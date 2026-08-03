@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STC OEE 월별 설비 가동률 상세 대시보드</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1420;
+    --panel: #161d2e;
+    --panel2: #1c2438;
+    --border: #2a3450;
+    --text: #e7ecf5;
+    --sub: #8b96ad;
+    --accent: #4da3ff;
+    --mold: #f4a340;
+    --mech: #4da3ff;
+    --elec: #f45b69;
+    --line: #4ee6a0;
+    --good: #4ee6a0;
+    --warn: #f4a340;
+    --bad: #f45b69;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', 'Malgun Gothic', -apple-system, sans-serif;
+    background: linear-gradient(160deg,#0b0f19,#141b2c 60%,#0f1420);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    padding: 22px 28px 14px 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    margin: 0 0 4px 0;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  header p {
+    margin: 0;
+    color: var(--sub);
+    font-size: 13px;
+  }
+  .layout {
+    display: flex;
+    gap: 18px;
+    padding: 20px 28px 40px 28px;
+    align-items: flex-start;
+  }
+  .sidebar {
+    flex: 0 0 150px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 78vh;
+    overflow-y: auto;
+  }
+  .sidebar .grp-label {
+    font-size: 11px;
+    color: var(--sub);
+    padding: 6px 8px 2px 8px;
+    letter-spacing: .5px;
+  }
+  .dc-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text);
+    text-align: left;
+    padding: 9px 12px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all .15s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dc-btn:hover { background: var(--panel2); }
+  .dc-btn.active {
+    background: linear-gradient(135deg, #2a5fb0, #1c3f7a);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .dc-btn.disabled {
+    color: #4a5570;
+    cursor: not-allowed;
+    font-weight: 400;
+  }
+  .dc-btn .rate-chip {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgba(255,255,255,.08);
+  }
+  .main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .kpi {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .kpi .label { font-size: 12px; color: var(--sub); margin-bottom: 4px; }
+  .kpi .value { font-size: 22px; font-weight: 700; }
+  .kpi .value.good { color: var(--good); }
+  .kpi .value.warn { color: var(--warn); }
+  .kpi .value.bad { color: var(--bad); }
+  .chart-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .chart-title h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+  .chart-title span {
+    color: var(--sub);
+    font-size: 12px;
+  }
+  .chart-wrap { position: relative; height: 420px; }
+  .legend-note {
+    display: flex;
+    gap: 18px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--sub);
+    flex-wrap: wrap;
+  }
+  .legend-note .dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 3px;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+  .missing-note {
+    font-size: 12px;
+    color: var(--sub);
+    padding: 10px 14px;
+    background: var(--panel2);
+    border-radius: 10px;
+    border: 1px dashed var(--border);
+  }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏭 STC OEE 월별 설비 가동률 상세 대시보드</h1>
+  <p>2026년 7월 · DC1~DC23 일별 가동률(A) 및 Loss 분류(금형 / 설비1-기계 / 설비2-전기)</p>
+</header>
+
+<div class="layout">
+  <div class="sidebar" id="sidebar"></div>
+
+  <div class="main">
+    <div class="card">
+      <div class="chart-title">
+        <h2 id="dcTitle">DC2</h2>
+        <span id="dcSub">2026년 7월 · 일별 가동률(A) 및 Loss 분류</span>
+      </div>
+      <div class="kpi-row" id="kpiRow"></div>
+    </div>
+
+    <div class="card">
+      <div class="chart-wrap">
+        <canvas id="mainChart"></canvas>
+      </div>
+      <div class="legend-note">
+        <span><span class="dot" style="background:var(--mold)"></span>금형 Loss(분)</span>
+        <span><span class="dot" style="background:var(--mech)"></span>설비1-기계 Loss(분)</span>
+        <span><span class="dot" style="background:var(--elec)"></span>설비2-전기 Loss(분)</span>
+        <span><span class="dot" style="background:var(--line)"></span>일일 종합 가동률(A) %</span>
+      </div>
+    </div>
+
+    <div class="missing-note">
+      ※ 데이터 없음(7월 기준): DC1, DC7, DC17 &nbsp;·&nbsp; 금형: 금형수리/파손,핀파손,슬라이드코어,팁교체,금형교체,금형냉각라인,제품소착,로트마크·사상 · 설비1(기계): 설비수리,노즐막힘,플런저오일막힘,설비냉각수,스프레이조정,진공설비,조건변경,탈산처리,스크랩용해,바가지교체 · 설비2(전기): 전기로수리,전기로회전,래들수리,히터수리,취출기수리,컨베이어수리,펌프이상,스프레이수리. 휴식·청소·미팅정전·기타는 막대에 포함되지 않고 꺾은선(종합 가동률)에만 반영됩니다.
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = {"DC2": [{"day": 1, "plan": 630.0, "run": 450.0, "mold": 0.0, "mech": 90.0, "elec": 0.0, "rate": 71.4}, {"day": 2, "plan": 480.0, "run": 370.0, "mold": 0.0, "mech": 0.0, "elec": 20.0, "rate": 77.1}, {"day": 3, "plan": 630.0, "run": 480.0, "mold": 15.0, "mech": 30.0, "elec": 15.0, "rate": 76.2}, {"day": 4, "plan": 480.0, "run": 375.0, "mold": 0.0, "mech": 25.0, "elec": 20.0, "rate": 78.1}, {"day": 5, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 6, "plan": 630.0, "run": 548.0, "mold": 60.0, "mech": 22.0, "elec": 0.0, "rate": 87.0}, {"day": 7, "plan": 1260.0, "run": 955.0, "mold": 60.0, "mech": 40.0, "elec": 205.0, "rate": 75.8}, {"day": 8, "plan": 1110.0, "run": 809.0, "mold": 145.0, "mech": 11.0, "elec": 25.0, "rate": 72.9}, {"day": 9, "plan": 1110.0, "run": 710.0, "mold": 190.0, "mech": 90.0, "elec": 30.0, "rate": 64.0}, {"day": 10, "plan": 1260.0, "run": 965.0, "mold": 150.0, "mech": 145.0, "elec": 0.0, "rate": 76.6}, {"day": 11, "plan": 960.0, "run": 930.0, "mold": 30.0, "mech": 0.0, "elec": 0.0, "rate": 96.9}, {"day": 12, "plan": 1260.0, "run": 830.0, "mold": 250.0, "mech": 30.0, "elec": 0.0, "rate": 65.9}, {"day": 13, "plan": 1260.0, "run": 1175.0, "mold": 0.0, "mech": 20.0, "elec": 55.0, "rate": 93.3}, {"day": 14, "plan": 630.0, "run": 526.0, "mold": 104.0, "mech": 0.0, "elec": 0.0, "rate": 83.5}, {"day": 15, "plan": 1260.0, "run": 1190.0, "mold": 0.0, "mech": 20.0, "elec": 10.0, "rate": 94.4}, {"day": 16, "plan": 630.0, "run": 330.0, "mold": 60.0, "mech": 90.0, "elec": 120.0, "rate": 52.4}, {"day": 17, "plan": 1170.0, "run": 1030.0, "mold": 70.0, "mech": 20.0, "elec": 0.0, "rate": 88.0}, {"day": 18, "plan": 1320.0, "run": 1030.0, "mold": 180.0, "mech": 50.0, "elec": 50.0, "rate": 78.0}, {"day": 19, "plan": 1050.0, "run": 950.0, "mold": 70.0, "mech": 0.0, "elec": 0.0, "rate": 90.5}, {"day": 20, "plan": 1260.0, "run": 955.0, "mold": 205.0, "mech": 30.0, "elec": 0.0, "rate": 75.8}, {"day": 21, "plan": 1290.0, "run": 1180.0, "mold": 0.0, "mech": 70.0, "elec": 0.0, "rate": 91.5}, {"day": 22, "plan": 1260.0, "run": 890.0, "mold": 280.0, "mech": 0.0, "elec": 0.0, "rate": 70.6}, {"day": 23, "plan": 1260.0, "run": 1250.0, "mold": 0.0, "mech": 0.0, "elec": 0.0, "rate": 99.2}, {"day": 24, "plan": 1200.0, "run": 1097.0, "mold": 13.0, "mech": 0.0, "elec": 0.0, "rate": 91.4}, {"day": 25, "plan": 1290.0, "run": 728.0, "mold": 562.0, "mech": 0.0, "elec": 0.0, "rate": 56.4}, {"day": 26, "plan": 390.0, "run": 390.0, "mold": 0.0, "mech": 0.0, "elec": 0.0, "rate": 100.0}, {"day": 27, "plan": 960.0, "run": 910.0, "mold": 20.0, "mech": 30.0, "elec": 0.0, "rate": 94.8}, {"day": 28, "plan": 1260.0, "run": 706.0, "mold": 234.0, "mech": 260.0, "elec": 30.0, "rate": 56.0}, {"day": 29, "plan": 630.0, "run": 345.0, "mold": 120.0, "mech": 165.0, "elec": 0.0, "rate": 54.8}, {"day": 30, "plan": 1260.0, "run": 1128.0, "mold": 57.0, "mech": 65.0, "elec": 0.0, "rate": 89.5}, {"day": 31, "plan": 1080.0, "run": 834.0, "mold": 126.0, "mech": 120.0, "elec": 0.0, "rate": 77.2}], "DC3": [{"day": 1, "plan": 1290.0, "run": 868.0, "mold": 205.0, "mech": 25.0, "elec": 192.0, "rate": 67.3}, {"day": 2, "plan": 1350.0, "run": 1295.0, "mold": 55.0, "mech": 0.0, "elec": 0.0, "rate": 95.9}, {"day": 3, "plan": 1350.0, "run": 1021.0, "mold": 304.0, "mech": 25.0, "elec": 0.0, "rate": 75.6}, {"day": 4, "plan": 1290.0, "run": 723.0, "mold": 567.0, "mech": 0.0, "elec": 0.0, "rate": 56.0}, {"day": 5, "plan": 1260.0, "run": 735.0, "mold": 315.0, "mech": 0.0, "elec": 30.0, "rate": 58.3}, {"day": 6, "plan": 1320.0, "run": 1028.0, "mold": 60.0, "mech": 0.0, "elec": 232.0, "rate": 77.9}, {"day": 7, "plan": 1320.0, "run": 1239.0, "mold": 81.0, "mech": 0.0, "elec": 0.0, "rate": 93.9}, {"day": 8, "plan": 1320.0, "run": 1130.0, "mold": 190.0, "mech": 0.0, "elec": 0.0, "rate": 85.6}, {"day": 9, "plan": 1320.0, "run": 1260.0, "mold": 60.0, "mech": 0.0, "elec": 0.0, "rate": 95.5}, {"day": 10, "plan": 1320.0, "run": 1192.0, "mold": 68.0, "mech": 30.0, "elec": 0.0, "rate": 90.3}, {"day": 11, "plan": 1290.0, "run": 971.0, "mold": 289.0, "mech": 0.0, "elec": 0.0, "rate": 75.3}, {"day": 12, "plan": 1260.0, "run": 799.0, "mold": 311.0, "mech": 30.0, "elec": 0.0, "rate": 63.4}, {"day": 13, "plan": 1320.0, "run": 1084.0, "mold": 206.0, "mech": 30.0, "elec": 0.0, "rate": 82.1}, {"day": 14, "plan": 690.0, "run": 690.0, "mold": 0.0, "mech": 0.0, "elec": 0.0, "rate": 100.0}, {"day": 15, "plan": 1350.0, "run": 1295.0, "mold": 30.0, "mech": 25.0, "elec": 0.0, "rate": 95.9}, {"day": 16, "plan": 1380.0, "run": 935.0, "mold": 60.0, "mech": 0.0, "elec": 240.0, "rate": 67.8}, {"day": 17, "plan": 1350.0, "run": 1270.0, "mold": 0.0, "mech": 0.0, "elec": 50.0, "rate": 94.1}, {"day": 18, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 19, "plan": 1170.0, "run": 795.0, "mold": 130.0, "mech": 215.0, "elec": 0.0, "rate": 67.9}, {"day": 20, "plan": 1380.0, "run": 1018.0, "mold": 285.0, "mech": 77.0, "elec": 0.0, "rate": 73.8}, {"day": 21, "plan": 1350.0, "run": 1074.0, "mold": 246.0, "mech": 0.0, "elec": 0.0, "rate": 79.6}, {"day": 22, "plan": 1350.0, "run": 1056.0, "mold": 279.0, "mech": 15.0, "elec": 0.0, "rate": 78.2}, {"day": 23, "plan": 1410.0, "run": 1052.0, "mold": 300.0, "mech": 58.0, "elec": 0.0, "rate": 74.6}, {"day": 24, "plan": 1440.0, "run": 910.0, "mold": 460.0, "mech": 70.0, "elec": 0.0, "rate": 63.2}, {"day": 25, "plan": 1380.0, "run": 850.0, "mold": 530.0, "mech": 0.0, "elec": 0.0, "rate": 61.6}, {"day": 26, "plan": 1260.0, "run": 931.0, "mold": 239.0, "mech": 0.0, "elec": 0.0, "rate": 73.9}, {"day": 27, "plan": 1290.0, "run": 806.0, "mold": 429.0, "mech": 0.0, "elec": 55.0, "rate": 62.5}, {"day": 28, "plan": 1380.0, "run": 1089.0, "mold": 261.0, "mech": 30.0, "elec": 0.0, "rate": 78.9}, {"day": 29, "plan": 1260.0, "run": 1112.0, "mold": 148.0, "mech": 0.0, "elec": 0.0, "rate": 88.3}, {"day": 30, "plan": 1350.0, "run": 1155.0, "mold": 90.0, "mech": 55.0, "elec": 50.0, "rate": 85.6}, {"day": 31, "plan": 1350.0, "run": 1070.0, "mold": 235.0, "mech": 0.0, "elec": 45.0, "rate": 79.3}], "DC4": [{"day": 1, "plan": 1290.0, "run": 965.0, "mold": 0.0, "mech": 181.0, "elec": 85.0, "rate": 74.8}, {"day": 2, "plan": 630.0, "run": 439.0, "mold": 146.0, "mech": 45.0, "elec": 0.0, "rate": 69.7}, {"day": 3, "plan": 1260.0, "run": 808.0, "mold": 417.0, "mech": 0.0, "elec": 25.0, "rate": 64.1}, {"day": 4, "plan": 1290.0, "run": 1226.0, "mold": 41.0, "mech": 0.0, "elec": 0.0, "rate": 95.0}, {"day": 5, "plan": 1260.0, "run": 1112.0, "mold": 148.0, "mech": 0.0, "elec": 0.0, "rate": 88.3}, {"day": 6, "plan": 1260.0, "run": 872.0, "mold": 126.0, "mech": 0.0, "elec": 262.0, "rate": 69.2}, {"day": 7, "plan": 630.0, "run": 600.0, "mold": 0.0, "mech": 20.0, "elec": 10.0, "rate": 95.2}, {"day": 8, "plan": 1260.0, "run": 1195.0, "mold": 6.0, "mech": 12.0, "elec": 17.0, "rate": 94.8}, {"day": 9, "plan": 1110.0, "run": 973.0, "mold": 60.0, "mech": 49.0, "elec": 7.0, "rate": 87.7}, {"day": 10, "plan": 1260.0, "run": 1191.0, "mold": 10.0, "mech": 29.0, "elec": 10.0, "rate": 94.5}, {"day": 11, "plan": 660.0, "run": 648.0, "mold": 0.0, "mech": 0.0, "elec": 0.0, "rate": 98.2}, {"day": 12, "plan": 690.0, "run": 235.0, "mold": 335.0, "mech": 0.0, "elec": 0.0, "rate": 34.1}, {"day": 13, "plan": 1260.0, "run": 490.0, "mold": 701.0, "mech": 69.0, "elec": 0.0, "rate": 38.9}, {"day": 14, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 15, "plan": 1290.0, "run": 1145.0, "mold": 135.0, "mech": 10.0, "elec": 0.0, "rate": 88.8}, {"day": 16, "plan": 1320.0, "run": 1137.0, "mold": 72.0, "mech": 10.0, "elec": 0.0, "rate": 86.1}, {"day": 17, "plan": 1350.0, "run": 1164.0, "mold": 186.0, "mech": 0.0, "elec": 0.0, "rate": 86.2}, {"day": 18, "plan": 1140.0, "run": 670.0, "mold": 261.0, "mech": 209.0, "elec": 0.0, "rate": 58.8}, {"day": 19, "plan": 660.0, "run": 513.0, "mold": 42.0, "mech": 0.0, "elec": 105.0, "rate": 77.7}, {"day": 20, "plan": 660.0, "run": 526.0, "mold": 60.0, "mech": 74.0, "elec": 0.0, "rate": 79.7}, {"day": 21, "plan": 1200.0, "run": 768.0, "mold": 0.0, "mech": 240.0, "elec": 0.0, "rate": 64.0}, {"day": 22, "plan": 1170.0, "run": 672.0, "mold": 0.0, "mech": 348.0, "elec": 0.0, "rate": 57.4}, {"day": 23, "plan": 1260.0, "run": 994.0, "mold": 71.0, "mech": 45.0, "elec": 0.0, "rate": 78.9}, {"day": 24, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 25, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 26, "plan": 1260.0, "run": 533.0, "mold": 182.0, "mech": 455.0, "elec": 0.0, "rate": 42.3}, {"day": 27, "plan": 870.0, "run": 675.0, "mold": 96.0, "mech": 49.0, "elec": 50.0, "rate": 77.6}, {"day": 28, "plan": 240.0, "run": 70.0, "mold": 15.0, "mech": 155.0, "elec": 0.0, "rate": 29.2}, {"day": 29, "plan": 630.0, "run": 492.0, "mold": 74.0, "mech": 33.0, "elec": 31.0, "rate": 78.1}, {"day": 30, "plan": 480.0, "run": 294.0, "mold": 23.0, "mech": 0.0, "elec": 163.0, "rate": 61.3}, {"day": 31, "plan": 240.0, "run": 68.0, "mold": 172.0, "mech": 0.0, "elec": 0.0, "rate": 28.3}], "DC5": [{"day": 1, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 2, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 3, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 4, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 5, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 6, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 7, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 8, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 9, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 10, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 11, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 12, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 13, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 14, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 15, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 16, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 17, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 18, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 19, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 20, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 21, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 22, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 23, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 24, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 25, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 26, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 27, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 28, "plan": 630.0, "run": 111.0, "mold": 0.0, "mech": 124.0, "elec": 395.0, "rate": 17.6}, {"day": 29, "plan": 1260.0, "run": 755.0, "mold": 61.0, "mech": 387.0, "elec": 47.0, "rate": 59.9}, {"day": 30, "plan": 1320.0, "run": 519.0, "mold": 63.0, "mech": 0.0, "elec": 738.0, "rate": 39.3}, {"day": 31, "plan": 1350.0, "run": 801.0, "mold": 349.0, "mech": 29.0, "elec": 171.0, "rate": 59.3}], "DC6": [{"day": 1, "plan": 1260.0, "run": 691.0, "mold": 325.0, "mech": 244.0, "elec": 0.0, "rate": 54.8}, {"day": 2, "plan": 1260.0, "run": 467.0, "mold": 42.0, "mech": 751.0, "elec": 0.0, "rate": 37.1}, {"day": 3, "plan": 1110.0, "run": 184.0, "mold": 0.0, "mech": 926.0, "elec": 0.0, "rate": 16.6}, {"day": 4, "plan": 1290.0, "run": 483.0, "mold": 420.0, "mech": 177.0, "elec": 210.0, "rate": 37.4}, {"day": 5, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 6, "plan": 1260.0, "run": 900.0, "mold": 30.0, "mech": 0.0, "elec": 270.0, "rate": 71.4}, {"day": 7, "plan": 1260.0, "run": 1160.0, "mold": 60.0, "mech": 30.0, "elec": 10.0, "rate": 92.1}, {"day": 8, "plan": 1260.0, "run": 800.0, "mold": 99.0, "mech": 331.0, "elec": 0.0, "rate": 63.5}, {"day": 9, "plan": 1260.0, "run": 796.0, "mold": 334.0, "mech": 130.0, "elec": 0.0, "rate": 63.2}, {"day": 10, "plan": 1260.0, "run": 967.0, "mold": 123.0, "mech": 170.0, "elec": 0.0, "rate": 76.7}, {"day": 11, "plan": 1290.0, "run": 735.0, "mold": 392.0, "mech": 153.0, "elec": 0.0, "rate": 57.0}, {"day": 12, "plan": 1260.0, "run": 990.0, "mold": 90.0, "mech": 30.0, "elec": 30.0, "rate": 78.6}, {"day": 13, "plan": 1260.0, "run": 1021.0, "mold": 153.0, "mech": 86.0, "elec": 0.0, "rate": 81.0}, {"day": 14, "plan": 630.0, "run": 351.0, "mold": 255.0, "mech": 24.0, "elec": 0.0, "rate": 55.7}, {"day": 15, "plan": 1260.0, "run": 880.0, "mold": 350.0, "mech": 0.0, "elec": 0.0, "rate": 69.8}, {"day": 16, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 17, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 18, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 19, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 20, "plan": 630.0, "run": 590.0, "mold": 0.0, "mech": 10.0, "elec": 0.0, "rate": 93.7}, {"day": 21, "plan": 1320.0, "run": 1150.0, "mold": 50.0, "mech": 60.0, "elec": 0.0, "rate": 87.1}, {"day": 22, "plan": 1260.0, "run": 807.0, "mold": 290.0, "mech": 103.0, "elec": 30.0, "rate": 64.0}, {"day": 23, "plan": 630.0, "run": 563.0, "mold": 0.0, "mech": 47.0, "elec": 20.0, "rate": 89.4}, {"day": 24, "plan": 1260.0, "run": 705.0, "mold": 0.0, "mech": 50.0, "elec": 505.0, "rate": 56.0}, {"day": 25, "plan": 1290.0, "run": 822.0, "mold": 330.0, "mech": 16.0, "elec": 122.0, "rate": 63.7}, {"day": 26, "plan": 1260.0, "run": 940.0, "mold": 70.0, "mech": 50.0, "elec": 110.0, "rate": 74.6}, {"day": 27, "plan": 1260.0, "run": 1050.0, "mold": 150.0, "mech": 60.0, "elec": 0.0, "rate": 83.3}, {"day": 28, "plan": 1140.0, "run": 868.0, "mold": 210.0, "mech": 62.0, "elec": 0.0, "rate": 76.1}, {"day": 29, "plan": 1260.0, "run": 985.0, "mold": 57.0, "mech": 30.0, "elec": 180.0, "rate": 78.2}, {"day": 30, "plan": 1260.0, "run": 1052.0, "mold": 68.0, "mech": 80.0, "elec": 30.0, "rate": 83.5}, {"day": 31, "plan": 1260.0, "run": 985.0, "mold": 145.0, "mech": 43.0, "elec": 35.0, "rate": 78.2}], "DC8": [{"day": 1, "plan": 1260.0, "run": 652.0, "mold": 230.0, "mech": 228.0, "elec": 120.0, "rate": 51.7}, {"day": 2, "plan": 1260.0, "run": 882.0, "mold": 215.0, "mech": 153.0, "elec": 0.0, "rate": 70.0}, {"day": 3, "plan": 1260.0, "run": 1033.0, "mold": 62.0, "mech": 105.0, "elec": 50.0, "rate": 82.0}, {"day": 4, "plan": 1290.0, "run": 748.0, "mold": 110.0, "mech": 162.0, "elec": 260.0, "rate": 58.0}, {"day": 5, "plan": 1260.0, "run": 840.0, "mold": 315.0, "mech": 105.0, "elec": 0.0, "rate": 66.7}, {"day": 6, "plan": 1260.0, "run": 670.0, "mold": 250.0, "mech": 100.0, "elec": 210.0, "rate": 53.2}, {"day": 7, "plan": 1260.0, "run": 1031.0, "mold": 15.0, "mech": 202.0, "elec": 0.0, "rate": 81.8}, {"day": 8, "plan": 1260.0, "run": 885.0, "mold": 240.0, "mech": 105.0, "elec": 0.0, "rate": 70.2}, {"day": 9, "plan": 1260.0, "run": 840.0, "mold": 315.0, "mech": 75.0, "elec": 20.0, "rate": 66.7}, {"day": 10, "plan": 1110.0, "run": 555.0, "mold": 510.0, "mech": 30.0, "elec": 0.0, "rate": 50.0}, {"day": 11, "plan": 480.0, "run": 100.0, "mold": 380.0, "mech": 0.0, "elec": 0.0, "rate": 20.8}, {"day": 12, "plan": 870.0, "run": 605.0, "mold": 155.0, "mech": 60.0, "elec": 50.0, "rate": 69.5}, {"day": 13, "plan": 1260.0, "run": 950.0, "mold": 185.0, "mech": 125.0, "elec": 0.0, "rate": 75.4}, {"day": 14, "plan": 630.0, "run": 495.0, "mold": 50.0, "mech": 50.0, "elec": 35.0, "rate": 78.6}, {"day": 15, "plan": 630.0, "run": 470.0, "mold": 70.0, "mech": 90.0, "elec": 0.0, "rate": 74.6}, {"day": 16, "plan": 1110.0, "run": 435.0, "mold": 465.0, "mech": 140.0, "elec": 20.0, "rate": 39.2}, {"day": 17, "plan": 630.0, "run": 270.0, "mold": 120.0, "mech": 210.0, "elec": 0.0, "rate": 42.9}, {"day": 18, "plan": 480.0, "run": 300.0, "mold": 0.0, "mech": 60.0, "elec": 120.0, "rate": 62.5}, {"day": 19, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 20, "plan": 1290.0, "run": 495.0, "mold": 270.0, "mech": 345.0, "elec": 90.0, "rate": 38.4}, {"day": 21, "plan": 1320.0, "run": 738.0, "mold": 0.0, "mech": 442.0, "elec": 80.0, "rate": 55.9}, {"day": 22, "plan": 630.0, "run": 220.0, "mold": 360.0, "mech": 50.0, "elec": 0.0, "rate": 34.9}, {"day": 23, "plan": 1260.0, "run": 805.0, "mold": 160.0, "mech": 205.0, "elec": 90.0, "rate": 63.9}, {"day": 24, "plan": 1110.0, "run": 438.0, "mold": 110.0, "mech": 441.0, "elec": 41.0, "rate": 39.5}, {"day": 25, "plan": 480.0, "run": 140.0, "mold": 0.0, "mech": 340.0, "elec": 0.0, "rate": 29.2}, {"day": 26, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 27, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 28, "plan": 630.0, "run": 150.0, "mold": 0.0, "mech": 420.0, "elec": 60.0, "rate": 23.8}, {"day": 29, "plan": 630.0, "run": 195.0, "mold": 180.0, "mech": 255.0, "elec": 0.0, "rate": 31.0}, {"day": 30, "plan": 480.0, "run": 240.0, "mold": 0.0, "mech": 240.0, "elec": 0.0, "rate": 50.0}, {"day": 31, "plan": 660.0, "run": 300.0, "mold": 0.0, "mech": 360.0, "elec": 0.0, "rate": 45.5}], "DC9": [{"day": 1, "plan": 1320.0, "run": 854.0, "mold": 432.0, "mech": 11.0, "elec": 23.0, "rate": 64.7}, {"day": 2, "plan": 1320.0, "run": 516.0, "mold": 639.0, "mech": 165.0, "elec": 0.0, "rate": 39.1}, {"day": 3, "plan": 1350.0, "run": 1174.0, "mold": 24.0, "mech": 104.0, "elec": 26.0, "rate": 87.0}, {"day": 4, "plan": 1290.0, "run": 589.0, "mold": 317.0, "mech": 346.0, "elec": 12.0, "rate": 45.7}, {"day": 5, "plan": 1260.0, "run": 987.0, "mold": 115.0, "mech": 104.0, "elec": 54.0, "rate": 78.3}, {"day": 6, "plan": 630.0, "run": 421.0, "mold": 141.0, "mech": 59.0, "elec": 9.0, "rate": 66.8}, {"day": 7, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 8, "plan": 690.0, "run": 490.0, "mold": 187.0, "mech": 13.0, "elec": 0.0, "rate": 71.0}, {"day": 9, "plan": 1320.0, "run": 1120.0, "mold": 127.0, "mech": 54.0, "elec": 19.0, "rate": 84.8}, {"day": 10, "plan": 1110.0, "run": 453.0, "mold": 371.0, "mech": 169.0, "elec": 15.0, "rate": 40.8}, {"day": 11, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 12, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 13, "plan": 690.0, "run": 309.0, "mold": 120.0, "mech": 254.0, "elec": 7.0, "rate": 44.8}, {"day": 14, "plan": 540.0, "run": 507.0, "mold": 3.0, "mech": 20.0, "elec": 10.0, "rate": 93.9}, {"day": 15, "plan": 1350.0, "run": 414.0, "mold": 505.0, "mech": 288.0, "elec": 6.0, "rate": 30.7}, {"day": 16, "plan": 1440.0, "run": 766.0, "mold": 331.0, "mech": 76.0, "elec": 24.0, "rate": 53.2}, {"day": 17, "plan": 1440.0, "run": 1204.0, "mold": 126.0, "mech": 15.0, "elec": 78.0, "rate": 83.6}, {"day": 18, "plan": 1410.0, "run": 1116.0, "mold": 235.0, "mech": 24.0, "elec": 35.0, "rate": 79.1}, {"day": 19, "plan": 1320.0, "run": 1009.0, "mold": 127.0, "mech": 32.0, "elec": 32.0, "rate": 76.4}, {"day": 20, "plan": 1350.0, "run": 1023.0, "mold": 88.0, "mech": 49.0, "elec": 60.0, "rate": 75.8}, {"day": 21, "plan": 1260.0, "run": 581.0, "mold": 422.0, "mech": 60.0, "elec": 0.0, "rate": 46.1}, {"day": 22, "plan": 1320.0, "run": 781.0, "mold": 240.0, "mech": 182.0, "elec": 87.0, "rate": 59.2}, {"day": 23, "plan": 1350.0, "run": 993.0, "mold": 188.0, "mech": 71.0, "elec": 38.0, "rate": 73.6}, {"day": 24, "plan": 1350.0, "run": 672.0, "mold": 189.0, "mech": 261.0, "elec": 22.0, "rate": 49.8}, {"day": 25, "plan": 1320.0, "run": 924.0, "mold": 310.0, "mech": 80.0, "elec": 3.0, "rate": 70.0}, {"day": 26, "plan": 930.0, "run": 507.0, "mold": 50.0, "mech": 99.0, "elec": 207.0, "rate": 54.5}, {"day": 27, "plan": 630.0, "run": 315.0, "mold": 159.0, "mech": 0.0, "elec": 0.0, "rate": 50.0}, {"day": 28, "plan": 1320.0, "run": 871.0, "mold": 266.0, "mech": 90.0, "elec": 93.0, "rate": 66.0}, {"day": 29, "plan": 1260.0, "run": 800.0, "mold": 316.0, "mech": 22.0, "elec": 92.0, "rate": 63.5}, {"day": 30, "plan": 1260.0, "run": 1134.0, "mold": 36.0, "mech": 35.0, "elec": 55.0, "rate": 90.0}, {"day": 31, "plan": 1350.0, "run": 925.0, "mold": 346.0, "mech": 0.0, "elec": 79.0, "rate": 68.5}], "DC10": [{"day": 1, "plan": 1350.0, "run": 1093.0, "mold": 125.0, "mech": 30.0, "elec": 92.0, "rate": 81.0}, {"day": 2, "plan": 1350.0, "run": 1232.0, "mold": 17.0, "mech": 27.0, "elec": 74.0, "rate": 91.3}, {"day": 3, "plan": 1200.0, "run": 1056.0, "mold": 4.0, "mech": 7.0, "elec": 133.0, "rate": 88.0}, {"day": 4, "plan": 1350.0, "run": 1184.0, "mold": 18.0, "mech": 58.0, "elec": 90.0, "rate": 87.7}, {"day": 5, "plan": 1260.0, "run": 1224.0, "mold": 0.0, "mech": 0.0, "elec": 36.0, "rate": 97.1}, {"day": 6, "plan": 1260.0, "run": 1208.0, "mold": 0.0, "mech": 25.0, "elec": 27.0, "rate": 95.9}, {"day": 7, "plan": 1320.0, "run": 1139.0, "mold": 17.0, "mech": 103.0, "elec": 61.0, "rate": 86.3}, {"day": 8, "plan": 1170.0, "run": 907.0, "mold": 240.0, "mech": 8.0, "elec": 15.0, "rate": 77.5}, {"day": 9, "plan": 1320.0, "run": 1094.0, "mold": 128.0, "mech": 49.0, "elec": 49.0, "rate": 82.9}, {"day": 10, "plan": 1320.0, "run": 1076.0, "mold": 180.0, "mech": 8.0, "elec": 56.0, "rate": 81.5}, {"day": 11, "plan": 1350.0, "run": 1086.0, "mold": 191.0, "mech": 49.0, "elec": 12.0, "rate": 80.4}, {"day": 12, "plan": 1380.0, "run": 1065.0, "mold": 154.0, "mech": 0.0, "elec": 30.0, "rate": 77.2}, {"day": 13, "plan": 690.0, "run": 245.0, "mold": 436.0, "mech": 0.0, "elec": 4.0, "rate": 35.5}, {"day": 14, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 15, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 16, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 17, "plan": 480.0, "run": 111.0, "mold": 120.0, "mech": 249.0, "elec": 0.0, "rate": 23.1}, {"day": 18, "plan": 1260.0, "run": 867.0, "mold": 273.0, "mech": 109.0, "elec": 11.0, "rate": 68.8}, {"day": 19, "plan": 1260.0, "run": 1178.0, "mold": 16.0, "mech": 0.0, "elec": 6.0, "rate": 93.5}, {"day": 20, "plan": 1410.0, "run": 1135.0, "mold": 233.0, "mech": 0.0, "elec": 12.0, "rate": 80.5}, {"day": 21, "plan": 1440.0, "run": 1254.0, "mold": 43.0, "mech": 0.0, "elec": 143.0, "rate": 87.1}, {"day": 22, "plan": 1380.0, "run": 1190.0, "mold": 129.0, "mech": 0.0, "elec": 61.0, "rate": 86.2}, {"day": 23, "plan": 1410.0, "run": 1225.0, "mold": 78.0, "mech": 0.0, "elec": 47.0, "rate": 86.9}, {"day": 24, "plan": 1350.0, "run": 1321.0, "mold": 9.0, "mech": 0.0, "elec": 20.0, "rate": 97.9}, {"day": 25, "plan": 1290.0, "run": 990.0, "mold": 290.0, "mech": 0.0, "elec": 10.0, "rate": 76.7}, {"day": 26, "plan": 1260.0, "run": 900.0, "mold": 238.0, "mech": 14.0, "elec": 18.0, "rate": 71.4}, {"day": 27, "plan": 1260.0, "run": 986.0, "mold": 43.0, "mech": 0.0, "elec": 171.0, "rate": 78.3}, {"day": 28, "plan": 1260.0, "run": 569.0, "mold": 350.0, "mech": 0.0, "elec": 281.0, "rate": 45.2}, {"day": 29, "plan": 1260.0, "run": 1190.0, "mold": 0.0, "mech": 11.0, "elec": 59.0, "rate": 94.4}, {"day": 30, "plan": 1260.0, "run": 1205.0, "mold": 12.0, "mech": 0.0, "elec": 43.0, "rate": 95.6}, {"day": 31, "plan": 1260.0, "run": 937.0, "mold": 220.0, "mech": 59.0, "elec": 14.0, "rate": 74.4}], "DC11": [{"day": 1, "plan": 1350.0, "run": 1220.0, "mold": 20.0, "mech": 0.0, "elec": 100.0, "rate": 90.4}, {"day": 2, "plan": 1260.0, "run": 942.0, "mold": 15.0, "mech": 48.0, "elec": 245.0, "rate": 74.8}, {"day": 3, "plan": 1260.0, "run": 1125.0, "mold": 10.0, "mech": 75.0, "elec": 40.0, "rate": 89.3}, {"day": 4, "plan": 1380.0, "run": 1280.0, "mold": 0.0, "mech": 15.0, "elec": 75.0, "rate": 92.8}, {"day": 5, "plan": 1290.0, "run": 1270.0, "mold": 0.0, "mech": 0.0, "elec": 20.0, "rate": 98.4}, {"day": 6, "plan": 1260.0, "run": 915.0, "mold": 50.0, "mech": 145.0, "elec": 140.0, "rate": 72.6}, {"day": 7, "plan": 1260.0, "run": 635.0, "mold": 75.0, "mech": 200.0, "elec": 340.0, "rate": 50.4}, {"day": 8, "plan": 630.0, "run": 315.0, "mold": 15.0, "mech": 180.0, "elec": 110.0, "rate": 50.0}, {"day": 9, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 10, "plan": 630.0, "run": 310.0, "mold": 0.0, "mech": 260.0, "elec": 60.0, "rate": 49.2}, {"day": 11, "plan": 1290.0, "run": 1020.0, "mold": 90.0, "mech": 30.0, "elec": 140.0, "rate": 79.1}, {"day": 12, "plan": 1260.0, "run": 1020.0, "mold": 25.0, "mech": 15.0, "elec": 90.0, "rate": 81.0}, {"day": 13, "plan": 480.0, "run": 260.0, "mold": 40.0, "mech": 120.0, "elec": 60.0, "rate": 54.2}, {"day": 14, "plan": 630.0, "run": 480.0, "mold": 60.0, "mech": 30.0, "elec": 60.0, "rate": 76.2}, {"day": 15, "plan": 1350.0, "run": 1090.0, "mold": 10.0, "mech": 210.0, "elec": 30.0, "rate": 80.7}, {"day": 16, "plan": 1260.0, "run": 920.0, "mold": 115.0, "mech": 0.0, "elec": 35.0, "rate": 73.0}, {"day": 17, "plan": 1290.0, "run": 1130.0, "mold": 80.0, "mech": 40.0, "elec": 0.0, "rate": 87.6}, {"day": 18, "plan": 1200.0, "run": 890.0, "mold": 30.0, "mech": 10.0, "elec": 270.0, "rate": 74.2}, {"day": 19, "plan": 1320.0, "run": 1110.0, "mold": 60.0, "mech": 5.0, "elec": 145.0, "rate": 84.1}, {"day": 20, "plan": 1410.0, "run": 1019.0, "mold": 140.0, "mech": 36.0, "elec": 175.0, "rate": 72.3}, {"day": 21, "plan": 1380.0, "run": 835.0, "mold": 300.0, "mech": 245.0, "elec": 0.0, "rate": 60.5}, {"day": 22, "plan": 1260.0, "run": 980.0, "mold": 70.0, "mech": 100.0, "elec": 110.0, "rate": 77.8}, {"day": 23, "plan": 1350.0, "run": 950.0, "mold": 290.0, "mech": 80.0, "elec": 20.0, "rate": 70.4}, {"day": 24, "plan": 1350.0, "run": 840.0, "mold": 230.0, "mech": 270.0, "elec": 0.0, "rate": 62.2}, {"day": 25, "plan": 480.0, "run": 360.0, "mold": 45.0, "mech": 45.0, "elec": 20.0, "rate": 75.0}, {"day": 26, "plan": 1260.0, "run": 495.0, "mold": 395.0, "mech": 270.0, "elec": 0.0, "rate": 39.3}, {"day": 27, "plan": 1260.0, "run": 1030.0, "mold": 0.0, "mech": 20.0, "elec": 190.0, "rate": 81.7}, {"day": 28, "plan": 1260.0, "run": 970.0, "mold": 0.0, "mech": 140.0, "elec": 130.0, "rate": 77.0}, {"day": 29, "plan": 720.0, "run": 340.0, "mold": 90.0, "mech": 100.0, "elec": 190.0, "rate": 47.2}, {"day": 30, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 31, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}], "DC12": [{"day": 1, "plan": 1350.0, "run": 1095.0, "mold": 190.0, "mech": 15.0, "elec": 50.0, "rate": 81.1}, {"day": 2, "plan": 1290.0, "run": 1055.0, "mold": 180.0, "mech": 30.0, "elec": 15.0, "rate": 81.8}, {"day": 3, "plan": 1440.0, "run": 1120.0, "mold": 190.0, "mech": 80.0, "elec": 40.0, "rate": 77.8}, {"day": 4, "plan": 1350.0, "run": 970.0, "mold": 220.0, "mech": 160.0, "elec": 0.0, "rate": 71.9}, {"day": 5, "plan": 1440.0, "run": 1180.0, "mold": 105.0, "mech": 105.0, "elec": 50.0, "rate": 81.9}, {"day": 6, "plan": 1320.0, "run": 1125.0, "mold": 140.0, "mech": 35.0, "elec": 0.0, "rate": 85.2}, {"day": 7, "plan": 1380.0, "run": 995.0, "mold": 250.0, "mech": 15.0, "elec": 120.0, "rate": 72.1}, {"day": 8, "plan": 1320.0, "run": 1160.0, "mold": 140.0, "mech": 10.0, "elec": 0.0, "rate": 87.9}, {"day": 9, "plan": 1320.0, "run": 1045.0, "mold": 205.0, "mech": 0.0, "elec": 60.0, "rate": 79.2}, {"day": 10, "plan": 1320.0, "run": 1055.0, "mold": 195.0, "mech": 30.0, "elec": 30.0, "rate": 79.9}, {"day": 11, "plan": 1350.0, "run": 1120.0, "mold": 140.0, "mech": 0.0, "elec": 80.0, "rate": 83.0}, {"day": 12, "plan": 1260.0, "run": 960.0, "mold": 150.0, "mech": 0.0, "elec": 0.0, "rate": 76.2}, {"day": 13, "plan": 1320.0, "run": 780.0, "mold": 45.0, "mech": 0.0, "elec": 465.0, "rate": 59.1}, {"day": 14, "plan": 630.0, "run": 465.0, "mold": 60.0, "mech": 0.0, "elec": 105.0, "rate": 73.8}, {"day": 15, "plan": 1350.0, "run": 1175.0, "mold": 0.0, "mech": 115.0, "elec": 50.0, "rate": 87.0}, {"day": 16, "plan": 1350.0, "run": 1000.0, "mold": 110.0, "mech": 80.0, "elec": 0.0, "rate": 74.1}, {"day": 17, "plan": 1350.0, "run": 1105.0, "mold": 80.0, "mech": 25.0, "elec": 100.0, "rate": 81.9}, {"day": 18, "plan": 1260.0, "run": 980.0, "mold": 210.0, "mech": 40.0, "elec": 0.0, "rate": 77.8}, {"day": 19, "plan": 1380.0, "run": 1220.0, "mold": 100.0, "mech": 60.0, "elec": 0.0, "rate": 88.4}, {"day": 20, "plan": 1350.0, "run": 1105.0, "mold": 110.0, "mech": 0.0, "elec": 95.0, "rate": 81.9}, {"day": 21, "plan": 1410.0, "run": 980.0, "mold": 280.0, "mech": 105.0, "elec": 15.0, "rate": 69.5}, {"day": 22, "plan": 1410.0, "run": 1125.0, "mold": 10.0, "mech": 120.0, "elec": 155.0, "rate": 79.8}, {"day": 23, "plan": 1350.0, "run": 1075.0, "mold": 155.0, "mech": 120.0, "elec": 0.0, "rate": 79.6}, {"day": 24, "plan": 1350.0, "run": 1200.0, "mold": 50.0, "mech": 25.0, "elec": 75.0, "rate": 88.9}, {"day": 25, "plan": 1380.0, "run": 940.0, "mold": 100.0, "mech": 300.0, "elec": 40.0, "rate": 68.1}, {"day": 26, "plan": 1260.0, "run": 795.0, "mold": 225.0, "mech": 150.0, "elec": 0.0, "rate": 63.1}, {"day": 27, "plan": 1350.0, "run": 1045.0, "mold": 135.0, "mech": 40.0, "elec": 120.0, "rate": 77.4}, {"day": 28, "plan": 1290.0, "run": 1175.0, "mold": 85.0, "mech": 20.0, "elec": 0.0, "rate": 91.1}, {"day": 29, "plan": 1440.0, "run": 1152.0, "mold": 213.0, "mech": 75.0, "elec": 0.0, "rate": 80.0}, {"day": 30, "plan": 1380.0, "run": 1080.0, "mold": 220.0, "mech": 70.0, "elec": 0.0, "rate": 78.3}, {"day": 31, "plan": 1440.0, "run": 1150.0, "mold": 20.0, "mech": 70.0, "elec": 200.0, "rate": 79.9}], "DC13": [{"day": 1, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 2, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 3, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 4, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 5, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 6, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 7, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 8, "plan": 630.0, "run": 330.0, "mold": 0.0, "mech": 150.0, "elec": 120.0, "rate": 52.4}, {"day": 9, "plan": 690.0, "run": 450.0, "mold": 75.0, "mech": 120.0, "elec": 0.0, "rate": 65.2}, {"day": 10, "plan": 1110.0, "run": 610.0, "mold": 150.0, "mech": 240.0, "elec": 110.0, "rate": 55.0}, {"day": 11, "plan": 1290.0, "run": 1135.0, "mold": 110.0, "mech": 0.0, "elec": 15.0, "rate": 88.0}, {"day": 12, "plan": 480.0, "run": 360.0, "mold": 0.0, "mech": 0.0, "elec": 0.0, "rate": 75.0}, {"day": 13, "plan": 120.0, "run": 120.0, "mold": 0.0, "mech": 0.0, "elec": 0.0, "rate": 100.0}, {"day": 14, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 15, "plan": 630.0, "run": 380.0, "mold": 0.0, "mech": 160.0, "elec": 90.0, "rate": 60.3}, {"day": 16, "plan": 1200.0, "run": 455.0, "mold": 0.0, "mech": 60.0, "elec": 565.0, "rate": 37.9}, {"day": 17, "plan": 660.0, "run": 240.0, "mold": 270.0, "mech": 150.0, "elec": 0.0, "rate": 36.4}, {"day": 18, "plan": 1200.0, "run": 760.0, "mold": 290.0, "mech": 150.0, "elec": 0.0, "rate": 63.3}, {"day": 19, "plan": 1170.0, "run": 650.0, "mold": 400.0, "mech": 90.0, "elec": 0.0, "rate": 55.6}, {"day": 20, "plan": 1290.0, "run": 795.0, "mold": 130.0, "mech": 265.0, "elec": 70.0, "rate": 61.6}, {"day": 21, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 22, "plan": 630.0, "run": 255.0, "mold": 165.0, "mech": 210.0, "elec": 0.0, "rate": 40.5}, {"day": 23, "plan": 1290.0, "run": 810.0, "mold": 0.0, "mech": 130.0, "elec": 320.0, "rate": 62.8}, {"day": 24, "plan": 1260.0, "run": 575.0, "mold": 115.0, "mech": 90.0, "elec": 480.0, "rate": 45.6}, {"day": 25, "plan": 1290.0, "run": 565.0, "mold": 240.0, "mech": 20.0, "elec": 435.0, "rate": 43.8}, {"day": 26, "plan": 1260.0, "run": 723.0, "mold": 130.0, "mech": 47.0, "elec": 220.0, "rate": 57.4}, {"day": 27, "plan": 1260.0, "run": 820.0, "mold": 175.0, "mech": 130.0, "elec": 135.0, "rate": 65.1}, {"day": 28, "plan": 1110.0, "run": 515.0, "mold": 305.0, "mech": 160.0, "elec": 130.0, "rate": 46.4}, {"day": 29, "plan": 720.0, "run": 380.0, "mold": 50.0, "mech": 190.0, "elec": 90.0, "rate": 52.8}, {"day": 30, "plan": 1350.0, "run": 540.0, "mold": 210.0, "mech": 30.0, "elec": 570.0, "rate": 40.0}, {"day": 31, "plan": 1260.0, "run": 730.0, "mold": 120.0, "mech": 160.0, "elec": 220.0, "rate": 57.9}], "DC15": [{"day": 1, "plan": 1260.0, "run": 1060.0, "mold": 100.0, "mech": 90.0, "elec": 0.0, "rate": 84.1}, {"day": 2, "plan": 1350.0, "run": 1080.0, "mold": 100.0, "mech": 160.0, "elec": 0.0, "rate": 80.0}, {"day": 3, "plan": 1290.0, "run": 1140.0, "mold": 0.0, "mech": 110.0, "elec": 10.0, "rate": 88.4}, {"day": 4, "plan": 1290.0, "run": 850.0, "mold": 380.0, "mech": 30.0, "elec": 0.0, "rate": 65.9}, {"day": 5, "plan": 1260.0, "run": 1070.0, "mold": 100.0, "mech": 10.0, "elec": 80.0, "rate": 84.9}, {"day": 6, "plan": 1260.0, "run": 820.0, "mold": 220.0, "mech": 120.0, "elec": 20.0, "rate": 65.1}, {"day": 7, "plan": 1260.0, "run": 825.0, "mold": 190.0, "mech": 180.0, "elec": 50.0, "rate": 65.5}, {"day": 8, "plan": 1260.0, "run": 890.0, "mold": 170.0, "mech": 90.0, "elec": 50.0, "rate": 70.6}, {"day": 9, "plan": 1260.0, "run": 980.0, "mold": 130.0, "mech": 100.0, "elec": 40.0, "rate": 77.8}, {"day": 10, "plan": 1260.0, "run": 1030.0, "mold": 190.0, "mech": 0.0, "elec": 30.0, "rate": 81.7}, {"day": 11, "plan": 960.0, "run": 840.0, "mold": 60.0, "mech": 0.0, "elec": 40.0, "rate": 87.5}, {"day": 12, "plan": 1260.0, "run": 1040.0, "mold": 130.0, "mech": 60.0, "elec": 0.0, "rate": 82.5}, {"day": 13, "plan": 1260.0, "run": 890.0, "mold": 160.0, "mech": 80.0, "elec": 110.0, "rate": 70.6}, {"day": 14, "plan": 630.0, "run": 451.0, "mold": 110.0, "mech": 59.0, "elec": 10.0, "rate": 71.6}, {"day": 15, "plan": 1260.0, "run": 760.0, "mold": 290.0, "mech": 80.0, "elec": 0.0, "rate": 60.3}, {"day": 16, "plan": 1320.0, "run": 1010.0, "mold": 90.0, "mech": 100.0, "elec": 30.0, "rate": 76.5}, {"day": 17, "plan": 1350.0, "run": 735.0, "mold": 410.0, "mech": 155.0, "elec": 20.0, "rate": 54.4}, {"day": 18, "plan": 840.0, "run": 441.0, "mold": 60.0, "mech": 339.0, "elec": 0.0, "rate": 52.5}, {"day": 19, "plan": 1200.0, "run": 450.0, "mold": 210.0, "mech": 510.0, "elec": 0.0, "rate": 37.5}, {"day": 20, "plan": 1320.0, "run": 980.0, "mold": 180.0, "mech": 100.0, "elec": 40.0, "rate": 74.2}, {"day": 21, "plan": 1440.0, "run": 1210.0, "mold": 80.0, "mech": 120.0, "elec": 30.0, "rate": 84.0}, {"day": 22, "plan": 1410.0, "run": 1245.0, "mold": 100.0, "mech": 10.0, "elec": 40.0, "rate": 88.3}, {"day": 23, "plan": 720.0, "run": 562.0, "mold": 60.0, "mech": 78.0, "elec": 20.0, "rate": 78.1}, {"day": 24, "plan": 1020.0, "run": 520.0, "mold": 470.0, "mech": 30.0, "elec": 0.0, "rate": 51.0}, {"day": 25, "plan": 1290.0, "run": 824.0, "mold": 266.0, "mech": 170.0, "elec": 20.0, "rate": 63.9}, {"day": 26, "plan": 1260.0, "run": 730.0, "mold": 370.0, "mech": 50.0, "elec": 0.0, "rate": 57.9}, {"day": 27, "plan": 1260.0, "run": 1210.0, "mold": 10.0, "mech": 30.0, "elec": 0.0, "rate": 96.0}, {"day": 28, "plan": 630.0, "run": 285.0, "mold": 0.0, "mech": 0.0, "elec": 345.0, "rate": 45.2}, {"day": 29, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 30, "plan": 1290.0, "run": 780.0, "mold": 280.0, "mech": 210.0, "elec": 0.0, "rate": 60.5}, {"day": 31, "plan": 1350.0, "run": 1350.0, "mold": 0.0, "mech": 0.0, "elec": 0.0, "rate": 100.0}], "DC16": [{"day": 1, "plan": 1110.0, "run": 720.0, "mold": 210.0, "mech": 140.0, "elec": 40.0, "rate": 64.9}, {"day": 2, "plan": 1260.0, "run": 980.0, "mold": 15.0, "mech": 215.0, "elec": 30.0, "rate": 77.8}, {"day": 3, "plan": 1260.0, "run": 1035.0, "mold": 60.0, "mech": 130.0, "elec": 35.0, "rate": 82.1}, {"day": 4, "plan": 1290.0, "run": 1150.0, "mold": 0.0, "mech": 140.0, "elec": 0.0, "rate": 89.1}, {"day": 5, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 6, "plan": 1260.0, "run": 880.0, "mold": 120.0, "mech": 160.0, "elec": 100.0, "rate": 69.8}, {"day": 7, "plan": 1260.0, "run": 1075.0, "mold": 30.0, "mech": 20.0, "elec": 135.0, "rate": 85.3}, {"day": 8, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 9, "plan": 480.0, "run": 180.0, "mold": 0.0, "mech": 300.0, "elec": 0.0, "rate": 37.5}, {"day": 10, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 11, "plan": 480.0, "run": 180.0, "mold": 60.0, "mech": 60.0, "elec": 180.0, "rate": 37.5}, {"day": 12, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 13, "plan": 1260.0, "run": 550.0, "mold": 380.0, "mech": 300.0, "elec": 30.0, "rate": 43.7}, {"day": 14, "plan": 630.0, "run": 450.0, "mold": 60.0, "mech": 80.0, "elec": 40.0, "rate": 71.4}, {"day": 15, "plan": 630.0, "run": 70.0, "mold": 460.0, "mech": 70.0, "elec": 0.0, "rate": 11.1}, {"day": 16, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 17, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 18, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 19, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 20, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 21, "plan": 1260.0, "run": 775.0, "mold": 100.0, "mech": 325.0, "elec": 0.0, "rate": 61.5}, {"day": 22, "plan": 1110.0, "run": 870.0, "mold": 0.0, "mech": 120.0, "elec": 120.0, "rate": 78.4}, {"day": 23, "plan": 1260.0, "run": 1170.0, "mold": 60.0, "mech": 30.0, "elec": 0.0, "rate": 92.9}, {"day": 24, "plan": 1110.0, "run": 630.0, "mold": 350.0, "mech": 100.0, "elec": 30.0, "rate": 56.8}, {"day": 25, "plan": 810.0, "run": 440.0, "mold": 290.0, "mech": 80.0, "elec": 0.0, "rate": 54.3}, {"day": 26, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 27, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 28, "plan": 1260.0, "run": 600.0, "mold": 380.0, "mech": 280.0, "elec": 0.0, "rate": 47.6}, {"day": 29, "plan": 840.0, "run": 535.0, "mold": 175.0, "mech": 80.0, "elec": 50.0, "rate": 63.7}, {"day": 30, "plan": 1260.0, "run": 570.0, "mold": 450.0, "mech": 240.0, "elec": 0.0, "rate": 45.2}, {"day": 31, "plan": 480.0, "run": 360.0, "mold": 0.0, "mech": 0.0, "elec": 0.0, "rate": 75.0}], "DC18": [{"day": 1, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 2, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 3, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 4, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 5, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 6, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 7, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 8, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 9, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 10, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 11, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 12, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 13, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 14, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 15, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 16, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 17, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 18, "plan": 1200.0, "run": 977.0, "mold": 20.0, "mech": 120.0, "elec": 23.0, "rate": 81.4}, {"day": 19, "plan": 1170.0, "run": 890.0, "mold": 80.0, "mech": 170.0, "elec": 0.0, "rate": 76.1}, {"day": 20, "plan": 1260.0, "run": 960.0, "mold": 0.0, "mech": 240.0, "elec": 0.0, "rate": 76.2}, {"day": 21, "plan": 1290.0, "run": 670.0, "mold": 0.0, "mech": 590.0, "elec": 0.0, "rate": 51.9}, {"day": 22, "plan": 1260.0, "run": 855.0, "mold": 0.0, "mech": 405.0, "elec": 0.0, "rate": 67.9}, {"day": 23, "plan": 1110.0, "run": 308.0, "mold": 0.0, "mech": 802.0, "elec": 0.0, "rate": 27.7}, {"day": 24, "plan": 1260.0, "run": 830.0, "mold": 0.0, "mech": 430.0, "elec": 0.0, "rate": 65.9}, {"day": 25, "plan": 810.0, "run": 660.0, "mold": 0.0, "mech": 90.0, "elec": 0.0, "rate": 81.5}, {"day": 26, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 27, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 28, "plan": 630.0, "run": 470.0, "mold": 0.0, "mech": 60.0, "elec": 0.0, "rate": 74.6}, {"day": 29, "plan": 360.0, "run": 60.0, "mold": 0.0, "mech": 240.0, "elec": 60.0, "rate": 16.7}, {"day": 30, "plan": 1260.0, "run": 263.0, "mold": 120.0, "mech": 817.0, "elec": 60.0, "rate": 20.9}, {"day": 31, "plan": 990.0, "run": 380.0, "mold": 120.0, "mech": 490.0, "elec": 0.0, "rate": 38.4}], "DC19": [{"day": 1, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 2, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 3, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 4, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 5, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 6, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 7, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 8, "plan": 960.0, "run": 660.0, "mold": 240.0, "mech": 0.0, "elec": 0.0, "rate": 68.8}, {"day": 9, "plan": 960.0, "run": 860.0, "mold": 65.0, "mech": 15.0, "elec": 20.0, "rate": 89.6}, {"day": 10, "plan": 480.0, "run": 230.0, "mold": 210.0, "mech": 40.0, "elec": 0.0, "rate": 47.9}, {"day": 11, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 12, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 13, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 14, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 15, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 16, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 17, "plan": 150.0, "run": 60.0, "mold": 0.0, "mech": 60.0, "elec": 0.0, "rate": 40.0}, {"day": 18, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 19, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 20, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 21, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 22, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 23, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 24, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 25, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 26, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 27, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 28, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 29, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 30, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 31, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}], "DC20": [{"day": 1, "plan": 1260.0, "run": 962.0, "mold": 249.0, "mech": 0.0, "elec": 0.0, "rate": 76.3}, {"day": 2, "plan": 1260.0, "run": 1085.0, "mold": 145.0, "mech": 0.0, "elec": 30.0, "rate": 86.1}, {"day": 3, "plan": 1260.0, "run": 994.0, "mold": 174.0, "mech": 75.0, "elec": 0.0, "rate": 78.9}, {"day": 4, "plan": 1290.0, "run": 1037.0, "mold": 141.0, "mech": 82.0, "elec": 0.0, "rate": 80.4}, {"day": 5, "plan": 1260.0, "run": 1164.0, "mold": 40.0, "mech": 47.0, "elec": 0.0, "rate": 92.4}, {"day": 6, "plan": 630.0, "run": 400.0, "mold": 180.0, "mech": 40.0, "elec": 10.0, "rate": 63.5}, {"day": 7, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 8, "plan": 1260.0, "run": 674.0, "mold": 448.0, "mech": 53.0, "elec": 0.0, "rate": 53.5}, {"day": 9, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 10, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 11, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 12, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 13, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 14, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 15, "plan": 1260.0, "run": 572.0, "mold": 340.0, "mech": 34.0, "elec": 60.0, "rate": 45.4}, {"day": 16, "plan": 1260.0, "run": 898.0, "mold": 88.0, "mech": 62.0, "elec": 85.0, "rate": 71.3}, {"day": 17, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 18, "plan": 990.0, "run": 609.0, "mold": 171.0, "mech": 180.0, "elec": 0.0, "rate": 61.5}, {"day": 19, "plan": 1260.0, "run": 1010.0, "mold": 80.0, "mech": 30.0, "elec": 60.0, "rate": 80.2}, {"day": 20, "plan": 1260.0, "run": 950.0, "mold": 140.0, "mech": 30.0, "elec": 80.0, "rate": 75.4}, {"day": 21, "plan": 1110.0, "run": 1010.0, "mold": 70.0, "mech": 10.0, "elec": 0.0, "rate": 91.0}, {"day": 22, "plan": 1260.0, "run": 1032.0, "mold": 178.0, "mech": 10.0, "elec": 40.0, "rate": 81.9}, {"day": 23, "plan": 480.0, "run": 380.0, "mold": 100.0, "mech": 0.0, "elec": 0.0, "rate": 79.2}, {"day": 24, "plan": 480.0, "run": 230.0, "mold": 70.0, "mech": 0.0, "elec": 0.0, "rate": 47.9}, {"day": 25, "plan": 1290.0, "run": 925.0, "mold": 125.0, "mech": 15.0, "elec": 90.0, "rate": 71.7}, {"day": 26, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 27, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 28, "plan": 1260.0, "run": 985.0, "mold": 90.0, "mech": 100.0, "elec": 55.0, "rate": 78.2}, {"day": 29, "plan": 1260.0, "run": 730.0, "mold": 70.0, "mech": 60.0, "elec": 370.0, "rate": 57.9}, {"day": 30, "plan": 1110.0, "run": 700.0, "mold": 70.0, "mech": 85.0, "elec": 165.0, "rate": 63.1}, {"day": 31, "plan": 1110.0, "run": 520.0, "mold": 500.0, "mech": 90.0, "elec": 0.0, "rate": 46.8}], "DC21": [{"day": 1, "plan": 1260.0, "run": 1144.0, "mold": 74.0, "mech": 0.0, "elec": 22.0, "rate": 90.8}, {"day": 2, "plan": 1260.0, "run": 823.0, "mold": 352.0, "mech": 36.0, "elec": 49.0, "rate": 65.3}, {"day": 3, "plan": 1260.0, "run": 910.0, "mold": 144.0, "mech": 23.0, "elec": 173.0, "rate": 72.2}, {"day": 4, "plan": 1290.0, "run": 1173.0, "mold": 88.0, "mech": 11.0, "elec": 18.0, "rate": 90.9}, {"day": 5, "plan": 1260.0, "run": 1226.0, "mold": 0.0, "mech": 0.0, "elec": 34.0, "rate": 97.3}, {"day": 6, "plan": 1320.0, "run": 1207.0, "mold": 60.0, "mech": 0.0, "elec": 53.0, "rate": 91.4}, {"day": 7, "plan": 1320.0, "run": 1245.0, "mold": 0.0, "mech": 27.0, "elec": 48.0, "rate": 94.3}, {"day": 8, "plan": 1260.0, "run": 1116.0, "mold": 0.0, "mech": 97.0, "elec": 17.0, "rate": 88.6}, {"day": 9, "plan": 1320.0, "run": 1249.0, "mold": 36.0, "mech": 0.0, "elec": 35.0, "rate": 94.6}, {"day": 10, "plan": 1320.0, "run": 1262.0, "mold": 19.0, "mech": 0.0, "elec": 39.0, "rate": 95.6}, {"day": 11, "plan": 1290.0, "run": 1195.0, "mold": 64.0, "mech": 0.0, "elec": 16.0, "rate": 92.6}, {"day": 12, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 13, "plan": 1260.0, "run": 1147.0, "mold": 60.0, "mech": 0.0, "elec": 53.0, "rate": 91.0}, {"day": 14, "plan": 630.0, "run": 345.0, "mold": 60.0, "mech": 60.0, "elec": 8.0, "rate": 54.8}, {"day": 15, "plan": 1350.0, "run": 1256.0, "mold": 66.0, "mech": 0.0, "elec": 28.0, "rate": 93.0}, {"day": 16, "plan": 1350.0, "run": 1165.0, "mold": 100.0, "mech": 0.0, "elec": 22.0, "rate": 86.3}, {"day": 17, "plan": 1290.0, "run": 738.0, "mold": 103.0, "mech": 69.0, "elec": 20.0, "rate": 57.2}, {"day": 18, "plan": 1200.0, "run": 981.0, "mold": 128.0, "mech": 7.0, "elec": 75.0, "rate": 81.8}, {"day": 19, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 20, "plan": 1320.0, "run": 1282.0, "mold": 0.0, "mech": 0.0, "elec": 38.0, "rate": 97.1}, {"day": 21, "plan": 1350.0, "run": 1295.0, "mold": 0.0, "mech": 0.0, "elec": 52.0, "rate": 95.9}, {"day": 22, "plan": 1260.0, "run": 1174.0, "mold": 63.0, "mech": 0.0, "elec": 23.0, "rate": 93.2}, {"day": 23, "plan": 1260.0, "run": 709.0, "mold": 481.0, "mech": 60.0, "elec": 10.0, "rate": 56.3}, {"day": 24, "plan": 1260.0, "run": 1012.0, "mold": 208.0, "mech": 0.0, "elec": 40.0, "rate": 80.3}, {"day": 25, "plan": 1290.0, "run": 1049.0, "mold": 223.0, "mech": 0.0, "elec": 18.0, "rate": 81.3}, {"day": 26, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 27, "plan": 0, "run": 0, "mold": 0, "mech": 0, "elec": 0, "rate": null}, {"day": 28, "plan": 1260.0, "run": 1130.0, "mold": 78.0, "mech": 0.0, "elec": 52.0, "rate": 89.7}, {"day": 29, "plan": 1260.0, "run": 1098.0, "mold": 81.0, "mech": 0.0, "elec": 81.0, "rate": 87.1}, {"day": 30, "plan": 1260.0, "run": 1112.0, "mold": 62.0, "mech": 12.0, "elec": 68.0, "rate": 88.3}, {"day": 31, "plan": 1260.0, "run": 1110.0, "mold": 61.0, "mech": 0.0, "elec": 89.0, "rate": 88.1}], "DC22": [{"day": 1, "plan": 1350.0, "run": 1143.0, "mold": 158.0, "mech": 10.0, "elec": 39.0, "rate": 84.7}, {"day": 2, "plan": 1350.0, "run": 966.0, "mold": 219.0, "mech": 44.0, "elec": 121.0, "rate": 71.6}, {"day": 3, "plan": 1440.0, "run": 1231.0, "mold": 155.0, "mech": 0.0, "elec": 54.0, "rate": 85.5}, {"day": 4, "plan": 1410.0, "run": 909.0, "mold": 484.0, "mech": 0.0, "elec": 17.0, "rate": 64.5}, {"day": 5, "plan": 1260.0, "run": 883.0, "mold": 361.0, "mech": 0.0, "elec": 16.0, "rate": 70.1}, {"day": 6, "plan": 1380.0, "run": 1128.0, "mold": 148.0, "mech": 23.0, "elec": 81.0, "rate": 81.7}, {"day": 7, "plan": 1380.0, "run": 1189.0, "mold": 167.0, "mech": 0.0, "elec": 24.0, "rate": 86.2}, {"day": 8, "plan": 1170.0, "run": 759.0, "mold": 361.0, "mech": 8.0, "elec": 35.0, "rate": 64.9}, {"day": 9, "plan": 1380.0, "run": 946.0, "mold": 415.0, "mech": 0.0, "elec": 19.0, "rate": 68.6}, {"day": 10, "plan": 1320.0, "run": 1263.0, "mold": 28.0, "mech": 0.0, "elec": 29.0, "rate": 95.7}, {"day": 11, "plan": 1410.0, "run": 1143.0, "mold": 248.0, "mech": 0.0, "elec": 19.0, "rate": 81.1}, {"day": 12, "plan": 1260.0, "run": 605.0, "mold": 216.0, "mech": 7.0, "elec": 378.0, "rate": 48.0}, {"day": 13, "plan": 1380.0, "run": 902.0, "mold": 323.0, "mech": 0.0, "elec": 142.0, "rate": 65.4}, {"day": 14, "plan": 690.0, "run": 556.0, "mold": 113.0, "mech": 0.0, "elec": 13.0, "rate": 80.6}, {"day": 15, "plan": 1380.0, "run": 1108.0, "mold": 226.0, "mech": 0.0, "elec": 38.0, "rate": 80.3}, {"day": 16, "plan": 1380.0, "run": 898.0, "mold": 328.0, "mech": 0.0, "elec": 55.0, "rate": 65.1}, {"day": 17, "plan": 1440.0, "run": 1079.0, "mold": 290.0, "mech": 53.0, "elec": 18.0, "rate": 74.9}, {"day": 18, "plan": 1260.0, "run": 1136.0, "mold": 89.0, "mech": 0.0, "elec": 35.0, "rate": 90.2}, {"day": 19, "plan": 1170.0, "run": 964.0, "mold": 164.0, "mech": 0.0, "elec": 12.0, "rate": 82.4}, {"day": 20, "plan": 1380.0, "run": 790.0, "mold": 564.0, "mech": 0.0, "elec": 26.0, "rate": 57.2}, {"day": 21, "plan": 1380.0, "run": 870.0, "mold": 432.0, "mech": 0.0, "elec": 18.0, "rate": 63.0}, {"day": 22, "plan": 1440.0, "run": 1062.0, "mold": 155.0, "mech": 39.0, "elec": 15.0, "rate": 73.8}, {"day": 23, "plan": 1440.0, "run": 1017.0, "mold": 350.0, "mech": 53.0, "elec": 20.0, "rate": 70.6}, {"day": 24, "plan": 1440.0, "run": 1202.0, "mold": 210.0, "mech": 0.0, "elec": 20.0, "rate": 83.5}, {"day": 25, "plan": 1290.0, "run": 1099.0, "mold": 179.0, "mech": 0.0, "elec": 12.0, "rate": 85.2}, {"day": 26, "plan": 1260.0, "run": 1015.0, "mold": 42.0, "mech": 77.0, "elec": 36.0, "rate": 80.6}, {"day": 27, "plan": 1260.0, "run": 1028.0, "mold": 187.0, "mech": 8.0, "elec": 7.0, "rate": 81.6}, {"day": 28, "plan": 1260.0, "run": 804.0, "mold": 350.0, "mech": 20.0, "elec": 86.0, "rate": 63.8}, {"day": 29, "plan": 630.0, "run": 81.0, "mold": 537.0, "mech": 0.0, "elec": 12.0, "rate": 12.9}, {"day": 30, "plan": 1260.0, "run": 514.0, "mold": 233.0, "mech": 3.0, "elec": 480.0, "rate": 40.8}, {"day": 31, "plan": 1260.0, "run": 864.0, "mold": 380.0, "mech": 0.0, "elec": 16.0, "rate": 68.6}], "DC23": [{"day": 1, "plan": 1260.0, "run": 1087.0, "mold": 69.0, "mech": 86.0, "elec": 18.0, "rate": 86.3}, {"day": 2, "plan": 1140.0, "run": 937.0, "mold": 71.0, "mech": 47.0, "elec": 18.0, "rate": 82.2}, {"day": 3, "plan": 1440.0, "run": 1383.0, "mold": 4.0, "mech": 25.0, "elec": 28.0, "rate": 96.0}, {"day": 4, "plan": 1440.0, "run": 1108.0, "mold": 293.0, "mech": 2.0, "elec": 37.0, "rate": 76.9}, {"day": 5, "plan": 1260.0, "run": 1228.0, "mold": 0.0, "mech": 0.0, "elec": 32.0, "rate": 97.5}, {"day": 6, "plan": 1380.0, "run": 1123.0, "mold": 216.0, "mech": 27.0, "elec": 14.0, "rate": 81.4}, {"day": 7, "plan": 1380.0, "run": 1143.0, "mold": 191.0, "mech": 20.0, "elec": 26.0, "rate": 82.8}, {"day": 8, "plan": 1380.0, "run": 1143.0, "mold": 158.0, "mech": 0.0, "elec": 79.0, "rate": 82.8}, {"day": 9, "plan": 1110.0, "run": 402.0, "mold": 696.0, "mech": 12.0, "elec": 0.0, "rate": 36.2}, {"day": 10, "plan": 810.0, "run": 732.0, "mold": 36.0, "mech": 0.0, "elec": 15.0, "rate": 90.4}, {"day": 11, "plan": 1410.0, "run": 1312.0, "mold": 34.0, "mech": 21.0, "elec": 16.0, "rate": 93.0}, {"day": 12, "plan": 1260.0, "run": 1033.0, "mold": 177.0, "mech": 40.0, "elec": 10.0, "rate": 82.0}, {"day": 13, "plan": 1380.0, "run": 1231.0, "mold": 39.0, "mech": 78.0, "elec": 32.0, "rate": 89.2}, {"day": 14, "plan": 690.0, "run": 634.0, "mold": 35.0, "mech": 9.0, "elec": 12.0, "rate": 91.9}, {"day": 15, "plan": 1380.0, "run": 509.0, "mold": 663.0, "mech": 58.0, "elec": 0.0, "rate": 36.9}, {"day": 16, "plan": 1380.0, "run": 773.0, "mold": 320.0, "mech": 167.0, "elec": 120.0, "rate": 56.0}, {"day": 17, "plan": 1440.0, "run": 1267.0, "mold": 35.0, "mech": 104.0, "elec": 34.0, "rate": 88.0}, {"day": 18, "plan": 1260.0, "run": 1240.0, "mold": 4.0, "mech": 7.0, "elec": 9.0, "rate": 98.4}, {"day": 19, "plan": 1200.0, "run": 1051.0, "mold": 13.0, "mech": 127.0, "elec": 9.0, "rate": 87.6}, {"day": 20, "plan": 1440.0, "run": 1097.0, "mold": 218.0, "mech": 106.0, "elec": 19.0, "rate": 76.2}, {"day": 21, "plan": 1440.0, "run": 1338.0, "mold": 63.0, "mech": 0.0, "elec": 39.0, "rate": 92.9}, {"day": 22, "plan": 1350.0, "run": 1255.0, "mold": 52.0, "mech": 0.0, "elec": 43.0, "rate": 93.0}, {"day": 23, "plan": 1410.0, "run": 1210.0, "mold": 110.0, "mech": 3.0, "elec": 87.0, "rate": 85.8}, {"day": 24, "plan": 1260.0, "run": 1157.0, "mold": 20.0, "mech": 23.0, "elec": 60.0, "rate": 91.8}, {"day": 25, "plan": 1290.0, "run": 1127.0, "mold": 148.0, "mech": 7.0, "elec": 8.0, "rate": 87.4}, {"day": 26, "plan": 1260.0, "run": 981.0, "mold": 105.0, "mech": 0.0, "elec": 47.0, "rate": 77.9}, {"day": 27, "plan": 1260.0, "run": 1153.0, "mold": 52.0, "mech": 0.0, "elec": 25.0, "rate": 91.5}, {"day": 28, "plan": 1260.0, "run": 848.0, "mold": 347.0, "mech": 28.0, "elec": 7.0, "rate": 67.3}, {"day": 29, "plan": 1260.0, "run": 1186.0, "mold": 21.0, "mech": 6.0, "elec": 17.0, "rate": 94.1}, {"day": 30, "plan": 1260.0, "run": 1135.0, "mold": 8.0, "mech": 20.0, "elec": 58.0, "rate": 90.1}, {"day": 31, "plan": 1260.0, "run": 1068.0, "mold": 168.0, "mech": 0.0, "elec": 24.0, "rate": 84.8}]};
+const DC_ORDER = ["DC2", "DC3", "DC4", "DC5", "DC6", "DC8", "DC9", "DC10", "DC11", "DC12", "DC13", "DC15", "DC16", "DC18", "DC19", "DC20", "DC21", "DC22", "DC23"];
+const ALL_DC = ["DC1", "DC2", "DC3", "DC4", "DC5", "DC6", "DC7", "DC8", "DC9", "DC10", "DC11", "DC12", "DC13", "DC15", "DC16", "DC17", "DC18", "DC19", "DC20", "DC21", "DC22", "DC23"];
+
+let currentDC = DC_ORDER[0];
+let chart = null;
+
+function rateClass(r) {
+  if (r === null || r === undefined) return '';
+  if (r >= 85) return 'good';
+  if (r >= 70) return 'warn';
+  return 'bad';
+}
+
+function avgRate(days) {
+  const vals = days.filter(d => d.rate !== null).map(d => d.rate);
+  if (!vals.length) return null;
+  return Math.round((vals.reduce((a,b)=>a+b,0) / vals.length) * 10) / 10;
+}
+
+function buildSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.innerHTML = '<div class="grp-label">DC 설비 선택</div>';
+  ALL_DC.forEach(dc => {
+    const has = DATA[dc] !== undefined;
+    const btn = document.createElement('button');
+    btn.className = 'dc-btn' + (dc === currentDC ? ' active' : '') + (has ? '' : ' disabled');
+    const label = document.createElement('span');
+    label.textContent = dc;
+    btn.appendChild(label);
+    if (has) {
+      const ar = avgRate(DATA[dc]);
+      const chip = document.createElement('span');
+      chip.className = 'rate-chip';
+      chip.textContent = ar !== null ? ar + '%' : '-';
+      btn.appendChild(chip);
+      btn.onclick = () => selectDC(dc);
+    } else {
+      const chip = document.createElement('span');
+      chip.className = 'rate-chip';
+      chip.textContent = '자료없음';
+      btn.appendChild(chip);
+    }
+    sb.appendChild(btn);
+  });
+}
+
+function buildKPI(days) {
+  const validPlan = days.reduce((a,d)=>a+d.plan,0);
+  const validRun = days.reduce((a,d)=>a+d.run,0);
+  const mold = days.reduce((a,d)=>a+d.mold,0);
+  const mech = days.reduce((a,d)=>a+d.mech,0);
+  const elec = days.reduce((a,d)=>a+d.elec,0);
+  const overall = validPlan > 0 ? Math.round((validRun/validPlan)*1000)/10 : null;
+  const kr = document.getElementById('kpiRow');
+  kr.innerHTML = '';
+  const items = [
+    {label:'월 종합 가동률(A)', value: overall !== null ? overall+'%' : '-', cls: rateClass(overall)},
+    {label:'금형 Loss 합계', value: Math.round(mold)+'분', cls:''},
+    {label:'설비1(기계) Loss 합계', value: Math.round(mech)+'분', cls:''},
+    {label:'설비2(전기) Loss 합계', value: Math.round(elec)+'분', cls:''}
+  ];
+  items.forEach(it => {
+    const div = document.createElement('div');
+    div.className = 'kpi';
+    div.innerHTML = `<div class="label">${it.label}</div><div class="value ${it.cls}">${it.value}</div>`;
+    kr.appendChild(div);
+  });
+}
+
+function selectDC(dc) {
+  currentDC = dc;
+  document.getElementById('dcTitle').textContent = dc;
+  buildSidebar();
+  const days = DATA[dc];
+  buildKPI(days);
+  renderChart(days);
+}
+
+function renderChart(days) {
+  const labels = days.map(d => d.day + '일');
+  const mold = days.map(d => d.mold);
+  const mech = days.map(d => d.mech);
+  const elec = days.map(d => d.elec);
+  const rate = days.map(d => d.rate);
+
+  if (chart) chart.destroy();
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  chart = new Chart(ctx, {
+    data: {
+      labels: labels,
+      datasets: [
+        { type:'bar', label:'금형 Loss(분)', data:mold, backgroundColor:'#f4a340', stack:'loss', yAxisID:'y', borderRadius:3 },
+        { type:'bar', label:'설비1-기계 Loss(분)', data:mech, backgroundColor:'#4da3ff', stack:'loss', yAxisID:'y', borderRadius:3 },
+        { type:'bar', label:'설비2-전기 Loss(분)', data:elec, backgroundColor:'#f45b69', stack:'loss', yAxisID:'y', borderRadius:3 },
+        { type:'line', label:'일일 종합 가동률(A) %', data:rate, borderColor:'#4ee6a0', backgroundColor:'#4ee6a0', yAxisID:'y1', tension:.25, spanGaps:true, pointRadius:3, pointBackgroundColor:'#4ee6a0', borderWidth:2 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { display:false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              if (ctx.dataset.yAxisID === 'y1') {
+                return ctx.dataset.label + ': ' + (ctx.raw !== null ? ctx.raw+'%' : 'N/A');
+              }
+              return ctx.dataset.label + ': ' + ctx.raw + '분';
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks:{ color:'#8b96ad', font:{size:10} }, grid:{ color:'rgba(255,255,255,.04)' } },
+        y: {
+          stacked: true,
+          position:'left',
+          title:{ display:true, text:'Loss 시간(분)', color:'#8b96ad' },
+          ticks:{ color:'#8b96ad' },
+          grid:{ color:'rgba(255,255,255,.06)' }
+        },
+        y1: {
+          position:'right',
+          min:0, max:100,
+          title:{ display:true, text:'가동률(A) %', color:'#8b96ad' },
+          ticks:{ color:'#8b96ad' },
+          grid:{ drawOnChartArea:false }
+        }
+      }
+    }
+  });
+}
+
+buildSidebar();
+buildKPI(DATA[currentDC]);
+renderChart(DATA[currentDC]);
+</script>
+</body>
+</html>
