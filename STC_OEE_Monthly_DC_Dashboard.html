@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>STC OEE 월별 설비 가동률 상세 대시보드</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --panel: #ffffff;
+    --panel2: #eef1f8;
+    --border: #d9dfec;
+    --text: #1c2438;
+    --sub: #667088;
+    --accent: #2f6fed;
+    --mold: #f5a524;
+    --mech: #2f6fed;
+    --elec: #ef4360;
+    --line: #16a673;
+    --good: #16a673;
+    --warn: #f5a524;
+    --bad: #ef4360;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', 'Malgun Gothic', -apple-system, sans-serif;
+    background: linear-gradient(160deg,#eef2fa,#f7f9fd 60%,#f4f6fb);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    padding: 22px 28px 14px 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    margin: 0 0 4px 0;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  header p {
+    margin: 0;
+    color: var(--sub);
+    font-size: 13px;
+  }
+  .layout {
+    display: flex;
+    gap: 18px;
+    padding: 20px 28px 40px 28px;
+    align-items: flex-start;
+  }
+  .sidebar {
+    flex: 0 0 150px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 78vh;
+    overflow-y: auto;
+  }
+  .sidebar .grp-label {
+    font-size: 11px;
+    color: var(--sub);
+    padding: 6px 8px 2px 8px;
+    letter-spacing: .5px;
+  }
+  .dc-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text);
+    text-align: left;
+    padding: 9px 12px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all .15s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dc-btn:hover { background: var(--panel2); }
+  .dc-btn.active {
+    background: linear-gradient(135deg, #2a5fb0, #1c3f7a);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .dc-btn.disabled {
+    color: #4a5570;
+    cursor: not-allowed;
+    font-weight: 400;
+  }
+  .dc-btn .rate-chip {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgba(255,255,255,.08);
+  }
+  .main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .kpi {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .kpi .label { font-size: 12px; color: var(--sub); margin-bottom: 4px; }
+  .kpi .value { font-size: 22px; font-weight: 700; }
+  .kpi .value.good { color: var(--good); }
+  .kpi .value.warn { color: var(--warn); }
+  .kpi .value.bad { color: var(--bad); }
+  .chart-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .chart-title h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+  .chart-title span {
+    color: var(--sub);
+    font-size: 12px;
+  }
+  .chart-wrap { position: relative; height: 420px; }
+  .legend-note {
+    display: flex;
+    gap: 18px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--sub);
+    flex-wrap: wrap;
+  }
+  .legend-note .dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 3px;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+  .missing-note {
+    font-size: 12px;
+    color: var(--sub);
+    padding: 10px 14px;
+    background: var(--panel2);
+    border-radius: 10px;
+    border: 1px dashed var(--border);
+  }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+
+  .worst5 {
+    margin-top: 14px;
+  }
+  .worst5 h3 {
+    font-size: 13px;
+    color: var(--sub);
+    margin: 0 0 8px 0;
+    letter-spacing: .3px;
+  }
+  .worst5-list {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+  .worst5-item {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .worst5-item .rank {
+    font-size: 11px;
+    color: var(--bad);
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .worst5-item .day {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .worst5-item .week {
+    font-size: 11px;
+    color: var(--sub);
+    margin-top: 2px;
+  }
+  .worst5-item .rate {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--bad);
+    margin-top: 4px;
+  }
+  .worst5-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .worst5-header h3 { margin: 0; }
+  .reset-day-btn {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--sub);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  .reset-day-btn:hover { color: var(--text); border-color: var(--accent); }
+  .chart-wrap { cursor: pointer; }
+  .summary-section {
+    padding: 18px 28px 0 28px;
+  }
+  .summary-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    gap: 24px;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+  .summary-kpi {
+    flex: 0 0 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid var(--border);
+    padding-right: 20px;
+  }
+  .summary-kpi .label {
+    font-size: 12px;
+    color: var(--sub);
+    margin-bottom: 6px;
+  }
+  .summary-kpi .value {
+    font-size: 30px;
+    font-weight: 800;
+  }
+  .summary-kpi .target {
+    font-size: 12px;
+    color: var(--sub);
+    margin-top: 4px;
+  }
+  .summary-chart-wrap {
+    flex: 1;
+    min-width: 260px;
+    height: 130px;
+    position: relative;
+  }
+  .summary-title {
+    font-size: 13px;
+    color: var(--sub);
+    margin-bottom: 8px;
+    letter-spacing: .3px;
+  }
+  .period-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .period-selector label {
+    font-size: 12px;
+    color: var(--sub);
+  }
+  .period-selector select {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-size: 13px;
+  }
+  .period-selector button {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .period-selector button.reset-period {
+    background: var(--panel2);
+    color: var(--sub);
+    border: 1px solid var(--border);
+  }
+  .analysis-section {
+    padding: 0 28px;
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .analysis-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  .month-tabs {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .month-tab-btn {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--sub);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .month-tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .analysis-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .analysis-chart-wrap {
+    position: relative;
+    height: 220px;
+    margin-bottom: 14px;
+  }
+  .weekly-worst-block {
+    margin-bottom: 10px;
+  }
+  .weekly-worst-block .wk-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sub);
+    margin-bottom: 6px;
+  }
+  .weekly-worst-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .wk-chip {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 9px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .wk-chip:hover { border-color: var(--accent); }
+  .wk-chip .wk-rate { font-weight: 700; color: var(--bad); }
+  .monthly-worst-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .mw-row {
+    display: grid;
+    grid-template-columns: 24px 60px 1fr 50px;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .mw-row:hover { background: var(--panel2); }
+  .mw-row .mw-rank { color: var(--sub); font-weight: 700; }
+  .mw-row .mw-dc { font-weight: 700; }
+  .mw-row .mw-bar-track { background: rgba(0,0,0,.06); border-radius: 6px; height: 8px; overflow: hidden; }
+  .mw-row .mw-bar-fill { height: 100%; background: var(--bad); border-radius: 6px; }
+  .mw-row .mw-rate { text-align: right; font-weight: 700; color: var(--bad); }
+  .worst5-item.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(47,111,237,.25);
+  }
+  .worst5-detail {
+    margin-top: 12px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .worst5-detail .detail-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .worst5-detail .detail-head strong {
+    font-size: 15px;
+  }
+  .worst5-detail .detail-head span {
+    font-size: 12px;
+    color: var(--sub);
+  }
+  .detail-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .detail-bar-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 60px;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+  }
+  .detail-bar-row .bar-track {
+    background: rgba(0,0,0,.06);
+    border-radius: 6px;
+    height: 10px;
+    overflow: hidden;
+  }
+  .detail-bar-row .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+  }
+  .detail-summary {
+    display: flex;
+    gap: 18px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+    font-size: 12px;
+    color: var(--sub);
+    flex-wrap: wrap;
+  }
+  .detail-summary b { color: var(--text); }
+  .main-nav {
+    display: flex;
+    gap: 4px;
+    padding: 0 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+  }
+  .main-nav-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--sub);
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .main-nav-btn .nav-icon { font-size: 15px; }
+  .main-nav-btn:hover { color: var(--text); }
+  .main-nav-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .page {
+    animation: fadeIn .15s ease-in;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏭 STC OEE 월별 설비 가동률 상세 대시보드</h1>
+  <p>2026년 7월 · DC1~DC23 일별 가동률(A) 및 Loss 분류(금형 / 설비1-기계 / 설비2-전기)</p>
+  <div class="month-tabs" id="monthTabs"></div>
+</header>
+
+<nav class="main-nav" id="mainNav">
+  <button class="main-nav-btn active" id="navBtnOverview" onclick="switchMainTab('overview')">
+    <span class="nav-icon">📋</span><span class="nav-label">전체 현황</span>
+  </button>
+  <button class="main-nav-btn" id="navBtnWeekly" onclick="switchMainTab('weekly')">
+    <span class="nav-icon">📊</span><span class="nav-label">주간분석</span>
+  </button>
+  <button class="main-nav-btn" id="navBtnMonthly" onclick="switchMainTab('monthly')">
+    <span class="nav-icon">📅</span><span class="nav-label">월간분석</span>
+  </button>
+</nav>
+
+<div id="page-overview" class="page">
+
+<div class="summary-section">
+  <div class="summary-card">
+    <div class="summary-kpi">
+      <div class="label" id="monthlyLabelText">📊 7월 전체 설비 종합 가동률(A)</div>
+      <div class="value" id="monthlyRateValue"></div>
+      <div class="target">목표 89% 대비 <span id="monthlyGapValue"></span></div>
+    </div>
+    <div style="flex:1; min-width:260px;">
+      <div class="period-selector">
+        <label>기간</label>
+        <select id="periodStart"></select>
+        <span style="color:var(--sub);font-size:12px;">일 ~</span>
+        <select id="periodEnd"></select>
+        <span style="color:var(--sub);font-size:12px;">일</span>
+        <button onclick="applyPeriod()">적용</button>
+        <button class="reset-period" onclick="resetPeriod()">전체월</button>
+      </div>
+      <div class="summary-title" id="weeklyTrendTitle">📈 주차별(W28~W32) 종합 가동률 추이 — 전체 DC 합산 기준</div>
+      <div class="summary-chart-wrap">
+        <canvas id="weeklyTrendChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<div class="layout">
+  <div class="sidebar" id="sidebar"></div>
+
+  <div class="main">
+    <div class="card">
+      <div class="chart-title">
+        <h2 id="dcTitle">DC2</h2>
+        <span id="dcSub">2026년 7월 · 일별 가동률(A) 및 Loss 분류</span>
+      </div>
+      <div class="kpi-row" id="kpiRow"></div>
+    </div>
+
+    <div class="card">
+      <div class="chart-wrap">
+        <canvas id="mainChart"></canvas>
+      </div>
+      <div class="legend-note">
+        <span><span class="dot" style="background:var(--mold)"></span>금형 Loss(분)</span>
+        <span><span class="dot" style="background:var(--mech)"></span>설비1-기계 Loss(분)</span>
+        <span><span class="dot" style="background:var(--elec)"></span>설비2-전기 Loss(분)</span>
+        <span><span class="dot" style="background:var(--line)"></span>일일 종합 가동률(A) %</span>
+      </div>
+      <div class="worst5">
+        <div class="worst5-header">
+          <h3 id="worst5Title">⚠️ 워스트 5 (가동률 하위 5일 · 7월 전체 기준)</h3>
+          <button id="resetDayBtn" class="reset-day-btn" style="display:none;" onclick="clearDaySelection()">전체 보기 ✕</button>
+        </div>
+        <div class="worst5-list" id="worst5List"></div>
+        <div class="worst5-detail" id="worst5Detail" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="missing-note">
+      ※ 데이터 없음(7월 기준): DC1, DC7, DC17 &nbsp;·&nbsp; 금형: 금형수리/파손,핀파손,슬라이드코어,팁교체,금형교체,금형냉각라인,제품소착,로트마크·사상 · 설비1(기계): 설비수리,노즐막힘,플런저오일막힘,설비냉각수,스프레이조정,진공설비,조건변경,탈산처리,스크랩용해,바가지교체 · 설비2(전기): 전기로수리,전기로회전,래들수리,히터수리,취출기수리,컨베이어수리,펌프이상,스프레이수리. 휴식·청소·미팅정전·기타는 막대에 포함되지 않고 꺾은선(종합 가동률)에만 반영됩니다.
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div id="page-weekly" class="page" style="display:none;">
+<div class="analysis-card">
+    <div class="analysis-card-title">📊 주간분석 — 주차별 Loss 원인 비교 (전체 DC 합산 · 선택 기간 기준)</div>
+    <div class="analysis-chart-wrap"><canvas id="weeklyCauseChart"></canvas></div>
+    <div id="weeklyWorstList"></div>
+  </div>
+</div>
+
+<div id="page-monthly" class="page" style="display:none;">
+<div class="analysis-card">
+    <div class="analysis-card-title">📅 월간분석 — 선택 기간 전체 Loss 원인 비율 및 워스트 설비</div>
+    <div class="analysis-chart-wrap"><canvas id="monthlyCauseChart"></canvas></div>
+    <div id="monthlyWorstList"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- Live Google Sheets data loading ---------- */
+const SHEET_PUB_KEY = '2PACX-1vQ6U8gG0Mr3oJ-5XOOzr7Eh_oZGc-BGHFG0n1__eor4Zc8aJaMuf01NXCAHJECH6U8aUvtnQGLKD5-_';
+const A_GID = '345197688'; // A_가동률 탭
+function sheetCsvUrl(gid){
+  return `https://docs.google.com/spreadsheets/d/e/${SHEET_PUB_KEY}/pub?gid=${gid}&single=true&output=csv`;
+}
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') { if (text[i+1] === '"') { field += '"'; i++; } else inQuotes = false; }
+      else field += c;
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\r') { /* skip */ }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else field += c;
+    }
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  const header = rows[0] || [];
+  return rows.slice(1)
+    .filter(r => !(r.length === 1 && r[0] === ''))
+    .map(r => { const obj = {}; header.forEach((h,i)=> obj[h]=r[i]); return obj; });
+}
+const num = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+
+// 쉬프트시간_분 / 쉬프트시간(분) 등 표기가 달라도 인식 (없으면 계획시간_분으로 폴백)
+function shiftMinutesOf(r){
+  const keys = ['쉬프트시간_분','쉬프트시간(분)','쉬프트시간 (분)','쉬프트시간'];
+  for (const k of keys) {
+    const v = r[k];
+    if (v!==undefined && v!==null && String(v).trim()!=='') return num(v);
+  }
+  return num(r['계획시간_분']);
+}
+
+const LOSS_NAMES = ['금형수리','금형파손','핀파손','설비수리','전기로수리','취출기수리','스프레이수리','슬라이드코어수리','팁교체','노즐막힘','플런저오일막힘','래들수리','조건변경','탈산처리','스크랩용해','전기로회전','금형교체','휴식, 설비교대','청소','미팅/정전','금형냉각라인','제품소착','컨베이어수리','설비냉각수','스프레이조정','바가지교체','히터수리','펌프이상','로트마크, 사상','진공설비','기타'];
+const MOLD_SET = new Set(['금형수리','금형파손','핀파손','슬라이드코어수리','팁교체','금형교체','금형냉각라인','제품소착','로트마크, 사상']);
+const MECH_SET = new Set(['설비수리','노즐막힘','플런저오일막힘','설비냉각수','스프레이조정','진공설비','조건변경','탈산처리','스크랩용해','바가지교체']);
+const ELEC_SET = new Set(['전기로수리','전기로회전','래들수리','히터수리','취출기수리','컨베이어수리','펌프이상','스프레이수리']);
+
+const MONTH_LABELS = {'01':'1월','02':'2월','03':'3월','04':'4월','05':'5월','06':'6월','07':'7월','08':'8월','09':'9월','10':'10월','11':'11월','12':'12월'};
+function monthLabelOf(monthKey){ // monthKey like '2026-07'
+  if (!monthKey) return '';
+  const mm = monthKey.slice(5,7);
+  return MONTH_LABELS[mm] || (mm+'월');
+}
+function daysInMonth(monthKey){
+  const [y,m] = monthKey.split('-').map(Number);
+  return new Date(y, m, 0).getDate();
+}
+
+let DATA = {}, SUBDATA = {}, DC_ORDER = [];
+const ALL_DC = ["DC1", "DC2", "DC3", "DC4", "DC5", "DC6", "DC7", "DC8", "DC9", "DC10", "DC11", "DC12", "DC13", "DC15", "DC16", "DC17", "DC18", "DC19", "DC20", "DC21", "DC22", "DC23"];
+let GLOBAL_DAILY = [];
+let MONTHS = [];
+let MONTH_DATA = {}; // monthKey -> { DATA, SUBDATA, DC_ORDER, GLOBAL_DAILY }
+let currentMonth = null;
+
+function buildMonthDataFromRows(rows) {
+  // rows: parsed A탭 rows, each with 일자(YYYY-MM-DD), 설비명, 가동시간_분, 쉬프트시간_분(or 계획시간_분), 31개 loss reason columns
+  const byMonth = {}; // month -> dc -> day -> {shift,run,mold,mech,elec}
+  const globalByMonth = {}; // month -> day -> {shift, run}
+  for (const r of rows) {
+    const iso = r['일자'];
+    if (!iso || iso.length < 10) continue;
+    const month = iso.slice(0,7);
+    const day = parseInt(iso.slice(8,10), 10);
+    const dc = r['설비명'];
+    if (!dc) continue;
+    const shift = shiftMinutesOf(r);
+    const run = num(r['가동시간_분']);
+    if (!byMonth[month]) byMonth[month] = {};
+    if (!byMonth[month][dc]) byMonth[month][dc] = {};
+    if (!byMonth[month][dc][day]) byMonth[month][dc][day] = { shift:0, run:0, mold:0, mech:0, elec:0, lossDetail:{mold:{},mech:{},elec:{}} };
+    const rec = byMonth[month][dc][day];
+    rec.shift += shift;
+    rec.run += run;
+    for (const name of LOSS_NAMES) {
+      const v = num(r[name]);
+      if (!v) continue;
+      if (MOLD_SET.has(name)) { rec.mold += v; rec.lossDetail.mold[name] = (rec.lossDetail.mold[name]||0) + v; }
+      else if (MECH_SET.has(name)) { rec.mech += v; rec.lossDetail.mech[name] = (rec.lossDetail.mech[name]||0) + v; }
+      else if (ELEC_SET.has(name)) { rec.elec += v; rec.lossDetail.elec[name] = (rec.lossDetail.elec[name]||0) + v; }
+    }
+    if (!globalByMonth[month]) globalByMonth[month] = {};
+    if (!globalByMonth[month][day]) globalByMonth[month][day] = { shift:0, run:0 };
+    globalByMonth[month][day].shift += shift;
+    globalByMonth[month][day].run += run;
+  }
+
+  const weekOf = {}; // day-level week label comes straight from source rows; recompute via 주차 column instead
+  // Re-derive week per (month,day) using 주차 column present in rows
+  const weekByMonthDay = {};
+  for (const r of rows) {
+    const iso = r['일자'];
+    if (!iso || iso.length < 10) continue;
+    const month = iso.slice(0,7);
+    const day = parseInt(iso.slice(8,10), 10);
+    const wk = r['주차'];
+    if (!wk) continue;
+    weekByMonthDay[month+'|'+day] = wk;
+  }
+
+  const monthData = {};
+  const months = Object.keys(byMonth).sort();
+  months.forEach(month => {
+    const nDays = daysInMonth(month);
+    const dcMap = byMonth[month];
+    const dcOrder = Object.keys(dcMap).sort((a,b) => {
+      const na = parseInt((a.match(/\d+/)||['0'])[0],10);
+      const nb = parseInt((b.match(/\d+/)||['0'])[0],10);
+      return na-nb;
+    });
+    const dataOut = {};
+    const subOut = {};
+    dcOrder.forEach(dc => {
+      const dayList = [];
+      const sub = {};
+      for (let day=1; day<=nDays; day++) {
+        const rec = dcMap[dc][day];
+        const wk = weekByMonthDay[month+'|'+day] || null;
+        if (!rec || (rec.shift<=0 && rec.run<=0)) {
+          dayList.push({ day, plan:0, run:0, mold:0, mech:0, elec:0, rate:null, week:null });
+          continue;
+        }
+        const divisor = rec.shift > 0 ? rec.shift : 0;
+        const rate = divisor > 0 ? Math.round(rec.run/divisor*1000)/10 : null;
+        dayList.push({
+          day, plan: Math.round(divisor*10)/10, run: Math.round(rec.run*10)/10,
+          mold: Math.round(rec.mold*10)/10, mech: Math.round(rec.mech*10)/10, elec: Math.round(rec.elec*10)/10,
+          rate, week: wk
+        });
+        const md = rec.lossDetail.mold, mc = rec.lossDetail.mech, el = rec.lossDetail.elec;
+        if (Object.keys(md).length || Object.keys(mc).length || Object.keys(el).length) {
+          sub[String(day)] = { mold: md, mech: mc, elec: el };
+        }
+      }
+      dataOut[dc] = dayList;
+      subOut[dc] = sub;
+    });
+
+    const globalList = [];
+    const nDays2 = daysInMonth(month);
+    for (let day=1; day<=nDays2; day++) {
+      const g = globalByMonth[month][day];
+      const wk = weekByMonthDay[month+'|'+day] || null;
+      if (!g || g.shift<=0) { globalList.push({ day, plan:0, run:0, week:null, rate:null }); continue; }
+      const rate = Math.round(g.run/g.shift*1000)/10;
+      globalList.push({ day, plan: Math.round(g.shift*10)/10, run: Math.round(g.run*10)/10, week: wk, rate });
+    }
+
+    monthData[month] = { DATA: dataOut, SUBDATA: subOut, DC_ORDER: dcOrder, GLOBAL_DAILY: globalList };
+  });
+
+  return { months, monthData };
+}
+
+const TARGET_A = 89;
+let weeklyChart = null;
+let periodStart = 1;
+let periodEnd = 31;
+
+function populatePeriodSelectors() {
+  const s = document.getElementById('periodStart');
+  const e = document.getElementById('periodEnd');
+  s.innerHTML = '';
+  e.innerHTML = '';
+  const nDays = currentMonth ? daysInMonth(currentMonth) : 31;
+  for (let i=1;i<=nDays;i++) {
+    const o1 = document.createElement('option'); o1.value=i; o1.textContent=i+'일';
+    const o2 = document.createElement('option'); o2.value=i; o2.textContent=i+'일';
+    s.appendChild(o1);
+    e.appendChild(o2);
+  }
+  s.value = periodStart;
+  e.value = periodEnd;
+}
+
+function applyPeriod() {
+  const s = parseInt(document.getElementById('periodStart').value, 10);
+  const e = parseInt(document.getElementById('periodEnd').value, 10);
+  if (s > e) { alert('시작일이 종료일보다 늦을 수 없습니다.'); return; }
+  periodStart = s;
+  periodEnd = e;
+  renderSummaryTop();
+  renderAnalysisSection();
+}
+
+function resetPeriod() {
+  periodStart = 1;
+  periodEnd = currentMonth ? daysInMonth(currentMonth) : 31;
+  populatePeriodSelectors();
+  renderSummaryTop();
+  renderAnalysisSection();
+}
+
+function renderSummaryTop() {
+  const rangeDays = GLOBAL_DAILY.filter(d => d.day >= periodStart && d.day <= periodEnd && d.plan > 0);
+  const totalPlan = rangeDays.reduce((a,d)=>a+d.plan,0);
+  const totalRun = rangeDays.reduce((a,d)=>a+d.run,0);
+  const rangeRate = totalPlan > 0 ? Math.round((totalRun/totalPlan)*1000)/10 : null;
+
+  const mLabel = monthLabelOf(currentMonth);
+  const nDays = currentMonth ? daysInMonth(currentMonth) : 31;
+  const periodLabel = (periodStart === 1 && periodEnd === nDays) ? `${mLabel} 전체` : `${mLabel} ${periodStart}일~${periodEnd}일`;
+  document.getElementById('monthlyLabelText').textContent = `📊 ${periodLabel} 설비 종합 가동률(A)`;
+  document.getElementById('monthlyRateValue').textContent = rangeRate !== null ? rangeRate + '%' : '-';
+  document.getElementById('monthlyRateValue').className = 'value ' + (rangeRate === null ? '' : (rangeRate >= TARGET_A ? 'good' : (rangeRate >= TARGET_A - 15 ? 'warn' : 'bad')));
+  const gap = rangeRate !== null ? Math.round((rangeRate - TARGET_A) * 10) / 10 : null;
+  document.getElementById('monthlyGapValue').textContent = gap !== null ? ((gap >= 0 ? '+' : '') + gap + 'p') : '-';
+
+  // 선택 기간에 포함된 주차만 재집계
+  const weekAgg = {};
+  rangeDays.forEach(d => {
+    if (!d.week) return;
+    if (!weekAgg[d.week]) weekAgg[d.week] = { plan:0, run:0 };
+    weekAgg[d.week].plan += d.plan;
+    weekAgg[d.week].run += d.run;
+  });
+  const weeks = Object.keys(weekAgg).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+  const labels = weeks;
+  const rates = weeks.map(w => Math.round((weekAgg[w].run/weekAgg[w].plan)*1000)/10);
+  const targetLine = weeks.map(() => TARGET_A);
+
+  document.getElementById('weeklyTrendTitle').textContent =
+    `📈 주차별(${weeks[0] || '-'}~${weeks[weeks.length-1] || '-'}) 종합 가동률 추이 — ${periodLabel} · 전체 DC 합산 기준`;
+
+  if (weeklyChart) weeklyChart.destroy();
+  const ctx = document.getElementById('weeklyTrendChart').getContext('2d');
+  weeklyChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { type:'bar', label:'주차별 가동률(A) %', data: rates, backgroundColor: rates.map(r => r >= TARGET_A ? '#16a673' : (r >= TARGET_A-15 ? '#f5a524' : '#ef4360')), borderRadius:4, barThickness: 28 },
+        { type:'line', label:'목표 89%', data: targetLine, borderColor:'#667088', borderDash:[5,5], pointRadius:0, borderWidth:1.5 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display:false } },
+      scales: {
+        x: { ticks:{ color:'#667088', font:{size:11} }, grid:{ display:false } },
+        y: { min:0, max:100, ticks:{ color:'#667088', font:{size:10} }, grid:{ color:'rgba(0,0,0,.05)' } }
+      }
+    }
+  });
+}
+
+let weeklyCauseChart = null;
+let monthlyCauseChart = null;
+
+function switchMainTab(tab) {
+  document.getElementById('page-overview').style.display = tab === 'overview' ? 'block' : 'none';
+  document.getElementById('page-weekly').style.display = tab === 'weekly' ? 'block' : 'none';
+  document.getElementById('page-monthly').style.display = tab === 'monthly' ? 'block' : 'none';
+  document.getElementById('navBtnOverview').classList.toggle('active', tab === 'overview');
+  document.getElementById('navBtnWeekly').classList.toggle('active', tab === 'weekly');
+  document.getElementById('navBtnMonthly').classList.toggle('active', tab === 'monthly');
+}
+
+function buildMonthTabs() {
+  const wrap = document.getElementById('monthTabs');
+  wrap.innerHTML = '';
+  MONTHS.forEach((key) => {
+    const btn = document.createElement('button');
+    btn.className = 'month-tab-btn' + (key === currentMonth ? ' active' : '');
+    btn.textContent = monthLabelOf(key);
+    btn.onclick = () => loadMonth(key);
+    wrap.appendChild(btn);
+  });
+}
+
+function loadMonth(monthKey) {
+  const md = MONTH_DATA[monthKey];
+  if (!md) return;
+  currentMonth = monthKey;
+  DATA = md.DATA;
+  SUBDATA = md.SUBDATA;
+  DC_ORDER = md.DC_ORDER;
+  GLOBAL_DAILY = md.GLOBAL_DAILY;
+  periodStart = 1;
+  periodEnd = daysInMonth(monthKey);
+  currentDC = DC_ORDER[0] || null;
+  selectedDay = null;
+
+  document.querySelector('header p').textContent =
+    `${monthKey.slice(0,4)}년 ${monthLabelOf(monthKey)} · DC1~DC23 일별 가동률(A) 및 Loss 분류(금형 / 설비1-기계 / 설비2-전기)`;
+  const missingDCs = ALL_DC.filter(dc => !DC_ORDER.includes(dc));
+  const missingNote = document.querySelector('.missing-note');
+  if (missingNote) {
+    missingNote.innerHTML = `※ 데이터 없음(${monthLabelOf(monthKey)} 기준): ${missingDCs.join(', ') || '없음'} &nbsp;·&nbsp; 금형: 금형수리/파손,핀파손,슬라이드코어,팁교체,금형교체,금형냉각라인,제품소착,로트마크·사상 · 설비1(기계): 설비수리,노즐막힘,플런저오일막힘,설비냉각수,스프레이조정,진공설비,조건변경,탈산처리,스크랩용해,바가지교체 · 설비2(전기): 전기로수리,전기로회전,래들수리,히터수리,취출기수리,컨베이어수리,펌프이상,스프레이수리. 휴식·청소·미팅정전·기타는 막대에 포함되지 않고 꺾은선(종합 가동률)에만 반영됩니다.`;
+  }
+
+  buildMonthTabs();
+  populatePeriodSelectors();
+  renderSummaryTop();
+  renderAnalysisSection();
+  buildSidebar();
+  if (currentDC) {
+    document.getElementById('dcTitle').textContent = currentDC;
+    document.getElementById('dcSub').textContent = `${monthKey.slice(0,4)}년 ${monthLabelOf(monthKey)} · 일별 가동률(A) 및 Loss 분류`;
+    buildKPI(DATA[currentDC]);
+    buildWorst5(DATA[currentDC]);
+    renderChart(DATA[currentDC]);
+  }
+}
+
+function computeAnalysisForRange(start, end) {
+  // 선택 기간(start~end)에 해당하는 주차별 Loss 원인, 주차별 워스트TOP3, 전체 Loss 비율, 워스트5 설비를 DATA에서 직접 계산
+  const weekCause = {};   // week -> {mold,mech,elec}
+  const weekDcAgg = {};   // week -> dc -> {plan,run}
+  const monthlyCause = { mold:0, mech:0, elec:0 };
+  const monthlyDcAgg = {}; // dc -> {plan,run}
+
+  DC_ORDER.forEach(dc => {
+    monthlyDcAgg[dc] = { plan:0, run:0 };
+    DATA[dc].forEach(d => {
+      if (!d.plan || d.day < start || d.day > end) return;
+      const w = d.week;
+      if (w) {
+        if (!weekCause[w]) weekCause[w] = { mold:0, mech:0, elec:0 };
+        weekCause[w].mold += d.mold;
+        weekCause[w].mech += d.mech;
+        weekCause[w].elec += d.elec;
+        if (!weekDcAgg[w]) weekDcAgg[w] = {};
+        if (!weekDcAgg[w][dc]) weekDcAgg[w][dc] = { plan:0, run:0 };
+        weekDcAgg[w][dc].plan += d.plan;
+        weekDcAgg[w][dc].run += d.run;
+      }
+      monthlyCause.mold += d.mold;
+      monthlyCause.mech += d.mech;
+      monthlyCause.elec += d.elec;
+      monthlyDcAgg[dc].plan += d.plan;
+      monthlyDcAgg[dc].run += d.run;
+    });
+  });
+
+  const weeks = Object.keys(weekCause).sort((a,b) => parseInt(a.slice(1)) - parseInt(b.slice(1)));
+  const weeklyCause = weeks.map(w => ({ week:w, mold:weekCause[w].mold, mech:weekCause[w].mech, elec:weekCause[w].elec }));
+
+  const weeklyWorst = {};
+  weeks.forEach(w => {
+    const rows = [];
+    Object.keys(weekDcAgg[w]).forEach(dc => {
+      const v = weekDcAgg[w][dc];
+      if (v.plan > 0) rows.push({ dc, rate: Math.round((v.run/v.plan)*1000)/10 });
+    });
+    rows.sort((a,b) => a.rate - b.rate);
+    weeklyWorst[w] = rows.slice(0,3);
+  });
+
+  const monthlyWorst5 = [];
+  DC_ORDER.forEach(dc => {
+    const v = monthlyDcAgg[dc];
+    if (v.plan > 0) monthlyWorst5.push({ dc, rate: Math.round((v.run/v.plan)*1000)/10 });
+  });
+  monthlyWorst5.sort((a,b) => a.rate - b.rate);
+
+  return { weeklyCause, weeklyWorst, monthlyCause, monthlyWorst5: monthlyWorst5.slice(0,5) };
+}
+
+function renderAnalysisSection() {
+  const { weeklyCause, weeklyWorst, monthlyCause, monthlyWorst5 } = computeAnalysisForRange(periodStart, periodEnd);
+
+  // 주간분석: 주차별 Loss 원인 스택 막대
+  const weeks = weeklyCause.map(w => w.week);
+  const moldArr = weeklyCause.map(w => w.mold);
+  const mechArr = weeklyCause.map(w => w.mech);
+  const elecArr = weeklyCause.map(w => w.elec);
+
+  if (weeklyCauseChart) weeklyCauseChart.destroy();
+  const ctx1 = document.getElementById('weeklyCauseChart').getContext('2d');
+  weeklyCauseChart = new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: weeks,
+      datasets: [
+        { label:'금형', data: moldArr, backgroundColor:'#f5a524', stack:'c', barPercentage:0.6 },
+        { label:'설비1-기계', data: mechArr, backgroundColor:'#2f6fed', stack:'c', barPercentage:0.6 },
+        { label:'설비2-전기', data: elecArr, backgroundColor:'#ef4360', stack:'c', barPercentage:0.6 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display:true, position:'bottom', labels:{ boxWidth:10, font:{size:10}, color:'#667088' } },
+        tooltip: { callbacks: { label: (c) => c.dataset.label + ': ' + Math.round(c.raw) + '분' } }
+      },
+      scales: {
+        x: { stacked:true, ticks:{ color:'#667088', font:{size:10} }, grid:{ display:false } },
+        y: { stacked:true, min:0, ticks:{ color:'#667088', font:{size:10} }, grid:{ color:'rgba(0,0,0,.05)' } }
+      }
+    }
+  });
+
+  // 주간분석: 주차별 워스트 설비 칩
+  const wwWrap = document.getElementById('weeklyWorstList');
+  wwWrap.innerHTML = '';
+  weeks.forEach(w => {
+    const block = document.createElement('div');
+    block.className = 'weekly-worst-block';
+    const dcs = weeklyWorst[w] || [];
+    const chips = dcs.map(d => `<span class="wk-chip" onclick="selectDC('${d.dc}')">${d.dc} <span class="wk-rate">${d.rate}%</span></span>`).join('');
+    block.innerHTML = `<div class="wk-label">${w} 워스트 TOP3</div><div class="weekly-worst-chips">${chips || '<span style=\'color:var(--sub);font-size:12px;\'>데이터 없음</span>'}</div>`;
+    wwWrap.appendChild(block);
+  });
+
+  // 월간분석: Loss 원인 비율 도넛
+  const totalCause = monthlyCause.mold + monthlyCause.mech + monthlyCause.elec;
+  if (monthlyCauseChart) monthlyCauseChart.destroy();
+  const ctx2 = document.getElementById('monthlyCauseChart').getContext('2d');
+  monthlyCauseChart = new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+      labels: ['금형', '설비1-기계', '설비2-전기'],
+      datasets: [{
+        data: [monthlyCause.mold, monthlyCause.mech, monthlyCause.elec],
+        backgroundColor: ['#f5a524', '#2f6fed', '#ef4360'],
+        borderWidth: 2,
+        borderColor: '#ffffff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display:true, position:'bottom', labels:{ boxWidth:10, font:{size:10}, color:'#667088' } },
+        tooltip: {
+          callbacks: {
+            label: (c) => {
+              const pct = totalCause > 0 ? Math.round(c.raw/totalCause*1000)/10 : 0;
+              return c.label + ': ' + Math.round(c.raw) + '분 (' + pct + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // 월간분석: 워스트5 설비
+  const mwWrap = document.getElementById('monthlyWorstList');
+  mwWrap.innerHTML = '';
+  const maxGap = Math.max(1, ...monthlyWorst5.map(d => 100 - d.rate));
+  monthlyWorst5.forEach((d, i) => {
+    const row = document.createElement('div');
+    row.className = 'mw-row';
+    row.onclick = () => selectDC(d.dc);
+    const fillPct = Math.round((100 - d.rate) / maxGap * 100);
+    row.innerHTML = `<span class="mw-rank">#${i+1}</span><span class="mw-dc">${d.dc}</span><span class="mw-bar-track"><span class="mw-bar-fill" style="width:${fillPct}%;"></span></span><span class="mw-rate">${d.rate}%</span>`;
+    mwWrap.appendChild(row);
+  });
+}
+
+let currentDC = DC_ORDER[0];
+let chart = null;
+let selectedDay = null; // null = 전체(월간) 워스트5 모드, 숫자 = 해당 일자의 전체 DC 워스트5 모드
+
+function rateClass(r) {
+  if (r === null || r === undefined) return '';
+  if (r >= 85) return 'good';
+  if (r >= 70) return 'warn';
+  return 'bad';
+}
+
+function avgRate(days) {
+  const vals = days.filter(d => d.rate !== null).map(d => d.rate);
+  if (!vals.length) return null;
+  return Math.round((vals.reduce((a,b)=>a+b,0) / vals.length) * 10) / 10;
+}
+
+function buildSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.innerHTML = '<div class="grp-label">DC 설비 선택</div>';
+  ALL_DC.forEach(dc => {
+    const has = DATA[dc] !== undefined;
+    const btn = document.createElement('button');
+    btn.className = 'dc-btn' + (dc === currentDC ? ' active' : '') + (has ? '' : ' disabled');
+    const label = document.createElement('span');
+    label.textContent = dc;
+    btn.appendChild(label);
+    if (has) {
+      const ar = avgRate(DATA[dc]);
+      const chip = document.createElement('span');
+      chip.className = 'rate-chip';
+      chip.textContent = ar !== null ? ar + '%' : '-';
+      btn.appendChild(chip);
+      btn.onclick = () => selectDC(dc);
+    } else {
+      const chip = document.createElement('span');
+      chip.className = 'rate-chip';
+      chip.textContent = '자료없음';
+      btn.appendChild(chip);
+    }
+    sb.appendChild(btn);
+  });
+}
+
+function buildKPI(days) {
+  const validPlan = days.reduce((a,d)=>a+d.plan,0);
+  const validRun = days.reduce((a,d)=>a+d.run,0);
+  const mold = days.reduce((a,d)=>a+d.mold,0);
+  const mech = days.reduce((a,d)=>a+d.mech,0);
+  const elec = days.reduce((a,d)=>a+d.elec,0);
+  const overall = validPlan > 0 ? Math.round((validRun/validPlan)*1000)/10 : null;
+  const kr = document.getElementById('kpiRow');
+  kr.innerHTML = '';
+  const items = [
+    {label:'월 종합 가동률(A)', value: overall !== null ? overall+'%' : '-', cls: rateClass(overall)},
+    {label:'금형 Loss 합계', value: Math.round(mold)+'분', cls:''},
+    {label:'설비1(기계) Loss 합계', value: Math.round(mech)+'분', cls:''},
+    {label:'설비2(전기) Loss 합계', value: Math.round(elec)+'분', cls:''}
+  ];
+  items.forEach(it => {
+    const div = document.createElement('div');
+    div.className = 'kpi';
+    div.innerHTML = `<div class="label">${it.label}</div><div class="value ${it.cls}">${it.value}</div>`;
+    kr.appendChild(div);
+  });
+}
+
+
+function buildWorst5(days) {
+  // 전체(월간) 모드: 현재 선택된 DC의 7월 전체 기준 워스트 5일
+  const valid = days.filter(d => d.rate !== null);
+  const worst = [...valid].sort((a,b) => a.rate - b.rate).slice(0,5);
+  const wrap = document.getElementById('worst5List');
+  wrap.innerHTML = '';
+  document.getElementById('worst5Detail').style.display = 'none';
+  document.getElementById('worst5Detail').innerHTML = '';
+  worst.forEach((d, i) => {
+    const div = document.createElement('div');
+    div.className = 'worst5-item';
+    div.innerHTML = `<div class="rank">#${i+1}</div><div class="day">${d.day}일</div><div class="week">${d.week || ''}</div><div class="rate">${d.rate}%</div>`;
+    div.onclick = () => showWorstDayDetail(d.day, div);
+    div.style.cursor = 'pointer';
+    wrap.appendChild(div);
+  });
+  document.getElementById('worst5Title').textContent = `⚠️ 워스트 5 (${currentDC} · 가동률 하위 5일 · ${monthLabelOf(currentMonth)} 전체 기준)`;
+  document.getElementById('resetDayBtn').style.display = 'none';
+}
+
+function showWorstDayDetail(day, cardEl) {
+  // 워스트5 카드 클릭 시 목록은 유지한 채 하단에 해당 일자 세부내용 표시
+  document.querySelectorAll('#worst5List .worst5-item').forEach(el => el.classList.remove('selected'));
+  if (cardEl) cardEl.classList.add('selected');
+
+  const rec = DATA[currentDC].find(d => d.day === day);
+  const box = document.getElementById('worst5Detail');
+  if (!rec) { box.style.display = 'none'; return; }
+
+  const causes = [
+    { name:'금형 Loss', val: rec.mold, color:'#f5a524' },
+    { name:'설비1-기계 Loss', val: rec.mech, color:'#2f6fed' },
+    { name:'설비2-전기 Loss', val: rec.elec, color:'#ef4360' }
+  ];
+  const maxVal = Math.max(1, ...causes.map(c => c.val));
+
+  const barsHtml = causes.map(c => `
+    <div class="detail-bar-row">
+      <span>${c.name}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(c.val/maxVal*100)}%; background:${c.color};"></div></div>
+      <span style="text-align:right;">${Math.round(c.val)}분</span>
+    </div>
+  `).join('');
+
+  box.innerHTML = `
+    <div class="detail-head">
+      <strong>${currentDC} · ${monthLabelOf(currentMonth)} ${day}일 (${rec.week || ''}) 세부내용</strong>
+      <span>가동률(A) ${rec.rate}%</span>
+    </div>
+    <div class="detail-bars">${barsHtml}</div>
+    <div class="detail-summary">
+      <span>쉬프트시간: <b>${Math.round(rec.plan)}분</b></span>
+      <span>가동시간: <b>${Math.round(rec.run)}분</b></span>
+      <span>총 Loss: <b>${Math.round(rec.plan - rec.run)}분</b></span>
+    </div>
+  `;
+  box.style.display = 'block';
+}
+
+function showCauseDetail(day, key, causeName, color, cardEl) {
+  // 특정 원인(금형/설비1-기계/설비2-전기) 카드 클릭 시, 그 원인의 세부 항목을 하단에 표시
+  document.querySelectorAll('#worst5List .worst5-item').forEach(el => el.classList.remove('selected'));
+  if (cardEl) cardEl.classList.add('selected');
+
+  const box = document.getElementById('worst5Detail');
+  const rec = DATA[currentDC].find(d => d.day === day);
+  const subItems = (SUBDATA[currentDC] && SUBDATA[currentDC][String(day)] && SUBDATA[currentDC][String(day)][key]) || {};
+  const entries = Object.entries(subItems).sort((a,b) => b[1] - a[1]);
+
+  if (entries.length === 0) {
+    box.innerHTML = `
+      <div class="detail-head">
+        <strong>${currentDC} · ${monthLabelOf(currentMonth)} ${day}일 · ${causeName} 세부항목</strong>
+        <span>합계 ${rec ? Math.round(rec[key]) : 0}분</span>
+      </div>
+      <div style="color:var(--sub); font-size:12px;">세부 항목 데이터가 없습니다.</div>
+    `;
+    box.style.display = 'block';
+    return;
+  }
+
+  const maxVal = Math.max(1, ...entries.map(e => e[1]));
+  const barsHtml = entries.map(([name, val]) => `
+    <div class="detail-bar-row">
+      <span>${name}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/maxVal*100)}%; background:${color};"></div></div>
+      <span style="text-align:right;">${Math.round(val)}분</span>
+    </div>
+  `).join('');
+
+  const total = entries.reduce((a,e)=>a+e[1],0);
+
+  box.innerHTML = `
+    <div class="detail-head">
+      <strong>${currentDC} · ${monthLabelOf(currentMonth)} ${day}일 · ${causeName} 세부항목</strong>
+      <span>합계 ${Math.round(total)}분</span>
+    </div>
+    <div class="detail-bars">${barsHtml}</div>
+  `;
+  box.style.display = 'block';
+}
+
+function buildWorst5ForDay(day) {
+  // 일별 모드: 현재 선택된 설비(currentDC)의 해당 일자 Loss 원인을 큰 순서로 랭킹
+  document.getElementById('worst5Detail').style.display = 'none';
+  document.getElementById('worst5Detail').innerHTML = '';
+  const rec = DATA[currentDC].find(d => d.day === day);
+  const wrap = document.getElementById('worst5List');
+  wrap.innerHTML = '';
+
+  if (!rec || rec.rate === null) {
+    document.getElementById('worst5Title').textContent = `⚠️ ${currentDC} · ${monthLabelOf(currentMonth)} ${day}일 (가동 데이터 없음)`;
+    document.getElementById('resetDayBtn').style.display = 'inline-block';
+    return;
+  }
+
+  const causes = [
+    { name:'금형 Loss', val: rec.mold, color:'#f5a524', key:'mold' },
+    { name:'설비1-기계 Loss', val: rec.mech, color:'#2f6fed', key:'mech' },
+    { name:'설비2-전기 Loss', val: rec.elec, color:'#ef4360', key:'elec' }
+  ].sort((a,b) => b.val - a.val);
+
+  // #1~#3: Loss 원인 순위, #4: 가동률(A) 요약 카드
+  causes.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'worst5-item';
+    div.innerHTML = `<div class="rank" style="color:${c.color}">#${i+1}</div><div class="day">${c.name}</div><div class="week">${rec.week || ''}</div><div class="rate" style="color:${c.color}">${Math.round(c.val)}분</div>`;
+    div.onclick = () => showCauseDetail(day, c.key, c.name, c.color, div);
+    div.style.cursor = 'pointer';
+    wrap.appendChild(div);
+  });
+  const infoDiv = document.createElement('div');
+  infoDiv.className = 'worst5-item';
+  infoDiv.innerHTML = `<div class="rank">가동률</div><div class="day">${day}일</div><div class="week">${rec.week || ''}</div><div class="rate">${rec.rate}%</div>`;
+  infoDiv.onclick = () => showWorstDayDetail(day, infoDiv);
+  infoDiv.style.cursor = 'pointer';
+  wrap.appendChild(infoDiv);
+
+  document.getElementById('worst5Title').textContent = `⚠️ ${currentDC} · ${monthLabelOf(currentMonth)} ${day}일 Loss 상세 (원인 큰 순)`;
+  document.getElementById('resetDayBtn').style.display = 'inline-block';
+}
+
+function selectDay(day) {
+  selectedDay = day;
+  buildWorst5ForDay(day);
+}
+
+function clearDaySelection() {
+  selectedDay = null;
+  buildWorst5(DATA[currentDC]);
+}
+
+function selectDC(dc) {
+  currentDC = dc;
+  selectedDay = null;
+  document.getElementById('dcTitle').textContent = dc;
+  buildSidebar();
+  const days = DATA[dc];
+  buildKPI(days);
+  buildWorst5(days);
+  renderChart(days);
+}
+
+function renderChart(days) {
+  const labels = days.map(d => d.day + '일');
+  const mold = days.map(d => d.mold);
+  const mech = days.map(d => d.mech);
+  const elec = days.map(d => d.elec);
+  const rate = days.map(d => d.rate);
+
+  if (chart) chart.destroy();
+  const ctx = document.getElementById('mainChart').getContext('2d');
+
+  const rateLabelPlugin = {
+    id: 'rateLabelPlugin',
+    afterDatasetsDraw(c) {
+      const meta = c.getDatasetMeta(3); // 라인(가동률) 데이터셋 인덱스
+      if (!meta || meta.hidden) return;
+      const {ctx: cctx} = c;
+      cctx.save();
+      cctx.font = '700 11px Segoe UI, sans-serif';
+      cctx.fillStyle = '#7c3aed';
+      cctx.textAlign = 'center';
+      meta.data.forEach((point, i) => {
+        const v = rate[i];
+        if (v === null || v === undefined) return;
+        cctx.fillText(v + '%', point.x, point.y - 10);
+      });
+      cctx.restore();
+    }
+  };
+
+  chart = new Chart(ctx, {
+    data: {
+      labels: labels,
+      datasets: [
+        { type:'bar', label:'금형 Loss(분)', data:mold, backgroundColor:'#f4a340', stack:'loss', yAxisID:'y', borderRadius:3 },
+        { type:'bar', label:'설비1-기계 Loss(분)', data:mech, backgroundColor:'#4da3ff', stack:'loss', yAxisID:'y', borderRadius:3 },
+        { type:'bar', label:'설비2-전기 Loss(분)', data:elec, backgroundColor:'#f45b69', stack:'loss', yAxisID:'y', borderRadius:3 },
+        { type:'line', label:'일일 종합 가동률(A) %', data:rate, borderColor:'#16a673', backgroundColor:'#7c3aed', yAxisID:'y1', tension:.25, spanGaps:true, pointRadius:4, pointBackgroundColor:'#7c3aed', pointBorderColor:'#ffffff', pointBorderWidth:1.5, borderWidth:2 }
+      ]
+    },
+    plugins: [rateLabelPlugin],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 20 } },
+      interaction: { mode:'index', intersect:false },
+      onClick: (evt, elements, chartInstance) => {
+        const points = chartInstance.getElementsAtEventForMode(evt, 'index', { intersect:false }, false);
+        if (points.length > 0) {
+          const dayIdx = points[0].index;
+          const clickedDay = days[dayIdx].day;
+          if (days[dayIdx].rate !== null) selectDay(clickedDay);
+        }
+      },
+      plugins: {
+        legend: { display:false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              if (ctx.dataset.yAxisID === 'y1') {
+                return ctx.dataset.label + ': ' + (ctx.raw !== null ? ctx.raw+'%' : 'N/A');
+              }
+              return ctx.dataset.label + ': ' + ctx.raw + '분';
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks:{ color:'#8b96ad', font:{size:10} }, grid:{ color:'rgba(255,255,255,.04)' } },
+        y: {
+          stacked: true,
+          position:'left',
+          title:{ display:true, text:'Loss 시간(분)', color:'#8b96ad' },
+          ticks:{ color:'#8b96ad' },
+          grid:{ color:'rgba(255,255,255,.06)' }
+        },
+        y1: {
+          position:'right',
+          min:0, max:100,
+          title:{ display:true, text:'가동률(A) %', color:'#8b96ad' },
+          ticks:{ color:'#8b96ad' },
+          grid:{ drawOnChartArea:false }
+        }
+      }
+    }
+  });
+}
+
+async function initLive() {
+  try {
+    const res = await fetch(sheetCsvUrl(A_GID), { cache: 'no-store' });
+    if (!res.ok) throw new Error(`시트 응답 오류: ${res.status}`);
+    const text = await res.text();
+    const rows = parseCSV(text);
+    if (!rows.length) throw new Error('데이터가 비어 있습니다.');
+    const built = buildMonthDataFromRows(rows);
+    MONTHS = built.months;
+    MONTH_DATA = built.monthData;
+    if (!MONTHS.length) throw new Error('월별 데이터를 찾을 수 없습니다.');
+    loadMonth(MONTHS[MONTHS.length - 1]); // 최신 월 기본 선택
+  } catch (err) {
+    console.error(err);
+    document.querySelector('header p').textContent = '데이터를 불러오지 못했습니다: ' + err.message;
+  }
+}
+initLive();
+</script>
+</body>
+</html>
