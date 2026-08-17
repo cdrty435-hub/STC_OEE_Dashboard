@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DC Equipment MTTR / MTBF Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root{
+    --bg:#f4f6f9;
+    --panel:#ffffff;
+    --panel-hero:#ffffff;
+    --panel-2:#eef1f5;
+    --border:#dde3ea;
+    --border-soft:#e8ecf1;
+    --text:#1a2230;
+    --text-dim:#5b6b7d;
+    --text-faint:#8a97a6;
+    --amber:#c9791a;
+    --amber-soft:#c9791a1a;
+    --teal:#0f9d68;
+    --teal-soft:#0f9d681a;
+    --red:#d13a30;
+    --red-soft:#d13a301a;
+    --cyan:#0678a8;
+    --mono:'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --sans:-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:
+      radial-gradient(1200px 500px at 15% -10%, #e8ecf3 0%, transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans); -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1400px; margin:0 auto; padding:32px 28px 70px;}
+
+  header{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:20px;}
+  .title-block .eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.16em; color:var(--amber); text-transform:uppercase; margin-bottom:8px; font-weight:600;}
+  .title-block h1{font-size:28px; margin:0; font-weight:800; letter-spacing:-.015em;}
+  .title-block .sub{color:var(--text-dim); font-size:13px; margin-top:8px; line-height:1.6;}
+  .header-right{display:flex; flex-direction:column; align-items:flex-end; gap:10px;}
+  .range-tag{font-family:var(--mono); font-size:11.5px; color:var(--text-dim); background:var(--panel-2); border:1px solid var(--border); padding:7px 13px; border-radius:7px; display:flex; align-items:center; gap:9px;}
+  .refresh-btn{
+    font-family:var(--mono); font-size:11px; background:var(--amber); color:#1a1206; border:none;
+    padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:700; letter-spacing:.02em;
+  }
+  .refresh-btn:hover{filter:brightness(1.08);}
+  .live-dot{width:6px; height:6px; border-radius:50%; background:var(--teal); display:inline-block; box-shadow:0 0 8px var(--teal);}
+
+  .status-strip{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:26px;}
+  .status-chip{font-family:var(--mono); font-size:10.5px; padding:4px 9px; border-radius:5px; border:1px solid var(--border); color:var(--text-faint); letter-spacing:.02em;}
+  .status-chip.broken{color:#b91c1c; border-color:#f3c6c2; background:var(--red-soft);}
+  .status-chip.missing{color:var(--text-faint); border-color:var(--border); background:var(--panel-2); text-decoration:line-through;}
+
+  section{margin-bottom:22px;}
+  .section-label{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-faint); margin:0 0 10px 2px; display:flex; align-items:center; gap:10px;}
+  .section-label::after{content:""; flex:1; height:1px; background:var(--border-soft);}
+
+  /* ---- HERO ---- */
+  .hero{
+    background:linear-gradient(180deg, #fbf7ef 0%, var(--panel-hero) 100%);
+    border:1px solid var(--border); border-top:2px solid var(--amber);
+    border-radius:14px; padding:24px 26px 20px;
+  }
+  .hero-head{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:18px;}
+  .hero-head h2{font-size:18px; margin:0 0 4px; font-weight:800; letter-spacing:-.01em;}
+  .hero-head .desc{font-size:12.5px; color:var(--text-dim);}
+
+  .week-chips{display:flex; gap:6px; flex-wrap:wrap; align-items:center;}
+  .week-chip{
+    font-family:var(--mono); font-size:11.5px; padding:6px 11px; border-radius:16px;
+    border:1px solid var(--border); background:var(--panel-2); color:var(--text-dim); cursor:pointer;
+    transition:all .12s ease; user-select:none;
+  }
+  .week-chip:hover{border-color:var(--amber);}
+  .week-chip.active{background:var(--amber); color:#1a1206; border-color:var(--amber); font-weight:700;}
+  .week-chip.all-toggle{background:transparent; border-style:dashed; color:var(--text-faint);}
+  .week-chip.all-toggle:hover{color:var(--text);}
+
+  .target-row{display:flex; gap:18px; flex-wrap:wrap; align-items:center; margin:16px 0 6px; padding:14px 16px; background:var(--panel-2); border:1px solid var(--border); border-radius:9px;}
+  .target-field{display:flex; align-items:center; gap:8px;}
+  .target-field label{font-family:var(--mono); font-size:11.5px; color:var(--text-dim); white-space:nowrap;}
+  .target-field .swatch{width:16px; height:0; border-top:2px dashed var(--target-color, var(--red)); display:inline-block;}
+  .target-field input{
+    width:76px; background:var(--bg); border:1px solid var(--border); color:var(--text);
+    font-family:var(--mono); font-size:13px; padding:6px 8px; border-radius:6px;
+  }
+  .target-field input:focus{outline:none; border-color:var(--amber);}
+  .target-field .unit{font-family:var(--mono); font-size:11px; color:var(--text-faint);}
+  .target-clear{font-family:var(--mono); font-size:11px; color:var(--text-faint); background:none; border:1px solid var(--border); border-radius:6px; padding:5px 10px; cursor:pointer; margin-left:auto;}
+  .target-clear:hover{color:var(--text); border-color:var(--text-faint);}
+
+  .hero-canvas-wrap{margin-top:18px;}
+  .mini-title{font-family:var(--mono); font-size:11.5px; color:var(--text-dim); margin-bottom:8px; letter-spacing:.03em;}
+
+  .analysis-panel{
+    margin-top:22px; padding-top:20px; border-top:1px dashed var(--border);
+  }
+  .analysis-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .analysis-head h3{font-size:15px; margin:0; font-weight:800;}
+  .analysis-head .close-btn{
+    font-family:var(--mono); font-size:11px; color:var(--text-faint); background:none;
+    border:1px solid var(--border); border-radius:6px; padding:4px 10px; cursor:pointer;
+  }
+  .analysis-head .close-btn:hover{color:var(--text); border-color:var(--text-faint);}
+  .analysis-stats{display:flex; gap:20px; flex-wrap:wrap; margin-bottom:16px; font-family:var(--mono); font-size:12px; color:var(--text-dim);}
+  .analysis-stats b{color:var(--text); font-size:14px;}
+  .analysis-grid{display:grid; grid-template-columns:1fr 1.3fr; gap:16px;}
+  @media (max-width:900px){ .analysis-grid{grid-template-columns:1fr;} }
+
+  .cause-list{list-style:none; margin:0; padding:0;}
+  .cause-list li{display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-radius:7px; font-size:12.5px;}
+  .cause-list li:nth-child(odd){background:var(--panel-2);}
+  .cause-list .cause-name{color:var(--text);}
+  .cause-list .cause-val{font-family:var(--mono); color:var(--text-dim);}
+  .cause-bar{height:5px; border-radius:3px; background:var(--amber); margin-top:4px;}
+
+  .swot-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .swot-cell{border-radius:9px; padding:12px 14px; font-size:12px; line-height:1.6;}
+  .swot-cell .swot-label{font-family:var(--mono); font-size:10.5px; font-weight:800; letter-spacing:.06em; margin-bottom:6px; display:block;}
+  .swot-cell ul{margin:0; padding-left:16px;}
+  .swot-s{background:var(--teal-soft); border:1px solid #bfe9d6;}
+  .swot-s .swot-label{color:#0f9d68;}
+  .swot-w{background:var(--red-soft); border:1px solid #f3c6c2;}
+  .swot-w .swot-label{color:#d13a30;}
+  .swot-o{background:#eaf3fb; border:1px solid #c7dff2;}
+  .swot-o .swot-label{color:#0678a8;}
+  .swot-t{background:var(--amber-soft); border:1px solid #ecd3a8;}
+  .swot-t .swot-label{color:#c9791a;}
+  .mini-title span{color:var(--text-faint);}
+
+  /* ---- KPI ---- */
+  .kpi-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:16px;}
+  .kpi{background:var(--panel); border:1px solid var(--border); border-radius:11px; padding:16px 18px; position:relative; overflow:hidden;}
+  .kpi::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--kpi-accent, var(--amber));}
+  .kpi .label{font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--text-faint); font-family:var(--mono); font-weight:600;}
+  .kpi .value{font-family:var(--mono); font-size:26px; font-weight:800; margin-top:7px; letter-spacing:-0.02em;}
+  .kpi .unit{font-size:13px; color:var(--text-dim); margin-left:3px; font-weight:400;}
+  .kpi .delta{font-size:10.5px; color:var(--text-faint); margin-top:5px; font-family:var(--mono);}
+
+  /* ---- filters / panels ---- */
+  .filters{display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:13px 16px;}
+  .filters label{font-size:11.5px; color:var(--text-dim); margin-right:6px; font-family:var(--mono);}
+  .filters input[type=date]{
+    background:var(--panel-2); border:1px solid var(--border); color:var(--text);
+    font-family:var(--mono); font-size:12.5px; padding:6px 9px; border-radius:6px;
+  }
+  .cat-btns{display:flex; gap:6px; margin-left:auto;}
+  .cat-btn{
+    font-family:var(--mono); font-size:11.5px; padding:6px 13px; border-radius:18px;
+    border:1px solid var(--border); background:transparent; color:var(--text-dim); cursor:pointer;
+    transition:all .12s ease;
+  }
+  .cat-btn:hover{border-color:var(--amber);}
+  .cat-btn.active{background:var(--amber); color:#1a1206; border-color:var(--amber); font-weight:700;}
+
+  .cat-chips{display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;}
+  .cat-chip{
+    font-family:var(--mono); font-size:11.5px; padding:6px 13px; border-radius:18px;
+    border:1px solid var(--border); background:var(--panel-2); color:var(--text-dim); cursor:pointer;
+    transition:all .12s ease;
+  }
+  .cat-chip:hover{border-color:var(--amber);}
+  .cat-chip.active{background:var(--amber); color:#1a1206; border-color:var(--amber); font-weight:700;}
+
+  .panel{background:var(--panel); border:1px solid var(--border); border-radius:11px; padding:18px 20px;}
+  .panel h2{font-size:13.5px; margin:0 0 2px; font-weight:700;}
+  .panel .desc{font-size:11.5px; color:var(--text-dim); margin-bottom:14px;}
+  .row-2{display:grid; grid-template-columns:1.3fr 1fr; gap:14px;}
+  .hero-split{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:900px){ .hero-split{grid-template-columns:1fr;} }
+  canvas{max-width:100%;}
+
+  .legend-note{display:flex; gap:16px; flex-wrap:wrap; font-size:11px; color:var(--text-dim); margin-top:12px; font-family:var(--mono);}
+  .legend-note span{display:inline-flex; align-items:center; gap:5px;}
+  .dot{width:8px; height:8px; border-radius:2px; display:inline-block;}
+
+  #loadingOverlay{
+    position:fixed; inset:0; background:rgba(244,246,249,.96); z-index:50;
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px;
+  }
+  #loadingOverlay .spin{
+    width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--amber);
+    border-radius:50%; animation:spin 0.9s linear infinite;
+  }
+  #loadingOverlay .msg{font-family:var(--mono); font-size:13px; color:var(--text-dim);}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  #errorBanner{
+    display:none; background:var(--red-soft); border:1px solid #f3c6c2; color:#a3241c;
+    font-family:var(--mono); font-size:12px; padding:12px 16px; border-radius:8px; margin-bottom:18px; line-height:1.6;
+  }
+  #errorBanner a{color:#a3241c;}
+
+  footer{margin-top:34px; padding-top:18px; border-top:1px solid var(--border); font-size:11px; color:var(--text-faint); font-family:var(--mono); line-height:1.8;}
+
+  @media (max-width:900px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .row-2{grid-template-columns:1fr;}
+    .hero-head{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="spin"></div>
+  <div class="msg" id="loadingMsg">구글시트에서 데이터 불러오는 중…</div>
+</div>
+
+<div class="wrap">
+
+  <header>
+    <div class="title-block">
+      <div class="eyebrow">STC · Die-Casting Maintenance</div>
+      <h1>DC Equipment MTTR / MTBF Dashboard</h1>
+      <div class="sub">DC1&ndash;DC23 (DC14 결번) &middot; 금형 / 설비 / 관리 로스 기준 고장 지표 &middot; 구글시트 실시간 연동</div>
+    </div>
+    <div class="header-right">
+      <div class="range-tag">
+        <span class="live-dot"></span>
+        <span id="dataRangeTag">로딩중…</span>
+        <button class="refresh-btn" id="refreshBtn">새로고침</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="errorBanner"></div>
+
+  <div class="status-strip">
+    <span class="status-chip broken">DC1 고장(가동중단)</span>
+    <span class="status-chip broken">DC7 고장(가동중단)</span>
+    <span class="status-chip broken">DC17 고장(가동중단)</span>
+    <span class="status-chip missing">DC14 결번</span>
+  </div>
+
+  <!-- ===== HERO: 전체 설비 주간별 MTTR/MTBF ===== -->
+  <section>
+    <div class="hero">
+      <div class="hero-head">
+        <div>
+          <h2>설비별 MTTR / MTBF</h2>
+          <div class="desc">DC1~DC23 · 위 주차 칩과 카테고리로 기간·범위를 고르면 그 기준 설비별 값으로 갱신됩니다 · MTTR/MTBF 별도 차트</div>
+        </div>
+        <div>
+          <div class="cat-chips" id="heroCatChips">
+            <button class="cat-chip active" data-cat="ALL">1.전체</button>
+            <button class="cat-chip" data-cat="금형">2.금형</button>
+            <button class="cat-chip" data-cat="설비">3.설비</button>
+            <button class="cat-chip" data-cat="관리">4.관리</button>
+          </div>
+          <div class="week-chips" id="weekChips" style="margin-top:8px;"><!-- populated by JS --></div>
+        </div>
+      </div>
+
+      <div class="target-row">
+        <div class="target-field">
+          <span class="swatch" style="--target-color:var(--red)"></span>
+          <label for="targetMttr">목표 MTTR</label>
+          <input type="number" id="targetMttr" step="0.1" placeholder="예: 1.0">
+          <span class="unit">h/건</span>
+        </div>
+        <div class="target-field">
+          <span class="swatch" style="--target-color:var(--cyan)"></span>
+          <label for="targetMtbf">목표 MTBF</label>
+          <input type="number" id="targetMtbf" step="0.1" placeholder="예: 3.0">
+          <span class="unit">h/건</span>
+        </div>
+        <button class="target-clear" id="targetClearBtn">기준선 지우기</button>
+      </div>
+
+      <div class="hero-canvas-wrap">
+        <div class="hero-split">
+          <div>
+            <div class="mini-title">설비별 MTTR (h/건) <span id="heroMttrScope"></span></div>
+            <canvas id="heroMttrChart" height="200"></canvas>
+          </div>
+          <div>
+            <div class="mini-title">설비별 MTBF (h/건) <span id="heroMtbfScope"></span></div>
+            <canvas id="heroMtbfChart" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi" style="--kpi-accent:var(--teal)">
+          <div class="label">가동시간 (선택 주차)</div>
+          <div class="value" id="heroKpiRun">–<span class="unit">h</span></div>
+          <div class="delta" id="heroKpiRunSub">&nbsp;</div>
+        </div>
+        <div class="kpi" style="--kpi-accent:var(--amber)">
+          <div class="label">로스시간 / 건수</div>
+          <div class="value" id="heroKpiLoss">–<span class="unit">h</span></div>
+          <div class="delta" id="heroKpiLossSub">&nbsp;</div>
+        </div>
+        <div class="kpi" style="--kpi-accent:var(--amber)">
+          <div class="label">MTTR (평균 수리시간)</div>
+          <div class="value" id="heroKpiMttr">–<span class="unit">h/건</span></div>
+          <div class="delta">로스시간 ÷ 로스횟수</div>
+        </div>
+        <div class="kpi" style="--kpi-accent:var(--teal)">
+          <div class="label">MTBF (평균 무고장시간)</div>
+          <div class="value" id="heroKpiMtbf">–<span class="unit">h/건</span></div>
+          <div class="delta">가동시간 ÷ 로스횟수</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 설비별 상세 ===== -->
+  <div class="section-label">설비별 워스트 랭킹 기간</div>
+
+  <section>
+    <div class="filters">
+      <div>
+        <label for="startDate">시작일</label>
+        <input type="date" id="startDate">
+      </div>
+      <div>
+        <label for="endDate">종료일</label>
+        <input type="date" id="endDate">
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:4px;">
+        <div>
+          <h2>설비별 MTTR / MTBF — 전체 워스트</h2>
+          <div class="desc">MTTR은 큰 순서(수리 오래 걸림), MTBF는 작은 순서(자주 고장)로 정렬 · 위 날짜 필터 기준</div>
+        </div>
+        <div class="cat-chips" id="dcCatChips">
+          <button class="cat-chip active" data-cat="ALL">1.전체</button>
+          <button class="cat-chip" data-cat="금형">2.금형</button>
+          <button class="cat-chip" data-cat="설비">3.설비</button>
+          <button class="cat-chip" data-cat="관리">4.관리</button>
+        </div>
+      </div>
+      <div class="hero-split" style="margin-top:14px;">
+        <div>
+          <div class="mini-title">설비별 MTTR 워스트 (h/건) <span style="color:#8a97a6;">— 막대를 클릭하면 원인분석이 나옵니다</span></div>
+          <div style="overflow-x:auto;"><div style="min-width:460px;"><canvas id="dcMttrChart" height="230"></canvas></div></div>
+        </div>
+        <div>
+          <div class="mini-title">설비별 MTBF 워스트 (h/건) <span style="color:#8a97a6;">— 막대를 클릭하면 원인분석이 나옵니다</span></div>
+          <div style="overflow-x:auto;"><div style="min-width:460px;"><canvas id="dcMtbfChart" height="230"></canvas></div></div>
+        </div>
+      </div>
+
+      <div id="dcAnalysisPanel" class="analysis-panel" style="display:none;"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:4px;">
+        <div>
+          <h2>세부 로스유형 Top 10 (파레토)</h2>
+          <div class="desc">로스시간 기준 상위 10개 항목 · 자체 기간·카테고리 필터 · 막대를 클릭하면 세부 내용이 나옵니다</div>
+        </div>
+        <div class="cat-chips" id="paretoCatChips">
+          <button class="cat-chip active" data-cat="ALL">1.전체</button>
+          <button class="cat-chip" data-cat="금형">2.금형</button>
+          <button class="cat-chip" data-cat="설비">3.설비</button>
+          <button class="cat-chip" data-cat="관리">4.관리</button>
+        </div>
+      </div>
+      <div class="filters" style="margin:12px 0 16px;">
+        <div>
+          <label for="paretoStartDate">시작일</label>
+          <input type="date" id="paretoStartDate">
+        </div>
+        <div>
+          <label for="paretoEndDate">종료일</label>
+          <input type="date" id="paretoEndDate">
+        </div>
+      </div>
+      <div style="height:400px;"><canvas id="paretoChart"></canvas></div>
+      <div class="legend-note">
+        <span><span class="dot" style="background:var(--amber)"></span>로스시간(h)</span>
+        <span><span class="dot" style="background:var(--teal)"></span>누적 비율(%)</span>
+      </div>
+      <div id="paretoAnalysisPanel" class="analysis-panel" style="display:none;"></div>
+    </div>
+  </section>
+
+  <footer id="footerNote">로딩중…</footer>
+</div>
+
+<script>
+const RUN_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFKfDFljNWVpItu5gLM6e_e6Empng8nIFYXzkF0Wbk4bQdX6nxQJVjLZLaL603rHGQpWpbhibx-WyN/pub?gid=360254314&single=true&output=csv";
+const LOSS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFKfDFljNWVpItu5gLM6e_e6Empng8nIFYXzkF0Wbk4bQdX6nxQJVjLZLaL603rHGQpWpbhibx-WyN/pub?gid=1689012019&single=true&output=csv";
+
+// Guard: if a CDN library failed to load, fail loudly instead of silently hanging
+(function checkLibs(){
+  const missing = [];
+  if(typeof Chart === 'undefined') missing.push('Chart.js');
+  if(typeof Papa === 'undefined') missing.push('PapaParse');
+  if(missing.length){
+    const overlay = document.getElementById('loadingOverlay');
+    const errBanner = document.getElementById('errorBanner');
+    if(overlay) overlay.style.display = 'none';
+    if(errBanner){
+      errBanner.style.display = 'block';
+      errBanner.innerHTML = `⚠ 라이브러리 로드 실패: ${missing.join(', ')} 를(을) CDN에서 불러오지 못했습니다. ` +
+        `네트워크/방화벽이 cdnjs.cloudflare.com 접속을 막고 있는지 확인하세요.`;
+    }
+    throw new Error('Required library missing: ' + missing.join(', '));
+  }
+})();
+
+const MISSING = new Set([14]);
+const BROKEN = new Set([1,7,17]);
+const ALL_MACHINES = Array.from({length:23}, (_,i)=>i+1).filter(n=>!MISSING.has(n));
+
+Chart.defaults.color = '#5b6b7d';
+Chart.defaults.borderColor = '#dde3ea';
+Chart.defaults.font.family = "'SFMono-Regular', Consolas, monospace";
+if(typeof ChartDataLabels !== 'undefined'){ Chart.register(ChartDataLabels); }
+
+let RUN = [];
+let LOSS = [];
+let dcMttrChart, dcMtbfChart, paretoChart, heroMttrChart, heroMtbfChart;
+let paretoCat = 'ALL';
+let heroCat = 'ALL';      // for hero 설비별 MTTR/MTBF
+let dcCat = 'ALL';        // for 설비별 워스트 랭킹
+let selectedWeeks = new Set();   // populated after data loads
+let allWeeks = [];
+let targetMTTR = null;
+let targetMTBF = null;
+
+function isoWeek(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  const target = new Date(d.valueOf());
+  const dayNr = (d.getUTCDay() + 6) % 7;
+  target.setUTCDate(target.getUTCDate() - dayNr + 3);
+  const firstThursday = new Date(target.getUTCFullYear(),0,4);
+  const diff = (target - firstThursday) / 86400000;
+  return 1 + Math.round(diff/7);
+}
+
+function normDate(raw){
+  if(!raw) return null;
+  raw = String(raw).trim();
+  let m = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m) return `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  m = raw.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+  if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  const d = new Date(raw);
+  if(!isNaN(d)) return d.toISOString().slice(0,10);
+  return null;
+}
+
+function toNum(v){
+  if(v===undefined || v===null || v==='') return 0;
+  const n = parseFloat(String(v).replace(/,/g,''));
+  return isNaN(n) ? 0 : n;
+}
+
+function fetchCSV(url, timeoutMs=15000){
+  return new Promise(async (resolve, reject)=>{
+    const controller = new AbortController();
+    const timer = setTimeout(()=>{ controller.abort(); }, timeoutMs);
+    try{
+      const res = await fetch(url, {signal: controller.signal, cache:'no-store', mode:'cors'});
+      clearTimeout(timer);
+      if(!res.ok){ reject(new Error(`HTTP ${res.status} (${res.statusText || '응답 오류'})`)); return; }
+      const text = await res.text();
+      if(!text || text.trim().length === 0){ reject(new Error('빈 응답을 받았습니다.')); return; }
+      const parsed = Papa.parse(text, {header:true, skipEmptyLines:true});
+      resolve(parsed.data);
+    }catch(err){
+      clearTimeout(timer);
+      if(err.name === 'AbortError'){
+        reject(new Error(`${timeoutMs/1000}초 내에 응답이 없어 요청을 중단했습니다 (네트워크 차단 또는 CORS 문제 가능성).`));
+      }else{
+        reject(new Error(`네트워크 요청 실패: ${err.message} (CORS 또는 접근 권한 문제일 수 있음)`));
+      }
+    }
+  });
+}
+
+async function loadData(){
+  const overlay = document.getElementById('loadingOverlay');
+  const errBanner = document.getElementById('errorBanner');
+  overlay.style.display = 'flex';
+  errBanner.style.display = 'none';
+  try{
+    let runRows, lossRows;
+    try{ runRows = await fetchCSV(RUN_CSV_URL); }
+    catch(e){ throw new Error(`[0.가동데이터] ${e.message}`); }
+    try{ lossRows = await fetchCSV(LOSS_CSV_URL); }
+    catch(e){ throw new Error(`[0.로스데이터] ${e.message}`); }
+
+    RUN = runRows.map(r=>({
+      d: normDate(r['일자']), m: parseInt(r['설비명']), r: toNum(r['가동분'])
+    })).filter(r=>r.d && r.m);
+
+    LOSS = lossRows.map(r=>({
+      d: normDate(r['일자']), m: parseInt(r['설비명']),
+      c: (r['카테고리']||'').trim(), i: (r['세부항목']||'').trim(), l: toNum(r['로스분'])
+    })).filter(r=>r.d && r.m);
+
+    if(RUN.length===0 || LOSS.length===0){
+      throw new Error('데이터가 비어있습니다. 시트 공유 설정(웹에 게시)을 확인하세요.');
+    }
+
+    const dates = RUN.map(r=>r.d).concat(LOSS.map(r=>r.d)).sort();
+    const minDate = dates[0];
+    const maxDate = dates[dates.length-1];
+    document.getElementById('startDate').value = minDate;
+    document.getElementById('endDate').value = maxDate;
+    document.getElementById('paretoStartDate').value = minDate;
+    document.getElementById('paretoEndDate').value = maxDate;
+    document.getElementById('dataRangeTag').textContent =
+      `${minDate} ~ ${maxDate} · 가동${RUN.length}행 · 로스${LOSS.length}행`;
+
+    // build week list
+    const wkSet = new Set();
+    RUN.forEach(r=>wkSet.add(isoWeek(r.d)));
+    LOSS.forEach(r=>wkSet.add(isoWeek(r.d)));
+    allWeeks = Array.from(wkSet).sort((a,b)=>a-b);
+    selectedWeeks = new Set(allWeeks);
+    buildWeekChips();
+
+    document.getElementById('footerNote').innerHTML =
+      `MTTR = 로스시간 ÷ 로스횟수 (고장 1건당 평균 수리시간) &nbsp;·&nbsp; MTBF = 가동시간 ÷ 로스횟수 (고장 1건당 평균 무고장 가동시간) &nbsp;·&nbsp; ` +
+      `가동률 = 가동시간 ÷ (가동시간+로스시간) × 100 &nbsp;·&nbsp; 구글시트 "0.가동데이터" / "0.로스데이터" 탭에서 실시간 로드 &nbsp;·&nbsp; ` +
+      `DC1·DC7·DC17은 고장으로 가동 중단된 설비, DC14는 결번`;
+
+    render();
+  }catch(e){
+    errBanner.style.display = 'block';
+    errBanner.innerHTML = '⚠ 데이터 로드 실패: ' + e.message +
+      '<br>· 구글시트가 "파일 → 공유 → 웹에 게시"로 게시되어 있는지 확인하세요.' +
+      '<br>· 아래 링크를 새 탭에서 직접 열어 CSV가 바로 보이는지 확인하세요:' +
+      '<br>&nbsp;&nbsp;<a href="'+RUN_CSV_URL+'" target="_blank">가동데이터 CSV 링크</a> / ' +
+      '<a href="'+LOSS_CSV_URL+'" target="_blank">로스데이터 CSV 링크</a>';
+    console.error(e);
+  }finally{
+    overlay.style.display = 'none';
+  }
+}
+
+function buildWeekChips(){
+  const wrap = document.getElementById('weekChips');
+  wrap.innerHTML = '';
+  const allBtn = document.createElement('button');
+  allBtn.className = 'week-chip all-toggle';
+  allBtn.textContent = '전체선택';
+  allBtn.onclick = ()=>{ selectedWeeks = new Set(allWeeks); refreshWeekChips(); renderHero(); };
+  wrap.appendChild(allBtn);
+
+  allWeeks.forEach(wk=>{
+    const btn = document.createElement('button');
+    btn.className = 'week-chip active';
+    btn.textContent = wk + '주차';
+    btn.dataset.week = wk;
+    btn.onclick = ()=>{
+      if(selectedWeeks.has(wk)){
+        if(selectedWeeks.size > 1) selectedWeeks.delete(wk);
+      }else{
+        selectedWeeks.add(wk);
+      }
+      refreshWeekChips();
+      renderHero();
+    };
+    wrap.appendChild(btn);
+  });
+}
+
+function refreshWeekChips(){
+  document.querySelectorAll('.week-chip[data-week]').forEach(btn=>{
+    const wk = parseInt(btn.dataset.week);
+    btn.classList.toggle('active', selectedWeeks.has(wk));
+  });
+}
+
+document.getElementById('targetMttr').addEventListener('input', (e)=>{
+  targetMTTR = e.target.value === '' ? null : parseFloat(e.target.value);
+  renderHero();
+});
+document.getElementById('targetMtbf').addEventListener('input', (e)=>{
+  targetMTBF = e.target.value === '' ? null : parseFloat(e.target.value);
+  renderHero();
+});
+document.getElementById('targetClearBtn').addEventListener('click', ()=>{
+  targetMTTR = null; targetMTBF = null;
+  document.getElementById('targetMttr').value = '';
+  document.getElementById('targetMtbf').value = '';
+  renderHero();
+});
+
+document.getElementById('refreshBtn').addEventListener('click', loadData);
+document.querySelectorAll('#heroCatChips .cat-chip').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#heroCatChips .cat-chip').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    heroCat = btn.dataset.cat;
+    renderHero();
+  });
+});
+document.querySelectorAll('#dcCatChips .cat-chip').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#dcCatChips .cat-chip').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    dcCat = btn.dataset.cat;
+    renderDetail();
+  });
+});
+document.querySelectorAll('#paretoCatChips .cat-chip').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#paretoCatChips .cat-chip').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    paretoCat = btn.dataset.cat;
+    renderParetoSection();
+  });
+});
+document.getElementById('startDate').addEventListener('change', renderDetail);
+document.getElementById('endDate').addEventListener('change', renderDetail);
+document.getElementById('paretoStartDate').addEventListener('change', renderParetoSection);
+document.getElementById('paretoEndDate').addEventListener('change', renderParetoSection);
+
+function fmt(n, dp=2){
+  if(!isFinite(n)) return '0';
+  return n.toLocaleString('en-US', {minimumFractionDigits:dp, maximumFractionDigits:dp});
+}
+
+function render(){
+  renderHero();
+  renderDetail();
+  renderParetoSection();
+}
+
+// ---------- HERO: 전체 설비 주간별 MTTR/MTBF ----------
+function renderHero(){
+  const run = RUN.filter(r=>selectedWeeks.has(isoWeek(r.d)));
+  const lossAll = LOSS.filter(r=>selectedWeeks.has(isoWeek(r.d)));   // 전체 카테고리 로스 (가동률 계산용)
+  let loss = lossAll;
+  if(heroCat !== 'ALL') loss = lossAll.filter(r=>r.c === heroCat);   // 카테고리 필터 적용 (MTTR/MTBF/로스시간 계산용)
+
+  const runH = run.reduce((a,r)=>a+r.r,0)/60;
+  const lossH = loss.reduce((a,r)=>a+r.l,0)/60;
+  const lossHAll = lossAll.reduce((a,r)=>a+r.l,0)/60;
+  const cnt = loss.length;
+  const mttr = cnt ? lossH/cnt : 0;
+  const mtbf = cnt ? runH/cnt : 0;
+  const avail = (runH+lossHAll)>0 ? runH/(runH+lossHAll)*100 : 0;   // 가동률은 항상 전체 로스 기준
+
+  document.getElementById('heroKpiRun').innerHTML = `${fmt(runH,1)}<span class="unit">h</span>`;
+  document.getElementById('heroKpiRunSub').textContent = `가동률 ${fmt(avail,1)}%`;
+  document.getElementById('heroKpiLoss').innerHTML = `${fmt(lossH,1)}<span class="unit">h</span>`;
+  document.getElementById('heroKpiLossSub').textContent = `${cnt.toLocaleString()}건`;
+  document.getElementById('heroKpiMttr').innerHTML = `${fmt(mttr,2)}<span class="unit">h/건</span>`;
+  document.getElementById('heroKpiMtbf').innerHTML = `${fmt(mtbf,2)}<span class="unit">h/건</span>`;
+
+  const scopeLabel = selectedWeeks.size === allWeeks.length ? '(전체 주차)' :
+    `(${Array.from(selectedWeeks).sort((a,b)=>a-b).map(w=>w+'주차').join(', ')})`;
+  document.getElementById('heroMttrScope').textContent = scopeLabel;
+  document.getElementById('heroMtbfScope').textContent = scopeLabel;
+
+  // per-DC aggregation over selected weeks, ordered by DC number 1~23
+  const runByM = {}, lossByM = {}, cntByM = {};
+  run.forEach(r=>{ runByM[r.m]=(runByM[r.m]||0)+r.r; });
+  loss.forEach(r=>{ lossByM[r.m]=(lossByM[r.m]||0)+r.l; cntByM[r.m]=(cntByM[r.m]||0)+1; });
+
+  const rows = ALL_MACHINES.map(m=>{
+    const c = cntByM[m]||0;
+    const lH = (lossByM[m]||0)/60;
+    const rH = (runByM[m]||0)/60;
+    return {m, mttr: c ? lH/c : 0, mtbf: c ? rH/c : 0, cnt:c};
+  });
+
+  const labels = rows.map(r=>'DC'+r.m + (BROKEN.has(r.m)?' ⚠':''));
+
+  // ---- MTTR chart ----
+  const hasMttrTarget = targetMTTR !== null && !isNaN(targetMTTR);
+  const mttrDatasets = [{
+    type:'bar', label:'MTTR (h/건)', data: rows.map(r=>r.mttr),
+    backgroundColor: rows.map(r=>{
+      if(r.cnt===0) return '#d7dde4';
+      if(hasMttrTarget) return r.mttr > targetMTTR ? '#e2564dcc' : '#34c98ecc';
+      return r.mttr>2 ? '#e2564dcc' : r.mttr>1 ? '#e8a33dcc' : '#34c98ecc';
+    }),
+    borderRadius:3,
+    datalabels:{
+      anchor:'end', align:'top', color:'#111826', font:{size:12, weight:'800'},
+      formatter: v => v>0 ? v.toFixed(2) : ''
+    }
+  }];
+  if(hasMttrTarget){
+    mttrDatasets.push({
+      type:'line', label:`목표 MTTR ${targetMTTR}`, data: rows.map(()=>targetMTTR),
+      borderColor:'#e2564d', borderDash:[7,5], borderWidth:2, pointRadius:0, fill:false,
+      datalabels:{display:false}
+    });
+  }
+
+  const mttrCtx = document.getElementById('heroMttrChart');
+  if(heroMttrChart) heroMttrChart.destroy();
+  heroMttrChart = new Chart(mttrCtx, {
+    data:{ labels, datasets: mttrDatasets },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:'#1a2230', boxWidth:12, font:{size:11}}}},
+      scales:{
+        y:{beginAtZero:true, title:{display:true,text:'MTTR (h/건)',color:'#5b6b7d'}, grid:{color:'#e8ecf1'}},
+        x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, font:{size:10.5}}}
+      }
+    }
+  });
+
+  // ---- MTBF chart ----
+  const hasMtbfTarget = targetMTBF !== null && !isNaN(targetMTBF);
+  const mtbfDatasets = [{
+    type:'bar', label:'MTBF (h/건)', data: rows.map(r=>r.mtbf),
+    backgroundColor: rows.map(r=>{
+      if(r.cnt===0) return '#d7dde4';
+      if(hasMtbfTarget) return r.mtbf < targetMTBF ? '#e2564dcc' : '#34c98ecc';
+      return '#34c98ecc';
+    }),
+    borderRadius:3,
+    datalabels:{
+      anchor:'end', align:'top', color:'#111826', font:{size:12, weight:'800'},
+      formatter: v => v>0 ? v.toFixed(2) : ''
+    }
+  }];
+  if(hasMtbfTarget){
+    mtbfDatasets.push({
+      type:'line', label:`목표 MTBF ${targetMTBF}`, data: rows.map(()=>targetMTBF),
+      borderColor:'#4fd1ff', borderDash:[7,5], borderWidth:2, pointRadius:0, fill:false,
+      datalabels:{display:false}
+    });
+  }
+
+  const mtbfCtx = document.getElementById('heroMtbfChart');
+  if(heroMtbfChart) heroMtbfChart.destroy();
+  heroMtbfChart = new Chart(mtbfCtx, {
+    data:{ labels, datasets: mtbfDatasets },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{color:'#1a2230', boxWidth:12, font:{size:11}}}},
+      scales:{
+        y:{beginAtZero:true, title:{display:true,text:'MTBF (h/건)',color:'#5b6b7d'}, grid:{color:'#e8ecf1'}},
+        x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, font:{size:10.5}}}
+      }
+    }
+  });
+}
+
+// ---------- DETAIL: DC ranking (driven by date range + own category chips) ----------
+function filterDCData(){
+  const s = document.getElementById('startDate').value;
+  const e = document.getElementById('endDate').value;
+  const run = RUN.filter(r => r.d >= s && r.d <= e);
+  let loss = LOSS.filter(r => r.d >= s && r.d <= e);
+  if(dcCat !== 'ALL') loss = loss.filter(r => r.c === dcCat);
+  return {run, loss};
+}
+
+function renderDetail(){
+  const dcData = filterDCData();
+  renderDCWorst(dcData.run, dcData.loss);
+}
+
+// ---------- PARETO: own date range + own category chips ----------
+function filterParetoData(){
+  const s = document.getElementById('paretoStartDate').value;
+  const e = document.getElementById('paretoEndDate').value;
+  let loss = LOSS.filter(r => r.d >= s && r.d <= e);
+  if(paretoCat !== 'ALL') loss = loss.filter(r => r.c === paretoCat);
+  return loss;
+}
+
+function renderParetoSection(){
+  renderPareto(filterParetoData());
+}
+
+let lastDCRows = [];   // shared state for click-to-analyze
+let lastDCLoss = [];   // the loss rows currently backing the DC worst charts
+
+function renderDCWorst(run, loss){
+  const runByM = {}, lossByM = {}, cntByM = {};
+  run.forEach(r=>{ runByM[r.m]=(runByM[r.m]||0)+r.r; });
+  loss.forEach(r=>{ lossByM[r.m]=(lossByM[r.m]||0)+r.l; cntByM[r.m]=(cntByM[r.m]||0)+1; });
+
+  let rows = ALL_MACHINES.map(m=>{
+    const c = cntByM[m]||0;
+    const l = (lossByM[m]||0)/60;
+    const rH = (runByM[m]||0)/60;
+    return {m, mttr: c ? l/c : 0, mtbf: c ? rH/c : 0, cnt:c};
+  }).filter(r=>r.cnt>0);
+
+  lastDCRows = rows;
+  lastDCLoss = loss;
+
+  // ---- MTTR worst: highest MTTR first ----
+  const mttrRows = [...rows].sort((a,b)=> b.mttr - a.mttr);
+  const mttrLabels = mttrRows.map(r=>'DC'+r.m + (BROKEN.has(r.m)?' ⚠':''));
+  const mttrCtx = document.getElementById('dcMttrChart');
+  if(dcMttrChart) dcMttrChart.destroy();
+  dcMttrChart = new Chart(mttrCtx, {
+    type:'bar',
+    data:{
+      labels: mttrLabels,
+      datasets:[{
+        label:'MTTR (h/건)', data: mttrRows.map(r=>r.mttr),
+        backgroundColor: mttrRows.map(r=> r.mttr>2 ? '#e2564dcc' : r.mttr>1 ? '#e8a33dcc' : '#34c98ecc'),
+        borderRadius:3,
+        datalabels:{anchor:'end', align:'top', color:'#111826', font:{size:11, weight:'800'}, formatter:v=>v>0?v.toFixed(2):''}
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      onClick:(evt, elements)=>{
+        if(elements.length){ showDCAnalysis(mttrRows[elements[0].index].m); }
+      },
+      onHover:(evt, elements)=>{ evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; },
+      scales:{
+        y:{beginAtZero:true, title:{display:true,text:'MTTR (h/건)',color:'#5b6b7d'}, grid:{color:'#e8ecf1'}},
+        x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, font:{size:10}}}
+      }
+    }
+  });
+
+  // ---- MTBF worst: lowest MTBF first ----
+  const mtbfRows = [...rows].sort((a,b)=> a.mtbf - b.mtbf);
+  const mtbfLabels = mtbfRows.map(r=>'DC'+r.m + (BROKEN.has(r.m)?' ⚠':''));
+  const mtbfCtx = document.getElementById('dcMtbfChart');
+  if(dcMtbfChart) dcMtbfChart.destroy();
+  dcMtbfChart = new Chart(mtbfCtx, {
+    type:'bar',
+    data:{
+      labels: mtbfLabels,
+      datasets:[{
+        label:'MTBF (h/건)', data: mtbfRows.map(r=>r.mtbf),
+        backgroundColor: mtbfRows.map(r=> r.mtbf<1 ? '#e2564dcc' : r.mtbf<2 ? '#e8a33dcc' : '#34c98ecc'),
+        borderRadius:3,
+        datalabels:{anchor:'end', align:'top', color:'#111826', font:{size:11, weight:'800'}, formatter:v=>v>0?v.toFixed(2):''}
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      onClick:(evt, elements)=>{
+        if(elements.length){ showDCAnalysis(mtbfRows[elements[0].index].m); }
+      },
+      onHover:(evt, elements)=>{ evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; },
+      scales:{
+        y:{beginAtZero:true, title:{display:true,text:'MTBF (h/건)',color:'#5b6b7d'}, grid:{color:'#e8ecf1'}},
+        x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, font:{size:10}}}
+      }
+    }
+  });
+
+  // if a machine is currently under analysis, refresh its panel with new filter scope
+  if(selectedDCForAnalysis !== null){
+    if(rows.some(r=>r.m === selectedDCForAnalysis)){
+      showDCAnalysis(selectedDCForAnalysis);
+    }else{
+      hideDCAnalysis();
+    }
+  }
+}
+
+let selectedDCForAnalysis = null;
+
+function hideDCAnalysis(){
+  selectedDCForAnalysis = null;
+  document.getElementById('dcAnalysisPanel').style.display = 'none';
+}
+
+function showDCAnalysis(m){
+  selectedDCForAnalysis = m;
+  const row = lastDCRows.find(r=>r.m === m);
+  if(!row) return;
+
+  const panel = document.getElementById('dcAnalysisPanel');
+  panel.style.display = 'block';
+
+  // ---- 원인분석: top 5 세부항목 for this machine ----
+  const machineLoss = lastDCLoss.filter(r=>r.m === m);
+  const byItem = {};
+  machineLoss.forEach(r=>{ byItem[r.i] = (byItem[r.i]||0) + r.l; });
+  let items = Object.entries(byItem).map(([item, min])=>({item, h: min/60}));
+  items.sort((a,b)=>b.h-a.h);
+  const totalItemH = items.reduce((a,r)=>a+r.h,0);
+  items = items.slice(0,5);
+
+  const causeListHtml = items.map(it=>{
+    const pct = totalItemH ? (it.h/totalItemH*100) : 0;
+    return `<li>
+      <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between;">
+          <span class="cause-name">${it.item}</span>
+          <span class="cause-val">${it.h.toFixed(1)}h (${pct.toFixed(0)}%)</span>
+        </div>
+        <div class="cause-bar" style="width:${Math.max(pct,2)}%;"></div>
+      </div>
+    </li>`;
+  }).join('');
+
+  // ---- fleet averages for comparison ----
+  const validRows = lastDCRows.filter(r=>r.cnt>0);
+  const avgMttr = validRows.reduce((a,r)=>a+r.mttr,0) / (validRows.length||1);
+  const avgMtbf = validRows.reduce((a,r)=>a+r.mtbf,0) / (validRows.length||1);
+
+  const mttrSorted = [...validRows].sort((a,b)=>b.mttr-a.mttr);
+  const mttrRank = mttrSorted.findIndex(r=>r.m===m) + 1;
+  const isBroken = BROKEN.has(m);
+
+  const topItem = items[0];
+  const topItemPct = topItem && totalItemH ? (topItem.h/totalItemH*100) : 0;
+
+  const strengths = [];
+  const weaknesses = [];
+  const opportunities = [];
+  const threats = [];
+
+  if(row.mttr <= avgMttr) strengths.push(`MTTR ${row.mttr.toFixed(2)}h/건 — 전체 평균(${avgMttr.toFixed(2)}h/건)보다 수리시간이 짧음`);
+  if(row.mtbf >= avgMtbf) strengths.push(`MTBF ${row.mtbf.toFixed(2)}h/건 — 전체 평균(${avgMtbf.toFixed(2)}h/건)보다 무고장 주기가 김`);
+  if(strengths.length===0) strengths.push('현재 필터 기준으로는 평균 대비 뚜렷한 강점이 없음');
+
+  if(row.mttr > avgMttr) weaknesses.push(`MTTR ${row.mttr.toFixed(2)}h/건 — 전체 평균(${avgMttr.toFixed(2)}h/건)보다 수리시간이 김`);
+  if(row.mtbf < avgMtbf) weaknesses.push(`MTBF ${row.mtbf.toFixed(2)}h/건 — 전체 평균(${avgMtbf.toFixed(2)}h/건)보다 자주 고장`);
+  if(weaknesses.length===0) weaknesses.push('현재 필터 기준으로는 평균 대비 뚜렷한 약점이 없음');
+
+  if(topItem) opportunities.push(`'${topItem.item}' 항목이 이 설비 로스의 ${topItemPct.toFixed(0)}%(${topItem.h.toFixed(1)}h) 차지 — 우선 개선 시 MTTR 개선 효과가 가장 큼`);
+  opportunities.push(`고장 ${row.cnt}건 · 원인 상위 ${Math.min(items.length,3)}개 항목에 집중하면 재발 방지 여지 있음`);
+
+  if(isBroken) threats.push('현재 고장으로 가동 중단 상태 — 복구 전까지 생산 손실 지속');
+  if(mttrRank <= 3) threats.push(`전체 설비 중 MTTR 상위 ${mttrRank}위 — 지속 시 라인 가동률에 영향 우려`);
+  if(threats.length===0) threats.push('현재 필터 기준으로는 즉각적 위협 요인 없음');
+
+  const toLi = arr => arr.map(t=>`<li>${t}</li>`).join('');
+
+  panel.innerHTML = `
+    <div class="analysis-head">
+      <h3>DC${m} 원인분석 · SWOT ${isBroken?'<span style="color:#d13a30;font-size:12px;">(고장/가동중단)</span>':''}</h3>
+      <button class="close-btn" onclick="hideDCAnalysis()">닫기 ✕</button>
+    </div>
+    <div class="analysis-stats">
+      <span>MTTR <b>${row.mttr.toFixed(2)}</b> h/건</span>
+      <span>MTBF <b>${row.mtbf.toFixed(2)}</b> h/건</span>
+      <span>고장건수 <b>${row.cnt}</b>건</span>
+      <span>MTTR 순위 <b>${mttrRank}</b>/${validRows.length}위</span>
+    </div>
+    <div class="analysis-grid">
+      <div>
+        <div class="mini-title">원인분석 — 세부 로스유형 Top ${items.length}</div>
+        <ul class="cause-list">${causeListHtml || '<li>선택 기간·카테고리에 해당하는 로스 데이터가 없음</li>'}</ul>
+      </div>
+      <div class="swot-grid">
+        <div class="swot-cell swot-s"><span class="swot-label">STRENGTH</span><ul>${toLi(strengths)}</ul></div>
+        <div class="swot-cell swot-w"><span class="swot-label">WEAKNESS</span><ul>${toLi(weaknesses)}</ul></div>
+        <div class="swot-cell swot-o"><span class="swot-label">OPPORTUNITY</span><ul>${toLi(opportunities)}</ul></div>
+        <div class="swot-cell swot-t"><span class="swot-label">THREAT</span><ul>${toLi(threats)}</ul></div>
+      </div>
+    </div>
+  `;
+}
+
+
+
+let lastParetoLoss = [];   // shared state for click-to-analyze
+
+function renderPareto(loss){
+  lastParetoLoss = loss;
+  const byItem = {};
+  loss.forEach(r=>{ byItem[r.i] = (byItem[r.i]||0) + r.l; });
+  let arr = Object.entries(byItem).map(([item,min])=>({item, h: min/60}));
+  arr.sort((a,b)=>b.h-a.h);
+  arr = arr.slice(0,10);
+  const total = arr.reduce((a,r)=>a+r.h,0);
+  let cum = 0;
+  const cumArr = arr.map(r=>{ cum += r.h; return total? cum/total*100 : 0; });
+
+  const ctx = document.getElementById('paretoChart');
+  if(paretoChart) paretoChart.destroy();
+  paretoChart = new Chart(ctx, {
+    data:{
+      labels: arr.map(r=>r.item),
+      datasets:[
+        {type:'bar', label:'로스시간(h)', data:arr.map(r=>r.h), backgroundColor:'#e8a33dcc', yAxisID:'y', borderRadius:4,
+         datalabels:{anchor:'end', align:'top', color:'#1a2230', font:{size:10, weight:'800'}, formatter:v=>v.toFixed(1)}},
+        {type:'line', label:'누적 비율(%)', data:cumArr, borderColor:'#34c98e', backgroundColor:'#34c98e', yAxisID:'y1', tension:.25, pointRadius:3,
+         datalabels:{display:false}}
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#1a2230', boxWidth:12}}},
+      onClick:(evt, elements)=>{
+        if(elements.length){
+          const el = elements.find(e=>e.datasetIndex===0) || elements[0];
+          showParetoAnalysis(arr[el.index].item);
+        }
+      },
+      onHover:(evt, elements)=>{ evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; },
+      scales:{
+        y:{position:'left', title:{display:true,text:'로스시간(h)',color:'#5b6b7d'}, grid:{color:'#e8ecf1'}},
+        y1:{position:'right', min:0, max:100, title:{display:true,text:'누적 비율(%)',color:'#5b6b7d'}, grid:{display:false}},
+        x:{ticks:{maxRotation:40, minRotation:20, font:{size:13, weight:'600'}, color:'#1a2230'}, grid:{display:false}}
+      }
+    }
+  });
+
+  if(selectedParetoItem !== null){
+    if(lastParetoLoss.some(r=>r.i===selectedParetoItem)){
+      showParetoAnalysis(selectedParetoItem);
+    }else{
+      hideParetoAnalysis();
+    }
+  }
+}
+
+let selectedParetoItem = null;
+
+function hideParetoAnalysis(){
+  selectedParetoItem = null;
+  document.getElementById('paretoAnalysisPanel').style.display = 'none';
+}
+
+function showParetoAnalysis(item){
+  selectedParetoItem = item;
+  const panel = document.getElementById('paretoAnalysisPanel');
+  panel.style.display = 'block';
+
+  const rows = lastParetoLoss.filter(r=>r.i === item);
+  const totalH = rows.reduce((a,r)=>a+r.l,0)/60;
+  const cnt = rows.length;
+  const avgH = cnt ? totalH/cnt : 0;
+  const cat = rows.length ? rows[0].c : '';
+
+  const byM = {};
+  rows.forEach(r=>{
+    if(!byM[r.m]) byM[r.m] = {h:0, cnt:0};
+    byM[r.m].h += r.l/60;
+    byM[r.m].cnt += 1;
+  });
+  let dcRows = Object.entries(byM).map(([m,v])=>({m:parseInt(m), h:v.h, cnt:v.cnt}));
+  dcRows.sort((a,b)=>b.h-a.h);
+  const maxH = dcRows.length ? dcRows[0].h : 0;
+
+  const dcListHtml = dcRows.map(r=>{
+    const pct = maxH ? (r.h/maxH*100) : 0;
+    const label = 'DC'+r.m + (BROKEN.has(r.m)?' ⚠':'');
+    return `<li>
+      <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between;">
+          <span class="cause-name">${label}</span>
+          <span class="cause-val">${r.h.toFixed(1)}h · ${r.cnt}건</span>
+        </div>
+        <div class="cause-bar" style="width:${Math.max(pct,2)}%;"></div>
+      </div>
+    </li>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div class="analysis-head">
+      <h3>'${item}' 세부 내용 <span style="color:#8a97a6; font-size:12px; font-weight:400;">(${cat})</span></h3>
+      <button class="close-btn" onclick="hideParetoAnalysis()">닫기 ✕</button>
+    </div>
+    <div class="analysis-stats">
+      <span>총 로스시간 <b>${totalH.toFixed(1)}</b> h</span>
+      <span>발생건수 <b>${cnt}</b>건</span>
+      <span>평균 <b>${avgH.toFixed(2)}</b> h/건</span>
+      <span>발생 설비 <b>${dcRows.length}</b>대</span>
+    </div>
+    <div class="mini-title">설비별 발생 현황 (로스시간 순)</div>
+    <ul class="cause-list">${dcListHtml || '<li>데이터 없음</li>'}</ul>
+  `;
+}
+
+loadData();
+</script>
+</body>
+</html>
