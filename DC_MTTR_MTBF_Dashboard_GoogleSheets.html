@@ -372,11 +372,11 @@
       <div class="hero-canvas-wrap">
         <div class="hero-split">
           <div>
-            <div class="mini-title">설비별 MTTR (h/건) <span id="heroMttrScope"></span> <span style="color:#8a97a6;">— 막대 클릭 시 세부 내용</span></div>
+            <div class="mini-title">설비별 MTTR (h/건) <span id="heroMttrScope"></span> <span style="color:#8a97a6;">— 막대 클릭 시 세부 내용 · 목표 설정 시 <b style="color:#c0392b;">WORST3</b> 표시</span></div>
             <canvas id="heroMttrChart" height="200"></canvas>
           </div>
           <div>
-            <div class="mini-title">설비별 MTBF (h/건) <span id="heroMtbfScope"></span> <span style="color:#8a97a6;">— 막대 클릭 시 세부 내용</span></div>
+            <div class="mini-title">설비별 MTBF (h/건) <span id="heroMtbfScope"></span> <span style="color:#8a97a6;">— 막대 클릭 시 세부 내용 · 목표 설정 시 <b style="color:#c0392b;">WORST3</b> 표시</span></div>
             <canvas id="heroMtbfChart" height="200"></canvas>
           </div>
         </div>
@@ -2440,6 +2440,40 @@ function renderHero(){
 
   const labels = rows.map(r=>'DC'+r.m + (BROKEN.has(r.m)?' ⚠':''));
 
+  // 목표를 설정했을 때만, 목표를 못 지킨 설비 중 나쁜 순으로 최대 3곳을 표시한다
+  //  · MTTR: 값이 클수록 나쁨 (목표 초과분)
+  //  · MTBF: 값이 작을수록 나쁨 (목표 미달분)
+  const worstRankMap = (key, tgt, dir) => {
+    const map = {};
+    if (tgt === null || isNaN(tgt)) return map;
+    rows.map((r,i)=>({i, v:r[key], cnt:r.cnt}))
+        .filter(x => x.cnt > 0 && x.v > 0 && (dir === 'high' ? x.v > tgt : x.v < tgt))
+        .sort((a,b) => dir === 'high' ? b.v - a.v : a.v - b.v)
+        .slice(0,3)
+        .forEach((x,k) => { map[x.i] = k+1; });
+    return map;
+  };
+  const mttrWorst = worstRankMap('mttr', targetMTTR, 'high');
+  const mtbfWorst = worstRankMap('mtbf', targetMTBF, 'low');
+
+  // 값 라벨 + 워스트 뱃지를 함께 그리는 datalabels 설정
+  const labelCfg = (rankMap) => ({
+    labels: {
+      value: {
+        anchor:'end', align:'top', color:'#111826', font:{size:9, weight:'700'},
+        offset:1, clamp:true,
+        formatter: v => v>0 ? v.toFixed(2) : ''
+      },
+      rank: {
+        anchor:'end', align:'top', offset:17, clamp:true,
+        color:'#fff', backgroundColor:'#c0392b', borderRadius:7,
+        padding:{top:2, bottom:2, left:5, right:5},
+        font:{size:8, weight:'800'},
+        formatter: (v, ctx) => rankMap[ctx.dataIndex] ? 'WORST'+rankMap[ctx.dataIndex] : null
+      }
+    }
+  });
+
   // ---- MTTR chart ----
   const hasMttrTarget = targetMTTR !== null && !isNaN(targetMTTR);
   const mttrColors = rows.map(r=>{
@@ -2452,11 +2486,7 @@ function renderHero(){
     type:'bar', label:'MTTR (h/건)', data: rows.map(r=>r.mttr),
     backgroundColor: [...mttrColors],
     borderRadius:3,
-    datalabels:{
-      anchor:'end', align:'top', color:'#111826', font:{size:9, weight:'700'},
-      offset:1, clamp:true,
-      formatter: v => v>0 ? v.toFixed(2) : ''
-    }
+    datalabels: labelCfg(mttrWorst)
   }];
   if(hasMttrTarget){
     mttrDatasets.push({
@@ -2501,11 +2531,7 @@ function renderHero(){
     type:'bar', label:'MTBF (h/건)', data: rows.map(r=>r.mtbf),
     backgroundColor: [...mtbfColors],
     borderRadius:3,
-    datalabels:{
-      anchor:'end', align:'top', color:'#111826', font:{size:9, weight:'700'},
-      offset:1, clamp:true,
-      formatter: v => v>0 ? v.toFixed(2) : ''
-    }
+    datalabels: labelCfg(mtbfWorst)
   }];
   if(hasMtbfTarget){
     mtbfDatasets.push({
