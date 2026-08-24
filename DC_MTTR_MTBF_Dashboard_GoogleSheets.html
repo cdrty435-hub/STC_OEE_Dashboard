@@ -275,6 +275,16 @@
     .row-2{grid-template-columns:1fr;}
     .hero-head{flex-direction:column;}
   }
+  .cost-cats{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;
+             border:1px solid #d8dfe7;border-radius:9px;padding:4px 8px;background:#fff;}
+  .cost-cats .cc-label{font-size:11px;color:#8b96a3;font-weight:700;margin-right:2px;}
+  .cc-chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;cursor:pointer;
+           border:1px solid #e2e7ec;border-radius:13px;padding:3px 9px;background:#fafbfc;user-select:none;}
+  .cc-chip:hover{border-color:#b9c2cb;}
+  .cc-chip input{margin:0;cursor:pointer;}
+  .cc-chip.on{background:#fff3e2;border-color:#e8a33d;color:#8a5a10;font-weight:700;}
+  .cc-chip.cc-udt.on{background:#fdeceb;border-color:#e2564d;color:#a3241c;}
+  .cc-btn{padding:3px 9px;font-size:11px;}
 </style>
 </head>
 <body>
@@ -676,11 +686,16 @@
             <option value="month">월간</option>
             <option value="range">기간 합계 (단일 집계)</option>
           </select>
-          <select id="costBasis" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:12px;">
-            <option value="eq">⑤ 설비 비용 (전기+라인)</option>
-            <option value="all">⑥ 전체 비용 (금형+설비+관리)</option>
-            <option value="udt">계획외 고장(UDT)만</option>
-          </select>
+          <span class="cost-cats" id="costCats">
+            <span class="cc-label">유형</span>
+            <label class="cc-chip"><input type="checkbox" class="ccBox" value="설비-전기" checked>1.설비-전기</label>
+            <label class="cc-chip"><input type="checkbox" class="ccBox" value="설비-라인" checked>2.설비-라인</label>
+            <label class="cc-chip"><input type="checkbox" class="ccBox" value="금형">3.금형</label>
+            <label class="cc-chip"><input type="checkbox" class="ccBox" value="관리">4.관리</label>
+            <button type="button" class="cat-chip cc-btn" id="ccAll">전체</button>
+            <button type="button" class="cat-chip cc-btn" id="ccEq">설비만</button>
+            <label class="cc-chip cc-udt"><input type="checkbox" id="ccUdt">계획외 고장(UDT)만</label>
+          </span>
           <label style="font-size:11px;color:#8b96a3">목표
             <input type="number" id="costTarget" value="60000" step="1000" style="width:88px;border:1px solid #d8dfe7;border-radius:7px;padding:6px 8px;font-size:12px;margin-left:4px;"> THB</label>
           <select id="costScope" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:12px;">
@@ -2184,23 +2199,50 @@ function costRange(){
   return { s:a, e:b, f:r=>(!a||r.d>=a)&&(!b||r.d<=b) };
 }
 const COST_G = ['설비-전기','설비-라인','금형','관리'];
-function basisSet(basis){
-  if(basis==='eq')  return new Set(['설비-전기','설비-라인']);
-  return new Set(COST_G);
+// 체크된 유형 목록 (1.설비-전기 / 2.설비-라인 / 3.금형 / 4.관리 자유 조합)
+function selectedCostCats(){
+  const on = [...document.querySelectorAll('.ccBox')].filter(b=>b.checked).map(b=>b.value);
+  return on.length ? on : COST_G.slice();   // 아무것도 안 고르면 전체로 간주
+}
+function isUdtOnly(){
+  const el = document.getElementById('ccUdt');
+  return !!(el && el.checked);
+}
+// 칩 on/off 표시 + 선택 내용을 라벨로 요약
+function refreshCostCats(){
+  document.querySelectorAll('#costCats .cc-chip').forEach(lb=>{
+    const box = lb.querySelector('input');
+    lb.classList.toggle('on', !!(box && box.checked));
+  });
+  const udt = isUdtOnly();
+  document.querySelectorAll('.ccBox').forEach(b=>{ b.disabled = udt; });
+  document.querySelectorAll('#costCats .cc-chip:not(.cc-udt)').forEach(lb=>{
+    lb.style.opacity = udt ? .45 : 1;
+  });
+  ['ccAll','ccEq'].forEach(id=>{ const b=document.getElementById(id); if(b) b.disabled = udt; });
+}
+function costBasisLabel(){
+  if(isUdtOnly()) return '계획외 고장(UDT)만';
+  const on = selectedCostCats();
+  return on.length === COST_G.length ? '전체 유형' : on.join('+');
+}
+function basisSet(){
+  return new Set(selectedCostCats());
 }
 function renderCost(){
   if(!RUN.length) return;
   const RATE  = getRates();
   const tgt   = parseFloat(document.getElementById('costTarget').value)||0;
   const scope = document.getElementById('costScope').value;
-  const basis = document.getElementById('costBasis').value;
+  const basis = isUdtOnly() ? 'udt' : 'sel';
   const mode  = document.getElementById('costPeriod').value;
   const rg    = costRange();
   const RUNr  = RUN.filter(rg.f), LOSSr = LOSS.filter(rg.f);
   COST_RANGE_LABEL = (rg.s||'전체') + ' ~ ' + (rg.e||'전체');
   const per   = periodsOf(mode, RUNr);
-  const keep  = basisSet(basis);
+  const keep  = basisSet();
   const src   = (basis==='udt') ? fails(LOSSr) : LOSSr.filter(r=>keep.has(r.s));
+  refreshCostCats();
   const cost  = r => r.l * (RATE[r.m]||0);
   const mcs   = ALL_MACHINES.slice();
   const pName = mode==='month' ? '월' : mode==='range' ? '기간' : '주차';
@@ -2217,7 +2259,7 @@ function renderCost(){
   const udtC = fails(LOSSr).reduce((a,x)=>a+cost(x),0);
   const nP = per.length||1;
   document.getElementById('costKpi').innerHTML = [
-    ['선택 기준 총액', Math.round(grand).toLocaleString(), `${per.length}개 ${pName}`],
+    [`선택 기준 총액 · ${costBasisLabel()}`, Math.round(grand).toLocaleString(), `${per.length}개 ${pName}`],
     [`${pName} 평균`, Math.round(grand/nP).toLocaleString(), `목표 ${tgt.toLocaleString()} THB`],
     ['⑤ 설비 비용', Math.round(eqC).toLocaleString(), `전체의 ${(eqC/allC*100).toFixed(1)}%`],
     ['⑥ 전체 비용', Math.round(allC).toLocaleString(), `계획외 고장분 ${(udtC/allC*100).toFixed(1)}%`]
@@ -2333,12 +2375,12 @@ function renderCost(){
 }
 function costCsvDown(){
   const RATE=getRates();
-  const basis=document.getElementById('costBasis').value;
+  const basis=isUdtOnly()?'udt':costBasisLabel().replace(/[+\s]/g,'-');
   const mode=document.getElementById('costPeriod').value;
   const rg=costRange();
   const RUNr=RUN.filter(rg.f), LOSSr=LOSS.filter(rg.f);
   COST_RANGE_LABEL=(rg.s||'전체')+' ~ '+(rg.e||'전체');
-  const per=periodsOf(mode,RUNr), keep=basisSet(basis);
+  const per=periodsOf(mode,RUNr), keep=basisSet();
   const src=(basis==='udt')?fails(LOSSr):LOSSr.filter(r=>keep.has(r.s));
   const idx={}; src.forEach(r=>{const k=r.m+'|'+periodKey(r,mode); idx[k]=(idx[k]||0)+r.l*(RATE[r.m]||0);});
   const esc=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
@@ -2354,8 +2396,19 @@ function costCsvDown(){
 }
 document.getElementById('rateToggle').addEventListener('click', ()=>{
   document.getElementById('ratePanel').classList.toggle('open'); });
-['costTarget','costScope','costBasis','costPeriod','costStart','costEnd'].forEach(id=>
+['costTarget','costScope','costPeriod','costStart','costEnd'].forEach(id=>
   document.getElementById(id).addEventListener('change', renderCost));
+document.querySelectorAll('.ccBox').forEach(b=>b.addEventListener('change', ()=>{ refreshCostCats(); renderCost(); }));
+document.getElementById('ccUdt').addEventListener('change', ()=>{ refreshCostCats(); renderCost(); });
+document.getElementById('ccAll').addEventListener('click', ()=>{
+  document.querySelectorAll('.ccBox').forEach(b=>b.checked = true);
+  refreshCostCats(); renderCost();
+});
+document.getElementById('ccEq').addEventListener('click', ()=>{
+  document.querySelectorAll('.ccBox').forEach(b=>b.checked = (b.value==='설비-전기'||b.value==='설비-라인'));
+  refreshCostCats(); renderCost();
+});
+refreshCostCats();
 document.getElementById('costRangeReset').addEventListener('click', ()=>{
   const ds=RUN.map(r=>r.d).sort();
   document.getElementById('costStart').value = ds[0]||'';
