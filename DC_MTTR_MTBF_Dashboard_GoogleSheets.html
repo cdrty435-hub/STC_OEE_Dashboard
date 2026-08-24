@@ -1129,10 +1129,16 @@ function buildWeekChips(){
 }
 
 function refreshWeekChips(){
+  // 주차 값은 'W29' 같은 문자열이다. parseInt를 쓰면 NaN이 되어 선택 표시가 모두 풀린다.
   document.querySelectorAll('.week-chip[data-week]').forEach(btn=>{
-    const wk = parseInt(btn.dataset.week);
+    const wk = btn.dataset.week;
     btn.classList.toggle('active', selectedWeeks.has(wk));
   });
+  // 마지막 클릭 버튼에 남는 포커스 테두리가 '선택됨'처럼 보이는 것을 막는다
+  if (document.activeElement && document.activeElement.classList &&
+      document.activeElement.classList.contains('week-chip')) {
+    document.activeElement.blur();
+  }
 }
 
 const TKEY_MTTR='stc_target_mttr', TKEY_MTBF='stc_target_mtbf';
