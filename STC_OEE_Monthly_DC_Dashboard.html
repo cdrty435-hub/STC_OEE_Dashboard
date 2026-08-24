@@ -1371,15 +1371,21 @@ function renderChart(days) {
     afterDatasetsDraw(c) {
       const meta = c.getDatasetMeta(3); // 라인(가동률) 데이터셋 인덱스
       if (!meta || meta.hidden) return;
-      const {ctx: cctx} = c;
+      const {ctx: cctx, chartArea: area} = c;
       cctx.save();
       cctx.font = '700 11px Segoe UI, sans-serif';
       cctx.fillStyle = '#7c3aed';
       cctx.textAlign = 'center';
+      cctx.textBaseline = 'bottom';
       meta.data.forEach((point, i) => {
         const v = rate[i];
         if (v === null || v === undefined) return;
-        cctx.fillText(v + '%', point.x, point.y - 10);
+        let y = point.y - 10;
+        // 위쪽 경계를 넘으면 점 아래쪽에 표기 (100%에 가까운 날 라벨 잘림 방지)
+        if (y - 11 < area.top) { y = point.y + 22; cctx.textBaseline = 'bottom'; }
+        // 좌우 끝 라벨이 캔버스 밖으로 나가지 않게 안쪽으로 당김
+        const x = Math.min(Math.max(point.x, area.left + 14), area.right - 14);
+        cctx.fillText(v + '%', x, y);
       });
       cctx.restore();
     }
@@ -1399,7 +1405,7 @@ function renderChart(days) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { top: 20 } },
+      layout: { padding: { top: 34, right: 8, left: 4 } },
       interaction: { mode:'index', intersect:false },
       onClick: (evt, elements, chartInstance) => {
         const points = chartInstance.getElementsAtEventForMode(evt, 'index', { intersect:false }, false);
@@ -1427,6 +1433,8 @@ function renderChart(days) {
         y: {
           stacked: true,
           position:'left',
+          beginAtZero: true,
+          grace: '15%',
           title:{ display:true, text:'Loss 시간(분)', color:'#8b96ad' },
           ticks:{ color:'#8b96ad' },
           grid:{ color:'rgba(255,255,255,.06)' }
@@ -1435,7 +1443,7 @@ function renderChart(days) {
           position:'right',
           min:0, max:100,
           title:{ display:true, text:'가동률(A) %', color:'#8b96ad' },
-          ticks:{ color:'#8b96ad' },
+          ticks:{ color:'#8b96ad', stepSize:20 },
           grid:{ drawOnChartArea:false }
         }
       }
