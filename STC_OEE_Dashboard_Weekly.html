@@ -99,7 +99,14 @@
       </div>
       <div class="control-group" id="weekModeGroup">
         <label>주차:</label>
-        <select id="weekSelect" onchange="renderAll()"></select>
+        <select id="weekSelect" onchange="onWeekSelectChange()"></select>
+        <span class="rng-sep" style="color:#fff; font-weight:700; opacity:.85;">·</span>
+        <label style="font-size:12px;">기간:</label>
+        <input type="date" id="weekRangeStart" onchange="onWeekRangeNarrow('start')" style="padding:6px 8px; border:none; border-radius:4px; font-size:13px;">
+        <span style="color:#fff;">~</span>
+        <input type="date" id="weekRangeEnd" onchange="onWeekRangeNarrow('end')" style="padding:6px 8px; border:none; border-radius:4px; font-size:13px;">
+        <button class="pd-preset" onclick="resetWeekRange()">주차 전체</button>
+        <span id="weekNarrowNote" style="display:none; white-space:nowrap; font-size:12px; font-weight:700; color:#7a4b00; background:#fff3d6; border:1px solid #ffd88a; border-radius:12px; padding:4px 10px;">&#9986; 주차 일부 구간</span>
       </div>
       <div class="control-group" id="periodModeGroup" style="display:none;">
         <label>기간:</label>
@@ -580,6 +587,64 @@ function dailyFromStore(startDate, endDate, scope){
 
 function isPeriodMode(){ return document.getElementById('viewModeSelect').value === 'period'; }
 
+/* ---------- 주차 내 기간 좁히기 ---------- */
+// 선택한 주차가 실제로 덮는 날짜 구간
+function weekBounds(label){
+  const w = DATA && DATA.weeks ? DATA.weeks[label] : null;
+  if (!w || !w.startDate) return { min:null, max:null };
+  return { min: w.startDate, max: w.endDate || w.startDate };
+}
+
+// 주차 입력칸을 해당 주차 범위로 제한하고, 비어 있거나 벗어나면 주차 전체로 되돌린다
+function syncWeekRangeInputs(resetToFull){
+  const sEl = document.getElementById('weekRangeStart');
+  const eEl = document.getElementById('weekRangeEnd');
+  if (!sEl || !eEl) return;
+  const { min, max } = weekBounds(currentWeekLabel());
+  if (!min) { sEl.value = eEl.value = ''; sEl.disabled = eEl.disabled = true; return; }
+  sEl.disabled = eEl.disabled = false;
+  sEl.min = eEl.min = min;
+  sEl.max = eEl.max = max;
+  if (resetToFull || !sEl.value || !eEl.value || sEl.value < min || eEl.value > max || sEl.value > eEl.value) {
+    sEl.value = min; eEl.value = max;
+  }
+}
+
+// 현재 주차에서 실제로 볼 구간
+function weekSubRange(){
+  const sEl = document.getElementById('weekRangeStart');
+  const eEl = document.getElementById('weekRangeEnd');
+  const { min, max } = weekBounds(currentWeekLabel());
+  if (!min) return { start:null, end:null, full:true };
+  const start = (sEl && sEl.value) ? sEl.value : min;
+  const end   = (eEl && eEl.value) ? eEl.value : max;
+  return { start, end, full: (start <= min && end >= max) };
+}
+
+function hasRawRows(){
+  return !!(DATA && DATA.rawA && DATA.rawA.rows && DATA.rawA.rows.length);
+}
+
+function onWeekSelectChange(){
+  syncWeekRangeInputs(true);   // 주차를 바꾸면 그 주차 전체로 초기화
+  renderAll();
+}
+
+function onWeekRangeNarrow(which){
+  const sEl = document.getElementById('weekRangeStart');
+  const eEl = document.getElementById('weekRangeEnd');
+  if (sEl.value && eEl.value && sEl.value > eEl.value) {
+    if (which === 'start') eEl.value = sEl.value; else sEl.value = eEl.value;
+  }
+  syncWeekRangeInputs(false);
+  renderAll();
+}
+
+function resetWeekRange(){
+  syncWeekRangeInputs(true);
+  renderAll();
+}
+
 /* ---------- 기간(시작일~종료일) 선택 ---------- */
 function addDays(ymd, n){
   const d = new Date(ymd + 'T00:00:00');
@@ -681,9 +746,16 @@ function renderGauges(){
     p = (sd && ed) ? periodSummaryFromStore(sd, ed, s) : {A:null,P:null,Q:null};
     titleText = `목표 대비 실적 (${sd||'-'} ~ ${ed||'-'})`;
   } else {
-    const w = DATA.weeks[currentWeekLabel()];
-    p = w ? w.pct[s] : {A:null,P:null,Q:null};
-    titleText = `목표 대비 실적 (${currentWeekLabel()||'-'})`;
+    const sub = weekSubRange();
+    if (!sub.full && hasRawRows()) {
+      // 주차 안에서 기간을 좁힌 경우: 그 날짜 구간만으로 A/P/Q 재계산
+      p = periodSummaryFromStore(sub.start, sub.end, s);
+      titleText = `목표 대비 실적 (${currentWeekLabel()} 중 ${sub.start} ~ ${sub.end})`;
+    } else {
+      const w = DATA.weeks[currentWeekLabel()];
+      p = w ? w.pct[s] : {A:null,P:null,Q:null};
+      titleText = `목표 대비 실적 (${currentWeekLabel()||'-'})`;
+    }
   }
   document.getElementById('gaugeWeekTitle').textContent = titleText;
   drawGauge('gauge-a', p.A, 89, '#2196F3');
@@ -912,8 +984,18 @@ function renderDailyChart(){
   } else {
     const w = DATA.weeks[currentWeekLabel()];
     const daily = w ? (scope==='all' ? w.dailyAll : w.dailyRegular) : {dates:[], A:[]};
-    dates = daily.dates; A = daily.A;
-    titleText = `A(%) PERFORMANCE (${currentWeekLabel()||'-'})`;
+    const sub = weekSubRange();
+    if (!sub.full) {
+      // 주차 안에서 좁힌 구간만 남긴다 (원자료 없이도 동작)
+      const keep = [];
+      (daily.dates||[]).forEach((d,i)=>{ if (d >= sub.start && d <= sub.end) keep.push(i); });
+      dates = keep.map(i=>daily.dates[i]);
+      A = keep.map(i=>daily.A[i]);
+      titleText = `A(%) PERFORMANCE (${currentWeekLabel()} 중 ${sub.start} ~ ${sub.end})`;
+    } else {
+      dates = daily.dates; A = daily.A;
+      titleText = `A(%) PERFORMANCE (${currentWeekLabel()||'-'})`;
+    }
   }
   document.getElementById('dailyTitle').textContent = titleText;
   if (chartInstances.daily) chartInstances.daily.destroy();
@@ -943,6 +1025,18 @@ function renderDailyChart(){
 function renderAll(){
   populateWeekSelect();
   if (typeof clampPeriodInputs === 'function') { clampPeriodInputs(); updatePeriodInfo(); }
+  if (typeof syncWeekRangeInputs === 'function') {
+    syncWeekRangeInputs(false);
+    const sub = weekSubRange();
+    const note = document.getElementById('weekNarrowNote');
+    if (note) {
+      const narrowed = !sub.full;
+      note.style.display = narrowed ? 'inline-block' : 'none';
+      note.textContent = narrowed && !hasRawRows()
+        ? '✂ 주차 일부 구간 (A(%)만 반영 · P/Q는 주차 전체값)'
+        : '✂ 주차 일부 구간';
+    }
+  }
   try { renderGauges(); } catch(e){ console.error('gauge render error', e); }
   try { renderMonthlyChart(); } catch(e){ console.error('monthly render error', e); }
   try { renderWeekTrendChart(); } catch(e){ console.error('5week render error', e); }
