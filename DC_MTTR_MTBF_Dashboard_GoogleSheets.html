@@ -2453,7 +2453,8 @@ function renderHero(){
     backgroundColor: [...mttrColors],
     borderRadius:3,
     datalabels:{
-      anchor:'end', align:'top', color:'#111826', font:{size:12, weight:'800'},
+      anchor:'end', align:'top', color:'#111826', font:{size:9, weight:'700'},
+      offset:1, clamp:true,
       formatter: v => v>0 ? v.toFixed(2) : ''
     }
   }];
@@ -2501,7 +2502,8 @@ function renderHero(){
     backgroundColor: [...mtbfColors],
     borderRadius:3,
     datalabels:{
-      anchor:'end', align:'top', color:'#111826', font:{size:12, weight:'800'},
+      anchor:'end', align:'top', color:'#111826', font:{size:9, weight:'700'},
+      offset:1, clamp:true,
       formatter: v => v>0 ? v.toFixed(2) : ''
     }
   }];
@@ -2709,7 +2711,7 @@ function renderDCWorst(run, loss){
         label:'MTTR (h/건)', data: mttrRows.map(r=>r.mttr),
         backgroundColor: [...mttrColors],
         borderRadius:3,
-        datalabels:{anchor:'end', align:'top', color:'#111826', font:{size:11, weight:'800'}, formatter:v=>v>0?v.toFixed(2):''}
+        datalabels:{anchor:'end', align:'top', color:'#111826', font:{size:9, weight:'700'}, offset:1, clamp:true, formatter:v=>v>0?v.toFixed(2):''}
       }]
     },
     options:{
@@ -2746,7 +2748,7 @@ function renderDCWorst(run, loss){
         label:'MTBF (h/건)', data: mtbfRows.map(r=>r.mtbf),
         backgroundColor: [...mtbfColors],
         borderRadius:3,
-        datalabels:{anchor:'end', align:'top', color:'#111826', font:{size:11, weight:'800'}, formatter:v=>v>0?v.toFixed(2):''}
+        datalabels:{anchor:'end', align:'top', color:'#111826', font:{size:9, weight:'700'}, offset:1, clamp:true, formatter:v=>v>0?v.toFixed(2):''}
       }]
     },
     options:{
