@@ -184,7 +184,6 @@
           <option value="12">최근 12주</option>
           <option value="all">전체</option>
         </select>
-        <span id="trendSyncNote" style="flex:none; display:none; white-space:nowrap; font-size:12px; font-weight:700; color:#1e50b5; background:#eef4ff; border:1px solid #c7dbff; border-radius:12px; padding:4px 10px;">&#128279; 상단 기간에 연동됨</span>
       </div>
       <div class="chart-title" id="weekTrendTitle">KPI PERFORMANCE</div>
       <div class="chart-wrap"><canvas id="chart-5week" width="720" height="270"></canvas></div>
@@ -907,18 +906,6 @@ function renderMonthlyChart(){
   ]);
 }
 
-// 상단에서 고른 날짜 기간과 겹치는 주차들을 반환 (기간 모드 연동용)
-function trendWeeksFromPeriod(){
-  const sd = document.getElementById('periodStart').value;
-  const ed = document.getElementById('periodEnd').value;
-  if (!sd || !ed) return [];
-  return allWeeksSorted().filter(w => {
-    if (!w.startDate) return false;
-    const ws = w.startDate, we = w.endDate || w.startDate;
-    return ws <= ed && we >= sd;   // 기간과 하루라도 겹치면 포함
-  });
-}
-
 function renderWeekTrendChart(){
   const scopeSel = document.getElementById('trendScope');
   if (scopeSel && !scopeSel.dataset.inited) {
@@ -929,34 +916,16 @@ function renderWeekTrendChart(){
   populateTrendWeekSelects();
   const startSel = document.getElementById('trendStartWeek'), endSel = document.getElementById('trendEndWeek');
   const presetSel = document.getElementById('trendPreset');
-  const note = document.getElementById('trendSyncNote');
-  const periodMode = (typeof isPeriodMode === 'function') && isPeriodMode();
+  // 이 패널은 상단 주차/기간 설정과 무관하게 자체 주차 구간을 따른다 (여러 주차 비교용)
+  startSel.disabled = endSel.disabled = false;
+  if (presetSel) presetSel.disabled = false;
 
-  let weeks, titleSuffix = '';
-  if (periodMode) {
-    // 상단에서 날짜 기간을 고른 경우: 그 기간에 걸치는 주차만 표시하고 주차 선택은 잠근다
-    weeks = trendWeeksFromPeriod();
-    if (weeks.length) {
-      startSel.value = weeks[0].label;
-      endSel.value = weeks[weeks.length-1].label;
-    }
-    const sd = document.getElementById('periodStart').value, ed = document.getElementById('periodEnd').value;
-    titleSuffix = ` · 기간 ${sd||'-'} ~ ${ed||'-'}`;
-    startSel.disabled = endSel.disabled = true;
-    if (presetSel) presetSel.disabled = true;
-    if (note) note.style.display = 'inline-block';
-  } else {
-    weeks = weeksInRange(startSel ? startSel.value : null, endSel ? endSel.value : null);
-    startSel.disabled = endSel.disabled = false;
-    if (presetSel) presetSel.disabled = false;
-    if (note) note.style.display = 'none';
-  }
-
+  const weeks = weeksInRange(startSel ? startSel.value : null, endSel ? endSel.value : null);
   const labels = weeks.map(w=>w.label);
   document.getElementById('weekTrendTitle').textContent =
     labels.length
-      ? `KPI PERFORMANCE (${labels[0]} ~ ${labels[labels.length-1]})${titleSuffix}`
-      : `KPI PERFORMANCE (선택 기간에 해당하는 주차 없음)${titleSuffix}`;
+      ? `KPI PERFORMANCE (${labels[0]} ~ ${labels[labels.length-1]})`
+      : `KPI PERFORMANCE (표시할 주차 없음)`;
   const A = weeks.map(w=>w.pct[scope].A), P = weeks.map(w=>w.pct[scope].P), Q = weeks.map(w=>w.pct[scope].Q), OEE = weeks.map(w=>w.pct[scope].OEE);
   drawBarChart('chart-5week', labels, [
     { name:'A(%)', color:'#2196F3', colorLight:'#64B5F6', data:A },
