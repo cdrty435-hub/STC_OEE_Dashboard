@@ -64,8 +64,9 @@
   .chart-wrap { position:relative; height:320px; margin-bottom:10px; }
   .chart-wrap canvas { width:100%; height:100%; display:block; }
 
-  .top3-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-  @media (max-width:1000px){ .top3-grid{ grid-template-columns:1fr; } }
+  .top3-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  @media (max-width:1400px){ .top3-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:760px){ .top3-grid{ grid-template-columns:1fr; } }
   .equip-card { border:1px solid #eee; border-radius:8px; padding:12px; }
   .equip-name { text-align:center; font-weight:800; font-size:14px; margin-bottom:6px; }
   .pie-wrap { position:relative; height:220px; }
@@ -131,17 +132,18 @@
       <span><i class="key" style="background:#3D96DD"></i>목표 달성</span>
       <span><i class="key" style="background:#FF9F43"></i>목표 미달</span>
       <span><i class="key" style="background:#fff1f0; outline:1px dashed rgba(244,67,54,.6)"></i>고장/정지 (0%)</span>
+      <span><i class="key" style="background:#E03131"></i>가동율 저조 TOP4</span>
       <span><i class="key" style="background:#f4f5f7; outline:1px dashed rgba(140,148,158,.6)"></i>데이터 없음 (0%)</span>
     </div>
-    <div class="footnote">※ 선택한 기간 <span id="weekRangeLabel">-</span> (<span id="weekCountLabel1">-</span>일) 데이터를 합산한 설비별 가동율입니다. 목표(89%) 미달 설비는 주황색으로 표시됩니다.<br>
+    <div class="footnote">※ 선택한 기간 <span id="weekRangeLabel">-</span> (<span id="weekCountLabel1">-</span>일) 데이터를 합산한 설비별 가동율입니다. 목표(89%) 미달 설비는 주황색, 그중 <b>가동율이 가장 낮은 4곳은 붉은색 TOP1~TOP4 뱃지</b>로 표시됩니다.<br>
     ※ 고장/정지 설비(<b id="downEquipLabel">-</b>)는 구글시트에 가동 데이터가 없어 자동 집계에서 누락되므로, 차트에는 <b>전체 보유 설비(DC1~DC23, DC14 제외)가 항상 표시</b>됩니다. 해당 주차에 가동 데이터가 없는 설비는 0%로 나오며, 아래 <b>고장/정지 설비 선택</b>에서 체크한 설비는 붉은 점선(고장 정지), 체크하지 않은 설비는 회색 점선(데이터 없음)으로 구분됩니다.</div>
   </div>
 
   <div class="card">
-    <div class="card-title">🥧 가동율 저조 설비 Top3 원인 분석</div>
+    <div class="card-title">🥧 가동율 저조 설비 TOP4 원인 분석</div>
     <div id="top3Container" class="top3-grid"></div>
-    <div class="footnote">※ 가동율이 가장 낮은 설비 3곳의 Loss 원인을 각 설비 자체 Loss 합계 대비 비중(%)으로, 상위 5개 항목만 표시합니다.<br>
-    ※ 고장/정지 설비는 Loss 원인 입력 데이터가 없으므로 이 원인 분석에서는 제외하고, 실제 가동한 설비 중에서 Top3를 뽑습니다.</div>
+    <div class="footnote">※ 가동율이 가장 낮은 설비 4곳(막대그래프 TOP1~TOP4와 동일)의 Loss 원인을 각 설비 자체 Loss 합계 대비 비중(%)으로, 상위 5개 항목만 표시합니다.<br>
+    ※ 고장/정지 설비는 Loss 원인 입력 데이터가 없으므로 이 원인 분석에서는 제외하고, 실제 가동한 설비 중에서 TOP4를 뽑습니다.</div>
   </div>
 
   <div class="card">
@@ -324,7 +326,18 @@ function fillRoundedBar(ctx, x, y, w, h, radius, colorTop, colorBottom){
   ctx.restore();
 }
 
+// 실제 가동한 설비 중 가동율이 가장 낮은 4곳 (고장/무데이터 설비는 제외)
+function worstRanking(list, n){
+  const map = {};
+  [...list].filter(x => x.A != null && x.A > 0 && !x.down && !x.nodata)
+           .sort((a,b) => a.A - b.A)
+           .slice(0, n)
+           .forEach((x,i) => { map[x.equip] = i+1; });
+  return map;
+}
+
 function drawRankChart(canvasId, list, target){
+  const worstRankMap = worstRanking(list, 4);
   const canvas = document.getElementById(canvasId);
   const cssW = canvas.clientWidth || 1000, cssH = canvas.clientHeight || 320;
   canvas.width = cssW; canvas.height = cssH;
@@ -361,6 +374,7 @@ function drawRankChart(canvasId, list, target){
     const cx = left + i*catW + catW/2;
     const isDown = !!item.down;
     const isNoData = !isDown && !!item.nodata;   // 고장 체크는 안 됐고 데이터만 없는 설비
+    const worstRank = worstRankMap[item.equip] || 0;   // 1~4 = 가동율 저조 TOP4
 
     // 고장/정지는 붉은 점선, 단순 무데이터는 회색 점선 컬럼으로 위치를 표시
     if (isDown || isNoData) {
@@ -376,12 +390,39 @@ function drawRankChart(canvasId, list, target){
     if (item.A != null && item.A > 0) {
       const y0 = yToPix(Math.max(0,Math.min(yMax,item.A)));
       const below = item.A < target;
-      fillRoundedBar(ctx, cx-barW/2, y0, barW, bottom-y0, 3,
-                     below ? '#FFC078' : '#7FC4F0',
-                     below ? '#FF9F43' : '#3D96DD');
-      ctx.fillStyle = '#333';
+      let cTop, cBot;
+      if (worstRank) { cTop = '#F58F8F'; cBot = '#E03131'; }        // 저조 TOP4
+      else if (below) { cTop = '#FFC078'; cBot = '#FF9F43'; }        // 목표 미달
+      else { cTop = '#7FC4F0'; cBot = '#3D96DD'; }                   // 목표 달성
+      fillRoundedBar(ctx, cx-barW/2, y0, barW, bottom-y0, 3, cTop, cBot);
+
+      ctx.fillStyle = worstRank ? '#C92A2A' : '#333';
       ctx.font = 'bold 10px "Segoe UI", Arial'; ctx.textBaseline='bottom';
-      ctx.fillText(item.A.toFixed(1)+'%', cx, y0-4);
+      ctx.fillText(item.A.toFixed(1)+'%', cx, worstRank ? y0-22 : y0-4);   // 뱃지와 겹치지 않게 위로
+
+      // 순위 뱃지 (TOP1~TOP4) — 막대 바로 위
+      if (worstRank) {
+        const bw = 34, bh = 14, by = y0 - 18;
+        ctx.save();
+        ctx.fillStyle = '#E03131';
+        const rr = 7, bx = cx - bw/2;
+        ctx.beginPath();
+        ctx.moveTo(bx+rr, by); ctx.lineTo(bx+bw-rr, by);
+        ctx.quadraticCurveTo(bx+bw, by, bx+bw, by+rr);
+        ctx.lineTo(bx+bw, by+bh-rr);
+        ctx.quadraticCurveTo(bx+bw, by+bh, bx+bw-rr, by+bh);
+        ctx.lineTo(bx+rr, by+bh);
+        ctx.quadraticCurveTo(bx, by+bh, bx, by+bh-rr);
+        ctx.lineTo(bx, by+rr);
+        ctx.quadraticCurveTo(bx, by, bx+rr, by);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 9px "Segoe UI", Arial';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('TOP' + worstRank, cx, by + bh/2 + 0.5);
+        ctx.restore();
+        ctx.textAlign = 'center';
+      }
     } else {
       ctx.fillStyle = isDown ? '#E53935' : '#9aa1ab';
       ctx.font = 'bold 10px "Segoe UI", Arial'; ctx.textBaseline='bottom';
@@ -399,8 +440,8 @@ function drawRankChart(canvasId, list, target){
       ctx.restore();
     }
 
-    ctx.fillStyle = isDown ? '#E53935' : (isNoData ? '#9aa1ab' : '#666');
-    ctx.font = (isDown ? 'bold ' : '') + '10px "Segoe UI", Arial'; ctx.textBaseline='top';
+    ctx.fillStyle = isDown ? '#E53935' : (isNoData ? '#9aa1ab' : (worstRank ? '#C92A2A' : '#666'));
+    ctx.font = ((isDown || worstRank) ? 'bold ' : '') + '10px "Segoe UI", Arial'; ctx.textBaseline='top';
     ctx.fillText(item.equip, cx, bottom+6);
   }
 
@@ -739,12 +780,13 @@ function renderAll(){
 
   const cols = reasonColumns(LAST_A.header);
 
-  // 고장/무데이터 설비는 Loss 원인 입력 자체가 없으므로 Top3 원인 분석에서 제외
-  const worst3 = [...list].filter(x=>x.A!=null && !x.down && !x.nodata).sort((a,b)=>a.A-b.A).slice(0,3);
+  // 고장/무데이터 설비는 Loss 원인 입력 자체가 없으므로 Top4 원인 분석에서 제외
+  // (막대그래프의 TOP1~TOP4 뱃지와 동일한 기준·순서)
+  const worst3 = [...list].filter(x=>x.A!=null && x.A>0 && !x.down && !x.nodata).sort((a,b)=>a.A-b.A).slice(0,4);
   const container = document.getElementById('top3Container');
   container.innerHTML = worst3.map((w,i)=>`
     <div class="equip-card">
-      <div class="equip-name">${w.equip} <span style="color:#999; font-weight:400; font-size:11px;">(A ${w.A.toFixed(1)}%)</span></div>
+      <div class="equip-name"><span style="display:inline-block; background:#E03131; color:#fff; font-size:9px; font-weight:800; border-radius:7px; padding:2px 6px; margin-right:5px; vertical-align:middle;">TOP${i+1}</span>${w.equip} <span style="color:#999; font-weight:400; font-size:11px;">(A ${w.A.toFixed(1)}%)</span></div>
       <div class="pie-wrap"><canvas id="pie-worst-${i}"></canvas></div>
       <table class="mini" id="table-worst-${i}"></table>
     </div>
