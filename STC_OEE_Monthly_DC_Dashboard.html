@@ -495,6 +495,10 @@
   @keyframes fadeIn {
     from { opacity: 0; } to { opacity: 1; }
   }
+  .dc-btn.all-equip-btn { background:#eef4ff; border:1px solid #c7dbff; font-weight:800; color:#1e50b5; }
+  .dc-btn.all-equip-btn:hover { background:#e0ebff; }
+  .dc-btn.all-equip-btn.active { background:#2f6fed; color:#fff; border-color:#2f6fed; }
+  .dc-btn.all-equip-btn.active .rate-chip { background:rgba(255,255,255,.25); color:#fff; }
 </style>
 </head>
 <body>
@@ -661,6 +665,7 @@ function daysInMonth(monthKey){
 }
 
 let DATA = {}, SUBDATA = {}, DC_ORDER = [];
+const ALL_EQUIP_KEY = '전체 설비';   // 전 설비 합산을 하나의 가상 설비처럼 다루기 위한 키
 const ALL_DC = ["DC1", "DC2", "DC3", "DC4", "DC5", "DC6", "DC7", "DC8", "DC9", "DC10", "DC11", "DC12", "DC13", "DC15", "DC16", "DC17", "DC18", "DC19", "DC20", "DC21", "DC22", "DC23"];
 let GLOBAL_DAILY = [];
 let MONTHS = [];
@@ -694,9 +699,19 @@ function buildMonthDataFromRows(rows) {
       else if (ELEC_SET.has(name)) { rec.elec += v; rec.lossDetail.elec[name] = (rec.lossDetail.elec[name]||0) + v; }
     }
     if (!globalByMonth[month]) globalByMonth[month] = {};
-    if (!globalByMonth[month][day]) globalByMonth[month][day] = { shift:0, run:0 };
-    globalByMonth[month][day].shift += shift;
-    globalByMonth[month][day].run += run;
+    if (!globalByMonth[month][day]) globalByMonth[month][day] =
+      { shift:0, run:0, mold:0, mech:0, elec:0, lossDetail:{mold:{},mech:{},elec:{}} };
+    const grec = globalByMonth[month][day];
+    grec.shift += shift;
+    grec.run += run;
+    // 전체 설비 합산용 Loss 누적 (설비별 rec와 동일한 분류 기준)
+    for (const name of LOSS_NAMES) {
+      const v = num(r[name]);
+      if (!v) continue;
+      if (MOLD_SET.has(name)) { grec.mold += v; grec.lossDetail.mold[name] = (grec.lossDetail.mold[name]||0) + v; }
+      else if (MECH_SET.has(name)) { grec.mech += v; grec.lossDetail.mech[name] = (grec.lossDetail.mech[name]||0) + v; }
+      else if (ELEC_SET.has(name)) { grec.elec += v; grec.lossDetail.elec[name] = (grec.lossDetail.elec[name]||0) + v; }
+    }
   }
 
   const weekOf = {}; // day-level week label comes straight from source rows; recompute via 주차 column instead
@@ -751,14 +766,30 @@ function buildMonthDataFromRows(rows) {
     });
 
     const globalList = [];
+    const globalSub = {};
     const nDays2 = daysInMonth(month);
     for (let day=1; day<=nDays2; day++) {
       const g = globalByMonth[month][day];
       const wk = weekByMonthDay[month+'|'+day] || null;
-      if (!g || g.shift<=0) { globalList.push({ day, plan:0, run:0, week:null, rate:null }); continue; }
+      if (!g || g.shift<=0) {
+        globalList.push({ day, plan:0, run:0, mold:0, mech:0, elec:0, week:null, rate:null });
+        continue;
+      }
       const rate = Math.round(g.run/g.shift*1000)/10;
-      globalList.push({ day, plan: Math.round(g.shift*10)/10, run: Math.round(g.run*10)/10, week: wk, rate });
+      globalList.push({
+        day, plan: Math.round(g.shift*10)/10, run: Math.round(g.run*10)/10,
+        mold: Math.round(g.mold*10)/10, mech: Math.round(g.mech*10)/10, elec: Math.round(g.elec*10)/10,
+        week: wk, rate
+      });
+      const md = g.lossDetail.mold, mc = g.lossDetail.mech, el = g.lossDetail.elec;
+      if (Object.keys(md).length || Object.keys(mc).length || Object.keys(el).length) {
+        globalSub[String(day)] = { mold: md, mech: mc, elec: el };
+      }
     }
+
+    // '전체 설비'를 가상 설비로 등록 (DC_ORDER에는 넣지 않아 주차/월 분석 집계는 그대로 유지)
+    dataOut[ALL_EQUIP_KEY] = globalList;
+    subOut[ALL_EQUIP_KEY] = globalSub;
 
     monthData[month] = { DATA: dataOut, SUBDATA: subOut, DC_ORDER: dcOrder, GLOBAL_DAILY: globalList };
   });
@@ -893,7 +924,7 @@ function loadMonth(monthKey) {
   GLOBAL_DAILY = md.GLOBAL_DAILY;
   periodStart = 1;
   periodEnd = daysInMonth(monthKey);
-  currentDC = DC_ORDER[0] || null;
+  currentDC = (md.DATA[ALL_EQUIP_KEY] ? ALL_EQUIP_KEY : (DC_ORDER[0] || null));
   selectedDay = null;
 
   document.querySelector('header p').textContent =
@@ -911,7 +942,8 @@ function loadMonth(monthKey) {
   buildSidebar();
   if (currentDC) {
     document.getElementById('dcTitle').textContent = currentDC;
-    document.getElementById('dcSub').textContent = `${monthKey.slice(0,4)}년 ${monthLabelOf(monthKey)} · 일별 가동률(A) 및 Loss 분류`;
+    document.getElementById('dcSub').textContent = `${monthKey.slice(0,4)}년 ${monthLabelOf(monthKey)} · 일별 가동률(A) 및 Loss 분류`
+      + (currentDC === ALL_EQUIP_KEY ? ' · 전 설비 합산 (가동률 = Σ가동시간 ÷ Σ쉬프트시간)' : '');
     buildKPI(DATA[currentDC]);
     buildWorst5(DATA[currentDC]);
     renderChart(DATA[currentDC]);
@@ -1085,6 +1117,29 @@ function avgRate(days) {
 function buildSidebar() {
   const sb = document.getElementById('sidebar');
   sb.innerHTML = '<div class="grp-label">DC 설비 선택</div>';
+
+  // 전 설비 합산 보기 (맨 위 고정)
+  if (DATA[ALL_EQUIP_KEY]) {
+    const allBtn = document.createElement('button');
+    allBtn.className = 'dc-btn all-equip-btn' + (currentDC === ALL_EQUIP_KEY ? ' active' : '');
+    const lb = document.createElement('span');
+    lb.textContent = '📊 ' + ALL_EQUIP_KEY;
+    allBtn.appendChild(lb);
+    const ar = avgRate(DATA[ALL_EQUIP_KEY]);
+    const chip = document.createElement('span');
+    chip.className = 'rate-chip';
+    chip.textContent = ar !== null ? ar + '%' : '-';
+    allBtn.appendChild(chip);
+    allBtn.onclick = () => selectDC(ALL_EQUIP_KEY);
+    sb.appendChild(allBtn);
+
+    const div = document.createElement('div');
+    div.className = 'grp-label';
+    div.style.marginTop = '10px';
+    div.textContent = '개별 설비';
+    sb.appendChild(div);
+  }
+
   ALL_DC.forEach(dc => {
     const has = DATA[dc] !== undefined;
     const btn = document.createElement('button');
@@ -1289,6 +1344,11 @@ function selectDC(dc) {
   currentDC = dc;
   selectedDay = null;
   document.getElementById('dcTitle').textContent = dc;
+  const sub = document.getElementById('dcSub');
+  if (sub && currentMonth) {
+    sub.textContent = `${currentMonth.slice(0,4)}년 ${monthLabelOf(currentMonth)} · 일별 가동률(A) 및 Loss 분류`
+      + (dc === ALL_EQUIP_KEY ? ` · 전 설비 합산 (가동률 = Σ가동시간 ÷ Σ쉬프트시간)` : '');
+  }
   buildSidebar();
   const days = DATA[dc];
   buildKPI(days);
