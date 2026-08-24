@@ -285,6 +285,13 @@
   .cc-chip.on{background:#fff3e2;border-color:#e8a33d;color:#8a5a10;font-weight:700;}
   .cc-chip.cc-udt.on{background:#fdeceb;border-color:#e2564d;color:#a3241c;}
   .cc-btn{padding:3px 9px;font-size:11px;}
+  .mtbf-basis{display:inline-flex;align-items:center;gap:5px;border:1px solid #d8dfe7;
+              border-radius:9px;padding:3px 8px;background:#fff;margin-right:6px;}
+  .mtbf-basis .mb-label{font-size:11px;color:#8b96a3;font-weight:700;}
+  .mtbf-basis .mb-unit{font-size:11px;color:#8b96a3;}
+  .mtbf-basis select{border:1px solid #d8dfe7;border-radius:7px;padding:4px 7px;font-size:11.5px;}
+  .mtbf-basis input{width:62px;border:1px solid #d8dfe7;border-radius:7px;padding:4px 6px;font-size:11.5px;}
+  .mtbf-basis input:disabled{background:#f2f4f6;color:#aab2bb;}
 </style>
 </head>
 <body>
@@ -376,7 +383,17 @@
           <input type="number" id="targetMtbf" step="0.1" placeholder="예: 3.0">
           <span class="unit">h/건</span>
         </div>
-        <button class="target-clear" id="targetClearBtn">기준선 지우기</button>
+        <span class="mtbf-basis">
+            <span class="mb-label">MTBF 기준</span>
+            <select id="heroPptMode">
+              <option value="run">실가동시간 (현행)</option>
+              <option value="fixed">PPT 일괄</option>
+              <option value="real">실적 계획시간</option>
+            </select>
+            <input type="number" id="heroPptHours" value="630" step="10" title="일괄 적용할 PPT 시간">
+            <span class="mb-unit">h</span>
+          </span>
+          <button class="target-clear" id="targetClearBtn">기준선 지우기</button>
       </div>
 
       <div class="hero-canvas-wrap">
@@ -386,7 +403,7 @@
             <canvas id="heroMttrChart" height="200"></canvas>
           </div>
           <div>
-            <div class="mini-title">설비별 MTBF (h/건) <span id="heroMtbfScope"></span> <span style="color:#8a97a6;">— 막대 클릭 시 세부 내용 · 목표 설정 시 <b style="color:#c0392b;">WORST3</b> 표시</span></div>
+            <div class="mini-title">설비별 MTBF (h/건) <span id="heroMtbfScope"></span> <span style="color:#8a97a6;">— <b id="heroMtbfBasis">가동시간 ÷ 로스횟수</b> · 목표 설정 시 <b style="color:#c0392b;">WORST3</b> 표시</span></div>
             <canvas id="heroMtbfChart" height="200"></canvas>
           </div>
         </div>
@@ -412,7 +429,7 @@
         <div class="kpi" style="--kpi-accent:var(--teal)">
           <div class="label">MTBF (평균 무고장시간)</div>
           <div class="value" id="heroKpiMtbf">–<span class="unit">h/건</span></div>
-          <div class="delta">가동시간 ÷ 로스횟수</div>
+          <div class="delta" id="heroKpiMtbfSub">가동시간 ÷ 로스횟수</div>
         </div>
       </div>
     </div>
@@ -2417,6 +2434,12 @@ document.getElementById('costRangeReset').addEventListener('click', ()=>{
 });
 document.getElementById('costCsv').addEventListener('click', costCsvDown);
 
+/* MTBF 산출 기준 변경 → 히어로 차트/KPI 재계산 */
+['heroPptMode','heroPptHours'].forEach(id=>{
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('change', ()=>{ try{ renderHero(); }catch(e){ console.error(e); } });
+});
+
 /* ---------- 탭 전환 ---------- */
 function showTab(id){
   document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('show', p.id===id));
@@ -2469,7 +2492,25 @@ function renderHero(){
   document.getElementById('heroKpiLoss').innerHTML = `${fmt(lossH,1)}<span class="unit">h</span>`;
   document.getElementById('heroKpiLossSub').textContent = `${cnt.toLocaleString()}건`;
   document.getElementById('heroKpiMttr').innerHTML = `${fmt(mttr,2)}<span class="unit">h/건</span>`;
-  document.getElementById('heroKpiMtbf').innerHTML = `${fmt(mtbf,2)}<span class="unit">h/건</span>`;
+  {
+    const md = (document.getElementById('heroPptMode')||{value:'run'}).value;
+    const ph = parseFloat((document.getElementById('heroPptHours')||{}).value) || 630;
+    const nMc = new Set(run.map(r=>r.m)).size || 1;      // 가동 실적이 있는 설비 수
+    const lossH = loss.reduce((a,x)=>a+x.l,0)/60;
+    const planH = run.reduce((a,x)=>a+(x.p||0),0)/60;
+    let mtbfShown = mtbf, sub = '가동시간 ÷ 로스횟수';
+    if (cnt) {
+      if (md === 'fixed') { mtbfShown = Math.max(ph*nMc - lossH, 0)/cnt; sub = `(PPT ${ph}h × ${nMc}대 − 로스시간) ÷ 로스횟수`; }
+      else if (md === 'real') { mtbfShown = Math.max(planH - lossH, 0)/cnt; sub = '(계획시간 − 로스시간) ÷ 로스횟수'; }
+    }
+    document.getElementById('heroKpiMtbf').innerHTML = `${fmt(mtbfShown,2)}<span class="unit">h/건</span>`;
+    const subEl = document.getElementById('heroKpiMtbfSub'); if (subEl) subEl.textContent = sub;
+    const bEl = document.getElementById('heroMtbfBasis');
+    if (bEl) bEl.textContent = md==='fixed' ? `(PPT ${ph}h − 로스시간) ÷ 로스횟수`
+                            : md==='real'  ? '(계획시간 − 로스시간) ÷ 로스횟수'
+                            : '가동시간 ÷ 로스횟수';
+    const hEl = document.getElementById('heroPptHours'); if (hEl) hEl.disabled = (md !== 'fixed');
+  }
 
   const scopeLabel = selectedWeeks.size === allWeeks.length ? '(전체 주차)' :
     `(${Array.from(selectedWeeks).sort((a,b)=>weekNum(a)-weekNum(b)).join(', ')})`;
@@ -2477,15 +2518,27 @@ function renderHero(){
   document.getElementById('heroMtbfScope').textContent = scopeLabel;
 
   // per-DC aggregation over selected weeks, ordered by DC number 1~23
-  const runByM = {}, lossByM = {}, cntByM = {};
-  run.forEach(r=>{ runByM[r.m]=(runByM[r.m]||0)+r.r; });
+  const runByM = {}, lossByM = {}, cntByM = {}, planByM = {};
+  run.forEach(r=>{ runByM[r.m]=(runByM[r.m]||0)+r.r; planByM[r.m]=(planByM[r.m]||0)+(r.p||0); });
   loss.forEach(r=>{ lossByM[r.m]=(lossByM[r.m]||0)+r.l; cntByM[r.m]=(cntByM[r.m]||0)+1; });
 
+  // MTBF 산출 기준: 실가동시간 / PPT 일괄 / 실적 계획시간
+  //  · run   : MTBF = 가동시간 ÷ 로스횟수            (현행)
+  //  · fixed : MTBF = (입력 PPT − 로스시간) ÷ 로스횟수  (시트의 "630 Hr 일괄"과 동일)
+  //  · real  : MTBF = (계획시간 − 로스시간) ÷ 로스횟수  (시트의 "실적 계획시간"과 동일)
+  const pptMode  = (document.getElementById('heroPptMode')||{value:'run'}).value;
+  const pptHours = parseFloat((document.getElementById('heroPptHours')||{}).value) || 630;
   const rows = ALL_MACHINES.map(m=>{
     const c = cntByM[m]||0;
     const lH = (lossByM[m]||0)/60;
     const rH = (runByM[m]||0)/60;
-    return {m, mttr: c ? lH/c : 0, mtbf: c ? rH/c : 0, cnt:c};
+    const planH = (planByM[m]||0)/60;
+    let mtbf;
+    if(!c) mtbf = 0;
+    else if(pptMode === 'fixed') mtbf = Math.max(pptHours - lH, 0) / c;
+    else if(pptMode === 'real')  mtbf = Math.max(planH  - lH, 0) / c;
+    else                         mtbf = rH / c;
+    return {m, mttr: c ? lH/c : 0, mtbf, cnt:c, planH, runH:rH};
   });
 
   lastHeroRows = rows;
