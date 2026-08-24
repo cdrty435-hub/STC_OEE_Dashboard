@@ -172,11 +172,17 @@
           <option value="regular">정규만 (특근제외)</option>
         </select>
         <label style="flex:none; white-space:nowrap;">시작 주차:</label>
-        <select id="trendStartWeek" style="flex:none; padding:5px 8px; border:1px solid #ddd; border-radius:4px; font-size:13px;"></select>
+        <select id="trendStartWeek" onchange="onTrendWeekChange('start')" style="flex:none; padding:5px 8px; border:1px solid #ddd; border-radius:4px; font-size:13px;"></select>
         <span style="flex:none;">~</span>
         <label style="flex:none; white-space:nowrap;">종료 주차:</label>
-        <select id="trendEndWeek" style="flex:none; padding:5px 8px; border:1px solid #ddd; border-radius:4px; font-size:13px;"></select>
+        <select id="trendEndWeek" onchange="onTrendWeekChange('end')" style="flex:none; padding:5px 8px; border:1px solid #ddd; border-radius:4px; font-size:13px;"></select>
         <button class="pdfbtn" style="flex:none; background:#4CAF50; color:#fff; padding:5px 12px; white-space:nowrap;" onclick="renderWeekTrendChart()">적용</button>
+        <label style="flex:none; white-space:nowrap;">일자 조정:</label>
+        <input type="date" id="trendDateStart" onchange="onTrendDateChange('start')" style="flex:none; padding:4px 6px; border:1px solid #ddd; border-radius:4px; font-size:12px;">
+        <span style="flex:none;">~</span>
+        <input type="date" id="trendDateEnd" onchange="onTrendDateChange('end')" style="flex:none; padding:4px 6px; border:1px solid #ddd; border-radius:4px; font-size:12px;">
+        <button class="pdfbtn" style="flex:none; background:#eee; color:#444; padding:5px 10px; white-space:nowrap;" onclick="resetTrendDates()">주차 전체</button>
+        <span id="trendNarrowNote" style="flex:none; display:none; white-space:nowrap; font-size:11.5px; font-weight:700; color:#7a4b00; background:#fff3d6; border:1px solid #ffd88a; border-radius:12px; padding:3px 9px;">&#9986; 일부 일자만 집계</span>
         <select id="trendPreset" style="flex:none; padding:5px 8px; border:1px solid #ddd; border-radius:4px; font-size:13px;" onchange="applyTrendPreset()">
           <option value="">빠른 선택</option>
           <option value="5">최근 5주</option>
@@ -447,6 +453,82 @@ function populateTrendWeekSelects() {
   endSel.value = arr.some(w => w.label === prevEnd) ? prevEnd : defaultEnd;
 }
 
+/* ---------- 주간 추이: 주차 내 일자 조정 ---------- */
+// 선택한 주차 구간 전체가 덮는 날짜 범위
+function trendDateBounds(weeks){
+  if (!weeks.length) return { min:null, max:null };
+  return { min: weeks[0].startDate, max: weeks[weeks.length-1].endDate || weeks[weeks.length-1].startDate };
+}
+
+// 일자 입력칸을 주차 구간 안으로 제한 (벗어나거나 비어 있으면 주차 전체로 복원)
+function syncTrendDateInputs(weeks, resetToFull){
+  const sEl = document.getElementById('trendDateStart');
+  const eEl = document.getElementById('trendDateEnd');
+  if (!sEl || !eEl) return;
+  const { min, max } = trendDateBounds(weeks);
+  if (!min) { sEl.value = eEl.value = ''; sEl.disabled = eEl.disabled = true; return; }
+  sEl.disabled = eEl.disabled = false;
+  sEl.min = eEl.min = min;
+  sEl.max = eEl.max = max;
+  if (resetToFull || !sEl.value || !eEl.value || sEl.value < min || eEl.value > max || sEl.value > eEl.value) {
+    sEl.value = min; eEl.value = max;
+  }
+}
+
+function trendDateRange(weeks){
+  const sEl = document.getElementById('trendDateStart');
+  const eEl = document.getElementById('trendDateEnd');
+  const { min, max } = trendDateBounds(weeks);
+  if (!min) return { start:null, end:null, full:true };
+  const start = (sEl && sEl.value) ? sEl.value : min;
+  const end   = (eEl && eEl.value) ? eEl.value : max;
+  return { start, end, full: (start <= min && end >= max) };
+}
+
+// 주차 하나의 KPI를 (주차 ∩ 선택 일자) 구간으로 계산
+function trendKpiOf(week, scope, range){
+  if (!range || range.full) return week.pct[scope];
+  const ws = week.startDate, we = week.endDate || week.startDate;
+  const s = ws > range.start ? ws : range.start;
+  const e = we < range.end   ? we : range.end;
+  if (s > e) return { A:null, P:null, Q:null, OEE:null };      // 이 주차는 선택 일자에 걸치지 않음
+  if (s <= ws && e >= we) return week.pct[scope];              // 이 주차는 통째로 포함
+  if (typeof hasRawRows === 'function' && hasRawRows()) {
+    return periodSummaryFromStore(s, e, scope);                // 부분 포함 → 원자료로 재계산
+  }
+  return week.pct[scope];                                      // 원자료 없으면 주차 전체값 유지
+}
+
+function onTrendWeekChange(which){
+  const startSel = document.getElementById('trendStartWeek');
+  const endSel = document.getElementById('trendEndWeek');
+  const arr = allWeeksSorted();
+  const si = arr.findIndex(w=>w.label===startSel.value);
+  const ei = arr.findIndex(w=>w.label===endSel.value);
+  if (si >= 0 && ei >= 0 && si > ei) {
+    if (which === 'start') endSel.value = startSel.value; else startSel.value = endSel.value;
+  }
+  // 주차 구간이 바뀌면 일자 조정은 새 구간 전체로 초기화
+  syncTrendDateInputs(weeksInRange(startSel.value, endSel.value), true);
+  renderWeekTrendChart();
+}
+
+function onTrendDateChange(which){
+  const sEl = document.getElementById('trendDateStart');
+  const eEl = document.getElementById('trendDateEnd');
+  if (sEl.value && eEl.value && sEl.value > eEl.value) {
+    if (which === 'start') eEl.value = sEl.value; else sEl.value = eEl.value;
+  }
+  renderWeekTrendChart();
+}
+
+function resetTrendDates(){
+  const startSel = document.getElementById('trendStartWeek');
+  const endSel = document.getElementById('trendEndWeek');
+  syncTrendDateInputs(weeksInRange(startSel.value, endSel.value), true);
+  renderWeekTrendChart();
+}
+
 function applyTrendPreset() {
   const presetSel = document.getElementById('trendPreset');
   const n = presetSel.value;
@@ -457,6 +539,7 @@ function applyTrendPreset() {
   const endSel = document.getElementById('trendEndWeek');
   endSel.value = arr[arr.length-1].label;
   startSel.value = (n === 'all') ? arr[0].label : arr[Math.max(0, arr.length - Number(n))].label;
+  syncTrendDateInputs(weeksInRange(startSel.value, endSel.value), true);
   renderWeekTrendChart();
 }
 
@@ -921,12 +1004,21 @@ function renderWeekTrendChart(){
   if (presetSel) presetSel.disabled = false;
 
   const weeks = weeksInRange(startSel ? startSel.value : null, endSel ? endSel.value : null);
+  syncTrendDateInputs(weeks, false);
+  const range = trendDateRange(weeks);
+
+  const note = document.getElementById('trendNarrowNote');
+  if (note) note.style.display = range.full ? 'none' : 'inline-block';
+
   const labels = weeks.map(w=>w.label);
+  const titleSuffix = range.full ? '' : ` · 일자 ${range.start} ~ ${range.end}`;
   document.getElementById('weekTrendTitle').textContent =
     labels.length
-      ? `KPI PERFORMANCE (${labels[0]} ~ ${labels[labels.length-1]})`
+      ? `KPI PERFORMANCE (${labels[0]} ~ ${labels[labels.length-1]})${titleSuffix}`
       : `KPI PERFORMANCE (표시할 주차 없음)`;
-  const A = weeks.map(w=>w.pct[scope].A), P = weeks.map(w=>w.pct[scope].P), Q = weeks.map(w=>w.pct[scope].Q), OEE = weeks.map(w=>w.pct[scope].OEE);
+
+  const kpis = weeks.map(w => trendKpiOf(w, scope, range));
+  const A = kpis.map(k=>k.A), P = kpis.map(k=>k.P), Q = kpis.map(k=>k.Q), OEE = kpis.map(k=>k.OEE);
   drawBarChart('chart-5week', labels, [
     { name:'A(%)', color:'#2196F3', colorLight:'#64B5F6', data:A },
     { name:'P(%)', color:'#FB8C00', colorLight:'#FFB74D', data:P },
