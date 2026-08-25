@@ -171,6 +171,24 @@ tfoot td{border-top:1px solid var(--line2);border-bottom:0;font-weight:600;color
 .chip:hover{border-color:var(--mute)}
 .chip.dead{opacity:.4;cursor:not-allowed}
 .chart.lg{height:380px}
+
+/* ---------- small multiples ---------- */
+.smalls{display:grid;grid-template-columns:repeat(auto-fill,minmax(216px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line)}
+.sm1{background:var(--panel);padding:13px 14px 11px}
+.sm1 .h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sm1 .nm{font-family:var(--mono);font-size:12.5px;font-weight:500;display:flex;align-items:center;gap:6px}
+.sm1 .nm i{width:8px;height:8px;border-radius:50%;display:block}
+.sm1 .ty{font-family:var(--mono);font-size:10px;color:var(--dim)}
+.sm1 .tt{font-family:var(--mono);font-size:17px;font-weight:500;letter-spacing:-.01em;margin:7px 0 2px}
+.sm1 .tt small{font-size:10px;color:var(--dim);margin-left:3px;font-weight:400}
+.sm1 svg{width:100%;height:52px;display:block;margin-top:6px;overflow:visible}
+.sm1 .f{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;
+  color:var(--dim);margin-top:7px}
+.sm1 .dl{font-weight:500}
+.up{color:#FF6B35} .dn{color:#4E9FC6} .fl{color:var(--dim)}
+.smempty{background:var(--panel);padding:34px;text-align:center;font-family:var(--mono);
+  font-size:12px;color:var(--dim);grid-column:1/-1}
 footer{border-top:1px solid var(--line);padding-top:20px;font-family:var(--mono);font-size:11px;
   color:var(--dim);line-height:1.8}
 footer b{color:var(--mute);font-weight:500}
@@ -252,7 +270,13 @@ footer b{color:var(--mute);font-weight:500}
           <button id="axM" aria-pressed="false">월간</button>
         </div>
       </div>
-      <div class="field"><label for="mtCat">분류</label>
+      <div class="field"><label>집계</label>
+        <div class="seg" role="group" aria-label="집계 단위">
+          <button id="agSum" aria-pressed="true">전 설비 합계</button>
+          <button id="agMc" aria-pressed="false">설비별</button>
+        </div>
+      </div>
+      <div class="field" id="mtCatWrap" hidden><label for="mtCat">분류</label>
         <select id="mtCat">
           <option value="all">전체</option>
           <option value="0">금형</option>
@@ -269,6 +293,18 @@ footer b{color:var(--mute);font-weight:500}
           <button id="mtThb" aria-pressed="false">THB</button>
         </div>
       </div>
+      <div class="field"><label>보기</label>
+        <div class="seg" role="group" aria-label="보기 방식">
+          <button id="vwOver" aria-pressed="true">겹쳐보기</button>
+          <button id="vwSplit" aria-pressed="false">나눠보기</button>
+        </div>
+      </div>
+      <div class="field" id="scWrap" hidden><label>세로 축</label>
+        <div class="seg" role="group" aria-label="세로 축 기준">
+          <button id="scShared" aria-pressed="true">공통</button>
+          <button id="scOwn" aria-pressed="false">개별</button>
+        </div>
+      </div>
       <div class="field" id="avgWrap" hidden><label>월간 기준</label>
         <div class="seg" role="group" aria-label="월간 기준">
           <button id="avSum" aria-pressed="true">총량</button>
@@ -276,7 +312,7 @@ footer b{color:var(--mute);font-weight:500}
         </div>
       </div>
       <div class="spacer"></div>
-      <div class="field"><label>설비 선택</label>
+      <div class="field" id="pickWrap"><label>설비 선택</label>
         <div class="seg" role="group" aria-label="설비 일괄 선택">
           <button id="pickAll">전체</button>
           <button id="pickTop">상위 5</button>
@@ -285,7 +321,9 @@ footer b{color:var(--mute);font-weight:500}
       </div>
     </div>
     <div class="chips" id="chips"></div>
-    <div class="chart lg"><canvas id="mtrend"></canvas></div>
+    <div class="chips" id="catchips" hidden></div>
+    <div class="chart lg" id="overWrap"><canvas id="mtrend"></canvas></div>
+    <div class="smalls" id="smalls" hidden></div>
   </div>
 </section>
 
@@ -317,7 +355,8 @@ const CC = ['#E8703A','#F2C14E','#4E9FC6','#7C8896'];
 const CN = DATA.cats;
 let state = { i1:0, i2:DATA.weeks.length-1, unit:'min', mc:null, sort:{k:'tot',asc:false},
   axis:'week', mtCat:'all', mtAvg:false, pick:new Set(),
-  mtUnit:'min', mtW1:0, mtW2:DATA.weeks.length-1, mtM1:0, mtM2:DATA.MONTHS.length-1 };
+  mtUnit:'min', mtW1:0, mtW2:DATA.weeks.length-1, mtM1:0, mtM2:DATA.MONTHS.length-1,
+  agg:'sum', view:'over', scale:'shared', catPick:new Set([0,1,2,3,'tot']) };
 
 // 22 distinguishable line colours (hue sweep, alternating lightness)
 const MCOL = DATA.mcs.map((m,i)=>{
@@ -562,114 +601,199 @@ function renderCodes(){
 
 /* ---------------- machine trend ---------------- */
 const mtUnitLabel = () => state.mtUnit==='min' ? '분' : 'THB';
-function mtValue(m,key,isMonth){
-  const src = isMonth ? DATA.M[key][m] : DATA.W[key][m];
-  let v = state.mtCat==='all' ? src.reduce((a,b)=>a+b,0) : src[+state.mtCat];
-  if(state.mtUnit==='thb') v = v*rate(m);
-  if(isMonth && state.mtAvg){
-    const days = DATA.MONTHS.find(x=>x[0]===key)[2];
-    v = v/days;
-  }
-  return v;
-}
+const TOTCOL = '#E9EDF2';
+
 function mtRange(){
   return state.axis==='month'
     ? DATA.MONTHS.map(x=>x[0]).slice(state.mtM1, state.mtM2+1)
     : DATA.weeks.slice(state.mtW1, state.mtW2+1);
 }
-function fillMtSelects(){
-  const isMonth = state.axis==='month';
-  const opts = isMonth
-    ? DATA.MONTHS.map((x,i)=>`<option value="${i}">${x[0]}  ${x[1]}</option>`).join('')
-    : DATA.weeks.map((w,i)=>`<option value="${i}">${w}  ${DATA.periods[i]}</option>`).join('');
-  $('#mt1').innerHTML=opts; $('#mt2').innerHTML=opts;
-  $('#mt1').value = isMonth?state.mtM1:state.mtW1;
-  $('#mt2').value = isMonth?state.mtM2:state.mtW2;
+function isMonth(){ return state.axis==='month'; }
+function days(key){ return DATA.MONTHS.find(x=>x[0]===key)[2]; }
+function raw(m,key){ return isMonth() ? DATA.M[key][m] : DATA.W[key][m]; }
+function scaleVal(v,m,key){
+  if(state.mtUnit==='thb') v=v*rate(m);
+  if(isMonth() && state.mtAvg) v=v/days(key);
+  return v;
 }
+// 설비 m, 기간 key, 분류 ci(0~3 또는 'tot')
+function mtValue(m,key,ci){
+  const s=raw(m,key);
+  return scaleVal(ci==='tot' ? s.reduce((x,y)=>x+y,0) : s[ci], m, key);
+}
+// 선택 설비 전체 합, 분류 ci
+function sumValue(key,ci){
+  return picked().reduce((t,m)=>t+mtValue(m,key,ci),0);
+}
+function picked(){ return DATA.mcs.filter(m=>state.pick.has(m)); }
 function topFive(){
   return [...DATA.mcs].map(m=>({m,v:mcTot(m)})).sort((a,b)=>b.v-a.v).slice(0,5).map(x=>x.m);
 }
+function fillMtSelects(){
+  const opts = isMonth()
+    ? DATA.MONTHS.map((x,i)=>`<option value="${i}">${x[0]}  ${x[1]}</option>`).join('')
+    : DATA.weeks.map((w,i)=>`<option value="${i}">${w}  ${DATA.periods[i]}</option>`).join('');
+  $('#mt1').innerHTML=opts; $('#mt2').innerHTML=opts;
+  $('#mt1').value = isMonth()?state.mtM1:state.mtW1;
+  $('#mt2').value = isMonth()?state.mtM2:state.mtW2;
+}
+function press(id,on){ $(id).setAttribute('aria-pressed', on); }
+
 function initMT(){
-  state.pick = new Set(topFive());
-  const seg=(id,val)=>{ $(id).onclick=()=>{ state.axis=val;
-    $('#axW').setAttribute('aria-pressed',val==='week');
-    $('#axM').setAttribute('aria-pressed',val==='month');
+  state.pick = new Set(LIVE);
+  const axis=(id,val)=>{ $(id).onclick=()=>{ state.axis=val;
+    press('#axW',val==='week'); press('#axM',val==='month');
     $('#avgWrap').hidden = val!=='month';
     fillMtSelects(); renderMT(); }; };
-  seg('#axW','week'); seg('#axM','month');
+  axis('#axW','week'); axis('#axM','month');
   fillMtSelects();
   $('#mt1').onchange=e=>{ const v=+e.target.value;
-    if(state.axis==='month'){ state.mtM1=v; if(state.mtM2<v){state.mtM2=v;$('#mt2').value=v;} }
+    if(isMonth()){ state.mtM1=v; if(state.mtM2<v){state.mtM2=v;$('#mt2').value=v;} }
     else { state.mtW1=v; if(state.mtW2<v){state.mtW2=v;$('#mt2').value=v;} }
     renderMT(); };
   $('#mt2').onchange=e=>{ const v=+e.target.value;
-    if(state.axis==='month'){ state.mtM2=v; if(state.mtM1>v){state.mtM1=v;$('#mt1').value=v;} }
+    if(isMonth()){ state.mtM2=v; if(state.mtM1>v){state.mtM1=v;$('#mt1').value=v;} }
     else { state.mtW2=v; if(state.mtW1>v){state.mtW1=v;$('#mt1').value=v;} }
     renderMT(); };
-  $('#mtMin').onclick=()=>{ state.mtUnit='min'; $('#mtMin').setAttribute('aria-pressed',true);
-    $('#mtThb').setAttribute('aria-pressed',false); renderMT(); };
-  $('#mtThb').onclick=()=>{ state.mtUnit='thb'; $('#mtMin').setAttribute('aria-pressed',false);
-    $('#mtThb').setAttribute('aria-pressed',true); renderMT(); };
-  $('#avSum').onclick=()=>{ state.mtAvg=false; $('#avSum').setAttribute('aria-pressed',true);
-    $('#avDay').setAttribute('aria-pressed',false); renderMT(); };
-  $('#avDay').onclick=()=>{ state.mtAvg=true; $('#avSum').setAttribute('aria-pressed',false);
-    $('#avDay').setAttribute('aria-pressed',true); renderMT(); };
+  $('#mtMin').onclick=()=>{ state.mtUnit='min'; press('#mtMin',true); press('#mtThb',false); renderMT(); };
+  $('#mtThb').onclick=()=>{ state.mtUnit='thb'; press('#mtMin',false); press('#mtThb',true); renderMT(); };
+  $('#avSum').onclick=()=>{ state.mtAvg=false; press('#avSum',true); press('#avDay',false); renderMT(); };
+  $('#avDay').onclick=()=>{ state.mtAvg=true; press('#avSum',false); press('#avDay',true); renderMT(); };
+  $('#agSum').onclick=()=>{ state.agg='sum'; press('#agSum',true); press('#agMc',false); renderMT(); };
+  $('#agMc').onclick=()=>{ state.agg='mc'; press('#agSum',false); press('#agMc',true); renderMT(); };
+  $('#vwOver').onclick=()=>{ state.view='over'; press('#vwOver',true); press('#vwSplit',false); renderMT(); };
+  $('#vwSplit').onclick=()=>{ state.view='split'; press('#vwOver',false); press('#vwSplit',true); renderMT(); };
+  $('#scShared').onclick=()=>{ state.scale='shared'; press('#scShared',true); press('#scOwn',false); renderMT(); };
+  $('#scOwn').onclick=()=>{ state.scale='own'; press('#scShared',false); press('#scOwn',true); renderMT(); };
   $('#mtCat').onchange=e=>{ state.mtCat=e.target.value; renderMT(); };
   $('#pickAll').onclick=()=>{ state.pick=new Set(LIVE); renderMT(); };
   $('#pickTop').onclick=()=>{ state.pick=new Set(topFive()); renderMT(); };
   $('#pickNone').onclick=()=>{ state.pick=new Set(); renderMT(); };
 }
-let cMT;
-function renderMT(){
-  const isMonth = state.axis==='month';
-  const keys = mtRange();
-  const labels = isMonth
-    ? keys.map(n=>{const x=DATA.MONTHS.find(y=>y[0]===n); return [x[0], x[1]];})
-    : keys.map(w=>{const i=DATA.weeks.indexOf(w); return [w, DATA.periods[i]];});
+
+/* series builder — returns [{name,color,data[]}] */
+function mtSeries(keys){
+  if(state.agg==='sum'){
+    const out=[];
+    CN.forEach((c,i)=>{ if(state.catPick.has(i))
+      out.push({name:c,color:CC[i],data:keys.map(k=>sumValue(k,i))}); });
+    if(state.catPick.has('tot'))
+      out.push({name:'전체',color:TOTCOL,data:keys.map(k=>sumValue(k,'tot')),dash:[5,4]});
+    return out;
+  }
+  const ci = state.mtCat==='all' ? 'tot' : +state.mtCat;
+  return picked().map(m=>({name:m,color:COLOF[m],sub:DATA.types[m],
+    data:keys.map(k=>mtValue(m,k,ci))}));
+}
+
+/* ---- chips ---- */
+function renderChips(){
+  const sumMode = state.agg==='sum';
+  $('#chips').hidden = false;
+  $('#catchips').hidden = !sumMode;
+  $('#mtCatWrap').hidden = sumMode;
+  $('#pickWrap').hidden = false;
+  $('#scWrap').hidden = state.view!=='split';
 
   $('#chips').innerHTML = DATA.mcs.map(m=>{
-    const dead = !LIVE.includes(m), on = state.pick.has(m);
+    const dead=!LIVE.includes(m), on=state.pick.has(m);
     return `<button class="chip ${dead?'dead':''}" data-mc="${m}" aria-pressed="${on}"
-      ${dead?'disabled title="전 구간 무실적"':''}>
-      <i style="background:${on?COLOF[m]:''}"></i>${m}</button>`;
+      ${dead?'disabled title="전 구간 무실적"':''}><i style="background:${on?COLOF[m]:''}"></i>${m}</button>`;
   }).join('');
   $('#chips').querySelectorAll('.chip:not(.dead)').forEach(b=>b.onclick=()=>{
-    const m=b.dataset.mc;
-    state.pick.has(m) ? state.pick.delete(m) : state.pick.add(m);
-    renderMT();
-  });
+    const m=b.dataset.mc; state.pick.has(m)?state.pick.delete(m):state.pick.add(m); renderMT(); });
 
-  const sel = DATA.mcs.filter(m=>state.pick.has(m));
-  const ds = sel.map(m=>({
-    label:m, data:keys.map(k=>mtValue(m,k,isMonth)),
-    borderColor:COLOF[m], backgroundColor:COLOF[m],
-    borderWidth:2, tension:0, pointRadius:3.5, pointHoverRadius:6, pointBorderWidth:0,
-    spanGaps:true
-  }));
-  const catName = state.mtCat==='all' ? '전체' : CN[+state.mtCat];
-  const suffix = isMonth && state.mtAvg ? ` / 일` : '';
-  const span = keys.length===1 ? keys[0] : `${keys[0]} ~ ${keys[keys.length-1]}`;
-  const partial = isMonth && keys.some(k=>DATA.MONTHS.find(x=>x[0]===k)[3]!=='완전');
-  $('#mtNote').textContent =
-    `${isMonth?'월간':'주간'} · ${span} · ${catName} · ${mtUnitLabel()}${suffix} · 선택 ${sel.length}대`
-    + (partial ? '  ·  6월·8월은 부분 데이터' : '');
+  if(sumMode){
+    const items=CN.map((c,i)=>[i,c,CC[i]]).concat([['tot','전체',TOTCOL]]);
+    $('#catchips').innerHTML=items.map(([k,lab,col])=>{
+      const on=state.catPick.has(k);
+      return `<button class="chip" data-c="${k}" aria-pressed="${on}">
+        <i style="background:${on?col:''}"></i>${lab}</button>`;}).join('');
+    $('#catchips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{
+      const k = b.dataset.c==='tot' ? 'tot' : +b.dataset.c;
+      state.catPick.has(k)?state.catPick.delete(k):state.catPick.add(k); renderMT(); });
+  }
+}
 
+/* ---- overlay chart ---- */
+let cMT;
+function drawOverlay(keys,labels,series,suffix){
+  $('#overWrap').hidden=false; $('#smalls').hidden=true;
+  const ds=series.map(s=>({label:s.name,data:s.data,borderColor:s.color,backgroundColor:s.color,
+    borderWidth:s.dash?2.5:2, borderDash:s.dash||[], tension:0,
+    pointRadius:3.5,pointHoverRadius:6,pointBorderWidth:0,spanGaps:true}));
   const cfg={type:'line',data:{labels,datasets:ds},options:{
     responsive:true,maintainAspectRatio:false,
-    interaction:{mode:'nearest',axis:'x',intersect:false},
+    interaction:{mode:'index',axis:'x',intersect:false},
     plugins:{legend:{display:false},tooltip:{
       backgroundColor:'#20272F',borderColor:'#3C4753',borderWidth:1,padding:11,
       titleFont:{family:'IBM Plex Mono',size:12},bodyFont:{family:'IBM Plex Mono',size:12},
       itemSort:(a,b)=>b.parsed.y-a.parsed.y,
       callbacks:{title:it=>it[0].label.replace(',','  '),
         label:it=>` ${it.dataset.label}  ${fmt(it.parsed.y)} ${mtUnitLabel()}${suffix}`}}},
-    scales:{
-      x:{grid:{display:false},border:{color:gridColor},
-         ticks:{color:tickColor,font:{family:'IBM Plex Mono',size:10}}},
+    scales:{x:{grid:{display:false},border:{color:gridColor},
+      ticks:{color:tickColor,font:{family:'IBM Plex Mono',size:10}}},
       y:{beginAtZero:true,grid:{color:gridColor},border:{display:false},
-         ticks:{color:tickColor,font:{family:'IBM Plex Mono',size:10},callback:v=>fmt(v)}}}
-  }};
+      ticks:{color:tickColor,font:{family:'IBM Plex Mono',size:10},callback:v=>fmt(v)}}}}};
   if(cMT){cMT.destroy()} cMT=new Chart($('#mtrend'),cfg);
+}
+
+/* ---- small multiples ---- */
+function spark(data,color,max){
+  const n=data.length, W=100, H=34;
+  if(!n) return '';
+  const x=i=> n===1 ? W/2 : i/(n-1)*W;
+  const y=v=> H - (max? v/max*(H-3) : 0);
+  const pts=data.map((v,i)=>[x(i),y(v)]);
+  const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(2)+' '+p[1].toFixed(2)).join(' ');
+  const area=`${line} L ${x(n-1).toFixed(2)} ${H} L ${x(0).toFixed(2)} ${H} Z`;
+  const dots=pts.map(p=>`<circle cx="${p[0].toFixed(2)}" cy="${p[1].toFixed(2)}" r="1.7" fill="${color}"/>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    <path d="${area}" fill="${color}" opacity=".13"/>
+    <path d="${line}" fill="none" stroke="${color}" stroke-width="1.6"
+      vector-effect="non-scaling-stroke" stroke-linejoin="round"/>${dots}</svg>`;
+}
+function drawSmalls(keys,series,suffix){
+  $('#overWrap').hidden=true; $('#smalls').hidden=false;
+  if(!series.length){ $('#smalls').innerHTML='<div class="smempty">표시할 항목이 없습니다. 위에서 하나 이상 고르십시오.</div>'; return; }
+  const rows=series.map(s=>({...s, tot:s.data.reduce((a,b)=>a+b,0),
+    first:s.data[0], last:s.data[s.data.length-1], peak:Math.max(...s.data)}));
+  if(state.agg==='mc') rows.sort((a,b)=>b.tot-a.tot);
+  const gmax=Math.max(...rows.map(r=>r.peak),1);
+  $('#smalls').innerHTML=rows.map(r=>{
+    const max = state.scale==='shared' ? gmax : Math.max(r.peak,1);
+    const d = r.last-r.first;
+    const cls = Math.abs(d) < Math.max(r.peak*0.03,1) ? 'fl' : (d>0?'up':'dn');
+    const arrow = cls==='fl' ? '→' : (d>0?'▲':'▼');
+    const pk = keys[r.data.indexOf(r.peak)];
+    return `<div class="sm1">
+      <div class="h"><span class="nm"><i style="background:${r.color}"></i>${r.name}</span>
+        <span class="ty">${r.sub||''}</span></div>
+      <div class="tt">${fmt(r.tot)}<small>${mtUnitLabel()}</small></div>
+      ${spark(r.data,r.color,max)}
+      <div class="f"><span>최고 ${pk} · ${fmt(r.peak)}</span>
+        <span class="dl ${cls}">${arrow} ${fmt(Math.abs(d))}</span></div>
+    </div>`;}).join('');
+}
+
+function renderMT(){
+  renderChips();
+  const keys=mtRange();
+  const labels = isMonth()
+    ? keys.map(n=>{const x=DATA.MONTHS.find(y=>y[0]===n); return [x[0],x[1]];})
+    : keys.map(w=>{const i=DATA.weeks.indexOf(w); return [w,DATA.periods[i]];});
+  const series=mtSeries(keys);
+  const suffix = isMonth() && state.mtAvg ? ' / 일' : '';
+  const span = keys.length===1 ? keys[0] : `${keys[0]} ~ ${keys[keys.length-1]}`;
+  const partial = isMonth() && keys.some(k=>DATA.MONTHS.find(x=>x[0]===k)[3]!=='완전');
+  const what = state.agg==='sum'
+    ? `설비 ${picked().length}대 합계 · 로스 ${series.length}종`
+    : `${state.mtCat==='all'?'전체':CN[+state.mtCat]} · 설비 ${series.length}대`;
+  $('#mtNote').textContent =
+    `${isMonth()?'월간':'주간'} · ${span} · ${what} · ${mtUnitLabel()}${suffix}`
+    + (state.view==='split' && state.scale==='shared' ? '  ·  세로축 공통' : '')
+    + (partial ? '  ·  6월·8월은 부분 데이터' : '');
+  state.view==='split' ? drawSmalls(keys,series,suffix) : drawOverlay(keys,labels,series,suffix);
 }
 
 /* ---------------- boot ---------------- */
