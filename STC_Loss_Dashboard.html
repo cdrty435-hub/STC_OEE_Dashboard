@@ -159,6 +159,18 @@ tfoot td{border-top:1px solid var(--line2);border-bottom:0;font-weight:600;color
 .code .r small{display:block;font-size:10px;color:var(--dim)}
 .rank{font-family:var(--mono);font-size:10px;color:var(--dim);width:20px}
 
+
+/* ---------- machine trend ---------- */
+.ctl2{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;padding-bottom:16px;margin-bottom:6px;
+  border-bottom:1px solid var(--line)}
+.chip{display:flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line2);
+  border-radius:2px;padding:4px 9px;font-family:var(--mono);font-size:11.5px;color:var(--dim);cursor:pointer}
+.chip i{width:8px;height:8px;border-radius:50%;display:block;background:var(--line2)}
+.chip[aria-pressed="true"]{color:var(--ink);border-color:var(--line2);background:var(--panel2)}
+.chip:hover{border-color:var(--mute)}
+.chip.dead{opacity:.4;cursor:not-allowed}
+.chart.lg{height:380px}
 footer{border-top:1px solid var(--line);padding-top:20px;font-family:var(--mono);font-size:11px;
   color:var(--dim);line-height:1.8}
 footer b{color:var(--mute);font-weight:500}
@@ -228,6 +240,48 @@ footer b{color:var(--mute);font-weight:500}
 </section>
 
 <section>
+  <div class="head">
+    <h2>설비별 추이</h2>
+    <span class="note" id="mtNote"></span>
+  </div>
+  <div class="panel">
+    <div class="ctl2">
+      <div class="field"><label>축</label>
+        <div class="seg" role="group" aria-label="기간 축">
+          <button id="axW" aria-pressed="true">주간</button>
+          <button id="axM" aria-pressed="false">월간</button>
+        </div>
+      </div>
+      <div class="field"><label for="mtCat">분류</label>
+        <select id="mtCat">
+          <option value="all">전체</option>
+          <option value="0">금형</option>
+          <option value="1">설비-전기</option>
+          <option value="2">설비-라인</option>
+          <option value="3">관리</option>
+        </select>
+      </div>
+      <div class="field" id="avgWrap" hidden><label>월간 기준</label>
+        <div class="seg" role="group" aria-label="월간 기준">
+          <button id="avSum" aria-pressed="true">총량</button>
+          <button id="avDay" aria-pressed="false">일평균</button>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <div class="field"><label>설비 선택</label>
+        <div class="seg" role="group" aria-label="설비 일괄 선택">
+          <button id="pickAll">전체</button>
+          <button id="pickTop">상위 5</button>
+          <button id="pickNone">해제</button>
+        </div>
+      </div>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="chart lg"><canvas id="mtrend"></canvas></div>
+  </div>
+</section>
+
+<section>
   <div class="head"><h2>설비별 상세</h2><span class="note">열 제목을 눌러 정렬합니다</span></div>
   <div class="panel tw"><table id="tbl"></table></div>
 </section>
@@ -253,7 +307,16 @@ footer b{color:var(--mute);font-weight:500}
 const DATA={"weeks":["W27","W28","W29","W30","W31","W32","W33","W34"],"periods":["06/24~06/30","07/01~07/07","07/08~07/14","07/15~07/21","07/22~07/28","07/29~08/04","08/05~08/11","08/12~08/18"],"cats":["금형","설비-전기","설비-라인","관리"],"mcs":["DC1","DC2","DC3","DC4","DC5","DC6","DC7","DC8","DC9","DC10","DC11","DC12","DC13","DC15","DC16","DC17","DC18","DC19","DC20","DC21","DC22","DC23"],"types":{"DC1":"200T","DC2":"125T","DC3":"350T","DC4":"350T","DC5":"350T","DC6":"350T","DC7":"350T","DC8":"250T","DC9":"350T","DC10":"350T","DC11":"500T","DC12":"500T","DC13":"350T","DC15":"650T","DC16":"125T","DC17":"125T","DC18":"50T","DC19":"90T","DC20":"800T","DC21":"650T","DC22":"350T","DC23":"350T"},"rates":{"DC1":8.91375,"DC2":6.666667,"DC3":14.159583,"DC4":14.159583,"DC5":14.159583,"DC6":14.159583,"DC7":14.159583,"DC8":11.086667,"DC9":14.159583,"DC10":14.159583,"DC11":16.472083,"DC12":16.472083,"DC13":14.159583,"DC15":16.7825,"DC16":6.666667,"DC17":6.666667,"DC18":8.572083,"DC19":8.8825,"DC20":19.871042,"DC21":16.7825,"DC22":14.159583,"DC23":14.159583},"W":{"W27":{"DC1":[0,0,0,0],"DC2":[215,0,50,450],"DC3":[945,323,70,90],"DC4":[981,147,477,794],"DC5":[0,0,0,0],"DC6":[670,327,1601,210],"DC7":[0,0,0,0],"DC8":[1419,410,1004,0],"DC9":[1841,1091,226,420],"DC10":[657,475,1030,559],"DC11":[524,922,575,0],"DC12":[1285,1065,345,0],"DC13":[0,0,0,0],"DC15":[840,130,280,210],"DC16":[955,430,540,443],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[0,0,0,0],"DC20":[1112,423,107,90],"DC21":[261,589,1221,117],"DC22":[969,425,843,549],"DC23":[509,268,280,386]},"W28":{"DC1":[0,0,0,0],"DC2":[75,285,182,390],"DC3":[1587,454,50,180],"DC4":[820,382,246,150],"DC5":[0,0,0,0],"DC6":[55,2242,898,360],"DC7":[0,0,0,0],"DC8":[1059,859,1076,0],"DC9":[1134,599,314,582],"DC10":[191,571,192,0],"DC11":[230,1075,368,0],"DC12":[1120,385,420,105],"DC13":[0,0,0,0],"DC15":[870,160,700,395],"DC16":[155,423,722,300],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[0,0,0,0],"DC20":[1034,40,244,0],"DC21":[556,420,112,154],"DC22":[1479,396,62,184],"DC23":[757,240,231,63]},"W29":{"DC1":[0,0,0,0],"DC2":[739,130,341,540],"DC3":[1115,0,229,180],"DC4":[439,34,775,312],"DC5":[0,0,0,0],"DC6":[516,30,1844,240],"DC7":[0,0,0,0],"DC8":[925,290,1315,60],"DC9":[342,605,636,360],"DC10":[392,166,587,612],"DC11":[250,575,680,150],"DC12":[1025,780,160,190],"DC13":[230,245,700,140],"DC15":[700,280,426,440],"DC16":[200,610,560,330],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[515,20,55,60],"DC20":[503,0,53,30],"DC21":[115,175,221,322],"DC22":[1915,662,10,60],"DC23":[1358,378,143,120]},"W30":{"DC1":[0,0,0,0],"DC2":[525,180,280,150],"DC3":[653,290,355,145],"DC4":[493,288,360,496],"DC5":[0,0,0,0],"DC6":[380,60,30,30],"DC7":[0,0,0,0],"DC8":[685,855,922,80],"DC9":[1699,514,265,829],"DC10":[528,172,395,120],"DC11":[655,1136,185,120],"DC12":[790,260,425,290],"DC13":[850,785,815,360],"DC15":[970,120,1424,600],"DC16":[540,195,220,30],"DC17":[0,0,0,0],"DC18":[160,53,1090,0],"DC19":[0,0,60,0],"DC20":[899,315,316,381],"DC21":[340,304,7,432],"DC22":[1853,206,57,399],"DC23":[912,232,654,467]},"W31":{"DC1":[0,0,0,0],"DC2":[775,30,290,554],"DC3":[2204,113,409,90],"DC4":[184,925,177,570],"DC5":[0,414,105,0],"DC6":[250,882,733,480],"DC7":[0,0,0,0],"DC8":[295,1037,905,120],"DC9":[1105,919,314,819],"DC10":[399,608,812,210],"DC11":[860,920,725,90],"DC12":[780,520,645,90],"DC13":[1120,1792,715,210],"DC15":[741,473,600,400],"DC16":[1030,220,560,30],"DC17":[0,0,0,0],"DC18":[160,0,1787,0],"DC19":[0,0,0,0],"DC20":[548,225,85,360],"DC21":[993,143,60,60],"DC22":[1200,196,229,538],"DC23":[920,290,59,90]},"W32":{"DC1":[0,0,0,0],"DC2":[484,170,263,360],"DC3":[1181,95,213,120],"DC4":[715,621,231,120],"DC5":[564,1885,81,89],"DC6":[798,688,271,90],"DC7":[0,0,0,0],"DC8":[180,945,270,0],"DC9":[1880,486,120,270],"DC10":[156,723,1056,542],"DC11":[60,190,130,0],"DC12":[1268,690,410,150],"DC13":[805,1315,1230,300],"DC15":[1105,60,565,450],"DC16":[1400,70,510,360],"DC17":[0,0,0,0],"DC18":[120,480,1437,120],"DC19":[0,0,0,0],"DC20":[1123,930,255,750],"DC21":[372,332,41,0],"DC22":[1515,594,32,630],"DC23":[199,591,162,240]},"W33":{"DC1":[0,0,0,0],"DC2":[153,55,355,660],"DC3":[1085,5,166,90],"DC4":[440,108,858,450],"DC5":[306,783,179,180],"DC6":[228,802,407,0],"DC7":[0,0,0,0],"DC8":[523,405,1713,90],"DC9":[1928,433,101,244],"DC10":[947,285,345,778],"DC11":[615,1765,709,270],"DC12":[1764,610,740,285],"DC13":[200,955,1729,120],"DC15":[800,440,615,370],"DC16":[320,242,979,400],"DC17":[0,0,0,0],"DC18":[280,840,1903,80],"DC19":[0,0,0,0],"DC20":[980,0,297,613],"DC21":[177,460,51,695],"DC22":[2203,185,230,399],"DC23":[334,459,308,433]},"W34":{"DC1":[0,0,0,0],"DC2":[358,713,235,720],"DC3":[295,420,95,150],"DC4":[181,100,145,1110],"DC5":[666,128,150,30],"DC6":[1205,1062,176,150],"DC7":[0,0,0,0],"DC8":[897,230,785,90],"DC9":[725,715,1034,550],"DC10":[477,545,121,240],"DC11":[505,1005,458,596],"DC12":[917,1480,375,180],"DC13":[769,450,1525,250],"DC15":[965,735,320,270],"DC16":[810,135,660,270],"DC17":[0,0,0,0],"DC18":[80,499,2835,245],"DC19":[0,0,0,0],"DC20":[1098,297,144,330],"DC21":[137,206,59,150],"DC22":[1004,361,788,412],"DC23":[193,596,163,409]}},"MONTHS":[["6월","06/24~06/30",7,"부분"],["7월","07/01~07/31",31,"완전"],["8월","08/01~08/18",18,"부분"]],"M":{"6월":{"DC1":[0,0,0,0],"DC2":[215,0,50,450],"DC3":[945,323,70,90],"DC4":[981,147,477,794],"DC5":[0,0,0,0],"DC6":[670,327,1601,210],"DC7":[0,0,0,0],"DC8":[1419,410,1004,0],"DC9":[1841,1091,226,420],"DC10":[657,475,1030,559],"DC11":[524,922,575,0],"DC12":[1285,1065,345,0],"DC13":[0,0,0,0],"DC15":[840,130,280,210],"DC16":[955,430,540,443],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[0,0,0,0],"DC20":[1112,423,107,90],"DC21":[261,589,1221,117],"DC22":[969,425,843,549],"DC23":[509,268,280,386]},"7월":{"DC1":[0,0,0,0],"DC2":[2357,790,1278,1704],"DC3":[5914,952,1216,595],"DC4":[2205,1856,1558,1528],"DC5":[483,1745,146,0],"DC6":[1541,3582,3555,1110],"DC7":[0,0,0,0],"DC8":[3144,3686,4428,260],"DC9":[4978,2920,1529,2620],"DC10":[1562,1644,2045,1152],"DC11":[2055,3896,2088,360],"DC12":[4118,2155,1855,735],"DC13":[2620,3702,2610,710],"DC15":[3331,1033,3360,2085],"DC16":[2340,1518,2392,990],"DC17":[0,0,0,0],"DC18":[440,533,4064,120],"DC19":[515,20,115,60],"DC20":[3354,1260,788,1161],"DC21":[2207,1292,407,968],"DC22":[7199,1968,369,1601],"DC23":[4063,1250,1102,890]},"8월":{"DC1":[0,0,0,0],"DC2":[752,773,668,1670],"DC3":[2206,425,301,360],"DC4":[1067,602,1234,1680],"DC5":[1053,1465,369,299],"DC6":[1891,2184,804,240],"DC7":[0,0,0,0],"DC8":[1420,935,2558,180],"DC9":[3835,1351,1255,1034],"DC10":[1528,1426,1463,1350],"DC11":[1120,2770,1167,866],"DC12":[3546,2570,1320,555],"DC13":[1354,1840,4104,670],"DC15":[2820,1235,1290,840],"DC16":[2115,377,1819,730],"DC17":[0,0,0,0],"DC18":[360,1339,4988,325],"DC19":[0,0,0,0],"DC20":[2831,547,606,1303],"DC21":[483,748,144,845],"DC22":[3970,632,1039,1021],"DC23":[610,1536,618,932]}},"codes":[[1,"금형수리","금형",22638],[2,"금형파손","금형",820],[3,"핀파손","금형",23562],[4,"설비수리","설비-전기",19624],[5,"전기로수리","설비-전기",2670],[6,"취출기수리","설비-전기",16397],[7,"스프레이수리","설비-전기",8724],[8,"슬라이드코어수리","금형",7699],[9,"팁교체","설비-라인",15551],[10,"노즐막힘","설비-라인",7547],[11,"플런저오일막힘","설비-라인",1801],[12,"래들수리","설비-전기",6457],[13,"조건변경","설비-라인",20067],[14,"탈산처리","설비-라인",1786],[15,"스크랩용해","설비-라인",10414],[16,"전기로회전","설비-전기",7146],[17,"금형교체","관리",19906],[18,"휴식, 설비교대","관리",13037],[19,"청소","금형",5601],[20,"미팅/정전","관리",4924],[21,"금형냉각라인","금형",1069],[22,"제품소착","금형",19421],[23,"컨베이어수리","설비-전기",1334],[24,"설비냉각수","설비-라인",419],[25,"스프레이조정","설비-라인",10593],[26,"바가지교체","설비-라인",1123],[27,"히터수리","설비-전기",523],[28,"펌프이상","설비-전기",2535],[29,"로트마크, 사상","금형",19760],[30,"진공설비","설비-전기",172],[31,"기타","관리",0]]};
 const CC = ['#E8703A','#F2C14E','#4E9FC6','#7C8896'];
 const CN = DATA.cats;
-let state = { i1:0, i2:DATA.weeks.length-1, unit:'min', mc:null, sort:{k:'tot',asc:false} };
+let state = { i1:0, i2:DATA.weeks.length-1, unit:'min', mc:null, sort:{k:'tot',asc:false},
+  axis:'week', mtCat:'all', mtAvg:false, pick:new Set() };
+
+// 22 distinguishable line colours (hue sweep, alternating lightness)
+const MCOL = DATA.mcs.map((m,i)=>{
+  const h=Math.round((i*360/DATA.mcs.length + (i%2?180:0))%360);
+  return `hsl(${h} ${i%2?62:74}% ${i%2?62:54}%)`;
+});
+const COLOF = Object.fromEntries(DATA.mcs.map((m,i)=>[m,MCOL[i]]));
+const LIVE = DATA.mcs.filter(m=>DATA.weeks.some(w=>DATA.W[w][m].some(v=>v>0)));
 
 const $ = s => document.querySelector(s);
 const fmt = n => Math.round(n).toLocaleString('ko-KR');
@@ -488,12 +551,95 @@ function renderCodes(){
   }).join('');
 }
 
+/* ---------------- machine trend ---------------- */
+function mtValue(m,key,isMonth){
+  const src = isMonth ? DATA.M[key][m] : DATA.W[key][m];
+  let v = state.mtCat==='all' ? src.reduce((a,b)=>a+b,0) : src[+state.mtCat];
+  v = conv(v,m);
+  if(isMonth && state.mtAvg){
+    const days = DATA.MONTHS.find(x=>x[0]===key)[2];
+    v = v/days;
+  }
+  return v;
+}
+function topFive(){
+  return [...DATA.mcs].map(m=>({m,v:mcTot(m)})).sort((a,b)=>b.v-a.v).slice(0,5).map(x=>x.m);
+}
+function initMT(){
+  state.pick = new Set(topFive());
+  const seg=(id,val)=>{ $(id).onclick=()=>{ state.axis=val;
+    $('#axW').setAttribute('aria-pressed',val==='week');
+    $('#axM').setAttribute('aria-pressed',val==='month');
+    $('#avgWrap').hidden = val!=='month';
+    renderMT(); }; };
+  seg('#axW','week'); seg('#axM','month');
+  $('#avSum').onclick=()=>{ state.mtAvg=false; $('#avSum').setAttribute('aria-pressed',true);
+    $('#avDay').setAttribute('aria-pressed',false); renderMT(); };
+  $('#avDay').onclick=()=>{ state.mtAvg=true; $('#avSum').setAttribute('aria-pressed',false);
+    $('#avDay').setAttribute('aria-pressed',true); renderMT(); };
+  $('#mtCat').onchange=e=>{ state.mtCat=e.target.value; renderMT(); };
+  $('#pickAll').onclick=()=>{ state.pick=new Set(LIVE); renderMT(); };
+  $('#pickTop').onclick=()=>{ state.pick=new Set(topFive()); renderMT(); };
+  $('#pickNone').onclick=()=>{ state.pick=new Set(); renderMT(); };
+}
+let cMT;
+function renderMT(){
+  const isMonth = state.axis==='month';
+  const keys = isMonth ? DATA.MONTHS.map(x=>x[0]) : DATA.weeks.slice(state.i1,state.i2+1);
+  const labels = isMonth
+    ? DATA.MONTHS.map(x=>[x[0], x[1]])
+    : keys.map(w=>{const i=DATA.weeks.indexOf(w); return [w, DATA.periods[i]];});
+
+  $('#chips').innerHTML = DATA.mcs.map(m=>{
+    const dead = !LIVE.includes(m), on = state.pick.has(m);
+    return `<button class="chip ${dead?'dead':''}" data-mc="${m}" aria-pressed="${on}"
+      ${dead?'disabled title="전 구간 무실적"':''}>
+      <i style="background:${on?COLOF[m]:''}"></i>${m}</button>`;
+  }).join('');
+  $('#chips').querySelectorAll('.chip:not(.dead)').forEach(b=>b.onclick=()=>{
+    const m=b.dataset.mc;
+    state.pick.has(m) ? state.pick.delete(m) : state.pick.add(m);
+    renderMT();
+  });
+
+  const sel = DATA.mcs.filter(m=>state.pick.has(m));
+  const ds = sel.map(m=>({
+    label:m, data:keys.map(k=>mtValue(m,k,isMonth)),
+    borderColor:COLOF[m], backgroundColor:COLOF[m],
+    borderWidth:2, tension:.25, pointRadius:3, pointHoverRadius:5, pointBorderWidth:0,
+    spanGaps:true
+  }));
+  const catName = state.mtCat==='all' ? '전체' : CN[+state.mtCat];
+  const suffix = isMonth && state.mtAvg ? ` / 일` : '';
+  $('#mtNote').textContent =
+    `${isMonth?'월간':'주간'} · ${catName} · ${unitLabel()}${suffix} · 선택 ${sel.length}대`
+    + (isMonth ? '  ·  6월·8월은 부분 데이터' : '');
+
+  const cfg={type:'line',data:{labels,datasets:ds},options:{
+    responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'nearest',axis:'x',intersect:false},
+    plugins:{legend:{display:false},tooltip:{
+      backgroundColor:'#20272F',borderColor:'#3C4753',borderWidth:1,padding:11,
+      titleFont:{family:'IBM Plex Mono',size:12},bodyFont:{family:'IBM Plex Mono',size:12},
+      itemSort:(a,b)=>b.parsed.y-a.parsed.y,
+      callbacks:{title:it=>it[0].label.replace(',','  '),
+        label:it=>` ${it.dataset.label}  ${fmt(it.parsed.y)} ${unitLabel()}${suffix}`}}},
+    scales:{
+      x:{grid:{display:false},border:{color:gridColor},
+         ticks:{color:tickColor,font:{family:'IBM Plex Mono',size:10}}},
+      y:{beginAtZero:true,grid:{color:gridColor},border:{display:false},
+         ticks:{color:tickColor,font:{family:'IBM Plex Mono',size:10},callback:v=>fmt(v)}}}
+  }};
+  if(cMT){cMT.destroy()} cMT=new Chart($('#mtrend'),cfg);
+}
+
 /* ---------------- boot ---------------- */
 function render(){
   renderHead(); renderKpi(); renderBay();
-  renderTrend(); renderDonut(); renderHeat(); renderTable(); renderMonths();
+  renderTrend(); renderDonut(); renderHeat(); renderTable(); renderMonths(); renderMT();
 }
 initControls();
+initMT();
 render();
 renderCodes();
 
