@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>비가동 로스 손실 현황 보고 · STC Co., Ltd.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FFFFFF;--ink:#14181C;--sub:#4A545E;--mute:#7A848E;--rule:#D3D9DF;--rule2:#EAEEF1;
+  --loss:#B3261E;--gain:#1F6F5C;
+  --c1:#B3261E;--c2:#C77D0A;--c3:#2E5F8A;--c4:#8A929B;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'IBM Plex Sans KR',system-ui,sans-serif;
+  --serif:'Noto Serif KR',serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#8E959C;font-family:var(--sans);color:var(--ink);line-height:1.55;
+  -webkit-font-smoothing:antialiased;font-size:10.5pt}
+.num{font-variant-numeric:tabular-nums;font-family:var(--mono)}
+
+/* ---- toolbar (screen only) ---- */
+.bar{position:sticky;top:0;z-index:20;background:#14181C;color:#EDF1F4;padding:11px 20px;
+  display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.bar .t{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:#8A949E;margin-right:auto;padding-bottom:7px}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:#7A848E}
+.bar select{background:#242B33;color:#EDF1F4;border:1px solid #3A434D;border-radius:2px;
+  padding:6px 9px;font-family:var(--mono);font-size:12px}
+.bar button{background:#B3261E;color:#fff;border:0;border-radius:2px;padding:8px 16px;
+  font-family:var(--mono);font-size:12px;cursor:pointer;letter-spacing:.04em}
+.bar button.g{background:#242B33;border:1px solid #3A434D}
+.bar button:focus-visible,.bar select:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* ---- page ---- */
+.page{width:210mm;min-height:297mm;background:var(--paper);margin:22px auto;padding:16mm 16mm 14mm;
+  box-shadow:0 3px 16px rgba(0,0,0,.28);position:relative;display:flex;flex-direction:column}
+.ph{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:1.6pt solid var(--ink);padding-bottom:6px;margin-bottom:16px}
+.ph .co{font-family:var(--mono);font-size:8.5pt;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.ph .pg{font-family:var(--mono);font-size:8.5pt;color:var(--mute)}
+.pf{margin-top:auto;padding-top:9px;border-top:.6pt solid var(--rule);
+  font-family:var(--mono);font-size:7.5pt;color:var(--mute);display:flex;justify-content:space-between;gap:14px}
+
+h1{font-family:var(--serif);font-size:24pt;font-weight:700;letter-spacing:-.01em;margin:0 0 4px;line-height:1.25}
+h2{font-family:var(--serif);font-size:13pt;font-weight:600;margin:0 0 9px;
+  padding-bottom:5px;border-bottom:.8pt solid var(--rule)}
+h3{font-size:10.5pt;font-weight:600;margin:14px 0 6px}
+.lead{font-size:10.5pt;color:var(--sub);margin:0 0 14px}
+.kicker{font-family:var(--mono);font-size:8.5pt;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+
+/* headline money */
+.hl{border:1.6pt solid var(--ink);padding:16px 18px 15px;margin:14px 0 16px;position:relative}
+.hl .lab{font-family:var(--mono);font-size:8.5pt;letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+.hl .v{font-family:var(--mono);font-size:44pt;font-weight:700;color:var(--loss);line-height:1;
+  letter-spacing:-.035em;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.hl .v small{font-size:.28em;color:var(--sub);font-weight:500;margin-left:.16em;letter-spacing:0}
+.hl .sub{font-family:var(--mono);font-size:9pt;color:var(--sub);margin-top:6px}
+.hl3{display:grid;grid-template-columns:repeat(3,1fr);border-top:.8pt solid var(--rule);margin-top:13px;padding-top:12px;gap:14px}
+.hl3 .k{font-family:var(--mono);font-size:8pt;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.hl3 .n{font-family:var(--mono);font-size:15pt;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums}
+
+/* findings */
+ol.find{margin:0;padding:0;list-style:none;counter-reset:f}
+ol.find li{counter-increment:f;display:grid;grid-template-columns:22px 1fr;gap:10px;
+  padding:9px 0;border-bottom:.6pt solid var(--rule2)}
+ol.find li::before{content:counter(f,decimal-leading-zero);font-family:var(--mono);font-size:9pt;
+  color:var(--loss);font-weight:600;padding-top:2px}
+ol.find b{font-weight:600}
+ol.find .d{color:var(--sub);font-size:9.5pt;margin-top:2px}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:9pt}
+th,td{padding:5px 7px;border-bottom:.6pt solid var(--rule2);text-align:right;
+  font-variant-numeric:tabular-nums}
+th{font-family:var(--mono);font-size:7.5pt;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--mute);font-weight:500;border-bottom:.8pt solid var(--rule);white-space:nowrap}
+td.l,th.l{text-align:left}
+td.n{font-family:var(--mono)}
+tfoot td{border-top:.8pt solid var(--ink);border-bottom:0;font-weight:700;font-family:var(--mono)}
+.sw{display:inline-block;width:8px;height:8px;margin-right:6px;vertical-align:baseline}
+
+/* charts */
+.chartbox{margin:8px 0 4px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:8pt;color:var(--sub);margin:8px 0 2px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;display:block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+
+.note{font-family:var(--mono);font-size:7.5pt;color:var(--mute);line-height:1.75;margin-top:8px}
+.note a{color:var(--sub)}
+.callout{border-left:3pt solid var(--loss);background:#FAF6F5;padding:10px 13px;margin:12px 0;font-size:9.5pt}
+.callout.g{border-left-color:var(--gain);background:#F3F8F6}
+.callout b{font-weight:600}
+
+.band{display:flex;height:22px;margin-top:26px;position:relative}
+.band i{height:100%;position:relative}
+.band i span{position:absolute;left:6px;top:50%;transform:translateY(-50%);
+  font-family:var(--mono);font-size:7pt;color:#fff;white-space:nowrap}
+.bmark{position:absolute;top:-24px;transform:translateX(-50%);text-align:center}
+.bmark .l{font-family:var(--mono);font-size:9pt;font-weight:700;color:var(--ink);white-space:nowrap}
+.bmark .t{width:1.6pt;height:28px;background:var(--ink);margin:2px auto 0}
+.bscale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:7.5pt;color:var(--mute);margin-top:4px}
+
+.scn{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:.8pt solid var(--rule);margin-top:10px}
+.sc{padding:12px 13px;border-right:.8pt solid var(--rule)}
+.sc:last-child{border-right:0}
+.sc.hi{background:#FAF6F5}
+.sc .tg{font-family:var(--mono);font-size:7.5pt;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.sc .nm{font-weight:600;font-size:10pt;margin:4px 0 3px}
+.sc .bs{font-size:8pt;color:var(--sub);min-height:34px;line-height:1.5}
+.sc .vv{font-family:var(--mono);font-size:17pt;font-weight:700;color:var(--loss);margin-top:7px;font-variant-numeric:tabular-nums}
+.sc .vv small{font-size:.42em;color:var(--sub);font-weight:500;margin-left:3px}
+.sc .ex{font-family:var(--mono);font-size:7.5pt;color:var(--mute);margin-top:3px}
+
+@media print{
+  body{background:#fff}
+  .bar{display:none}
+  .page{margin:0;box-shadow:none;width:auto;min-height:auto;padding:14mm 14mm 12mm;
+    page-break-after:always;break-after:page}
+  .page:last-child{page-break-after:auto;break-after:auto}
+}
+@page{size:A4 portrait;margin:0}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <span class="t">STC · 로스 손실 보고서</span>
+  <div class="fld"><label for="p1">시작 주차</label><select id="p1"></select></div>
+  <div class="fld"><label for="p2">종료 주차</label><select id="p2"></select></div>
+  <div class="fld"><label for="rev">월 매출 (THB · 선택)</label>
+    <input id="rev" type="number" placeholder="예: 40000000" style="background:#242B33;color:#EDF1F4;
+      border:1px solid #3A434D;border-radius:2px;padding:6px 9px;font-family:var(--mono);font-size:12px;width:150px"></div>
+  <button class="g" id="btnAll">전체 기간</button>
+  <button id="btnPrint">인쇄 · PDF 저장</button>
+</div>
+
+<div id="report"></div>
+
+<script>
+const DATA={"weeks":["W27","W28","W29","W30","W31","W32","W33","W34"],"periods":["06/24~06/30","07/01~07/07","07/08~07/14","07/15~07/21","07/22~07/28","07/29~08/04","08/05~08/11","08/12~08/18"],"cats":["금형","설비-전기","설비-라인","관리"],"mcs":["DC1","DC2","DC3","DC4","DC5","DC6","DC7","DC8","DC9","DC10","DC11","DC12","DC13","DC15","DC16","DC17","DC18","DC19","DC20","DC21","DC22","DC23"],"types":{"DC1":"200T","DC2":"125T","DC3":"350T","DC4":"350T","DC5":"350T","DC6":"350T","DC7":"350T","DC8":"250T","DC9":"350T","DC10":"350T","DC11":"500T","DC12":"500T","DC13":"350T","DC15":"650T","DC16":"125T","DC17":"125T","DC18":"50T","DC19":"90T","DC20":"800T","DC21":"650T","DC22":"350T","DC23":"350T"},"rates":{"DC1":8.91375,"DC2":6.666667,"DC3":14.159583,"DC4":14.159583,"DC5":14.159583,"DC6":14.159583,"DC7":14.159583,"DC8":11.086667,"DC9":14.159583,"DC10":14.159583,"DC11":16.472083,"DC12":16.472083,"DC13":14.159583,"DC15":16.7825,"DC16":6.666667,"DC17":6.666667,"DC18":8.572083,"DC19":8.8825,"DC20":19.871042,"DC21":16.7825,"DC22":14.159583,"DC23":14.159583},"W":{"W27":{"DC1":[0,0,0,0],"DC2":[215,0,50,450],"DC3":[945,323,70,90],"DC4":[981,147,477,794],"DC5":[0,0,0,0],"DC6":[670,327,1601,210],"DC7":[0,0,0,0],"DC8":[1419,410,1004,0],"DC9":[1841,1091,226,420],"DC10":[657,475,1030,559],"DC11":[524,922,575,0],"DC12":[1285,1065,345,0],"DC13":[0,0,0,0],"DC15":[840,130,280,210],"DC16":[955,430,540,443],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[0,0,0,0],"DC20":[1112,423,107,90],"DC21":[261,589,1221,117],"DC22":[969,425,843,549],"DC23":[509,268,280,386]},"W28":{"DC1":[0,0,0,0],"DC2":[75,285,182,390],"DC3":[1587,454,50,180],"DC4":[820,382,246,150],"DC5":[0,0,0,0],"DC6":[55,2242,898,360],"DC7":[0,0,0,0],"DC8":[1059,859,1076,0],"DC9":[1134,599,314,582],"DC10":[191,571,192,0],"DC11":[230,1075,368,0],"DC12":[1120,385,420,105],"DC13":[0,0,0,0],"DC15":[870,160,700,395],"DC16":[155,423,722,300],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[0,0,0,0],"DC20":[1034,40,244,0],"DC21":[556,420,112,154],"DC22":[1479,396,62,184],"DC23":[757,240,231,63]},"W29":{"DC1":[0,0,0,0],"DC2":[739,130,341,540],"DC3":[1115,0,229,180],"DC4":[439,34,775,312],"DC5":[0,0,0,0],"DC6":[516,30,1844,240],"DC7":[0,0,0,0],"DC8":[925,290,1315,60],"DC9":[342,605,636,360],"DC10":[392,166,587,612],"DC11":[250,575,680,150],"DC12":[1025,780,160,190],"DC13":[230,245,700,140],"DC15":[700,280,426,440],"DC16":[200,610,560,330],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[515,20,55,60],"DC20":[503,0,53,30],"DC21":[115,175,221,322],"DC22":[1915,662,10,60],"DC23":[1358,378,143,120]},"W30":{"DC1":[0,0,0,0],"DC2":[525,180,280,150],"DC3":[653,290,355,145],"DC4":[493,288,360,496],"DC5":[0,0,0,0],"DC6":[380,60,30,30],"DC7":[0,0,0,0],"DC8":[685,855,922,80],"DC9":[1699,514,265,829],"DC10":[528,172,395,120],"DC11":[655,1136,185,120],"DC12":[790,260,425,290],"DC13":[850,785,815,360],"DC15":[970,120,1424,600],"DC16":[540,195,220,30],"DC17":[0,0,0,0],"DC18":[160,53,1090,0],"DC19":[0,0,60,0],"DC20":[899,315,316,381],"DC21":[340,304,7,432],"DC22":[1853,206,57,399],"DC23":[912,232,654,467]},"W31":{"DC1":[0,0,0,0],"DC2":[775,30,290,554],"DC3":[2204,113,409,90],"DC4":[184,925,177,570],"DC5":[0,414,105,0],"DC6":[250,882,733,480],"DC7":[0,0,0,0],"DC8":[295,1037,905,120],"DC9":[1105,919,314,819],"DC10":[399,608,812,210],"DC11":[860,920,725,90],"DC12":[780,520,645,90],"DC13":[1120,1792,715,210],"DC15":[741,473,600,400],"DC16":[1030,220,560,30],"DC17":[0,0,0,0],"DC18":[160,0,1787,0],"DC19":[0,0,0,0],"DC20":[548,225,85,360],"DC21":[993,143,60,60],"DC22":[1200,196,229,538],"DC23":[920,290,59,90]},"W32":{"DC1":[0,0,0,0],"DC2":[484,170,263,360],"DC3":[1181,95,213,120],"DC4":[715,621,231,120],"DC5":[564,1885,81,89],"DC6":[798,688,271,90],"DC7":[0,0,0,0],"DC8":[180,945,270,0],"DC9":[1880,486,120,270],"DC10":[156,723,1056,542],"DC11":[60,190,130,0],"DC12":[1268,690,410,150],"DC13":[805,1315,1230,300],"DC15":[1105,60,565,450],"DC16":[1400,70,510,360],"DC17":[0,0,0,0],"DC18":[120,480,1437,120],"DC19":[0,0,0,0],"DC20":[1123,930,255,750],"DC21":[372,332,41,0],"DC22":[1515,594,32,630],"DC23":[199,591,162,240]},"W33":{"DC1":[0,0,0,0],"DC2":[153,55,355,660],"DC3":[1085,5,166,90],"DC4":[440,108,858,450],"DC5":[306,783,179,180],"DC6":[228,802,407,0],"DC7":[0,0,0,0],"DC8":[523,405,1713,90],"DC9":[1928,433,101,244],"DC10":[947,285,345,778],"DC11":[615,1765,709,270],"DC12":[1764,610,740,285],"DC13":[200,955,1729,120],"DC15":[800,440,615,370],"DC16":[320,242,979,400],"DC17":[0,0,0,0],"DC18":[280,840,1903,80],"DC19":[0,0,0,0],"DC20":[980,0,297,613],"DC21":[177,460,51,695],"DC22":[2203,185,230,399],"DC23":[334,459,308,433]},"W34":{"DC1":[0,0,0,0],"DC2":[358,713,235,720],"DC3":[295,420,95,150],"DC4":[181,100,145,1110],"DC5":[666,128,150,30],"DC6":[1205,1062,176,150],"DC7":[0,0,0,0],"DC8":[897,230,785,90],"DC9":[725,715,1034,550],"DC10":[477,545,121,240],"DC11":[505,1005,458,596],"DC12":[917,1480,375,180],"DC13":[769,450,1525,250],"DC15":[965,735,320,270],"DC16":[810,135,660,270],"DC17":[0,0,0,0],"DC18":[80,499,2835,245],"DC19":[0,0,0,0],"DC20":[1098,297,144,330],"DC21":[137,206,59,150],"DC22":[1004,361,788,412],"DC23":[193,596,163,409]}},"MONTHS":[["6월","06/24~06/30",7,"부분"],["7월","07/01~07/31",31,"완전"],["8월","08/01~08/18",18,"부분"]],"M":{"6월":{"DC1":[0,0,0,0],"DC2":[215,0,50,450],"DC3":[945,323,70,90],"DC4":[981,147,477,794],"DC5":[0,0,0,0],"DC6":[670,327,1601,210],"DC7":[0,0,0,0],"DC8":[1419,410,1004,0],"DC9":[1841,1091,226,420],"DC10":[657,475,1030,559],"DC11":[524,922,575,0],"DC12":[1285,1065,345,0],"DC13":[0,0,0,0],"DC15":[840,130,280,210],"DC16":[955,430,540,443],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[0,0,0,0],"DC20":[1112,423,107,90],"DC21":[261,589,1221,117],"DC22":[969,425,843,549],"DC23":[509,268,280,386]},"7월":{"DC1":[0,0,0,0],"DC2":[2357,790,1278,1704],"DC3":[5914,952,1216,595],"DC4":[2205,1856,1558,1528],"DC5":[483,1745,146,0],"DC6":[1541,3582,3555,1110],"DC7":[0,0,0,0],"DC8":[3144,3686,4428,260],"DC9":[4978,2920,1529,2620],"DC10":[1562,1644,2045,1152],"DC11":[2055,3896,2088,360],"DC12":[4118,2155,1855,735],"DC13":[2620,3702,2610,710],"DC15":[3331,1033,3360,2085],"DC16":[2340,1518,2392,990],"DC17":[0,0,0,0],"DC18":[440,533,4064,120],"DC19":[515,20,115,60],"DC20":[3354,1260,788,1161],"DC21":[2207,1292,407,968],"DC22":[7199,1968,369,1601],"DC23":[4063,1250,1102,890]},"8월":{"DC1":[0,0,0,0],"DC2":[752,773,668,1670],"DC3":[2206,425,301,360],"DC4":[1067,602,1234,1680],"DC5":[1053,1465,369,299],"DC6":[1891,2184,804,240],"DC7":[0,0,0,0],"DC8":[1420,935,2558,180],"DC9":[3835,1351,1255,1034],"DC10":[1528,1426,1463,1350],"DC11":[1120,2770,1167,866],"DC12":[3546,2570,1320,555],"DC13":[1354,1840,4104,670],"DC15":[2820,1235,1290,840],"DC16":[2115,377,1819,730],"DC17":[0,0,0,0],"DC18":[360,1339,4988,325],"DC19":[0,0,0,0],"DC20":[2831,547,606,1303],"DC21":[483,748,144,845],"DC22":[3970,632,1039,1021],"DC23":[610,1536,618,932]}},"codes":[[1,"금형수리","금형",22638],[2,"금형파손","금형",820],[3,"핀파손","금형",23562],[4,"설비수리","설비-전기",19624],[5,"전기로수리","설비-전기",2670],[6,"취출기수리","설비-전기",16397],[7,"스프레이수리","설비-전기",8724],[8,"슬라이드코어수리","금형",7699],[9,"팁교체","설비-라인",15551],[10,"노즐막힘","설비-라인",7547],[11,"플런저오일막힘","설비-라인",1801],[12,"래들수리","설비-전기",6457],[13,"조건변경","설비-라인",20067],[14,"탈산처리","설비-라인",1786],[15,"스크랩용해","설비-라인",10414],[16,"전기로회전","설비-전기",7146],[17,"금형교체","관리",19906],[18,"휴식, 설비교대","관리",13037],[19,"청소","금형",5601],[20,"미팅/정전","관리",4924],[21,"금형냉각라인","금형",1069],[22,"제품소착","금형",19421],[23,"컨베이어수리","설비-전기",1334],[24,"설비냉각수","설비-라인",419],[25,"스프레이조정","설비-라인",10593],[26,"바가지교체","설비-라인",1123],[27,"히터수리","설비-전기",523],[28,"펌프이상","설비-전기",2535],[29,"로트마크, 사상","금형",19760],[30,"진공설비","설비-전기",172],[31,"기타","관리",0]],"codesW":{"금형수리":{"cat":"금형","w":[2183,1459,2977,2321,2438,3978,4952,2330],"wc":[28348,21782,40146,33734,32107,54766,71642,30571],"m":[2183,11188,9267],"mc":[28348,154760,129989]},"금형파손":{"cat":"금형","w":[60,60,60,0,0,70,390,180],"wc":[850,988,1007,0,0,1362,6309,2549],"m":[60,120,640],"mc":[850,1995,10220]},"핀파손":{"cat":"금형","w":[3088,3077,2729,2223,4434,2433,2239,3339],"wc":[43768,44587,37764,31258,64118,34745,34141,47981],"m":[3088,13408,7066],"mc":[43768,190624,103969]},"설비수리":{"cat":"설비-전기","w":[2517,2883,1128,1919,3185,2944,3373,1675],"wc":[36152,39921,12706,25333,43670,36815,43929,21830],"m":[2517,11063,6044],"mc":[36152,144716,79488]},"전기로수리":{"cat":"설비-전기","w":[318,120,0,50,725,925,154,378],"wc":[5058,1977,0,708,11171,13098,1930,6218],"m":[318,1141,1211],"mc":[5058,17338,17763]},"취출기수리":{"cat":"설비-전기","w":[925,1134,1487,1929,3039,3062,778,4043],"wc":[14888,13312,20063,28259,44102,48696,10940,57390],"m":[925,9633,5839],"mc":[14888,138210,84552]},"스프레이수리":{"cat":"설비-전기","w":[827,1872,528,595,591,1116,2218,977],"wc":[10520,25480,7867,8952,8011,16376,34098,14596],"m":[827,4078,3819],"mc":[10520,57342,58038]},"슬라이드코어수리":{"cat":"금형","w":[984,1251,519,1690,578,975,909,793],"wc":[13708,17714,7124,21728,6985,13135,13349,11229],"m":[984,4510,2205],"mc":[13708,59564,31700]},"팁교체":{"cat":"설비-라인","w":[1479,1010,3882,530,2420,524,3830,1876],"wc":[19962,13871,51207,7132,34522,6743,48101,23802],"m":[1479,8055,6017],"mc":[19962,109611,75767]},"노즐막힘":{"cat":"설비-라인","w":[0,0,15,970,1777,1157,1153,2475],"wc":[0,0,133,8315,15233,9918,9884,21216],"m":[0,3789,3758],"mc":[0,32484,32214]},"플런저오일막힘":{"cat":"설비-라인","w":[208,122,60,514,498,187,97,115],"wc":[3015,1578,757,6955,5253,2115,1373,1505],"m":[208,1354,239],"mc":[3015,16276,3261]},"래들수리":{"cat":"설비-전기","w":[1018,784,537,515,984,1211,328,1080],"wc":[15896,12360,7726,7234,14375,17251,4628,14474],"m":[1018,3663,1776],"mc":[15896,53694,24353]},"조건변경":{"cat":"설비-라인","w":[2371,2010,2089,2445,2659,2436,3057,3000],"wc":[33480,26736,29556,34184,35925,33519,40040,38976],"m":[2371,10150,7546],"mc":[33480,138162,100774]},"탈산처리":{"cat":"설비-라인","w":[329,434,151,107,155,200,250,160],"wc":[4340,5919,2203,1421,2198,2700,3425,2526],"m":[329,870,587],"mc":[4340,12120,8273]},"스크랩용해":{"cat":"설비-라인","w":[2096,1027,1076,1655,699,1717,902,1242],"wc":[31404,12451,13559,23937,9541,23857,10798,17047],"m":[2096,5064,3254],"mc":[31404,67736,43454]},"전기로회전":{"cat":"설비-전기","w":[893,1045,829,859,789,653,1041,1037],"wc":[13545,16075,12617,12947,11711,9946,15217,15682],"m":[893,3842,2411],"mc":[13545,58428,35766]},"금형교체":{"cat":"관리","w":[2489,2185,2326,2470,2148,3272,2369,2647],"wc":[34037,29885,30291,35997,28545,47472,33249,35584],"m":[2489,10879,6538],"mc":[34037,149707,91315]},"휴식, 설비교대":{"cat":"관리","w":[1530,600,1500,330,1837,960,3060,3220],"wc":[18076,6023,19545,4473,25130,13427,43957,43544],"m":[1530,4327,7180],"mc":[18076,56021,100079]},"청소":{"cat":"금형","w":[736,641,906,606,743,662,774,533],"wc":[10560,9942,12990,8805,9926,10631,10545,8759],"m":[736,3231,1634],"mc":[10560,46842,24758]},"미팅/정전":{"cat":"관리","w":[299,78,320,2129,726,359,728,285],"wc":[3709,1144,4807,33559,11965,3852,8886,3699],"m":[299,3443,1182],"mc":[3709,53534,14379]},"금형냉각라인":{"cat":"금형","w":[113,285,133,120,52,59,58,249],"wc":[1649,3854,1962,1917,614,835,766,3811],"m":[113,609,347],"mc":[1649,8616,5143]},"제품소착":{"cat":"금형","w":[2826,2060,2364,3054,3003,2446,1881,1787],"wc":[38834,30154,31054,41747,39189,28531,27319,23187],"m":[2826,11316,5279],"mc":[38834,151770,69412]},"컨베이어수리":{"cat":"설비-전기","w":[186,251,153,20,10,60,654,0],"wc":[2320,3301,2305,329,142,665,9954,0],"m":[186,434,714],"mc":[2320,6077,10619]},"설비냉각수":{"cat":"설비-라인","w":[49,30,0,165,0,65,80,30],"wc":[922,503,0,2579,0,920,1343,425],"m":[49,200,170],"mc":[922,3153,2617]},"스프레이조정":{"cat":"설비-라인","w":[1895,1104,1264,1175,972,971,2189,1023],"wc":[25089,15269,16546,16890,13563,12628,29595,13684],"m":[1895,4816,3882],"mc":[25089,65602,52572]},"바가지교체":{"cat":"설비-라인","w":[222,80,198,299,30,20,127,147],"wc":[3425,1304,2583,3863,425,283,1798,2161],"m":[222,607,294],"mc":[3425,8174,4242]},"히터수리":{"cat":"설비-전기","w":[193,0,0,0,0,0,0,330],"wc":[3239,0,0,0,0,0,0,4673],"m":[193,0,330],"mc":[3239,0,4673]},"펌프이상":{"cat":"설비-전기","w":[135,354,308,59,384,857,286,152],"wc":[2050,4306,4875,835,5437,11464,4050,2152],"m":[135,1812,588],"mc":[2050,24793,8326]},"로트마크, 사상":{"cat":"금형","w":[3193,2289,1591,2918,2316,3302,2080,2071],"wc":[49244,36251,23022,44856,35266,51186,30956,32156],"m":[3193,10044,6523],"mc":[49244,154404,99289]},"진공설비":{"cat":"설비-전기","w":[13,88,10,19,0,37,0,5],"wc":[218,1246,142,269,0,524,0,71],"m":[13,136,23],"mc":[218,1926,326]},"기타":{"cat":"관리","w":[0,0,0,0,0,0,0,0],"wc":[0,0,0,0,0,0,0,0],"m":[0,0,0],"mc":[0,0,0]}},"rateAvg":13.8274,"RW":{"W27":{"DC1":0,"DC2":3575,"DC3":8052,"DC4":5401,"DC5":0,"DC6":6222,"DC7":0,"DC8":5987,"DC9":5602,"DC10":6219,"DC11":5719,"DC12":6905,"DC13":0,"DC15":7510,"DC16":5072,"DC17":0,"DC18":0,"DC19":0,"DC20":7388,"DC21":5372,"DC22":6754,"DC23":7077},"W28":{"DC1":0,"DC2":3178,"DC3":6909,"DC4":6022,"DC5":0,"DC6":3885,"DC7":0,"DC8":5856,"DC9":4541,"DC10":8136,"DC11":7387,"DC12":7540,"DC13":0,"DC15":6845,"DC16":5840,"DC17":0,"DC18":0,"DC19":0,"DC20":5642,"DC21":7728,"DC22":7449,"DC23":8009},"W29":{"DC1":0,"DC2":6470,"DC3":7626,"DC4":5310,"DC5":0,"DC6":6220,"DC7":0,"DC8":4910,"DC9":3097,"DC10":5473,"DC11":3895,"DC12":6995,"DC13":3005,"DC15":6674,"DC16":1780,"DC17":0,"DC18":0,"DC19":1750,"DC20":674,"DC21":6877,"DC22":6683,"DC23":6701},"W30":{"DC1":0,"DC2":7025,"DC3":6687,"DC4":6043,"DC5":0,"DC6":2800,"DC7":0,"DC8":3128,"DC9":6413,"DC10":4725,"DC11":7234,"DC12":7805,"DC13":3400,"DC15":5646,"DC16":965,"DC17":0,"DC18":3737,"DC19":120,"DC20":5409,"DC21":6837,"DC22":6905,"DC23":7275},"W31":{"DC1":0,"DC2":5971,"DC3":6694,"DC4":2944,"DC5":111,"DC6":5755,"DC7":0,"DC8":1753,"DC9":5063,"DC10":7181,"DC11":5625,"DC12":7355,"DC13":4263,"DC15":5376,"DC16":3710,"DC17":0,"DC18":3123,"DC19":0,"DC20":3552,"DC21":5074,"DC22":7227,"DC23":7731},"W32":{"DC1":0,"DC2":5533,"DC3":7661,"DC4":2723,"DC5":5151,"DC6":6673,"DC7":0,"DC8":855,"DC9":5704,"DC10":6163,"DC11":340,"DC12":7142,"DC13":4750,"DC15":5800,"DC16":1980,"DC17":0,"DC18":1563,"DC19":0,"DC20":5252,"DC21":6035,"DC22":5539,"DC23":7238},"W33":{"DC1":0,"DC2":4327,"DC3":5284,"DC4":4294,"DC5":4732,"DC6":2703,"DC7":0,"DC8":4979,"DC9":6984,"DC10":6675,"DC11":3001,"DC12":6021,"DC13":2666,"DC15":6145,"DC16":5349,"DC17":0,"DC18":2057,"DC19":0,"DC20":6330,"DC21":5307,"DC22":6643,"DC23":8126},"W34":{"DC1":0,"DC2":2864,"DC3":6030,"DC4":2094,"DC5":3196,"DC6":6917,"DC7":0,"DC8":7478,"DC9":6216,"DC10":7437,"DC11":2926,"DC12":6168,"DC13":5976,"DC15":4310,"DC16":2385,"DC17":0,"DC18":5191,"DC19":0,"DC20":7011,"DC21":4098,"DC22":7005,"DC23":7669}},"RM":{"6월":{"DC1":0,"DC2":3575,"DC3":8052,"DC4":5401,"DC5":0,"DC6":6222,"DC7":0,"DC8":5987,"DC9":5602,"DC10":6219,"DC11":5719,"DC12":6905,"DC13":0,"DC15":7510,"DC16":5072,"DC17":0,"DC18":0,"DC19":0,"DC20":7388,"DC21":5372,"DC22":6754,"DC23":7077},"7월":{"DC1":0,"DC2":24951,"DC3":31253,"DC4":21173,"DC5":2186,"DC6":21682,"DC7":0,"DC8":16382,"DC9":21973,"DC10":28847,"DC11":24481,"DC12":33077,"DC13":12318,"DC15":26671,"DC16":13760,"DC17":0,"DC18":7563,"DC19":1870,"DC20":17227,"DC21":29836,"DC22":29723,"DC23":33105},"8월":{"DC1":0,"DC2":10417,"DC3":15638,"DC4":8257,"DC5":11004,"DC6":13271,"DC7":0,"DC8":12577,"DC9":16045,"DC10":16943,"DC11":5927,"DC12":15949,"DC13":11742,"DC15":14125,"DC16":8249,"DC17":0,"DC18":8108,"DC19":0,"DC20":16643,"DC21":12120,"DC22":17728,"DC23":19644}},"fx":32.8};
+/* ============ data helpers ============ */
+const CN=DATA.cats, CC=['#B3261E','#C77D0A','#2E5F8A','#8A929B'];
+const FX=DATA.fx, WK=DATA.weeks, PER=DATA.periods, MONS=DATA.MONTHS;
+const $=s=>document.querySelector(s);
+const f=n=>Math.round(n).toLocaleString('ko-KR');
+const f1=n=>n.toFixed(1);
+const rate=m=>DATA.rates[m];
+const LIVE=DATA.mcs.filter(m=>WK.some(w=>DATA.W[w][m].some(v=>v>0)));
+const ST={i1:0,i2:WK.length-1,rev:0};
+const sel=()=>WK.slice(ST.i1,ST.i2+1);
+const D_=()=>sel().length*7;
+
+const wCat=(w,c)=>DATA.mcs.reduce((s,m)=>s+DATA.W[w][m][c]*rate(m),0);
+const wCatMin=(w,c)=>DATA.mcs.reduce((s,m)=>s+DATA.W[w][m][c],0);
+const wTot=w=>[0,1,2,3].reduce((s,c)=>s+wCat(w,c),0);
+const wRun=w=>DATA.mcs.reduce((s,m)=>s+(DATA.RW[w][m]||0),0);
+const mCat=(n,c)=>DATA.mcs.reduce((s,m)=>s+DATA.M[n][m][c]*rate(m),0);
+const mTot=n=>[0,1,2,3].reduce((s,c)=>s+mCat(n,c),0);
+const mRun=n=>DATA.mcs.reduce((s,m)=>s+(DATA.RM[n][m]||0),0);
+
+const TOT =()=>sel().reduce((s,w)=>s+wTot(w),0);
+const CAT =c=>sel().reduce((s,w)=>s+wCat(w,c),0);
+const CATM=c=>sel().reduce((s,w)=>s+wCatMin(w,c),0);
+const MIN =()=>[0,1,2,3].reduce((s,c)=>s+CATM(c),0);
+const RUN =()=>sel().reduce((s,w)=>s+wRun(w),0);
+const AVAIL=()=>{const r=RUN(),l=MIN();return (r+l)?r/(r+l):0;};
+function gap(t){const T=RUN()+MIN(),tg=T*(1-t),cut=Math.max(MIN()-tg,0);
+  return {cut,ratio:MIN()?cut/MIN():0,thb:MIN()?cut/MIN()*TOT():0};}
+const mcCat=(m,c)=>sel().reduce((s,w)=>s+DATA.W[w][m][c]*rate(m),0);
+const mcTot=m=>[0,1,2,3].reduce((s,c)=>s+mcCat(m,c),0);
+const mcMin=m=>sel().reduce((s,w)=>s+DATA.W[w][m].reduce((a,b)=>a+b,0),0);
+function codeRows(){
+  const idx=sel().map(w=>WK.indexOf(w));
+  return Object.entries(DATA.codesW).map(([n,o])=>({n,cat:o.cat,
+    thb:idx.reduce((s,i)=>s+o.wc[i],0),min:idx.reduce((s,i)=>s+o.w[i],0)}))
+    .filter(x=>x.thb>0).sort((a,b)=>b.thb-a.thb);
+}
+const yr=v=>v/D_()*365, mo=v=>v/D_()*30;
+
+/* ============ svg: vertical stacked bars ============ */
+function niceMax(v){
+  if(v<=0) return 1;
+  const p=Math.pow(10,Math.floor(Math.log10(v))), n=v/p;
+  return (n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p;
+}
+function vbar(items,opt){
+  opt=opt||{};
+  const W=opt.w||660, H=opt.h||210, L=opt.left||46, R=6, T=16, B=opt.bottom||30;
+  const pw=W-L-R, ph=H-T-B;
+  const max=niceMax(Math.max(...items.map(d=>d.parts.reduce((a,b)=>a+b,0)),1));
+  const n=items.length, gapw=opt.gap||0.34;
+  const bw=pw/n*(1-gapw), step=pw/n;
+  const y=v=>T+ph-v/max*ph;
+  const ticks=[0,.25,.5,.75,1].map(t=>t*max);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img">`;
+  ticks.forEach(t=>{
+    s+=`<line x1="${L}" x2="${W-R}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}"
+      stroke="${t===0?'#14181C':'#EAEEF1'}" stroke-width="${t===0?1:.8}"/>`;
+    s+=`<text x="${L-7}" y="${(y(t)+3).toFixed(1)}" text-anchor="end"
+      font-family="IBM Plex Mono" font-size="8" fill="#7A848E">${opt.fmt?opt.fmt(t):f(t/1000)+'k'}</text>`;
+  });
+  items.forEach((d,i)=>{
+    const x=L+step*i+(step-bw)/2;
+    let acc=0;
+    d.parts.forEach((p,ci)=>{
+      const h=p/max*ph;
+      if(h>0) s+=`<rect x="${x.toFixed(1)}" y="${(y(acc)-h).toFixed(1)}" width="${bw.toFixed(1)}"
+        height="${h.toFixed(1)}" fill="${CC[ci]}"><title>${d.label} · ${CN[ci]} · ${f(p)}</title></rect>`;
+      acc+=p;
+    });
+    const tot=d.parts.reduce((a,b)=>a+b,0);
+    s+=`<text x="${(x+bw/2).toFixed(1)}" y="${(y(tot)-5).toFixed(1)}" text-anchor="middle"
+      font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="#14181C">${opt.top?opt.top(tot):f(tot/1000)+'k'}</text>`;
+    s+=`<text x="${(x+bw/2).toFixed(1)}" y="${(T+ph+12).toFixed(1)}" text-anchor="middle"
+      font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="#14181C">${d.label}</text>`;
+    if(d.sub) s+=`<text x="${(x+bw/2).toFixed(1)}" y="${(T+ph+22).toFixed(1)}" text-anchor="middle"
+      font-family="IBM Plex Mono" font-size="7" fill="#7A848E">${d.sub}</text>`;
+  });
+  return s+'</svg>';
+}
+function vbarSimple(items,color,opt){
+  opt=opt||{};
+  const W=opt.w||300,H=opt.h||132,L=opt.left||38,R=4,T=14,B=24;
+  const pw=W-L-R, ph=H-T-B;
+  const max=niceMax(Math.max(...items.map(d=>d.v),1));
+  const n=items.length, step=pw/n, bw=step*.6;
+  const y=v=>T+ph-v/max*ph;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img">`;
+  [0,.5,1].forEach(t=>{const v=t*max;
+    s+=`<line x1="${L}" x2="${W-R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"
+      stroke="${t===0?'#14181C':'#EAEEF1'}" stroke-width="${t===0?1:.8}"/>`;
+    s+=`<text x="${L-6}" y="${(y(v)+3).toFixed(1)}" text-anchor="end" font-family="IBM Plex Mono"
+      font-size="7.5" fill="#7A848E">${f(v/1000)}k</text>`;});
+  items.forEach((d,i)=>{
+    const x=L+step*i+(step-bw)/2, h=d.v/max*ph;
+    s+=`<rect x="${x.toFixed(1)}" y="${(y(d.v)).toFixed(1)}" width="${bw.toFixed(1)}"
+      height="${Math.max(h,0).toFixed(1)}" fill="${color}"><title>${d.label} ${f(d.v)}</title></rect>`;
+    s+=`<text x="${(x+bw/2).toFixed(1)}" y="${(T+ph+11).toFixed(1)}" text-anchor="middle"
+      font-family="IBM Plex Mono" font-size="7.5" fill="#14181C">${d.label}</text>`;
+  });
+  return s+'</svg>';
+}
+const legend=()=>`<div class="legend">${CN.map((c,i)=>
+  `<span><i style="background:${CC[i]}"></i>${c}</span>`).join('')}
+  <span style="margin-left:auto;color:#7A848E">단위 · THB (천 단위 표기)</span></div>`;
+
+/* ============ pages ============ */
+const TODAY='2026-08-25';
+function pg(no,total,body){
+  return `<div class="page"><div class="ph">
+    <span class="co">STC Co., Ltd. · 공무팀 · 비가동 로스 손실 현황 보고</span>
+    <span class="pg">${no} / ${total}</span></div>
+    ${body}
+    <div class="pf"><span>작성 ${TODAY} · 정본: OEE_RawData_APQ 「A_가동률」</span>
+    <span>주간 = 수 ~ 화 · 금액 = 로스(분) × M/C Rate</span></div></div>`;
+}
+
+function page1(){
+  const T=TOT(),M=MIN(),A=AVAIL(),g=gap(.90),ks=sel();
+  const p1=PER[ST.i1].split('~')[0], p2=PER[ST.i2].split('~')[1];
+  const cats=[0,1,2,3].map(c=>({c,v:CAT(c)})).sort((a,b)=>b.v-a.v);
+  const wr=DATA.mcs.map(m=>({m,v:mcTot(m)})).sort((a,b)=>b.v-a.v);
+  const cr=codeRows(); let run=0; const n50=cr.findIndex(x=>(run+=x.thb)>=cr.reduce((s,y)=>s+y.thb,0)*.5)+1;
+  const top5=wr.slice(0,5).reduce((s,x)=>s+x.v,0);
+  const revLine = ST.rev>0
+    ? `<div class="callout"><b>월 매출 대비 ${f1(mo(T)/ST.rev*100)}%</b> 입니다.
+       세계 500대 제조사 평균은 매출의 11% 수준입니다(Siemens, 2024).</div>` : '';
+  return pg(1,5,`
+    <div class="kicker">보고 기간 ${ks[0]} ~ ${ks[ks.length-1]} · 2026-${p1} ~ 2026-${p2} · ${D_()}일</div>
+    <h1>비가동 로스로<br>${f(T)} 밧이 나갔습니다</h1>
+    <p class="lead">다이캐스팅 설비 ${LIVE.length}대의 정지 시간을 설비별 분당 원가로 환산한 금액입니다.
+      집계 근거는 일별 생산일보이며, 시트 「F-COST」의 손실비용과 총액이 일치합니다.</p>
+
+    <div class="hl">
+      <div class="lab">보고 기간 손실금액</div>
+      <div class="v">${f(T)}<small>THB</small></div>
+      <div class="sub">≈ US$ ${f(T/FX)} · 비가동 ${f(M/60)}시간 · 하루 평균 ${f(T/D_())} THB</div>
+      <div class="hl3">
+        <div><div class="k">월 환산</div><div class="n">${f(mo(T))} THB</div></div>
+        <div><div class="k">연 환산</div><div class="n">${f(yr(T))} THB</div></div>
+        <div><div class="k">가동률</div><div class="n">${f1(A*100)}%</div></div>
+      </div>
+    </div>
+    ${revLine}
+
+    <h2>핵심 사항</h2>
+    <ol class="find">
+      <li><div><b>손실은 하루 ${f(T/D_())} 밧, 연 환산 ${f(yr(T))} 밧입니다.</b>
+        <div class="d">로스 1시간의 평균 원가는 ${f(DATA.rateAvg*60)} 밧입니다. 개선 효과를 이 값으로 바로 환산할 수 있습니다.</div></div></li>
+      <li><div><b>가동률 ${f1(A*100)}%로 세계 기준 90%에 ${f1(90-A*100)}%p 못 미칩니다.</b>
+        <div class="d">그 격차를 금액으로 환산하면 연 ${f(yr(g.thb))} 밧입니다. 비가동이 전체 조업시간의 ${f1(M/(RUN()+M)*100)}%를 차지합니다.</div></div></li>
+      <li><div><b>손실의 ${f1(cats[0].v/T*100)}%가 ${CN[cats[0].c]}에서 발생합니다.</b>
+        <div class="d">${cats.map(x=>`${CN[x.c]} ${f(x.v)}`).join(' · ')} 밧 순입니다.</div></div></li>
+      <li><div><b>원인 ${n50}개가 금액의 절반을 차지합니다.</b>
+        <div class="d">전체 ${cr.length}종 중 상위 ${n50}종만 관리해도 손실의 50%에 손댈 수 있습니다.</div></div></li>
+      <li><div><b>설비 ${wr[0].m} 한 대가 전체의 ${f1(wr[0].v/T*100)}%입니다.</b>
+        <div class="d">상위 5대(${wr.slice(0,5).map(x=>x.m).join(' · ')})가 ${f1(top5/T*100)}%를 차지합니다.</div></div></li>
+    </ol>
+
+    <h2>요청 사항</h2>
+    <p style="margin:0;font-size:10pt">상위 5대 설비와 상위 ${n50}개 원인에 보전 자원을 집중하는 안을 검토해 주시기 바랍니다.
+      회수 가능 금액은 4쪽에 정리했습니다.</p>`);
+}
+
+function page2(){
+  const items=WK.map((w,i)=>({label:w,sub:PER[i],parts:[0,1,2,3].map(c=>wCat(w,c)),
+    on:i>=ST.i1&&i<=ST.i2}));
+  const mitems=MONS.map(([n,per,dy,tag])=>({label:n,sub:per,parts:[0,1,2,3].map(c=>mCat(n,c))}));
+  const T=TOT();
+  const rows=[0,1,2,3].map(c=>({c,thb:CAT(c),min:CATM(c)})).sort((a,b)=>b.thb-a.thb);
+  return pg(2,5,`
+    <h2>로스 분류별 손실금액 — 주간</h2>
+    <div class="chartbox">${vbar(items,{h:230})}</div>
+    ${legend()}
+    <div class="note">주간은 사내 기준(수요일~화요일)입니다. 막대 위 숫자는 그 주의 합계입니다.
+      보고 기간은 ${sel()[0]} ~ ${sel()[sel().length-1]} 이며, 표의 합계는 이 구간만 집계했습니다.</div>
+
+    <h2 style="margin-top:18px">로스 분류별 손실금액 — 월간</h2>
+    <div class="grid2">
+      <div class="chartbox">${vbar(mitems,{w:330,h:200,left:44,gap:.45})}</div>
+      <div>
+        <table><thead><tr><th class="l">월</th><th class="l">기간</th><th>손실금액</th><th>일평균</th></tr></thead>
+        <tbody>${MONS.map(([n,per,dy,tag])=>{const v=mTot(n);
+          return `<tr><td class="l">${n}${tag==='완전'?'':' <span style="color:#7A848E">(부분)</span>'}</td>
+            <td class="l n" style="font-size:8pt">${per}</td>
+            <td class="n">${f(v)}</td><td class="n">${f(v/dy)}</td></tr>`;}).join('')}
+        </tbody></table>
+        <div class="note">6월(7일)·8월(18일)은 원자료 수록 범위 때문에 부분 집계입니다.
+          총량이 아니라 <b>일평균</b>으로 비교해야 합니다. 일평균 기준으로 8월이 7월보다 높습니다.</div>
+      </div>
+    </div>
+
+    <h2 style="margin-top:18px">분류별 집계 — 보고 기간</h2>
+    <table><thead><tr><th class="l">분류</th><th>손실금액 (THB)</th><th>비중</th>
+      <th>로스시간</th><th>일평균 (THB)</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td class="l"><i class="sw" style="background:${CC[r.c]}"></i>${CN[r.c]}</td>
+        <td class="n">${f(r.thb)}</td><td class="n">${f1(r.thb/T*100)}%</td>
+        <td class="n">${f(r.min/60)} h</td><td class="n">${f(r.thb/D_())}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td class="l">합계</td><td>${f(T)}</td><td>100.0%</td>
+        <td>${f(MIN()/60)} h</td><td>${f(T/D_())}</td></tr></tfoot></table>`);
+}
+
+function page3(){
+  const T=TOT();
+  const items=CN.map((c,i)=>({c,i,
+    w:WK.map(w=>({label:w.replace('W',''),v:wCat(w,i)}))}));
+  const wr=DATA.mcs.map(m=>({m,ty:DATA.types[m],parts:[0,1,2,3].map(c=>mcCat(m,c)),
+    v:mcTot(m),min:mcMin(m)})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  const cr=codeRows(); const CT=cr.reduce((s,x)=>s+x.thb,0); let acc=0;
+  return pg(3,5,`
+    <h2>분류별 주간 추이 — 무엇이 나빠지고 있는가</h2>
+    <div class="grid4">${items.map(it=>`<div>
+      <div style="font-size:9pt;font-weight:600;margin-bottom:2px">
+        <i class="sw" style="background:${CC[it.i]}"></i>${CN[it.i]}</div>
+      <div class="chartbox">${vbarSimple(it.w,CC[it.i],{w:210,h:120,left:34})}</div></div>`).join('')}</div>
+    <div class="note">가로축은 주차(W27~W34), 세로축은 THB입니다. 네 그래프의 세로 눈금은 각각 다릅니다.
+      금형은 평탄한 반면 설비-라인과 관리가 기간 중 크게 올라갔습니다.</div>
+
+    <h2 style="margin-top:16px">설비별 손실금액 — 상위 10대</h2>
+    <table><thead><tr><th class="l">순위</th><th class="l">설비</th><th class="l">형식</th>
+      <th>금형</th><th>설비-전기</th><th>설비-라인</th><th>관리</th><th>합계</th><th>비중</th></tr></thead>
+      <tbody>${wr.slice(0,10).map((r,i)=>`<tr>
+        <td class="l n">${i+1}</td><td class="l n">${r.m}</td><td class="l n" style="color:#7A848E">${r.ty}</td>
+        ${r.parts.map(p=>`<td class="n">${p?f(p):'—'}</td>`).join('')}
+        <td class="n" style="font-weight:700">${f(r.v)}</td>
+        <td class="n">${f1(r.v/T*100)}%</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td class="l" colspan="3">상위 10대 소계</td>
+        ${[0,1,2,3].map(c=>`<td>${f(wr.slice(0,10).reduce((s,r)=>s+r.parts[c],0))}</td>`).join('')}
+        <td>${f(wr.slice(0,10).reduce((s,r)=>s+r.v,0))}</td>
+        <td>${f1(wr.slice(0,10).reduce((s,r)=>s+r.v,0)/T*100)}%</td></tr></tfoot></table>
+
+    <h2 style="margin-top:16px">원인별 손실금액 — 상위 12종</h2>
+    <table><thead><tr><th class="l">순위</th><th class="l">로스코드</th><th class="l">분류</th>
+      <th>손실금액</th><th>로스시간</th><th>비중</th><th>누적</th></tr></thead>
+      <tbody>${cr.slice(0,12).map((r,i)=>{acc+=r.thb;
+        return `<tr><td class="l n">${i+1}</td><td class="l">${r.n}</td>
+        <td class="l" style="font-size:8pt"><i class="sw" style="background:${CC[CN.indexOf(r.cat)]}"></i>${r.cat}</td>
+        <td class="n">${f(r.thb)}</td><td class="n">${f(r.min/60)} h</td>
+        <td class="n">${f1(r.thb/CT*100)}%</td>
+        <td class="n" style="color:#B3261E;font-weight:600">${f1(acc/CT*100)}%</td></tr>`;}).join('')}</tbody></table>
+    <div class="note">누적 열은 파레토입니다. 위에서부터 몇 개를 잡으면 금액의 몇 %에 손대는지 보여줍니다.</div>`);
+}
+
+function page4(){
+  const A=AVAIL(),T=TOT(),g90=gap(.90),g80=gap(.80);
+  const SCN=[
+    ['보수적','예방보전 강화',.12,'Deloitte — 유지비 5~10% 절감, 가동률 10~20% 개선. 계획보전 대비 기준이라 방어하기 쉬운 수치.'],
+    ['표준','예지보전(PdM) 도입',.40,'US DOE — 비가동 35~45% 감소, 고장 70~75% 제거, 투자 회수 10배. 사후보전 대비 기준.'],
+    ['상한','세계 수준 가동률 90%',g90.ratio,'Nakajima TPM — 가동률 90%가 세계 수준 기준선. 우리 데이터로 역산한 필요 감축폭.'],
+  ];
+  return pg(4,5,`
+    <h2>우리 위치 — 가동률</h2>
+    <div class="band">
+      <i style="width:70%;background:#8C3A33"><span>미흡 · 70% 미만</span></i>
+      <i style="width:10%;background:#C08A2E"><span>업계 평균 70–79%</span></i>
+      <i style="width:10%;background:#3D6E96"><span>우수 80–89%</span></i>
+      <i style="width:10%;background:#2E7A63"><span>세계 수준 90%+</span></i>
+      <div class="bmark" style="left:${A*100}%"><div class="l">STC ${f1(A*100)}%</div><div class="t"></div></div>
+    </div>
+    <div class="bscale"><span>0%</span><span>70%</span><span>80%</span><span>90%</span><span>100%</span></div>
+    <div class="note">세계 수준 OEE 85%는 가동률 90% × 성능 95% × 품질 99%로 구성됩니다(Nakajima, TPM).
+      이산 제조업 평균 가동률은 70~79% 구간입니다.</div>
+
+    <table style="margin-top:12px"><thead><tr><th class="l">구분</th><th>필요 감축</th>
+      <th>보고 기간 회수액</th><th>연 환산</th></tr></thead>
+      <tbody>
+        <tr><td class="l">우수 구간(80%) 도달</td><td class="n">${f(g80.cut/60)} h · ${f1(g80.ratio*100)}%</td>
+          <td class="n">${f(g80.thb)}</td><td class="n">${f(yr(g80.thb))}</td></tr>
+        <tr><td class="l">세계 수준(90%) 도달</td><td class="n">${f(g90.cut/60)} h · ${f1(g90.ratio*100)}%</td>
+          <td class="n">${f(g90.thb)}</td><td class="n" style="font-weight:700;color:#B3261E">${f(yr(g90.thb))}</td></tr>
+      </tbody></table>
+
+    <h2 style="margin-top:18px">회수 시나리오</h2>
+    <div class="scn">${SCN.map(([tg,nm,cut,bs],i)=>`
+      <div class="sc ${i===1?'hi':''}">
+        <div class="tg">${tg}</div><div class="nm">${nm}</div>
+        <div class="bs">${bs}</div>
+        <div class="vv">${f(yr(T*cut))}<small>THB / 년</small></div>
+        <div class="ex">로스 ${f1(cut*100)}% 감축 · 기간 ${f(T*cut)} THB · ≈ US$ ${f(yr(T*cut)/FX)}</div>
+      </div>`).join('')}</div>
+
+    <div class="callout g"><b>단계적 접근을 권고합니다.</b>
+      예지보전의 감축폭은 무엇과 비교하느냐에 따라 달라집니다 — 계획보전 대비 8~12%, 사후보전 대비 30~40%입니다.
+      도입 첫해부터 40%가 나오지 않습니다. 상위 손실 설비 1~2대에 상태감시를 시범 적용해 효과를 검증한 뒤 확대하는 것이 안전합니다.</div>
+
+    <h2 style="margin-top:16px">인용 자료</h2>
+    <div class="note" style="font-size:8pt;line-height:1.9">
+      Siemens, <i>The True Cost of Downtime 2024</i> — 세계 500대 제조사의 비가동 손실은 연 1.4조 달러, 매출의 11%.<br>
+      U.S. Department of Energy, <i>O&amp;M Best Practices</i> — 예지보전 도입 시 ROI 10배, 고장 70~75% 제거, 비가동 35~45% 감소, 유지비 25~30% 절감.<br>
+      Deloitte — 예지보전으로 유지비 5~10% 절감, 가동률 10~20% 개선.<br>
+      S. Nakajima, <i>TPM</i> — 세계 수준 OEE 85% = 가동률 90% × 성능 95% × 품질 99%.<br>
+      TeepTrak, <i>World-Class OEE Benchmark 2026</i> — OEE 85% 이상 상위 10%, 이산 제조 평균 60~75%.<br>
+      <br>
+      ※ 위 수치는 외부 연구의 일반 벤치마크입니다. 우리 설비에 적용한 회수 시나리오는 추정치이며,
+      실제 효과는 설비 상태와 투자 범위에 따라 달라집니다.
+      "제조업 평균 비가동 원가 시간당 26만 달러"라는 자주 인용되는 수치는 대형 플랜트의 라인 전체 정지 기준이므로,
+      설비 1대 기준인 본 보고서의 ${f(DATA.rateAvg*60)} 밧/시간과 직접 비교할 수 없습니다.
+    </div>`);
+}
+
+function page5(){
+  const T=TOT();
+  const rows=DATA.mcs.map(m=>({m,ty:DATA.types[m],rate:rate(m),
+    parts:[0,1,2,3].map(c=>mcCat(m,c)),v:mcTot(m),min:mcMin(m)})).sort((a,b)=>b.v-a.v);
+  return pg(5,5,`
+    <h2>부록 — 설비별 전체 집계</h2>
+    <div class="note" style="margin:0 0 8px">보고 기간 ${sel()[0]} ~ ${sel()[sel().length-1]} ·
+      DC14는 결번, DC1·DC7·DC17은 전 구간 무실적입니다.</div>
+    <table><thead><tr><th class="l">설비</th><th class="l">형식</th><th>Rate</th>
+      <th>금형</th><th>설비-전기</th><th>설비-라인</th><th>관리</th>
+      <th>합계 (THB)</th><th>로스(분)</th><th>비중</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td class="l n">${r.m}</td><td class="l n" style="color:#7A848E">${r.ty}</td>
+        <td class="n" style="color:#7A848E">${r.rate.toFixed(2)}</td>
+        ${r.parts.map(p=>`<td class="n">${p?f(p):'—'}</td>`).join('')}
+        <td class="n" style="font-weight:600">${r.v?f(r.v):'—'}</td>
+        <td class="n" style="color:#7A848E">${r.min?f(r.min):'—'}</td>
+        <td class="n">${r.v?f1(r.v/T*100)+'%':'—'}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td class="l">합계</td><td>${LIVE.length}대</td><td></td>
+        ${[0,1,2,3].map(c=>`<td>${f(CAT(c))}</td>`).join('')}
+        <td>${f(T)}</td><td>${f(MIN())}</td><td>100.0%</td></tr></tfoot></table>
+
+    <h2 style="margin-top:16px">집계 기준</h2>
+    <table><tbody>
+      <tr><td class="l" style="width:34%">손실금액</td><td class="l">로스(분) × 설비별 M/C Rate(THB/분). 시트 「F-COST」 ⑥ 전체 손실비용과 총액 일치</td></tr>
+      <tr><td class="l">주간</td><td class="l">사내 기준 수요일 ~ 화요일. W27 = 06/24~06/30 … W34 = 08/12~08/18</td></tr>
+      <tr><td class="l">월간</td><td class="l">달력 1일 ~ 말일. 6월·8월은 원자료 범위상 부분 집계</td></tr>
+      <tr><td class="l">가동률</td><td class="l">가동시간 ÷ (가동시간 + 로스시간). 원본 「주차별 추이」 탭 값과 일치</td></tr>
+      <tr><td class="l">분류</td><td class="l">원본 「분류마스터」 로스코드 31종의 세분류를 그대로 적용</td></tr>
+      <tr><td class="l">환율</td><td class="l">1 USD = ${FX} THB (2026-08-24 기준, 참고용)</td></tr>
+    </tbody></table>
+    <div class="note">분류 기준에 대한 검토 의견은 별도 엑셀 「8_분류검증」 시트를 참조하십시오.
+      본 보고서는 현행 분류를 그대로 적용했습니다.</div>`);
+}
+
+/* ============ boot ============ */
+function render(){ $('#report').innerHTML=[page1(),page2(),page3(),page4(),page5()].join(''); }
+function fill(){
+  const o=WK.map((w,i)=>`<option value="${i}">${w} ${PER[i]}</option>`).join('');
+  $('#p1').innerHTML=o; $('#p2').innerHTML=o; $('#p1').value=ST.i1; $('#p2').value=ST.i2;
+}
+fill();
+$('#p1').onchange=e=>{ST.i1=+e.target.value; if(ST.i2<ST.i1){ST.i2=ST.i1;$('#p2').value=ST.i2;} render();};
+$('#p2').onchange=e=>{ST.i2=+e.target.value; if(ST.i1>ST.i2){ST.i1=ST.i2;$('#p1').value=ST.i1;} render();};
+$('#btnAll').onclick=()=>{ST.i1=0;ST.i2=WK.length-1;fill();render();};
+$('#btnPrint').onclick=()=>window.print();
+$('#rev').oninput=e=>{ST.rev=+e.target.value||0; render();};
+render();
+
+</script>
+</body>
+</html>
