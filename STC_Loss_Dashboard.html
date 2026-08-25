@@ -261,6 +261,14 @@ footer b{color:var(--mute);font-weight:500}
           <option value="3">관리</option>
         </select>
       </div>
+      <div class="field"><label for="mt1">시작</label><select id="mt1"></select></div>
+      <div class="field"><label for="mt2">종료</label><select id="mt2"></select></div>
+      <div class="field"><label>단위</label>
+        <div class="seg" role="group" aria-label="추이 단위">
+          <button id="mtMin" aria-pressed="true">분</button>
+          <button id="mtThb" aria-pressed="false">THB</button>
+        </div>
+      </div>
       <div class="field" id="avgWrap" hidden><label>월간 기준</label>
         <div class="seg" role="group" aria-label="월간 기준">
           <button id="avSum" aria-pressed="true">총량</button>
@@ -308,7 +316,8 @@ const DATA={"weeks":["W27","W28","W29","W30","W31","W32","W33","W34"],"periods":
 const CC = ['#E8703A','#F2C14E','#4E9FC6','#7C8896'];
 const CN = DATA.cats;
 let state = { i1:0, i2:DATA.weeks.length-1, unit:'min', mc:null, sort:{k:'tot',asc:false},
-  axis:'week', mtCat:'all', mtAvg:false, pick:new Set() };
+  axis:'week', mtCat:'all', mtAvg:false, pick:new Set(),
+  mtUnit:'min', mtW1:0, mtW2:DATA.weeks.length-1, mtM1:0, mtM2:DATA.MONTHS.length-1 };
 
 // 22 distinguishable line colours (hue sweep, alternating lightness)
 const MCOL = DATA.mcs.map((m,i)=>{
@@ -552,15 +561,30 @@ function renderCodes(){
 }
 
 /* ---------------- machine trend ---------------- */
+const mtUnitLabel = () => state.mtUnit==='min' ? '분' : 'THB';
 function mtValue(m,key,isMonth){
   const src = isMonth ? DATA.M[key][m] : DATA.W[key][m];
   let v = state.mtCat==='all' ? src.reduce((a,b)=>a+b,0) : src[+state.mtCat];
-  v = conv(v,m);
+  if(state.mtUnit==='thb') v = v*rate(m);
   if(isMonth && state.mtAvg){
     const days = DATA.MONTHS.find(x=>x[0]===key)[2];
     v = v/days;
   }
   return v;
+}
+function mtRange(){
+  return state.axis==='month'
+    ? DATA.MONTHS.map(x=>x[0]).slice(state.mtM1, state.mtM2+1)
+    : DATA.weeks.slice(state.mtW1, state.mtW2+1);
+}
+function fillMtSelects(){
+  const isMonth = state.axis==='month';
+  const opts = isMonth
+    ? DATA.MONTHS.map((x,i)=>`<option value="${i}">${x[0]}  ${x[1]}</option>`).join('')
+    : DATA.weeks.map((w,i)=>`<option value="${i}">${w}  ${DATA.periods[i]}</option>`).join('');
+  $('#mt1').innerHTML=opts; $('#mt2').innerHTML=opts;
+  $('#mt1').value = isMonth?state.mtM1:state.mtW1;
+  $('#mt2').value = isMonth?state.mtM2:state.mtW2;
 }
 function topFive(){
   return [...DATA.mcs].map(m=>({m,v:mcTot(m)})).sort((a,b)=>b.v-a.v).slice(0,5).map(x=>x.m);
@@ -571,8 +595,21 @@ function initMT(){
     $('#axW').setAttribute('aria-pressed',val==='week');
     $('#axM').setAttribute('aria-pressed',val==='month');
     $('#avgWrap').hidden = val!=='month';
-    renderMT(); }; };
+    fillMtSelects(); renderMT(); }; };
   seg('#axW','week'); seg('#axM','month');
+  fillMtSelects();
+  $('#mt1').onchange=e=>{ const v=+e.target.value;
+    if(state.axis==='month'){ state.mtM1=v; if(state.mtM2<v){state.mtM2=v;$('#mt2').value=v;} }
+    else { state.mtW1=v; if(state.mtW2<v){state.mtW2=v;$('#mt2').value=v;} }
+    renderMT(); };
+  $('#mt2').onchange=e=>{ const v=+e.target.value;
+    if(state.axis==='month'){ state.mtM2=v; if(state.mtM1>v){state.mtM1=v;$('#mt1').value=v;} }
+    else { state.mtW2=v; if(state.mtW1>v){state.mtW1=v;$('#mt1').value=v;} }
+    renderMT(); };
+  $('#mtMin').onclick=()=>{ state.mtUnit='min'; $('#mtMin').setAttribute('aria-pressed',true);
+    $('#mtThb').setAttribute('aria-pressed',false); renderMT(); };
+  $('#mtThb').onclick=()=>{ state.mtUnit='thb'; $('#mtMin').setAttribute('aria-pressed',false);
+    $('#mtThb').setAttribute('aria-pressed',true); renderMT(); };
   $('#avSum').onclick=()=>{ state.mtAvg=false; $('#avSum').setAttribute('aria-pressed',true);
     $('#avDay').setAttribute('aria-pressed',false); renderMT(); };
   $('#avDay').onclick=()=>{ state.mtAvg=true; $('#avSum').setAttribute('aria-pressed',false);
@@ -585,9 +622,9 @@ function initMT(){
 let cMT;
 function renderMT(){
   const isMonth = state.axis==='month';
-  const keys = isMonth ? DATA.MONTHS.map(x=>x[0]) : DATA.weeks.slice(state.i1,state.i2+1);
+  const keys = mtRange();
   const labels = isMonth
-    ? DATA.MONTHS.map(x=>[x[0], x[1]])
+    ? keys.map(n=>{const x=DATA.MONTHS.find(y=>y[0]===n); return [x[0], x[1]];})
     : keys.map(w=>{const i=DATA.weeks.indexOf(w); return [w, DATA.periods[i]];});
 
   $('#chips').innerHTML = DATA.mcs.map(m=>{
@@ -606,14 +643,16 @@ function renderMT(){
   const ds = sel.map(m=>({
     label:m, data:keys.map(k=>mtValue(m,k,isMonth)),
     borderColor:COLOF[m], backgroundColor:COLOF[m],
-    borderWidth:2, tension:.25, pointRadius:3, pointHoverRadius:5, pointBorderWidth:0,
+    borderWidth:2, tension:0, pointRadius:3.5, pointHoverRadius:6, pointBorderWidth:0,
     spanGaps:true
   }));
   const catName = state.mtCat==='all' ? '전체' : CN[+state.mtCat];
   const suffix = isMonth && state.mtAvg ? ` / 일` : '';
+  const span = keys.length===1 ? keys[0] : `${keys[0]} ~ ${keys[keys.length-1]}`;
+  const partial = isMonth && keys.some(k=>DATA.MONTHS.find(x=>x[0]===k)[3]!=='완전');
   $('#mtNote').textContent =
-    `${isMonth?'월간':'주간'} · ${catName} · ${unitLabel()}${suffix} · 선택 ${sel.length}대`
-    + (isMonth ? '  ·  6월·8월은 부분 데이터' : '');
+    `${isMonth?'월간':'주간'} · ${span} · ${catName} · ${mtUnitLabel()}${suffix} · 선택 ${sel.length}대`
+    + (partial ? '  ·  6월·8월은 부분 데이터' : '');
 
   const cfg={type:'line',data:{labels,datasets:ds},options:{
     responsive:true,maintainAspectRatio:false,
@@ -623,7 +662,7 @@ function renderMT(){
       titleFont:{family:'IBM Plex Mono',size:12},bodyFont:{family:'IBM Plex Mono',size:12},
       itemSort:(a,b)=>b.parsed.y-a.parsed.y,
       callbacks:{title:it=>it[0].label.replace(',','  '),
-        label:it=>` ${it.dataset.label}  ${fmt(it.parsed.y)} ${unitLabel()}${suffix}`}}},
+        label:it=>` ${it.dataset.label}  ${fmt(it.parsed.y)} ${mtUnitLabel()}${suffix}`}}},
     scales:{
       x:{grid:{display:false},border:{color:gridColor},
          ticks:{color:tickColor,font:{family:'IBM Plex Mono',size:10}}},
