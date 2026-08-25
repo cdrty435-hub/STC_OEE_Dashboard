@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STC 다이캐스팅 · 로스 손실금액</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#101419; --panel:#181E25; --panel2:#1F262E; --line:#2B333D; --line2:#3A4550;
+  --ink:#EAEEF3; --mute:#8A96A3; --dim:#5C6773;
+  --mold:#E8703A; --elec:#F2C14E; --mech:#4E9FC6; --mgmt:#7C8896;
+  --hot:#FF6B35; --cool:#4E9FC6;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'IBM Plex Sans KR',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1420px;margin:0 auto;padding:0 26px 90px}
+.eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+
+/* ================= HERO ================= */
+.hero{border-bottom:1px solid var(--line);padding:32px 0 30px;margin-bottom:30px}
+.hbar{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap}
+.hbar h1{font-size:16px;font-weight:600;margin:8px 0 0;letter-spacing:-.01em}
+.ctl{display:flex;gap:9px;align-items:flex-end;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+select,input[type=number]{background:var(--panel2);color:var(--ink);border:1px solid var(--line2);
+  border-radius:2px;padding:8px 11px;font-family:var(--mono);font-size:13px}
+select{min-width:118px}
+.seg{display:flex;border:1px solid var(--line2);border-radius:2px;overflow:hidden}
+.seg button{background:transparent;border:0;color:var(--mute);font-family:var(--mono);font-size:12px;
+  padding:9px 15px;cursor:pointer;letter-spacing:.05em}
+.seg button[aria-pressed="true"]{background:var(--hot);color:#101419;font-weight:600}
+select:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--hot);outline-offset:2px}
+
+.money{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:34px;
+  align-items:end;margin-top:26px}
+@media(max-width:880px){.money{grid-template-columns:1fr;gap:24px}}
+.big{font-family:var(--mono);font-weight:600;font-size:clamp(52px,9.2vw,116px);line-height:.88;
+  letter-spacing:-.045em;color:var(--hot);font-variant-numeric:tabular-nums}
+.big .cur{font-size:.26em;color:var(--mute);letter-spacing:0;margin-left:.14em;font-weight:500}
+.mline{font-family:var(--mono);font-size:13px;color:var(--mute);margin-top:16px}
+.mline b{color:var(--ink);font-weight:500}
+.anchor{margin-top:13px;display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line2);
+  border-left:3px solid var(--hot);padding:8px 13px;font-family:var(--mono);font-size:12.5px;color:var(--mute)}
+.anchor b{color:var(--ink);font-weight:600}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.fact{background:var(--panel);padding:15px 16px}
+.fact .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:7px}
+.fact .v{font-family:var(--mono);font-size:22px;font-weight:500;letter-spacing:-.02em;line-height:1.1}
+.fact .n{font-family:var(--mono);font-size:10.5px;color:var(--mute);margin-top:6px}
+.up{color:var(--hot)} .dn{color:var(--cool)} .fl{color:var(--mute)}
+
+/* ================= sections ================= */
+section{margin-bottom:36px}
+.head{display:flex;align-items:baseline;gap:13px;margin-bottom:14px;flex-wrap:wrap}
+.head h2{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em}
+.head .note{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.panel{background:var(--panel);border:1px solid var(--line);padding:20px}
+
+/* leak cards */
+.leaks{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line)}
+.leak{background:var(--panel);padding:17px 18px 16px;position:relative}
+.leak::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c)}
+.leak .t{display:flex;justify-content:space-between;align-items:baseline}
+.leak .t b{font-size:13.5px;font-weight:600}
+.leak .t .sh{font-family:var(--mono);font-size:12px;color:var(--mute)}
+.leak .v{font-family:var(--mono);font-size:27px;font-weight:600;letter-spacing:-.03em;margin:10px 0 2px;
+  font-variant-numeric:tabular-nums}
+.leak .v small{font-size:11px;color:var(--dim);font-weight:400;margin-left:4px}
+.leak .m{font-family:var(--mono);font-size:11px;color:var(--mute)}
+.leak svg{width:100%;height:34px;display:block;margin-top:11px;overflow:visible}
+.leak .f{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;
+  color:var(--dim);margin-top:8px}
+.track{height:5px;background:var(--panel2);margin-top:10px;overflow:hidden}
+.track i{display:block;height:100%}
+
+/* bars */
+.rank{display:flex;flex-direction:column;gap:9px}
+.rrow{display:grid;grid-template-columns:56px 1fr 128px;gap:11px;align-items:center;cursor:pointer}
+.rrow:hover .rname{color:var(--ink)}
+.rname{font-family:var(--mono);font-size:12px;color:var(--mute)}
+.rbar{height:19px;display:flex;background:var(--panel2)}
+.rbar i{display:block;height:100%}
+.rval{font-family:var(--mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+.rval span{color:var(--dim);font-size:10.5px;margin-left:6px}
+.rrow.on .rname{color:var(--hot);font-weight:600}
+
+/* sim */
+.sim{display:grid;grid-template-columns:1fr 1.25fr;gap:26px;align-items:center}
+@media(max-width:820px){.sim{grid-template-columns:1fr}}
+input[type=range]{width:100%;accent-color:var(--hot);height:22px}
+.simv{font-family:var(--mono);font-size:clamp(30px,4.6vw,46px);font-weight:600;color:var(--hot);
+  letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.simv small{font-size:.3em;color:var(--mute);margin-left:.2em;font-weight:500}
+.simg{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);margin-top:16px}
+.simg div{background:var(--panel2);padding:12px 13px}
+.simg .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim)}
+.simg .v{font-family:var(--mono);font-size:16px;margin-top:5px;font-variant-numeric:tabular-nums}
+
+.chart{position:relative;height:300px}
+.chart.lg{height:370px}
+.g2{display:grid;grid-template-columns:1.6fr 1fr;gap:20px}
+@media(max-width:980px){.g2{grid-template-columns:1fr}}
+
+/* details disclosure */
+details{border:1px solid var(--line);background:var(--panel);margin-bottom:14px}
+summary{padding:14px 18px;cursor:pointer;font-size:14px;font-weight:600;list-style:none;
+  display:flex;justify-content:space-between;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'＋';font-family:var(--mono);color:var(--dim)}
+details[open] summary::after{content:'－'}
+summary:hover{background:var(--panel2)}
+.dbody{padding:0 18px 20px;border-top:1px solid var(--line)}
+.dbody>*:first-child{margin-top:18px}
+
+.ctl2{display:flex;flex-wrap:wrap;gap:9px;align-items:flex-end;margin-bottom:14px}
+.spacer{flex:1}
+.chips{display:flex;flex-wrap:wrap;gap:5px;padding-bottom:14px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+.chip{display:flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line2);
+  border-radius:2px;padding:4px 9px;font-family:var(--mono);font-size:11.5px;color:var(--dim);cursor:pointer}
+.chip i{width:8px;height:8px;border-radius:50%;display:block;background:var(--line2)}
+.chip[aria-pressed="true"]{color:var(--ink)}
+.chip.dead{opacity:.4;cursor:not-allowed}
+.smalls{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line)}
+.sm1{background:var(--panel);padding:13px 14px 11px}
+.sm1 .h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sm1 .nm{font-family:var(--mono);font-size:12.5px;font-weight:500;display:flex;align-items:center;gap:6px}
+.sm1 .nm i{width:8px;height:8px;border-radius:50%;display:block}
+.sm1 .ty{font-family:var(--mono);font-size:10px;color:var(--dim)}
+.sm1 .tt{font-family:var(--mono);font-size:17px;font-weight:500;margin:7px 0 2px;font-variant-numeric:tabular-nums}
+.sm1 .tt small{font-size:10px;color:var(--dim);margin-left:3px}
+.sm1 svg{width:100%;height:48px;display:block;margin-top:6px;overflow:visible}
+.sm1 .f{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:7px}
+.smempty{background:var(--panel);padding:32px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--dim);grid-column:1/-1}
+
+.hm{overflow-x:auto}
+.hmg{display:grid;gap:2px;min-width:640px}
+.hmc{height:25px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);
+  font-size:9.5px;color:rgba(255,255,255,.85)}
+.hml{font-family:var(--mono);font-size:11px;color:var(--mute);display:flex;align-items:center;height:25px}
+.hmh{font-family:var(--mono);font-size:10px;color:var(--dim);text-align:center;padding-bottom:5px}
+.hmscale{display:flex;align-items:center;gap:9px;margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--dim)}
+.hmramp{height:7px;width:150px}
+
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:12.5px;min-width:760px}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:500;
+  cursor:pointer;white-space:nowrap;background:var(--panel);position:sticky;top:0}
+th:hover{color:var(--ink)}
+th.s::after{content:'▾';margin-left:5px;color:var(--hot)}
+th.s.asc::after{content:'▴'}
+td:first-child,th:first-child,td:nth-child(2),th:nth-child(2){text-align:left}
+tbody tr:hover{background:var(--panel2)}
+.zero{color:var(--dim)}
+tfoot td{border-top:1px solid var(--line2);border-bottom:0;font-weight:600;padding-top:11px}
+
+.mcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.mcard{background:var(--panel);padding:17px 18px}
+.mcard.full{background:var(--panel2);box-shadow:inset 3px 0 0 var(--hot)}
+.mcard .mm{display:flex;justify-content:space-between;align-items:baseline}
+.mcard .mm b{font-size:16px}
+.mcard .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;padding:2px 7px;
+  border:1px solid var(--line2);color:var(--dim)}
+.mcard.full .tag{border-color:var(--hot);color:var(--hot)}
+.mcard .per{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin:4px 0 12px}
+.mcard .bigm{font-family:var(--mono);font-size:23px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mcard .bigm small{font-size:11px;color:var(--mute);margin-left:4px;font-weight:400}
+.mcard .day{font-family:var(--mono);font-size:10.5px;color:var(--mute);margin-top:6px}
+.mstack{display:flex;height:5px;margin-top:12px;overflow:hidden}
+.mstack i{display:block;height:100%}
+
+footer{border-top:1px solid var(--line);padding-top:20px;font-family:var(--mono);font-size:11px;
+  color:var(--dim);line-height:1.85}
+footer b{color:var(--mute);font-weight:500}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div class="hbar">
+    <div>
+      <div class="eyebrow">STC Co., Ltd. · Die Casting · 공무팀</div>
+      <h1>비가동 로스 손실금액</h1>
+    </div>
+    <div class="ctl">
+      <div class="field"><label>기간</label>
+        <div class="seg" role="group" aria-label="기간 축">
+          <button id="axW" aria-pressed="true">주간</button>
+          <button id="axM" aria-pressed="false">월간</button>
+        </div>
+      </div>
+      <div class="field"><label for="p1">시작</label><select id="p1"></select></div>
+      <div class="field"><label for="p2">종료</label><select id="p2"></select></div>
+    </div>
+  </div>
+
+  <div class="money">
+    <div>
+      <div class="eyebrow" id="periodLine"></div>
+      <div class="big" id="bigMoney">0<span class="cur">THB</span></div>
+      <div class="mline" id="bigSub"></div>
+      <div class="anchor" id="anchor"></div>
+    </div>
+    <div class="facts" id="facts"></div>
+  </div>
+</div>
+
+<section>
+  <div class="head"><h2>어디서 새는가</h2><span class="note" id="leakNote"></span></div>
+  <div class="leaks" id="leaks"></div>
+</section>
+
+<section class="g2">
+  <div>
+    <div class="head"><h2>손실금액 추이</h2><span class="note" id="trendNote"></span></div>
+    <div class="panel"><div class="chart"><canvas id="trend"></canvas></div></div>
+  </div>
+  <div>
+    <div class="head"><h2>설비 워스트</h2><span class="note">금액 기준 상위 10대</span></div>
+    <div class="panel"><div class="rank" id="worst"></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="head"><h2>원인 파레토</h2><span class="note" id="paretoNote"></span></div>
+  <div class="panel"><div class="chart lg"><canvas id="pareto"></canvas></div></div>
+</section>
+
+<section>
+  <div class="head"><h2>줄이면 얼마인가</h2><span class="note">개선 목표를 넣어 절감액을 확인합니다</span></div>
+  <div class="panel">
+    <div class="sim">
+      <div>
+        <div class="eyebrow">로스 감축 목표</div>
+        <div style="display:flex;align-items:baseline;gap:10px;margin:6px 0 12px">
+          <span class="simv" id="simPct">10<small>%</small></span>
+        </div>
+        <input type="range" id="simRange" min="5" max="50" step="5" value="10" aria-label="로스 감축 목표 비율">
+        <div class="eyebrow" style="margin-top:16px">적용 대상</div>
+        <div class="seg" style="margin-top:6px" role="group" aria-label="감축 대상">
+          <button id="scAll" aria-pressed="true">전체 로스</button>
+          <button id="scEq" aria-pressed="false">설비 로스만</button>
+        </div>
+      </div>
+      <div>
+        <div class="eyebrow">절감 금액</div>
+        <div class="simv" id="simSave">0<small>THB</small></div>
+        <div class="simg" id="simGrid"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="head"><h2>상세 분석</h2><span class="note">필요할 때만 펼쳐 보십시오</span></div>
+
+  <details>
+    <summary>설비 × 기간 열지도</summary>
+    <div class="dbody hm">
+      <div class="hmg" id="heat"></div>
+      <div class="hmscale"><span>낮음</span><div class="hmramp" id="ramp"></div><span>높음</span>
+        <span id="hmMax" style="margin-left:8px"></span></div>
+    </div>
+  </details>
+
+  <details>
+    <summary>추이 상세 — 로스별 · 설비별</summary>
+    <div class="dbody">
+      <div class="ctl2">
+        <div class="field"><label>집계</label>
+          <div class="seg" role="group" aria-label="집계 단위">
+            <button id="agSum" aria-pressed="true">전 설비 합계</button>
+            <button id="agMc" aria-pressed="false">설비별</button>
+          </div>
+        </div>
+        <div class="field" id="mtCatWrap" hidden><label for="mtCat">분류</label>
+          <select id="mtCat">
+            <option value="all">전체</option><option value="0">금형</option>
+            <option value="1">설비-전기</option><option value="2">설비-라인</option>
+            <option value="3">관리</option>
+          </select>
+        </div>
+        <div class="field"><label>단위</label>
+          <div class="seg" role="group" aria-label="추이 단위">
+            <button id="mtThb" aria-pressed="true">THB</button>
+            <button id="mtMin" aria-pressed="false">분</button>
+          </div>
+        </div>
+        <div class="field"><label>보기</label>
+          <div class="seg" role="group" aria-label="보기 방식">
+            <button id="vwOver" aria-pressed="true">겹쳐보기</button>
+            <button id="vwSplit" aria-pressed="false">나눠보기</button>
+          </div>
+        </div>
+        <div class="field" id="scWrap" hidden><label>세로 축</label>
+          <div class="seg" role="group" aria-label="세로 축 기준">
+            <button id="scShared" aria-pressed="true">공통</button>
+            <button id="scOwn" aria-pressed="false">개별</button>
+          </div>
+        </div>
+        <div class="field" id="avgWrap" hidden><label>월간 기준</label>
+          <div class="seg" role="group" aria-label="월간 기준">
+            <button id="avSum" aria-pressed="true">총량</button>
+            <button id="avDay" aria-pressed="false">일평균</button>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="field" id="pickWrap"><label>설비 선택</label>
+          <div class="seg" role="group" aria-label="설비 일괄 선택">
+            <button id="pickAll">전체</button><button id="pickTop">상위 5</button><button id="pickNone">해제</button>
+          </div>
+        </div>
+      </div>
+      <div class="chips" id="catchips"></div>
+      <div class="chips" id="chips" hidden></div>
+      <div class="chart lg" id="overWrap"><canvas id="mtrend"></canvas></div>
+      <div class="smalls" id="smalls" hidden></div>
+      <div class="eyebrow" id="mtNote" style="margin-top:12px"></div>
+    </div>
+  </details>
+
+  <details>
+    <summary>설비별 표</summary>
+    <div class="dbody tw"><table id="tbl"></table></div>
+  </details>
+
+  <details>
+    <summary>월간 요약 — 달력 1일~말일</summary>
+    <div class="dbody"><div class="mcards" id="months"></div></div>
+  </details>
+</section>
+
+<footer>
+  <b>손실금액</b> · 로스(분) × 설비별 M/C Rate(THB/분) · 시트 「F-COST」 ⑥ 전체 손실비용과 총액 일치(3,779,316 THB)<br>
+  <b>집계 기준</b> · 주간 = 수요일~화요일(사내) · 월간 = 달력 1일~말일 · 6월(7일)·8월(18일)은 부분 데이터<br>
+  <b>정본</b> · 구글시트 OEE_RawData_APQ 「A_가동률」 일별 원자료 · 분류는 「분류마스터」 31종 세분류 · DC14 결번 · DC1/7/17 무실적
+</footer>
+
+</div>
+<script>
+const DATA={"weeks":["W27","W28","W29","W30","W31","W32","W33","W34"],"periods":["06/24~06/30","07/01~07/07","07/08~07/14","07/15~07/21","07/22~07/28","07/29~08/04","08/05~08/11","08/12~08/18"],"cats":["금형","설비-전기","설비-라인","관리"],"mcs":["DC1","DC2","DC3","DC4","DC5","DC6","DC7","DC8","DC9","DC10","DC11","DC12","DC13","DC15","DC16","DC17","DC18","DC19","DC20","DC21","DC22","DC23"],"types":{"DC1":"200T","DC2":"125T","DC3":"350T","DC4":"350T","DC5":"350T","DC6":"350T","DC7":"350T","DC8":"250T","DC9":"350T","DC10":"350T","DC11":"500T","DC12":"500T","DC13":"350T","DC15":"650T","DC16":"125T","DC17":"125T","DC18":"50T","DC19":"90T","DC20":"800T","DC21":"650T","DC22":"350T","DC23":"350T"},"rates":{"DC1":8.91375,"DC2":6.666667,"DC3":14.159583,"DC4":14.159583,"DC5":14.159583,"DC6":14.159583,"DC7":14.159583,"DC8":11.086667,"DC9":14.159583,"DC10":14.159583,"DC11":16.472083,"DC12":16.472083,"DC13":14.159583,"DC15":16.7825,"DC16":6.666667,"DC17":6.666667,"DC18":8.572083,"DC19":8.8825,"DC20":19.871042,"DC21":16.7825,"DC22":14.159583,"DC23":14.159583},"W":{"W27":{"DC1":[0,0,0,0],"DC2":[215,0,50,450],"DC3":[945,323,70,90],"DC4":[981,147,477,794],"DC5":[0,0,0,0],"DC6":[670,327,1601,210],"DC7":[0,0,0,0],"DC8":[1419,410,1004,0],"DC9":[1841,1091,226,420],"DC10":[657,475,1030,559],"DC11":[524,922,575,0],"DC12":[1285,1065,345,0],"DC13":[0,0,0,0],"DC15":[840,130,280,210],"DC16":[955,430,540,443],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[0,0,0,0],"DC20":[1112,423,107,90],"DC21":[261,589,1221,117],"DC22":[969,425,843,549],"DC23":[509,268,280,386]},"W28":{"DC1":[0,0,0,0],"DC2":[75,285,182,390],"DC3":[1587,454,50,180],"DC4":[820,382,246,150],"DC5":[0,0,0,0],"DC6":[55,2242,898,360],"DC7":[0,0,0,0],"DC8":[1059,859,1076,0],"DC9":[1134,599,314,582],"DC10":[191,571,192,0],"DC11":[230,1075,368,0],"DC12":[1120,385,420,105],"DC13":[0,0,0,0],"DC15":[870,160,700,395],"DC16":[155,423,722,300],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[0,0,0,0],"DC20":[1034,40,244,0],"DC21":[556,420,112,154],"DC22":[1479,396,62,184],"DC23":[757,240,231,63]},"W29":{"DC1":[0,0,0,0],"DC2":[739,130,341,540],"DC3":[1115,0,229,180],"DC4":[439,34,775,312],"DC5":[0,0,0,0],"DC6":[516,30,1844,240],"DC7":[0,0,0,0],"DC8":[925,290,1315,60],"DC9":[342,605,636,360],"DC10":[392,166,587,612],"DC11":[250,575,680,150],"DC12":[1025,780,160,190],"DC13":[230,245,700,140],"DC15":[700,280,426,440],"DC16":[200,610,560,330],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[515,20,55,60],"DC20":[503,0,53,30],"DC21":[115,175,221,322],"DC22":[1915,662,10,60],"DC23":[1358,378,143,120]},"W30":{"DC1":[0,0,0,0],"DC2":[525,180,280,150],"DC3":[653,290,355,145],"DC4":[493,288,360,496],"DC5":[0,0,0,0],"DC6":[380,60,30,30],"DC7":[0,0,0,0],"DC8":[685,855,922,80],"DC9":[1699,514,265,829],"DC10":[528,172,395,120],"DC11":[655,1136,185,120],"DC12":[790,260,425,290],"DC13":[850,785,815,360],"DC15":[970,120,1424,600],"DC16":[540,195,220,30],"DC17":[0,0,0,0],"DC18":[160,53,1090,0],"DC19":[0,0,60,0],"DC20":[899,315,316,381],"DC21":[340,304,7,432],"DC22":[1853,206,57,399],"DC23":[912,232,654,467]},"W31":{"DC1":[0,0,0,0],"DC2":[775,30,290,554],"DC3":[2204,113,409,90],"DC4":[184,925,177,570],"DC5":[0,414,105,0],"DC6":[250,882,733,480],"DC7":[0,0,0,0],"DC8":[295,1037,905,120],"DC9":[1105,919,314,819],"DC10":[399,608,812,210],"DC11":[860,920,725,90],"DC12":[780,520,645,90],"DC13":[1120,1792,715,210],"DC15":[741,473,600,400],"DC16":[1030,220,560,30],"DC17":[0,0,0,0],"DC18":[160,0,1787,0],"DC19":[0,0,0,0],"DC20":[548,225,85,360],"DC21":[993,143,60,60],"DC22":[1200,196,229,538],"DC23":[920,290,59,90]},"W32":{"DC1":[0,0,0,0],"DC2":[484,170,263,360],"DC3":[1181,95,213,120],"DC4":[715,621,231,120],"DC5":[564,1885,81,89],"DC6":[798,688,271,90],"DC7":[0,0,0,0],"DC8":[180,945,270,0],"DC9":[1880,486,120,270],"DC10":[156,723,1056,542],"DC11":[60,190,130,0],"DC12":[1268,690,410,150],"DC13":[805,1315,1230,300],"DC15":[1105,60,565,450],"DC16":[1400,70,510,360],"DC17":[0,0,0,0],"DC18":[120,480,1437,120],"DC19":[0,0,0,0],"DC20":[1123,930,255,750],"DC21":[372,332,41,0],"DC22":[1515,594,32,630],"DC23":[199,591,162,240]},"W33":{"DC1":[0,0,0,0],"DC2":[153,55,355,660],"DC3":[1085,5,166,90],"DC4":[440,108,858,450],"DC5":[306,783,179,180],"DC6":[228,802,407,0],"DC7":[0,0,0,0],"DC8":[523,405,1713,90],"DC9":[1928,433,101,244],"DC10":[947,285,345,778],"DC11":[615,1765,709,270],"DC12":[1764,610,740,285],"DC13":[200,955,1729,120],"DC15":[800,440,615,370],"DC16":[320,242,979,400],"DC17":[0,0,0,0],"DC18":[280,840,1903,80],"DC19":[0,0,0,0],"DC20":[980,0,297,613],"DC21":[177,460,51,695],"DC22":[2203,185,230,399],"DC23":[334,459,308,433]},"W34":{"DC1":[0,0,0,0],"DC2":[358,713,235,720],"DC3":[295,420,95,150],"DC4":[181,100,145,1110],"DC5":[666,128,150,30],"DC6":[1205,1062,176,150],"DC7":[0,0,0,0],"DC8":[897,230,785,90],"DC9":[725,715,1034,550],"DC10":[477,545,121,240],"DC11":[505,1005,458,596],"DC12":[917,1480,375,180],"DC13":[769,450,1525,250],"DC15":[965,735,320,270],"DC16":[810,135,660,270],"DC17":[0,0,0,0],"DC18":[80,499,2835,245],"DC19":[0,0,0,0],"DC20":[1098,297,144,330],"DC21":[137,206,59,150],"DC22":[1004,361,788,412],"DC23":[193,596,163,409]}},"MONTHS":[["6월","06/24~06/30",7,"부분"],["7월","07/01~07/31",31,"완전"],["8월","08/01~08/18",18,"부분"]],"M":{"6월":{"DC1":[0,0,0,0],"DC2":[215,0,50,450],"DC3":[945,323,70,90],"DC4":[981,147,477,794],"DC5":[0,0,0,0],"DC6":[670,327,1601,210],"DC7":[0,0,0,0],"DC8":[1419,410,1004,0],"DC9":[1841,1091,226,420],"DC10":[657,475,1030,559],"DC11":[524,922,575,0],"DC12":[1285,1065,345,0],"DC13":[0,0,0,0],"DC15":[840,130,280,210],"DC16":[955,430,540,443],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[0,0,0,0],"DC20":[1112,423,107,90],"DC21":[261,589,1221,117],"DC22":[969,425,843,549],"DC23":[509,268,280,386]},"7월":{"DC1":[0,0,0,0],"DC2":[2357,790,1278,1704],"DC3":[5914,952,1216,595],"DC4":[2205,1856,1558,1528],"DC5":[483,1745,146,0],"DC6":[1541,3582,3555,1110],"DC7":[0,0,0,0],"DC8":[3144,3686,4428,260],"DC9":[4978,2920,1529,2620],"DC10":[1562,1644,2045,1152],"DC11":[2055,3896,2088,360],"DC12":[4118,2155,1855,735],"DC13":[2620,3702,2610,710],"DC15":[3331,1033,3360,2085],"DC16":[2340,1518,2392,990],"DC17":[0,0,0,0],"DC18":[440,533,4064,120],"DC19":[515,20,115,60],"DC20":[3354,1260,788,1161],"DC21":[2207,1292,407,968],"DC22":[7199,1968,369,1601],"DC23":[4063,1250,1102,890]},"8월":{"DC1":[0,0,0,0],"DC2":[752,773,668,1670],"DC3":[2206,425,301,360],"DC4":[1067,602,1234,1680],"DC5":[1053,1465,369,299],"DC6":[1891,2184,804,240],"DC7":[0,0,0,0],"DC8":[1420,935,2558,180],"DC9":[3835,1351,1255,1034],"DC10":[1528,1426,1463,1350],"DC11":[1120,2770,1167,866],"DC12":[3546,2570,1320,555],"DC13":[1354,1840,4104,670],"DC15":[2820,1235,1290,840],"DC16":[2115,377,1819,730],"DC17":[0,0,0,0],"DC18":[360,1339,4988,325],"DC19":[0,0,0,0],"DC20":[2831,547,606,1303],"DC21":[483,748,144,845],"DC22":[3970,632,1039,1021],"DC23":[610,1536,618,932]}},"codes":[[1,"금형수리","금형",22638],[2,"금형파손","금형",820],[3,"핀파손","금형",23562],[4,"설비수리","설비-전기",19624],[5,"전기로수리","설비-전기",2670],[6,"취출기수리","설비-전기",16397],[7,"스프레이수리","설비-전기",8724],[8,"슬라이드코어수리","금형",7699],[9,"팁교체","설비-라인",15551],[10,"노즐막힘","설비-라인",7547],[11,"플런저오일막힘","설비-라인",1801],[12,"래들수리","설비-전기",6457],[13,"조건변경","설비-라인",20067],[14,"탈산처리","설비-라인",1786],[15,"스크랩용해","설비-라인",10414],[16,"전기로회전","설비-전기",7146],[17,"금형교체","관리",19906],[18,"휴식, 설비교대","관리",13037],[19,"청소","금형",5601],[20,"미팅/정전","관리",4924],[21,"금형냉각라인","금형",1069],[22,"제품소착","금형",19421],[23,"컨베이어수리","설비-전기",1334],[24,"설비냉각수","설비-라인",419],[25,"스프레이조정","설비-라인",10593],[26,"바가지교체","설비-라인",1123],[27,"히터수리","설비-전기",523],[28,"펌프이상","설비-전기",2535],[29,"로트마크, 사상","금형",19760],[30,"진공설비","설비-전기",172],[31,"기타","관리",0]],"codesW":{"금형수리":{"cat":"금형","w":[2183,1459,2977,2321,2438,3978,4952,2330],"wc":[28348,21782,40146,33734,32107,54766,71642,30571],"m":[2183,11188,9267],"mc":[28348,154760,129989]},"금형파손":{"cat":"금형","w":[60,60,60,0,0,70,390,180],"wc":[850,988,1007,0,0,1362,6309,2549],"m":[60,120,640],"mc":[850,1995,10220]},"핀파손":{"cat":"금형","w":[3088,3077,2729,2223,4434,2433,2239,3339],"wc":[43768,44587,37764,31258,64118,34745,34141,47981],"m":[3088,13408,7066],"mc":[43768,190624,103969]},"설비수리":{"cat":"설비-전기","w":[2517,2883,1128,1919,3185,2944,3373,1675],"wc":[36152,39921,12706,25333,43670,36815,43929,21830],"m":[2517,11063,6044],"mc":[36152,144716,79488]},"전기로수리":{"cat":"설비-전기","w":[318,120,0,50,725,925,154,378],"wc":[5058,1977,0,708,11171,13098,1930,6218],"m":[318,1141,1211],"mc":[5058,17338,17763]},"취출기수리":{"cat":"설비-전기","w":[925,1134,1487,1929,3039,3062,778,4043],"wc":[14888,13312,20063,28259,44102,48696,10940,57390],"m":[925,9633,5839],"mc":[14888,138210,84552]},"스프레이수리":{"cat":"설비-전기","w":[827,1872,528,595,591,1116,2218,977],"wc":[10520,25480,7867,8952,8011,16376,34098,14596],"m":[827,4078,3819],"mc":[10520,57342,58038]},"슬라이드코어수리":{"cat":"금형","w":[984,1251,519,1690,578,975,909,793],"wc":[13708,17714,7124,21728,6985,13135,13349,11229],"m":[984,4510,2205],"mc":[13708,59564,31700]},"팁교체":{"cat":"설비-라인","w":[1479,1010,3882,530,2420,524,3830,1876],"wc":[19962,13871,51207,7132,34522,6743,48101,23802],"m":[1479,8055,6017],"mc":[19962,109611,75767]},"노즐막힘":{"cat":"설비-라인","w":[0,0,15,970,1777,1157,1153,2475],"wc":[0,0,133,8315,15233,9918,9884,21216],"m":[0,3789,3758],"mc":[0,32484,32214]},"플런저오일막힘":{"cat":"설비-라인","w":[208,122,60,514,498,187,97,115],"wc":[3015,1578,757,6955,5253,2115,1373,1505],"m":[208,1354,239],"mc":[3015,16276,3261]},"래들수리":{"cat":"설비-전기","w":[1018,784,537,515,984,1211,328,1080],"wc":[15896,12360,7726,7234,14375,17251,4628,14474],"m":[1018,3663,1776],"mc":[15896,53694,24353]},"조건변경":{"cat":"설비-라인","w":[2371,2010,2089,2445,2659,2436,3057,3000],"wc":[33480,26736,29556,34184,35925,33519,40040,38976],"m":[2371,10150,7546],"mc":[33480,138162,100774]},"탈산처리":{"cat":"설비-라인","w":[329,434,151,107,155,200,250,160],"wc":[4340,5919,2203,1421,2198,2700,3425,2526],"m":[329,870,587],"mc":[4340,12120,8273]},"스크랩용해":{"cat":"설비-라인","w":[2096,1027,1076,1655,699,1717,902,1242],"wc":[31404,12451,13559,23937,9541,23857,10798,17047],"m":[2096,5064,3254],"mc":[31404,67736,43454]},"전기로회전":{"cat":"설비-전기","w":[893,1045,829,859,789,653,1041,1037],"wc":[13545,16075,12617,12947,11711,9946,15217,15682],"m":[893,3842,2411],"mc":[13545,58428,35766]},"금형교체":{"cat":"관리","w":[2489,2185,2326,2470,2148,3272,2369,2647],"wc":[34037,29885,30291,35997,28545,47472,33249,35584],"m":[2489,10879,6538],"mc":[34037,149707,91315]},"휴식, 설비교대":{"cat":"관리","w":[1530,600,1500,330,1837,960,3060,3220],"wc":[18076,6023,19545,4473,25130,13427,43957,43544],"m":[1530,4327,7180],"mc":[18076,56021,100079]},"청소":{"cat":"금형","w":[736,641,906,606,743,662,774,533],"wc":[10560,9942,12990,8805,9926,10631,10545,8759],"m":[736,3231,1634],"mc":[10560,46842,24758]},"미팅/정전":{"cat":"관리","w":[299,78,320,2129,726,359,728,285],"wc":[3709,1144,4807,33559,11965,3852,8886,3699],"m":[299,3443,1182],"mc":[3709,53534,14379]},"금형냉각라인":{"cat":"금형","w":[113,285,133,120,52,59,58,249],"wc":[1649,3854,1962,1917,614,835,766,3811],"m":[113,609,347],"mc":[1649,8616,5143]},"제품소착":{"cat":"금형","w":[2826,2060,2364,3054,3003,2446,1881,1787],"wc":[38834,30154,31054,41747,39189,28531,27319,23187],"m":[2826,11316,5279],"mc":[38834,151770,69412]},"컨베이어수리":{"cat":"설비-전기","w":[186,251,153,20,10,60,654,0],"wc":[2320,3301,2305,329,142,665,9954,0],"m":[186,434,714],"mc":[2320,6077,10619]},"설비냉각수":{"cat":"설비-라인","w":[49,30,0,165,0,65,80,30],"wc":[922,503,0,2579,0,920,1343,425],"m":[49,200,170],"mc":[922,3153,2617]},"스프레이조정":{"cat":"설비-라인","w":[1895,1104,1264,1175,972,971,2189,1023],"wc":[25089,15269,16546,16890,13563,12628,29595,13684],"m":[1895,4816,3882],"mc":[25089,65602,52572]},"바가지교체":{"cat":"설비-라인","w":[222,80,198,299,30,20,127,147],"wc":[3425,1304,2583,3863,425,283,1798,2161],"m":[222,607,294],"mc":[3425,8174,4242]},"히터수리":{"cat":"설비-전기","w":[193,0,0,0,0,0,0,330],"wc":[3239,0,0,0,0,0,0,4673],"m":[193,0,330],"mc":[3239,0,4673]},"펌프이상":{"cat":"설비-전기","w":[135,354,308,59,384,857,286,152],"wc":[2050,4306,4875,835,5437,11464,4050,2152],"m":[135,1812,588],"mc":[2050,24793,8326]},"로트마크, 사상":{"cat":"금형","w":[3193,2289,1591,2918,2316,3302,2080,2071],"wc":[49244,36251,23022,44856,35266,51186,30956,32156],"m":[3193,10044,6523],"mc":[49244,154404,99289]},"진공설비":{"cat":"설비-전기","w":[13,88,10,19,0,37,0,5],"wc":[218,1246,142,269,0,524,0,71],"m":[13,136,23],"mc":[218,1926,326]},"기타":{"cat":"관리","w":[0,0,0,0,0,0,0,0],"wc":[0,0,0,0,0,0,0,0],"m":[0,0,0],"mc":[0,0,0]}},"rateAvg":13.8274};
+const CC=['#E8703A','#F2C14E','#4E9FC6','#7C8896'];
+const CN=DATA.cats, TOT='#EAEEF3';
+const $=s=>document.querySelector(s);
+const fmt=n=>Math.round(n).toLocaleString('ko-KR');
+const rate=m=>DATA.rates[m];
+const MCOL=DATA.mcs.map((m,i)=>{const h=Math.round((i*360/DATA.mcs.length+(i%2?180:0))%360);
+  return `hsl(${h} ${i%2?62:74}% ${i%2?62:54}%)`;});
+const COLOF=Object.fromEntries(DATA.mcs.map((m,i)=>[m,MCOL[i]]));
+const LIVE=DATA.mcs.filter(m=>DATA.weeks.some(w=>DATA.W[w][m].some(v=>v>0)));
+const MONNAME=DATA.MONTHS.map(x=>x[0]);
+const days=k=>DATA.MONTHS.find(x=>x[0]===k)[2];
+
+const S={ axis:'week', i1:0, i2:DATA.weeks.length-1,
+  simPct:10, simScope:'all',
+  agg:'sum', view:'over', scale:'shared', mtCat:'all', mtUnit:'thb', mtAvg:false,
+  pick:new Set(LIVE), catPick:new Set([0,1,2,3,'tot']),
+  sort:{k:'thb',asc:false} };
+
+/* ---------- period ---------- */
+const isMonth=()=>S.axis==='month';
+const allKeys=()=>isMonth()?MONNAME:DATA.weeks;
+const keys=()=>allKeys().slice(S.i1,S.i2+1);
+const keyPeriod=k=>isMonth()?DATA.MONTHS.find(x=>x[0]===k)[1]:DATA.periods[DATA.weeks.indexOf(k)];
+const src=(k,m)=>isMonth()?DATA.M[k][m]:DATA.W[k][m];
+
+/* ---------- core aggregates (THB) ---------- */
+function catCost(k,ci){ return DATA.mcs.reduce((s,m)=>s+src(k,m)[ci]*rate(m),0); }
+function catMin(k,ci){ return DATA.mcs.reduce((s,m)=>s+src(k,m)[ci],0); }
+function keyCost(k){ let s=0; for(let c=0;c<4;c++) s+=catCost(k,c); return s; }
+function keyMin(k){ let s=0; for(let c=0;c<4;c++) s+=catMin(k,c); return s; }
+function mcCost(m,ci){ return keys().reduce((s,k)=>s+(ci==null
+  ? src(k,m).reduce((a,b)=>a+b,0) : src(k,m)[ci])*rate(m),0); }
+function mcMin(m){ return keys().reduce((s,k)=>s+src(k,m).reduce((a,b)=>a+b,0),0); }
+const totCost=()=>keys().reduce((s,k)=>s+keyCost(k),0);
+const totMin =()=>keys().reduce((s,k)=>s+keyMin(k),0);
+const catTotCost=ci=>keys().reduce((s,k)=>s+catCost(k,ci),0);
+const catTotMin =ci=>keys().reduce((s,k)=>s+catMin(k,ci),0);
+function totDays(){ return isMonth()? keys().reduce((s,k)=>s+days(k),0) : keys().length*7; }
+
+/* ---------- controls ---------- */
+function fillPeriod(){
+  const opts=allKeys().map((k,i)=>`<option value="${i}">${k}  ${keyPeriod(k)}</option>`).join('');
+  $('#p1').innerHTML=opts; $('#p2').innerHTML=opts;
+  $('#p1').value=S.i1; $('#p2').value=S.i2;
+}
+function initCtl(){
+  const setAxis=v=>{ S.axis=v; S.i1=0; S.i2=allKeys().length-1;
+    $('#axW').setAttribute('aria-pressed',v==='week');
+    $('#axM').setAttribute('aria-pressed',v==='month');
+    $('#avgWrap').hidden=v!=='month';
+    fillPeriod(); render(); };
+  $('#axW').onclick=()=>setAxis('week'); $('#axM').onclick=()=>setAxis('month');
+  fillPeriod();
+  $('#p1').onchange=e=>{S.i1=+e.target.value; if(S.i2<S.i1){S.i2=S.i1;$('#p2').value=S.i2;} render();};
+  $('#p2').onchange=e=>{S.i2=+e.target.value; if(S.i1>S.i2){S.i1=S.i2;$('#p1').value=S.i1;} render();};
+  $('#simRange').oninput=e=>{S.simPct=+e.target.value; renderSim();};
+  $('#scAll').onclick=()=>{S.simScope='all';$('#scAll').setAttribute('aria-pressed',true);
+    $('#scEq').setAttribute('aria-pressed',false);renderSim();};
+  $('#scEq').onclick=()=>{S.simScope='eq';$('#scAll').setAttribute('aria-pressed',false);
+    $('#scEq').setAttribute('aria-pressed',true);renderSim();};
+}
+
+/* ---------- hero ---------- */
+function renderHero(){
+  const ks=keys(), C=totCost(), M=totMin(), D=totDays();
+  const p1=keyPeriod(ks[0]).split('~')[0], p2=keyPeriod(ks[ks.length-1]).split('~')[1];
+  $('#periodLine').textContent =
+    `${ks[0]}${ks.length>1?' ~ '+ks[ks.length-1]:''}  ·  2026-${p1} ~ 2026-${p2}  ·  ${D}일`;
+  $('#bigMoney').innerHTML=`${fmt(C)}<span class="cur">THB</span>`;
+  $('#bigSub').innerHTML=
+    `비가동 <b>${fmt(M/60)}시간</b> (${fmt(M)}분) · 하루 평균 <b>${fmt(C/D)} THB</b> · `
+    +`설비 1대당 <b>${fmt(C/LIVE.length)} THB</b>`;
+  $('#anchor').innerHTML=`로스 <b>1시간</b> = 평균 <b>${fmt(DATA.rateAvg*60)} THB</b>`
+    +` &nbsp;·&nbsp; <b>1분</b> = ${DATA.rateAvg.toFixed(1)} THB`;
+
+  const per=ks.map(k=>keyCost(k));
+  const last=per[per.length-1], prev=per.length>1?per[per.length-2]:null;
+  const d=prev!=null?last-prev:0, pc=prev? d/prev*100:0;
+  const cls=prev==null?'fl':(Math.abs(pc)<2?'fl':(d>0?'up':'dn'));
+  const arw=cls==='fl'?'→':(d>0?'▲':'▼');
+  const wr=DATA.mcs.map(m=>({m,v:mcCost(m)})).sort((a,b)=>b.v-a.v);
+  const top5=wr.slice(0,5).reduce((s,x)=>s+x.v,0);
+  const ci=[0,1,2,3].map(c=>({c,v:catTotCost(c)})).sort((a,b)=>b.v-a.v)[0];
+  const unit=isMonth()?'월':'주';
+  $('#facts').innerHTML=[
+    [`${unit} 평균`, fmt(C/ks.length)+' THB', `${ks.length}개 ${unit} 평균`],
+    [`최근 ${unit} (${ks[ks.length-1]})`, fmt(last)+' THB',
+      prev==null?'비교 대상 없음':`<span class="${cls}">${arw} ${fmt(Math.abs(d))} THB (${pc>0?'+':''}${pc.toFixed(1)}%)</span>`],
+    ['최다 손실 설비', wr[0].m, `${fmt(wr[0].v)} THB · 전체의 ${(wr[0].v/C*100).toFixed(1)}%`],
+    ['상위 5대 집중도', (top5/C*100).toFixed(0)+'%', wr.slice(0,5).map(x=>x.m).join(' · ')],
+  ].map(([k,v,n])=>`<div class="fact"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join('');
+  $('#leakNote').textContent=`${CN[ci.c]}이(가) 가장 큽니다 · ${fmt(ci.v)} THB`;
+}
+
+/* ---------- leak cards ---------- */
+function spark(data,color,max,h){
+  const n=data.length,W=100,H=h||30;
+  if(!n) return '';
+  const x=i=>n===1?W/2:i/(n-1)*W, y=v=>H-(max?v/max*(H-3):0);
+  const p=data.map((v,i)=>[x(i),y(v)]);
+  const line=p.map((q,i)=>(i?'L':'M')+q[0].toFixed(2)+' '+q[1].toFixed(2)).join(' ');
+  const area=`${line} L ${x(n-1).toFixed(2)} ${H} L ${x(0).toFixed(2)} ${H} Z`;
+  const dots=p.map(q=>`<circle cx="${q[0].toFixed(2)}" cy="${q[1].toFixed(2)}" r="1.6" fill="${color}"/>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    <path d="${area}" fill="${color}" opacity=".14"/>
+    <path d="${line}" fill="none" stroke="${color}" stroke-width="1.6"
+      vector-effect="non-scaling-stroke" stroke-linejoin="round"/>${dots}</svg>`;
+}
+function renderLeaks(){
+  const ks=keys(), C=totCost();
+  const rows=CN.map((c,i)=>({c,i,thb:catTotCost(i),min:catTotMin(i),
+    per:ks.map(k=>catCost(k,i))})).sort((a,b)=>b.thb-a.thb);
+  const mx=Math.max(...rows.flatMap(r=>r.per),1);
+  $('#leaks').innerHTML=rows.map(r=>{
+    const f=r.per[0], l=r.per[r.per.length-1], d=l-f;
+    const cls=r.per.length<2||Math.abs(d)<f*.05?'fl':(d>0?'up':'dn');
+    const arw=cls==='fl'?'→':(d>0?'▲':'▼');
+    return `<div class="leak" style="--c:${CC[r.i]}">
+      <div class="t"><b>${r.c}</b><span class="sh">${(r.thb/C*100).toFixed(1)}%</span></div>
+      <div class="v" style="color:${CC[r.i]}">${fmt(r.thb)}<small>THB</small></div>
+      <div class="m">${fmt(r.min/60)}시간 · ${fmt(r.min)}분</div>
+      <div class="track"><i style="width:${r.thb/C*100}%;background:${CC[r.i]}"></i></div>
+      ${spark(r.per,CC[r.i],mx)}
+      <div class="f"><span>${ks[0]} → ${ks[ks.length-1]}</span>
+        <span class="${cls}">${arw} ${fmt(Math.abs(d))} THB</span></div></div>`;
+  }).join('');
+}
+
+/* ---------- trend ---------- */
+let cTrend,cPareto;
+const grid='#2B333D', tick='#8A96A3';
+function renderTrend(){
+  const ks=keys();
+  const ds=CN.map((c,i)=>({label:c,backgroundColor:CC[i],borderWidth:0,
+    data:ks.map(k=>catCost(k,i)),order:2}));
+  const avg=totCost()/ks.length;
+  ds.push({type:'line',label:'평균',data:ks.map(()=>avg),borderColor:'#EAEEF3',
+    borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false,order:1});
+  const labels=ks.map(k=>[k,keyPeriod(k)]);
+  const cfg={type:'bar',data:{labels,datasets:ds},options:{
+    responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1F262E',borderColor:'#3A4550',
+      borderWidth:1,padding:11,titleFont:{family:'IBM Plex Mono',size:12},
+      bodyFont:{family:'IBM Plex Mono',size:12},
+      callbacks:{title:it=>it[0].label.replace(',','  '),
+        label:it=>` ${it.dataset.label}  ${fmt(it.parsed.y)} THB`,
+        footer:it=>'합계  '+fmt(it.filter(x=>x.dataset.type!=='line')
+          .reduce((s,x)=>s+x.parsed.y,0))+' THB'}}},
+    scales:{x:{stacked:true,grid:{display:false},border:{color:grid},
+      ticks:{color:tick,font:{family:'IBM Plex Mono',size:10}}},
+      y:{stacked:true,grid:{color:grid},border:{display:false},
+      ticks:{color:tick,font:{family:'IBM Plex Mono',size:10},callback:v=>fmt(v/1000)+'k'}}}}};
+  if(cTrend)cTrend.destroy(); cTrend=new Chart($('#trend'),cfg);
+  $('#trendNote').textContent=`${isMonth()?'월':'주'}별 · THB · 점선은 평균 ${fmt(avg)} THB`;
+}
+
+/* ---------- worst machines ---------- */
+function renderWorst(){
+  const C=totCost();
+  const rows=DATA.mcs.map(m=>({m,parts:[0,1,2,3].map(c=>mcCost(m,c)),v:mcCost(m)}))
+    .filter(r=>r.v>0).sort((a,b)=>b.v-a.v).slice(0,10);
+  const mx=rows[0]?.v||1;
+  $('#worst').innerHTML=rows.map(r=>
+    `<div class="rrow" title="${r.m} · ${fmt(r.v)} THB">
+      <span class="rname">${r.m}</span>
+      <span class="rbar">${r.parts.map((p,i)=>
+        `<i style="width:${p/mx*100}%;background:${CC[i]}"></i>`).join('')}</span>
+      <span class="rval">${fmt(r.v)}<span>${(r.v/C*100).toFixed(1)}%</span></span></div>`).join('');
+}
+
+/* ---------- pareto ---------- */
+function renderPareto(){
+  const ks=keys(), idx=ks.map(k=>allKeys().indexOf(k));
+  const arr=Object.entries(DATA.codesW).map(([name,o])=>{
+    const a=isMonth()?o.mc:o.wc, b=isMonth()?o.m:o.w;
+    return {name,cat:o.cat,thb:idx.reduce((s,i)=>s+a[i],0),min:idx.reduce((s,i)=>s+b[i],0)};
+  }).filter(x=>x.thb>0).sort((a,b)=>b.thb-a.thb);
+  const top=arr.slice(0,14), T=arr.reduce((s,x)=>s+x.thb,0);
+  let run=0; const cum=top.map(x=>{run+=x.thb;return run/T*100;});
+  const n50=cum.findIndex(v=>v>=50)+1, n80=cum.findIndex(v=>v>=80)+1;
+  $('#paretoNote').textContent=
+    `상위 ${n50}개 원인이 금액의 50%${n80>0?` · 상위 ${n80}개가 80%`:''} · 총 ${arr.length}종`;
+  const cfg={data:{labels:top.map(x=>x.name),datasets:[
+    {type:'bar',label:'손실금액',data:top.map(x=>x.thb),
+     backgroundColor:top.map(x=>CC[CN.indexOf(x.cat)]||'#7C8896'),borderWidth:0,order:2},
+    {type:'line',label:'누적 비중',data:cum,yAxisID:'y2',borderColor:'#EAEEF3',
+     borderWidth:1.6,pointRadius:2.5,pointBackgroundColor:'#EAEEF3',tension:0,order:1}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1F262E',borderColor:'#3A4550',
+      borderWidth:1,padding:11,titleFont:{family:'IBM Plex Mono',size:12},
+      bodyFont:{family:'IBM Plex Mono',size:12},
+      callbacks:{label:it=>it.dataset.yAxisID==='y2'
+        ? ` 누적 ${it.parsed.y.toFixed(1)}%`
+        : ` ${fmt(it.parsed.y)} THB · ${fmt(top[it.dataIndex].min)}분 · ${top[it.dataIndex].cat}`}}},
+    scales:{x:{grid:{display:false},border:{color:grid},
+      ticks:{color:tick,font:{family:'IBM Plex Mono',size:10},maxRotation:45,minRotation:45}},
+      y:{grid:{color:grid},border:{display:false},
+      ticks:{color:tick,font:{family:'IBM Plex Mono',size:10},callback:v=>fmt(v/1000)+'k'}},
+      y2:{position:'right',min:0,max:100,grid:{display:false},border:{display:false},
+      ticks:{color:'#5C6773',font:{family:'IBM Plex Mono',size:10},callback:v=>v+'%'}}}}};
+  if(cPareto)cPareto.destroy(); cPareto=new Chart($('#pareto'),cfg);
+}
+
+/* ---------- simulator ---------- */
+function renderSim(){
+  const base=S.simScope==='all'?totCost():(catTotCost(1)+catTotCost(2));
+  const save=base*S.simPct/100, D=totDays();
+  $('#simPct').innerHTML=`${S.simPct}<small>%</small>`;
+  $('#simSave').innerHTML=`${fmt(save)}<small>THB</small>`;
+  $('#simGrid').innerHTML=[
+    ['하루당', fmt(save/D)+' THB'],
+    ['월 환산 (30일)', fmt(save/D*30)+' THB'],
+    ['연 환산 (365일)', fmt(save/D*365)+' THB'],
+  ].map(([k,v])=>`<div><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+}
+
+/* ---------- heatmap ---------- */
+function heatColor(t){
+  const st=[[31,38,46],[46,86,110],[203,157,62],[255,107,53]];
+  const x=Math.max(0,Math.min(1,t))*(st.length-1), i=Math.min(Math.floor(x),st.length-2), f=x-i;
+  const c=st[i].map((v,j)=>Math.round(v+(st[i+1][j]-v)*f));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+function renderHeat(){
+  const ks=allKeys(), sel=keys();
+  const list=DATA.mcs.filter(m=>ks.some(k=>src(k,m).some(v=>v>0)));
+  const g=$('#heat'); g.style.gridTemplateColumns=`54px repeat(${ks.length},1fr)`;
+  const h=['<div></div>'].concat(ks.map(k=>
+    `<div class="hmh" style="opacity:${sel.includes(k)?1:.35}">${k}</div>`));
+  let max=0;
+  const val=(m,k)=>src(k,m).reduce((a,b)=>a+b,0)*rate(m);
+  list.forEach(m=>ks.forEach(k=>{const v=val(m,k); if(v>max)max=v;}));
+  list.forEach(m=>{
+    h.push(`<div class="hml">${m}</div>`);
+    ks.forEach(k=>{const v=val(m,k),on=sel.includes(k);
+      h.push(`<div class="hmc" style="background:${heatColor(max?v/max:0)};opacity:${on?1:.3}"
+        title="${m} · ${k} · ${fmt(v)} THB">${v>max*.55?fmt(v/1000)+'k':''}</div>`);});
+  });
+  g.innerHTML=h.join('');
+  $('#ramp').style.background=`linear-gradient(90deg,${[0,.33,.66,1].map(heatColor).join(',')})`;
+  $('#hmMax').textContent=`최대 ${fmt(max)} THB / ${isMonth()?'월':'주'} · 가동 ${list.length}대`;
+}
+
+/* ---------- table ---------- */
+function renderTable(){
+  const C=totCost();
+  const rows=DATA.mcs.map(m=>({m,ty:DATA.types[m],rate:rate(m),
+    c:[0,1,2,3].map(i=>mcCost(m,i)),thb:mcCost(m),min:mcMin(m)}));
+  rows.forEach(r=>r.top=r.thb?CN[r.c.indexOf(Math.max(...r.c))]:'—');
+  const k=S.sort.k,asc=S.sort.asc;
+  const val=r=>k==='m'?DATA.mcs.indexOf(r.m):k==='thb'?r.thb:k==='min'?r.min:r.c[+k];
+  rows.sort((a,b)=>(val(a)-val(b))*(asc?1:-1));
+  const cols=[['m','설비'],['ty','TYPE'],['0','금형'],['1','설비-전기'],['2','설비-라인'],['3','관리'],
+    ['thb','손실금액'],['min','로스(분)'],['top','최대 분류'],['pc','비중']];
+  const th=cols.map(([id,l])=>{
+    const so=['m','0','1','2','3','thb','min'].includes(id);
+    return `<th ${so?`data-k="${id}"`:''} class="${so&&k===id?'s'+(asc?' asc':''):''}"
+      style="${so?'':'cursor:default'}">${l}</th>`;}).join('');
+  const z=v=>v?fmt(v):'<span class="zero">—</span>';
+  const body=rows.map(r=>`<tr><td>${r.m}</td><td class="zero">${r.ty}</td>
+    ${r.c.map(v=>`<td>${z(v)}</td>`).join('')}
+    <td><b>${z(r.thb)}</b></td><td class="zero">${z(r.min)}</td>
+    <td style="text-align:left;color:${r.thb?CC[CN.indexOf(r.top)]:'#5C6773'}">${r.top}</td>
+    <td>${r.thb?(r.thb/C*100).toFixed(1)+'%':'<span class="zero">—</span>'}</td></tr>`).join('');
+  const tf=`<tr><td>TTL</td><td>22대</td>${[0,1,2,3].map(i=>`<td>${fmt(catTotCost(i))}</td>`).join('')}
+    <td>${fmt(C)}</td><td>${fmt(totMin())}</td><td style="text-align:left">THB</td><td>100%</td></tr>`;
+  $('#tbl').innerHTML=`<thead><tr>${th}</tr></thead><tbody>${body}</tbody><tfoot>${tf}</tfoot>`;
+  $('#tbl').querySelectorAll('th[data-k]').forEach(t=>t.onclick=()=>{
+    const id=t.dataset.k; S.sort=S.sort.k===id?{k:id,asc:!S.sort.asc}:{k:id,asc:false}; renderTable();});
+}
+
+/* ---------- months ---------- */
+function renderMonths(){
+  const tot=MONNAME.reduce((s,n)=>s+DATA.mcs.reduce((t,m)=>
+    t+DATA.M[n][m].reduce((a,b)=>a+b,0)*rate(m),0),0);
+  $('#months').innerHTML=DATA.MONTHS.map(([n,per,dy,tag])=>{
+    const parts=[0,1,2,3].map(ci=>DATA.mcs.reduce((s,m)=>s+DATA.M[n][m][ci]*rate(m),0));
+    const t=parts.reduce((a,b)=>a+b,0), full=tag==='완전';
+    return `<div class="mcard ${full?'full':''}">
+      <div class="mm"><b>${n}</b><span class="tag">${tag}</span></div>
+      <div class="per">${per} · ${dy}일</div>
+      <div class="bigm">${fmt(t)}<small>THB</small></div>
+      <div class="day">일평균 ${fmt(t/dy)} THB</div>
+      <div class="mstack">${parts.map((p,i)=>
+        `<i style="width:${t?p/t*100:0}%;background:${CC[i]}"></i>`).join('')}</div></div>`;
+  }).join('');
+}
+
+/* ---------- detail trend ---------- */
+const mtU=()=>S.mtUnit==='thb'?'THB':'분';
+function mtVal(m,k,ci){
+  const s=src(k,m); let v=ci==='tot'?s.reduce((a,b)=>a+b,0):s[ci];
+  if(S.mtUnit==='thb') v*=rate(m);
+  if(isMonth()&&S.mtAvg) v/=days(k);
+  return v;
+}
+const picked=()=>DATA.mcs.filter(m=>S.pick.has(m));
+const topFive=()=>[...DATA.mcs].map(m=>({m,v:mcCost(m)})).sort((a,b)=>b.v-a.v).slice(0,5).map(x=>x.m);
+function press(id,on){$(id).setAttribute('aria-pressed',on);}
+function initMT(){
+  $('#mtMin').onclick=()=>{S.mtUnit='min';press('#mtMin',true);press('#mtThb',false);renderMT();};
+  $('#mtThb').onclick=()=>{S.mtUnit='thb';press('#mtMin',false);press('#mtThb',true);renderMT();};
+  $('#avSum').onclick=()=>{S.mtAvg=false;press('#avSum',true);press('#avDay',false);renderMT();};
+  $('#avDay').onclick=()=>{S.mtAvg=true;press('#avSum',false);press('#avDay',true);renderMT();};
+  $('#agSum').onclick=()=>{S.agg='sum';press('#agSum',true);press('#agMc',false);renderMT();};
+  $('#agMc').onclick=()=>{S.agg='mc';press('#agSum',false);press('#agMc',true);renderMT();};
+  $('#vwOver').onclick=()=>{S.view='over';press('#vwOver',true);press('#vwSplit',false);renderMT();};
+  $('#vwSplit').onclick=()=>{S.view='split';press('#vwOver',false);press('#vwSplit',true);renderMT();};
+  $('#scShared').onclick=()=>{S.scale='shared';press('#scShared',true);press('#scOwn',false);renderMT();};
+  $('#scOwn').onclick=()=>{S.scale='own';press('#scShared',false);press('#scOwn',true);renderMT();};
+  $('#mtCat').onchange=e=>{S.mtCat=e.target.value;renderMT();};
+  $('#pickAll').onclick=()=>{S.pick=new Set(LIVE);renderMT();};
+  $('#pickTop').onclick=()=>{S.pick=new Set(topFive());renderMT();};
+  $('#pickNone').onclick=()=>{S.pick=new Set();renderMT();};
+}
+function mtSeries(ks){
+  if(S.agg==='sum'){
+    const out=[];
+    CN.forEach((c,i)=>{ if(S.catPick.has(i))
+      out.push({name:c,color:CC[i],data:ks.map(k=>picked().reduce((s,m)=>s+mtVal(m,k,i),0))});});
+    if(S.catPick.has('tot'))
+      out.push({name:'전체',color:TOT,dash:[5,4],
+        data:ks.map(k=>picked().reduce((s,m)=>s+mtVal(m,k,'tot'),0))});
+    return out;
+  }
+  const ci=S.mtCat==='all'?'tot':+S.mtCat;
+  return picked().map(m=>({name:m,color:COLOF[m],sub:DATA.types[m],data:ks.map(k=>mtVal(m,k,ci))}));
+}
+function renderChips(){
+  const sum=S.agg==='sum';
+  $('#catchips').hidden=!sum; $('#chips').hidden=sum;
+  $('#mtCatWrap').hidden=sum; $('#scWrap').hidden=S.view!=='split';
+  if(sum){
+    const it=CN.map((c,i)=>[i,c,CC[i]]).concat([['tot','전체',TOT]]);
+    $('#catchips').innerHTML=it.map(([k,l,col])=>{const on=S.catPick.has(k);
+      return `<button class="chip" data-c="${k}" aria-pressed="${on}">
+        <i style="background:${on?col:''}"></i>${l}</button>`;}).join('');
+    $('#catchips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{
+      const k=b.dataset.c==='tot'?'tot':+b.dataset.c;
+      S.catPick.has(k)?S.catPick.delete(k):S.catPick.add(k); renderMT();});
+  }else{
+    $('#chips').innerHTML=DATA.mcs.map(m=>{const dead=!LIVE.includes(m),on=S.pick.has(m);
+      return `<button class="chip ${dead?'dead':''}" data-mc="${m}" aria-pressed="${on}"
+        ${dead?'disabled':''}><i style="background:${on?COLOF[m]:''}"></i>${m}</button>`;}).join('');
+    $('#chips').querySelectorAll('.chip:not(.dead)').forEach(b=>b.onclick=()=>{
+      const m=b.dataset.mc; S.pick.has(m)?S.pick.delete(m):S.pick.add(m); renderMT();});
+  }
+}
+let cMT;
+function renderMT(){
+  renderChips();
+  const ks=keys(), ser=mtSeries(ks);
+  const suffix=isMonth()&&S.mtAvg?' / 일':'';
+  $('#mtNote').textContent=
+    `${isMonth()?'월간':'주간'} · ${ks[0]}${ks.length>1?' ~ '+ks[ks.length-1]:''} · `
+    +(S.agg==='sum'?`설비 ${picked().length}대 합계 · 로스 ${ser.length}종`
+      :`${S.mtCat==='all'?'전체':CN[+S.mtCat]} · 설비 ${ser.length}대`)
+    +` · ${mtU()}${suffix}`;
+  if(S.view==='split'){
+    $('#overWrap').hidden=true; $('#smalls').hidden=false;
+    if(!ser.length){$('#smalls').innerHTML='<div class="smempty">표시할 항목이 없습니다.</div>';return;}
+    const rows=ser.map(s=>({...s,tot:s.data.reduce((a,b)=>a+b,0),
+      first:s.data[0],last:s.data[s.data.length-1],peak:Math.max(...s.data)}));
+    if(S.agg==='mc') rows.sort((a,b)=>b.tot-a.tot);
+    const gm=Math.max(...rows.map(r=>r.peak),1);
+    $('#smalls').innerHTML=rows.map(r=>{
+      const mx=S.scale==='shared'?gm:Math.max(r.peak,1), d=r.last-r.first;
+      const cls=Math.abs(d)<Math.max(r.peak*.03,1)?'fl':(d>0?'up':'dn');
+      const arw=cls==='fl'?'→':(d>0?'▲':'▼');
+      return `<div class="sm1"><div class="h"><span class="nm">
+        <i style="background:${r.color}"></i>${r.name}</span><span class="ty">${r.sub||''}</span></div>
+        <div class="tt">${fmt(r.tot)}<small>${mtU()}</small></div>
+        ${spark(r.data,r.color,mx,44)}
+        <div class="f"><span>최고 ${ks[r.data.indexOf(r.peak)]} · ${fmt(r.peak)}</span>
+        <span class="${cls}">${arw} ${fmt(Math.abs(d))}</span></div></div>`;}).join('');
+    return;
+  }
+  $('#overWrap').hidden=false; $('#smalls').hidden=true;
+  const cfg={type:'line',data:{labels:ks.map(k=>[k,keyPeriod(k)]),
+    datasets:ser.map(s=>({label:s.name,data:s.data,borderColor:s.color,backgroundColor:s.color,
+      borderWidth:s.dash?2.5:2,borderDash:s.dash||[],tension:0,pointRadius:3.5,
+      pointHoverRadius:6,pointBorderWidth:0,spanGaps:true}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',axis:'x',intersect:false},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1F262E',borderColor:'#3A4550',
+        borderWidth:1,padding:11,titleFont:{family:'IBM Plex Mono',size:12},
+        bodyFont:{family:'IBM Plex Mono',size:12},itemSort:(a,b)=>b.parsed.y-a.parsed.y,
+        callbacks:{title:it=>it[0].label.replace(',','  '),
+          label:it=>` ${it.dataset.label}  ${fmt(it.parsed.y)} ${mtU()}${suffix}`}}},
+      scales:{x:{grid:{display:false},border:{color:grid},
+        ticks:{color:tick,font:{family:'IBM Plex Mono',size:10}}},
+        y:{beginAtZero:true,grid:{color:grid},border:{display:false},
+        ticks:{color:tick,font:{family:'IBM Plex Mono',size:10},callback:v=>fmt(v)}}}}};
+  if(cMT)cMT.destroy(); cMT=new Chart($('#mtrend'),cfg);
+}
+
+/* ---------- boot ---------- */
+function render(){
+  renderHero(); renderLeaks(); renderTrend(); renderWorst(); renderPareto();
+  renderSim(); renderHeat(); renderTable(); renderMonths(); renderMT();
+}
+initCtl(); initMT(); render();
+
+</script>
+</body>
+</html>
