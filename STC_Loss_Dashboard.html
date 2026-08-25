@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STC 다이캐스팅 로스 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#12161B; --panel:#1A2027; --panel2:#20272F; --line:#2E3742; --line2:#3C4753;
+  --ink:#E9EDF2; --mute:#8A96A3; --dim:#5E6975;
+  --mold:#E8703A; --elec:#F2C14E; --mech:#4E9FC6; --mgmt:#7C8896;
+  --hot:#FF6B35;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'IBM Plex Sans KR',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-weight:400;
+  -webkit-font-smoothing:antialiased;line-height:1.5}
+.wrap{max-width:1440px;margin:0 auto;padding:0 28px 80px}
+
+/* ---------- header ---------- */
+header{border-bottom:1px solid var(--line);padding:34px 0 22px;margin-bottom:26px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:10px}
+h1{font-size:clamp(26px,3.4vw,40px);font-weight:600;letter-spacing:-.02em;margin:0 0 4px}
+h1 .thin{font-weight:300;color:var(--mute)}
+.sub{font-family:var(--mono);font-size:12px;color:var(--mute)}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:22px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+select{background:var(--panel2);color:var(--ink);border:1px solid var(--line2);border-radius:2px;
+  padding:8px 11px;font-family:var(--mono);font-size:13px;min-width:112px}
+select:focus-visible,button:focus-visible{outline:2px solid var(--hot);outline-offset:2px}
+.seg{display:flex;border:1px solid var(--line2);border-radius:2px;overflow:hidden}
+.seg button{background:transparent;border:0;color:var(--mute);font-family:var(--mono);font-size:12px;
+  padding:9px 16px;cursor:pointer;letter-spacing:.06em}
+.seg button[aria-pressed="true"]{background:var(--hot);color:#12161B;font-weight:600}
+.spacer{flex:1}
+.reset{background:transparent;border:1px solid var(--line2);color:var(--mute);border-radius:2px;
+  padding:9px 14px;font-family:var(--mono);font-size:12px;cursor:pointer}
+.reset:hover{border-color:var(--hot);color:var(--hot)}
+
+/* ---------- kpi ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);margin-bottom:30px}
+.kpi{background:var(--panel);padding:18px 20px 20px}
+.kpi .k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:9px}
+.kpi .v{font-family:var(--mono);font-size:29px;font-weight:500;letter-spacing:-.02em;line-height:1}
+.kpi .u{font-size:13px;color:var(--mute);margin-left:4px;font-weight:400}
+.kpi .n{font-size:11px;color:var(--mute);margin-top:7px;font-family:var(--mono)}
+
+/* ---------- sections ---------- */
+section{margin-bottom:38px}
+.head{display:flex;align-items:baseline;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.head h2{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em}
+.head .note{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.panel{background:var(--panel);border:1px solid var(--line);padding:20px}
+
+/* ---------- bay strip (signature) ---------- */
+.bay{display:flex;gap:4px;align-items:flex-end;height:190px;padding:0 2px}
+.stall{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+  height:100%;cursor:pointer;position:relative;background:none;border:0;padding:0;font-family:inherit}
+.stall .col{width:100%;display:flex;flex-direction:column-reverse;border-radius:1px 1px 0 0;
+  transition:opacity .18s, transform .18s;min-height:2px}
+.stall .col i{display:block}
+.stall:hover .col{transform:translateY(-3px)}
+.stall.off .col{opacity:.22}
+.stall.on .col{box-shadow:0 0 0 1px var(--hot),0 0 14px rgba(255,107,53,.4)}
+.stall .lab{font-family:var(--mono);font-size:9.5px;color:var(--dim);margin-top:7px;
+  writing-mode:vertical-rl;letter-spacing:.04em}
+.stall.on .lab,.stall:hover .lab{color:var(--ink)}
+.stall .dead{width:100%;height:2px;background:var(--line2)}
+.bayfoot{display:flex;justify-content:space-between;border-top:1px solid var(--line);
+  margin-top:14px;padding-top:11px;font-family:var(--mono);font-size:11px;color:var(--dim)}
+
+/* ---------- legend ---------- */
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--mute)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;border-radius:1px;display:block}
+
+/* ---------- grid ---------- */
+.g2{display:grid;grid-template-columns:1.75fr 1fr;gap:20px}
+.g2b{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.g2,.g2b{grid-template-columns:1fr}}
+.chart{position:relative;height:290px}
+.chart.sm{height:250px}
+
+/* ---------- share bars ---------- */
+.share{display:flex;flex-direction:column;gap:14px;margin-top:4px}
+.srow .top{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;margin-bottom:6px}
+.srow .top b{font-weight:500}
+.srow .top .pc{color:var(--mute)}
+.track{height:7px;background:var(--panel2);border-radius:1px;overflow:hidden}
+.track i{display:block;height:100%}
+
+/* ---------- heatmap ---------- */
+.hm{overflow-x:auto}
+.hmg{display:grid;gap:2px;min-width:660px}
+.hmc{height:26px;border-radius:1px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.82)}
+.hml{font-family:var(--mono);font-size:11px;color:var(--mute);display:flex;align-items:center;height:26px}
+.hmh{font-family:var(--mono);font-size:10px;color:var(--dim);text-align:center;padding-bottom:5px;letter-spacing:.04em}
+.hmscale{display:flex;align-items:center;gap:9px;margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--dim)}
+.hmramp{height:7px;width:150px;border-radius:1px}
+
+/* ---------- table ---------- */
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:12.5px;min-width:720px}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line)}
+th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:500;
+  cursor:pointer;user-select:none;white-space:nowrap;position:sticky;top:0;background:var(--panel)}
+th:hover{color:var(--ink)}
+th.s::after{content:'▾';margin-left:5px;color:var(--hot)}
+th.s.asc::after{content:'▴'}
+td:first-child,th:first-child,td:nth-child(2),th:nth-child(2){text-align:left}
+tbody tr:hover{background:var(--panel2)}
+tbody tr.on{background:rgba(255,107,53,.09)}
+.mc{color:var(--ink);font-weight:500}
+.ty{color:var(--dim);font-size:11px}
+.zero{color:var(--dim)}
+.bar{position:relative}
+.bar em{position:absolute;left:0;top:50%;transform:translateY(-50%);height:16px;
+  background:rgba(232,112,58,.16);border-left:2px solid var(--mold);z-index:0}
+.bar span{position:relative;z-index:1}
+tfoot td{border-top:1px solid var(--line2);border-bottom:0;font-weight:600;color:var(--ink);padding-top:11px}
+
+/* ---------- months ---------- */
+.mcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line)}
+.mcard{background:var(--panel);padding:18px 20px}
+.mcard.full{background:var(--panel2);box-shadow:inset 3px 0 0 var(--hot)}
+.mcard .mm{display:flex;justify-content:space-between;align-items:baseline}
+.mcard .mm b{font-size:17px;font-weight:600}
+.mcard .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 7px;border:1px solid var(--line2);color:var(--dim);border-radius:1px}
+.mcard.full .tag{border-color:var(--hot);color:var(--hot)}
+.mcard .per{font-family:var(--mono);font-size:11px;color:var(--dim);margin:4px 0 14px}
+.mcard .big{font-family:var(--mono);font-size:25px;font-weight:500;letter-spacing:-.02em}
+.mcard .big small{font-size:12px;color:var(--mute);font-weight:400;margin-left:4px}
+.mcard .day{font-family:var(--mono);font-size:11px;color:var(--mute);margin-top:6px}
+.mstack{display:flex;height:6px;margin-top:14px;border-radius:1px;overflow:hidden}
+.mstack i{display:block;height:100%}
+
+/* ---------- codes ---------- */
+.codes{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line)}
+.code{background:var(--panel);padding:12px 15px;display:flex;justify-content:space-between;
+  align-items:center;gap:12px}
+.code .l{min-width:0}
+.code .nm{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.code .cat{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px}
+.code .r{font-family:var(--mono);font-size:13px;text-align:right;white-space:nowrap}
+.code .r small{display:block;font-size:10px;color:var(--dim)}
+.rank{font-family:var(--mono);font-size:10px;color:var(--dim);width:20px}
+
+footer{border-top:1px solid var(--line);padding-top:20px;font-family:var(--mono);font-size:11px;
+  color:var(--dim);line-height:1.8}
+footer b{color:var(--mute);font-weight:500}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">STC Co., Ltd. · Die Casting · 공무팀</div>
+  <h1>설비 로스 <span class="thin">/ 4분류 집계</span></h1>
+  <div class="sub" id="subline"></div>
+  <div class="ctl">
+    <div class="field"><label for="w1">시작 주차</label><select id="w1"></select></div>
+    <div class="field"><label for="w2">종료 주차</label><select id="w2"></select></div>
+    <div class="field"><label>단위</label>
+      <div class="seg" role="group" aria-label="단위 선택">
+        <button id="uMin" aria-pressed="true">분</button>
+        <button id="uThb" aria-pressed="false">THB</button>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <button class="reset" id="clearMc" hidden>설비 선택 해제</button>
+  </div>
+</header>
+
+<div class="kpis" id="kpis"></div>
+
+<section>
+  <div class="head">
+    <h2>설비 배치도</h2>
+    <span class="note" id="bayNote">DC1 → DC23 · 막대를 누르면 해당 설비만 봅니다</span>
+  </div>
+  <div class="panel">
+    <div class="bay" id="bay"></div>
+    <div class="bayfoot">
+      <div class="legend" id="legend"></div>
+      <div id="bayMax"></div>
+    </div>
+  </div>
+</section>
+
+<section class="g2">
+  <div>
+    <div class="head"><h2>주간 추이</h2><span class="note">수요일 ~ 화요일</span></div>
+    <div class="panel"><div class="chart"><canvas id="trend"></canvas></div></div>
+  </div>
+  <div>
+    <div class="head"><h2>분류 구성</h2></div>
+    <div class="panel">
+      <div class="chart sm"><canvas id="donut"></canvas></div>
+      <div class="share" id="share"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="head"><h2>설비 × 주차 열지도</h2><span class="note" id="hmNote"></span></div>
+  <div class="panel hm">
+    <div class="hmg" id="heat"></div>
+    <div class="hmscale">
+      <span>낮음</span><div class="hmramp" id="ramp"></div><span>높음</span>
+      <span id="hmMax" style="margin-left:8px"></span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="head"><h2>설비별 상세</h2><span class="note">열 제목을 눌러 정렬합니다</span></div>
+  <div class="panel tw"><table id="tbl"></table></div>
+</section>
+
+<section>
+  <div class="head"><h2>월간</h2><span class="note">달력 1일 ~ 말일 · 주차 필터와 무관</span></div>
+  <div class="mcards" id="months"></div>
+</section>
+
+<section>
+  <div class="head"><h2>로스코드 순위</h2><span class="note">전 기간 06/24 ~ 08/18 · 상위 12종</span></div>
+  <div class="codes" id="codes"></div>
+</section>
+
+<footer>
+  <b>집계 기준</b> · 주간 = 수요일~화요일(사내 기준) · 월간 = 달력 1일~말일 · 금액 = 로스(분) × 설비별 M/C Rate(THB/분)<br>
+  <b>정본</b> · 구글시트 OEE_RawData_APQ 「A_가동률」 일별 원자료 · 분류는 「분류마스터」 31종 세분류 적용<br>
+  <b>검산</b> · 8주 로스시간이 원본 「주차별 추이」 탭과 일치 · DC14 결번 제외 · DC1/DC7/DC17 전 구간 무실적
+</footer>
+
+</div>
+<script>
+const DATA={"weeks":["W27","W28","W29","W30","W31","W32","W33","W34"],"periods":["06/24~06/30","07/01~07/07","07/08~07/14","07/15~07/21","07/22~07/28","07/29~08/04","08/05~08/11","08/12~08/18"],"cats":["금형","설비-전기","설비-라인","관리"],"mcs":["DC1","DC2","DC3","DC4","DC5","DC6","DC7","DC8","DC9","DC10","DC11","DC12","DC13","DC15","DC16","DC17","DC18","DC19","DC20","DC21","DC22","DC23"],"types":{"DC1":"200T","DC2":"125T","DC3":"350T","DC4":"350T","DC5":"350T","DC6":"350T","DC7":"350T","DC8":"250T","DC9":"350T","DC10":"350T","DC11":"500T","DC12":"500T","DC13":"350T","DC15":"650T","DC16":"125T","DC17":"125T","DC18":"50T","DC19":"90T","DC20":"800T","DC21":"650T","DC22":"350T","DC23":"350T"},"rates":{"DC1":8.91375,"DC2":6.666667,"DC3":14.159583,"DC4":14.159583,"DC5":14.159583,"DC6":14.159583,"DC7":14.159583,"DC8":11.086667,"DC9":14.159583,"DC10":14.159583,"DC11":16.472083,"DC12":16.472083,"DC13":14.159583,"DC15":16.7825,"DC16":6.666667,"DC17":6.666667,"DC18":8.572083,"DC19":8.8825,"DC20":19.871042,"DC21":16.7825,"DC22":14.159583,"DC23":14.159583},"W":{"W27":{"DC1":[0,0,0,0],"DC2":[215,0,50,450],"DC3":[945,323,70,90],"DC4":[981,147,477,794],"DC5":[0,0,0,0],"DC6":[670,327,1601,210],"DC7":[0,0,0,0],"DC8":[1419,410,1004,0],"DC9":[1841,1091,226,420],"DC10":[657,475,1030,559],"DC11":[524,922,575,0],"DC12":[1285,1065,345,0],"DC13":[0,0,0,0],"DC15":[840,130,280,210],"DC16":[955,430,540,443],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[0,0,0,0],"DC20":[1112,423,107,90],"DC21":[261,589,1221,117],"DC22":[969,425,843,549],"DC23":[509,268,280,386]},"W28":{"DC1":[0,0,0,0],"DC2":[75,285,182,390],"DC3":[1587,454,50,180],"DC4":[820,382,246,150],"DC5":[0,0,0,0],"DC6":[55,2242,898,360],"DC7":[0,0,0,0],"DC8":[1059,859,1076,0],"DC9":[1134,599,314,582],"DC10":[191,571,192,0],"DC11":[230,1075,368,0],"DC12":[1120,385,420,105],"DC13":[0,0,0,0],"DC15":[870,160,700,395],"DC16":[155,423,722,300],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[0,0,0,0],"DC20":[1034,40,244,0],"DC21":[556,420,112,154],"DC22":[1479,396,62,184],"DC23":[757,240,231,63]},"W29":{"DC1":[0,0,0,0],"DC2":[739,130,341,540],"DC3":[1115,0,229,180],"DC4":[439,34,775,312],"DC5":[0,0,0,0],"DC6":[516,30,1844,240],"DC7":[0,0,0,0],"DC8":[925,290,1315,60],"DC9":[342,605,636,360],"DC10":[392,166,587,612],"DC11":[250,575,680,150],"DC12":[1025,780,160,190],"DC13":[230,245,700,140],"DC15":[700,280,426,440],"DC16":[200,610,560,330],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[515,20,55,60],"DC20":[503,0,53,30],"DC21":[115,175,221,322],"DC22":[1915,662,10,60],"DC23":[1358,378,143,120]},"W30":{"DC1":[0,0,0,0],"DC2":[525,180,280,150],"DC3":[653,290,355,145],"DC4":[493,288,360,496],"DC5":[0,0,0,0],"DC6":[380,60,30,30],"DC7":[0,0,0,0],"DC8":[685,855,922,80],"DC9":[1699,514,265,829],"DC10":[528,172,395,120],"DC11":[655,1136,185,120],"DC12":[790,260,425,290],"DC13":[850,785,815,360],"DC15":[970,120,1424,600],"DC16":[540,195,220,30],"DC17":[0,0,0,0],"DC18":[160,53,1090,0],"DC19":[0,0,60,0],"DC20":[899,315,316,381],"DC21":[340,304,7,432],"DC22":[1853,206,57,399],"DC23":[912,232,654,467]},"W31":{"DC1":[0,0,0,0],"DC2":[775,30,290,554],"DC3":[2204,113,409,90],"DC4":[184,925,177,570],"DC5":[0,414,105,0],"DC6":[250,882,733,480],"DC7":[0,0,0,0],"DC8":[295,1037,905,120],"DC9":[1105,919,314,819],"DC10":[399,608,812,210],"DC11":[860,920,725,90],"DC12":[780,520,645,90],"DC13":[1120,1792,715,210],"DC15":[741,473,600,400],"DC16":[1030,220,560,30],"DC17":[0,0,0,0],"DC18":[160,0,1787,0],"DC19":[0,0,0,0],"DC20":[548,225,85,360],"DC21":[993,143,60,60],"DC22":[1200,196,229,538],"DC23":[920,290,59,90]},"W32":{"DC1":[0,0,0,0],"DC2":[484,170,263,360],"DC3":[1181,95,213,120],"DC4":[715,621,231,120],"DC5":[564,1885,81,89],"DC6":[798,688,271,90],"DC7":[0,0,0,0],"DC8":[180,945,270,0],"DC9":[1880,486,120,270],"DC10":[156,723,1056,542],"DC11":[60,190,130,0],"DC12":[1268,690,410,150],"DC13":[805,1315,1230,300],"DC15":[1105,60,565,450],"DC16":[1400,70,510,360],"DC17":[0,0,0,0],"DC18":[120,480,1437,120],"DC19":[0,0,0,0],"DC20":[1123,930,255,750],"DC21":[372,332,41,0],"DC22":[1515,594,32,630],"DC23":[199,591,162,240]},"W33":{"DC1":[0,0,0,0],"DC2":[153,55,355,660],"DC3":[1085,5,166,90],"DC4":[440,108,858,450],"DC5":[306,783,179,180],"DC6":[228,802,407,0],"DC7":[0,0,0,0],"DC8":[523,405,1713,90],"DC9":[1928,433,101,244],"DC10":[947,285,345,778],"DC11":[615,1765,709,270],"DC12":[1764,610,740,285],"DC13":[200,955,1729,120],"DC15":[800,440,615,370],"DC16":[320,242,979,400],"DC17":[0,0,0,0],"DC18":[280,840,1903,80],"DC19":[0,0,0,0],"DC20":[980,0,297,613],"DC21":[177,460,51,695],"DC22":[2203,185,230,399],"DC23":[334,459,308,433]},"W34":{"DC1":[0,0,0,0],"DC2":[358,713,235,720],"DC3":[295,420,95,150],"DC4":[181,100,145,1110],"DC5":[666,128,150,30],"DC6":[1205,1062,176,150],"DC7":[0,0,0,0],"DC8":[897,230,785,90],"DC9":[725,715,1034,550],"DC10":[477,545,121,240],"DC11":[505,1005,458,596],"DC12":[917,1480,375,180],"DC13":[769,450,1525,250],"DC15":[965,735,320,270],"DC16":[810,135,660,270],"DC17":[0,0,0,0],"DC18":[80,499,2835,245],"DC19":[0,0,0,0],"DC20":[1098,297,144,330],"DC21":[137,206,59,150],"DC22":[1004,361,788,412],"DC23":[193,596,163,409]}},"MONTHS":[["6월","06/24~06/30",7,"부분"],["7월","07/01~07/31",31,"완전"],["8월","08/01~08/18",18,"부분"]],"M":{"6월":{"DC1":[0,0,0,0],"DC2":[215,0,50,450],"DC3":[945,323,70,90],"DC4":[981,147,477,794],"DC5":[0,0,0,0],"DC6":[670,327,1601,210],"DC7":[0,0,0,0],"DC8":[1419,410,1004,0],"DC9":[1841,1091,226,420],"DC10":[657,475,1030,559],"DC11":[524,922,575,0],"DC12":[1285,1065,345,0],"DC13":[0,0,0,0],"DC15":[840,130,280,210],"DC16":[955,430,540,443],"DC17":[0,0,0,0],"DC18":[0,0,0,0],"DC19":[0,0,0,0],"DC20":[1112,423,107,90],"DC21":[261,589,1221,117],"DC22":[969,425,843,549],"DC23":[509,268,280,386]},"7월":{"DC1":[0,0,0,0],"DC2":[2357,790,1278,1704],"DC3":[5914,952,1216,595],"DC4":[2205,1856,1558,1528],"DC5":[483,1745,146,0],"DC6":[1541,3582,3555,1110],"DC7":[0,0,0,0],"DC8":[3144,3686,4428,260],"DC9":[4978,2920,1529,2620],"DC10":[1562,1644,2045,1152],"DC11":[2055,3896,2088,360],"DC12":[4118,2155,1855,735],"DC13":[2620,3702,2610,710],"DC15":[3331,1033,3360,2085],"DC16":[2340,1518,2392,990],"DC17":[0,0,0,0],"DC18":[440,533,4064,120],"DC19":[515,20,115,60],"DC20":[3354,1260,788,1161],"DC21":[2207,1292,407,968],"DC22":[7199,1968,369,1601],"DC23":[4063,1250,1102,890]},"8월":{"DC1":[0,0,0,0],"DC2":[752,773,668,1670],"DC3":[2206,425,301,360],"DC4":[1067,602,1234,1680],"DC5":[1053,1465,369,299],"DC6":[1891,2184,804,240],"DC7":[0,0,0,0],"DC8":[1420,935,2558,180],"DC9":[3835,1351,1255,1034],"DC10":[1528,1426,1463,1350],"DC11":[1120,2770,1167,866],"DC12":[3546,2570,1320,555],"DC13":[1354,1840,4104,670],"DC15":[2820,1235,1290,840],"DC16":[2115,377,1819,730],"DC17":[0,0,0,0],"DC18":[360,1339,4988,325],"DC19":[0,0,0,0],"DC20":[2831,547,606,1303],"DC21":[483,748,144,845],"DC22":[3970,632,1039,1021],"DC23":[610,1536,618,932]}},"codes":[[1,"금형수리","금형",22638],[2,"금형파손","금형",820],[3,"핀파손","금형",23562],[4,"설비수리","설비-전기",19624],[5,"전기로수리","설비-전기",2670],[6,"취출기수리","설비-전기",16397],[7,"스프레이수리","설비-전기",8724],[8,"슬라이드코어수리","금형",7699],[9,"팁교체","설비-라인",15551],[10,"노즐막힘","설비-라인",7547],[11,"플런저오일막힘","설비-라인",1801],[12,"래들수리","설비-전기",6457],[13,"조건변경","설비-라인",20067],[14,"탈산처리","설비-라인",1786],[15,"스크랩용해","설비-라인",10414],[16,"전기로회전","설비-전기",7146],[17,"금형교체","관리",19906],[18,"휴식, 설비교대","관리",13037],[19,"청소","금형",5601],[20,"미팅/정전","관리",4924],[21,"금형냉각라인","금형",1069],[22,"제품소착","금형",19421],[23,"컨베이어수리","설비-전기",1334],[24,"설비냉각수","설비-라인",419],[25,"스프레이조정","설비-라인",10593],[26,"바가지교체","설비-라인",1123],[27,"히터수리","설비-전기",523],[28,"펌프이상","설비-전기",2535],[29,"로트마크, 사상","금형",19760],[30,"진공설비","설비-전기",172],[31,"기타","관리",0]]};
+const CC = ['#E8703A','#F2C14E','#4E9FC6','#7C8896'];
+const CN = DATA.cats;
+let state = { i1:0, i2:DATA.weeks.length-1, unit:'min', mc:null, sort:{k:'tot',asc:false} };
+
+const $ = s => document.querySelector(s);
+const fmt = n => Math.round(n).toLocaleString('ko-KR');
+const rate = m => DATA.rates[m];
+const conv = (v,m) => state.unit==='min' ? v : v*rate(m);
+const unitLabel = () => state.unit==='min' ? '분' : 'THB';
+
+function weekIdx(){ const a=[]; for(let i=state.i1;i<=state.i2;i++) a.push(i); return a; }
+function machines(){ return state.mc ? [state.mc] : DATA.mcs; }
+
+// value for machine m, week index wi, category index ci — in current unit
+function cell(m,wi,ci){ return conv(DATA.W[DATA.weeks[wi]][m][ci], m); }
+function mcWeek(m,wi){ let s=0; for(let c=0;c<4;c++) s+=cell(m,wi,c); return s; }
+function mcCat(m,ci){ let s=0; for(const wi of weekIdx()) s+=cell(m,wi,ci); return s; }
+function mcTot(m){ let s=0; for(let c=0;c<4;c++) s+=mcCat(m,c); return s; }
+function catTot(ci){ let s=0; for(const m of machines()) s+=mcCat(m,ci); return s; }
+function grand(){ let s=0; for(let c=0;c<4;c++) s+=catTot(c); return s; }
+
+/* ---------------- controls ---------------- */
+function initControls(){
+  const o = i => DATA.weeks.map((w,j)=>`<option value="${j}">${w}  ${DATA.periods[j]}</option>`).join('');
+  $('#w1').innerHTML=o(); $('#w2').innerHTML=o();
+  $('#w1').value=state.i1; $('#w2').value=state.i2;
+  $('#w1').onchange=e=>{ state.i1=+e.target.value; if(state.i2<state.i1){state.i2=state.i1;$('#w2').value=state.i2;} render(); };
+  $('#w2').onchange=e=>{ state.i2=+e.target.value; if(state.i1>state.i2){state.i1=state.i2;$('#w1').value=state.i1;} render(); };
+  $('#uMin').onclick=()=>setUnit('min');
+  $('#uThb').onclick=()=>setUnit('thb');
+  $('#clearMc').onclick=()=>{ state.mc=null; render(); };
+}
+function setUnit(u){
+  state.unit=u;
+  $('#uMin').setAttribute('aria-pressed', u==='min');
+  $('#uThb').setAttribute('aria-pressed', u==='thb');
+  render();
+}
+
+/* ---------------- header + kpi ---------------- */
+function renderHead(){
+  const p1=DATA.periods[state.i1].split('~')[0], p2=DATA.periods[state.i2].split('~')[1];
+  const n=state.i2-state.i1+1;
+  $('#subline').textContent =
+    `${DATA.weeks[state.i1]} ~ ${DATA.weeks[state.i2]}  ·  ${p1} ~ ${p2}  ·  ${n}주`
+    + (state.mc ? `  ·  ${state.mc} 단독` : `  ·  설비 22대`);
+  $('#clearMc').hidden = !state.mc;
+}
+function renderKpi(){
+  const g=grand(), n=state.i2-state.i1+1;
+  const tops=[0,1,2,3].map(c=>({c,v:catTot(c)})).sort((a,b)=>b.v-a.v)[0];
+  const mins = state.unit==='min' ? g : machines().reduce((s,m)=>{let t=0;for(let c=0;c<4;c++)for(const wi of weekIdx())t+=DATA.W[DATA.weeks[wi]][m][c];return s+t;},0);
+  const rank = DATA.mcs.map(m=>({m,v:mcTot(m)})).sort((a,b)=>b.v-a.v);
+  const live = rank.filter(r=>r.v>0).length;
+  const last = state.mc
+    ? ['설비 순위', (rank.findIndex(r=>r.m===state.mc)+1)+'위', '/ '+live+'대',
+       '가동 설비 '+live+'대 중']
+    : ['최다 로스 설비', rank[0].m, '', fmt(rank[0].v)+' '+unitLabel()+' · '+(g?(rank[0].v/g*100).toFixed(1):0)+'%'];
+  const k=[
+    ['총 로스', fmt(g), unitLabel(), state.unit==='min'? fmt(mins/60)+' 시간' : fmt(mins)+' 분'],
+    ['주평균', fmt(g/n), unitLabel(), n+'개 주차 평균'],
+    ['최대 분류', CN[tops.c], '', fmt(tops.v)+' '+unitLabel()+' · '+(g?(tops.v/g*100).toFixed(1):0)+'%'],
+    last,
+  ];
+  $('#kpis').innerHTML=k.map(([a,b,c,d])=>
+    `<div class="kpi"><div class="k">${a}</div><div class="v">${b}${c?`<span class="u">${c}</span>`:''}</div><div class="n">${d}</div></div>`).join('');
+}
+
+/* ---------------- bay strip ---------------- */
+function renderBay(){
+  const vals=DATA.mcs.map(m=>({m,v:mcTot(m),parts:[0,1,2,3].map(c=>mcCat(m,c))}));
+  const max=Math.max(...vals.map(v=>v.v),1);
+  $('#bay').innerHTML=vals.map(({m,v,parts})=>{
+    const h=Math.max(v/max*100,0);
+    const cls = state.mc ? (state.mc===m?'on':'off') : '';
+    const segs = v>0 ? parts.map((p,i)=>`<i style="height:${p/v*100}%;background:${CC[i]}"></i>`).join('') : '';
+    const inner = v>0
+      ? `<div class="col" style="height:${h}%">${segs}</div>`
+      : `<div class="dead" title="무실적"></div>`;
+    return `<button class="stall ${cls}" data-mc="${m}" title="${m} · ${fmt(v)} ${unitLabel()}"
+      aria-pressed="${state.mc===m}">${inner}<span class="lab">${m.replace('DC','')}</span></button>`;
+  }).join('');
+  $('#bay').querySelectorAll('.stall').forEach(b=>b.onclick=()=>{
+    state.mc = state.mc===b.dataset.mc ? null : b.dataset.mc; render();
+  });
+  $('#bayMax').textContent = `최대 ${fmt(max)} ${unitLabel()}`;
+  $('#legend').innerHTML=CN.map((c,i)=>`<span><i style="background:${CC[i]}"></i>${c}</span>`).join('');
+}
+
+/* ---------------- charts ---------------- */
+let cTrend,cDonut;
+const gridColor='#2E3742', tickColor='#8A96A3';
+function renderTrend(){
+  const labels=DATA.weeks.map((w,i)=>[w,DATA.periods[i]]);
+  const ds=CN.map((c,ci)=>({
+    label:c, backgroundColor:CC[ci], borderWidth:0,
+    data:DATA.weeks.map((w,wi)=>machines().reduce((s,m)=>s+conv(DATA.W[w][m][ci],m),0)),
+    // dim weeks outside the selected range
+    borderSkipped:false
+  }));
+  const inRange=DATA.weeks.map((_,i)=>i>=state.i1&&i<=state.i2);
+  ds.forEach(d=>{ d.backgroundColor=d.data.map((_,i)=>inRange[i]?CC[CN.indexOf(d.label)]:CC[CN.indexOf(d.label)]+'33'); });
+  const cfg={type:'bar',data:{labels,datasets:ds},options:{
+    responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{
+      backgroundColor:'#20272F',borderColor:'#3C4753',borderWidth:1,padding:11,
+      titleFont:{family:'IBM Plex Mono',size:12},bodyFont:{family:'IBM Plex Mono',size:12},
+      callbacks:{
+        title:it=>it[0].label.replace(',','  '),
+        label:it=>` ${it.dataset.label}  ${fmt(it.parsed.y)} ${unitLabel()}`,
+        footer:it=>'합계  '+fmt(it.reduce((s,x)=>s+x.parsed.y,0))+' '+unitLabel()}}},
+    scales:{
+      x:{stacked:true,grid:{display:false},border:{color:gridColor},
+         ticks:{color:tickColor,font:{family:'IBM Plex Mono',size:10}}},
+      y:{stacked:true,grid:{color:gridColor},border:{display:false},
+         ticks:{color:tickColor,font:{family:'IBM Plex Mono',size:10},callback:v=>fmt(v)}}}
+  }};
+  if(cTrend){cTrend.destroy()} cTrend=new Chart($('#trend'),cfg);
+}
+function renderDonut(){
+  const d=[0,1,2,3].map(c=>catTot(c));
+  const cfg={type:'doughnut',data:{labels:CN,datasets:[{data:d,backgroundColor:CC,borderColor:'#1A2027',borderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor:'#20272F',borderColor:'#3C4753',borderWidth:1,padding:11,
+        bodyFont:{family:'IBM Plex Mono',size:12},
+        callbacks:{label:it=>` ${it.label}  ${fmt(it.parsed)} ${unitLabel()}`}}}}};
+  if(cDonut){cDonut.destroy()} cDonut=new Chart($('#donut'),cfg);
+  const g=d.reduce((a,b)=>a+b,0)||1;
+  $('#share').innerHTML=CN.map((c,i)=>
+    `<div class="srow"><div class="top"><b>${c}</b><span class="pc">${fmt(d[i])} ${unitLabel()} · ${(d[i]/g*100).toFixed(1)}%</span></div>
+     <div class="track"><i style="width:${d[i]/g*100}%;background:${CC[i]}"></i></div></div>`).join('');
+}
+
+/* ---------------- heatmap ---------------- */
+function heatColor(t){
+  // graphite -> steel -> amber -> molten
+  const stops=[[32,39,47],[46,86,110],[203,157,62],[255,107,53]];
+  const x=Math.max(0,Math.min(1,t))*(stops.length-1);
+  const i=Math.min(Math.floor(x),stops.length-2), f=x-i;
+  const c=stops[i].map((v,j)=>Math.round(v+(stops[i+1][j]-v)*f));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+function renderHeat(){
+  const list=DATA.mcs.filter(m=>DATA.weeks.some((w,i)=>mcWeek(m,i)>0));
+  const n=DATA.weeks.length;
+  const g=$('#heat');
+  g.style.gridTemplateColumns=`54px repeat(${n},1fr)`;
+  let h=['<div></div>'].concat(DATA.weeks.map((w,i)=>
+    `<div class="hmh" style="opacity:${i>=state.i1&&i<=state.i2?1:.35}">${w}</div>`));
+  let max=0; list.forEach(m=>DATA.weeks.forEach((_,i)=>{const v=mcWeek(m,i); if(v>max)max=v;}));
+  list.forEach(m=>{
+    h.push(`<div class="hml" style="color:${state.mc===m?'#E9EDF2':''}">${m}</div>`);
+    DATA.weeks.forEach((w,i)=>{
+      const v=mcWeek(m,i), t=max?v/max:0, on=i>=state.i1&&i<=state.i2;
+      h.push(`<div class="hmc" style="background:${heatColor(t)};opacity:${on?1:.3}"
+        title="${m} · ${DATA.weeks[i]} · ${fmt(v)} ${unitLabel()}">${v>max*.55?fmt(v):''}</div>`);
+    });
+  });
+  g.innerHTML=h.join('');
+  $('#ramp').style.background=`linear-gradient(90deg,${[0,.33,.66,1].map(t=>heatColor(t)).join(',')})`;
+  $('#hmMax').textContent=`최대 ${fmt(max)} ${unitLabel()} / 주`;
+  $('#hmNote').textContent=`가동 설비 ${list.length}대 · 설비×주차 ${unitLabel()}`;
+}
+
+/* ---------------- table ---------------- */
+function renderTable(){
+  const rows=DATA.mcs.map(m=>({
+    m, ty:DATA.types[m], rate:rate(m),
+    c:[0,1,2,3].map(i=>mcCat(m,i)), tot:mcTot(m)
+  }));
+  const g=rows.reduce((s,r)=>s+r.tot,0)||1;
+  const max=Math.max(...rows.map(r=>r.tot),1);
+  rows.forEach(r=>{ r.top = r.tot? CN[r.c.indexOf(Math.max(...r.c))] : '—'; });
+  const k=state.sort.k, asc=state.sort.asc;
+  const val=r=> k==='m'?DATA.mcs.indexOf(r.m) : k==='tot'?r.tot : k==='rate'?r.rate : r.c[+k];
+  rows.sort((a,b)=> (val(a)-val(b))*(asc?1:-1) );
+  const cols=[['m','설비'],['ty','TYPE'],['0',CN[0]],['1',CN[1]],['2',CN[2]],['3',CN[3]],
+              ['tot','합계'],['top','최대 분류'],['pc','비중']];
+  const th=cols.map(([id,lab])=>{
+    const sortable=['m','0','1','2','3','tot'].includes(id);
+    const cls=(k===id?'s'+(asc?' asc':''):'');
+    return `<th ${sortable?`data-k="${id}"`:''} class="${sortable?cls:''}"
+      style="${sortable?'':'cursor:default'}">${lab}</th>`;}).join('');
+  const body=rows.map(r=>{
+    const z=v=>v?fmt(v):'<span class="zero">—</span>';
+    return `<tr class="${state.mc===r.m?'on':''}" data-mc="${r.m}" style="cursor:pointer">
+      <td class="mc">${r.m}</td><td class="ty">${r.ty}</td>
+      ${r.c.map(v=>`<td>${z(v)}</td>`).join('')}
+      <td class="bar"><em style="width:${r.tot/max*100}%"></em><span>${z(r.tot)}</span></td>
+      <td style="text-align:left;color:${r.tot?CC[CN.indexOf(r.top)]:'#5E6975'}">${r.top}</td>
+      <td>${r.tot?(r.tot/g*100).toFixed(1)+'%':'<span class="zero">—</span>'}</td></tr>`;
+  }).join('');
+  const tf=`<tr><td>TTL</td><td class="ty">22대</td>
+    ${[0,1,2,3].map(i=>`<td>${fmt(rows.reduce((s,r)=>s+r.c[i],0))}</td>`).join('')}
+    <td>${fmt(g)}</td><td style="text-align:left">${unitLabel()}</td><td>100%</td></tr>`;
+  $('#tbl').innerHTML=`<thead><tr>${th}</tr></thead><tbody>${body}</tbody><tfoot>${tf}</tfoot>`;
+  $('#tbl').querySelectorAll('th[data-k]').forEach(t=>t.onclick=()=>{
+    const id=t.dataset.k;
+    state.sort = state.sort.k===id ? {k:id,asc:!state.sort.asc} : {k:id,asc:false};
+    renderTable();
+  });
+  $('#tbl').querySelectorAll('tbody tr').forEach(tr=>tr.onclick=()=>{
+    state.mc = state.mc===tr.dataset.mc ? null : tr.dataset.mc; render();
+  });
+}
+
+/* ---------------- months ---------------- */
+function renderMonths(){
+  $('#months').innerHTML=DATA.MONTHS.map(([name,per,days,tag])=>{
+    const parts=[0,1,2,3].map(ci=>machines().reduce((s,m)=>s+conv(DATA.M[name][m][ci],m),0));
+    const tot=parts.reduce((a,b)=>a+b,0);
+    const full=tag==='완전';
+    return `<div class="mcard ${full?'full':''}">
+      <div class="mm"><b>${name}</b><span class="tag">${tag}</span></div>
+      <div class="per">${per} · ${days}일</div>
+      <div class="big">${fmt(tot)}<small>${unitLabel()}</small></div>
+      <div class="day">일평균 ${fmt(tot/days)} ${unitLabel()}</div>
+      <div class="mstack">${parts.map((p,i)=>`<i style="width:${tot?p/tot*100:0}%;background:${CC[i]}"></i>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------------- codes ---------------- */
+function renderCodes(){
+  const s=[...DATA.codes].sort((a,b)=>b[3]-a[3]).slice(0,12);
+  const g=DATA.codes.reduce((x,c)=>x+c[3],0)||1;
+  $('#codes').innerHTML=s.map((c,i)=>{
+    const col=CC[CN.indexOf(c[2])] || '#7C8896';
+    return `<div class="code"><span class="rank">${String(i+1).padStart(2,'0')}</span>
+      <div class="l"><div class="nm">${c[1]}</div>
+        <div class="cat" style="color:${col}">${c[2]}</div></div>
+      <div class="r">${fmt(c[3])}<small>분 · ${(c[3]/g*100).toFixed(1)}%</small></div></div>`;
+  }).join('');
+}
+
+/* ---------------- boot ---------------- */
+function render(){
+  renderHead(); renderKpi(); renderBay();
+  renderTrend(); renderDonut(); renderHeat(); renderTable(); renderMonths();
+}
+initControls();
+render();
+renderCodes();
+
+</script>
+</body>
+</html>
