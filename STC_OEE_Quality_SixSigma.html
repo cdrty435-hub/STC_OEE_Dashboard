@@ -58,6 +58,40 @@
   .sigma-marker-line { position:absolute; top:0; width:2px; height:28px; background:#222; }
 
   .eq-tags { font-size:10.5px; color:#666; }
+
+  /* ---- 설비 불량유형 상세 모달 ---- */
+  #eqModal{position:fixed;inset:0;background:rgba(15,20,28,.55);display:none;z-index:9999;
+    align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;}
+  #eqModal.open{display:flex;}
+  #eqModal .box{background:#fff;border-radius:10px;max-width:760px;width:100%;
+    box-shadow:0 18px 50px rgba(0,0,0,.35);overflow:hidden;}
+  #eqModal .hd{background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;padding:16px 20px;
+    display:flex;align-items:center;gap:12px;}
+  #eqModal .hd h3{font-size:17px;font-weight:700;margin:0;flex:1;}
+  #eqModal .hd .pd{font-size:11.5px;opacity:.85;}
+  #eqModal .hd button{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:5px;
+    padding:6px 13px;font-size:12.5px;cursor:pointer;}
+  #eqModal .hd button:hover{background:rgba(255,255,255,.32);}
+  #eqModal .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:#e6eaef;}
+  #eqModal .kpis div{background:#f7f9fb;padding:10px 8px;text-align:center;}
+  #eqModal .kpis .k{font-size:10.5px;color:#7a848e;}
+  #eqModal .kpis .v{font-size:15px;font-weight:700;color:#1e3c72;margin-top:3px;}
+  #eqModal .bd{padding:16px 20px 20px;max-height:60vh;overflow:auto;}
+  #eqModal table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  #eqModal th,#eqModal td{padding:6px 8px;border-bottom:1px solid #eef1f4;text-align:right;}
+  #eqModal th{font-size:10.5px;color:#7a848e;text-transform:uppercase;letter-spacing:.05em;
+    border-bottom:1.5px solid #d7dde3;white-space:nowrap;}
+  #eqModal td.l,#eqModal th.l{text-align:left;}
+  #eqModal .barcell{position:relative;min-width:120px;}
+  #eqModal .barcell i{display:block;height:9px;border-radius:2px;background:#e53935;}
+  #eqModal tr.unclass td{background:#fff8e1;}
+  #eqModal .note{font-size:11px;color:#8a949e;margin-top:10px;line-height:1.7;}
+  #eqModal .mdl{margin-top:14px;font-size:12px;color:#4a545e;}
+  #eqModal .mdl b{color:#1e3c72;}
+  tr.eq-clickable{cursor:pointer;}
+  tr.eq-clickable:hover{background:#eef4ff !important;}
+  tr.eq-clickable td:first-child::after{content:' 🔍';font-size:10px;opacity:.45;}
+  #chart-eqrank{cursor:pointer;}
 </style>
 </head>
 <body>
@@ -297,6 +331,17 @@ const I18N = {
     'wa.A': '가동률(A)', 'wa.P': '성능(P)', 'wa.Q': '품질(Q)', 'wa.OEE': '종합 OEE',
     'wa.total': '총 생산수량', 'wa.bad': '총 불량수량',
     'wa.eqRankTitle': '설비별 가동률(A) · 불량율 순위 (Worst → Best)',
+    'eqm.title': '{eq} · 불량 유형 상세',
+    'eqm.hint': '설비 행 또는 막대를 클릭하면 불량 유형이 열립니다',
+    'eqm.close': '닫기',
+    'eqm.total': '검사수량', 'eqm.bad': '불량수량', 'eqm.rate': '불량률',
+    'eqm.ppm': 'PPM', 'eqm.sigma': 'Sigma', 'eqm.grade': '등급',
+    'eqm.thType': '불량 유형', 'eqm.thQty': '수량', 'eqm.thShare': '비중', 'eqm.thCum': '누적',
+    'eqm.thPpm': 'PPM', 'eqm.rank': '순위',
+    'eqm.none': '이 설비에는 세부 불량 유형 기록이 없습니다.',
+    'eqm.unclassNote': '미분류 = 불량수량에서 세부 유형 합계를 뺀 값입니다. 이 값이 크면 현장 사유 기재가 누락된 것입니다.',
+    'eqm.period': '분석 기간',
+    'eqm.models': '주요 생산 모델',
     'wa.eqChartTitle': '설비별 계획/생산/불량수량 · 불량율 (그래프)',
     'wa.lossTitle': '비가동(Loss) 사유 Top 10 (분 기준)',
     'th.eq': '설비', 'th.plan': '계획(분)', 'th.run': '가동(분)', 'th.A': '가동률(A)',
@@ -388,6 +433,17 @@ const I18N = {
     'wa.A': 'Availability(A)', 'wa.P': 'Performance(P)', 'wa.Q': 'Quality(Q)', 'wa.OEE': 'OEE รวม',
     'wa.total': 'จำนวนผลิตรวม', 'wa.bad': 'จำนวนของเสียรวม',
     'wa.eqRankTitle': 'อันดับเครื่องจักรตาม Availability(A) · อัตราของเสีย (แย่ → ดี)',
+    'eqm.title': '{eq} · รายละเอียดประเภทของเสีย',
+    'eqm.hint': 'คลิกแถวหรือแท่งกราฟเพื่อดูประเภทของเสีย',
+    'eqm.close': 'ปิด',
+    'eqm.total': 'จำนวนตรวจ', 'eqm.bad': 'ของเสีย', 'eqm.rate': 'อัตราของเสีย',
+    'eqm.ppm': 'PPM', 'eqm.sigma': 'Sigma', 'eqm.grade': 'เกรด',
+    'eqm.thType': 'ประเภทของเสีย', 'eqm.thQty': 'จำนวน', 'eqm.thShare': 'สัดส่วน', 'eqm.thCum': 'สะสม',
+    'eqm.thPpm': 'PPM', 'eqm.rank': 'อันดับ',
+    'eqm.none': 'เครื่องจักรนี้ไม่มีบันทึกประเภทของเสีย',
+    'eqm.unclassNote': 'ไม่ระบุ = ของเสียทั้งหมด ลบ ผลรวมประเภทที่ระบุ หากค่านี้สูงแสดงว่าบันทึกสาเหตุไม่ครบ',
+    'eqm.period': 'ช่วงวิเคราะห์',
+    'eqm.models': 'รุ่นหลักที่ผลิต',
     'wa.eqChartTitle': 'กราฟ แผน/ผลิต/ของเสีย ตามเครื่องจักร · อัตราของเสีย',
     'wa.lossTitle': 'สาเหตุ Loss (หยุดเครื่อง) Top 10 (หน่วยนาที)',
     'th.eq': 'เครื่องจักร', 'th.plan': 'แผน(นาที)', 'th.run': 'เดินเครื่อง(นาที)', 'th.A': 'Availability(A)',
@@ -606,6 +662,7 @@ function colorFromSigma(sigma) {
 /* =========================================================================
    3. Quality aggregation from the Q(품질) raw rows
    ========================================================================= */
+let LAST_STATS = null;
 const DEFECT_COLS = ['미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스','품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타'];
 
 function computeQualityStats(rows) {
@@ -619,18 +676,30 @@ function computeQualityStats(rows) {
     const g = num(r['Qty_Good']), b = num(r['불량수량']);
     total += t; good += g; bad += b;
     const eq = r['설비명'];
-    if (!byEq[eq]) byEq[eq] = { total:0, bad:0 };
+    if (!byEq[eq]) byEq[eq] = { total:0, bad:0, defects:{}, models:{} };
     byEq[eq].total += t; byEq[eq].bad += b;
+    const md = r['Model'] || r['모델'] || r['모델명'];
+    if (md) byEq[eq].models[md] = (byEq[eq].models[md]||0) + b;
     const d = r['일자'];
     if (!byDay[d]) byDay[d] = { total:0, bad:0 };
     byDay[d].total += t; byDay[d].bad += b;
     let rowDetailSum = 0;
-    for (const c of DEFECT_COLS) { const v = num(r[c]); paretoRaw[c] += v; rowDetailSum += v; }
+    const eqD = byEq[eq].defects;
+    for (const c of DEFECT_COLS) {
+      const v = num(r[c]);
+      if (v) { paretoRaw[c] += v; eqD[c] = (eqD[c]||0) + v; }
+      rowDetailSum += v;
+    }
     const gap = b - rowDetailSum;
-    if (gap > 0) paretoRaw['미분류'] = (paretoRaw['미분류']||0) + gap;
+    if (gap > 0) {
+      paretoRaw['미분류'] = (paretoRaw['미분류']||0) + gap;
+      eqD['미분류'] = (eqD['미분류']||0) + gap;
+    }
   }
   const ppm = total>0 ? bad/total*1e6 : null;
-  return { total, good, bad, ppm, sigma: sigmaFromPPM(ppm), byEq, byDay, paretoRaw };
+  const out = { total, good, bad, ppm, sigma: sigmaFromPPM(ppm), byEq, byDay, paretoRaw };
+  LAST_STATS = out;
+  return out;
 }
 
 /* =========================================================================
@@ -750,9 +819,11 @@ function drawEqRankChart(canvasId, items, targetPPM) {
   const rowH = plotH / items.length;
   const barH = rowH * 0.62;
   ctx.font = '10.5px Arial';
+  EQRANK_HITS = [];
   items.forEach((it,i)=>{
     const y = topM + rowH*i + (rowH-barH)/2;
     const w = plotW * (it.ppm/maxV);
+    EQRANK_HITS.push({ label: it.label, y0: topM + rowH*i, y1: topM + rowH*(i+1) });
     ctx.fillStyle = colorFromSigma(it.sigma);
     ctx.fillRect(leftM, y, w, barH);
     ctx.fillStyle = '#333'; ctx.textAlign='right'; ctx.textBaseline='middle';
@@ -1159,6 +1230,89 @@ function renderSigmaScale(sigma) {
   }
 }
 
+
+/* =========================================================================
+   설비별 불량 유형 드릴다운 (행/막대 클릭 → 모달)
+   ========================================================================= */
+let EQRANK_HITS = [];
+
+function periodLabelText(){
+  try {
+    const b = getPeriodBounds();
+    if (b && b.start && b.end) return b.start + ' ~ ' + b.end;
+  } catch(e){}
+  return '';
+}
+
+function openEqDetail(eq){
+  const st = LAST_STATS;
+  if (!st || !st.byEq || !st.byEq[eq]) return;
+  const v = st.byEq[eq];
+  const ppm = v.total ? v.bad/v.total*1e6 : null;
+  const sig = sigmaFromPPM(ppm);
+  const grade = gradeFromSigma(sig);
+
+  document.getElementById('eqmTitle').textContent = t('eqm.title', { eq });
+  const pl = periodLabelText();
+  document.getElementById('eqmPeriod').textContent = pl ? (t('eqm.period') + ' · ' + pl) : '';
+
+  document.getElementById('eqmKpis').innerHTML = [
+    [t('eqm.total'), v.total.toLocaleString()],
+    [t('eqm.bad'),   v.bad.toLocaleString()],
+    [t('eqm.rate'),  v.total ? (v.bad/v.total*100).toFixed(2)+'%' : '-'],
+    [t('eqm.ppm'),   ppm==null ? '-' : Math.round(ppm).toLocaleString()],
+    [t('eqm.sigma'), sig==null ? '-' : sig.toFixed(2)+'σ'],
+    [t('eqm.grade'), grade.label],
+  ].map(([k,val])=>`<div><div class="k">${k}</div><div class="v">${val}</div></div>`).join('');
+
+  const items = Object.entries(v.defects||{}).filter(([k,n])=>n>0).sort((a,b)=>b[1]-a[1]);
+  const body = document.getElementById('eqmBody');
+  if (!items.length){
+    body.innerHTML = `<div class="note">${t('eqm.none')}</div>`;
+  } else {
+    const sum = items.reduce((a,[,n])=>a+n,0);
+    const mx  = items[0][1];
+    let acc = 0;
+    const rows = items.map(([name,n],i)=>{
+      acc += n;
+      const isUn = (name === '미분류');
+      return `<tr class="${isUn?'unclass':''}">
+        <td class="l">${i+1}</td>
+        <td class="l">${trTerm(name)}</td>
+        <td>${n.toLocaleString()}</td>
+        <td>${(n/sum*100).toFixed(1)}%</td>
+        <td>${(acc/sum*100).toFixed(0)}%</td>
+        <td>${v.total ? Math.round(n/v.total*1e6).toLocaleString() : '-'}</td>
+        <td class="barcell"><i style="width:${(n/mx*100).toFixed(1)}%;background:${isUn?'#c7a008':'#e53935'}"></i></td>
+      </tr>`;}).join('');
+    const models = Object.entries(v.models||{}).filter(([,n])=>n>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const mdlHtml = models.length
+      ? `<div class="mdl">${t('eqm.models')} · ${models.map(([m,n])=>`<b>${m}</b> (${n.toLocaleString()})`).join(' · ')}</div>` : '';
+    body.innerHTML = `<table>
+      <thead><tr>
+        <th class="l">${t('eqm.rank')}</th><th class="l">${t('eqm.thType')}</th>
+        <th>${t('eqm.thQty')}</th><th>${t('eqm.thShare')}</th><th>${t('eqm.thCum')}</th>
+        <th>${t('eqm.thPpm')}</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table>
+      ${mdlHtml}
+      <div class="note">${t('eqm.unclassNote')}</div>`;
+  }
+  document.getElementById('eqModal').classList.add('open');
+}
+function closeEqDetail(){ document.getElementById('eqModal').classList.remove('open'); }
+
+function makeRowsClickable(tableSel, eqColIndex){
+  document.querySelectorAll(tableSel + ' tbody tr').forEach(tr=>{
+    const cell = tr.cells[eqColIndex||0];
+    if (!cell) return;
+    const eq = cell.textContent.trim().replace(/\s*🔍$/,'');
+    if (!eq || !LAST_STATS || !LAST_STATS.byEq || !LAST_STATS.byEq[eq]) return;
+    tr.classList.add('eq-clickable');
+    tr.title = t('eqm.hint');
+    tr.onclick = ()=>openEqDetail(eq);
+  });
+}
+
 function renderEqTable(stats) {
   const tbody = document.querySelector('#table-eq tbody');
   tbody.innerHTML = '';
@@ -1225,6 +1379,7 @@ function renderAll() {
   const eqRanked = renderEqTable(stats);
   const eqTop = eqRanked.filter(r=>r.ppm!=null).map(r=>({label:r.eq, ppm:r.ppm, sigma:r.sigma}));
   drawEqRankChart('chart-eqrank', eqTop, targetPPMValue());
+  makeRowsClickable('#table-eq', 0);
 
   const dates = [...new Set(rows.map(r=>r['일자']))].filter(Boolean).sort();
   const pbar = stats.total>0 ? stats.bad/stats.total : 0;
@@ -1577,6 +1732,7 @@ function renderWeeklyAnalysis(){
     eqBody.appendChild(tr);
   });
   drawEqComboChart('chart-wa-eq', wa.eqStats);
+  makeRowsClickable('#table-wa-eq', 0);
 
   const lossBody = document.querySelector('#table-wa-loss tbody');
   lossBody.innerHTML = '';
@@ -1631,6 +1787,20 @@ async function onRefreshClick(){
   }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  const md = document.getElementById('eqModal');
+  document.getElementById('eqmClose').onclick = closeEqDetail;
+  md.addEventListener('click', e => { if (e.target === md) closeEqDetail(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEqDetail(); });
+  const cv = document.getElementById('chart-eqrank');
+  if (cv) cv.addEventListener('click', e => {
+    const r = cv.getBoundingClientRect();
+    const y = (e.clientY - r.top) * (cv.height / r.height);
+    const hit = EQRANK_HITS.find(h => y >= h.y0 && y <= h.y1);
+    if (hit) openEqDetail(hit.label);
+  });
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
   applyStaticI18n();
   try {
@@ -1653,5 +1823,19 @@ window.addEventListener('resize', () => {
   _resizeTimer = setTimeout(() => { if (RAW_Q.length) renderAll(); }, 150);
 });
 </script>
+
+<div id="eqModal" role="dialog" aria-modal="true" aria-labelledby="eqmTitle">
+  <div class="box">
+    <div class="hd">
+      <div style="flex:1">
+        <h3 id="eqmTitle">-</h3>
+        <div class="pd" id="eqmPeriod"></div>
+      </div>
+      <button type="button" id="eqmClose" data-i18n="eqm.close">닫기</button>
+    </div>
+    <div class="kpis" id="eqmKpis"></div>
+    <div class="bd" id="eqmBody"></div>
+  </div>
+</div>
 </body>
 </html>
