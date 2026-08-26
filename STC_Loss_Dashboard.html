@@ -240,22 +240,25 @@ function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v
 
 function combo(items,opt){
   opt=opt||{};
-  const W=opt.w||1180,H=opt.h||330,L=64,R=76,T=30,B=42;
+  const W=opt.w||1180,H=opt.h||360,L=68,R=92,T=52,B=42;
   const pw=W-L-R,ph=H-T-B;
   const maxM=niceMax(Math.max(...items.map(d=>d.parts.reduce((a,b)=>a+b,0)),1));
   const maxC=niceMax(Math.max(...items.map(d=>d.cost),1));
   const n=items.length,step=pw/n,bw=Math.min(step*.55,86);
   const yL=v=>T+ph-v/maxM*ph, yR=v=>T+ph-v/maxC*ph;
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img" preserveAspectRatio="xMidYMid meet">`;
-  s+=`<text x="${L}" y="${T-13}" font-family="IBM Plex Mono" font-size="11" fill="#4A545E">로스 (분)</text>`;
-  s+=`<text x="${W-R}" y="${T-13}" text-anchor="end" font-family="IBM Plex Mono" font-size="11" fill="#14181C">비용 (THB)</text>`;
+  s+=`<rect x="${L}" y="${T-25}" width="11" height="11" fill="#C0281F"/>`;
+  s+=`<text x="${L+16}" y="${T-15}" font-family="IBM Plex Mono" font-size="11.5" fill="#4A545E">막대 · 로스 합계 (시간 / 분) — 왼쪽 축</text>`;
+  s+=`<line x1="${W-R-118}" x2="${W-R-104}" y1="${T-20}" y2="${T-20}" stroke="#14181C" stroke-width="2.4"/>`;
+  s+=`<circle cx="${W-R-111}" cy="${T-20}" r="3.4" fill="#fff" stroke="#14181C" stroke-width="2"/>`;
+  s+=`<text x="${W-R}" y="${T-15}" text-anchor="end" font-family="IBM Plex Mono" font-size="11.5" fill="#14181C">선 · 총 손실비용 (THB) — 오른쪽 축</text>`;
   [0,.25,.5,.75,1].forEach(t=>{const yy=yL(t*maxM);
     s+=`<line x1="${L}" x2="${W-R}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}"
       stroke="${t===0?'#14181C':'#EDF0F3'}" stroke-width="${t===0?1.2:1}"/>`;
     s+=`<text x="${L-8}" y="${(yy+4).toFixed(1)}" text-anchor="end" font-family="IBM Plex Mono"
-      font-size="10.5" fill="#79838D">${f(t*maxM)}</text>`;
+      font-size="10.5" fill="#79838D">${f(t*maxM/60)}${t===1?'h':''}</text>`;
     s+=`<text x="${W-R+8}" y="${(yy+4).toFixed(1)}" font-family="IBM Plex Mono"
-      font-size="10.5" fill="#14181C">${K(t*maxC)}</text>`;});
+      font-size="10.5" fill="#14181C">${K(t*maxC)}${t===1?' THB':''}</text>`;});
   const pts=[];
   items.forEach((d,i)=>{
     const x=L+step*i+(step-bw)/2;let acc=0;
@@ -263,8 +266,10 @@ function combo(items,opt){
       if(h>0)s+=`<rect x="${x.toFixed(1)}" y="${(yL(acc)-h).toFixed(1)}" width="${bw.toFixed(1)}"
         height="${h.toFixed(1)}" fill="${CC[ci]}"><title>${d.label} · ${CN[ci]} · ${f(p)}분</title></rect>`;
       acc+=p;});
+    s+=`<text x="${(x+bw/2).toFixed(1)}" y="${(yL(acc)-19).toFixed(1)}" text-anchor="middle"
+      font-family="IBM Plex Mono" font-size="12" font-weight="700" fill="#14181C">${f(acc/60)}시간</text>`;
     s+=`<text x="${(x+bw/2).toFixed(1)}" y="${(yL(acc)-7).toFixed(1)}" text-anchor="middle"
-      font-family="IBM Plex Mono" font-size="10.5" font-weight="600" fill="#4A545E">${f(acc)}</text>`;
+      font-family="IBM Plex Mono" font-size="10.5" font-weight="500" fill="#79838D">${f(acc)}분</text>`;
     s+=`<text x="${(x+bw/2).toFixed(1)}" y="${(T+ph+17).toFixed(1)}" text-anchor="middle"
       font-family="IBM Plex Mono" font-size="12" font-weight="600" fill="#14181C">${d.label}</text>`;
     s+=`<text x="${(x+bw/2).toFixed(1)}" y="${(T+ph+30).toFixed(1)}" text-anchor="middle"
@@ -274,10 +279,15 @@ function combo(items,opt){
   s+=`<polyline fill="none" stroke="#14181C" stroke-width="2.2" stroke-linejoin="round"
     points="${pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}"/>`;
   pts.forEach(p=>{
-    s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.2" fill="#fff"
-      stroke="#14181C" stroke-width="2"><title>${p[2].label} · ${f(p[2].cost)} THB</title></circle>`;
-    s+=`<text x="${p[0].toFixed(1)}" y="${(p[1]-11).toFixed(1)}" text-anchor="middle"
-      font-family="IBM Plex Mono" font-size="12" font-weight="700" fill="#14181C">${K(p[2].cost)}</text>`;});
+    s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.6" fill="#fff"
+      stroke="#14181C" stroke-width="2.2"><title>${p[2].label} · ${f(p[2].cost)} THB</title></circle>`;
+    const lab=f(p[2].cost)+' THB', bwid=lab.length*7.1+14, by=p[1]-25;
+    s+=`<rect x="${(p[0]-bwid/2).toFixed(1)}" y="${by.toFixed(1)}" width="${bwid.toFixed(1)}" height="18"
+      rx="2" fill="#14181C"/>`;
+    s+=`<rect x="${(p[0]-bwid/2).toFixed(1)}" y="${by.toFixed(1)}" width="${bwid.toFixed(1)}" height="18"
+      rx="2" fill="none" stroke="#14181C" stroke-width="0"/>`;
+    s+=`<text x="${p[0].toFixed(1)}" y="${(by+13).toFixed(1)}" text-anchor="middle"
+      font-family="IBM Plex Mono" font-size="11.5" font-weight="700" fill="#FFFFFF">${lab}</text>`;});
   return s+'</svg>';
 }
 
@@ -382,7 +392,8 @@ function renderMain(){
       : `${first.label} ${f(first.parts.reduce((a,b)=>a+b,0))}분 / ${K(first.cost)} → `
         +`${lastI.label} ${f(lastI.parts.reduce((a,b)=>a+b,0))}분 / ${K(lastI.cost)}. `
         +`시간 ${dm>=0?'+':''}${f(dm)}분, 비용 ${dc>=0?'+':''}${f(dc)} THB. `
-        +`막대와 선이 따로 움직이면 비싼 설비에서 로스가 났다는 뜻입니다.`);
+        +`같은 사건을 시간과 금액 두 단위로 잰 값입니다 (평균 ${f(DATA.rateAvg*60)} THB/시간). `
+        +`막대는 줄었는데 선이 안 내려가면 분당 단가가 비싼 설비에서 로스가 난 것입니다.`);
 }
 
 function renderCats(){
