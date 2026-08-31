@@ -1531,7 +1531,58 @@ function showTrendPointAnalysis(wk){
       <ul>${dl}</ul>
     </div>`;
   }).join('');
-  panel.innerHTML = `<div style="margin-bottom:8px;"><b>${wk}</b> (전주 ${pw} 대비) 계통별 상승/하강 원인 분석 — 로스유형 TOP3</div><div class="rep-grid">${cards}</div>`;
+  /* ----- ${wk} 워스트3 변동 + 개선 필요 사항 (기존 ACTION 매핑 재사용) ----- */
+  const curStat = mcStats(wk), prevStat = pw ? mcStats(pw) : {};
+  const curArr  = Object.values(curStat).filter(x=>x.cnt>=MIN_N);
+  const prevArr = Object.values(prevStat).filter(x=>x.cnt>=MIN_N);
+  const worstMttrCur  = curArr.slice().sort((a,b)=>b.mttr-a.mttr).slice(0,3);
+  const worstMttrPrev = new Set(prevArr.slice().sort((a,b)=>b.mttr-a.mttr).slice(0,3).map(x=>x.m));
+  const worstMtbfCur  = curArr.slice().sort((a,b)=>a.mtbf-b.mtbf).slice(0,3);
+  const worstMtbfPrev = new Set(prevArr.slice().sort((a,b)=>a.mtbf-b.mtbf).slice(0,3).map(x=>x.m));
+
+  const actionRows = [];
+  const seen = new Set();
+  const collect = (list, prevSet, kind) => {
+    list.forEach((x,i)=>{
+      const top = topCodes(x.rows, 2);
+      top.forEach(c=>{
+        const key = x.m+'|'+c.code;
+        if(seen.has(key)) return; seen.add(key);
+        const [prob, act, own, days] = actOf(c.code);
+        actionRows.push({ m:x.m, rank:i+1, kind:kind, isNew: !prevSet.has(x.m),
+          code:c.code, sub:c.s, h:c.h, n:c.n, prob:prob, act:act, own:own, days:days,
+          mttr:x.mttr, mtbf:x.mtbf, ratio: x.lossH? c.h/x.lossH*100 : 0 });
+      });
+    });
+  };
+  collect(worstMttrCur, worstMttrPrev, 'MTTR');
+  collect(worstMtbfCur, worstMtbfPrev, 'MTBF');
+
+  const actionHtml = actionRows.length ? `
+    <div style="overflow-x:auto; margin-top:10px;">
+    <table class="ppt-table"><thead><tr>
+      <th>순위</th><th>설비</th><th>구분</th><th>신규</th><th>주요 로스유형</th><th>손실</th><th>비중</th>
+      <th>문제점</th><th>개선사항</th><th>담당</th><th>표준일수</th>
+    </tr></thead><tbody>${actionRows.map(a=>`<tr>
+      <td>${a.rank}</td><td class="mc">DC${a.m}</td>
+      <td>${a.kind} ${a.kind==='MTTR'?fmt(a.mttr,2):fmt(a.mtbf,2)}h</td>
+      <td>${a.isNew?'<span class="rep-bad">신규</span>':''}</td>
+      <td class="ty" style="text-align:left">${a.code}<br><span style="font-size:10px;color:#8b96a3">${a.sub}</span></td>
+      <td>${fmt(a.h,1)}h / ${a.n}건</td><td>${fmt(a.ratio,0)}%</td>
+      <td class="ty" style="text-align:left;font-size:11px">${a.prob}</td>
+      <td class="ty" style="text-align:left;font-size:11px">${a.act}</td>
+      <td>${a.own}</td><td>${a.days}일</td>
+    </tr>`).join('')}</tbody></table></div>`
+    : `<div style="margin-top:10px;color:#8b96a3">${wk} 워스트 산정에 필요한 최소 로스건수(${MIN_N}건)를 채운 설비가 없습니다.</div>`;
+
+  const newEntrants = worstMttrCur.filter(x=>!worstMttrPrev.has(x.m)).map(x=>'DC'+x.m);
+  const dropped = [...worstMttrPrev].filter(m=>!worstMttrCur.some(x=>x.m===m)).map(m=>'DC'+m);
+  const flagLine = (newEntrants.length||dropped.length)
+    ? `<div style="margin-top:6px;font-size:12px;">MTTR 워스트3 변동 — ${newEntrants.length?`신규 진입 <b class="rep-bad">${newEntrants.join(', ')}</b>`:''}${(newEntrants.length&&dropped.length)?' · ':''}${dropped.length?`이탈 <b class="rep-good">${dropped.join(', ')}</b>`:''}</div>`
+    : `<div style="margin-top:6px;font-size:12px;color:#8b96a3">MTTR 워스트3 구성은 전주와 동일합니다.</div>`;
+
+  panel.innerHTML = `<div style="margin-bottom:8px;"><b>${wk}</b> (전주 ${pw} 대비) 계통별 상승/하강 원인 분석 — 로스유형 TOP3</div><div class="rep-grid">${cards}</div>`
+    + `<div style="margin-top:16px;padding-top:14px;border-top:1px solid #e8ecf1;"><b>${wk} 개선 필요 사항</b> — MTTR/MTBF 워스트3 설비의 주요 로스유형을 표준 개선과제로 매핑${flagLine}${actionHtml}</div>`;
 }
 
 document.querySelectorAll('#trendCatChips .cat-chip[data-cat]').forEach(btn=>{
