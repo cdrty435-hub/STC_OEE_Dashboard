@@ -35,29 +35,30 @@
       var(--bg);
     color:var(--text);
     font-family:var(--sans); -webkit-font-smoothing:antialiased;
+    font-weight:500;
   }
   .wrap{max-width:1400px; margin:0 auto; padding:32px 28px 70px;}
 
   header{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:20px;}
-  .title-block .eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.16em; color:var(--amber); text-transform:uppercase; margin-bottom:8px; font-weight:600;}
+  .title-block .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; color:var(--amber); text-transform:uppercase; margin-bottom:8px; font-weight:600;}
   .title-block h1{font-size:28px; margin:0; font-weight:800; letter-spacing:-.015em;}
   .title-block .sub{color:var(--text-dim); font-size:13px; margin-top:8px; line-height:1.6;}
   .header-right{display:flex; flex-direction:column; align-items:flex-end; gap:10px;}
-  .range-tag{font-family:var(--mono); font-size:11.5px; color:var(--text-dim); background:var(--panel-2); border:1px solid var(--border); padding:7px 13px; border-radius:7px; display:flex; align-items:center; gap:9px;}
+  .range-tag{font-family:var(--mono); font-size:12.5px; color:var(--text-dim); background:var(--panel-2); border:1px solid var(--border); padding:7px 13px; border-radius:7px; display:flex; align-items:center; gap:9px;}
   .refresh-btn{
-    font-family:var(--mono); font-size:11px; background:var(--amber); color:#1a1206; border:none;
+    font-family:var(--mono); font-size:12px; background:var(--amber); color:#1a1206; border:none;
     padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:700; letter-spacing:.02em;
   }
   .refresh-btn:hover{filter:brightness(1.08);}
   .live-dot{width:6px; height:6px; border-radius:50%; background:var(--teal); display:inline-block; box-shadow:0 0 8px var(--teal);}
 
   .status-strip{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:26px;}
-  .status-chip{font-family:var(--mono); font-size:10.5px; padding:4px 9px; border-radius:5px; border:1px solid var(--border); color:var(--text-faint); letter-spacing:.02em;}
+  .status-chip{font-family:var(--mono); font-size:11.5px; padding:4px 9px; border-radius:5px; border:1px solid var(--border); color:var(--text-faint); letter-spacing:.02em;}
   .status-chip.broken{color:#b91c1c; border-color:#f3c6c2; background:var(--red-soft);}
   .status-chip.missing{color:var(--text-faint); border-color:var(--border); background:var(--panel-2); text-decoration:line-through;}
 
   section{margin-bottom:22px;}
-  .section-label{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-faint); margin:0 0 10px 2px; display:flex; align-items:center; gap:10px;}
+  .section-label{font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-faint); margin:0 0 10px 2px; display:flex; align-items:center; gap:10px;}
   .section-label::after{content:""; flex:1; height:1px; background:var(--border-soft);}
 
   /* ---- HERO ---- */
@@ -68,11 +69,11 @@
   }
   .hero-head{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:18px;}
   .hero-head h2{font-size:18px; margin:0 0 4px; font-weight:800; letter-spacing:-.01em;}
-  .hero-head .desc{font-size:12.5px; color:var(--text-dim);}
+  .hero-head .desc{font-size:13.5px; color:var(--text-dim);}
 
   .week-chips{display:flex; gap:6px; flex-wrap:wrap; align-items:center;}
   .week-chip{
-    font-family:var(--mono); font-size:11.5px; padding:6px 11px; border-radius:16px;
+    font-family:var(--mono); font-size:12.5px; padding:6px 11px; border-radius:16px;
     border:1px solid var(--border); background:var(--panel-2); color:var(--text-dim); cursor:pointer;
     transition:all .12s ease; user-select:none;
   }
@@ -83,19 +84,19 @@
 
   .target-row{display:flex; gap:18px; flex-wrap:wrap; align-items:center; margin:16px 0 6px; padding:14px 16px; background:var(--panel-2); border:1px solid var(--border); border-radius:9px;}
   .target-field{display:flex; align-items:center; gap:8px;}
-  .target-field label{font-family:var(--mono); font-size:11.5px; color:var(--text-dim); white-space:nowrap;}
+  .target-field label{font-family:var(--mono); font-size:12.5px; color:var(--text-dim); white-space:nowrap;}
   .target-field .swatch{width:16px; height:0; border-top:2px dashed var(--target-color, var(--red)); display:inline-block;}
   .target-field input{
     width:76px; background:var(--bg); border:1px solid var(--border); color:var(--text);
     font-family:var(--mono); font-size:13px; padding:6px 8px; border-radius:6px;
   }
   .target-field input:focus{outline:none; border-color:var(--amber);}
-  .target-field .unit{font-family:var(--mono); font-size:11px; color:var(--text-faint);}
-  .target-clear{font-family:var(--mono); font-size:11px; color:var(--text-faint); background:none; border:1px solid var(--border); border-radius:6px; padding:5px 10px; cursor:pointer; margin-left:auto;}
+  .target-field .unit{font-family:var(--mono); font-size:12px; color:var(--text-faint);}
+  .target-clear{font-family:var(--mono); font-size:12px; color:var(--text-faint); background:none; border:1px solid var(--border); border-radius:6px; padding:5px 10px; cursor:pointer; margin-left:auto;}
   .target-clear:hover{color:var(--text); border-color:var(--text-faint);}
 
   .hero-canvas-wrap{margin-top:18px;}
-  .mini-title{font-family:var(--mono); font-size:11.5px; color:var(--text-dim); margin-bottom:8px; letter-spacing:.03em;}
+  .mini-title{font-family:var(--mono); font-size:12.5px; color:var(--text-dim); margin-bottom:8px; letter-spacing:.03em;}
 
   .analysis-panel{
     margin-top:22px; padding-top:20px; border-top:1px dashed var(--border);
@@ -103,25 +104,25 @@
   .analysis-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
   .analysis-head h3{font-size:15px; margin:0; font-weight:800;}
   .analysis-head .close-btn{
-    font-family:var(--mono); font-size:11px; color:var(--text-faint); background:none;
+    font-family:var(--mono); font-size:12px; color:var(--text-faint); background:none;
     border:1px solid var(--border); border-radius:6px; padding:4px 10px; cursor:pointer;
   }
   .analysis-head .close-btn:hover{color:var(--text); border-color:var(--text-faint);}
-  .analysis-stats{display:flex; gap:20px; flex-wrap:wrap; margin-bottom:16px; font-family:var(--mono); font-size:12px; color:var(--text-dim);}
+  .analysis-stats{display:flex; gap:20px; flex-wrap:wrap; margin-bottom:16px; font-family:var(--mono); font-size:13px; color:var(--text-dim);}
   .analysis-stats b{color:var(--text); font-size:14px;}
   .analysis-grid{display:grid; grid-template-columns:1fr 1.3fr; gap:16px;}
   @media (max-width:900px){ .analysis-grid{grid-template-columns:1fr;} }
 
   .cause-list{list-style:none; margin:0; padding:0;}
-  .cause-list li{display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-radius:7px; font-size:12.5px;}
+  .cause-list li{display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-radius:7px; font-size:13.5px;}
   .cause-list li:nth-child(odd){background:var(--panel-2);}
   .cause-list .cause-name{color:var(--text);}
   .cause-list .cause-val{font-family:var(--mono); color:var(--text-dim);}
   .cause-bar{height:5px; border-radius:3px; background:var(--amber); margin-top:4px;}
 
   .swot-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-  .swot-cell{border-radius:9px; padding:12px 14px; font-size:12px; line-height:1.6;}
-  .swot-cell .swot-label{font-family:var(--mono); font-size:10.5px; font-weight:800; letter-spacing:.06em; margin-bottom:6px; display:block;}
+  .swot-cell{border-radius:9px; padding:12px 14px; font-size:13px; line-height:1.6;}
+  .swot-cell .swot-label{font-family:var(--mono); font-size:11.5px; font-weight:800; letter-spacing:.06em; margin-bottom:6px; display:block;}
   .swot-cell ul{margin:0; padding-left:16px;}
   .swot-s{background:var(--teal-soft); border:1px solid #bfe9d6;}
   .swot-s .swot-label{color:#0f9d68;}
@@ -137,21 +138,21 @@
   .kpi-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:16px;}
   .kpi{background:var(--panel); border:1px solid var(--border); border-radius:11px; padding:16px 18px; position:relative; overflow:hidden;}
   .kpi::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--kpi-accent, var(--amber));}
-  .kpi .label{font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--text-faint); font-family:var(--mono); font-weight:600;}
+  .kpi .label{font-size:11.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--text-faint); font-family:var(--mono); font-weight:600;}
   .kpi .value{font-family:var(--mono); font-size:26px; font-weight:800; margin-top:7px; letter-spacing:-0.02em;}
   .kpi .unit{font-size:13px; color:var(--text-dim); margin-left:3px; font-weight:400;}
-  .kpi .delta{font-size:10.5px; color:var(--text-faint); margin-top:5px; font-family:var(--mono);}
+  .kpi .delta{font-size:11.5px; color:var(--text-faint); margin-top:5px; font-family:var(--mono);}
 
   /* ---- filters / panels ---- */
   .filters{display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:13px 16px;}
-  .filters label{font-size:11.5px; color:var(--text-dim); margin-right:6px; font-family:var(--mono);}
+  .filters label{font-size:12.5px; color:var(--text-dim); margin-right:6px; font-family:var(--mono);}
   .filters input[type=date]{
     background:var(--panel-2); border:1px solid var(--border); color:var(--text);
-    font-family:var(--mono); font-size:12.5px; padding:6px 9px; border-radius:6px;
+    font-family:var(--mono); font-size:13.5px; padding:6px 9px; border-radius:6px;
   }
   .cat-btns{display:flex; gap:6px; margin-left:auto;}
   .cat-btn{
-    font-family:var(--mono); font-size:11.5px; padding:6px 13px; border-radius:18px;
+    font-family:var(--mono); font-size:12.5px; padding:6px 13px; border-radius:18px;
     border:1px solid var(--border); background:transparent; color:var(--text-dim); cursor:pointer;
     transition:all .12s ease;
   }
@@ -160,10 +161,10 @@
 
   .cat-chips{display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;}
   .stdbar{display:flex; gap:12px; flex-wrap:wrap; align-items:center; padding:9px 13px;
-     background:#fff8ec; border:1px solid #f0d9b5; border-radius:10px; margin-bottom:10px; font-size:12px;}
-  .stdbar .lb{color:#8b6b3d; font-weight:700; font-size:11px;}
+     background:#fff8ec; border:1px solid #f0d9b5; border-radius:10px; margin-bottom:10px; font-size:13px;}
+  .stdbar .lb{color:#8b6b3d; font-weight:700; font-size:12px;}
   .stdbar label{display:flex; align-items:center; gap:5px; cursor:pointer; color:#33404f;}
-  .stdbar input[type=number]{border:1px solid #e0cba8; border-radius:6px; padding:4px 7px; font-size:12px;}
+  .stdbar input[type=number]{border:1px solid #e0cba8; border-radius:6px; padding:4px 7px; font-size:13px;}
   .layout{display:flex; gap:18px; align-items:flex-start;}
   .panes{flex:1 1 auto; min-width:0;}
   .tabbar{display:flex; flex-direction:column; gap:3px; padding:8px;
@@ -173,7 +174,7 @@
           border:0; background:transparent; color:#33404f; font-size:13px; font-weight:600;
           padding:10px 12px; border-radius:9px; cursor:pointer; white-space:nowrap;}
   .tabbtn .no{flex:0 0 20px; height:20px; line-height:20px; text-align:center; border-radius:6px;
-          background:#d7dee7; color:#33404f; font-size:11px; font-weight:800;}
+          background:#d7dee7; color:#33404f; font-size:12px; font-weight:800;}
   .tabbtn .tx{flex:1 1 auto; overflow:hidden; text-overflow:ellipsis;}
   .tabbtn:hover{background:#e2e8ef;}
   .tabbtn.active{background:#1f3864; color:#fff; box-shadow:0 1px 4px rgba(31,56,100,.25);}
@@ -187,32 +188,32 @@
   .rep-charts{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px;}
   @media(max-width:900px){ .rep-charts{grid-template-columns:1fr;} }
   .rep-chart-box{border:1px solid #e6ebf1; border-radius:10px; padding:10px 12px 6px; background:#fff;}
-  .rep-chart-box h4{margin:0 0 6px; font-size:12px; color:#33404f; font-weight:700;}
+  .rep-chart-box h4{margin:0 0 6px; font-size:13px; color:#33404f; font-weight:700;}
   .cost-table td.over{background:#ffe2de; color:#c00000; font-weight:700;}
   .cost-table td.zero{color:#c8d2dd;}
   .rate-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px; margin-top:10px;}
-  .rate-grid div{display:flex; align-items:center; gap:5px; font-size:11px;}
-  .rate-grid input{width:70px; border:1px solid #d8dfe7; border-radius:6px; padding:4px 6px; font-size:11px;}
+  .rate-grid div{display:flex; align-items:center; gap:5px; font-size:12px;}
+  .rate-grid input{width:70px; border:1px solid #d8dfe7; border-radius:6px; padding:4px 6px; font-size:12px;}
   .grade-badge{display:inline-block; min-width:26px; text-align:center; padding:2px 8px;
-       border-radius:6px; color:#fff; font-weight:800; font-size:12px;}
+       border-radius:6px; color:#fff; font-weight:800; font-size:13px;}
   .g-A{background:#1d7d60} .g-B{background:#63be7b} .g-C{background:#e8a33d}
   .g-D{background:#ed7d31} .g-E{background:#c00000}
   .grade-kpi{display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin:14px 0;}
   .gk{border:1px solid #e6ebf1; border-radius:10px; padding:10px 12px; text-align:center; background:#fff;}
   .gk .n{font-size:26px; font-weight:800; font-family:'SFMono-Regular',Consolas,monospace;}
-  .gk .l{font-size:11px; color:#5a6674; margin-top:2px;}
+  .gk .l{font-size:12px; color:#5a6674; margin-top:2px;}
   .crit{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; padding:12px;
         border:1px dashed #cbd5df; border-radius:10px; background:#fafbfc; margin-top:10px; display:none;}
   .crit.open{display:flex;}
-  .crit label{display:block; font-size:11px; color:#5a6674; margin-bottom:3px;}
-  .crit input{width:74px; border:1px solid #d8dfe7; border-radius:7px; padding:6px 8px; font-size:12px;}
+  .crit label{display:block; font-size:12px; color:#5a6674; margin-bottom:3px;}
+  .crit input{width:74px; border:1px solid #d8dfe7; border-radius:7px; padding:6px 8px; font-size:13px;}
   .pm-row{background:#fff6f4 !important;}
   .rep-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-top:12px;}
   .rep-card{border:1px solid #e6ebf1; border-radius:10px; padding:12px 14px; background:#fff;}
-  .rep-card .rk{font-size:11px; font-weight:700; color:#5a6674; letter-spacing:.04em;}
+  .rep-card .rk{font-size:12px; font-weight:700; color:#5a6674; letter-spacing:.04em;}
   .rep-card .mc{font-size:17px; font-weight:800; color:#1f3864; margin:2px 0 6px;}
   .rep-card .val{font-family:'SFMono-Regular',Consolas,monospace; font-size:13px; margin-bottom:8px;}
-  .rep-card ul{margin:0; padding-left:16px; font-size:12px; line-height:1.35; color:#4a5765;}
+  .rep-card ul{margin:0; padding-left:16px; font-size:13px; line-height:1.35; color:#4a5765;}
   .rep-card ul li{margin-bottom:3px;}
   .rep-card ul li:last-child{margin-bottom:0;}
   .rep-bad{color:#c00000; font-weight:700;} .rep-good{color:#1d7d60; font-weight:700;}
@@ -221,10 +222,10 @@
   .ai-cfg{display:none; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-top:10px;
           padding:12px; border:1px dashed #cbd5df; border-radius:10px; background:#fafbfc;}
   .ai-cfg.open{display:flex;}
-  .ai-cfg label{display:block; font-size:11px; color:#5a6674; margin-bottom:3px;}
-  .ai-cfg input,.ai-cfg select{border:1px solid #d8dfe7; border-radius:7px; padding:6px 9px; font-size:12px;}
-  .ai-warn{font-size:11px; color:#c00000; width:100%;}
-  .ppt-table{width:100%; border-collapse:collapse; font-family:'SFMono-Regular',Consolas,monospace; font-size:12px;}
+  .ai-cfg label{display:block; font-size:12px; color:#5a6674; margin-bottom:3px;}
+  .ai-cfg input,.ai-cfg select{border:1px solid #d8dfe7; border-radius:7px; padding:6px 9px; font-size:13px;}
+  .ai-warn{font-size:12px; color:#c00000; width:100%;}
+  .ppt-table{width:100%; border-collapse:collapse; font-family:'SFMono-Regular',Consolas,monospace; font-size:13px;}
   .ppt-table th{background:#1f3864; color:#fff; padding:7px 6px; text-align:center; font-weight:700; white-space:nowrap; position:sticky; top:0;}
   .ppt-table td{padding:5px 6px; text-align:right; border-bottom:1px solid #e6ebf1; white-space:nowrap;}
   .ppt-table td.mc{text-align:left; font-weight:700; color:#1f3864;}
@@ -234,7 +235,7 @@
   .ppt-table tfoot td{background:#c6e0b4; font-weight:700; border-top:2px solid #1f3864;}
   .ppt-table td.warn{color:#c00000; font-weight:700;}
   .cat-chip{
-    font-family:var(--mono); font-size:11.5px; padding:6px 13px; border-radius:18px;
+    font-family:var(--mono); font-size:12.5px; padding:6px 13px; border-radius:18px;
     border:1px solid var(--border); background:var(--panel-2); color:var(--text-dim); cursor:pointer;
     transition:all .12s ease;
   }
@@ -243,13 +244,13 @@
 
   .panel{background:var(--panel); border:1px solid var(--border); border-radius:11px; padding:18px 20px;}
   .panel h2{font-size:13.5px; margin:0 0 2px; font-weight:700;}
-  .panel .desc{font-size:11.5px; color:var(--text-dim); margin-bottom:14px;}
+  .panel .desc{font-size:12.5px; color:var(--text-dim); margin-bottom:14px;}
   .row-2{display:grid; grid-template-columns:1.3fr 1fr; gap:14px;}
   .hero-split{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
   @media (max-width:900px){ .hero-split{grid-template-columns:1fr;} }
   canvas{max-width:100%;}
 
-  .legend-note{display:flex; gap:16px; flex-wrap:wrap; font-size:11px; color:var(--text-dim); margin-top:12px; font-family:var(--mono);}
+  .legend-note{display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:var(--text-dim); margin-top:12px; font-family:var(--mono);}
   .legend-note span{display:inline-flex; align-items:center; gap:5px;}
   .dot{width:8px; height:8px; border-radius:2px; display:inline-block;}
 
@@ -266,11 +267,11 @@
 
   #errorBanner{
     display:none; background:var(--red-soft); border:1px solid #f3c6c2; color:#a3241c;
-    font-family:var(--mono); font-size:12px; padding:12px 16px; border-radius:8px; margin-bottom:18px; line-height:1.6;
+    font-family:var(--mono); font-size:13px; padding:12px 16px; border-radius:8px; margin-bottom:18px; line-height:1.6;
   }
   #errorBanner a{color:#a3241c;}
 
-  footer{margin-top:34px; padding-top:18px; border-top:1px solid var(--border); font-size:11px; color:var(--text-faint); font-family:var(--mono); line-height:1.8;}
+  footer{margin-top:34px; padding-top:18px; border-top:1px solid var(--border); font-size:12px; color:var(--text-faint); font-family:var(--mono); line-height:1.8;}
 
   @media (max-width:900px){
     .kpi-grid{grid-template-columns:repeat(2,1fr);}
@@ -279,20 +280,20 @@
   }
   .cost-cats{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;
              border:1px solid #d8dfe7;border-radius:9px;padding:4px 8px;background:#fff;}
-  .cost-cats .cc-label{font-size:11px;color:#5a6674;font-weight:700;margin-right:2px;}
-  .cc-chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;cursor:pointer;
+  .cost-cats .cc-label{font-size:12px;color:#5a6674;font-weight:700;margin-right:2px;}
+  .cc-chip{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;cursor:pointer;
            border:1px solid #e2e7ec;border-radius:13px;padding:3px 9px;background:#fafbfc;user-select:none;}
   .cc-chip:hover{border-color:#b9c2cb;}
   .cc-chip input{margin:0;cursor:pointer;}
   .cc-chip.on{background:#fff3e2;border-color:#e8a33d;color:#8a5a10;font-weight:700;}
   .cc-chip.cc-udt.on{background:#fdeceb;border-color:#e2564d;color:#a3241c;}
-  .cc-btn{padding:3px 9px;font-size:11px;}
+  .cc-btn{padding:3px 9px;font-size:12px;}
   .mtbf-basis{display:inline-flex;align-items:center;gap:5px;border:1px solid #d8dfe7;
               border-radius:9px;padding:3px 8px;background:#fff;margin-right:6px;}
-  .mtbf-basis .mb-label{font-size:11px;color:#5a6674;font-weight:700;}
-  .mtbf-basis .mb-unit{font-size:11px;color:#5a6674;}
-  .mtbf-basis select{border:1px solid #d8dfe7;border-radius:7px;padding:4px 7px;font-size:11.5px;}
-  .mtbf-basis input{width:62px;border:1px solid #d8dfe7;border-radius:7px;padding:4px 6px;font-size:11.5px;}
+  .mtbf-basis .mb-label{font-size:12px;color:#5a6674;font-weight:700;}
+  .mtbf-basis .mb-unit{font-size:12px;color:#5a6674;}
+  .mtbf-basis select{border:1px solid #d8dfe7;border-radius:7px;padding:4px 7px;font-size:12.5px;}
+  .mtbf-basis input{width:62px;border:1px solid #d8dfe7;border-radius:7px;padding:4px 6px;font-size:12.5px;}
   .mtbf-basis input:disabled{background:#f2f4f6;color:#aab2bb;}
 </style>
 </head>
@@ -446,19 +447,19 @@
         </div>
         <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
           <div class="cat-chips" id="trendMetricChips">
-            <span style="font-size:11px; color:#5a6674; align-self:center; margin-right:4px;">지표</span>
+            <span style="font-size:12px; color:#5a6674; align-self:center; margin-right:4px;">지표</span>
             <button class="cat-chip active" data-metric="MTTR">MTTR</button>
             <button class="cat-chip" data-metric="MTBF">MTBF</button>
             <button class="cat-chip" data-metric="BOTH">MTTR+MTBF</button>
-            <span style="font-size:11px; color:#5a6674; align-self:center; margin:0 4px 0 10px;">배경</span>
-            <select id="trendBg" style="border:1px solid #d8dfe7;border-radius:7px;padding:5px 8px;font-size:12px;">
+            <span style="font-size:12px; color:#5a6674; align-self:center; margin:0 4px 0 10px;">배경</span>
+            <select id="trendBg" style="border:1px solid #d8dfe7;border-radius:7px;padding:5px 8px;font-size:13px;">
               <option value="avail">가동률 (%)</option>
               <option value="cost">손실비용 (THB)</option>
               <option value="none">없음</option>
             </select>
           </div>
           <div class="cat-chips" id="trendCatChips">
-            <span style="font-size:11px; color:#5a6674; align-self:center; margin-right:4px;">계통(복수선택)</span>
+            <span style="font-size:12px; color:#5a6674; align-self:center; margin-right:4px;">계통(복수선택)</span>
             <button class="cat-chip active" data-cat="ALL">전체</button>
             <button class="cat-chip" data-cat="금형">금형</button>
             <button class="cat-chip" data-cat="설비-전기">설비-전기</button>
@@ -490,7 +491,7 @@
           <div class="desc">선택 주차의 워스트 설비와 전주 대비 로스유형 변동을 분석합니다 · AI 키를 넣으면 서술형 소견이 추가됩니다</div>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
-          <select id="repWeek" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:12px;"></select>
+          <select id="repWeek" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:13px;"></select>
           <button class="cat-chip" id="repAiToggle">AI 설정</button>
           <button class="cat-chip active" id="repRun">리포트 생성</button>
         </div>
@@ -623,7 +624,7 @@
           <div class="desc">1개월 단위 재산출 · 가동률 + MTBF + MTTR 가중 점수 → A~E 5등급 · D·E 등급은 PM 우선 대상</div>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
-          <select id="gradeMonth" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:12px;"></select>
+          <select id="gradeMonth" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:13px;"></select>
           <button class="cat-chip" id="gradeCritToggle">기준 설정</button>
           <button class="cat-chip active" id="gradeRun">등급 재산출</button>
         </div>
@@ -644,7 +645,7 @@
         <div><label>C이상</label><input type="number" id="gC" value="55" step="1"></div>
         <div><label>D이상</label><input type="number" id="gD" value="40" step="1"></div>
         <div><button class="cat-chip" id="gradeSave">저장 및 재산출</button></div>
-        <div style="width:100%; font-size:11px; color:#5a6674;">
+        <div style="width:100%; font-size:12px; color:#5a6674;">
           MTBF·MTTR 점수는 상단 [목표 MTBF/MTTR] 값을 기준으로 환산합니다(미입력 시 MTBF 3.0 / MTTR 1.0 기본).
           D 미만은 자동으로 E등급입니다.</div>
       </div>
@@ -670,8 +671,8 @@
           <div class="desc">등급 워스트 3 + MTTR 워스트 3 + MTBF 워스트 3 → 중복 제거 후 로스유형별 개선과제를 자동 편성합니다 (1개월 실행 기준)</div>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
-          <label style="font-size:11px;color:#5a6674">착수일
-            <input type="date" id="pmStart" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:12px;margin-left:4px;">
+          <label style="font-size:12px;color:#5a6674">착수일
+            <input type="date" id="pmStart" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:13px;margin-left:4px;">
           </label>
           <button class="cat-chip" id="pmBuild">계획 생성</button>
           <button class="cat-chip active" id="pmCsv">간트용 CSV 내보내기</button>
@@ -696,11 +697,11 @@
           <div class="desc">비가동 시간 × 설비별 M/C Rate(THB/분) = 손실비용 · 주차별 자동 집계 · 목표 초과 시 붉게 표시</div>
         </div>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          <label style="font-size:11px;color:#5a6674">기간
-            <input type="date" id="costStart" style="border:1px solid #d8dfe7;border-radius:7px;padding:5px 7px;font-size:12px;margin-left:4px;">
-            ~ <input type="date" id="costEnd" style="border:1px solid #d8dfe7;border-radius:7px;padding:5px 7px;font-size:12px;"></label>
+          <label style="font-size:12px;color:#5a6674">기간
+            <input type="date" id="costStart" style="border:1px solid #d8dfe7;border-radius:7px;padding:5px 7px;font-size:13px;margin-left:4px;">
+            ~ <input type="date" id="costEnd" style="border:1px solid #d8dfe7;border-radius:7px;padding:5px 7px;font-size:13px;"></label>
           <button class="cat-chip" id="costRangeReset">전체기간</button>
-          <select id="costPeriod" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:12px;">
+          <select id="costPeriod" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:13px;">
             <option value="iso">주간 · ISO주차 (F-COST 기준)</option>
             <option value="sheet">주간 · 시트 주차(W27~)</option>
             <option value="month">월간</option>
@@ -716,9 +717,9 @@
             <button type="button" class="cat-chip cc-btn" id="ccEq">설비만</button>
             <label class="cc-chip cc-udt"><input type="checkbox" id="ccUdt">계획외 고장(UDT)만</label>
           </span>
-          <label style="font-size:11px;color:#5a6674">목표
-            <input type="number" id="costTarget" value="60000" step="1000" style="width:88px;border:1px solid #d8dfe7;border-radius:7px;padding:6px 8px;font-size:12px;margin-left:4px;"> THB</label>
-          <select id="costScope" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:12px;">
+          <label style="font-size:12px;color:#5a6674">목표
+            <input type="number" id="costTarget" value="60000" step="1000" style="width:88px;border:1px solid #d8dfe7;border-radius:7px;padding:6px 8px;font-size:13px;margin-left:4px;"> THB</label>
+          <select id="costScope" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:13px;">
             <option value="mcweek">설비 × 기간</option>
             <option value="allweek">전사 × 기간</option>
           </select>
@@ -728,7 +729,7 @@
       </div>
 
       <div class="crit" id="ratePanel">
-        <div style="width:100%; font-size:11px; color:#8b6b3d; font-weight:700;">설비별 M/C Rate (THB/분) — 수정 시 자동 저장·재계산</div>
+        <div style="width:100%; font-size:12px; color:#8b6b3d; font-weight:700;">설비별 M/C Rate (THB/분) — 수정 시 자동 저장·재계산</div>
         <div class="rate-grid" id="rateGrid" style="width:100%"></div>
       </div>
 
@@ -1399,11 +1400,11 @@ function renderTrend(){
   if(bgMode==='avail') ds.push({ type:'bar', label:'가동률 (%)', data: base.map(r=>r.avail),
     yAxisID:'y2', backgroundColor:'#c8d2dd55', borderWidth:0, order:9,
     datalabels:{ anchor:'start', align:'top', offset:2, color:'#7b8794',
-      font:{size:10,weight:'700'}, formatter:v=>v?v.toFixed(1)+'%':'' } });
+      font:{size:11,weight:'700'}, formatter:v=>v?v.toFixed(1)+'%':'' } });
   else if(bgMode==='cost') ds.push({ type:'bar', label:'손실비용 (THB)', data: base.map(r=>r.cost),
     yAxisID:'y3', backgroundColor:'#e8a33d33', borderWidth:0, order:9,
     datalabels:{ anchor:'start', align:'top', offset:2, color:'#b9791f',
-      font:{size:10,weight:'700'}, formatter:v=>v?Math.round(v/1000)+'k':'' } });
+      font:{size:11,weight:'700'}, formatter:v=>v?Math.round(v/1000)+'k':'' } });
   const lbl = c => (c==='ALL' ? '전체' : c);
   cats.forEach(c=>{
     const rows = statsByCat[c], col = CAT_COLOR[c];
@@ -1412,7 +1413,7 @@ function renderTrend(){
       borderColor:col, backgroundColor:col, borderWidth:3, tension:.25,
       pointRadius:4, pointHoverRadius:7, order:1,
       datalabels:{align:'top', anchor:'end', color:col,
-        font:{size: multi?10:11, weight:'700'}, formatter:v=>v?v.toFixed(2):''}
+        font:{size: multi?11:12, weight:'700'}, formatter:v=>v?v.toFixed(2):''}
     });
     if(showMtbf) ds.push({
       type:'line', label:`${lbl(c)} MTBF`, data: rows.map(r=>r.mtbf), yAxisID:'y1',
@@ -1420,7 +1421,7 @@ function renderTrend(){
       borderDash: (trendMetric==='BOTH' ? [6,4] : []),
       pointRadius:4, pointStyle:(trendMetric==='BOTH'?'rectRot':'circle'), pointHoverRadius:7, order:2,
       datalabels:{align:'bottom', anchor:'start', color:col,
-        font:{size: multi?10:11, weight:'700'}, formatter:v=>v?v.toFixed(2):''}
+        font:{size: multi?11:12, weight:'700'}, formatter:v=>v?v.toFixed(2):''}
     });
   });
   if(showMttr && targetMTTR !== null && !isNaN(targetMTTR)) ds.push({
@@ -1445,7 +1446,7 @@ function renderTrend(){
       },
       onHover:(evt, elements)=>{ evt.native.target.style.cursor = (elements&&elements.length) ? 'pointer' : 'default'; },
       plugins:{
-        legend:{ position:'top', labels:{ boxWidth:12, font:{size:12}, usePointStyle:true } },
+        legend:{ position:'top', labels:{ boxWidth:12, font:{size:13}, usePointStyle:true } },
         tooltip:{ callbacks:{ afterBody:(items)=>{
           const i = items[0].dataIndex, r = base[i];
           return [`기간 ${r.from.slice(5)}~${r.to.slice(5)}`,
@@ -1477,7 +1478,7 @@ function renderTrend(){
     if(prev===undefined||prev===null||prev===0) return '';
     const d=cur-prev; if(Math.abs(d)<0.005) return '';
     const good = goodIsUp ? d>0 : d<0;
-    return ` <span style="color:${good?'#1d7d60':'#c00000'};font-size:10px">${d>0?'▲':'▼'}${Math.abs(d).toFixed(2)}</span>`;
+    return ` <span style="color:${good?'#1d7d60':'#c00000'};font-size:11px">${d>0?'▲':'▼'}${Math.abs(d).toFixed(2)}</span>`;
   };
   document.querySelector('#trendTable tbody').innerHTML = base.map((r,i)=>{
     let tds = `<td class="mc">${r.w}</td><td class="ty">${r.from.slice(5)}~${r.to.slice(5)}</td>`
@@ -1570,10 +1571,10 @@ function showTrendPointAnalysis(wk){
       <td>${a.rank}</td><td class="mc">DC${a.m}</td>
       <td>${a.kind} ${a.kind==='MTTR'?fmt(a.mttr,2):fmt(a.mtbf,2)}h</td>
       <td>${a.isNew?'<span class="rep-bad">신규</span>':''}</td>
-      <td class="ty" style="text-align:left">${a.code}<br><span style="font-size:10px;color:#5a6674">${a.sub}</span></td>
+      <td class="ty" style="text-align:left">${a.code}<br><span style="font-size:11px;color:#5a6674">${a.sub}</span></td>
       <td>${fmt(a.h,1)}h / ${a.n}건</td><td>${fmt(a.ratio,0)}%</td>
-      <td class="ty" style="text-align:left;font-size:11px">${a.prob}</td>
-      <td class="ty" style="text-align:left;font-size:11px">${a.act}</td>
+      <td class="ty" style="text-align:left;font-size:12px">${a.prob}</td>
+      <td class="ty" style="text-align:left;font-size:12px">${a.act}</td>
       <td>${a.own}</td><td>${a.days}일</td>
     </tr>`).join('')}</tbody></table></div>`
     : `<div style="margin-top:10px;color:#5a6674">${wk} 워스트 산정에 필요한 최소 로스건수(${MIN_N}건)를 채운 설비가 없습니다.</div>`;
@@ -1581,12 +1582,12 @@ function showTrendPointAnalysis(wk){
   const newEntrants = worstMttrCur.filter(x=>!worstMttrPrev.has(x.m)).map(x=>'DC'+x.m);
   const dropped = [...worstMttrPrev].filter(m=>!worstMttrCur.some(x=>x.m===m)).map(m=>'DC'+m);
   const flagLine = (newEntrants.length||dropped.length)
-    ? `<div style="margin-top:6px;font-size:12px;">MTTR 워스트3 변동 — ${newEntrants.length?`신규 진입 <b class="rep-bad">${newEntrants.join(', ')}</b>`:''}${(newEntrants.length&&dropped.length)?' · ':''}${dropped.length?`이탈 <b class="rep-good">${dropped.join(', ')}</b>`:''}</div>`
-    : `<div style="margin-top:6px;font-size:12px;color:#5a6674">MTTR 워스트3 구성은 전주와 동일합니다.</div>`;
+    ? `<div style="margin-top:6px;font-size:13px;">MTTR 워스트3 변동 — ${newEntrants.length?`신규 진입 <b class="rep-bad">${newEntrants.join(', ')}</b>`:''}${(newEntrants.length&&dropped.length)?' · ':''}${dropped.length?`이탈 <b class="rep-good">${dropped.join(', ')}</b>`:''}</div>`
+    : `<div style="margin-top:6px;font-size:13px;color:#5a6674">MTTR 워스트3 구성은 전주와 동일합니다.</div>`;
 
   const nextWk = 'W' + (weekNum(wk) + 1);
   panel.innerHTML = `<div style="margin-bottom:8px;"><b>${wk}</b> (전주 ${pw} 대비) 계통별 상승/하강 원인 분석 — 로스유형 TOP3</div><div class="rep-grid">${cards}</div>`
-    + `<div style="margin-top:16px;padding-top:14px;border-top:1px solid #e8ecf1;"><b>${nextWk} 개선 필요 사항</b> <span style="color:#5a6674;font-size:12px">(${wk} 실적 기준 — MTTR/MTBF 워스트3의 주요 로스유형을 표준 개선과제로 매핑)</span>${flagLine}${actionHtml}</div>`;
+    + `<div style="margin-top:16px;padding-top:14px;border-top:1px solid #e8ecf1;"><b>${nextWk} 개선 필요 사항</b> <span style="color:#5a6674;font-size:13px">(${wk} 실적 기준 — MTTR/MTBF 워스트3의 주요 로스유형을 표준 개선과제로 매핑)</span>${flagLine}${actionHtml}</div>`;
 }
 
 document.querySelectorAll('#trendCatChips .cat-chip[data-cat]').forEach(btn=>{
@@ -1884,10 +1885,10 @@ function renderReportCharts(wk, pw, wMttr, wMtbf, prev, deltas){
           backgroundColor: key==='mttr' ? '#e8a33d' : '#2fb18a', borderRadius:4 }
       ]},
     options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
-      plugins:{ legend:{ labels:{boxWidth:11, font:{size:11}} },
-        datalabels:{ anchor:'end', align:'right', color:'#33404f', font:{size:11,weight:'700'},
+      plugins:{ legend:{ labels:{boxWidth:11, font:{size:12}} },
+        datalabels:{ anchor:'end', align:'right', color:'#33404f', font:{size:12,weight:'700'},
                      formatter:v=>v?v.toFixed(2):'' } },
-      scales:{ x:{ beginAtZero:true, title:{display:true,text:label, font:{size:11}} },
+      scales:{ x:{ beginAtZero:true, title:{display:true,text:label, font:{size:12}} },
                y:{ grid:{display:false} } } }
   });
   repMttrChart = mk(repMttrChart,'repMttrChart', pairBar('repMttrChart', wMttr, 'mttr','MTTR (h/건)'));
@@ -1906,9 +1907,9 @@ function renderReportCharts(wk, pw, wMttr, wMtbf, prev, deltas){
         datalabels:{ anchor:(c)=> c.dataset.data[c.dataIndex]>0?'end':'start',
                      align:(c)=> c.dataset.data[c.dataIndex]>0?'right':'left',
                      color:(c)=> c.dataset.data[c.dataIndex]>0?'#c00000':'#1d7d60',
-                     font:{size:11,weight:'700'}, formatter:v=>(v>0?'+':'')+v.toFixed(1) } },
-      scales:{ x:{ title:{display:true,text:'증감 (h)', font:{size:11}}, grid:{color:'#eef2f6'} },
-               y:{ grid:{display:false}, ticks:{font:{size:11}} } } }
+                     font:{size:12,weight:'700'}, formatter:v=>(v>0?'+':'')+v.toFixed(1) } },
+      scales:{ x:{ title:{display:true,text:'증감 (h)', font:{size:12}}, grid:{color:'#eef2f6'} },
+               y:{ grid:{display:false}, ticks:{font:{size:12}} } } }
   });
 
   const mcs = [...new Set(wMttr.concat(wMtbf).map(x=>x.m))].slice(0,5);
@@ -1921,11 +1922,11 @@ function renderReportCharts(wk, pw, wMttr, wMtbf, prev, deltas){
           return L.length ? L.reduce((a,x)=>a+x.l,0)/60/L.length : null; }),
         borderColor:pal[i], backgroundColor:pal[i], borderWidth:2.5, tension:.25,
         pointRadius:3, spanGaps:true,
-        datalabels:{ align:'top', anchor:'end', color:pal[i], font:{size:10,weight:'700'},
+        datalabels:{ align:'top', anchor:'end', color:pal[i], font:{size:11,weight:'700'},
           formatter:v=> v==null?'':v.toFixed(2) } })) },
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{boxWidth:11, font:{size:11}, usePointStyle:true} } },
-      scales:{ y:{ beginAtZero:true, title:{display:true,text:'MTTR (h/건)', font:{size:11}} } } }
+      plugins:{ legend:{ labels:{boxWidth:11, font:{size:12}, usePointStyle:true} } },
+      scales:{ y:{ beginAtZero:true, title:{display:true,text:'MTTR (h/건)', font:{size:12}} } } }
   });
 
   const gs = ['금형','설비-전기','설비-라인','관리'];
@@ -1935,10 +1936,10 @@ function renderReportCharts(wk, pw, wMttr, wMtbf, prev, deltas){
       datasets: gs.map(g=>({ label:g, backgroundColor:CAT_C[g], borderRadius:3,
         data: mcs.map(m=> LOSS.filter(r=>r.w===wk&&r.m===m&&r.s===g).reduce((a,x)=>a+x.l,0)/60) })) },
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{boxWidth:11, font:{size:11}} },
-        datalabels:{ color:'#fff', font:{size:10,weight:'700'}, formatter:v=> v>3 ? v.toFixed(0) : '' } },
+      plugins:{ legend:{ labels:{boxWidth:11, font:{size:12}} },
+        datalabels:{ color:'#fff', font:{size:11,weight:'700'}, formatter:v=> v>3 ? v.toFixed(0) : '' } },
       scales:{ x:{ stacked:true, grid:{display:false} },
-               y:{ stacked:true, beginAtZero:true, title:{display:true,text:'로스시간 (h)', font:{size:11}} } } }
+               y:{ stacked:true, beginAtZero:true, title:{display:true,text:'로스시간 (h)', font:{size:12}} } } }
   });
 }
 
@@ -2055,10 +2056,10 @@ function renderGrade(){
         tooltip:{ callbacks:{ label:(t)=>{ const x=srt[t.dataIndex];
           return [`총점 ${x.tot.toFixed(1)} · ${x.g}등급`,
                   `가동률 ${x.avail.toFixed(1)}% / MTBF ${x.mtbf.toFixed(2)} / MTTR ${x.mttr.toFixed(2)}`]; } } },
-        datalabels:{ anchor:'end', align:'top', color:'#33404f', font:{size:10,weight:'700'},
+        datalabels:{ anchor:'end', align:'top', color:'#33404f', font:{size:11,weight:'700'},
                      formatter:v=>v.toFixed(0) } },
-      scales:{ y:{ beginAtZero:true, max:100, title:{display:true,text:'총점', font:{size:11}} },
-               x:{ grid:{display:false}, ticks:{font:{size:11}} } } }
+      scales:{ y:{ beginAtZero:true, max:100, title:{display:true,text:'총점', font:{size:12}} },
+               x:{ grid:{display:false}, ticks:{font:{size:12}} } } }
   });
 
   /* 차트 : 가동률 vs MTBF 버블 */
@@ -2069,13 +2070,13 @@ function renderGrade(){
       label:g+'등급', backgroundColor:GC5[g]+'cc',
       data: cur.filter(x=>x.g===g).map(x=>({ x:x.avail, y:x.mtbf, r:Math.max(4,Math.sqrt(x.lossH)*1.5), mc:x.m })) })) },
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{boxWidth:11,font:{size:11}} },
-        datalabels:{ color:'#33404f', font:{size:10,weight:'700'},
+      plugins:{ legend:{ labels:{boxWidth:11,font:{size:12}} },
+        datalabels:{ color:'#33404f', font:{size:11,weight:'700'},
                      formatter:(v,ctx)=>'DC'+ctx.dataset.data[ctx.dataIndex].mc, anchor:'center', align:'center' },
         tooltip:{ callbacks:{ label:(t)=>{ const d=t.raw;
           return `DC${d.mc} · 가동률 ${d.x.toFixed(1)}% · MTBF ${d.y.toFixed(2)}`; } } } },
-      scales:{ x:{ title:{display:true,text:'가동률 (%)', font:{size:11}} },
-               y:{ title:{display:true,text:'MTBF (h/건)', font:{size:11}}, beginAtZero:true } } }
+      scales:{ x:{ title:{display:true,text:'가동률 (%)', font:{size:12}} },
+               y:{ title:{display:true,text:'MTBF (h/건)', font:{size:12}}, beginAtZero:true } } }
   });
 
   lastGradeRows = cur; lastGradeMonth = mon;
@@ -2205,11 +2206,11 @@ function buildPM(){
   document.querySelector('#pmTable tbody').innerHTML = tasks.map(t=>`<tr>
     <td><b>${t.pri}</b></td><td class="mc">DC${t.mc}</td>
     <td><span class="grade-badge g-${t.g}">${t.g}</span></td>
-    <td class="ty" style="text-align:left;font-size:11px">${t.why}</td>
-    <td class="ty" style="text-align:left">${t.code}<br><span style="font-size:10px;color:#5a6674">${t.sub}</span></td>
+    <td class="ty" style="text-align:left;font-size:12px">${t.why}</td>
+    <td class="ty" style="text-align:left">${t.code}<br><span style="font-size:11px;color:#5a6674">${t.sub}</span></td>
     <td>${fmt(t.h,1)}h / ${t.n}건</td><td>${fmt(t.ratio,0)}%</td>
-    <td class="ty" style="text-align:left;font-size:11px">${t.prob}</td>
-    <td class="ty" style="text-align:left;font-size:11px">${t.act}</td>
+    <td class="ty" style="text-align:left;font-size:12px">${t.prob}</td>
+    <td class="ty" style="text-align:left;font-size:12px">${t.act}</td>
     <td>${t.own}</td><td>${t.st.slice(5)}</td><td>${t.en.slice(5)}</td><td>${t.days}</td></tr>`).join('');
 
   /* 간트 미리보기 */
@@ -2224,13 +2225,13 @@ function buildPM(){
         backgroundColor: tasks.map(t=>OWN_C[t.own]||'#7f7f7f'), borderRadius:4, barPercentage:.75 }] },
     options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
       plugins:{ legend:{display:false},
-        datalabels:{ color:'#fff', font:{size:10,weight:'700'}, anchor:'center', align:'center',
+        datalabels:{ color:'#fff', font:{size:11,weight:'700'}, anchor:'center', align:'center',
                      formatter:(v,c)=>tasks[c.dataIndex].own },
         tooltip:{ callbacks:{ label:(c)=>{ const t=tasks[c.dataIndex];
           return [`${t.st} ~ ${t.en} (${t.days}일) · ${t.own}`, t.act]; } } } },
-      scales:{ x:{ title:{display:true,text:`착수 후 경과일 (기준 ${ymd(minD)})`, font:{size:11}},
+      scales:{ x:{ title:{display:true,text:`착수 후 경과일 (기준 ${ymd(minD)})`, font:{size:12}},
                    beginAtZero:true, ticks:{stepSize:2} },
-               y:{ grid:{display:false}, ticks:{font:{size:11}} } } }
+               y:{ grid:{display:false}, ticks:{font:{size:12}} } } }
   });
 }
 
@@ -2385,7 +2386,7 @@ function renderCost(){
     [`${pName} 평균`, Math.round(grand/nP).toLocaleString(), `목표 ${tgt.toLocaleString()} THB`],
     ['⑤ 설비 비용', Math.round(eqC).toLocaleString(), `전체의 ${(eqC/allC*100).toFixed(1)}%`],
     ['⑥ 전체 비용', Math.round(allC).toLocaleString(), `계획외 고장분 ${(udtC/allC*100).toFixed(1)}%`]
-  ].map(([l,n,s2])=>`<div class="gk"><div class="n" style="font-size:19px">${n}<span style="font-size:11px"> THB</span></div>
+  ].map(([l,n,s2])=>`<div class="gk"><div class="n" style="font-size:19px">${n}<span style="font-size:12px"> THB</span></div>
       <div class="l"><b>${l}</b><br>${s2}</div></div>`).join('');
 
   /* 표 */
@@ -2415,13 +2416,13 @@ function renderCost(){
           data: per.map(()=>tgt), borderColor:'#e2564d', borderWidth:2, borderDash:[5,4],
           pointRadius:0, datalabels:{display:false} }] : []) },
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{labels:{boxWidth:11,font:{size:10}}},
+      plugins:{ legend:{labels:{boxWidth:11,font:{size:11}}},
         tooltip:{ callbacks:{ label:c=>`${c.dataset.label}: ${Math.round(c.parsed.y).toLocaleString()} THB` } },
-        datalabels:{ color:'#fff', font:{size:9,weight:'700'},
+        datalabels:{ color:'#fff', font:{size:10,weight:'700'},
           formatter:v=> v>25000 ? Math.round(v/1000)+'k' : '' } },
       scales:{ x:{stacked:true, grid:{display:false}},
                y:{stacked:true, beginAtZero:true, ticks:{callback:v=>(v/1000)+'k'},
-                  title:{display:true,text:'THB',font:{size:10}}} } }
+                  title:{display:true,text:'THB',font:{size:11}}} } }
   });
 
   /* ② 설비별 TOP */
@@ -2434,9 +2435,9 @@ function renderCost(){
       datasets: gShow.map(g=>({ label:g, backgroundColor:CAT_C[g], borderRadius:3,
         data: srt.map(m=> mIdx[m+'|'+g]||0) })) },
     options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
-      plugins:{ legend:{labels:{boxWidth:11,font:{size:10}}},
+      plugins:{ legend:{labels:{boxWidth:11,font:{size:11}}},
         tooltip:{ callbacks:{ label:c=>`${c.dataset.label}: ${Math.round(c.parsed.x).toLocaleString()} THB` } },
-        datalabels:{ color:'#fff', font:{size:9,weight:'700'},
+        datalabels:{ color:'#fff', font:{size:10,weight:'700'},
           formatter:v=> v>30000 ? Math.round(v/1000)+'k' : '' } },
       scales:{ x:{stacked:true, beginAtZero:true, ticks:{callback:v=>(v/1000)+'k'}},
                y:{stacked:true, grid:{display:false}} } }
@@ -2449,9 +2450,9 @@ function renderCost(){
     type:'doughnut',
     data:{ labels: COST_G, datasets:[{ data: mix, backgroundColor: COST_G.map(g=>CAT_C[g]), borderWidth:2 }] },
     options:{ responsive:true, maintainAspectRatio:false, cutout:'52%',
-      plugins:{ legend:{position:'right', labels:{boxWidth:11,font:{size:11}}},
+      plugins:{ legend:{position:'right', labels:{boxWidth:11,font:{size:12}}},
         tooltip:{ callbacks:{ label:c=>`${c.label}: ${Math.round(c.parsed).toLocaleString()} THB (${(c.parsed/allC*100).toFixed(1)}%)` } },
-        datalabels:{ color:'#fff', font:{size:11,weight:'800'},
+        datalabels:{ color:'#fff', font:{size:12,weight:'800'},
           formatter:(v)=> (v/allC*100).toFixed(0)+'%' } } }
   });
 
@@ -2466,19 +2467,19 @@ function renderCost(){
     data:{ labels: per, datasets:[
       { label:'⑥ 전체 비용', data: per.map(p=>alP[p]||0), borderColor:'#1f3864',
         backgroundColor:'#1f386422', borderWidth:3, tension:.25, fill:true, pointRadius:4,
-        datalabels:{ align:'top', anchor:'end', color:'#1f3864', font:{size:9,weight:'700'},
+        datalabels:{ align:'top', anchor:'end', color:'#1f3864', font:{size:10,weight:'700'},
           formatter:v=> v?Math.round(v/1000)+'k':'' } },
       { label:'⑤ 설비 비용', data: per.map(p=>eqP[p]||0), borderColor:'#ed7d31',
         backgroundColor:'#ed7d3122', borderWidth:3, tension:.25, fill:true, pointRadius:4,
-        datalabels:{ align:'bottom', anchor:'start', color:'#b9791f', font:{size:9,weight:'700'},
+        datalabels:{ align:'bottom', anchor:'start', color:'#b9791f', font:{size:10,weight:'700'},
           formatter:v=> v?Math.round(v/1000)+'k':'' } } ] },
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{labels:{boxWidth:11,font:{size:10},usePointStyle:true}},
+      plugins:{ legend:{labels:{boxWidth:11,font:{size:11},usePointStyle:true}},
         tooltip:{ callbacks:{ label:c=>`${c.dataset.label}: ${Math.round(c.parsed.y).toLocaleString()} THB`,
           afterBody:(it)=>{ const p=per[it[0].dataIndex];
             return `설비 비중 ${((eqP[p]||0)/(alP[p]||1)*100).toFixed(1)}%`; } } } },
       scales:{ y:{beginAtZero:true, ticks:{callback:v=>(v/1000)+'k'},
-                  title:{display:true,text:'THB',font:{size:10}}},
+                  title:{display:true,text:'THB',font:{size:11}}},
                x:{grid:{display:false}} } }
   });
 
@@ -2671,7 +2672,7 @@ function renderHero(){
   const labelCfg = (rankMap) => ({
     labels: {
       value: {
-        anchor:'end', align:'top', color:'#111826', font:{size:9, weight:'700'},
+        anchor:'end', align:'top', color:'#111826', font:{size:10, weight:'700'},
         offset:1, clamp:true,
         formatter: v => v>0 ? v.toFixed(2) : ''
       },
@@ -2679,7 +2680,7 @@ function renderHero(){
         anchor:'end', align:'top', offset:17, clamp:true,
         color:'#fff', backgroundColor:'#c0392b', borderRadius:7,
         padding:{top:2, bottom:2, left:5, right:5},
-        font:{size:8, weight:'800'},
+        font:{size:9, weight:'800'},
         formatter: (v, ctx) => rankMap[ctx.dataIndex] ? 'WORST'+rankMap[ctx.dataIndex] : null
       }
     }
@@ -2713,7 +2714,7 @@ function renderHero(){
     data:{ labels, datasets: mttrDatasets },
     options:{
       responsive:true,
-      plugins:{legend:{labels:{color:'#1a2230', boxWidth:12, font:{size:11}}}},
+      plugins:{legend:{labels:{color:'#1a2230', boxWidth:12, font:{size:12}}}},
       onClick:(evt, elements)=>{
         const el = elements.find(e=>e.datasetIndex===0);
         if(el && rows[el.index].cnt>0){
@@ -2725,7 +2726,10 @@ function renderHero(){
       onHover:(evt, elements)=>{ evt.native.target.style.cursor = elements.some(e=>e.datasetIndex===0) ? 'pointer' : 'default'; },
       scales:{
         y:{beginAtZero:true, title:{display:true,text:'MTTR (h/건)',color:'#33404f'}, grid:{color:'#e8ecf1'}},
-        x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, font:{size:10.5}}}
+        x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, autoSkip:false,
+            color:(ctx)=> BROKEN.has(rows[ctx.index]?.m) ? '#c00000' : '#33404f',
+            font:(ctx)=> BROKEN.has(rows[ctx.index]?.m) ? {size:11.5, weight:'800'} : {size:11.5}
+        }}
       }
     }
   });
@@ -2758,7 +2762,7 @@ function renderHero(){
     data:{ labels, datasets: mtbfDatasets },
     options:{
       responsive:true,
-      plugins:{legend:{labels:{color:'#1a2230', boxWidth:12, font:{size:11}}}},
+      plugins:{legend:{labels:{color:'#1a2230', boxWidth:12, font:{size:12}}}},
       onClick:(evt, elements)=>{
         const el = elements.find(e=>e.datasetIndex===0);
         if(el && rows[el.index].cnt>0){
@@ -2770,7 +2774,10 @@ function renderHero(){
       onHover:(evt, elements)=>{ evt.native.target.style.cursor = elements.some(e=>e.datasetIndex===0) ? 'pointer' : 'default'; },
       scales:{
         y:{beginAtZero:true, title:{display:true,text:'MTBF (h/건)',color:'#33404f'}, grid:{color:'#e8ecf1'}},
-        x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, font:{size:10.5}}}
+        x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, autoSkip:false,
+            color:(ctx)=> BROKEN.has(rows[ctx.index]?.m) ? '#c00000' : '#33404f',
+            font:(ctx)=> BROKEN.has(rows[ctx.index]?.m) ? {size:11.5, weight:'800'} : {size:11.5}
+        }}
       }
     }
   });
@@ -2861,7 +2868,7 @@ function showHeroAnalysis(m){
 
   panel.innerHTML = `
     <div class="analysis-head">
-      <h3>DC${m} 원인분석 · SWOT ${isBroken?'<span style="color:#d13a30;font-size:12px;">(고장/가동중단)</span>':''}</h3>
+      <h3>DC${m} 원인분석 · SWOT ${isBroken?'<span style="color:#d13a30;font-size:13px;">(고장/가동중단)</span>':''}</h3>
       <button class="close-btn" onclick="hideHeroAnalysis()">닫기 ✕</button>
     </div>
     <div class="analysis-stats">
@@ -2948,7 +2955,7 @@ function renderDCWorst(run, loss){
         label:'MTTR (h/건)', data: mttrRows.map(r=>r.mttr),
         backgroundColor: [...mttrColors],
         borderRadius:3,
-        datalabels:{anchor:'end', align:'top', color:'#111826', font:{size:9, weight:'700'}, offset:1, clamp:true, formatter:v=>v>0?v.toFixed(2):''}
+        datalabels:{anchor:'end', align:'top', color:'#111826', font:{size:10, weight:'700'}, offset:1, clamp:true, formatter:v=>v>0?v.toFixed(2):''}
       }]
     },
     options:{
@@ -2964,7 +2971,10 @@ function renderDCWorst(run, loss){
       onHover:(evt, elements)=>{ evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; },
       scales:{
         y:{beginAtZero:true, title:{display:true,text:'MTTR (h/건)',color:'#33404f'}, grid:{color:'#e8ecf1'}},
-        x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, font:{size:10}}}
+        x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, autoSkip:false,
+            color:(ctx)=> BROKEN.has(mttrRows[ctx.index]?.m) ? '#c00000' : '#33404f',
+            font:(ctx)=> BROKEN.has(mttrRows[ctx.index]?.m) ? {size:11, weight:'800'} : {size:11}
+        }}
       }
     }
   });
@@ -2985,7 +2995,7 @@ function renderDCWorst(run, loss){
         label:'MTBF (h/건)', data: mtbfRows.map(r=>r.mtbf),
         backgroundColor: [...mtbfColors],
         borderRadius:3,
-        datalabels:{anchor:'end', align:'top', color:'#111826', font:{size:9, weight:'700'}, offset:1, clamp:true, formatter:v=>v>0?v.toFixed(2):''}
+        datalabels:{anchor:'end', align:'top', color:'#111826', font:{size:10, weight:'700'}, offset:1, clamp:true, formatter:v=>v>0?v.toFixed(2):''}
       }]
     },
     options:{
@@ -3001,7 +3011,10 @@ function renderDCWorst(run, loss){
       onHover:(evt, elements)=>{ evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; },
       scales:{
         y:{beginAtZero:true, title:{display:true,text:'MTBF (h/건)',color:'#33404f'}, grid:{color:'#e8ecf1'}},
-        x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, font:{size:10}}}
+        x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, autoSkip:false,
+            color:(ctx)=> BROKEN.has(mtbfRows[ctx.index]?.m) ? '#c00000' : '#33404f',
+            font:(ctx)=> BROKEN.has(mtbfRows[ctx.index]?.m) ? {size:11, weight:'800'} : {size:11}
+        }}
       }
     }
   });
@@ -3101,7 +3114,7 @@ function showDCAnalysis(m){
 
   panel.innerHTML = `
     <div class="analysis-head">
-      <h3>DC${m} 원인분석 · SWOT ${isBroken?'<span style="color:#d13a30;font-size:12px;">(고장/가동중단)</span>':''}</h3>
+      <h3>DC${m} 원인분석 · SWOT ${isBroken?'<span style="color:#d13a30;font-size:13px;">(고장/가동중단)</span>':''}</h3>
       <button class="close-btn" onclick="hideDCAnalysis()">닫기 ✕</button>
     </div>
     <div class="analysis-stats">
@@ -3148,9 +3161,9 @@ function renderPareto(loss){
       labels: arr.map(r=>r.item),
       datasets:[
         {type:'bar', label:'로스시간(h)', data:arr.map(r=>r.h), backgroundColor:[...paretoBaseColors], yAxisID:'y', borderRadius:4,
-         datalabels:{anchor:'end', align:'top', color:'#1a2230', font:{size:10, weight:'800'}, formatter:v=>v.toFixed(1)}},
+         datalabels:{anchor:'end', align:'top', color:'#1a2230', font:{size:11, weight:'800'}, formatter:v=>v.toFixed(1)}},
         {type:'line', label:'누적 비율(%)', data:cumArr, borderColor:'#34c98e', backgroundColor:'#34c98e', yAxisID:'y1', tension:.25, pointRadius:3,
-         datalabels:{anchor:'end', align:'top', color:'#1d7d60', font:{size:9, weight:'700'}, formatter:v=>v.toFixed(0)+'%'}}
+         datalabels:{anchor:'end', align:'top', color:'#1d7d60', font:{size:10, weight:'700'}, formatter:v=>v.toFixed(0)+'%'}}
       ]
     },
     options:{
@@ -3168,7 +3181,7 @@ function renderPareto(loss){
       scales:{
         y:{position:'left', title:{display:true,text:'로스시간(h)',color:'#33404f'}, grid:{color:'#e8ecf1'}},
         y1:{position:'right', min:0, max:100, title:{display:true,text:'누적 비율(%)',color:'#33404f'}, grid:{display:false}},
-        x:{ticks:{maxRotation:40, minRotation:20, font:{size:13, weight:'600'}, color:'#1a2230'}, grid:{display:false}}
+        x:{ticks:{maxRotation:40, minRotation:20, font:{size:14, weight:'600'}, color:'#1a2230'}, grid:{display:false}}
       }
     }
   });
@@ -3229,7 +3242,7 @@ function showParetoAnalysis(item){
 
   panel.innerHTML = `
     <div class="analysis-head">
-      <h3>'${item}' 세부 내용 <span style="color:#5a6674; font-size:12px; font-weight:400;">(${cat})</span></h3>
+      <h3>'${item}' 세부 내용 <span style="color:#5a6674; font-size:13px; font-weight:400;">(${cat})</span></h3>
       <button class="close-btn" onclick="hideParetoAnalysis()">닫기 ✕</button>
     </div>
     <div class="analysis-stats">
