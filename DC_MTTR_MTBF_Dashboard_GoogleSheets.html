@@ -1355,13 +1355,15 @@ function weekStats(cat){
     const lossH = L.reduce((a,x)=>a+x.l,0)/60;
     const lossAllH = Lall.reduce((a,x)=>a+x.l,0)/60;
     const n = L.length;
+    const planH = R.reduce((a,x)=>a+(x.p||0),0)/60;
+    const nMc = new Set(R.map(x=>x.m)).size || 1;
     const ds = R.map(x=>x.d).sort();
     const RT = getRates();
     const costAll = Lall.reduce((a,x)=>a+x.l*(RT[x.m]||0),0);
     const costEq  = Lall.filter(x=>x.s==='설비-전기'||x.s==='설비-라인')
                         .reduce((a,x)=>a+x.l*(RT[x.m]||0),0);
     return { w:w, runH:runH, lossH:lossH, cnt:n,
-      mttr: n? lossH/n : 0, mtbf: n? runH/n : 0,
+      mttr: n? lossH/n : 0, mtbf: mtbfBasis(runH, lossH, n, planH, nMc),
       avail: (runH+lossAllH)>0 ? runH/(runH+lossAllH)*100 : 0,
       cost: costAll, costEq: costEq, rowsAll: Lall,
       from: ds[0]||'', to: ds[ds.length-1]||'' };
@@ -1667,6 +1669,18 @@ document.querySelectorAll('#trendMetricChips .cat-chip').forEach(btn=>{
 const MIN_N = 5;                    // 워스트 선정 최소 로스건수
 let lastReportCtx = null;
 
+// 탭1(설비별 MTTR/MTBF)의 "MTBF 기준" 설정(heroPptMode/heroPptHours)을
+// 다른 탭(원인분석 리포트·주차별 추이·워스트 랭킹·설비 등급)에도 동일하게 적용해
+// 탭 간 MTBF/워스트 순위가 어긋나지 않도록 한다.
+function mtbfBasis(runH, lossH, cnt, planH, nMc){
+  if(!cnt) return 0;
+  const md = (document.getElementById('heroPptMode')||{value:'run'}).value;
+  const ph = parseFloat((document.getElementById('heroPptHours')||{}).value) || 630;
+  if(md === 'fixed') return Math.max(ph*(nMc||1) - lossH, 0) / cnt;
+  if(md === 'real')  return Math.max(planH - lossH, 0) / cnt;
+  return runH / cnt;
+}
+
 function mcStats(week, cat){
   const R = RUN.filter(r=>r.w===week), L = LOSS.filter(r=>r.w===week);
   const out = {};
@@ -1674,8 +1688,9 @@ function mcStats(week, cat){
     const rr = R.filter(x=>x.m===m);
     const ll = fails((cat&&cat!=='ALL') ? L.filter(x=>x.m===m&&matchCat(x,cat)) : L.filter(x=>x.m===m));
     const runH = rr.reduce((a,x)=>a+x.r,0)/60, lossH = ll.reduce((a,x)=>a+x.l,0)/60, n = ll.length;
+    const planH = rr.reduce((a,x)=>a+(x.p||0),0)/60;
     out[m] = { m:m, runH:runH, lossH:lossH, cnt:n,
-               mttr: n?lossH/n:0, mtbf: n?runH/n:0,
+               mttr: n?lossH/n:0, mtbf: mtbfBasis(runH, lossH, n, planH),
                avail:(runH+lossH)>0?runH/(runH+lossH)*100:0, rows:ll };
   });
   return out;
@@ -1982,7 +1997,7 @@ function monthStats(mon){
     const lossH = ll.reduce((a,x)=>a+x.l,0)/60, n = ll.length;
     out.push({ m:m, runH:runH, planH:planH, lossH:lossH, allH:allH, cnt:n, rowsAll:lAll,
       avail: (runH+allH)>0 ? runH/(runH+allH)*100 : 0,
-      mtbf: n? runH/n : 0, mttr: n? lossH/n : 0,
+      mtbf: mtbfBasis(runH, lossH, n, planH), mttr: n? lossH/n : 0,
       top: (()=>{ const by={}; lAll.forEach(r=>{by[r.i]=(by[r.i]||0)+r.l/60;});
         const k=Object.keys(by).sort((a,b)=>by[b]-by[a])[0];
         return k ? {code:k, h:by[k]} : null; })() });
@@ -2925,15 +2940,16 @@ let lastDCRows = [];   // shared state for click-to-analyze
 let lastDCLoss = [];   // the loss rows currently backing the DC worst charts
 
 function renderDCWorst(run, loss){
-  const runByM = {}, lossByM = {}, cntByM = {};
-  run.forEach(r=>{ runByM[r.m]=(runByM[r.m]||0)+r.r; });
+  const runByM = {}, lossByM = {}, cntByM = {}, planByM = {};
+  run.forEach(r=>{ runByM[r.m]=(runByM[r.m]||0)+r.r; planByM[r.m]=(planByM[r.m]||0)+(r.p||0); });
   loss.forEach(r=>{ lossByM[r.m]=(lossByM[r.m]||0)+r.l; cntByM[r.m]=(cntByM[r.m]||0)+1; });
 
   let rows = ALL_MACHINES.map(m=>{
     const c = cntByM[m]||0;
     const l = (lossByM[m]||0)/60;
     const rH = (runByM[m]||0)/60;
-    return {m, mttr: c ? l/c : 0, mtbf: c ? rH/c : 0, cnt:c};
+    const pH = (planByM[m]||0)/60;
+    return {m, mttr: c ? l/c : 0, mtbf: mtbfBasis(rH, l, c, pH), cnt:c};
   }).filter(r=>r.cnt>0);
 
   lastDCRows = rows;
