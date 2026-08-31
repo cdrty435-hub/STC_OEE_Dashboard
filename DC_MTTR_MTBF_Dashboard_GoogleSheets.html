@@ -295,6 +295,68 @@
   .mtbf-basis select{border:1px solid #d8dfe7;border-radius:7px;padding:4px 7px;font-size:12.5px;}
   .mtbf-basis input{width:62px;border:1px solid #d8dfe7;border-radius:7px;padding:4px 6px;font-size:12.5px;}
   .mtbf-basis input:disabled{background:#f2f4f6;color:#aab2bb;}
+  /* ================= Ⅱ. 손실 경영분석 (STC Loss Dashboard 통합) ================= */
+  .cost-subnav{display:flex; gap:7px; flex-wrap:wrap; margin:16px 0 2px; padding-top:14px; border-top:1px dashed var(--border);}
+  .cost-subnav .cat-chip{font-size:13px; padding:7px 14px;}
+
+  .lx-set{display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; padding:11px 13px;
+    background:#f7f9fb; border:1px solid #e6ebf1; border-radius:10px; margin:14px 0 4px;}
+  .lx-set label{display:block; font-size:11.5px; color:#5a6674; margin-bottom:3px;}
+  .lx-set input{width:100px; border:1px solid #d8dfe7; border-radius:7px; padding:6px 8px;
+    font-size:13px; font-family:var(--mono);}
+  .lx-set .hint{font-size:11.5px; color:#8b97a6; line-height:1.6; margin-left:auto; max-width:430px; text-align:right;}
+
+  .lx-hero{display:grid; grid-template-columns:1.7fr repeat(4,1fr); gap:10px; margin:14px 0;}
+  @media (max-width:1150px){ .lx-hero{grid-template-columns:1fr 1fr;} }
+  @media (max-width:640px){ .lx-hero{grid-template-columns:1fr;} }
+  .lx-k{border:1px solid #e6ebf1; border-radius:10px; padding:12px 14px; background:#fff;}
+  .lx-k.main{background:#1f2a3a; border-color:#1f2a3a;}
+  .lx-k .kk{font-family:var(--mono); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase; color:#7c8899;}
+  .lx-k.main .kk{color:#9fb0c4;}
+  .lx-k .kv{font-family:var(--mono); font-size:25px; font-weight:800; letter-spacing:-.02em; margin-top:6px; line-height:1.1;}
+  .lx-k.main .kv{font-size:35px; color:#ffb26b;}
+  .lx-k .kv small{font-size:.42em; font-weight:600; color:#8b97a6; margin-left:5px;}
+  .lx-k.main .kv small{color:#9fb0c4;}
+  .lx-k .kd{font-family:var(--mono); font-size:11.5px; color:#6b7a8c; margin-top:7px; line-height:1.65;}
+  .lx-k.main .kd{color:#b9c6d6; font-size:12px;}
+
+  .lx-cats{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+  @media (max-width:900px){ .lx-cats{grid-template-columns:1fr 1fr;} }
+  .lx-cat{border:1px solid #e6ebf1; border-radius:10px; padding:11px 12px; position:relative; overflow:hidden; background:#fff;}
+  .lx-cat::before{content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--cc);}
+  .lx-cat .t{font-size:12.5px; font-weight:700; padding-left:4px;}
+  .lx-cat .v{font-family:var(--mono); font-size:20px; font-weight:800; margin:5px 0 1px; padding-left:4px;}
+  .lx-cat .m{font-family:var(--mono); font-size:11px; color:#6b7a8c; padding-left:4px;}
+  .lx-bar0{height:5px; background:#edf1f5; margin-top:8px;}
+  .lx-bar0 i{display:block; height:100%;}
+
+  .lx-rank{display:flex; flex-direction:column; gap:6px;}
+  .lx-rrow{display:grid; grid-template-columns:52px 1fr 156px; gap:9px; align-items:center;}
+  .lx-rn{font-family:var(--mono); font-size:12.5px; font-weight:700; color:#1f3864;}
+  .lx-rb{height:17px; display:flex; background:#edf1f5; border-radius:2px; overflow:hidden;}
+  .lx-rb i{display:block; height:100%;}
+  .lx-rv{font-family:var(--mono); font-size:12px; text-align:right;}
+  .lx-rv span{color:#8b97a6; font-size:10.5px; margin-left:5px;}
+
+  .lx-picto{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px;}
+  .lx-mch{width:22px; height:30px; position:relative; border:1px solid #dde3ea; background:#f5f7fa; border-radius:2px;}
+  .lx-mch i{position:absolute; left:0; right:0; bottom:0; background:#d13a30;}
+
+  .lx-grid2{display:grid; grid-template-columns:2fr 1fr; gap:14px; margin-top:14px;}
+  @media (max-width:1000px){ .lx-grid2{grid-template-columns:1fr;} }
+  .lx-note{border:1px solid #e6ebf1; border-radius:10px; padding:11px 13px; background:#fbfcfd;
+    font-family:var(--mono); font-size:11.5px; color:#5a6674; line-height:1.8; margin-top:10px; white-space:pre-line;}
+  .lx-note b{color:#1a2230;}
+  .lx-raw-wrap{overflow:auto; max-height:520px; margin-top:10px; border:1px solid #e6ebf1; border-radius:10px;}
+  .lx-raw-wrap .ppt-table th{font-size:11.5px; padding:6px 7px;}
+  .lx-raw-wrap .ppt-table td{font-size:12px;}
+  .lx-raw-wrap .ppt-table td.pl{text-align:left; font-weight:700; color:#1f3864;}
+  .lx-raw-wrap .ppt-table td.dt{text-align:center; color:#8b97a6; font-size:11px;}
+  .lx-raw-wrap .ppt-table td.up{color:#c00000; font-weight:700;}
+  .lx-raw-wrap .ppt-table td.dn{color:#0f7a52; font-weight:700;}
+  .lx-sep{border-top:1px dashed var(--border); margin:20px 0 4px; padding-top:14px;}
+  .lx-h3{font-size:14px; font-weight:800; margin:0 0 3px;}
+  .lx-h3 + .desc{margin-bottom:10px;}
 </style>
 </head>
 <body>
@@ -733,6 +795,12 @@
         <div class="rate-grid" id="rateGrid" style="width:100%"></div>
       </div>
 
+      <div class="cost-subnav" id="costSubnav">
+        <button class="cat-chip active" data-cv="A">Ⅰ. 비용 관리 · 설비 × 기간</button>
+        <button class="cat-chip" data-cv="B">Ⅱ. 손실 경영분석 · 주간추이 / 로데이터</button>
+      </div>
+
+      <div id="costViewA">
       <div class="grade-kpi" id="costKpi" style="grid-template-columns:repeat(4,1fr)"></div>
 
       <div class="rep-charts">
@@ -750,6 +818,80 @@
         <table id="costTable" class="ppt-table cost-table"><thead></thead><tbody></tbody></table>
       </div>
       <div class="rep-box" id="costNote" style="margin-top:14px;"></div>
+      </div><!-- /costViewA -->
+
+      <div id="costViewB" style="display:none">
+
+        <div class="lx-set">
+          <div><label for="lxWage">작업자 월 인건비 (THB)</label>
+            <input type="number" id="lxWage" step="100" value="10400"></div>
+          <div><label for="lxPph">시간당 생산 수량 (개)</label>
+            <input type="number" id="lxPph" step="0.1" value="137.4"></div>
+          <div><label for="lxAvailTgt">목표 가동률 (%)</label>
+            <input type="number" id="lxAvailTgt" step="1" value="90"></div>
+          <div><label for="lxFx">환율 (THB / 1 USD)</label>
+            <input type="number" id="lxFx" step="0.1" value="32.8"></div>
+          <div class="hint">상단 기간 · 유형 필터가 이 화면에도 그대로 적용됩니다.<br>
+            금액은 <b>선택 유형 기준</b>, 가동률·회수액은 <b>전체 로스 기준</b>으로 산출합니다.</div>
+        </div>
+
+        <div class="lx-hero" id="lxKpi"></div>
+
+        <div class="rep-chart-box">
+          <h4 id="lxComboTitle">① 기간별 로스시간(분) × 손실비용(THB)</h4>
+          <div class="desc" style="font-size:11.5px; margin:-2px 0 6px;">막대 = 계통별 로스 시간(왼쪽 축) · 선 = 총 손실비용(오른쪽 축) — 같은 사건을 시간과 금액 두 단위로 잰 값입니다</div>
+          <div style="height:340px;"><canvas id="lxComboChart"></canvas></div>
+        </div>
+        <div class="lx-note" id="lxComboNote"></div>
+
+        <div class="lx-grid2">
+          <div class="rep-chart-box">
+            <h4>② 로스 분류별 손실금액</h4>
+            <div class="lx-cats" id="lxCats" style="margin-top:8px"></div>
+            <div class="lx-note" style="margin-top:10px">막대는 선택 기준 총액 대비 비중입니다. 괄호 안은 로스 시간입니다.</div>
+          </div>
+          <div class="rep-chart-box">
+            <h4>③ 설비 워스트 · 손실금액 상위 10대 <span id="lxWorstNote" style="float:right;font-weight:500;color:#8b97a6;font-size:11.5px"></span></h4>
+            <div class="lx-rank" id="lxWorst" style="margin-top:8px"></div>
+          </div>
+        </div>
+
+        <div class="lx-grid2">
+          <div class="rep-chart-box">
+            <h4>④ 원인 파레토 · 금액 기준 <span id="lxParetoNote" style="float:right;font-weight:500;color:#8b97a6;font-size:11.5px"></span></h4>
+            <div style="height:300px;"><canvas id="lxParetoChart"></canvas></div>
+          </div>
+          <div class="rep-chart-box">
+            <h4>⑤ 가동 상태 <span id="lxAvailNote" style="float:right;font-weight:500;color:#8b97a6;font-size:11.5px"></span></h4>
+            <div style="height:190px;"><canvas id="lxAvailChart"></canvas></div>
+            <div class="lx-note" id="lxGapNote"></div>
+            <div style="margin-top:10px">
+              <div class="mini-title" style="margin-bottom:4px">정지 상당 설비 (Idle-equivalent)</div>
+              <div class="lx-picto" id="lxPicto"></div>
+              <div class="lx-note" id="lxPictoNote" style="margin-top:8px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lx-sep">
+          <h3 class="lx-h3">⑥ 기간별 추이 로데이터</h3>
+          <div class="desc">집계 단위(ISO주차 / 시트주차 / 월간)로 계통별 로스 시간과 손실금액을 그대로 펼친 원자료입니다 · 증감은 직전 기간 대비 금액 변동
+            <button class="cat-chip active" id="lxRawCsv" style="float:right">로데이터 CSV</button></div>
+          <div class="lx-raw-wrap">
+            <table id="lxRawTable" class="ppt-table"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+          </div>
+        </div>
+
+        <div class="lx-sep">
+          <h3 class="lx-h3">⑦ 설비별 손실 상세</h3>
+          <div class="desc">설비별 계통 금액 · 총액 · 비중 · 인건비 환산 인원 — 형식(Ton)과 M/C Rate 포함</div>
+          <div class="lx-raw-wrap" style="max-height:560px">
+            <table id="lxMcTable" class="ppt-table"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+          </div>
+        </div>
+
+        <div class="lx-note" id="lxFootNote"></div>
+      </div><!-- /costViewB -->
     </div>
   </section>
 
@@ -2510,7 +2652,365 @@ function renderCost(){
     + `· 선택 기준 ${pName} 평균 ${Math.round(grand/nP).toLocaleString()} THB · 분당 평균 ${(totMin?grand/totMin:0).toFixed(2)} THB/분\n`
     + `· 비용 워스트 3 : ${worst.map(m=>`DC${m} ${Math.round(rowT[m]).toLocaleString()} THB`).join(' · ')}\n`
     + `<b>· ⑤ 설비 ${Math.round(eqC).toLocaleString()} THB (${(eqC/allC*100).toFixed(1)}%) / 금형·관리 ${Math.round(allC-eqC).toLocaleString()} THB (${((allC-eqC)/allC*100).toFixed(1)}%)</b>`;
+
+  /* → Ⅱ. 손실 경영분석 블록 갱신 (같은 필터 컨텍스트 그대로 전달) */
+  try{
+    renderLossX({ RATE, per, mode, src, LOSSr, RUNr, cell, rowT, colT, grand, keep, pName, tgt });
+  }catch(e){ console.error('renderLossX', e); }
 }
+/* ================= Ⅱ. 손실 경영분석 (STC Loss Dashboard 통합) =================
+   2번 대시보드(STC_Loss_Dashboard)의 분석 블록을 하드코딩 없이
+   구글시트 실시간 데이터(RUN / LOSS)로 재계산합니다.
+   · 금액       : 선택 유형(유형 칩 / UDT) 기준
+   · 가동률·회수 : 전체 로스 기준 (생산 관점 유지)                              */
+let lxComboChart, lxParetoChart, lxAvailChart;
+let LX_LAST = null;                       // CSV 내보내기용 마지막 집계 스냅샷
+const LX_DEF = { wage:10400, pph:137.4, availTgt:90, fx:32.8 };
+
+function lxCfg(){
+  let c = Object.assign({}, LX_DEF);
+  try{ const j = JSON.parse(localStorage.getItem('stc_lx_cfg')||'null'); if(j) c = Object.assign(c,j); }catch(e){}
+  return c;
+}
+function lxApplyCfgToInputs(){
+  const c = lxCfg();
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el && document.activeElement!==el) el.value=v; };
+  set('lxWage',c.wage); set('lxPph',c.pph); set('lxAvailTgt',c.availTgt); set('lxFx',c.fx);
+}
+function lxSaveCfg(){
+  const num=(id,d)=>{ const el=document.getElementById(id); const v=el?parseFloat(el.value):NaN; return isNaN(v)||v<=0?d:v; };
+  const c = { wage:num('lxWage',LX_DEF.wage), pph:num('lxPph',LX_DEF.pph),
+              availTgt:num('lxAvailTgt',LX_DEF.availTgt), fx:num('lxFx',LX_DEF.fx) };
+  try{ localStorage.setItem('stc_lx_cfg', JSON.stringify(c)); }catch(e){}
+  return c;
+}
+const lxN  = v => Math.round(v||0).toLocaleString();
+const lxN1 = v => (v||0).toFixed(1);
+const lxK  = v => Math.round((v||0)/1000).toLocaleString()+'k';
+
+function renderLossX(ctx){
+  if(!document.getElementById('costViewB')) return;
+  const { RATE, per, mode, src, LOSSr, RUNr, colT, grand, pName } = ctx;
+  const cfg = lxCfg();
+  lxApplyCfgToInputs();
+  const costOf = r => r.l * (RATE[r.m]||0);
+  const nP = per.length || 1;
+  const gi = g => COST_G.indexOf(g);
+
+  /* ---------- 기간별 집계 ---------- */
+  const pMinC={}, pCostC={}, pMinAll={}, pCostAll={}, pRun={}, pDates={};
+  per.forEach(p=>{ pMinC[p]=[0,0,0,0]; pCostC[p]=[0,0,0,0];
+    pMinAll[p]=0; pCostAll[p]=0; pRun[p]=0; pDates[p]=new Set(); });
+  src.forEach(r=>{ const p=periodKey(r,mode); if(!pMinC[p]) return;
+    const i=gi(r.s); if(i>=0){ pMinC[p][i]+=r.l; pCostC[p][i]+=costOf(r); } });
+  LOSSr.forEach(r=>{ const p=periodKey(r,mode); if(pMinAll[p]===undefined) return;
+    pMinAll[p]+=r.l; pCostAll[p]+=costOf(r); });
+  RUNr.forEach(r=>{ const p=periodKey(r,mode); if(pRun[p]===undefined) return;
+    pRun[p]+=r.r; if(r.d) pDates[p].add(r.d); });
+
+  const pMinSel  = p => pMinC[p].reduce((a,b)=>a+b,0);
+  const pCostSel = p => (colT[p]||0);
+  const pDay     = p => pDates[p].size || 1;
+  const pSpan    = p => { const d=[...pDates[p]].sort();
+    return d.length ? (d[0].slice(5)+'~'+d[d.length-1].slice(5)) : '—'; };
+
+  const minsSel = per.reduce((a,p)=>a+pMinSel(p),0);
+  const costSel = grand;
+  const minsAll = per.reduce((a,p)=>a+pMinAll[p],0);
+  const costAll = per.reduce((a,p)=>a+pCostAll[p],0) || 1;
+  const runMin  = per.reduce((a,p)=>a+pRun[p],0);
+  const days    = per.reduce((a,p)=>a+pDates[p].size,0) || 1;
+  const avail   = (runMin+minsAll) ? runMin/(runMin+minsAll) : 0;
+
+  /* ---------- KPI ---------- */
+  const seq  = per.map(p=>pCostSel(p));
+  const last = seq[seq.length-1], prev = seq.length>1 ? seq[seq.length-2] : null;
+  const dPc  = (prev && prev>0) ? (last-prev)/prev*100 : null;
+  const arw  = dPc===null ? '' : (Math.abs(dPc)<2 ? '→' : (dPc>0 ? '▲' : '▼'));
+  const arwC = dPc===null ? '#8b97a6' : (Math.abs(dPc)<2 ? '#8b97a6' : (dPc>0 ? '#d13a30' : '#0f7a52'));
+  const yr   = v => v/days*365;
+  const lostEA = minsSel/60*cfg.pph;
+  const heads  = costSel/cfg.wage;
+
+  document.getElementById('lxKpi').innerHTML = `
+    <div class="lx-k main"><div class="kk">손실금액 · ${per[0]||'—'}${per.length>1?' ~ '+per[per.length-1]:''}</div>
+      <div class="kv">${lxN(costSel)}<small>THB</small></div>
+      <div class="kd">하루 ${lxN(costSel/days)} · ${pName}평균 ${lxN(costSel/nP)} · 연 환산 ${lxN(yr(costSel))} THB
+        <br>≈ USD ${lxN(costSel/cfg.fx)} · 집계일수 ${days}일 / ${per.length}개 ${pName}</div></div>
+    <div class="lx-k"><div class="kk">로스 시간</div>
+      <div class="kv">${lxN(minsSel/60)}<small>시간</small></div>
+      <div class="kd">${lxN(minsSel)}분 · 직전 ${pName} 대비
+        <span style="color:${arwC};font-weight:700">${arw} ${dPc===null?'—':lxN1(Math.abs(dPc))+'%'}</span></div></div>
+    <div class="lx-k"><div class="kk">가동률 · 전체 로스 기준</div>
+      <div class="kv">${lxN1(avail*100)}<small>%</small></div>
+      <div class="kd">목표 ${cfg.availTgt}% · 격차 ${lxN1(cfg.availTgt-avail*100)}%p
+        <br>가동 ${lxN(runMin/60)}h / 로스 ${lxN(minsAll/60)}h</div></div>
+    <div class="lx-k"><div class="kk">인건비 환산</div>
+      <div class="kv">${lxN1(heads)}<small>명</small></div>
+      <div class="kd">작업자 월 급여 ${lxN(cfg.wage)} THB 기준<br>이 손실로 ${Math.floor(heads)}명을 1개월 더 쓸 수 있었습니다</div></div>
+    <div class="lx-k"><div class="kk">못 만든 수량</div>
+      <div class="kv">${lxN1(lostEA/10000)}<small>만 개</small></div>
+      <div class="kd">약 ${lxN(lostEA)}개<br>시간당 ${cfg.pph}개 기준</div></div>`;
+
+  /* ---------- ① 콤보 : 로스(분) 막대 + 비용(THB) 선 ---------- */
+  document.getElementById('lxComboTitle').textContent = `① ${pName}별 로스시간(분) × 손실비용(THB)`;
+  if(lxComboChart) lxComboChart.destroy();
+  lxComboChart = new Chart(document.getElementById('lxComboChart'),{
+    data:{ labels: per,
+      datasets: COST_G.map((g,i)=>({ type:'bar', label:g+' (분)', yAxisID:'y', order:2,
+          backgroundColor:CAT_C[g], borderRadius:3, data: per.map(p=>pMinC[p][i]) }))
+        .concat([{ type:'line', label:'총 손실비용 (THB)', yAxisID:'y1', order:1,
+          data: per.map(p=>pCostSel(p)), borderColor:'#1a2230', backgroundColor:'#1a2230',
+          borderWidth:2.6, tension:.22, pointRadius:4.5, pointBackgroundColor:'#fff',
+          pointBorderWidth:2.4,
+          datalabels:{ align:'top', anchor:'end', color:'#fff', backgroundColor:'#1a2230',
+            borderRadius:3, padding:{top:2,bottom:2,left:5,right:5},
+            font:{size:10.5,weight:'700'}, formatter:v=> v?lxN(v):'' } }]) },
+    options:{ responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{ legend:{labels:{boxWidth:11,font:{size:11},usePointStyle:true}},
+        tooltip:{ callbacks:{ label:c=> c.dataset.yAxisID==='y1'
+            ? `${c.dataset.label}: ${lxN(c.parsed.y)} THB`
+            : `${c.dataset.label}: ${lxN(c.parsed.y)}분 (${lxN1(c.parsed.y/60)}h)`,
+          afterBody:it=>{ const p=per[it[0].dataIndex];
+            return `합계 ${lxN(pMinSel(p))}분 = ${lxN1(pMinSel(p)/60)}h · ${pDay(p)}일 · 일평균 ${lxN(pCostSel(p)/pDay(p))} THB`; } } },
+        datalabels:{ display:ctxD=> ctxD.dataset.type==='bar' && ctxD.dataset.data[ctxD.dataIndex]>900,
+          color:'#fff', font:{size:9.5,weight:'700'}, formatter:v=>lxN(v/60)+'h' } },
+      scales:{
+        x:{ stacked:true, grid:{display:false} },
+        y:{ stacked:true, beginAtZero:true, position:'left',
+            title:{display:true,text:'로스 시간 (분)',font:{size:11}},
+            ticks:{ callback:v=>lxN(v) } },
+        y1:{ beginAtZero:true, position:'right', grid:{drawOnChartArea:false},
+            title:{display:true,text:'손실비용 (THB)',font:{size:11}},
+            ticks:{ callback:v=>(v/1000)+'k' } } } }
+  });
+
+  const f0=per[0], fL=per[per.length-1];
+  const dMin = per.length>1 ? pMinSel(fL)-pMinSel(f0) : 0;
+  const dThb = per.length>1 ? pCostSel(fL)-pCostSel(f0) : 0;
+  const unevenDay = per.some(p=>pDay(p)!==pDay(f0));
+  document.getElementById('lxComboNote').innerHTML = per.length<2
+    ? '단일 구간입니다. 추이를 보려면 상단 기간을 넓히거나 집계 단위를 바꾸십시오.'
+    : (unevenDay
+        ? `<b>기간 길이가 다릅니다</b> — ${per.map(p=>`${p} ${pDay(p)}일`).join(' · ')}. 총량 대신 <b>일평균</b>으로 비교하십시오 — `
+          + per.map(p=>`${p} ${lxN(pMinSel(p)/pDay(p))}분 / ${lxN(pCostSel(p)/pDay(p))} THB`).join(' · ')+'.'
+        : `${f0} ${lxN(pMinSel(f0))}분 / ${lxK(pCostSel(f0))} → ${fL} ${lxN(pMinSel(fL))}분 / ${lxK(pCostSel(fL))} · `
+          + `시간 ${dMin>=0?'+':''}${lxN(dMin)}분, 비용 ${dThb>=0?'+':''}${lxN(dThb)} THB.\n`
+          + `평균 단가 ${lxN1(minsSel?costSel/minsSel*60:0)} THB/시간 — <b>막대는 줄었는데 선이 안 내려가면 분당 단가가 비싼 대형기에서 로스가 난 것입니다.</b>`);
+
+  /* ---------- ② 분류별 카드 ---------- */
+  const catThb = COST_G.map(g=> src.filter(r=>r.s===g).reduce((a,x)=>a+costOf(x),0));
+  const catMin = COST_G.map(g=> src.filter(r=>r.s===g).reduce((a,x)=>a+x.l,0));
+  const cMax = Math.max(...catThb,1), cSum = catThb.reduce((a,b)=>a+b,0)||1;
+  const cOrd = COST_G.map((g,i)=>({g,i,thb:catThb[i],min:catMin[i]})).sort((a,b)=>b.thb-a.thb);
+  document.getElementById('lxCats').innerHTML = cOrd.map(o=>`
+    <div class="lx-cat" style="--cc:${CAT_C[o.g]}">
+      <div class="t">${o.g}</div>
+      <div class="v" style="color:${CAT_C[o.g]}">${lxN(o.thb)}</div>
+      <div class="m">${lxN1(o.thb/cSum*100)}% · ${lxN(o.min/60)}시간 (${lxN(o.min)}분)</div>
+      <div class="lx-bar0"><i style="width:${o.thb/cMax*100}%;background:${CAT_C[o.g]}"></i></div>
+    </div>`).join('');
+
+  /* ---------- ③ 설비 워스트 ---------- */
+  const mcC={}, mcM={};
+  ALL_MACHINES.forEach(m=>{ mcC[m]=[0,0,0,0]; mcM[m]=0; });
+  src.forEach(r=>{ if(!mcC[r.m]) return; const i=gi(r.s); if(i>=0) mcC[r.m][i]+=costOf(r); mcM[r.m]+=r.l; });
+  const mcTot = m => mcC[m].reduce((a,b)=>a+b,0);
+  const wRows = ALL_MACHINES.map(m=>({m, v:mcTot(m), min:mcM[m], parts:mcC[m]}))
+                  .filter(r=>r.v>0).sort((a,b)=>b.v-a.v);
+  const wTop = wRows.slice(0,10), wMax = wTop[0] ? wTop[0].v : 1;
+  const top5 = wRows.slice(0,5).reduce((a,r)=>a+r.v,0);
+  document.getElementById('lxWorstNote').textContent =
+    `상위 5대 = ${lxN1(top5/(costSel||1)*100)}% · 총 ${wRows.length}대`;
+  document.getElementById('lxWorst').innerHTML = wTop.length ? wTop.map(r=>`
+    <div class="lx-rrow" title="DC${r.m} · ${lxN(r.v)} THB · ${lxN(r.min)}분">
+      <span class="lx-rn">DC${r.m}${BROKEN.has(r.m)?' ⛔':''}</span>
+      <span class="lx-rb">${r.parts.map((v,i)=>`<i style="width:${v/wMax*100}%;background:${CAT_C[COST_G[i]]}"></i>`).join('')}</span>
+      <span class="lx-rv">${lxN(r.v)}<span>${lxN1(r.v/(costSel||1)*100)}% · ${lxN(r.min/60)}h</span></span>
+    </div>`).join('') : '<div class="lx-note">선택 기준에 해당하는 데이터가 없습니다.</div>';
+
+  /* ---------- ④ 원인 파레토 (금액) ---------- */
+  const codeIdx={};
+  src.forEach(r=>{ const k=r.i; if(!codeIdx[k]) codeIdx[k]={n:k, s:r.s, thb:0, min:0};
+    codeIdx[k].thb+=costOf(r); codeIdx[k].min+=r.l; });
+  const cRows = Object.values(codeIdx).filter(x=>x.thb>0).sort((a,b)=>b.thb-a.thb);
+  const cTot = cRows.reduce((a,x)=>a+x.thb,0)||1;
+  let acc=0; const n50 = cRows.findIndex(x=>(acc+=x.thb)>=cTot*0.5)+1;
+  document.getElementById('lxParetoNote').textContent =
+    `상위 ${n50||0}개가 금액의 50% · 총 ${cRows.length}종`;
+  const pTop = cRows.slice(0,12);
+  let cum=0; const cumArr = pTop.map(x=>{ cum+=x.thb; return cum/cTot*100; });
+  if(lxParetoChart) lxParetoChart.destroy();
+  lxParetoChart = new Chart(document.getElementById('lxParetoChart'),{
+    data:{ labels: pTop.map(x=>x.n),
+      datasets:[
+        { type:'bar', label:'손실금액 (THB)', yAxisID:'y', order:2, borderRadius:3,
+          backgroundColor: pTop.map(x=>CAT_C[x.s]||'#7f7f7f'), data: pTop.map(x=>x.thb),
+          datalabels:{ display:false } },
+        { type:'line', label:'누적 비중 (%)', yAxisID:'y1', order:1, data: cumArr,
+          borderColor:'#1a2230', borderWidth:1.8, tension:.2, pointRadius:3,
+          pointBackgroundColor:'#1a2230',
+          datalabels:{ align:'top', color:'#1a2230', font:{size:9.5,weight:'700'},
+            formatter:(v,c)=> (c.dataIndex%2===0||c.dataIndex===cumArr.length-1) ? v.toFixed(0)+'%' : '' } }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{labels:{boxWidth:11,font:{size:11},usePointStyle:true}},
+        tooltip:{ callbacks:{ label:c=> c.dataset.yAxisID==='y1'
+          ? `누적 ${c.parsed.y.toFixed(1)}%`
+          : `${lxN(c.parsed.y)} THB · ${lxN(pTop[c.dataIndex].min)}분 (${pTop[c.dataIndex].s})` } } },
+      scales:{ x:{ grid:{display:false}, ticks:{font:{size:10.5}, maxRotation:52, minRotation:38} },
+        y:{ beginAtZero:true, title:{display:true,text:'THB',font:{size:11}}, ticks:{callback:v=>(v/1000)+'k'} },
+        y1:{ beginAtZero:true, max:100, position:'right', grid:{drawOnChartArea:false},
+             ticks:{callback:v=>v+'%'} } } }
+  });
+
+  /* ---------- ⑤ 가동 상태 ---------- */
+  const tgtA = cfg.availTgt/100;
+  const lxGap = t => { const T=runMin+minsAll, allow=T*(1-t), cut=Math.max(minsAll-allow,0);
+    return { cut, ratio: minsAll?cut/minsAll:0, thb: minsAll ? cut/minsAll*costAll : 0 }; };
+  const gT = lxGap(tgtA), g80 = lxGap(0.80);
+  document.getElementById('lxAvailNote').textContent = `가동률 ${lxN1(avail*100)}%`;
+  if(lxAvailChart) lxAvailChart.destroy();
+  lxAvailChart = new Chart(document.getElementById('lxAvailChart'),{
+    type:'bar',
+    data:{ labels:['현재 가동률','목표 '+cfg.availTgt+'%'],
+      datasets:[{ data:[avail*100, cfg.availTgt], borderRadius:4,
+        backgroundColor:['#d13a30','#0f9d68'], barPercentage:.55 }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false},
+        tooltip:{ callbacks:{ label:c=>c.parsed.y.toFixed(1)+'%' } },
+        datalabels:{ anchor:'end', align:'top', font:{size:15,weight:'800'},
+          color:c=>c.dataIndex?'#0f7a52':'#b3271e', formatter:v=>v.toFixed(1)+'%' } },
+      scales:{ y:{ beginAtZero:true, max:100, ticks:{callback:v=>v+'%'} },
+               x:{ grid:{display:false} } } }
+  });
+  document.getElementById('lxGapNote').innerHTML =
+    `목표 ${cfg.availTgt}% 도달 시 회수 <b style="color:#c00000">연 ${lxN(yr(gT.thb))} THB</b> (로스 ${lxN1(gT.ratio*100)}% 감축 · 기간분 ${lxN(gT.thb)} THB)\n`
+    + `80% 도달 시 회수 연 ${lxN(yr(g80.thb))} THB (로스 ${lxN1(g80.ratio*100)}% 감축)`;
+
+  const liveSet = new Set(); RUNr.forEach(r=>{ if(r.r>0||r.p>0) liveSet.add(r.m); });
+  const live = [...liveSet].sort((a,b)=>a-b);
+  const perMcH = live.length ? (runMin+minsAll)/60/live.length : 0;
+  const idle = perMcH ? (minsAll/60)/perMcH : 0;
+  document.getElementById('lxPicto').innerHTML = live.map((m,i)=>{
+    const fl = Math.max(0, Math.min(1, idle-i));
+    return `<div class="lx-mch" title="DC${m}"><i style="height:${(fl*100).toFixed(0)}%"></i></div>`; }).join('');
+  document.getElementById('lxPictoNote').innerHTML =
+    `가동 실적이 있는 설비 <b>${live.length}대</b> 중 <b>${lxN1(idle)}대</b>가 전 기간 멈춰 있던 것과 같습니다 · 전체 로스 ${lxN(minsAll/60)}시간`;
+
+  /* ---------- ⑥ 기간별 추이 로데이터 ---------- */
+  const rawHead = ['기간','날짜','일수']
+    .concat(COST_G.map(g=>g+'(분)'))
+    .concat(['선택 로스(분)','시간(h)'])
+    .concat(COST_G.map(g=>g+'(THB)'))
+    .concat(['선택 THB','일평균 THB','직전 대비','전체 로스(분)','가동(분)','가동률(%)']);
+  document.querySelector('#lxRawTable thead').innerHTML =
+    '<tr>'+rawHead.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+  const rawRows = per.map((p,i)=>{
+    const prevV = i>0 ? pCostSel(per[i-1]) : null;
+    const cur = pCostSel(p);
+    const dv = prevV!=null && prevV>0 ? (cur-prevV)/prevV*100 : null;
+    const av = (pRun[p]+pMinAll[p]) ? pRun[p]/(pRun[p]+pMinAll[p])*100 : 0;
+    return { p, span:pSpan(p), day:pDay(p), min:pMinC[p].slice(), tot:pMinSel(p),
+      cost:pCostC[p].slice(), thb:cur, dv, allMin:pMinAll[p], run:pRun[p], av };
+  });
+  document.querySelector('#lxRawTable tbody').innerHTML = rawRows.map(r=>`<tr>
+    <td class="pl">${r.p}</td><td class="dt">${r.span}</td><td>${r.day}</td>
+    ${r.min.map(v=>`<td${v?'':' class="zero"'}>${v?lxN(v):'-'}</td>`).join('')}
+    <td><b>${lxN(r.tot)}</b></td><td>${lxN1(r.tot/60)}</td>
+    ${r.cost.map(v=>`<td${v?'':' class="zero"'}>${v?lxN(v):'-'}</td>`).join('')}
+    <td><b>${lxN(r.thb)}</b></td><td>${lxN(r.thb/r.day)}</td>
+    <td class="${r.dv==null?'':(r.dv>0?'up':'dn')}">${r.dv==null?'—':(r.dv>0?'+':'')+lxN1(r.dv)+'%'}</td>
+    <td>${lxN(r.allMin)}</td><td>${lxN(r.run)}</td><td>${lxN1(r.av)}</td></tr>`).join('');
+  document.querySelector('#lxRawTable tfoot').innerHTML = `<tr>
+    <td class="pl">TTL</td><td class="dt">${per.length}개 ${pName}</td><td>${days}</td>
+    ${COST_G.map((g,i)=>`<td>${lxN(per.reduce((a,p)=>a+pMinC[p][i],0))}</td>`).join('')}
+    <td>${lxN(minsSel)}</td><td>${lxN1(minsSel/60)}</td>
+    ${COST_G.map((g,i)=>`<td>${lxN(per.reduce((a,p)=>a+pCostC[p][i],0))}</td>`).join('')}
+    <td>${lxN(costSel)}</td><td>${lxN(costSel/days)}</td><td>—</td>
+    <td>${lxN(minsAll)}</td><td>${lxN(runMin)}</td><td>${lxN1(avail*100)}</td></tr>`;
+
+  /* ---------- ⑦ 설비별 손실 상세 ---------- */
+  const mcHead = ['MC','Type','M/C Rate'].concat(COST_G)
+    .concat(['손실금액','로스(분)','시간(h)','최대 분류','비중','인원']);
+  document.querySelector('#lxMcTable thead').innerHTML =
+    '<tr>'+mcHead.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+  const mcRows = ALL_MACHINES.map(m=>{
+    const parts=mcC[m], v=mcTot(m);
+    const topI = v ? parts.indexOf(Math.max(...parts)) : -1;
+    return {m, parts, v, min:mcM[m], top: topI>=0 ? COST_G[topI] : '—'};
+  }).sort((a,b)=>b.v-a.v);
+  document.querySelector('#lxMcTable tbody').innerHTML = mcRows.map(r=>`
+    <tr${r.v?'':' class="dead"'}>
+      <td class="mc">DC #${r.m}${BROKEN.has(r.m)?' ⛔':''}</td>
+      <td class="ty">${(MC_TYPE[r.m]||'-')} Ton</td>
+      <td class="ty">${(+RATE[r.m]||0).toFixed(2)}</td>
+      ${r.parts.map(v=>`<td${v?'':' class="zero"'}>${v?lxN(v):'-'}</td>`).join('')}
+      <td><b>${r.v?lxN(r.v):'-'}</b></td>
+      <td>${r.min?lxN(r.min):'-'}</td>
+      <td>${r.min?lxN1(r.min/60):'-'}</td>
+      <td class="ty" style="color:${r.v?CAT_C[r.top]:'#b9c2cc'};font-weight:700">${r.top}</td>
+      <td>${r.v?lxN1(r.v/(costSel||1)*100)+'%':'-'}</td>
+      <td>${r.v?lxN1(r.v/cfg.wage)+'명':'-'}</td></tr>`).join('');
+  document.querySelector('#lxMcTable tfoot').innerHTML = `<tr>
+    <td class="mc">TTL</td><td class="ty">${live.length}대 가동</td><td class="ty">—</td>
+    ${COST_G.map((g,i)=>`<td>${lxN(ALL_MACHINES.reduce((a,m)=>a+mcC[m][i],0))}</td>`).join('')}
+    <td>${lxN(costSel)}</td><td>${lxN(minsSel)}</td><td>${lxN1(minsSel/60)}</td>
+    <td class="ty">—</td><td>100%</td><td>${lxN1(costSel/cfg.wage)}명</td></tr>`;
+
+  /* ---------- 각주 ---------- */
+  document.getElementById('lxFootNote').innerHTML =
+      `<b>손실금액</b> · 로스(분) × 설비별 M/C Rate(THB/분) — Rate는 상단 [M/C Rate] 버튼에서 수정하면 즉시 재계산됩니다\n`
+    + `<b>집계</b> · ${mode==='iso'?'ISO 주차(월~일, 기존 F-COST 기준)':mode==='sheet'?'시트 주차(수~화, 사내 기준)':mode==='month'?'월간(달력 1일~말일)':'기간 합계'} · 비용 대상 ${costBasisLabel()} · 조회 ${per[0]||'—'} ~ ${per[per.length-1]||'—'} (${days}일)\n`
+    + `<b>환산</b> · 인건비 월 ${lxN(cfg.wage)} THB · 생산 시간당 ${cfg.pph}개 · 1 USD = ${cfg.fx} THB · 목표 가동률 ${cfg.availTgt}%\n`
+    + `<b>정본</b> · 구글시트 OEE_RawData_APQ 「A_가동률」 일별 원자료 · DC14 결번 · 가동실적 없는 설비는 회색 처리`;
+
+  LX_LAST = { per, pName, rawHead, rawRows, mode, days, minsSel, costSel, minsAll, runMin, avail, COSTG:COST_G.slice() };
+}
+
+function lxRawCsvDown(){
+  if(!LX_LAST){ return; }
+  const esc = v => '"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const lines = [ LX_LAST.rawHead.map(esc).join(',') ];
+  LX_LAST.rawRows.forEach(r=>{
+    lines.push([r.p, r.span, r.day]
+      .concat(r.min.map(v=>Math.round(v)))
+      .concat([Math.round(r.tot), (r.tot/60).toFixed(2)])
+      .concat(r.cost.map(v=>Math.round(v)))
+      .concat([Math.round(r.thb), Math.round(r.thb/r.day),
+               r.dv==null?'':r.dv.toFixed(1)+'%',
+               Math.round(r.allMin), Math.round(r.run), r.av.toFixed(1)])
+      .map(esc).join(','));
+  });
+  lines.push(['TTL', LX_LAST.per.length+'개 '+LX_LAST.pName, LX_LAST.days]
+    .concat(LX_LAST.COSTG.map((g,i)=>Math.round(LX_LAST.rawRows.reduce((a,r)=>a+r.min[i],0))))
+    .concat([Math.round(LX_LAST.minsSel), (LX_LAST.minsSel/60).toFixed(2)])
+    .concat(LX_LAST.COSTG.map((g,i)=>Math.round(LX_LAST.rawRows.reduce((a,r)=>a+r.cost[i],0))))
+    .concat([Math.round(LX_LAST.costSel), Math.round(LX_LAST.costSel/LX_LAST.days), '',
+             Math.round(LX_LAST.minsAll), Math.round(LX_LAST.runMin), (LX_LAST.avail*100).toFixed(1)])
+    .map(esc).join(','));
+  const blob = new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `LOSS_RAW_${LX_LAST.mode}_${LX_LAST.per[0]}-${LX_LAST.per[LX_LAST.per.length-1]}.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* 서브탭 전환 · 환산 설정 이벤트 */
+document.querySelectorAll('#costSubnav [data-cv]').forEach(b=>b.addEventListener('click', ()=>{
+  document.querySelectorAll('#costSubnav [data-cv]').forEach(x=>x.classList.toggle('active', x===b));
+  const v = b.dataset.cv;
+  document.getElementById('costViewA').style.display = v==='A' ? '' : 'none';
+  document.getElementById('costViewB').style.display = v==='B' ? '' : 'none';
+  if(v==='B'){ renderCost(); }
+}));
+['lxWage','lxPph','lxAvailTgt','lxFx'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('change', ()=>{ lxSaveCfg(); renderCost(); });
+});
+(function(){ const b=document.getElementById('lxRawCsv'); if(b) b.addEventListener('click', lxRawCsvDown); })();
+lxApplyCfgToInputs();
+
+
 function costCsvDown(){
   const RATE=getRates();
   const basis=isUdtOnly()?'udt':costBasisLabel().replace(/[+\s]/g,'-');
