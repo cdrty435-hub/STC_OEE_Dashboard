@@ -1581,8 +1581,9 @@ function showTrendPointAnalysis(wk){
     ? `<div style="margin-top:6px;font-size:12px;">MTTR 워스트3 변동 — ${newEntrants.length?`신규 진입 <b class="rep-bad">${newEntrants.join(', ')}</b>`:''}${(newEntrants.length&&dropped.length)?' · ':''}${dropped.length?`이탈 <b class="rep-good">${dropped.join(', ')}</b>`:''}</div>`
     : `<div style="margin-top:6px;font-size:12px;color:#8b96a3">MTTR 워스트3 구성은 전주와 동일합니다.</div>`;
 
+  const nextWk = 'W' + (weekNum(wk) + 1);
   panel.innerHTML = `<div style="margin-bottom:8px;"><b>${wk}</b> (전주 ${pw} 대비) 계통별 상승/하강 원인 분석 — 로스유형 TOP3</div><div class="rep-grid">${cards}</div>`
-    + `<div style="margin-top:16px;padding-top:14px;border-top:1px solid #e8ecf1;"><b>${wk} 개선 필요 사항</b> — MTTR/MTBF 워스트3 설비의 주요 로스유형을 표준 개선과제로 매핑${flagLine}${actionHtml}</div>`;
+    + `<div style="margin-top:16px;padding-top:14px;border-top:1px solid #e8ecf1;"><b>${nextWk} 개선 필요 사항</b> <span style="color:#8b96a3;font-size:12px">(${wk} 실적 기준 — MTTR/MTBF 워스트3의 주요 로스유형을 표준 개선과제로 매핑)</span>${flagLine}${actionHtml}</div>`;
 }
 
 document.querySelectorAll('#trendCatChips .cat-chip[data-cat]').forEach(btn=>{
