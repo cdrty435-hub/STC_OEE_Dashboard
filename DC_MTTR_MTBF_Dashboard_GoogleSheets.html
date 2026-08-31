@@ -16,8 +16,8 @@
     --border:#dde3ea;
     --border-soft:#e8ecf1;
     --text:#1a2230;
-    --text-dim:#5b6b7d;
-    --text-faint:#8a97a6;
+    --text-dim:#3d4a59;
+    --text-faint:#5f6c7b;
     --amber:#c9791a;
     --amber-soft:#c9791a1a;
     --teal:#0f9d68;
@@ -170,10 +170,10 @@
           background:#eef2f6; border-radius:12px; position:sticky; top:10px; z-index:30;
           flex:0 0 196px; width:196px;}
   .tabbtn{display:flex; align-items:center; gap:9px; width:100%; text-align:left;
-          border:0; background:transparent; color:#5b6b7d; font-size:13px; font-weight:600;
+          border:0; background:transparent; color:#33404f; font-size:13px; font-weight:600;
           padding:10px 12px; border-radius:9px; cursor:pointer; white-space:nowrap;}
   .tabbtn .no{flex:0 0 20px; height:20px; line-height:20px; text-align:center; border-radius:6px;
-          background:#d7dee7; color:#5b6b7d; font-size:11px; font-weight:800;}
+          background:#d7dee7; color:#33404f; font-size:11px; font-weight:800;}
   .tabbtn .tx{flex:1 1 auto; overflow:hidden; text-overflow:ellipsis;}
   .tabbtn:hover{background:#e2e8ef;}
   .tabbtn.active{background:#1f3864; color:#fff; box-shadow:0 1px 4px rgba(31,56,100,.25);}
@@ -187,7 +187,7 @@
   .rep-charts{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px;}
   @media(max-width:900px){ .rep-charts{grid-template-columns:1fr;} }
   .rep-chart-box{border:1px solid #e6ebf1; border-radius:10px; padding:10px 12px 6px; background:#fff;}
-  .rep-chart-box h4{margin:0 0 6px; font-size:12px; color:#5b6b7d; font-weight:700;}
+  .rep-chart-box h4{margin:0 0 6px; font-size:12px; color:#33404f; font-weight:700;}
   .cost-table td.over{background:#ffe2de; color:#c00000; font-weight:700;}
   .cost-table td.zero{color:#c8d2dd;}
   .rate-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px; margin-top:10px;}
@@ -200,16 +200,16 @@
   .grade-kpi{display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin:14px 0;}
   .gk{border:1px solid #e6ebf1; border-radius:10px; padding:10px 12px; text-align:center; background:#fff;}
   .gk .n{font-size:26px; font-weight:800; font-family:'SFMono-Regular',Consolas,monospace;}
-  .gk .l{font-size:11px; color:#8b96a3; margin-top:2px;}
+  .gk .l{font-size:11px; color:#5a6674; margin-top:2px;}
   .crit{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; padding:12px;
         border:1px dashed #cbd5df; border-radius:10px; background:#fafbfc; margin-top:10px; display:none;}
   .crit.open{display:flex;}
-  .crit label{display:block; font-size:11px; color:#8b96a3; margin-bottom:3px;}
+  .crit label{display:block; font-size:11px; color:#5a6674; margin-bottom:3px;}
   .crit input{width:74px; border:1px solid #d8dfe7; border-radius:7px; padding:6px 8px; font-size:12px;}
   .pm-row{background:#fff6f4 !important;}
   .rep-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-top:12px;}
   .rep-card{border:1px solid #e6ebf1; border-radius:10px; padding:12px 14px; background:#fff;}
-  .rep-card .rk{font-size:11px; font-weight:700; color:#8b96a3; letter-spacing:.04em;}
+  .rep-card .rk{font-size:11px; font-weight:700; color:#5a6674; letter-spacing:.04em;}
   .rep-card .mc{font-size:17px; font-weight:800; color:#1f3864; margin:2px 0 6px;}
   .rep-card .val{font-family:'SFMono-Regular',Consolas,monospace; font-size:13px; margin-bottom:8px;}
   .rep-card ul{margin:0; padding-left:16px; font-size:12px; line-height:1.35; color:#4a5765;}
@@ -221,7 +221,7 @@
   .ai-cfg{display:none; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-top:10px;
           padding:12px; border:1px dashed #cbd5df; border-radius:10px; background:#fafbfc;}
   .ai-cfg.open{display:flex;}
-  .ai-cfg label{display:block; font-size:11px; color:#8b96a3; margin-bottom:3px;}
+  .ai-cfg label{display:block; font-size:11px; color:#5a6674; margin-bottom:3px;}
   .ai-cfg input,.ai-cfg select{border:1px solid #d8dfe7; border-radius:7px; padding:6px 9px; font-size:12px;}
   .ai-warn{font-size:11px; color:#c00000; width:100%;}
   .ppt-table{width:100%; border-collapse:collapse; font-family:'SFMono-Regular',Consolas,monospace; font-size:12px;}
@@ -279,7 +279,7 @@
   }
   .cost-cats{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;
              border:1px solid #d8dfe7;border-radius:9px;padding:4px 8px;background:#fff;}
-  .cost-cats .cc-label{font-size:11px;color:#8b96a3;font-weight:700;margin-right:2px;}
+  .cost-cats .cc-label{font-size:11px;color:#5a6674;font-weight:700;margin-right:2px;}
   .cc-chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;cursor:pointer;
            border:1px solid #e2e7ec;border-radius:13px;padding:3px 9px;background:#fafbfc;user-select:none;}
   .cc-chip:hover{border-color:#b9c2cb;}
@@ -289,8 +289,8 @@
   .cc-btn{padding:3px 9px;font-size:11px;}
   .mtbf-basis{display:inline-flex;align-items:center;gap:5px;border:1px solid #d8dfe7;
               border-radius:9px;padding:3px 8px;background:#fff;margin-right:6px;}
-  .mtbf-basis .mb-label{font-size:11px;color:#8b96a3;font-weight:700;}
-  .mtbf-basis .mb-unit{font-size:11px;color:#8b96a3;}
+  .mtbf-basis .mb-label{font-size:11px;color:#5a6674;font-weight:700;}
+  .mtbf-basis .mb-unit{font-size:11px;color:#5a6674;}
   .mtbf-basis select{border:1px solid #d8dfe7;border-radius:7px;padding:4px 7px;font-size:11.5px;}
   .mtbf-basis input{width:62px;border:1px solid #d8dfe7;border-radius:7px;padding:4px 6px;font-size:11.5px;}
   .mtbf-basis input:disabled{background:#f2f4f6;color:#aab2bb;}
@@ -401,11 +401,11 @@
       <div class="hero-canvas-wrap">
         <div class="hero-split">
           <div>
-            <div class="mini-title">설비별 MTTR (h/건) <span id="heroMttrScope"></span> <span style="color:#8a97a6;">— 막대 클릭 시 세부 내용 · 목표 설정 시 <b style="color:#c0392b;">WORST3</b> 표시</span></div>
+            <div class="mini-title">설비별 MTTR (h/건) <span id="heroMttrScope"></span> <span style="color:#5a6674;">— 막대 클릭 시 세부 내용 · 목표 설정 시 <b style="color:#c0392b;">WORST3</b> 표시</span></div>
             <canvas id="heroMttrChart" height="200"></canvas>
           </div>
           <div>
-            <div class="mini-title">설비별 MTBF (h/건) <span id="heroMtbfScope"></span> <span style="color:#8a97a6;">— <b id="heroMtbfBasis">가동시간 ÷ 로스횟수</b> · 목표 설정 시 <b style="color:#c0392b;">WORST3</b> 표시</span></div>
+            <div class="mini-title">설비별 MTBF (h/건) <span id="heroMtbfScope"></span> <span style="color:#5a6674;">— <b id="heroMtbfBasis">가동시간 ÷ 로스횟수</b> · 목표 설정 시 <b style="color:#c0392b;">WORST3</b> 표시</span></div>
             <canvas id="heroMtbfChart" height="200"></canvas>
           </div>
         </div>
@@ -446,11 +446,11 @@
         </div>
         <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
           <div class="cat-chips" id="trendMetricChips">
-            <span style="font-size:11px; color:#8b96a3; align-self:center; margin-right:4px;">지표</span>
+            <span style="font-size:11px; color:#5a6674; align-self:center; margin-right:4px;">지표</span>
             <button class="cat-chip active" data-metric="MTTR">MTTR</button>
             <button class="cat-chip" data-metric="MTBF">MTBF</button>
             <button class="cat-chip" data-metric="BOTH">MTTR+MTBF</button>
-            <span style="font-size:11px; color:#8b96a3; align-self:center; margin:0 4px 0 10px;">배경</span>
+            <span style="font-size:11px; color:#5a6674; align-self:center; margin:0 4px 0 10px;">배경</span>
             <select id="trendBg" style="border:1px solid #d8dfe7;border-radius:7px;padding:5px 8px;font-size:12px;">
               <option value="avail">가동률 (%)</option>
               <option value="cost">손실비용 (THB)</option>
@@ -458,7 +458,7 @@
             </select>
           </div>
           <div class="cat-chips" id="trendCatChips">
-            <span style="font-size:11px; color:#8b96a3; align-self:center; margin-right:4px;">계통(복수선택)</span>
+            <span style="font-size:11px; color:#5a6674; align-self:center; margin-right:4px;">계통(복수선택)</span>
             <button class="cat-chip active" data-cat="ALL">전체</button>
             <button class="cat-chip" data-cat="금형">금형</button>
             <button class="cat-chip" data-cat="설비-전기">설비-전기</button>
@@ -568,11 +568,11 @@
       </div>
       <div class="hero-split" style="margin-top:14px;">
         <div>
-          <div class="mini-title">설비별 MTTR 워스트 (h/건) <span style="color:#8a97a6;">— 막대를 클릭하면 원인분석이 나옵니다</span></div>
+          <div class="mini-title">설비별 MTTR 워스트 (h/건) <span style="color:#5a6674;">— 막대를 클릭하면 원인분석이 나옵니다</span></div>
           <div style="overflow-x:auto;"><div style="min-width:460px;"><canvas id="dcMttrChart" height="230"></canvas></div></div>
         </div>
         <div>
-          <div class="mini-title">설비별 MTBF 워스트 (h/건) <span style="color:#8a97a6;">— 막대를 클릭하면 원인분석이 나옵니다</span></div>
+          <div class="mini-title">설비별 MTBF 워스트 (h/건) <span style="color:#5a6674;">— 막대를 클릭하면 원인분석이 나옵니다</span></div>
           <div style="overflow-x:auto;"><div style="min-width:460px;"><canvas id="dcMtbfChart" height="230"></canvas></div></div>
         </div>
       </div>
@@ -644,7 +644,7 @@
         <div><label>C이상</label><input type="number" id="gC" value="55" step="1"></div>
         <div><label>D이상</label><input type="number" id="gD" value="40" step="1"></div>
         <div><button class="cat-chip" id="gradeSave">저장 및 재산출</button></div>
-        <div style="width:100%; font-size:11px; color:#8b96a3;">
+        <div style="width:100%; font-size:11px; color:#5a6674;">
           MTBF·MTTR 점수는 상단 [목표 MTBF/MTTR] 값을 기준으로 환산합니다(미입력 시 MTBF 3.0 / MTTR 1.0 기본).
           D 미만은 자동으로 E등급입니다.</div>
       </div>
@@ -670,7 +670,7 @@
           <div class="desc">등급 워스트 3 + MTTR 워스트 3 + MTBF 워스트 3 → 중복 제거 후 로스유형별 개선과제를 자동 편성합니다 (1개월 실행 기준)</div>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
-          <label style="font-size:11px;color:#8b96a3">착수일
+          <label style="font-size:11px;color:#5a6674">착수일
             <input type="date" id="pmStart" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:12px;margin-left:4px;">
           </label>
           <button class="cat-chip" id="pmBuild">계획 생성</button>
@@ -696,7 +696,7 @@
           <div class="desc">비가동 시간 × 설비별 M/C Rate(THB/분) = 손실비용 · 주차별 자동 집계 · 목표 초과 시 붉게 표시</div>
         </div>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          <label style="font-size:11px;color:#8b96a3">기간
+          <label style="font-size:11px;color:#5a6674">기간
             <input type="date" id="costStart" style="border:1px solid #d8dfe7;border-radius:7px;padding:5px 7px;font-size:12px;margin-left:4px;">
             ~ <input type="date" id="costEnd" style="border:1px solid #d8dfe7;border-radius:7px;padding:5px 7px;font-size:12px;"></label>
           <button class="cat-chip" id="costRangeReset">전체기간</button>
@@ -716,7 +716,7 @@
             <button type="button" class="cat-chip cc-btn" id="ccEq">설비만</button>
             <label class="cc-chip cc-udt"><input type="checkbox" id="ccUdt">계획외 고장(UDT)만</label>
           </span>
-          <label style="font-size:11px;color:#8b96a3">목표
+          <label style="font-size:11px;color:#5a6674">목표
             <input type="number" id="costTarget" value="60000" step="1000" style="width:88px;border:1px solid #d8dfe7;border-radius:7px;padding:6px 8px;font-size:12px;margin-left:4px;"> THB</label>
           <select id="costScope" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:12px;">
             <option value="mcweek">설비 × 기간</option>
@@ -937,9 +937,10 @@ const MISSING = new Set([14]);
 const BROKEN = new Set([1,7,17]);
 const ALL_MACHINES = Array.from({length:23}, (_,i)=>i+1).filter(n=>!MISSING.has(n));
 
-Chart.defaults.color = '#5b6b7d';
+Chart.defaults.color = '#33404f';
 Chart.defaults.borderColor = '#dde3ea';
 Chart.defaults.font.family = "'SFMono-Regular', Consolas, monospace";
+Chart.defaults.font.size = 12;
 if(typeof ChartDataLabels !== 'undefined'){ Chart.register(ChartDataLabels); }
 
 // ---------- bar highlight helpers (click = emphasize, others dimmed) ----------
@@ -1337,7 +1338,7 @@ document.querySelectorAll('#pptBasisChips .cat-chip').forEach(btn=>{
 let trendChart;
 let trendCats = new Set(['ALL']);
 let trendMetric = 'MTTR';
-const CAT_COLOR = { 'ALL':'#5b6b7d', '금형':'#c00000', '설비-전기':'#ed7d31', '설비-라인':'#2e75b6', '관리':'#7f7f7f' };
+const CAT_COLOR = { 'ALL':'#33404f', '금형':'#c00000', '설비-전기':'#ed7d31', '설비-라인':'#2e75b6', '관리':'#7f7f7f' };
 const CAT_ORDER = ['ALL','금형','설비-전기','설비-라인','관리'];
 try{
   const mm = localStorage.getItem('stc_trend_metric'); if(mm) trendMetric = mm;
@@ -1398,11 +1399,11 @@ function renderTrend(){
   if(bgMode==='avail') ds.push({ type:'bar', label:'가동률 (%)', data: base.map(r=>r.avail),
     yAxisID:'y2', backgroundColor:'#c8d2dd55', borderWidth:0, order:9,
     datalabels:{ anchor:'start', align:'top', offset:2, color:'#7b8794',
-      font:{size:9,weight:'700'}, formatter:v=>v?v.toFixed(1)+'%':'' } });
+      font:{size:10,weight:'700'}, formatter:v=>v?v.toFixed(1)+'%':'' } });
   else if(bgMode==='cost') ds.push({ type:'bar', label:'손실비용 (THB)', data: base.map(r=>r.cost),
     yAxisID:'y3', backgroundColor:'#e8a33d33', borderWidth:0, order:9,
     datalabels:{ anchor:'start', align:'top', offset:2, color:'#b9791f',
-      font:{size:9,weight:'700'}, formatter:v=>v?Math.round(v/1000)+'k':'' } });
+      font:{size:10,weight:'700'}, formatter:v=>v?Math.round(v/1000)+'k':'' } });
   const lbl = c => (c==='ALL' ? '전체' : c);
   cats.forEach(c=>{
     const rows = statsByCat[c], col = CAT_COLOR[c];
@@ -1411,7 +1412,7 @@ function renderTrend(){
       borderColor:col, backgroundColor:col, borderWidth:3, tension:.25,
       pointRadius:4, pointHoverRadius:7, order:1,
       datalabels:{align:'top', anchor:'end', color:col,
-        font:{size: multi?9:10, weight:'700'}, formatter:v=>v?v.toFixed(2):''}
+        font:{size: multi?10:11, weight:'700'}, formatter:v=>v?v.toFixed(2):''}
     });
     if(showMtbf) ds.push({
       type:'line', label:`${lbl(c)} MTBF`, data: rows.map(r=>r.mtbf), yAxisID:'y1',
@@ -1419,7 +1420,7 @@ function renderTrend(){
       borderDash: (trendMetric==='BOTH' ? [6,4] : []),
       pointRadius:4, pointStyle:(trendMetric==='BOTH'?'rectRot':'circle'), pointHoverRadius:7, order:2,
       datalabels:{align:'bottom', anchor:'start', color:col,
-        font:{size: multi?9:10, weight:'700'}, formatter:v=>v?v.toFixed(2):''}
+        font:{size: multi?10:11, weight:'700'}, formatter:v=>v?v.toFixed(2):''}
     });
   });
   if(showMttr && targetMTTR !== null && !isNaN(targetMTTR)) ds.push({
@@ -1444,7 +1445,7 @@ function renderTrend(){
       },
       onHover:(evt, elements)=>{ evt.native.target.style.cursor = (elements&&elements.length) ? 'pointer' : 'default'; },
       plugins:{
-        legend:{ position:'top', labels:{ boxWidth:12, font:{size:11}, usePointStyle:true } },
+        legend:{ position:'top', labels:{ boxWidth:12, font:{size:12}, usePointStyle:true } },
         tooltip:{ callbacks:{ afterBody:(items)=>{
           const i = items[0].dataIndex, r = base[i];
           return [`기간 ${r.from.slice(5)}~${r.to.slice(5)}`,
@@ -1506,7 +1507,7 @@ function showTrendPointAnalysis(wk){
   }
   const dtxt=(c,p,goodUp)=>{
     if(p===null||p===undefined) return '';
-    const d=c-p; if(Math.abs(d)<0.005) return ' <span style="color:#8b96a3">(전주 동일)</span>';
+    const d=c-p; if(Math.abs(d)<0.005) return ' <span style="color:#5a6674">(전주 동일)</span>';
     const good = goodUp ? d>0 : d<0;
     return ` <span class="${good?'rep-good':'rep-bad'}">${d>0?'▲':'▼'}${Math.abs(d).toFixed(2)}</span>`;
   };
@@ -1523,7 +1524,7 @@ function showTrendPointAnalysis(wk){
     const deltas = [...keys].map(k=>({code:k, cur:curMap[k]||0, prev:prevMap[k]||0, d:(curMap[k]||0)-(prevMap[k]||0)}))
       .sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,3);
     const dl = deltas.length
-      ? deltas.map(d=>`<li>${d.code} <span class="${d.d>0?'rep-bad':'rep-good'}">${d.d>0?'+':''}${d.d.toFixed(1)}h</span> <span style="color:#8b96a3">(${d.prev.toFixed(1)}→${d.cur.toFixed(1)})</span></li>`).join('')
+      ? deltas.map(d=>`<li>${d.code} <span class="${d.d>0?'rep-bad':'rep-good'}">${d.d>0?'+':''}${d.d.toFixed(1)}h</span> <span style="color:#5a6674">(${d.prev.toFixed(1)}→${d.cur.toFixed(1)})</span></li>`).join('')
       : '<li>변동 없음</li>';
     const label = cat==='ALL' ? '전체' : cat;
     return `<div class="rep-card">
@@ -1569,23 +1570,23 @@ function showTrendPointAnalysis(wk){
       <td>${a.rank}</td><td class="mc">DC${a.m}</td>
       <td>${a.kind} ${a.kind==='MTTR'?fmt(a.mttr,2):fmt(a.mtbf,2)}h</td>
       <td>${a.isNew?'<span class="rep-bad">신규</span>':''}</td>
-      <td class="ty" style="text-align:left">${a.code}<br><span style="font-size:10px;color:#8b96a3">${a.sub}</span></td>
+      <td class="ty" style="text-align:left">${a.code}<br><span style="font-size:10px;color:#5a6674">${a.sub}</span></td>
       <td>${fmt(a.h,1)}h / ${a.n}건</td><td>${fmt(a.ratio,0)}%</td>
       <td class="ty" style="text-align:left;font-size:11px">${a.prob}</td>
       <td class="ty" style="text-align:left;font-size:11px">${a.act}</td>
       <td>${a.own}</td><td>${a.days}일</td>
     </tr>`).join('')}</tbody></table></div>`
-    : `<div style="margin-top:10px;color:#8b96a3">${wk} 워스트 산정에 필요한 최소 로스건수(${MIN_N}건)를 채운 설비가 없습니다.</div>`;
+    : `<div style="margin-top:10px;color:#5a6674">${wk} 워스트 산정에 필요한 최소 로스건수(${MIN_N}건)를 채운 설비가 없습니다.</div>`;
 
   const newEntrants = worstMttrCur.filter(x=>!worstMttrPrev.has(x.m)).map(x=>'DC'+x.m);
   const dropped = [...worstMttrPrev].filter(m=>!worstMttrCur.some(x=>x.m===m)).map(m=>'DC'+m);
   const flagLine = (newEntrants.length||dropped.length)
     ? `<div style="margin-top:6px;font-size:12px;">MTTR 워스트3 변동 — ${newEntrants.length?`신규 진입 <b class="rep-bad">${newEntrants.join(', ')}</b>`:''}${(newEntrants.length&&dropped.length)?' · ':''}${dropped.length?`이탈 <b class="rep-good">${dropped.join(', ')}</b>`:''}</div>`
-    : `<div style="margin-top:6px;font-size:12px;color:#8b96a3">MTTR 워스트3 구성은 전주와 동일합니다.</div>`;
+    : `<div style="margin-top:6px;font-size:12px;color:#5a6674">MTTR 워스트3 구성은 전주와 동일합니다.</div>`;
 
   const nextWk = 'W' + (weekNum(wk) + 1);
   panel.innerHTML = `<div style="margin-bottom:8px;"><b>${wk}</b> (전주 ${pw} 대비) 계통별 상승/하강 원인 분석 — 로스유형 TOP3</div><div class="rep-grid">${cards}</div>`
-    + `<div style="margin-top:16px;padding-top:14px;border-top:1px solid #e8ecf1;"><b>${nextWk} 개선 필요 사항</b> <span style="color:#8b96a3;font-size:12px">(${wk} 실적 기준 — MTTR/MTBF 워스트3의 주요 로스유형을 표준 개선과제로 매핑)</span>${flagLine}${actionHtml}</div>`;
+    + `<div style="margin-top:16px;padding-top:14px;border-top:1px solid #e8ecf1;"><b>${nextWk} 개선 필요 사항</b> <span style="color:#5a6674;font-size:12px">(${wk} 실적 기준 — MTTR/MTBF 워스트3의 주요 로스유형을 표준 개선과제로 매핑)</span>${flagLine}${actionHtml}</div>`;
 }
 
 document.querySelectorAll('#trendCatChips .cat-chip[data-cat]').forEach(btn=>{
@@ -1714,7 +1715,7 @@ function buildReport(){
 
   const dtxt=(c,p,goodUp)=>{
     if(p===null||p===undefined) return '';
-    const d=c-p; if(Math.abs(d)<0.005) return ' <span style="color:#8b96a3">(전주 동일)</span>';
+    const d=c-p; if(Math.abs(d)<0.005) return ' <span style="color:#5a6674">(전주 동일)</span>';
     const good = goodUp ? d>0 : d<0;
     return ` <span class="${good?'rep-good':'rep-bad'}">${d>0?'▲':'▼'}${Math.abs(d).toFixed(2)}</span>`;
   };
@@ -1728,11 +1729,11 @@ function buildReport(){
       <div class="rk">${kind} 워스트 ${rank}</div>
       <div class="mc">DC${x.m}</div>
       <div class="val">${v}<br>로스 ${fmt(x.lossH,1)}h · ${x.cnt}건 · 가동 ${fmt(x.runH,1)}h · 가동률 ${fmt(x.avail,1)}%</div>
-      <ul>${t.map(c=>`<li>${c.code} <span style="color:#8b96a3">(${c.s})</span> — ${fmt(c.h,1)}h / ${c.n}건</li>`).join('')}</ul>
+      <ul>${t.map(c=>`<li>${c.code} <span style="color:#5a6674">(${c.s})</span> — ${fmt(c.h,1)}h / ${c.n}건</li>`).join('')}</ul>
     </div>`;
   };
   const up = deltas.filter(d=>d.d>0).slice(0,5), dn = deltas.filter(d=>d.d<0).slice(0,5);
-  const dlist=(a,cls)=> a.length ? a.map(d=>`<li>${d.code} <span class="${cls}">${d.d>0?'+':''}${fmt(d.d,1)}h</span> <span style="color:#8b96a3">(${fmt(d.prev,1)}→${fmt(d.cur,1)})</span></li>`).join('') : '<li>해당 없음</li>';
+  const dlist=(a,cls)=> a.length ? a.map(d=>`<li>${d.code} <span class="${cls}">${d.d>0?'+':''}${fmt(d.d,1)}h</span> <span style="color:#5a6674">(${fmt(d.prev,1)}→${fmt(d.cur,1)})</span></li>`).join('') : '<li>해당 없음</li>';
 
   document.getElementById('repBody').innerHTML =
     `<div class="rep-box" style="background:#fff;">
@@ -1825,7 +1826,7 @@ async function runAI(){
   const model = aiGet(AK.m) || (prov==='claude' ? 'claude-sonnet-4-5' : 'gpt-4o-mini');
   if((prov!=='proxy' && !key) || (prov==='proxy' && !url)){
     box.style.display='block';
-    box.innerHTML = '<span style="color:#8b96a3">AI 소견을 보려면 상단 [AI 설정]에서 키(또는 프록시 URL)를 입력하세요. '
+    box.innerHTML = '<span style="color:#5a6674">AI 소견을 보려면 상단 [AI 설정]에서 키(또는 프록시 URL)를 입력하세요. '
       + '위 표와 카드는 키 없이도 항상 계산됩니다.</span>';
     return;
   }
@@ -1864,7 +1865,7 @@ async function runAI(){
       .replace(/^(\d\))/gm,'<b>$1</b>');
   }catch(e){
     box.innerHTML = '<span class="rep-bad">AI 호출 실패: '+e.message+'</span>'
-      + '<br><span style="color:#8b96a3">CORS 차단이면 Apps Script 프록시 방식을 쓰세요. 위 계산 결과는 정상입니다.</span>';
+      + '<br><span style="color:#5a6674">CORS 차단이면 Apps Script 프록시 방식을 쓰세요. 위 계산 결과는 정상입니다.</span>';
   }
 }
 
@@ -1883,10 +1884,10 @@ function renderReportCharts(wk, pw, wMttr, wMtbf, prev, deltas){
           backgroundColor: key==='mttr' ? '#e8a33d' : '#2fb18a', borderRadius:4 }
       ]},
     options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
-      plugins:{ legend:{ labels:{boxWidth:11, font:{size:10}} },
-        datalabels:{ anchor:'end', align:'right', color:'#5b6b7d', font:{size:10,weight:'700'},
+      plugins:{ legend:{ labels:{boxWidth:11, font:{size:11}} },
+        datalabels:{ anchor:'end', align:'right', color:'#33404f', font:{size:11,weight:'700'},
                      formatter:v=>v?v.toFixed(2):'' } },
-      scales:{ x:{ beginAtZero:true, title:{display:true,text:label, font:{size:10}} },
+      scales:{ x:{ beginAtZero:true, title:{display:true,text:label, font:{size:11}} },
                y:{ grid:{display:false} } } }
   });
   repMttrChart = mk(repMttrChart,'repMttrChart', pairBar('repMttrChart', wMttr, 'mttr','MTTR (h/건)'));
@@ -1905,9 +1906,9 @@ function renderReportCharts(wk, pw, wMttr, wMtbf, prev, deltas){
         datalabels:{ anchor:(c)=> c.dataset.data[c.dataIndex]>0?'end':'start',
                      align:(c)=> c.dataset.data[c.dataIndex]>0?'right':'left',
                      color:(c)=> c.dataset.data[c.dataIndex]>0?'#c00000':'#1d7d60',
-                     font:{size:10,weight:'700'}, formatter:v=>(v>0?'+':'')+v.toFixed(1) } },
-      scales:{ x:{ title:{display:true,text:'증감 (h)', font:{size:10}}, grid:{color:'#eef2f6'} },
-               y:{ grid:{display:false}, ticks:{font:{size:10}} } } }
+                     font:{size:11,weight:'700'}, formatter:v=>(v>0?'+':'')+v.toFixed(1) } },
+      scales:{ x:{ title:{display:true,text:'증감 (h)', font:{size:11}}, grid:{color:'#eef2f6'} },
+               y:{ grid:{display:false}, ticks:{font:{size:11}} } } }
   });
 
   const mcs = [...new Set(wMttr.concat(wMtbf).map(x=>x.m))].slice(0,5);
@@ -1920,11 +1921,11 @@ function renderReportCharts(wk, pw, wMttr, wMtbf, prev, deltas){
           return L.length ? L.reduce((a,x)=>a+x.l,0)/60/L.length : null; }),
         borderColor:pal[i], backgroundColor:pal[i], borderWidth:2.5, tension:.25,
         pointRadius:3, spanGaps:true,
-        datalabels:{ align:'top', anchor:'end', color:pal[i], font:{size:9,weight:'700'},
+        datalabels:{ align:'top', anchor:'end', color:pal[i], font:{size:10,weight:'700'},
           formatter:v=> v==null?'':v.toFixed(2) } })) },
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{boxWidth:11, font:{size:10}, usePointStyle:true} } },
-      scales:{ y:{ beginAtZero:true, title:{display:true,text:'MTTR (h/건)', font:{size:10}} } } }
+      plugins:{ legend:{ labels:{boxWidth:11, font:{size:11}, usePointStyle:true} } },
+      scales:{ y:{ beginAtZero:true, title:{display:true,text:'MTTR (h/건)', font:{size:11}} } } }
   });
 
   const gs = ['금형','설비-전기','설비-라인','관리'];
@@ -1934,10 +1935,10 @@ function renderReportCharts(wk, pw, wMttr, wMtbf, prev, deltas){
       datasets: gs.map(g=>({ label:g, backgroundColor:CAT_C[g], borderRadius:3,
         data: mcs.map(m=> LOSS.filter(r=>r.w===wk&&r.m===m&&r.s===g).reduce((a,x)=>a+x.l,0)/60) })) },
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{boxWidth:11, font:{size:10}} },
-        datalabels:{ color:'#fff', font:{size:9,weight:'700'}, formatter:v=> v>3 ? v.toFixed(0) : '' } },
+      plugins:{ legend:{ labels:{boxWidth:11, font:{size:11}} },
+        datalabels:{ color:'#fff', font:{size:10,weight:'700'}, formatter:v=> v>3 ? v.toFixed(0) : '' } },
       scales:{ x:{ stacked:true, grid:{display:false} },
-               y:{ stacked:true, beginAtZero:true, title:{display:true,text:'로스시간 (h)', font:{size:10}} } } }
+               y:{ stacked:true, beginAtZero:true, title:{display:true,text:'로스시간 (h)', font:{size:11}} } } }
   });
 }
 
@@ -2024,9 +2025,9 @@ function renderGrade(){
   const ord = {E:0,D:1,C:2,B:3,A:4};
   document.querySelector('#gradeTable tbody').innerHTML = cur.map(x=>{
     const p = prevMap[x.m];
-    let mv = '<span style="color:#8b96a3">–</span>';
+    let mv = '<span style="color:#5a6674">–</span>';
     if(p){ const d = ord[x.g]-ord[p.g];
-      mv = d>0 ? `<span class="rep-good">▲ ${d}단계</span>` : d<0 ? `<span class="rep-bad">▼ ${-d}단계</span>` : '<span style="color:#8b96a3">유지</span>'; }
+      mv = d>0 ? `<span class="rep-good">▲ ${d}단계</span>` : d<0 ? `<span class="rep-bad">▼ ${-d}단계</span>` : '<span style="color:#5a6674">유지</span>'; }
     return `<tr class="${x.pm?'pm-row':''}">
       <td>${x.pm? '<b style="color:#c00000">'+x.pm+'</b>' : '–'}</td>
       <td class="mc">DC${x.m}</td>
@@ -2054,10 +2055,10 @@ function renderGrade(){
         tooltip:{ callbacks:{ label:(t)=>{ const x=srt[t.dataIndex];
           return [`총점 ${x.tot.toFixed(1)} · ${x.g}등급`,
                   `가동률 ${x.avail.toFixed(1)}% / MTBF ${x.mtbf.toFixed(2)} / MTTR ${x.mttr.toFixed(2)}`]; } } },
-        datalabels:{ anchor:'end', align:'top', color:'#5b6b7d', font:{size:9,weight:'700'},
+        datalabels:{ anchor:'end', align:'top', color:'#33404f', font:{size:10,weight:'700'},
                      formatter:v=>v.toFixed(0) } },
-      scales:{ y:{ beginAtZero:true, max:100, title:{display:true,text:'총점', font:{size:10}} },
-               x:{ grid:{display:false}, ticks:{font:{size:10}} } } }
+      scales:{ y:{ beginAtZero:true, max:100, title:{display:true,text:'총점', font:{size:11}} },
+               x:{ grid:{display:false}, ticks:{font:{size:11}} } } }
   });
 
   /* 차트 : 가동률 vs MTBF 버블 */
@@ -2068,13 +2069,13 @@ function renderGrade(){
       label:g+'등급', backgroundColor:GC5[g]+'cc',
       data: cur.filter(x=>x.g===g).map(x=>({ x:x.avail, y:x.mtbf, r:Math.max(4,Math.sqrt(x.lossH)*1.5), mc:x.m })) })) },
     options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{boxWidth:11,font:{size:10}} },
-        datalabels:{ color:'#33404f', font:{size:9,weight:'700'},
+      plugins:{ legend:{ labels:{boxWidth:11,font:{size:11}} },
+        datalabels:{ color:'#33404f', font:{size:10,weight:'700'},
                      formatter:(v,ctx)=>'DC'+ctx.dataset.data[ctx.dataIndex].mc, anchor:'center', align:'center' },
         tooltip:{ callbacks:{ label:(t)=>{ const d=t.raw;
           return `DC${d.mc} · 가동률 ${d.x.toFixed(1)}% · MTBF ${d.y.toFixed(2)}`; } } } },
-      scales:{ x:{ title:{display:true,text:'가동률 (%)', font:{size:10}} },
-               y:{ title:{display:true,text:'MTBF (h/건)', font:{size:10}}, beginAtZero:true } } }
+      scales:{ x:{ title:{display:true,text:'가동률 (%)', font:{size:11}} },
+               y:{ title:{display:true,text:'MTBF (h/건)', font:{size:11}}, beginAtZero:true } } }
   });
 
   lastGradeRows = cur; lastGradeMonth = mon;
@@ -2205,7 +2206,7 @@ function buildPM(){
     <td><b>${t.pri}</b></td><td class="mc">DC${t.mc}</td>
     <td><span class="grade-badge g-${t.g}">${t.g}</span></td>
     <td class="ty" style="text-align:left;font-size:11px">${t.why}</td>
-    <td class="ty" style="text-align:left">${t.code}<br><span style="font-size:10px;color:#8b96a3">${t.sub}</span></td>
+    <td class="ty" style="text-align:left">${t.code}<br><span style="font-size:10px;color:#5a6674">${t.sub}</span></td>
     <td>${fmt(t.h,1)}h / ${t.n}건</td><td>${fmt(t.ratio,0)}%</td>
     <td class="ty" style="text-align:left;font-size:11px">${t.prob}</td>
     <td class="ty" style="text-align:left;font-size:11px">${t.act}</td>
@@ -2223,13 +2224,13 @@ function buildPM(){
         backgroundColor: tasks.map(t=>OWN_C[t.own]||'#7f7f7f'), borderRadius:4, barPercentage:.75 }] },
     options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
       plugins:{ legend:{display:false},
-        datalabels:{ color:'#fff', font:{size:9,weight:'700'}, anchor:'center', align:'center',
+        datalabels:{ color:'#fff', font:{size:10,weight:'700'}, anchor:'center', align:'center',
                      formatter:(v,c)=>tasks[c.dataIndex].own },
         tooltip:{ callbacks:{ label:(c)=>{ const t=tasks[c.dataIndex];
           return [`${t.st} ~ ${t.en} (${t.days}일) · ${t.own}`, t.act]; } } } },
-      scales:{ x:{ title:{display:true,text:`착수 후 경과일 (기준 ${ymd(minD)})`, font:{size:10}},
+      scales:{ x:{ title:{display:true,text:`착수 후 경과일 (기준 ${ymd(minD)})`, font:{size:11}},
                    beginAtZero:true, ticks:{stepSize:2} },
-               y:{ grid:{display:false}, ticks:{font:{size:10}} } } }
+               y:{ grid:{display:false}, ticks:{font:{size:11}} } } }
   });
 }
 
@@ -2723,7 +2724,7 @@ function renderHero(){
       },
       onHover:(evt, elements)=>{ evt.native.target.style.cursor = elements.some(e=>e.datasetIndex===0) ? 'pointer' : 'default'; },
       scales:{
-        y:{beginAtZero:true, title:{display:true,text:'MTTR (h/건)',color:'#5b6b7d'}, grid:{color:'#e8ecf1'}},
+        y:{beginAtZero:true, title:{display:true,text:'MTTR (h/건)',color:'#33404f'}, grid:{color:'#e8ecf1'}},
         x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, font:{size:10.5}}}
       }
     }
@@ -2768,7 +2769,7 @@ function renderHero(){
       },
       onHover:(evt, elements)=>{ evt.native.target.style.cursor = elements.some(e=>e.datasetIndex===0) ? 'pointer' : 'default'; },
       scales:{
-        y:{beginAtZero:true, title:{display:true,text:'MTBF (h/건)',color:'#5b6b7d'}, grid:{color:'#e8ecf1'}},
+        y:{beginAtZero:true, title:{display:true,text:'MTBF (h/건)',color:'#33404f'}, grid:{color:'#e8ecf1'}},
         x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, font:{size:10.5}}}
       }
     }
@@ -2962,7 +2963,7 @@ function renderDCWorst(run, loss){
       },
       onHover:(evt, elements)=>{ evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; },
       scales:{
-        y:{beginAtZero:true, title:{display:true,text:'MTTR (h/건)',color:'#5b6b7d'}, grid:{color:'#e8ecf1'}},
+        y:{beginAtZero:true, title:{display:true,text:'MTTR (h/건)',color:'#33404f'}, grid:{color:'#e8ecf1'}},
         x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, font:{size:10}}}
       }
     }
@@ -2999,7 +3000,7 @@ function renderDCWorst(run, loss){
       },
       onHover:(evt, elements)=>{ evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; },
       scales:{
-        y:{beginAtZero:true, title:{display:true,text:'MTBF (h/건)',color:'#5b6b7d'}, grid:{color:'#e8ecf1'}},
+        y:{beginAtZero:true, title:{display:true,text:'MTBF (h/건)',color:'#33404f'}, grid:{color:'#e8ecf1'}},
         x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:45, font:{size:10}}}
       }
     }
@@ -3165,8 +3166,8 @@ function renderPareto(loss){
       },
       onHover:(evt, elements)=>{ evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; },
       scales:{
-        y:{position:'left', title:{display:true,text:'로스시간(h)',color:'#5b6b7d'}, grid:{color:'#e8ecf1'}},
-        y1:{position:'right', min:0, max:100, title:{display:true,text:'누적 비율(%)',color:'#5b6b7d'}, grid:{display:false}},
+        y:{position:'left', title:{display:true,text:'로스시간(h)',color:'#33404f'}, grid:{color:'#e8ecf1'}},
+        y1:{position:'right', min:0, max:100, title:{display:true,text:'누적 비율(%)',color:'#33404f'}, grid:{display:false}},
         x:{ticks:{maxRotation:40, minRotation:20, font:{size:13, weight:'600'}, color:'#1a2230'}, grid:{display:false}}
       }
     }
@@ -3228,7 +3229,7 @@ function showParetoAnalysis(item){
 
   panel.innerHTML = `
     <div class="analysis-head">
-      <h3>'${item}' 세부 내용 <span style="color:#8a97a6; font-size:12px; font-weight:400;">(${cat})</span></h3>
+      <h3>'${item}' 세부 내용 <span style="color:#5a6674; font-size:12px; font-weight:400;">(${cat})</span></h3>
       <button class="close-btn" onclick="hideParetoAnalysis()">닫기 ✕</button>
     </div>
     <div class="analysis-stats">
