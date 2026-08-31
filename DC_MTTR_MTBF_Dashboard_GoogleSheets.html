@@ -473,6 +473,7 @@
         <span>실선=MTTR · 점선=MTBF (MTTR+MTBF 모드)</span>
       </div>
       <div class="rep-box" id="trendNote" style="margin-top:14px;"></div>
+      <div class="rep-box" id="trendPointPanel" style="display:none; margin-top:14px;"></div>
       <div style="overflow-x:auto; margin-top:14px;">
         <table id="trendTable" class="ppt-table"><thead></thead><tbody></tbody></table>
       </div>
@@ -1434,13 +1435,20 @@ function renderTrend(){
     options:{
       responsive:true, maintainAspectRatio:false,
       interaction:{ mode:'index', intersect:false },
+      onClick:(evt, elements)=>{
+        if(!elements || !elements.length) return;
+        const wk = labels[elements[0].index];
+        if(wk) showTrendPointAnalysis(wk);
+      },
+      onHover:(evt, elements)=>{ evt.native.target.style.cursor = (elements&&elements.length) ? 'pointer' : 'default'; },
       plugins:{
         legend:{ position:'top', labels:{ boxWidth:12, font:{size:11}, usePointStyle:true } },
         tooltip:{ callbacks:{ afterBody:(items)=>{
           const i = items[0].dataIndex, r = base[i];
           return [`기간 ${r.from.slice(5)}~${r.to.slice(5)}`,
                   `가동 ${fmt(r.runH,1)}h · 가동률 ${fmt(r.avail,1)}%`,
-                  `손실비용 ${Math.round(r.cost).toLocaleString()} THB (설비 ${Math.round(r.costEq).toLocaleString()})`];
+                  `손실비용 ${Math.round(r.cost).toLocaleString()} THB (설비 ${Math.round(r.costEq).toLocaleString()})`,
+                  '클릭하면 계통별 상승/하강 원인 분석이 아래에 표시됩니다'];
         } } }
       },
       scales:{
@@ -1482,6 +1490,48 @@ function renderTrend(){
 
   const nb = document.getElementById('trendNote');
   if(nb) nb.innerHTML = trendCommentary(base);
+}
+
+/* ----- 점 클릭 시 : 전체/금형/설비-전기/설비-라인/관리 계통별 전주 대비 원인 분석 ----- */
+function showTrendPointAnalysis(wk){
+  const panel = document.getElementById('trendPointPanel');
+  if(!panel) return;
+  const idx = allWeeks.indexOf(wk), pw = idx>0 ? allWeeks[idx-1] : null;
+  panel.style.display = 'block';
+  if(!pw){
+    panel.innerHTML = `<div><b>${wk}</b> · 첫 주차라 전주 비교가 불가합니다.</div>`;
+    return;
+  }
+  const dtxt=(c,p,goodUp)=>{
+    if(p===null||p===undefined) return '';
+    const d=c-p; if(Math.abs(d)<0.005) return ' <span style="color:#8b96a3">(전주 동일)</span>';
+    const good = goodUp ? d>0 : d<0;
+    return ` <span class="${good?'rep-good':'rep-bad'}">${d>0?'▲':'▼'}${Math.abs(d).toFixed(2)}</span>`;
+  };
+  const cards = CAT_ORDER.map(cat=>{
+    const rows = weekStats(cat);
+    const cur = rows.find(r=>r.w===wk), prev = rows.find(r=>r.w===pw);
+    if(!cur) return '';
+    const L = fails(LOSS.filter(r=>r.w===wk  && matchCat(r,cat)));
+    const P = fails(LOSS.filter(r=>r.w===pw && matchCat(r,cat)));
+    const curMap={}, prevMap={};
+    L.forEach(r=>{ curMap[r.i]=(curMap[r.i]||0)+r.l/60; });
+    P.forEach(r=>{ prevMap[r.i]=(prevMap[r.i]||0)+r.l/60; });
+    const keys = new Set(Object.keys(curMap).concat(Object.keys(prevMap)));
+    const deltas = [...keys].map(k=>({code:k, cur:curMap[k]||0, prev:prevMap[k]||0, d:(curMap[k]||0)-(prevMap[k]||0)}))
+      .sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,3);
+    const dl = deltas.length
+      ? deltas.map(d=>`<li>${d.code} <span class="${d.d>0?'rep-bad':'rep-good'}">${d.d>0?'+':''}${d.d.toFixed(1)}h</span> <span style="color:#8b96a3">(${d.prev.toFixed(1)}→${d.cur.toFixed(1)})</span></li>`).join('')
+      : '<li>변동 없음</li>';
+    const label = cat==='ALL' ? '전체' : cat;
+    return `<div class="rep-card">
+      <div class="rk">${label}</div>
+      <div class="val">MTTR <b>${fmt(cur.mttr,2)}</b>${dtxt(cur.mttr, prev&&prev.mttr, false)} · MTBF <b>${fmt(cur.mtbf,2)}</b>${dtxt(cur.mtbf, prev&&prev.mtbf, true)}<br>
+      로스 ${fmt(cur.lossH,1)}h · ${cur.cnt}건 · 가동률 ${fmt(cur.avail,1)}%</div>
+      <ul>${dl}</ul>
+    </div>`;
+  }).join('');
+  panel.innerHTML = `<div style="margin-bottom:8px;"><b>${wk}</b> (전주 ${pw} 대비) 계통별 상승/하강 원인 분석 — 로스유형 TOP3</div><div class="rep-grid">${cards}</div>`;
 }
 
 document.querySelectorAll('#trendCatChips .cat-chip[data-cat]').forEach(btn=>{
