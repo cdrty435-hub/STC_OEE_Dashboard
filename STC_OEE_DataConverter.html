@@ -153,14 +153,47 @@ function cleanPct(v){
 /* 원본 P열(idx 15)의 NOF 유무를 자동 감지해 인덱스를 잡는다.
    - NOF 있는 신규 원본(Rawdata12~)  : offset 1
    - NOF 없는 구 원본(Rawdata11 이하) : offset 0  → 과거 파일도 그대로 변환 가능 */
+let LAST_LAYOUT = null;
 function buildColMap(rawRows){
   const norm = v => String(v==null?'':v).replace(/\s+/g,'').toUpperCase();
   const h0 = (rawRows[0]||[]).map(norm);
-  // NOF는 P열(idx15)에 있을 수도, 맨 뒤로 옮겨져 있을 수도 있다. 헤더 전체에서 찾는다.
+  const body = rawRows.slice(3).filter(r => r.length > 40);
+
+  /* 1단계: 가동률/성능/품질은 '%'로 끝나는 3개 연속 칸이다.
+     헤더 글자에 의존하지 않고 이 구조로 전체 오프셋을 판정한다. */
+  const pctRatio = i => {
+    if (i < 0) return 0;
+    let hit = 0, seen = 0;
+    for (const r of body){ const v = String(r[i]==null?'':r[i]).trim(); if (v==='') continue; seen++; if (/%$/.test(v)) hit++; }
+    return seen ? hit/seen : 0;
+  };
+  let pctIdx = -1;
+  for (let i = 44; i <= 50; i++){
+    if (pctRatio(i) > 0.8 && pctRatio(i+1) > 0.8 && pctRatio(i+2) > 0.8){ pctIdx = i; break; }
+  }
+  const o = pctIdx >= 0 ? (pctIdx - 46) : ((h0[15]||'').indexOf('NOF') >= 0 ? 1 : 0);
+  if (o < 0 || o > 1) throw new Error('원본 열 구조를 인식하지 못했습니다. 가동률/성능/품질 열의 위치가 예상 범위를 벗어났습니다.');
+
+  /* 2단계: NOF 열 찾기 — ① 헤더에 NOF 표기 ② P열 삽입형 ③ 맨 뒤 이동형 */
   let nofIdx = -1;
   for (let i=0;i<h0.length;i++){ if ((h0[i]||'').indexOf('NOF') >= 0) { nofIdx = i; break; } }
+  if (nofIdx < 0 && o === 1) nofIdx = 15;
+  if (nofIdx < 0){
+    // 불량합계(75+o) '다음' 칸부터 탐색. 불량합계와 값이 같은 열은 제외한다.
+    for (let i = 76+o; i <= 79+o; i++){
+      let ok=0, seen=0, sameAsTotal=0;
+      for (const r of body){
+        const v=String(r[i]==null?'':r[i]).trim();
+        if(v===''||v==='-') continue;
+        seen++;
+        if(/^\d{1,2}$/.test(v) && Number(v) <= 99) ok++;
+        if(v === String(r[75+o]==null?'':r[75+o]).trim()) sameAsTotal++;
+      }
+      if (seen >= 20 && ok/seen > 0.9 && sameAsTotal/seen < 0.5){ nofIdx = i; break; }
+    }
+  }
   const hasNof = nofIdx >= 0;
-  const o = (nofIdx === 15) ? 1 : 0;   // P열 삽입일 때만 뒤쪽 인덱스가 밀린다
+  LAST_LAYOUT = { offset:o, nofIdx:nofIdx, pctIdx:pctIdx };
   const C = {
     date:1, equip:2, shift:3, model:4, cav:5, ctStd:6, ctReal:7, qtyTotal:8, qtyGood:9, avgShot:10,
     shiftTime:11, plan:12, run:13, loss:14,
@@ -255,7 +288,9 @@ function convert(rawRows, year, weekLabel){
     }
   }
 
-  return { aRows, pRows, qRows, qModelRows, skipped, total: data.length };
+    let nofCount = 0, nofSum = 0;
+  if (COL.hasNof){ for (const a of aRows){ const v = a[a.length-1]; if (v !== '' ) { nofCount++; nofSum += Number(v)||0; } } }
+  return { aRows, pRows, qRows, qModelRows, skipped, total: data.length, layout: COL, nofCount, nofSum };
 }
 
 /* ---------- File reading with CP949/EUC-KR fallback ---------- */
@@ -307,7 +342,8 @@ async function onConvertClick(){
     const rawRows = parseRawCSV(text);
     if (rawRows.length < 4) throw new Error('파일 형식을 인식할 수 없습니다 (행이 너무 적음).');
 
-    const { aRows, pRows, qRows, qModelRows, skipped, total } = convert(rawRows, year, week);
+    const result = convert(rawRows, year, week);
+    const { aRows, pRows, qRows, qModelRows, skipped, total } = result;
     if (!aRows.length) throw new Error('변환된 데이터가 없습니다. 파일 형식(3행 헤더 + 데이터)을 확인해주세요.');
 
     const aCsv = toCSV(A_HEADER, aRows);
@@ -326,7 +362,14 @@ async function onConvertClick(){
     document.getElementById('resultCard').style.display = 'block';
     renderPreview(aRows);
 
-    setStatus(`변환 완료 — 총 ${total}개 데이터 행 중 ${aRows.length}행 변환${skipped ? `, ${skipped}행 건너뜀(일자 인식 불가)` : ''}.`, 'ok');
+    let diag;
+    if (!LAST_LAYOUT || LAST_LAYOUT.nofIdx < 0) {
+      diag = ' ⚠ NOF(고장횟수) 열을 원본에서 찾지 못했습니다 — AP열은 공란으로 출력됩니다.';
+    } else {
+      const colLetter = n => { let x=''; n+=1; while(n){ const m=(n-1)%26; x=String.fromCharCode(65+m)+x; n=Math.floor((n-1)/26);} return x; };
+      diag = ` · NOF 열 감지: 원본 ${colLetter(LAST_LAYOUT.nofIdx)}열 → 입력 ${result.nofCount}행 / 합계 ${result.nofSum}건 (미기록 ${aRows.length - result.nofCount}행은 공란).`;
+    }
+    setStatus(`변환 완료 — 총 ${total}개 데이터 행 중 ${aRows.length}행 변환${skipped ? `, ${skipped}행 건너뜀(일자 인식 불가)` : ''}.` + diag, LAST_LAYOUT && LAST_LAYOUT.nofIdx >= 0 ? 'ok' : 'err');
   } catch(e){
     console.error(e);
     setStatus('변환 오류: ' + e.message, 'err');
