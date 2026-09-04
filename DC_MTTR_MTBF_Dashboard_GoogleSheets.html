@@ -1070,8 +1070,8 @@
           <div><label for="lxPph">시간당 생산 수량</label><input id="lxPph" type="number" step="0.1" value="137.4"></div>
           <div><label for="lxAvailTgt">목표 가동률 %</label><input id="lxAvailTgt" type="number" step="1" value="90"></div>
           <div><label for="lxFx">THB / 1 USD</label><input id="lxFx" type="number" step="0.1" value="32.8"></div>
-          <div class="hint">상단 [기간]·[유형] 필터가 이 화면에도 그대로 적용됩니다<br>
-            금액 = 선택 유형 기준 · 가동률/회수액 = 전체 로스 기준</div>
+          <div class="hint">기간은 이 화면의 [시작]~[종료]로 직접 선택합니다 (전체 주차 W27~ 선택 가능)<br>
+            상단 [유형] 필터는 그대로 적용 · 금액 = 선택 유형 기준 · 가동률/회수액 = 전체 로스 기준</div>
         </div>
 
         <div class="lx-kpis" id="lxKpi"></div>
@@ -2995,9 +2995,14 @@ function renderCost(){
     + `· 비용 워스트 3 : ${worst.map(m=>`DC${m} ${Math.round(rowT[m]).toLocaleString()} THB`).join(' · ')}\n`
     + `<b>· ⑤ 설비 ${Math.round(eqC).toLocaleString()} THB (${(eqC/allC*100).toFixed(1)}%) / 금형·관리 ${Math.round(allC-eqC).toLocaleString()} THB (${((allC-eqC)/allC*100).toFixed(1)}%)</b>`;
 
-  /* → Ⅱ. 손실 경영분석 블록 갱신 (같은 필터 컨텍스트 그대로 전달) */
+  /* → Ⅱ. 손실 경영분석 블록 갱신
+     이 블록은 자체 [시작]~[종료] 선택으로 기간을 고르므로, 상단 날짜 필터로 잘린
+     목록이 아니라 전체 데이터의 주차(W27~) 를 그대로 넘긴다. 유형(카테고리) 필터는 그대로 적용. */
   try{
-    renderLossX({ RATE, per, mode, src, LOSSr, RUNr, cell, rowT, colT, grand, keep, pName, tgt });
+    const perFull = periodsOf(mode, RUN);
+    const srcFull = (basis==='udt') ? fails(LOSS) : LOSS.filter(r=>keep.has(r.s));
+    renderLossX({ RATE, per:perFull, mode, src:srcFull, LOSSr:LOSS, RUNr:RUN,
+                  cell, rowT, colT, grand, keep, pName, tgt });
   }catch(e){ console.error('renderLossX', e); }
 }
 /* ================= Ⅱ. 비가동 로스 손실 대시보드 =================================
@@ -3150,7 +3155,9 @@ function renderLossX(ctx){
 
   /* 로컬 시작/종료 구간 (원본 대시보드의 시작·종료 선택과 동일) */
   const sig = mode+'|'+per.join(',');
-  if(sig !== LX_SIG){ LX_SIG = sig; LX_I1 = 0; LX_I2 = per.length-1; }
+  if(sig !== LX_SIG){                       // 기간 단위·데이터가 바뀌면 첫 기간~마지막 기간으로 초기화
+    LX_SIG = sig; LX_I1 = 0; LX_I2 = per.length-1;
+  }
   LX_I1 = Math.min(Math.max(LX_I1,0), per.length-1);
   LX_I2 = Math.min(Math.max(LX_I2,LX_I1), per.length-1);
   const opts = per.map((k,i)=>`<option value="${i}">${k}</option>`).join('');
@@ -3612,6 +3619,7 @@ function renderWeekly(){
   /* ---------- ② 설비별 MTTR / MTBF ---------- */
   const rows = ALL_MACHINES.map(m=>mcs[m]).filter(x=>x && x.cnt>0);
   const labels = rows.map(x=>'DC'+x.m);
+  const HAS_DL = (typeof ChartDataLabels !== 'undefined');
   const mkBar = (ref, id, key, colorFn, tgt)=>{
     const ctx = document.getElementById(id); if(!ctx) return null;
     if(ref) ref.destroy();
@@ -3619,8 +3627,15 @@ function renderWeekly(){
                   backgroundColor: rows.map(colorFn), borderWidth:0, barPercentage:.82 }];
     return new Chart(ctx, { type:'bar', data:{labels:labels, datasets:ds},
       options:{ responsive:true, maintainAspectRatio:false, animation:false,
+        layout:{ padding:{ top:26 } },                 // 세로 값 라벨이 잘리지 않도록
         plugins:{ legend:{display:false},
-          datalabels: (typeof ChartDataLabels!=='undefined') ? {display:false} : undefined,
+          datalabels: HAS_DL ? {                        // 막대 위에 값 표시 (세로쓰기)
+            display: ctxD => ctxD.dataset.data[ctxD.dataIndex] > 0,
+            anchor:'end', align:'end', offset:2, rotation:-90, clamp:true,
+            color: ctxD => { const c = ctxD.dataset.backgroundColor[ctxD.dataIndex]||'';
+                             return (c.indexOf('e2564d')>=0) ? '#c00000' : '#33404f'; },
+            font:{ size:7.5, weight:'700', family:"'SFMono-Regular', Consolas, monospace" },
+            formatter: v => (v>0 ? fmt(v,2) : '') } : undefined,
           annotation: undefined },
         scales:{ x:{ ticks:{font:{size:8}, maxRotation:90, minRotation:90}, grid:{display:false} },
                  y:{ beginAtZero:true, ticks:{font:{size:9}}, grid:{color:'#eef2f7'} } } } });
@@ -3637,21 +3652,30 @@ function renderWeekly(){
     const ctx = document.getElementById('wkTrendChart');
     if(ctx){
       if(wkTrendChart) wkTrendChart.destroy();
+      const DL = (typeof ChartDataLabels !== 'undefined');
+      const lineDL = (color, align) => DL ? {
+        display:true, align:align, anchor:'center', offset:4, clamp:true,
+        color:color, font:{ size:7.5, weight:'700', family:"'SFMono-Regular', Consolas, monospace" },
+        formatter: v => fmt(v,2) } : undefined;
       wkTrendChart = new Chart(ctx, {
         data:{ labels: WS.map(x=>x.w), datasets:[
           { type:'bar',  label:'가동률(%)', data:WS.map(x=>+x.avail.toFixed(1)),
-            backgroundColor:'#c8d2dd66', borderWidth:0, yAxisID:'y2', order:3 },
+            backgroundColor:'#c8d2dd66', borderWidth:0, yAxisID:'y2', order:3,
+            datalabels: DL ? { display:true, anchor:'start', align:'end', offset:1, color:'#7a8794',
+              font:{ size:7, weight:'700' }, formatter: v => fmt(v,1)+'%' } : undefined },
           { type:'line', label:'MTTR', data:WS.map(x=>+x.mttr.toFixed(2)),
             borderColor:'#c00000', backgroundColor:'#c00000', borderWidth:2,
-            pointRadius: WS.map(x=>x.w===wk?4:2), tension:.25, yAxisID:'y', order:1 },
+            pointRadius: WS.map(x=>x.w===wk?4:2), tension:.25, yAxisID:'y', order:1,
+            datalabels: lineDL('#c00000','bottom') },
           { type:'line', label:'MTBF', data:WS.map(x=>+x.mtbf.toFixed(2)),
             borderColor:'#2e75b6', backgroundColor:'#2e75b6', borderWidth:2, borderDash:[5,3],
-            pointRadius: WS.map(x=>x.w===wk?4:2), tension:.25, yAxisID:'y', order:2 } ]},
+            pointRadius: WS.map(x=>x.w===wk?4:2), tension:.25, yAxisID:'y', order:2,
+            datalabels: lineDL('#2e75b6','top') } ]},
         options:{ responsive:true, maintainAspectRatio:false, animation:false,
-          plugins:{ legend:{display:true, labels:{boxWidth:9, font:{size:9}}},
-                    datalabels: (typeof ChartDataLabels!=='undefined') ? {display:false} : undefined },
+          layout:{ padding:{ top:12, bottom:2 } },
+          plugins:{ legend:{display:true, labels:{boxWidth:9, font:{size:9}}} },
           scales:{ x:{ ticks:{font:{size:8.5}}, grid:{display:false} },
-                   y:{ position:'left', ticks:{font:{size:9}}, grid:{color:'#eef2f7'} },
+                   y:{ position:'left', grace:'18%', ticks:{font:{size:9}}, grid:{color:'#eef2f7'} },
                    y2:{ position:'right', beginAtZero:true, max:100,
                         ticks:{font:{size:8.5}}, grid:{display:false} } } } });
     }
