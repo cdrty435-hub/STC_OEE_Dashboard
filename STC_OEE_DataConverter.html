@@ -150,13 +150,41 @@ function cleanPct(v){
 }
 
 /* Column index map for the original wide-format reference file (0-indexed) */
-const COL = {
-  date:1, equip:2, shift:3, model:4, cav:5, ctStd:6, ctReal:7, qtyTotal:8, qtyGood:9, avgShot:10,
-  shiftTime:11, plan:12, run:13, loss:14,
-  lossReasonsStart:15, lossReasonsEnd:45, // inclusive, 31 columns
-  availability:46, performance:47, quality:48,
-  qualReasonsStart:49, qualReasonsEnd:74 // inclusive, 26 columns
-};
+/* 원본 P열(idx 15)의 NOF 유무를 자동 감지해 인덱스를 잡는다.
+   - NOF 있는 신규 원본(Rawdata12~)  : offset 1
+   - NOF 없는 구 원본(Rawdata11 이하) : offset 0  → 과거 파일도 그대로 변환 가능 */
+function buildColMap(rawRows){
+  const norm = v => String(v==null?'':v).replace(/\s+/g,'').toUpperCase();
+  const h0 = (rawRows[0]||[]).map(norm);
+  const hasNof = (h0[15]||'').indexOf('NOF') >= 0;
+  const o = hasNof ? 1 : 0;
+  const C = {
+    date:1, equip:2, shift:3, model:4, cav:5, ctStd:6, ctReal:7, qtyTotal:8, qtyGood:9, avgShot:10,
+    shiftTime:11, plan:12, run:13, loss:14,
+    hasNof: hasNof, nof: hasNof ? 15 : -1,
+    lossReasonsStart:15+o, lossReasonsEnd:45+o,   // 31 columns
+    availability:46+o, performance:47+o, quality:48+o,
+    qualReasonsStart:49+o, qualReasonsEnd:74+o    // 26 columns
+  };
+  // 안전장치: 3번째 헤더행의 라벨로 위치 검증. 어긋나면 조용히 틀리지 않고 즉시 중단.
+  const h2 = (rawRows[2]||[]).map(v=>String(v==null?'':v).trim());
+  const chk = [[C.lossReasonsStart,'금형수리'],[C.lossReasonsEnd,'기타'],[C.qualReasonsStart,'미성형'],[C.qualReasonsEnd,'기타']];
+  for (const [i,expect] of chk){
+    if (h2[i] !== expect){
+      throw new Error('원본 열 구조가 예상과 다릅니다. '+(i+1)+'번째 열이 "'+expect+'" 여야 하는데 "'+(h2[i]||'(빈칸)')+'" 입니다. 원본에 열이 추가/삭제되었는지 확인하세요.');
+    }
+  }
+  return C;
+}
+
+/* NOF 값 정규화: '-' → 0, 공란은 공란 유지(7.21 이전 미기록 구간과 0건을 구분) */
+function nofVal(raw){
+  const s = cleanStr(raw);
+  if (s === '') return '';
+  if (s === '-') return 0;
+  const n = Number(s.replace(/,/g,''));
+  return Number.isFinite(n) ? n : '';
+}
 
 const A_HEADER = ['일자','주차','설비명','교대','구분','쉬프트시간_분','계획시간_분','가동시간_분','Losstime_분','금형수리','금형파손','핀파손','설비수리','전기로수리','취출기수리','스프레이수리','슬라이드코어수리','팁교체','노즐막힘','플런저오일막힘','래들수리','조건변경','탈산처리','스크랩용해','전기로회전','금형교체','휴식, 설비교대','청소','미팅/정전','금형냉각라인','제품소착','컨베이어수리','설비냉각수','스프레이조정','바가지교체','히터수리','펌프이상','로트마크, 사상','진공설비','기타','가동률(A)'];
 const P_HEADER = ['일자','주차','설비명','교대','구분','Model','CAV','CT_STD','CT_Real','Qty_Total','Avg_shot','가동시간_분','성능(P)'];
@@ -191,6 +219,7 @@ function toCSV(header, rows){
 
 function convert(rawRows, year, weekLabel){
   // rawRows: array of row-arrays from parseRawCSV, including the 3 header rows
+  const COL = buildColMap(rawRows);
   const data = rawRows.slice(3).filter(r => r.length > 1 && cleanStr(r[COL.date]));
 
   const aRows = [], pRows = [], qRows = [], qModelRows = [];
