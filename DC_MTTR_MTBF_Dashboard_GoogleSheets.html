@@ -465,7 +465,18 @@
     <label><input type="radio" name="stdmode" value="0" id="stdOff"> 전체 로스 (구 방식)</label>
     <span class="lb">고장 인정 최소 정지</span>
     <input type="number" id="minStop" step="1" min="0" style="width:64px"> <span class="lb">분</span>
+    <span class="lb">고장횟수(NOF)</span>
+    <label><input type="radio" name="nofsrc" value="auto" id="nofAuto"> 로스행 자동집계 (기존 방식·계통 구분 가능)</label>
+    <label><input type="radio" name="nofsrc" value="sheet" id="nofSheet"> 시트 NOF 열 (A_가동률·전체 합계용)</label>
+    <span class="lb">시트 NOF 범위</span>
+    <select id="nofScope" style="width:190px">
+      <option value="prorate">전체 고장 기준 → 계통별 안분</option>
+      <option value="direct">이미 설비고장만 집계 → 그대로 사용</option>
+    </select>
     <span class="lb" style="margin-left:auto" id="stdNote"></span>
+  </div>
+  <div class="stdbar">
+    <span class="lb" id="nofNote"></span>
   </div>
 
   <div class="layout">
@@ -535,7 +546,7 @@
             <canvas id="heroMttrChart" height="200"></canvas>
           </div>
           <div>
-            <div class="mini-title">설비별 MTBF (h/건) <span id="heroMtbfScope"></span> <span style="color:#5a6674;">— <b id="heroMtbfBasis">가동시간 ÷ 로스횟수</b> · 목표 설정 시 <b style="color:#c0392b;">WORST3</b> 표시</span></div>
+            <div class="mini-title">설비별 MTBF (h/건) <span id="heroMtbfScope"></span> <span style="color:#5a6674;">— <b id="heroMtbfBasis">가동시간 ÷ 고장횟수(NOF)</b> · 목표 설정 시 <b style="color:#c0392b;">WORST3</b> 표시</span></div>
             <canvas id="heroMtbfChart" height="200"></canvas>
           </div>
         </div>
@@ -556,12 +567,12 @@
         <div class="kpi" style="--kpi-accent:var(--amber)">
           <div class="label">MTTR (평균 수리시간)</div>
           <div class="value" id="heroKpiMttr">–<span class="unit">h/건</span></div>
-          <div class="delta">로스시간 ÷ 로스횟수</div>
+          <div class="delta">로스시간 ÷ 고장횟수(NOF)</div>
         </div>
         <div class="kpi" style="--kpi-accent:var(--teal)">
           <div class="label">MTBF (평균 무고장시간)</div>
           <div class="value" id="heroKpiMtbf">–<span class="unit">h/건</span></div>
-          <div class="delta" id="heroKpiMtbfSub">가동시간 ÷ 로스횟수</div>
+          <div class="delta" id="heroKpiMtbfSub">가동시간 ÷ 고장횟수(NOF)</div>
         </div>
       </div>
     </div>
@@ -716,7 +727,7 @@
       <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:4px;">
         <div>
           <h2>설비별 PPT 기준 지표 (NOR / OR / AOT)</h2>
-          <div class="desc">계획생산시간(PPT) 기준 · PPT는 A_가동률 원본의 계획시간_분 합계 · 고장 기준을 바꾸면 NOT/NOF가 재계산됩니다</div>
+          <div class="desc">계획생산시간(PPT) 기준 · PPT는 A_가동률 원본의 계획시간_분 합계 · NOF는 상단에서 고른 원천(시트 NOF 열 / 로스행 자동집계) 기준으로 재계산됩니다</div>
         </div>
         <div class="cat-chips" id="pptBasisChips">
           <button class="cat-chip" data-basis="ALL">전체 로스</button>
@@ -739,7 +750,7 @@
         <table id="pptTable" class="ppt-table"><thead></thead><tbody></tbody></table>
       </div>
       <div class="legend-note">
-        <span>PPT=계획생산시간 · NOT=고장정지시간 · NOF=고장횟수 · AOT=PPT−NOT</span>
+        <span>PPT=계획생산시간 · NOT=고장정지시간 · NOF=설비고장횟수(A_가동률 시트 기록값) · AOT=PPT−NOT</span>
         <span>MTBF=AOT÷NOF · MTTR=NOT÷NOF · NOR=NOT÷PPT · OR=MTBF÷(MTBF+MTTR)</span>
       </div>
     </div>
@@ -1077,6 +1088,57 @@ try{
 /* 고장(failure) 판정 : MTBF·MTTR·고장건수에만 적용 */
 function isFail(r){ return (!STD_MODE || r.u) && r.l >= MIN_STOP; }
 function fails(arr){ return arr.filter(isFail); }
+
+/* ── 고장횟수(NOF) 원천 ─────────────────────────────────────────────
+   A_가동률 시트에 기록된 "NOF 설비고장횟수" 열을 정본으로 쓸 수 있게 한다.
+   시트 NOF 는 교대(행) 단위 실제 기록값이라 로스코드별 내역이 없다.
+   따라서 계통(금형/설비-전기/…) 필터가 걸린 화면에서는
+   자동집계(로스행 카운트) 비율로 안분(按分)하여 배분한다.               */
+let NOF_MODE = 'auto';       // 기본값 = 기존 방식(로스행 자동집계) · 'sheet' 선택 시에만 시트 NOF 사용
+let HAS_SHEET_NOF = false;   // 시트에 NOF 열이 실제로 있고 값이 있는지
+let NOF_COL = null;          // 감지된 NOF 열 이름
+/* 시트 NOF 가 "전체 고장 합계"인지 "이미 설비고장만 센 값"인지에 따라 계통별 처리가 달라진다.
+   prorate : 전체값으로 보고 계통별로 안분   ·   direct : 계통 필터와 무관하게 시트값 그대로 */
+let NOF_SCOPE = 'prorate';
+try{ const c = localStorage.getItem('stc_nof_mode_v2');  if(c) NOF_MODE  = c;
+     const d = localStorage.getItem('stc_nof_scope');    if(d) NOF_SCOPE = d;
+     localStorage.removeItem('stc_nof_mode'); }catch(e){}   // 이전 버전 설정은 폐기
+
+/* 헤더에서 NOF 열 자동 탐지 (열 이름이 조금 달라도 찾도록 패턴 매칭) */
+function detectNofCol(row){
+  const keys = Object.keys(row||{});
+  for(const k of keys){ if(normCode(k).toUpperCase() === 'NOF') return k; }
+  for(const k of keys){
+    const n = normCode(k);
+    if(/고장/.test(n) && /(횟수|건수)/.test(n)) return k;
+    if(/^NOF/i.test(n)) return k;
+  }
+  return null;
+}
+function sheetNof(runRows){ let s=0; for(const r of (runRows||[])) s += (r.nf||0); return s; }
+
+/* 최종 고장횟수(NOF)
+   runRows     : 같은 필터(기간·설비)의 가동 행
+   lossAllRows : 같은 필터의 로스 행 (계통 필터 적용 전)
+   lossSelRows : 계통 필터까지 적용된 로스 행 · 전체(ALL)이면 null 을 넘긴다   */
+function nofCount(runRows, lossAllRows, lossSelRows){
+  const isAll  = (lossSelRows === undefined || lossSelRows === null || lossSelRows === lossAllRows);
+  const selArr = isAll ? (lossAllRows || []) : lossSelRows;
+  const aSel   = fails(selArr).length;                 // 자동집계값 (구 방식)
+  if(NOF_MODE !== 'sheet' || !HAS_SHEET_NOF) return aSel;
+  const nf = sheetNof(runRows);
+  if(!nf) return aSel;                                 // 시트값이 비어있는 구간은 자동집계로 폴백
+  if(isAll || NOF_SCOPE === 'direct') return nf;       // 전체(또는 '그대로 사용') → 시트 NOF
+  const aAll = fails(lossAllRows || []).length;
+  if(!aAll) return 0;
+  if(aSel === aAll) return nf;
+  return nf * (aSel / aAll);                           // 계통별 → 자동집계 비율로 안분
+}
+/* 안분 결과(소수)를 보기 좋게 표시 */
+function cntTxt(n){
+  if(!isFinite(n) || !n) return '0';
+  return Number.isInteger(n) ? n.toLocaleString() : fmt(n,1);
+}
 const CODE_LOOKUP = {};
 Object.keys(CODE_MAP).forEach(k=>{ CODE_LOOKUP[normCode(k)] = CODE_MAP[k]; });
 function catOf(code){ return (CODE_LOOKUP[normCode(code)] || ['기타','관리'])[0]; }
@@ -1122,6 +1184,7 @@ function unpivotRaw(rows){
   const LOSS_KEYS = ['Losstime_분','Losstime(분)','로스분'];
   const pick = (r, keys) => { for(const k of keys){ if(r[k] !== undefined) return toNum(r[k]); } return 0; };
   let codeCols = null;
+  NOF_COL = detectNofCol(rows[0]);          // "NOF 설비고장횟수" 열 탐지
   rows.forEach(r=>{
     const d = normDate(r['일자']);
     const m = machineNo(r['설비명']);
@@ -1132,7 +1195,7 @@ function unpivotRaw(rows){
     const plan = pick(r, PLAN_KEYS), rn = pick(r, RUN_KEYS), ls = pick(r, LOSS_KEYS);
     if(plan === 0 && rn === 0 && ls === 0) return;      // 미가동 교대는 제외
     const wk = weekLabel(r['주차'], d);
-    run.push({d:d, m:m, r:rn, w:wk, p:plan});
+    run.push({d:d, m:m, r:rn, w:wk, p:plan, nf: NOF_COL ? toNum(r[NOF_COL]) : 0});
     codeCols.forEach(k=>{
       const v = toNum(r[k]);
       if(v > 0){
@@ -1300,8 +1363,10 @@ async function loadData(){
       RUN = runRows.map(r=>({
         d: normDate(r['일자']), m: machineNo(r['설비명']), r: toNum(r['가동분']),
         w: weekLabel(r['주차'], normDate(r['일자'])),
-        p: toNum(r['계획분'])
+        p: toNum(r['계획분']),
+        nf: toNum(r['NOF'] || r['설비고장횟수'] || r['고장횟수'] || 0)
       })).filter(r=>r.d && r.m);
+      if(!NOF_COL && runRows.length) NOF_COL = detectNofCol(runRows[0]);
 
       LOSS = lossRows.map(r=>{
         const code = (r['세부항목']||'').trim();
@@ -1319,6 +1384,9 @@ async function loadData(){
     if(RUN.length===0 || LOSS.length===0){
       throw new Error('데이터가 비어있습니다. 시트 공유 설정(웹에 게시)을 확인하세요.');
     }
+
+    HAS_SHEET_NOF = RUN.some(r => (r.nf||0) > 0);      // 시트 NOF 사용 가능 여부 확정
+    if(typeof nofApplyUI === 'function') nofApplyUI();
 
     const dates = RUN.map(r=>r.d).concat(LOSS.map(r=>r.d)).sort();
     const minDate = dates[0];
@@ -1507,11 +1575,12 @@ function renderPptTable(){
   ALL_MACHINES.concat([...MISSING]).sort((a,b)=>a-b).forEach(mc=>{
     const R = run.filter(x=>x.m===mc);
     const L = lossSel.filter(x=>x.m===mc);
+    const Lall = loss.filter(x=>x.m===mc);
     const planReal = R.reduce((a,x)=>a+(x.p||0),0)/60;
     const runH = R.reduce((a,x)=>a+x.r,0)/60;
     const ppt = (mode==='fixed') ? 630 : planReal;
     const not = L.reduce((a,x)=>a+x.l,0)/60;
-    const nof = L.length;
+    const nof = nofCount(R, Lall, (pptBasis==='ALL') ? null : L);
     const aot = Math.max(ppt-not,0);
     const mtbf = nof ? aot/nof : 0;
     const mttr = nof ? not/nof : 0;
@@ -1527,7 +1596,7 @@ function renderPptTable(){
       `<td class="ty">${MC_TYPE[mc]||'-'} Ton</td>`+
       `<td>${dash(ppt)!==null?fmt(ppt,1):'-'}</td>`+
       `<td>${dash(not)!==null?fmt(not,1):'-'}</td>`+
-      `<td>${nof||'-'}</td>`+
+      `<td>${nof?cntTxt(nof):'-'}</td>`+
       `<td>${dash(aot)!==null?fmt(aot,1):'-'}</td>`+
       `<td class="${nof&&mtbf<10?'warn':''}">${nof?fmt(mtbf,2):'-'}</td>`+
       `<td class="${nof&&mttr>1.5?'warn':''}">${nof?fmt(mttr,2):'-'}</td>`+
@@ -1544,7 +1613,7 @@ function renderPptTable(){
   if(!tf){ tf = document.createElement('tfoot'); document.getElementById('pptTable').appendChild(tf); }
   tf.innerHTML = '<tr>'+
     `<td class="mc">TTL</td><td class="ty">—</td>`+
-    `<td>${fmt(T.ppt,1)}</td><td>${fmt(T.not,1)}</td><td>${T.nof.toLocaleString()}</td>`+
+    `<td>${fmt(T.ppt,1)}</td><td>${fmt(T.not,1)}</td><td>${cntTxt(T.nof)}</td>`+
     `<td>${fmt(aotT,1)}</td><td>${fmt(mtbfT,2)}</td><td>${fmt(mttrT,2)}</td>`+
     `<td>${T.ppt?fmt(T.not/T.ppt*100,1)+'%':'-'}</td>`+
     `<td>${(mtbfT+mttrT)?fmt(mtbfT/(mtbfT+mttrT)*100,1)+'%':'-'}</td>`+
@@ -1582,7 +1651,7 @@ function weekStats(cat){
     const runH = R.reduce((a,x)=>a+x.r,0)/60;
     const lossH = L.reduce((a,x)=>a+x.l,0)/60;
     const lossAllH = Lall.reduce((a,x)=>a+x.l,0)/60;
-    const n = L.length;
+    const n = nofCount(R, Lall, (cat==='ALL') ? null : L);
     const planH = R.reduce((a,x)=>a+(x.p||0),0)/60;
     const nMc = new Set(R.map(x=>x.m)).size || 1;
     const ds = R.map(x=>x.d).sort();
@@ -1761,7 +1830,7 @@ function showTrendPointAnalysis(wk){
     return `<div class="rep-card">
       <div class="rk">${label}</div>
       <div class="val">MTTR <b>${fmt(cur.mttr,2)}</b>${dtxt(cur.mttr, prev&&prev.mttr, false)} · MTBF <b>${fmt(cur.mtbf,2)}</b>${dtxt(cur.mtbf, prev&&prev.mtbf, true)}<br>
-      로스 ${fmt(cur.lossH,1)}h · ${cur.cnt}건 · 가동률 ${fmt(cur.avail,1)}%</div>
+      로스 ${fmt(cur.lossH,1)}h · ${cntTxt(cur.cnt)}건 · 가동률 ${fmt(cur.avail,1)}%</div>
       <ul>${dl}</ul>
     </div>`;
   }).join('');
@@ -1914,8 +1983,10 @@ function mcStats(week, cat){
   const out = {};
   ALL_MACHINES.forEach(m=>{
     const rr = R.filter(x=>x.m===m);
-    const ll = fails((cat&&cat!=='ALL') ? L.filter(x=>x.m===m&&matchCat(x,cat)) : L.filter(x=>x.m===m));
-    const runH = rr.reduce((a,x)=>a+x.r,0)/60, lossH = ll.reduce((a,x)=>a+x.l,0)/60, n = ll.length;
+    const lAllM = L.filter(x=>x.m===m);
+    const ll = fails((cat&&cat!=='ALL') ? lAllM.filter(x=>matchCat(x,cat)) : lAllM);
+    const runH = rr.reduce((a,x)=>a+x.r,0)/60, lossH = ll.reduce((a,x)=>a+x.l,0)/60;
+    const n = nofCount(rr, lAllM, (cat&&cat!=='ALL') ? ll : null);
     const planH = rr.reduce((a,x)=>a+(x.p||0),0)/60;
     out[m] = { m:m, runH:runH, lossH:lossH, cnt:n,
                mttr: n?lossH/n:0, mtbf: mtbfBasis(runH, lossH, n, planH),
@@ -1972,7 +2043,7 @@ function buildReport(){
     return `<div class="rep-card">
       <div class="rk">${kind} 워스트 ${rank}</div>
       <div class="mc">DC${x.m}</div>
-      <div class="val">${v}<br>로스 ${fmt(x.lossH,1)}h · ${x.cnt}건 · 가동 ${fmt(x.runH,1)}h · 가동률 ${fmt(x.avail,1)}%</div>
+      <div class="val">${v}<br>로스 ${fmt(x.lossH,1)}h · ${cntTxt(x.cnt)}건 · 가동 ${fmt(x.runH,1)}h · 가동률 ${fmt(x.avail,1)}%</div>
       <ul>${t.map(c=>`<li>${c.code} <span style="color:#5a6674">(${c.s})</span> — ${fmt(c.h,1)}h / ${c.n}건</li>`).join('')}</ul>
     </div>`;
   };
@@ -1999,10 +2070,10 @@ function buildReport(){
             MTTR:+mttrT.toFixed(2), MTBF:+mtbfT.toFixed(2),
             전주MTTR: mttrP!==null?+mttrP.toFixed(2):null, 전주MTBF: mtbfP!==null?+mtbfP.toFixed(2):null },
     목표: { MTTR: targetMTTR, MTBF: targetMTBF },
-    MTTR워스트3: worstMttr.map(x=>({설비:'DC'+x.m, MTTR:+x.mttr.toFixed(2), 로스h:+x.lossH.toFixed(1), 건수:x.cnt,
+    MTTR워스트3: worstMttr.map(x=>({설비:'DC'+x.m, MTTR:+x.mttr.toFixed(2), 로스h:+x.lossH.toFixed(1), 건수:+x.cnt.toFixed(1),
       가동률:+x.avail.toFixed(1), 전주MTTR: prev&&prev[x.m]?+prev[x.m].mttr.toFixed(2):null,
       주요로스: topCodes(x.rows,3).map(c=>({항목:c.code, 계통:c.s, 시간h:+c.h.toFixed(1), 건수:c.n})) })),
-    MTBF워스트3: worstMtbf.map(x=>({설비:'DC'+x.m, MTBF:+x.mtbf.toFixed(2), 로스h:+x.lossH.toFixed(1), 건수:x.cnt,
+    MTBF워스트3: worstMtbf.map(x=>({설비:'DC'+x.m, MTBF:+x.mtbf.toFixed(2), 로스h:+x.lossH.toFixed(1), 건수:+x.cnt.toFixed(1),
       가동률:+x.avail.toFixed(1), 전주MTBF: prev&&prev[x.m]?+prev[x.m].mtbf.toFixed(2):null,
       주요로스: topCodes(x.rows,3).map(c=>({항목:c.code, 계통:c.s, 시간h:+c.h.toFixed(1), 건수:c.n})) })),
     로스유형변동: deltas.slice(0,10).map(d=>({항목:d.code, 전주h:+d.prev.toFixed(1), 금주h:+d.cur.toFixed(1), 증감h:+d.d.toFixed(1)})),
@@ -2222,7 +2293,8 @@ function monthStats(mon){
     const runH = rr.reduce((a,x)=>a+x.r,0)/60;
     const planH = rr.reduce((a,x)=>a+(x.p||0),0)/60;
     const allH = lAll.reduce((a,x)=>a+x.l,0)/60;
-    const lossH = ll.reduce((a,x)=>a+x.l,0)/60, n = ll.length;
+    const lossH = ll.reduce((a,x)=>a+x.l,0)/60;
+    const n = nofCount(rr, lAll, null);
     out.push({ m:m, runH:runH, planH:planH, lossH:lossH, allH:allH, cnt:n, rowsAll:lAll,
       avail: (runH+allH)>0 ? runH/(runH+allH)*100 : 0,
       mtbf: mtbfBasis(runH, lossH, n, planH), mttr: n? lossH/n : 0,
@@ -2276,7 +2348,7 @@ function renderGrade(){
       <td>${x.pm? '<b style="color:#c00000">'+x.pm+'</b>' : '–'}</td>
       <td class="mc">DC${x.m}</td>
       <td>${fmt(x.avail,1)}%</td><td>${fmt(x.mtbf,2)}</td><td>${fmt(x.mttr,2)}</td>
-      <td>${fmt(x.lossH,1)}</td><td>${x.cnt}</td>
+      <td>${fmt(x.lossH,1)}</td><td>${cntTxt(x.cnt)}</td>
       <td>${fmt(x.sA,1)}</td><td>${fmt(x.sB,1)}</td><td>${fmt(x.sC,1)}</td>
       <td><b>${fmt(x.tot,1)}</b></td>
       <td><span class="grade-badge g-${x.g}">${x.g}</span></td>
@@ -2409,7 +2481,7 @@ function buildPM(){
   document.getElementById('pmPick').innerHTML = [
     ['등급 워스트 3', byScore, x=>`총점 ${fmt(x.tot,1)} · ${x.g}등급 · 가동률 ${fmt(x.avail,1)}%`],
     ['MTTR 워스트 3', byMttr, x=>`MTTR ${fmt(x.mttr,2)} h/건 · 로스 ${fmt(x.lossH,1)}h`],
-    ['MTBF 워스트 3', byMtbf, x=>`MTBF ${fmt(x.mtbf,2)} h/건 · ${x.cnt}건`]
+    ['MTBF 워스트 3', byMtbf, x=>`MTBF ${fmt(x.mtbf,2)} h/건 · ${cntTxt(x.cnt)}건`]
   ].map(([t,arr,f])=>`<div class="rep-card"><div class="rk">${t}</div><ul>`+
      arr.map(x=>`<li><b>DC${x.m}</b> — ${f(x)}</li>`).join('')+`</ul></div>`).join('');
 
@@ -2522,6 +2594,41 @@ function stdChanged(){
   document.getElementById(id).addEventListener('change', stdChanged);
 });
 stdApplyUI();
+
+/* ---------- 고장횟수(NOF) 원천 컨트롤 ---------- */
+function nofApplyUI(){
+  const sEl = document.getElementById('nofSheet'), aEl = document.getElementById('nofAuto');
+  if(!sEl || !aEl) return;
+  const useSheet = (NOF_MODE === 'sheet') && HAS_SHEET_NOF;
+  sEl.checked = useSheet; aEl.checked = !useSheet;
+  sEl.disabled = !HAS_SHEET_NOF;
+  const scEl = document.getElementById('nofScope');
+  if(scEl){ scEl.value = NOF_SCOPE; scEl.disabled = !useSheet; }
+  const n = document.getElementById('nofNote');
+  if(n){
+    n.textContent = !HAS_SHEET_NOF
+      ? '⚠ A_가동률 시트에서 NOF(설비고장횟수) 열을 찾지 못해 로스행 자동집계로 동작합니다.'
+      : (useSheet
+         ? `NOF = 시트 「${NOF_COL}」 열의 기록값 · MTTR = 로스시간 ÷ NOF · MTBF = 가동(또는 계획)시간 ÷ NOF · `
+           + (NOF_SCOPE === 'direct'
+              ? '계통(금형/설비/관리) 칩을 바꿔도 NOF는 시트값 그대로 씁니다 — 시트 NOF가 이미 설비고장만 센 값일 때 선택하세요.'
+              : '계통(금형/설비/관리)별 화면은 로스행 비율로 안분하므로 건수가 소수로 표시될 수 있습니다.')
+         : `NOF = 로스행에서 직접 카운트 (기존 방식·기본값) · 금형 / 설비-전기 / 설비-라인 / 관리 계통별로 정확히 구분됩니다`
+           + (HAS_SHEET_NOF ? ` · 시트 「${NOF_COL}」 열은 사용하지 않습니다 (전체 합계 대조가 필요할 때만 위에서 전환하세요).` : '.'));
+  }
+}
+function nofChanged(){
+  NOF_MODE  = document.getElementById('nofSheet').checked ? 'sheet' : 'auto';
+  NOF_SCOPE = (document.getElementById('nofScope')||{value:'prorate'}).value;
+  try{ localStorage.setItem('stc_nof_mode_v2', NOF_MODE);
+       localStorage.setItem('stc_nof_scope', NOF_SCOPE); }catch(e){}
+  nofApplyUI();
+  if(RUN.length) render();
+}
+['nofSheet','nofAuto','nofScope'].forEach(id=>{
+  const el = document.getElementById(id); if(el) el.addEventListener('change', nofChanged);
+});
+nofApplyUI();
 
 /* ================= 로스 비용 (F-COST) ================= */
 let costTrendChart, costMcChart, costMixChart, costCmpChart;
@@ -3279,7 +3386,7 @@ function renderHero(){
   const runH = run.reduce((a,r)=>a+r.r,0)/60;
   const lossH = loss.reduce((a,r)=>a+r.l,0)/60;
   const lossHAll = lossAll.reduce((a,r)=>a+r.l,0)/60;
-  const cnt = loss.length;
+  const cnt = nofCount(run, lossAll, (heroCat==='ALL') ? null : loss);
   const mttr = cnt ? lossH/cnt : 0;
   const mtbf = cnt ? runH/cnt : 0;
   const avail = (runH+lossHAll)>0 ? runH/(runH+lossHAll)*100 : 0;   // 가동률은 항상 전체 로스 기준
@@ -3287,7 +3394,7 @@ function renderHero(){
   document.getElementById('heroKpiRun').innerHTML = `${fmt(runH,1)}<span class="unit">h</span>`;
   document.getElementById('heroKpiRunSub').textContent = `가동률 ${fmt(avail,1)}%`;
   document.getElementById('heroKpiLoss').innerHTML = `${fmt(lossH,1)}<span class="unit">h</span>`;
-  document.getElementById('heroKpiLossSub').textContent = `${cnt.toLocaleString()}건`;
+  document.getElementById('heroKpiLossSub').textContent = `${cntTxt(cnt)}건`;
   document.getElementById('heroKpiMttr').innerHTML = `${fmt(mttr,2)}<span class="unit">h/건</span>`;
   {
     const md = (document.getElementById('heroPptMode')||{value:'run'}).value;
@@ -3295,17 +3402,17 @@ function renderHero(){
     const nMc = new Set(run.map(r=>r.m)).size || 1;      // 가동 실적이 있는 설비 수
     const lossH = loss.reduce((a,x)=>a+x.l,0)/60;
     const planH = run.reduce((a,x)=>a+(x.p||0),0)/60;
-    let mtbfShown = mtbf, sub = '가동시간 ÷ 로스횟수';
+    let mtbfShown = mtbf, sub = '가동시간 ÷ 고장횟수(NOF)';
     if (cnt) {
-      if (md === 'fixed') { mtbfShown = Math.max(ph*nMc - lossH, 0)/cnt; sub = `(PPT ${ph}h × ${nMc}대 − 로스시간) ÷ 로스횟수`; }
-      else if (md === 'real') { mtbfShown = Math.max(planH - lossH, 0)/cnt; sub = '(계획시간 − 로스시간) ÷ 로스횟수'; }
+      if (md === 'fixed') { mtbfShown = Math.max(ph*nMc - lossH, 0)/cnt; sub = `(PPT ${ph}h × ${nMc}대 − 로스시간) ÷ 고장횟수(NOF)`; }
+      else if (md === 'real') { mtbfShown = Math.max(planH - lossH, 0)/cnt; sub = '(계획시간 − 로스시간) ÷ 고장횟수(NOF)'; }
     }
     document.getElementById('heroKpiMtbf').innerHTML = `${fmt(mtbfShown,2)}<span class="unit">h/건</span>`;
     const subEl = document.getElementById('heroKpiMtbfSub'); if (subEl) subEl.textContent = sub;
     const bEl = document.getElementById('heroMtbfBasis');
-    if (bEl) bEl.textContent = md==='fixed' ? `(PPT ${ph}h − 로스시간) ÷ 로스횟수`
-                            : md==='real'  ? '(계획시간 − 로스시간) ÷ 로스횟수'
-                            : '가동시간 ÷ 로스횟수';
+    if (bEl) bEl.textContent = md==='fixed' ? `(PPT ${ph}h − 로스시간) ÷ 고장횟수(NOF)`
+                            : md==='real'  ? '(계획시간 − 로스시간) ÷ 고장횟수(NOF)'
+                            : '가동시간 ÷ 고장횟수(NOF)';
     const hEl = document.getElementById('heroPptHours'); if (hEl) hEl.disabled = (md !== 'fixed');
   }
 
@@ -3316,17 +3423,22 @@ function renderHero(){
 
   // per-DC aggregation over selected weeks, ordered by DC number 1~23
   const runByM = {}, lossByM = {}, cntByM = {}, planByM = {};
-  run.forEach(r=>{ runByM[r.m]=(runByM[r.m]||0)+r.r; planByM[r.m]=(planByM[r.m]||0)+(r.p||0); });
-  loss.forEach(r=>{ lossByM[r.m]=(lossByM[r.m]||0)+r.l; cntByM[r.m]=(cntByM[r.m]||0)+1; });
+  const runRowsByM = {}, lossAllByM = {}, lossSelByM = {};
+  run.forEach(r=>{ runByM[r.m]=(runByM[r.m]||0)+r.r; planByM[r.m]=(planByM[r.m]||0)+(r.p||0);
+                   (runRowsByM[r.m]=runRowsByM[r.m]||[]).push(r); });
+  lossAll.forEach(r=>{ (lossAllByM[r.m]=lossAllByM[r.m]||[]).push(r); });
+  loss.forEach(r=>{ lossByM[r.m]=(lossByM[r.m]||0)+r.l; cntByM[r.m]=(cntByM[r.m]||0)+1;
+                    (lossSelByM[r.m]=lossSelByM[r.m]||[]).push(r); });
 
   // MTBF 산출 기준: 실가동시간 / PPT 일괄 / 실적 계획시간
-  //  · run   : MTBF = 가동시간 ÷ 로스횟수            (현행)
-  //  · fixed : MTBF = (입력 PPT − 로스시간) ÷ 로스횟수  (시트의 "630 Hr 일괄"과 동일)
-  //  · real  : MTBF = (계획시간 − 로스시간) ÷ 로스횟수  (시트의 "실적 계획시간"과 동일)
+  //  · run   : MTBF = 가동시간 ÷ 고장횟수(NOF)            (현행)
+  //  · fixed : MTBF = (입력 PPT − 로스시간) ÷ 고장횟수(NOF)  (시트의 "630 Hr 일괄"과 동일)
+  //  · real  : MTBF = (계획시간 − 로스시간) ÷ 고장횟수(NOF)  (시트의 "실적 계획시간"과 동일)
   const pptMode  = (document.getElementById('heroPptMode')||{value:'run'}).value;
   const pptHours = parseFloat((document.getElementById('heroPptHours')||{}).value) || 630;
   const rows = ALL_MACHINES.map(m=>{
-    const c = cntByM[m]||0;
+    const c = nofCount(runRowsByM[m]||[], lossAllByM[m]||[],
+                       (heroCat==='ALL') ? null : (lossSelByM[m]||[]));
     const lH = (lossByM[m]||0)/60;
     const rH = (runByM[m]||0)/60;
     const planH = (planByM[m]||0)/60;
@@ -3549,7 +3661,7 @@ function showHeroAnalysis(m){
   if(weaknesses.length===0) weaknesses.push('현재 필터 기준으로는 평균 대비 뚜렷한 약점이 없음');
 
   if(topItem) opportunities.push(`'${topItem.item}' 항목이 이 설비 로스의 ${topItemPct.toFixed(0)}%(${topItem.h.toFixed(1)}h) 차지 — 우선 개선 시 효과가 가장 큼`);
-  opportunities.push(`고장 ${row.cnt}건 · 원인 상위 ${Math.min(items.length,3)}개 항목에 집중하면 재발 방지 여지 있음`);
+  opportunities.push(`고장 ${cntTxt(row.cnt)}건 · 원인 상위 ${Math.min(items.length,3)}개 항목에 집중하면 재발 방지 여지 있음`);
 
   if(isBroken) threats.push('현재 고장으로 가동 중단 상태 — 복구 전까지 생산 손실 지속');
   if(mttrRank <= 3) threats.push(`전체 설비 중 MTTR 상위 ${mttrRank}위 — 지속 시 라인 가동률에 영향 우려`);
@@ -3565,7 +3677,7 @@ function showHeroAnalysis(m){
     <div class="analysis-stats">
       <span>MTTR <b>${row.mttr.toFixed(2)}</b> h/건</span>
       <span>MTBF <b>${row.mtbf.toFixed(2)}</b> h/건</span>
-      <span>고장건수 <b>${row.cnt}</b>건</span>
+      <span>고장건수 <b>${cntTxt(row.cnt)}</b>건</span>
       <span>MTTR 순위 <b>${mttrRank}</b>/${validRows.length}위</span>
     </div>
     <div class="analysis-grid">
@@ -3590,13 +3702,14 @@ function filterDCData(){
   const run = RUN.filter(r => r.d >= s && r.d <= e);
   let loss = LOSS.filter(r => r.d >= s && r.d <= e);
   loss = fails(loss);
+  const lossAll = loss;                                   // 계통 필터 적용 전 (NOF 안분용)
   if(dcCat !== 'ALL') loss = loss.filter(r => matchCat(r, dcCat));
-  return {run, loss};
+  return {run, loss, lossAll};
 }
 
 function renderDetail(){
   const dcData = filterDCData();
-  renderDCWorst(dcData.run, dcData.loss);
+  renderDCWorst(dcData.run, dcData.loss, dcData.lossAll);
 }
 
 // ---------- PARETO: own date range + own category chips ----------
@@ -3615,13 +3728,19 @@ function renderParetoSection(){
 let lastDCRows = [];   // shared state for click-to-analyze
 let lastDCLoss = [];   // the loss rows currently backing the DC worst charts
 
-function renderDCWorst(run, loss){
+function renderDCWorst(run, loss, lossAll){
+  lossAll = lossAll || loss;
   const runByM = {}, lossByM = {}, cntByM = {}, planByM = {};
-  run.forEach(r=>{ runByM[r.m]=(runByM[r.m]||0)+r.r; planByM[r.m]=(planByM[r.m]||0)+(r.p||0); });
-  loss.forEach(r=>{ lossByM[r.m]=(lossByM[r.m]||0)+r.l; cntByM[r.m]=(cntByM[r.m]||0)+1; });
+  const runRowsByM = {}, lossAllByM = {}, lossSelByM = {};
+  run.forEach(r=>{ runByM[r.m]=(runByM[r.m]||0)+r.r; planByM[r.m]=(planByM[r.m]||0)+(r.p||0);
+                   (runRowsByM[r.m]=runRowsByM[r.m]||[]).push(r); });
+  lossAll.forEach(r=>{ (lossAllByM[r.m]=lossAllByM[r.m]||[]).push(r); });
+  loss.forEach(r=>{ lossByM[r.m]=(lossByM[r.m]||0)+r.l; cntByM[r.m]=(cntByM[r.m]||0)+1;
+                    (lossSelByM[r.m]=lossSelByM[r.m]||[]).push(r); });
 
   let rows = ALL_MACHINES.map(m=>{
-    const c = cntByM[m]||0;
+    const c = nofCount(runRowsByM[m]||[], lossAllByM[m]||[],
+                       (dcCat==='ALL') ? null : (lossSelByM[m]||[]));
     const l = (lossByM[m]||0)/60;
     const rH = (runByM[m]||0)/60;
     const pH = (planByM[m]||0)/60;
@@ -3796,7 +3915,7 @@ function showDCAnalysis(m){
   if(weaknesses.length===0) weaknesses.push('현재 필터 기준으로는 평균 대비 뚜렷한 약점이 없음');
 
   if(topItem) opportunities.push(`'${topItem.item}' 항목이 이 설비 로스의 ${topItemPct.toFixed(0)}%(${topItem.h.toFixed(1)}h) 차지 — 우선 개선 시 MTTR 개선 효과가 가장 큼`);
-  opportunities.push(`고장 ${row.cnt}건 · 원인 상위 ${Math.min(items.length,3)}개 항목에 집중하면 재발 방지 여지 있음`);
+  opportunities.push(`고장 ${cntTxt(row.cnt)}건 · 원인 상위 ${Math.min(items.length,3)}개 항목에 집중하면 재발 방지 여지 있음`);
 
   if(isBroken) threats.push('현재 고장으로 가동 중단 상태 — 복구 전까지 생산 손실 지속');
   if(mttrRank <= 3) threats.push(`전체 설비 중 MTTR 상위 ${mttrRank}위 — 지속 시 라인 가동률에 영향 우려`);
@@ -3812,7 +3931,7 @@ function showDCAnalysis(m){
     <div class="analysis-stats">
       <span>MTTR <b>${row.mttr.toFixed(2)}</b> h/건</span>
       <span>MTBF <b>${row.mtbf.toFixed(2)}</b> h/건</span>
-      <span>고장건수 <b>${row.cnt}</b>건</span>
+      <span>고장건수 <b>${cntTxt(row.cnt)}</b>건</span>
       <span>MTTR 순위 <b>${mttrRank}</b>/${validRows.length}위</span>
     </div>
     <div class="analysis-grid">
