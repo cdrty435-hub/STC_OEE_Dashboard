@@ -156,12 +156,15 @@ function cleanPct(v){
 function buildColMap(rawRows){
   const norm = v => String(v==null?'':v).replace(/\s+/g,'').toUpperCase();
   const h0 = (rawRows[0]||[]).map(norm);
-  const hasNof = (h0[15]||'').indexOf('NOF') >= 0;
-  const o = hasNof ? 1 : 0;
+  // NOF는 P열(idx15)에 있을 수도, 맨 뒤로 옮겨져 있을 수도 있다. 헤더 전체에서 찾는다.
+  let nofIdx = -1;
+  for (let i=0;i<h0.length;i++){ if ((h0[i]||'').indexOf('NOF') >= 0) { nofIdx = i; break; } }
+  const hasNof = nofIdx >= 0;
+  const o = (nofIdx === 15) ? 1 : 0;   // P열 삽입일 때만 뒤쪽 인덱스가 밀린다
   const C = {
     date:1, equip:2, shift:3, model:4, cav:5, ctStd:6, ctReal:7, qtyTotal:8, qtyGood:9, avgShot:10,
     shiftTime:11, plan:12, run:13, loss:14,
-    hasNof: hasNof, nof: hasNof ? 15 : -1,
+    hasNof: hasNof, nof: nofIdx,
     lossReasonsStart:15+o, lossReasonsEnd:45+o,   // 31 columns
     availability:46+o, performance:47+o, quality:48+o,
     qualReasonsStart:49+o, qualReasonsEnd:74+o    // 26 columns
@@ -186,7 +189,7 @@ function nofVal(raw){
   return Number.isFinite(n) ? n : '';
 }
 
-const A_HEADER = ['일자','주차','설비명','교대','구분','쉬프트시간_분','계획시간_분','가동시간_분','Losstime_분','금형수리','금형파손','핀파손','설비수리','전기로수리','취출기수리','스프레이수리','슬라이드코어수리','팁교체','노즐막힘','플런저오일막힘','래들수리','조건변경','탈산처리','스크랩용해','전기로회전','금형교체','휴식, 설비교대','청소','미팅/정전','금형냉각라인','제품소착','컨베이어수리','설비냉각수','스프레이조정','바가지교체','히터수리','펌프이상','로트마크, 사상','진공설비','기타','가동률(A)'];
+const A_HEADER = ['일자','주차','설비명','교대','구분','쉬프트시간_분','계획시간_분','가동시간_분','Losstime_분','금형수리','금형파손','핀파손','설비수리','전기로수리','취출기수리','스프레이수리','슬라이드코어수리','팁교체','노즐막힘','플런저오일막힘','래들수리','조건변경','탈산처리','스크랩용해','전기로회전','금형교체','휴식, 설비교대','청소','미팅/정전','금형냉각라인','제품소착','컨베이어수리','설비냉각수','스프레이조정','바가지교체','히터수리','펌프이상','로트마크, 사상','진공설비','기타','가동률(A)','NOF'];
 const P_HEADER = ['일자','주차','설비명','교대','구분','Model','CAV','CT_STD','CT_Real','Qty_Total','Avg_shot','가동시간_분','성능(P)'];
 const Q_HEADER = ['일자','주차','설비명','교대','구분','Qty_Total','Qty_Good','불량수량','품질(Q)','미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스','품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타'];
 const Q_MODEL_HEADER = ['일자','주차','설비명','교대','Model','구분','Qty_Total','Qty_Good','불량수량','품질(Q)','미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스','품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타'];
@@ -235,7 +238,7 @@ function convert(rawRows, year, weekLabel){
     // A row
     const lossReasons = [];
     for (let i = COL.lossReasonsStart; i <= COL.lossReasonsEnd; i++) lossReasons.push(num(r[i]));
-    aRows.push([iso, weekLabel, equip, shift, gubun, num(r[COL.shiftTime]), num(r[COL.plan]), num(r[COL.run]), num(r[COL.loss]), ...lossReasons, cleanPct(r[COL.availability])]);
+    aRows.push([iso, weekLabel, equip, shift, gubun, num(r[COL.shiftTime]), num(r[COL.plan]), num(r[COL.run]), num(r[COL.loss]), ...lossReasons, cleanPct(r[COL.availability]), (COL.hasNof ? nofVal(r[COL.nof]) : '')]);
 
     // P row (only meaningful if there's real cycle-time data; still emit the row to preserve structure)
     pRows.push([iso, weekLabel, equip, shift, gubun, cleanStr(r[COL.model]), cleanStr(r[COL.cav]).trim(), num(r[COL.ctStd]), num(r[COL.ctReal]), num(r[COL.qtyTotal]), num(r[COL.avgShot]), num(r[COL.run]), cleanPct(r[COL.performance])]);
