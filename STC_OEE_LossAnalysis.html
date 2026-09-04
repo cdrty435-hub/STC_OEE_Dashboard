@@ -209,7 +209,7 @@ function classifyColumns(rows){
 }
 
 /* ---------- Analysis logic (pure, unit-tested separately with real data) ---------- */
-const NON_REASON_COLS = new Set(['일자','주차','설비명','교대','구분','쉬프트시간_분','쉬프트시간(분)','쉬프트시간 (분)','쉬프트시간','계획시간_분','가동시간_분','Losstime_분','가동률(A)']);
+const NON_REASON_COLS = new Set(['일자','주차','설비명','교대','구분','쉬프트시간_분','쉬프트시간(분)','쉬프트시간 (분)','쉬프트시간','계획시간_분','가동시간_분','Losstime_분','가동률(A)','NOF','NOF(Number of Failed)','고장횟수']);
 // 시트 헤더 표기가 쉬프트시간(분) / 쉬프트시간_분 등으로 달라도 인식. W33 이전 데이터는 계획시간_분으로 폴백.
 function shiftMinOf(r){
   const keys = ['쉬프트시간_분','쉬프트시간(분)','쉬프트시간 (분)','쉬프트시간'];
