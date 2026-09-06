@@ -3861,14 +3861,19 @@ function renderWeekly(){
       ctx.strokeStyle = opts.color || '#c00000';
       ctx.beginPath(); ctx.moveTo(left, py); ctx.lineTo(right, py); ctx.stroke();
       ctx.setLineDash([]);
+      /* 라벨은 막대를 가리지 않도록 차트 영역 위쪽 여백(오른쪽 끝)에 표시한다 */
       const txt = opts.label || ('목표 ' + v);
       ctx.font = "700 8.5px 'SFMono-Regular', Consolas, monospace";
-      const w = ctx.measureText(txt).width + 8;
-      const bx = right - w, by = Math.max(py - 11, 1);
+      const w  = ctx.measureText(txt).width + 8;
+      const bx = right - w;
+      const by = Math.max(chart.chartArea.top - 13, 1);
       ctx.fillStyle = opts.color || '#c00000';
       ctx.beginPath(); ctx.roundRect(bx, by, w, 11, 3); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle';
       ctx.fillText(txt, bx + 4, by + 6);
+      /* 라벨과 목표선을 잇는 짧은 지시선 */
+      ctx.strokeStyle = opts.color || '#c00000'; ctx.lineWidth = 1; ctx.setLineDash([2,2]);
+      ctx.beginPath(); ctx.moveTo(right - w/2, by + 11); ctx.lineTo(right - w/2, py); ctx.stroke();
       ctx.restore();
     }
   };
@@ -3882,7 +3887,7 @@ function renderWeekly(){
     return new Chart(ctx, { type:'bar', data:{labels:labels, datasets:ds},
       plugins:[wkTgtLinePlugin],
       options:{ responsive:true, maintainAspectRatio:false, animation:false,
-        layout:{ padding:{ top:26 } },                 // 세로 값 라벨이 잘리지 않도록
+        layout:{ padding:{ top:34 } },                 // 세로 값 라벨이 잘리지 않도록
         plugins:{ legend:{display:false},
           datalabels: HAS_DL ? {                        // 막대 위에 값 표시 (세로쓰기)
             display: ctxD => ctxD.dataset.data[ctxD.dataIndex] > 0,
