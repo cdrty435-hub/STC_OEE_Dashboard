@@ -595,6 +595,17 @@
   .wk-avail-note .cls{float:right; border:none; background:none; cursor:pointer; color:#7a8698; font-size:11px;}
   @media print{ .wk-avail-note{display:none !important;} .wk-k .info{display:none;} }
 </style>
+
+<style>
+  /* ⑥ PPT 기준 지표 표 */
+  table.wk-t.mini th, table.wk-t.mini td{padding:3px 4px; font-size:10.2px;}
+  table.wk-t.mini td.mc{text-align:left;}
+  table.wk-t tr.dead td{color:#b9c2cc; background:#fafbfc;}
+  table.wk-t tfoot td{background:#e8f0e2; font-weight:800; border-top:2px solid #1f3864;}
+  table.wk-t td.warn{color:#c00000; font-weight:700;}
+  .wk-ppt-note{font-size:9.8px; color:#8a95a1; margin-top:3px;}
+  @media print{ table.wk-t.mini th, table.wk-t.mini td{padding:2px 3px; font-size:9px;} }
+</style>
 </head>
 <body>
 
@@ -722,13 +733,20 @@
       </div>
 
       <div class="wk-blk">
+        <h4>⑥ 설비별 PPT 기준 지표 (NOR / OR / AOT)<span class="wk-tgt" id="wkPptSub"></span></h4>
+        <table class="wk-t mini" id="wkPptTable"></table>
+        <div class="wk-ppt-note">PPT=계획생산시간 · NOT=고장정지시간 · NOF=설비고장횟수 · AOT=PPT−NOT ·
+          MTBF=AOT÷NOF · MTTR=NOT÷NOF · NOR=NOT÷PPT · OR=MTBF÷(MTBF+MTTR) · 실가동률=가동시간÷PPT</div>
+      </div>
+
+      <div class="wk-blk">
         <div class="wk-2col">
           <div>
-            <h4>⑥ 계통별 로스 증감 (전주 대비)</h4>
+            <h4>⑦ 계통별 로스 증감 (전주 대비)</h4>
             <table class="wk-t" id="wkCatTable"></table>
           </div>
           <div>
-            <h4>⑦ F-COST 손실비용 TOP 5</h4>
+            <h4>⑧ F-COST 손실비용 TOP 5</h4>
             <table class="wk-t" id="wkCostTable"></table>
           </div>
         </div>
@@ -737,11 +755,11 @@
       <div class="wk-blk">
         <div class="wk-2col">
           <div>
-            <h4>⑧ 설비등급 D·E (PM 우선 대상)</h4>
+            <h4>⑨ 설비등급 D·E (PM 우선 대상)</h4>
             <table class="wk-t" id="wkGradeTable"></table>
           </div>
           <div>
-            <h4>⑨ 특이사항 · 익주 계획</h4>
+            <h4>⑩ 특이사항 · 익주 계획</h4>
             <textarea class="wk-memo" id="wkMemo" placeholder="불가동 설비 조치 현황, PM 진행, 익주 계획 등을 입력하세요 (주차별로 저장됩니다)"></textarea>
           </div>
         </div>
@@ -4212,7 +4230,58 @@ function renderWeekly(){
     if(ib) ib.innerHTML = issue;
   }
 
-  /* ---------- ⑥ 계통별 증감 ---------- */
+  /* ---------- ⑥ 설비별 PPT 기준 지표 (보고 주차 기준) ---------- */
+  {
+    const md  = (document.getElementById('heroPptMode')||{value:'fixed'}).value;
+    const ph  = parseFloat((document.getElementById('heroPptHours')||{}).value) || 630;
+    const R0  = RUN.filter(r=>r.w===wk);
+    const L0  = LOSS.filter(r=>r.w===wk);
+    const Lok = fails(L0);                       // 주간보고 다른 항목과 동일하게 전체 로스 기준
+    const sub = document.getElementById('wkPptSub');
+    if(sub) sub.textContent = `${wk} · PPT ${md==='real' ? '실적 계획시간' : ph+'h 일괄'} · 전체 로스 기준`;
+
+    const head = ['MC','Ton','PPT (h)','NOT (h)','NOF','AOT (h)','MTBF (h)','MTTR (h)','NOR','OR','실가동률'];
+    let T = {ppt:0, not:0, nof:0, run:0};
+    const body = ALL_MACHINES.concat([...MISSING]).sort((a,b)=>a-b).map(mc=>{
+      const R = R0.filter(x=>x.m===mc);
+      const L = Lok.filter(x=>x.m===mc);
+      const Lall = L0.filter(x=>x.m===mc);
+      const planReal = R.reduce((a,x)=>a+(x.p||0),0)/60;
+      const runH = R.reduce((a,x)=>a+x.r,0)/60;
+      const ppt  = (md === 'real') ? planReal : ph;
+      const not  = L.reduce((a,x)=>a+x.l,0)/60;
+      const nof  = nofCount(R, Lall, null);
+      const aot  = Math.max(ppt-not, 0);
+      const mtbf = nof ? aot/nof : 0;
+      const mttr = nof ? not/nof : 0;
+      const or   = (mtbf+mttr) ? mtbf/(mtbf+mttr) : 0;
+      const dead = (R.length === 0);
+      T.ppt+=ppt; T.not+=not; T.nof+=nof; T.run+=runH;   // 탭5와 동일하게 전 호기 합산
+      const tag = MISSING.has(mc) ? ' (결번)' : (BROKEN.has(mc) ? ' (고장)' : '');
+      return `<tr class="${dead?'dead':''}">
+        <td class="mc">DC #${mc}${tag}</td><td>${MC_TYPE[mc]||'-'}</td>
+        <td>${ppt?fmt(ppt,1):'-'}</td><td>${not?fmt(not,1):'-'}</td>
+        <td>${nof?cntTxt(nof):'-'}</td><td>${aot?fmt(aot,1):'-'}</td>
+        <td class="${nof&&tB&&mtbf<tB?'warn':''}">${nof?fmt(mtbf,2):'-'}</td>
+        <td class="${nof&&tM&&mttr>tM?'warn':''}">${nof?fmt(mttr,2):'-'}</td>
+        <td>${ppt?fmt(not/ppt*100,1)+'%':'-'}</td>
+        <td>${nof?fmt(or*100,1)+'%':'-'}</td>
+        <td>${ppt?fmt(runH/ppt*100,1)+'%':'-'}</td></tr>`;
+    }).join('');
+
+    const aotT  = Math.max(T.ppt-T.not, 0);
+    const mtbfT = T.nof ? aotT/T.nof : 0, mttrT = T.nof ? T.not/T.nof : 0;
+    document.getElementById('wkPptTable').innerHTML =
+      '<thead><tr>' + head.map(h=>`<th>${h}</th>`).join('') + '</tr></thead><tbody>' + body + '</tbody>'
+      + `<tfoot><tr><td class="mc">TTL</td><td>—</td>
+          <td>${fmt(T.ppt,1)}</td><td>${fmt(T.not,1)}</td><td>${cntTxt(T.nof)}</td>
+          <td>${fmt(aotT,1)}</td><td>${fmt(mtbfT,2)}</td><td>${fmt(mttrT,2)}</td>
+          <td>${T.ppt?fmt(T.not/T.ppt*100,1)+'%':'-'}</td>
+          <td>${(mtbfT+mttrT)?fmt(mtbfT/(mtbfT+mttrT)*100,1)+'%':'-'}</td>
+          <td>${T.ppt?fmt(T.run/T.ppt*100,1)+'%':'-'}</td></tr></tfoot>`;
+  }
+
+  /* ---------- ⑦ 계통별 증감 ---------- */
   const ct = document.getElementById('wkCatTable');
   const totC = WK_SUBS.reduce((a,k)=>a+(sc[k]?sc[k].h:0),0);
   ct.innerHTML = '<thead><tr><th>계통</th><th>금주 로스</th><th>건수</th><th>전주 로스</th><th>증감</th><th>비중</th></tr></thead><tbody>'+
