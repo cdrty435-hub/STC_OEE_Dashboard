@@ -921,8 +921,10 @@
       </div>
 
       <div class="wk-blk">
-        <h4>⑥ 설비별 PPT 기준 지표 (NOR / OR / AOT)<span class="wk-tgt" id="wkPptSub"></span></h4>
+        <h4>⑥ 설비별 PPT 기준 지표 (NOR / OR / AOT)<span class="wk-catbar">집계 계통
+          <span class="wk-cchips" id="wkCat6"></span></span><span class="wk-tgt" id="wkPptSub"></span></h4>
         <table class="wk-t mini" id="wkPptTable"></table>
+        <div class="wk-ppt-note" id="wkPptNote2" style="margin-bottom:2px"></div>
         <div class="wk-ppt-note">PPT=계획생산시간 · NOT=고장정지시간 · NOF=설비고장횟수 · AOT=PPT−NOT ·
           MTBF=AOT÷NOF · MTTR=NOT÷NOF · NOR=NOT÷PPT · OR=MTBF÷(MTBF+MTTR) · 실가동률=가동시간÷PPT</div>
       </div>
@@ -4116,7 +4118,7 @@ function renderWeekly(){
         const v = dep.value;
         try{
           localStorage.setItem('stc_wk_dept', v);
-          [1,2,4].forEach(n=>localStorage.setItem('stc_wk_cat'+n, v==='ALL' ? 'ALL' : JSON.stringify([v])));
+          [1,2,4,6].forEach(n=>localStorage.setItem('stc_wk_cat'+n, v==='ALL' ? 'ALL' : JSON.stringify([v])));
           localStorage.setItem('stc_wk_cost_cats', JSON.stringify(v==='ALL' ? WK_SUBS : [v]));
         }catch(e){}
         renderWeekly();
@@ -4142,7 +4144,7 @@ function renderWeekly(){
       localStorage.setItem('stc_wk_cat'+n, catIsAll(a) ? 'ALL' : JSON.stringify(a));
     }catch(e){} };
 
-  [1,2,4].forEach(n=>{
+  [1,2,4,6].forEach(n=>{
     const el = document.getElementById('wkCat'+n); if(!el) return;
     const cur0 = catGet(n), all = catIsAll(cur0);
     el.innerHTML = `<button type="button" class="all${all?' on':''}" data-c="ALL">전체 로스</button>`
@@ -4162,8 +4164,8 @@ function renderWeekly(){
       };
     });
   });
-  const cats1 = catGet(1), cats2 = catGet(2), cats4 = catGet(4);
-  const cat1 = catArg(cats1), cat2 = catArg(cats2), cat4 = catArg(cats4);
+  const cats1 = catGet(1), cats2 = catGet(2), cats4 = catGet(4), cats6 = catGet(6);
+  const cat1 = catArg(cats1), cat2 = catArg(cats2), cat4 = catArg(cats4), cat6 = catArg(cats6);
   [1,2].forEach(n=>{ const el = document.getElementById('wkCat'+n+'Note');
     if(el) el.textContent = catIsAll(catGet(n)) ? '' : '· 선택 계통만'; });
   const h3n = document.getElementById('wkH3Note');
@@ -4647,9 +4649,10 @@ function renderWeekly(){
     const ph  = parseFloat((document.getElementById('heroPptHours')||{}).value) || 630;
     const R0  = RUN.filter(r=>r.w===wk);
     const L0  = LOSS.filter(r=>r.w===wk);
-    const Lok = fails(L0);                       // 주간보고 다른 항목과 동일하게 전체 로스 기준
+    const isAll6 = catIsAll(cats6);
+    const Lok = fails(isAll6 ? L0 : L0.filter(r=>matchCat(r, cat6)));
     const sub = document.getElementById('wkPptSub');
-    if(sub) sub.textContent = `${wk} · PPT ${md==='real' ? '실적 계획시간' : ph+'h 일괄'} · 전체 로스 기준`;
+    if(sub) sub.textContent = `${wk} · PPT ${md==='real' ? '실적 계획시간' : ph+'h 일괄'} · ${catLabel(cats6)} 기준`;
 
     const head = ['MC','Ton','PPT (h)','NOT (h)','NOF','AOT (h)','MTBF (h)','MTTR (h)','NOR','OR','실가동률'];
     let T = {ppt:0, not:0, nof:0, run:0};
@@ -4661,7 +4664,7 @@ function renderWeekly(){
       const runH = R.reduce((a,x)=>a+x.r,0)/60;
       const ppt  = (md === 'real') ? planReal : ph;
       const not  = L.reduce((a,x)=>a+x.l,0)/60;
-      const nof  = nofCount(R, Lall, null);
+      const nof  = nofCount(R, Lall, isAll6 ? null : L);   // 계통 선택 시 그 계통 고장만 집계
       const aot  = Math.max(ppt-not, 0);
       const mtbf = nof ? aot/nof : 0;
       const mttr = nof ? not/nof : 0;
@@ -4682,6 +4685,9 @@ function renderWeekly(){
 
     const aotT  = Math.max(T.ppt-T.not, 0);
     const mtbfT = T.nof ? aotT/T.nof : 0, mttrT = T.nof ? T.not/T.nof : 0;
+    const n2 = document.getElementById('wkPptNote2');
+    if(n2) n2.textContent = isAll6 ? ''
+      : `※ ${catLabel(cats6)} 계통 로스만 NOT·NOF 에 반영했습니다 · PPT 는 설비 기준이라 그대로입니다`;
     document.getElementById('wkPptTable').innerHTML =
       '<thead><tr>' + head.map(h=>`<th>${h}</th>`).join('') + '</tr></thead><tbody>' + body + '</tbody>'
       + `<tfoot><tr><td class="mc">TTL</td><td>—</td>
