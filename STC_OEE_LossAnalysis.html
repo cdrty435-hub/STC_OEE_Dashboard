@@ -57,6 +57,33 @@
              border:1px solid #FFE3A3; border-radius:5px; padding:7px 10px; display:none; }
   .legend-row { display:flex; gap:18px; flex-wrap:wrap; align-items:center; font-size:11.5px; color:#666; margin-top:4px; }
   .legend-row .key { display:inline-block; width:14px; height:10px; border-radius:2px; margin-right:5px; vertical-align:middle; }
+  .legend-row .keyline { display:inline-block; width:16px; height:0; border-top:2px dashed #7048E8; margin-right:5px; vertical-align:middle; }
+
+  /* ---- 주차별 가동율 점선 패널 ---- */
+  .wk-grid { display:flex; flex-wrap:wrap; gap:7px; max-height:112px; overflow-y:auto; padding:1px; }
+  .wk-chip { display:inline-flex; align-items:center; gap:6px; border:1px solid #e0e3e8; border-radius:16px;
+             padding:5px 11px; font-size:12px; background:#fafbfc; cursor:pointer; user-select:none; line-height:1.2; }
+  .wk-chip:hover { border-color:#b9c0c8; }
+  .wk-chip .wk { font-weight:700; color:#444; }
+  .wk-chip .dt { font-size:10.5px; color:#98a0aa; }
+  .wk-chip .dash { display:inline-block; width:14px; height:0; border-top:2px dashed #c6ccd4; }
+  .wk-chip.inrange { background:#f2f8ff; border-color:#cfe2f7; }
+  .wk-chip.on { font-weight:700; }
+
+  /* ---- 차트 툴팁 ---- */
+  .chart-tip { position:absolute; pointer-events:none; display:none; z-index:5; background:rgba(33,38,45,.94); color:#fff;
+               font-size:11.5px; line-height:1.55; padding:7px 10px; border-radius:6px; box-shadow:0 3px 10px rgba(0,0,0,.2); white-space:nowrap; }
+  .chart-tip b { font-size:12.5px; }
+  .chart-tip .tdash { display:inline-block; width:12px; height:0; border-top:2px dashed #fff; margin-right:5px; vertical-align:middle; }
+
+  /* ---- 전체 설비 원인 분석 ---- */
+  .sec-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .sec-head .sec-title { font-size:13px; font-weight:800; color:#333; }
+  .sec-head .sec-hint { font-size:11.5px; color:#8b929b; }
+  .sec-head .sec-btn { margin-left:auto; font-size:11.5px; padding:5px 14px; border:1px solid #d8dce1;
+                       border-radius:14px; background:#fff; color:#555; cursor:pointer; font-weight:700; }
+  .sec-head .sec-btn:hover { background:#f5f6f8; }
+  .equip-card.rest { border-color:#f0f1f3; background:#fcfcfd; }
 
   .card { background:#fff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,.08); padding:18px 20px 22px; margin-bottom:20px; }
   .card-title { font-size:16px; font-weight:800; margin-bottom:14px; padding-bottom:8px; border-bottom:3px solid #2196F3; }
@@ -117,7 +144,17 @@
   <div class="card">
     <div class="card-title">📊 전체 설비 가동율 저조 설비 분석</div>
     <div class="chart-title" id="rankTitle">Distribution Center (DC) Operational Availability (%)</div>
-    <div class="chart-wrap"><canvas id="chart-rank" width="1000" height="320"></canvas></div>
+    <div class="chart-wrap"><canvas id="chart-rank" width="1000" height="320"></canvas><div class="chart-tip" id="rankTip"></div></div>
+
+    <div class="down-panel">
+      <div class="dp-head">
+        <span class="dp-title">📈 주차별 가동율 점선 추가</span>
+        <span class="dp-hint">주차를 클릭하면 해당 주차의 설비별 가동율이 점선 그래프로 겹쳐 표시됩니다 (여러 주차 동시 선택 가능 · 막대에 마우스를 올리면 값 비교)</span>
+        <button class="dp-clear" onclick="clearWeekLines()">전체 해제</button>
+      </div>
+      <div class="wk-grid" id="weekChipGrid"></div>
+    </div>
+
     <div class="down-panel">
       <div class="dp-head">
         <span class="dp-title">🔧 고장/정지 설비 선택</span>
@@ -134,9 +171,11 @@
       <span><i class="key" style="background:#fff1f0; outline:1px dashed rgba(244,67,54,.6)"></i>고장/정지 (0%)</span>
       <span><i class="key" style="background:#E03131"></i>가동율 저조 TOP4</span>
       <span><i class="key" style="background:#f4f5f7; outline:1px dashed rgba(140,148,158,.6)"></i>데이터 없음 (0%)</span>
+      <span><i class="keyline"></i>주차별 가동율 (선택 시)</span>
     </div>
     <div class="footnote">※ 선택한 기간 <span id="weekRangeLabel">-</span> (<span id="weekCountLabel1">-</span>일) 데이터를 합산한 설비별 가동율입니다. 목표(89%) 미달 설비는 주황색, 그중 <b>가동율이 가장 낮은 4곳은 붉은색 TOP1~TOP4 뱃지</b>로 표시됩니다.<br>
-    ※ 고장/정지 설비(<b id="downEquipLabel">-</b>)는 구글시트에 가동 데이터가 없어 자동 집계에서 누락되므로, 차트에는 <b>전체 보유 설비(DC1~DC23, DC14 제외)가 항상 표시</b>됩니다. 해당 주차에 가동 데이터가 없는 설비는 0%로 나오며, 아래 <b>고장/정지 설비 선택</b>에서 체크한 설비는 붉은 점선(고장 정지), 체크하지 않은 설비는 회색 점선(데이터 없음)으로 구분됩니다.</div>
+    ※ 고장/정지 설비(<b id="downEquipLabel">-</b>)는 구글시트에 가동 데이터가 없어 자동 집계에서 누락되므로, 차트에는 <b>전체 보유 설비(DC1~DC23, DC14 제외)가 항상 표시</b>됩니다. 해당 주차에 가동 데이터가 없는 설비는 0%로 나오며, 아래 <b>고장/정지 설비 선택</b>에서 체크한 설비는 붉은 점선(고장 정지), 체크하지 않은 설비는 회색 점선(데이터 없음)으로 구분됩니다.<br>
+    ※ <b>주차별 가동율 점선 추가</b>에서 주차를 클릭하면, 기간 합산 막대 위에 <b>해당 주차만의 설비별 가동율이 점선</b>으로 겹쳐 그려집니다. 하늘색 배경 칩은 현재 선택 기간에 포함된 주차입니다.</div>
   </div>
 
   <div class="card">
@@ -144,6 +183,18 @@
     <div id="top3Container" class="top3-grid"></div>
     <div class="footnote">※ 가동율이 가장 낮은 설비 4곳(막대그래프 TOP1~TOP4와 동일)의 Loss 원인을 각 설비 자체 Loss 합계 대비 비중(%)으로, 상위 5개 항목만 표시합니다.<br>
     ※ 고장/정지 설비는 Loss 원인 입력 데이터가 없으므로 이 원인 분석에서는 제외하고, 실제 가동한 설비 중에서 TOP4를 뽑습니다.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🥧 그 외 전체 설비 Loss 원인 분석</div>
+    <div class="sec-head">
+      <span class="sec-title">TOP4를 제외한 나머지 설비 <span id="restCount">-</span>대</span>
+      <span class="sec-hint">가동율이 낮은 순서대로 정렬 (#5부터)</span>
+      <button class="sec-btn" id="btnToggleRest" onclick="toggleRest()">접기</button>
+    </div>
+    <div id="restContainer" class="top3-grid"></div>
+    <div class="footnote">※ TOP4를 제외한 <b>가동 데이터가 있는 전체 설비</b>의 Loss 원인을, 각 설비 자체 Loss 합계 대비 비중(%)으로 상위 5개 항목까지 표시합니다.<br>
+    ※ 고장/정지 및 데이터 없음 설비는 Loss 원인 입력 자체가 없어 제외됩니다.</div>
   </div>
 
   <div class="card">
@@ -336,7 +387,8 @@ function worstRanking(list, n){
   return map;
 }
 
-function drawRankChart(canvasId, list, target){
+function drawRankChart(canvasId, list, target, overlays){
+  overlays = overlays || [];
   const worstRankMap = worstRanking(list, 4);
   const canvas = document.getElementById(canvasId);
   const cssW = canvas.clientWidth || 1000, cssH = canvas.clientHeight || 320;
@@ -346,6 +398,7 @@ function drawRankChart(canvasId, list, target){
   ctx.clearRect(0,0,W,H);
 
   if (!list.length) {
+    _rankGeom = null;
     ctx.fillStyle = '#bbb'; ctx.font = '13px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText('데이터 없음', W/2, H/2);
     return;
@@ -450,6 +503,69 @@ function drawRankChart(canvasId, list, target){
   ctx.beginPath(); ctx.moveTo(left,ty); ctx.lineTo(right,ty); ctx.stroke(); ctx.setLineDash([]);
   ctx.fillStyle = 'rgba(244,67,54,0.9)'; ctx.font='10px "Segoe UI", Arial'; ctx.textAlign='left'; ctx.textBaseline='bottom';
   ctx.fillText('Target '+target+'%', left+4, ty-3);
+
+  /* ---- 선택한 주차별 가동율을 점선 그래프로 겹쳐 그리기 ---- */
+  overlays.forEach(ov => {
+    ctx.save();
+    ctx.strokeStyle = ov.color; ctx.lineWidth = 2; ctx.setLineDash([5,4]);
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    let started = false;
+    for (let i=0;i<n;i++){
+      const v = ov.map[keyOf(list[i].equip)];
+      const cx = left + i*catW + catW/2;
+      if (v == null || !(v > 0)) { if (started) { ctx.stroke(); started = false; } continue; }
+      const y = yToPix(Math.max(0, Math.min(yMax, v)));
+      if (!started) { ctx.beginPath(); ctx.moveTo(cx, y); started = true; }
+      else ctx.lineTo(cx, y);
+    }
+    if (started) ctx.stroke();
+    ctx.setLineDash([]);
+    for (let i=0;i<n;i++){
+      const v = ov.map[keyOf(list[i].equip)];
+      if (v == null || !(v > 0)) continue;
+      const cx = left + i*catW + catW/2;
+      const y = yToPix(Math.max(0, Math.min(yMax, v)));
+      ctx.beginPath(); ctx.arc(cx, y, 2.8, 0, Math.PI*2);
+      ctx.fillStyle = ov.color; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.stroke();
+    }
+    ctx.restore();
+  });
+
+  _rankGeom = { left, catW, n, list, overlays, top, bottom };
+  bindRankTooltip(canvas);
+}
+
+/* ---------- 막대 위 마우스 툴팁 (기간 합산 vs 선택 주차 비교) ---------- */
+let _rankGeom = null;
+function bindRankTooltip(canvas){
+  if (canvas._tipBound) return;
+  canvas._tipBound = true;
+  const tip = document.getElementById('rankTip');
+  canvas.addEventListener('mousemove', (ev) => {
+    if (!_rankGeom || !tip) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = ev.clientX - rect.left, y = ev.clientY - rect.top;
+    const g = _rankGeom;
+    const idx = Math.floor((x - g.left) / g.catW);
+    if (idx < 0 || idx >= g.n || y < g.top - 12 || y > g.bottom + 14) { tip.style.display='none'; return; }
+    const it = g.list[idx];
+    const state = it.down ? ' <span style="color:#ff9d9d">고장/정지</span>'
+                : (it.nodata ? ' <span style="color:#c8ced6">데이터 없음</span>' : '');
+    let html = `<b>${it.equip}</b>${state}<br>기간 합산 <b>${(it.A||0).toFixed(1)}%</b>`;
+    g.overlays.forEach(ov => {
+      const v = ov.map[keyOf(it.equip)];
+      html += `<br><span class="tdash" style="border-top-color:${ov.color}"></span>${ov.label} ` +
+              (v != null && v > 0 ? `<b>${v.toFixed(1)}%</b>` : '<span style="color:#c8ced6">-</span>');
+    });
+    tip.innerHTML = html;
+    tip.style.display = 'block';
+    const tw = tip.offsetWidth;
+    let lx = x + 14; if (lx + tw > canvas.clientWidth) lx = x - tw - 14;
+    tip.style.left = Math.max(0, lx) + 'px';
+    tip.style.top  = Math.max(0, Math.min(y - 10, canvas.clientHeight - tip.offsetHeight - 4)) + 'px';
+  });
+  canvas.addEventListener('mouseleave', () => { const t=document.getElementById('rankTip'); if(t) t.style.display='none'; });
 }
 
 function drawPieChart(canvasId, ranked, centerLabel){
@@ -502,6 +618,61 @@ function buildLossTable(elId, rowLabel, total, ranked){
   const bodyLoss = '<tr><td class="rowlabel">Loss(m)</td>' + ranked.map(r=>`<td>${r.value.toLocaleString()}</td>`).join('') + '</tr>';
   const bodyPct = '<tr><td class="rowlabel">비중</td>' + ranked.map(r=>`<td>${r.pct.toFixed(1)}%</td>`).join('') + '</tr>';
   el.innerHTML = head + '<tbody>' + bodyLoss + bodyPct + '</tbody>';
+}
+
+/* ---------- 주차별 가동율 점선 (클릭해서 추가 · 브라우저에 저장) ---------- */
+const WK_LINE_KEY = 'stc_loss_week_lines_v1';
+const WK_COLORS = ['#7048E8','#12B886','#F76707','#1098AD','#D6336C','#5C940D','#AE3EC9','#F59F00'];
+let WEEK_SET = new Set();
+
+const keyOf = eq => String(eq).trim().toUpperCase();
+
+function restoreWeekLines(){
+  try { const sv = localStorage.getItem(WK_LINE_KEY); if (sv !== null) WEEK_SET = new Set(JSON.parse(sv)); }
+  catch(e){ WEEK_SET = new Set(); }
+}
+function saveWeekLines(){ try { localStorage.setItem(WK_LINE_KEY, JSON.stringify([...WEEK_SET])); } catch(e){} }
+function toggleWeekLine(wk){
+  if (WEEK_SET.has(wk)) WEEK_SET.delete(wk); else WEEK_SET.add(wk);
+  saveWeekLines(); renderAll();
+}
+function clearWeekLines(){ WEEK_SET = new Set(); saveWeekLines(); renderAll(); }
+
+// 특정 주차의 설비별 가동율(%) — 기간 선택과 무관하게 전체 데이터에서 계산
+function weeklyAvailMap(rows, wk){
+  const byEquip = {};
+  for (const r of rows) {
+    if (r['주차'] !== wk) continue;
+    const eq = r['설비명']; if (!eq) continue;
+    const k = keyOf(eq);
+    if (!byEquip[k]) byEquip[k] = { plan:0, run:0 };
+    byEquip[k].plan += shiftMinOf(r);
+    byEquip[k].run  += num(r['가동시간_분']);
+  }
+  const out = {};
+  for (const [k,t] of Object.entries(byEquip)) out[k] = t.plan>0 ? t.run/t.plan*100 : 0;
+  return out;
+}
+
+function renderWeekPanel(metaList, colorMap, inRangeSet){
+  const grid = document.getElementById('weekChipGrid');
+  if (!grid) return;
+  if (!metaList.length) { grid.innerHTML = '<span style="font-size:12px;color:#9aa1ab;">주차 데이터가 없습니다.</span>'; return; }
+  grid.innerHTML = metaList.map(w => {
+    const on = WEEK_SET.has(w.label);
+    const c  = colorMap[w.label] || '#7048E8';
+    const md = String(w.minDate||'').slice(5).replace('-','/');
+    const xd = String(w.maxDate||'').slice(5).replace('-','/');
+    const st = on ? `border-color:${c}; background:${c}14;` : '';
+    return `<span class="wk-chip${on?' on':''}${inRangeSet.has(w.label)?' inrange':''}" style="${st}"
+              title="${w.minDate} ~ ${w.maxDate}${inRangeSet.has(w.label)?' (선택 기간 포함)':''}"
+              onclick="toggleWeekLine('${w.label}')">
+      <i class="dash" style="${on?`border-top-color:${c}`:''}"></i>
+      <span class="wk" style="${on?`color:${c}`:''}">${w.label}</span><span class="dt">${md}~${xd}</span>
+    </span>`;
+  }).join('');
+  const last = grid.querySelector('.wk-chip:last-child');
+  if (last && !grid._scrolled) { grid.scrollTop = grid.scrollHeight; grid._scrolled = true; }
 }
 
 /* ---------- 고장/정지 설비 선택 (하단 체크 패널 · 브라우저에 저장) ---------- */
@@ -566,6 +737,16 @@ function renderDownPanel(dataEquips, availMap){
   } else {
     warn.style.display = 'none';
   }
+}
+
+/* ---------- 그 외 전체 설비 원인 분석 표시 여부 ---------- */
+const REST_KEY = 'stc_loss_rest_open_v1';
+let REST_OPEN = true;
+function restoreRestOpen(){ try { const v = localStorage.getItem(REST_KEY); if (v !== null) REST_OPEN = (v === '1'); } catch(e){} }
+function toggleRest(){
+  REST_OPEN = !REST_OPEN;
+  try { localStorage.setItem(REST_KEY, REST_OPEN ? '1' : '0'); } catch(e){}
+  renderAll();
 }
 
 function setStatus(msg, isError){
@@ -769,7 +950,18 @@ function renderAll(){
 
   const { filtered, list } = equipmentAvailability(inRange, downList, roster);
   const TARGET = 89;
-  drawRankChart('chart-rank', list, TARGET);
+
+  // 주차별 가동율 점선 오버레이 (선택한 주차만)
+  const metaList = weekMetaList(LAST_A.rows);
+  const validWk = new Set(metaList.map(w=>w.label));
+  [...WEEK_SET].forEach(w => { if (!validWk.has(w)) WEEK_SET.delete(w); });
+  const selWeeks = metaList.map(w=>w.label).filter(w => WEEK_SET.has(w));
+  const colorMap = {};
+  selWeeks.forEach((w,i) => { colorMap[w] = WK_COLORS[i % WK_COLORS.length]; });
+  const overlays = selWeeks.map(w => ({ label:w, color:colorMap[w], map: weeklyAvailMap(LAST_A.rows, w) }));
+  renderWeekPanel(metaList, colorMap, new Set(weeks));
+
+  drawRankChart('chart-rank', list, TARGET, overlays);
 
   const availMap = {};
   list.forEach(x => { if (dataEquips.has(x.equip)) availMap[x.equip] = x.A; });
@@ -782,7 +974,9 @@ function renderAll(){
 
   // 고장/무데이터 설비는 Loss 원인 입력 자체가 없으므로 Top4 원인 분석에서 제외
   // (막대그래프의 TOP1~TOP4 뱃지와 동일한 기준·순서)
-  const worst3 = [...list].filter(x=>x.A!=null && x.A>0 && !x.down && !x.nodata).sort((a,b)=>a.A-b.A).slice(0,4);
+  const opList = [...list].filter(x=>x.A!=null && x.A>0 && !x.down && !x.nodata).sort((a,b)=>a.A-b.A);
+  const worst3 = opList.slice(0,4);
+  const restList = opList.slice(4);
   const container = document.getElementById('top3Container');
   container.innerHTML = worst3.map((w,i)=>`
     <div class="equip-card">
@@ -797,6 +991,35 @@ function renderAll(){
     drawPieChart('pie-worst-'+i, bd.ranked, 'Loss '+bd.total.toLocaleString());
     buildLossTable('table-worst-'+i, 'Loss(m) '+bd.total.toLocaleString(), bd.total, bd.ranked);
   });
+
+  // ---- 그 외 전체 설비 Loss 원인 (TOP4 제외, 가동율 낮은 순) ----
+  const restEl   = document.getElementById('restContainer');
+  const restCntEl= document.getElementById('restCount');
+  const restBtn  = document.getElementById('btnToggleRest');
+  if (restCntEl) restCntEl.textContent = restList.length;
+  if (restBtn)   restBtn.textContent = REST_OPEN ? '접기' : '펼치기';
+  if (restEl) {
+    restEl.style.display = REST_OPEN ? '' : 'none';
+    if (!restList.length) {
+      restEl.innerHTML = '<div class="empty-msg">표시할 설비가 없습니다.</div>';
+    } else if (REST_OPEN) {
+      restEl.innerHTML = restList.map((w,i)=>`
+        <div class="equip-card rest">
+          <div class="equip-name"><span style="display:inline-block; background:#8b929b; color:#fff; font-size:9px; font-weight:800; border-radius:7px; padding:2px 6px; margin-right:5px; vertical-align:middle;">#${i+5}</span>${w.equip} <span style="color:#999; font-weight:400; font-size:11px;">(A ${w.A.toFixed(1)}%)</span></div>
+          <div class="pie-wrap"><canvas id="pie-rest-${i}"></canvas></div>
+          <table class="mini" id="table-rest-${i}"></table>
+        </div>
+      `).join('');
+      restList.forEach((w,i)=>{
+        const eqRows = filtered.filter(r=>r['설비명']===w.equip);
+        const bd = lossBreakdown(eqRows, cols, 5);
+        drawPieChart('pie-rest-'+i, bd.ranked, 'Loss '+bd.total.toLocaleString());
+        buildLossTable('table-rest-'+i, 'Loss(m) '+bd.total.toLocaleString(), bd.total, bd.ranked);
+      });
+    } else {
+      restEl.innerHTML = '';
+    }
+  }
 
   const bdAll = lossBreakdown(filtered, cols, 5);
   drawPieChart('chart-ttl', bdAll.ranked, 'TTL '+bdAll.total.toLocaleString());
@@ -887,6 +1110,8 @@ async function exportPPT(){
 
 document.addEventListener('DOMContentLoaded', async () => {
   restoreDownEquip();
+  restoreWeekLines();
+  restoreRestOpen();
   SHARED_DATA = await Store.get(STORE_KEY);
   if (SHARED_DATA && SHARED_DATA.rawA && SHARED_DATA.rawA.rows && SHARED_DATA.rawA.rows.length) {
     // Reuse the exact same live data the main dashboard already fetched — no separate request needed.
