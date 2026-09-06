@@ -795,6 +795,24 @@
   .wk-lang button.on{background:#1f3864; color:#fff;}
   @media print{ .wk-lang{display:none;} }
 </style>
+
+<style>
+  /* 보고서 보기 : 화면을 주간보고 한 장만 남긴다 (인쇄 화면과 같은 모습) */
+  body.report-mode header,
+  body.report-mode .status-strip,
+  body.report-mode .stdbar,
+  body.report-mode .tabbar,
+  body.report-mode #errorBanner{ display:none !important; }
+  body.report-mode .wrap{ max-width:none; padding:10px 14px 40px; }
+  body.report-mode .layout{ display:block; }
+  body.report-mode .wk-sheet{ box-shadow:0 2px 18px rgba(16,22,30,.10); }
+  body.report-mode .wk-bar{ position:sticky; top:0; z-index:40; background:#fff;
+                            box-shadow:0 2px 10px rgba(16,22,30,.08); }
+  .wk-focus{border:1px solid #1f3864; background:#fff; color:#1f3864; border-radius:8px;
+            padding:4px 12px; font-size:12px; font-weight:800; cursor:pointer;}
+  body.report-mode .wk-focus{background:#1f3864; color:#fff;}
+  @media print{ .wk-focus{display:none;} }
+</style>
 </head>
 <body>
 
@@ -882,6 +900,7 @@
           <option value="설비-라인">설비-라인</option>
           <option value="관리">관리</option>
         </select></span>
+      <button type="button" class="wk-focus" id="wkFocus" title="좌측 메뉴와 상단을 숨기고 보고서만 봅니다 (ESC 로 복귀)">⛶ 보고서 보기</button>
       <span class="wk-lang" id="wkLang">
         <button type="button" data-lang="ko">한국어</button>
         <button type="button" data-lang="th">ไทย</button>
@@ -6708,6 +6727,41 @@ document.querySelectorAll('#wkLang button').forEach(b=>{
     try{ applyWkLang(); }catch(e){ console.error(e); }
     return r;
   };
+})();
+
+/* ===== 보고서 보기 모드 =====
+   주간보고 탭에서만 동작한다. 켜면 좌측 메뉴·상단 머리말·기준 설정 줄이 숨고
+   보고서 한 장만 남는다. 버튼을 다시 누르거나 ESC 로 원래 화면으로 돌아온다. */
+function wkFocusSet(on){
+  document.body.classList.toggle('report-mode', !!on);
+  const b = document.getElementById('wkFocus');
+  if(b) b.textContent = on ? '⤢ 원래 화면' : '⛶ 보고서 보기';
+  try{ localStorage.setItem('stc_wk_focus', on ? '1' : '0'); }catch(e){}
+  /* 폭이 바뀌므로 차트를 다시 맞춘다 */
+  setTimeout(()=>{
+    ['wkMttrChart','wkMtbfChart','wkTrendChart','wkCatMttrChart','wkCatMtbfChart','wkCostTrendChart']
+      .forEach(id=>{ const c = (typeof Chart!=='undefined' && Chart.getChart) ? Chart.getChart(id) : null;
+                     if(c){ try{ c.resize(); }catch(e){} } });
+  }, 60);
+}
+(function(){
+  const b = document.getElementById('wkFocus');
+  if(b) b.addEventListener('click', ()=> wkFocusSet(!document.body.classList.contains('report-mode')));
+  document.addEventListener('keydown', e=>{
+    if(e.key === 'Escape' && document.body.classList.contains('report-mode')
+       && !document.getElementById('zoomBack')) wkFocusSet(false);
+  });
+  /* 주간보고 탭을 벗어나면 자동 해제 */
+  document.querySelectorAll('.tabbtn').forEach(tb=>{
+    tb.addEventListener('click', ()=>{
+      if(tb.dataset.tab !== 'tab-weekly' && document.body.classList.contains('report-mode'))
+        wkFocusSet(false);
+    });
+  });
+  let on = '0';
+  try{ on = localStorage.getItem('stc_wk_focus') || '0'; }catch(e){}
+  const pane = document.getElementById('tab-weekly');
+  if(on === '1' && pane && pane.classList.contains('show')) wkFocusSet(true);
 })();
 
 loadData();
