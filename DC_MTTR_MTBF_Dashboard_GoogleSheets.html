@@ -616,6 +616,13 @@
   .wkc-k .v small{font-size:9.5px; font-weight:600; color:#8a95a1; margin-left:3px;}
   .wkc-k .d{font-family:var(--mono); font-size:9.5px; font-weight:700; margin-top:1px;}
   .wkc-k .d.up{color:#c00000;} .wkc-k .d.dn{color:#1d7d60;} .wkc-k .d.flat{color:#8a95a1;}
+  .wkc-bar{display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin:0 0 8px;
+           border:1px solid #e6ebf1; border-radius:8px; padding:6px 10px; background:#fbfcfe;}
+  .wkc-bar .lb{font-family:var(--mono); font-size:10px; color:#8a95a1; letter-spacing:.05em;}
+  .wkc-bar label{font-size:11px; color:#33404f; display:flex; align-items:center; gap:3px; cursor:pointer;}
+  .wkc-bar input[type=checkbox]{accent-color:#c9791a; width:12px; height:12px;}
+  .wkc-bar select{border:1px solid #d8dfe7; border-radius:6px; padding:2px 6px; font-size:11px;}
+  @media print{ .wkc-bar select, .wkc-bar input{border:none;} }
   .wkc-2{display:grid; grid-template-columns:1.25fr .75fr; gap:11px;}
   .wkc-cat{display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin-bottom:7px;}
   .wkc-c{border:1px solid #e6ebf1; border-left-width:4px; border-radius:7px; padding:5px 8px;}
@@ -764,6 +771,16 @@
 
       <div class="wk-blk">
         <h4>⑦ 로스 비용 현황 (F-COST)<span class="wk-tgt" id="wkCostSub"></span></h4>
+        <div class="wkc-bar">
+          <span class="lb">계통</span>
+          <label><input type="checkbox" class="wkcCat" value="설비-전기">설비-전기</label>
+          <label><input type="checkbox" class="wkcCat" value="설비-라인">설비-라인</label>
+          <label><input type="checkbox" class="wkcCat" value="금형">금형</label>
+          <label><input type="checkbox" class="wkcCat" value="관리">관리</label>
+          <span class="lb" style="margin-left:14px">누계 시작</span>
+          <select id="wkCostFrom"></select>
+          <span class="lb" style="margin-left:auto" id="wkCostFilterNote"></span>
+        </div>
         <div class="wkc-kpi" id="wkCostKpi"></div>
         <div class="wkc-2">
           <div class="wk-canv"><h5>주차별 로스시간 · 손실비용</h5>
@@ -4371,11 +4388,44 @@ function renderWeekly(){
     const RT   = getRates();
     const upto = allWeeks.slice(0, idx+1);
     const cost = r => r.l * (RT[r.m] || 0);
-    const perW = upto.map(w=>{
-      const L = fails(LOSS.filter(r=>r.w===w));
+
+    /* --- 주간보고 전용 필터 : 계통 체크 + 누계 시작 주차 (브라우저에 저장) --- */
+    let cCats = null;
+    try{ cCats = JSON.parse(localStorage.getItem('stc_wk_cost_cats')||'null'); }catch(e){}
+    if(!Array.isArray(cCats) || !cCats.length) cCats = WK_SUBS.slice();
+    document.querySelectorAll('.wkcCat').forEach(b=>{
+      b.checked = cCats.indexOf(b.value) >= 0;
+      b.onchange = ()=>{
+        const on = [...document.querySelectorAll('.wkcCat')].filter(x=>x.checked).map(x=>x.value);
+        try{ localStorage.setItem('stc_wk_cost_cats', JSON.stringify(on.length?on:WK_SUBS)); }catch(e){}
+        renderWeekly();
+      };
+    });
+    const selCats = new Set(cCats);
+
+    let fromW = null;
+    try{ fromW = localStorage.getItem('stc_wk_cost_from'); }catch(e){}
+    if(upto.indexOf(fromW) < 0) fromW = upto[0];
+    const fromSel = document.getElementById('wkCostFrom');
+    if(fromSel){
+      fromSel.innerHTML = upto.map(w=>`<option value="${w}">${w}</option>`).join('');
+      fromSel.value = fromW;
+      fromSel.onchange = ()=>{
+        try{ localStorage.setItem('stc_wk_cost_from', fromSel.value); }catch(e){}
+        renderWeekly();
+      };
+    }
+    const span   = upto.slice(upto.indexOf(fromW));
+    const inCat  = r => selCats.has(r.s);
+    const allCat = selCats.size === WK_SUBS.length;
+    const fn = document.getElementById('wkCostFilterNote');
+    if(fn) fn.textContent = allCat ? '전체 계통 기준' : `선택 계통만 집계 — ${[...selCats].join(' · ')}`;
+
+    const perW = span.map(w=>{
+      const L = fails(LOSS.filter(r=>r.w===w)).filter(inCat);
       const R = RUN.filter(r=>r.w===w);
       const runH = R.reduce((a,x)=>a+x.r,0)/60;
-      const lsH  = LOSS.filter(r=>r.w===w).reduce((a,x)=>a+x.l,0)/60;
+      const lsH  = LOSS.filter(r=>r.w===w).reduce((a,x)=>a+x.l,0)/60;   // 가동률은 항상 전체 로스
       return { w:w, h:L.reduce((a,x)=>a+x.l,0)/60, thb:L.reduce((a,x)=>a+cost(x),0),
                avail:(runH+lsH)>0 ? runH/(runH+lsH)*100 : 0, days:new Set(R.map(x=>x.d)).size||1 };
     });
@@ -4385,17 +4435,17 @@ function renderWeekly(){
     const sum = perW.reduce((a,x)=>a+x.thb,0);
 
     const sb = document.getElementById('wkCostSub');
-    if(sb) sb.textContent = `${wk} · 전체 로스 기준 · 설비별 M/C Rate 적용 · 누계 ${upto[0]}~${wk} ${Math.round(sum).toLocaleString()} THB`;
+    if(sb) sb.textContent = `${wk} · ${allCat?'전체 계통':[...selCats].join('+')} · M/C Rate 적용 · 누계 ${fromW}~${wk} ${Math.round(sum).toLocaleString()} THB`;
 
     const dCls = dPc===null ? 'flat' : (dPc>0 ? 'up' : 'dn');
     const dTxt = dPc===null ? '전주 데이터 없음'
                : `${dPc>0?'▲':'▼'}${Math.abs(dPc).toFixed(1)}% (전주 ${Math.round(c1.thb).toLocaleString()})`;
     document.getElementById('wkCostKpi').innerHTML = [
       ['금주 손실비용', Math.round(c0.thb).toLocaleString(), 'THB', `<div class="d ${dCls}">${dTxt}</div>`],
-      ['로스시간', fmt(c0.h,1), 'h', `<div class="d flat">${cntTxt(fails(LOSS.filter(r=>r.w===wk)).length)}건</div>`],
+      ['로스시간', fmt(c0.h,1), 'h', `<div class="d flat">${cntTxt(fails(LOSS.filter(r=>r.w===wk)).filter(inCat).length)}건</div>`],
       ['가동률', fmt(c0.avail,1), '%', `<div class="d flat">전체 로스 기준</div>`],
       ['일평균 손실', Math.round(c0.thb/(c0.days||1)).toLocaleString(), 'THB', `<div class="d flat">${c0.days}일 기준</div>`],
-      ['기간 누계', Math.round(sum).toLocaleString(), 'THB', `<div class="d flat">${upto.length}개 주차</div>`]
+      ['기간 누계', Math.round(sum).toLocaleString(), 'THB', `<div class="d flat">${span.length}개 주차 (${fromW}~)</div>`]
     ].map(k=>`<div class="wkc-k"><div class="l">${k[0]}</div>
         <div class="v">${k[1]}<small>${k[2]}</small></div>${k[3]}</div>`).join('');
 
@@ -4405,13 +4455,13 @@ function renderWeekly(){
       if(el){
         if(wkCostTrendChart) wkCostTrendChart.destroy();
         wkCostTrendChart = new Chart(el, {
-          data:{ labels: upto, datasets:[
+          data:{ labels: span, datasets:[
             { type:'bar', label:'로스시간 (h)', data: perW.map(x=>+x.h.toFixed(1)),
-              backgroundColor: upto.map(w=>w===wk?'#c9791a':'#e8c79a'), yAxisID:'y', order:2,
+              backgroundColor: span.map(w=>w===wk?'#c9791a':'#e8c79a'), yAxisID:'y', order:2,
               datalabels:{display:false} },
             { type:'line', label:'손실비용 (THB)', data: perW.map(x=>Math.round(x.thb)),
               borderColor:'#1f3864', backgroundColor:'#1f3864', borderWidth:2, tension:.25,
-              pointRadius: upto.map(w=>w===wk?4:2), yAxisID:'y1', order:1,
+              pointRadius: span.map(w=>w===wk?4:2), yAxisID:'y1', order:1,
               datalabels:{display:false} } ]},
           options:{ responsive:true, maintainAspectRatio:false, animation:false,
             layout:{ padding:{ top:8 } },
@@ -4427,12 +4477,12 @@ function renderWeekly(){
     }
 
     /* 계통별 손실비용 */
-    const Lw = fails(LOSS.filter(r=>r.w===wk));
-    const byS = {}; WK_SUBS.forEach(s=>byS[s]={thb:0,h:0,n:0});
+    const Lw = fails(LOSS.filter(r=>r.w===wk)).filter(inCat);
+    const byS = {}; [...selCats].forEach(s=>byS[s]={thb:0,h:0,n:0});
     Lw.forEach(r=>{ if(!byS[r.s]) byS[r.s]={thb:0,h:0,n:0};
       byS[r.s].thb += cost(r); byS[r.s].h += r.l/60; byS[r.s].n++; });
     const totS = Object.values(byS).reduce((a,x)=>a+x.thb,0) || 1;
-    document.getElementById('wkCostCat').innerHTML = WK_SUBS
+    document.getElementById('wkCostCat').innerHTML = Object.keys(byS)
       .sort((a,b)=>byS[b].thb-byS[a].thb)
       .map(s=>`<div class="wkc-c" style="border-left-color:${CAT_COLOR[s]||'#7f7f7f'}">
         <div class="n">${s}</div>
