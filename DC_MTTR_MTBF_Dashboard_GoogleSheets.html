@@ -813,13 +813,9 @@
       </div>
 
       <div class="wk-blk">
-        <div class="wk-2col">
+        <div>
           <div>
-            <h4>⑪ 설비등급 D·E (PM 우선 대상)</h4>
-            <table class="wk-t" id="wkGradeTable"></table>
-          </div>
-          <div>
-            <h4>⑫ 특이사항 · 익주 계획</h4>
+            <h4>⑪ 특이사항 · 익주 계획</h4>
             <textarea class="wk-memo" id="wkMemo" placeholder="불가동 설비 조치 현황, PM 진행, 익주 계획 등을 입력하세요 (주차별로 저장됩니다)"></textarea>
           </div>
         </div>
@@ -4628,33 +4624,7 @@ function renderWeekly(){
     `<td>${Math.round(totCost).toLocaleString()}</td>`+
     `<td>${fmt(Object.values(byM).reduce((a,x)=>a+x.h,0),1)}h</td><td>100%</td></tr></tbody>`;
 
-  /* ---------- ⑦ 설비등급 D·E ---------- */
-  const gt = document.getElementById('wkGradeTable');
-  let de = [], gMon = '';
-  try{
-    const mon = (cur.to||'').slice(0,7);
-    if(mon && monthsInData().indexOf(mon) >= 0){
-      const c = gradeCrit();
-      const g = monthStats(mon).map(x=>Object.assign({}, x, scoreOne(x, c, tB||3.0, tM||1.0)));
-      g.sort((a,b)=>a.tot-b.tot);
-      g.forEach((x,i)=>{ x.pm = (x.g==='D'||x.g==='E') ? i+1 : null; });
-      de = g.filter(x=>x.g==='D'||x.g==='E').slice(0,6);
-      gMon = mon;
-    }
-  }catch(e){ console.warn('주간보고 등급 산출 실패', e); }
-  if(!de.length){
-    de = (lastGradeRows||[]).filter(x=>x.g==='D'||x.g==='E').sort((a,b)=>a.tot-b.tot).slice(0,6);
-    gMon = lastGradeMonth || '';
-  }
-  gt.innerHTML = de.length
-    ? '<thead><tr><th>PM순위</th><th>설비</th><th>등급</th><th>총점</th><th>가동률</th><th>MTBF</th><th>MTTR</th><th>최다 로스유형</th></tr></thead><tbody>'+
-      de.map(x=>`<tr class="bad"><td>${x.pm||'-'}</td><td class="mc">DC${x.m}</td><td><b>${x.g}</b></td>`+
-        `<td>${fmt(x.tot,1)}</td><td>${fmt(x.avail,1)}%</td><td>${fmt(x.mtbf,2)}</td><td>${fmt(x.mttr,2)}</td>`+
-        `<td class="l">${x.top? x.top.code+' '+fmt(x.top.h,1)+'h' : '-'}</td></tr>`).join('')+
-      `</tbody>`
-    : '<tr><td class="l" style="color:#5a6674">D·E 등급 설비 없음 (또는 [설비 등급 / PM] 탭에서 등급 재산출 필요)</td></tr>';
-  if(de.length && gMon)
-    gt.insertAdjacentHTML('beforeend', `<caption style="caption-side:bottom;font-size:10px;color:#8a95a1;text-align:left;padding-top:3px">기준월 ${gMon} · 보고 주차가 속한 달 기준 · 가동률+MTBF+MTTR 가중 점수</caption>`);
+  /* ⑦ 설비등급 D·E 블록은 [설비 등급 / PM] 탭에서 보므로 주간보고에서 제외 */
 
   /* ---------- ⑧ 메모 + 저장 ---------- */
   const memo = document.getElementById('wkMemo');
