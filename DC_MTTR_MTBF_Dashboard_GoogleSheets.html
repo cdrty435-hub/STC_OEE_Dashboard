@@ -1129,8 +1129,7 @@
             ~ <input type="date" id="costEnd" style="border:1px solid #d8dfe7;border-radius:7px;padding:5px 7px;font-size:13px;"></label>
           <button class="cat-chip" id="costRangeReset">전체기간</button>
           <select id="costPeriod" style="border:1px solid #d8dfe7;border-radius:7px;padding:6px 9px;font-size:13px;">
-            <option value="iso">주간 · ISO주차 (F-COST 기준)</option>
-            <option value="sheet">주간 · 시트 주차(W27~)</option>
+            <option value="sheet" selected>주간 · 사내 주차 (로데이터 주차 열)</option>
             <option value="month">월간</option>
             <option value="range">기간 합계 (단일 집계)</option>
           </select>
@@ -1194,8 +1193,7 @@
           </div>
           <div class="lx-fld"><label>기간 단위</label>
             <div class="lx-seg" id="lxSeg" role="group" aria-label="기간 단위">
-              <button data-md="sheet" aria-pressed="false">주간·시트</button>
-              <button data-md="iso" aria-pressed="true">주간·ISO</button>
+              <button data-md="sheet" aria-pressed="true">주간·사내주차</button>
               <button data-md="month" aria-pressed="false">월간</button>
               <button data-md="range" aria-pressed="false">기간합계</button>
             </div></div>
@@ -1488,10 +1486,44 @@ function machineNo(v){
 }
 /* 주차 라벨: 원본 시트의 "주차" 열(W34 등)을 우선 사용, 없으면 ISO 주차로 대체.
    현장 주차(수~화)와 ISO 주차(월~일) 경계가 달라 시트 라벨을 정본으로 삼습니다. */
+/* ===== 사내 주차 정의 =====
+   수요일 시작 ~ 화요일 종료. 기준점: W36 = 2026-08-26(수) ~ 2026-09-01(화)
+   따라서 W35 = 08/19~08/25, W37 = 09/02~09/08 ...
+   ISO 주차(월~일)와 경계가 다르므로 집계에는 절대 쓰지 않는다.        */
+const STC_WEEK_ANCHOR_DATE = '2026-08-26';   // 이 날짜가
+const STC_WEEK_ANCHOR_NO   = 36;             // 이 주차의 첫날(수요일)
+function stcWeekNo(dateStr){
+  const d = new Date(String(dateStr) + 'T00:00:00Z');
+  if(isNaN(d)) return 0;
+  const a = new Date(STC_WEEK_ANCHOR_DATE + 'T00:00:00Z');
+  const n = STC_WEEK_ANCHOR_NO + Math.floor((d - a) / (7*86400000));
+  return ((n - 1) % 53 + 53) % 53 + 1;       // 연도 경계에서도 1~53 안에 들도록
+}
+/* 사내 주차의 시작(수)·종료(화) 날짜 */
+function stcWeekSpan(dateStr){
+  const d = new Date(String(dateStr) + 'T00:00:00Z');
+  const a = new Date(STC_WEEK_ANCHOR_DATE + 'T00:00:00Z');
+  const k = Math.floor((d - a) / (7*86400000));
+  const s = new Date(a.valueOf() + k*7*86400000);
+  const e = new Date(s.valueOf() + 6*86400000);
+  return { from: s.toISOString().slice(0,10), to: e.toISOString().slice(0,10) };
+}
+
+let WEEK_FALLBACK = 0;      // 시트 주차 열이 비어 날짜로 보완한 행 수
+let WEEK_MISMATCH = 0;      // 시트 주차 값이 사내 주차 정의와 어긋나는 행 수
+const WEEK_MISMATCH_EG = [];// 어긋난 예시 (최대 5건)
 function weekLabel(rawWeek, dateStr){
   const w = String(rawWeek||'').trim();
-  if(w) return w;                       // 'W34' 또는 '34주차' 등 시트 표기 그대로
-  return 'W' + isoWeek(dateStr);
+  if(w){                                     // 로데이터의 주차 열이 정본
+    const calc = dateStr ? 'W' + stcWeekNo(dateStr) : '';
+    if(calc && weekNum(w) !== weekNum(calc)){
+      WEEK_MISMATCH++;
+      if(WEEK_MISMATCH_EG.length < 5) WEEK_MISMATCH_EG.push(`${dateStr} 시트 ${w} / 사내주차 ${calc}`);
+    }
+    return w;
+  }
+  WEEK_FALLBACK++;                           // 비어 있을 때만 사내 주차 정의로 보완
+  return 'W' + stcWeekNo(dateStr);
 }
 function weekNum(label){
   const n = parseInt(String(label).replace(/[^0-9]/g,''), 10);
@@ -1610,14 +1642,21 @@ let allWeeks = [];
 let targetMTTR = null;
 let targetMTBF = null;
 
+/* ISO 주차 (월~일).
+   주의: 예전 코드는 날짜를 '로컬 시각'으로 만들고 요일은 getUTCDay()로 읽어,
+   태국(UTC+7)·한국(UTC+9)처럼 UTC보다 앞선 지역에서 요일이 하루씩 밀렸습니다.
+   그 결과 주차 경계가 월~일이 아니라 화~월로 잡혀 마지막 주차의 일수가 어긋났습니다.
+   아래는 전부 UTC 기준으로 통일한 버전입니다. */
 function isoWeek(dateStr){
-  const d = new Date(dateStr + 'T00:00:00');
+  const d = new Date(dateStr + 'T00:00:00Z');
+  if(isNaN(d)) return 0;
   const target = new Date(d.valueOf());
-  const dayNr = (d.getUTCDay() + 6) % 7;
-  target.setUTCDate(target.getUTCDate() - dayNr + 3);
-  const firstThursday = new Date(target.getUTCFullYear(),0,4);
-  const diff = (target - firstThursday) / 86400000;
-  return 1 + Math.round(diff/7);
+  const dayNr = (d.getUTCDay() + 6) % 7;              // 월=0 … 일=6
+  target.setUTCDate(target.getUTCDate() - dayNr + 3); // 그 주의 목요일
+  const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));
+  const fDayNr = (firstThursday.getUTCDay() + 6) % 7;
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - fDayNr + 3);
+  return 1 + Math.round((target - firstThursday) / (7*86400000));
 }
 
 function normDate(raw){
@@ -3060,19 +3099,22 @@ function buildRateGrid(){
   }));
 }
 let COST_RANGE_LABEL = '전체기간';
+/* 주차 집계는 항상 로데이터(시트의 주차 열, 사내 기준 수~화)를 따른다.
+   계산으로 만든 ISO 주차는 사내 주차와 경계가 달라 숫자가 어긋나므로 쓰지 않는다.
+   예전에 저장된 'iso' 설정이 남아 있어도 시트 주차로 되돌린다. */
+function normPeriodMode(mode){ return (mode === 'iso') ? 'sheet' : (mode || 'sheet'); }
 function periodsOf(mode, runArr){
+  mode = normPeriodMode(mode);
   const A = runArr || RUN;
   if(mode==='range'){ return [COST_RANGE_LABEL]; }
   if(mode==='month'){ return [...new Set(A.map(r=>r.d.slice(0,7)))].sort(); }
-  if(mode==='sheet'){ return [...new Set(A.map(r=>r.w))].sort((a,b)=>weekNum(a)-weekNum(b)); }
-  return [...new Set(A.map(r=>'W'+isoWeek(r.d)))]
-           .sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
+  return [...new Set(A.map(r=>r.w))].filter(Boolean).sort((a,b)=>weekNum(a)-weekNum(b));
 }
 function periodKey(r, mode){
+  mode = normPeriodMode(mode);
   if(mode==='range') return COST_RANGE_LABEL;
   if(mode==='month') return r.d.slice(0,7);
-  if(mode==='sheet') return r.w;
-  return 'W'+isoWeek(r.d);
+  return r.w;
 }
 function costRange(){
   const a=document.getElementById('costStart').value, b=document.getElementById('costEnd').value;
@@ -3590,7 +3632,8 @@ function renderLossX(ctx){
   });
   const zc = v => v ? lxF(v) : '<span class="zero">—</span>';
   document.querySelector('#lxRawTable tbody').innerHTML = rawRows.map(r=>`<tr>
-    <td class="l m" style="font-weight:600">${r.p}</td><td class="l m zero">${r.span}</td><td class="m">${r.day}</td>
+    <td class="l m" style="font-weight:600">${r.p}</td><td class="l m zero">${r.span}</td>
+    <td class="m" ${r.day<7?'style="color:#c00000;font-weight:700" title="집계 일수가 7일 미만입니다 — 진행 중이거나 데이터가 빠진 주차"':''}>${r.day}${r.day<7?'*':''}</td>
     ${r.min.map(v=>`<td class="m">${zc(v)}</td>`).join('')}
     <td class="m" style="font-weight:700">${lxF(r.tot)}</td><td class="m">${lxF1(r.tot/60)}</td>
     ${r.cost.map(v=>`<td class="m">${zc(v)}</td>`).join('')}
@@ -3838,8 +3881,12 @@ function renderWeekly(){
   const au  = (document.getElementById('wkAuthor').value||'').trim();
   document.getElementById('wkTitle').textContent =
     `MC MTTR / MTBF Weekly Report ${seq ? '· '+seq : ''}`.trim();
+  const wkSpan = cur.from ? stcWeekSpan(cur.from) : null;
   document.getElementById('wkMeta').innerHTML =
-    `<b>${wk}</b> · ${cur.from} ~ ${cur.to}<br>` +
+    `<b>${wk}</b> · ${wkSpan ? wkSpan.from+' ~ '+wkSpan.to : cur.from+' ~ '+cur.to}`
+    + (wkSpan && (wkSpan.from !== cur.from || wkSpan.to !== cur.to)
+        ? ` <span style="color:#8a95a1">(기록 ${cur.from}~${cur.to})</span>` : '')
+    + `<br>` +
     `${au ? au + ' · ' : ''}작성일 ${new Date().toISOString().slice(0,10)}` +
     ` · 기준 ${STD_MODE?'계획외 고장(UDT)':'전체 로스'} / 최소정지 ${MIN_STOP}분` +
     ` · MTBF ${mtbfBasisLabel()}`;
@@ -4351,7 +4398,10 @@ function renderWeekly(){
   const memo = document.getElementById('wkMemo');
   memo.value = notes.memo || '';
   document.getElementById('wkFootR').textContent =
-    `${wk} (${cur.from} ~ ${cur.to}) · 원천: ${DATA_SOURCE} · NOF: ${(NOF_MODE==='sheet'&&HAS_SHEET_NOF)?'시트 '+NOF_COL:'로스행 자동집계'}`;
+    `${wk} (${cur.from} ~ ${cur.to}) · 원천: ${DATA_SOURCE} · 주차: 로데이터 주차 열 (사내 기준 수~화)`
+    + (WEEK_FALLBACK ? ` · 주차 미기재 ${WEEK_FALLBACK}행은 날짜로 보완` : '')
+    + (WEEK_MISMATCH ? ` · ⚠ 주차 열이 사내 기준과 다른 행 ${WEEK_MISMATCH}건` : '')
+    + ` · NOF: ${(NOF_MODE==='sheet'&&HAS_SHEET_NOF)?'시트 '+NOF_COL:'로스행 자동집계'}`;
 
   const save = ()=>{
     const o = wkLoadNotes(wk);
