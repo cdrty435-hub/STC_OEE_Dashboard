@@ -4427,7 +4427,7 @@ function renderWeekly(){
       if(wkTrendChart) wkTrendChart.destroy();
       const DL = (typeof ChartDataLabels !== 'undefined');
       const lineDL = (color, align) => DL ? {
-        display:true, align:align, anchor:'center', offset:4, clamp:true,
+        display:true, align:align, anchor:'center', offset:6, clamp:true,
         color:color, font:{ size:7.5, weight:'700', family:"'SFMono-Regular', Consolas, monospace" },
         formatter: v => fmt(v,2) } : undefined;
       wkTrendChart = new Chart(ctx, {
@@ -4438,12 +4438,12 @@ function renderWeekly(){
             borderColor: WSR.map(x=> (WK_SEL_WEEK && x.w===WK_SEL_WEEK) ? '#c9791a' : 'rgba(0,0,0,0)'),
             borderWidth: WSR.map(x=> (WK_SEL_WEEK && x.w===WK_SEL_WEEK) ? 1.5 : 0),
             yAxisID:'y2', order:3,
-            datalabels: DL ? { display:true, anchor:'start', align:'end', offset:1, color:'#4a5765',
+            datalabels: DL ? { display:true, anchor:'end', align:'start', offset:3, color:'#4a5765',
               font:{ size:7.5, weight:'700' }, formatter: v => fmt(v,1)+'%' } : undefined },
           { type:'line', label:'MTTR', data:WSR.map(x=>+x.mttr.toFixed(2)),
             borderColor:'#c00000', backgroundColor:'#c00000', borderWidth:2,
             pointRadius: WSR.map(x=> (WK_SEL_WEEK && x.w===WK_SEL_WEEK) ? 6 : (x.w===wk?4:2)), tension:.25, yAxisID:'y', order:1,
-            datalabels: lineDL('#c00000','bottom') },
+            datalabels: lineDL('#c00000','top') },        // 가동률 라벨과 겹치지 않게 선 위로
           { type:'line', label:'MTBF', data:WSR.map(x=>+x.mtbf.toFixed(2)),
             borderColor:'#2e75b6', backgroundColor:'#2e75b6', borderWidth:2, borderDash:[5,3],
             pointRadius: WSR.map(x=> (WK_SEL_WEEK && x.w===WK_SEL_WEEK) ? 6 : (x.w===wk?4:2)), tension:.25, yAxisID:'y', order:2,
@@ -4539,21 +4539,22 @@ function renderWeekly(){
         const over = items[items.length-1].y - chartArea.bottom;
         if(over > 0) items.forEach(it=>{ it.y -= over; });
         items.forEach(it=>{ it.y = Math.max(it.y, chartArea.top + 3); });
-        const x = chartArea.right + 4;
+        const x = chartArea.right + 6;
         ctx.save(); ctx.textBaseline='middle'; ctx.textAlign='left';
         items.forEach(it=>{
-          ctx.font = "700 8px 'SFMono-Regular', Consolas, monospace";
+          ctx.font = "700 8.5px 'SFMono-Regular', Consolas, monospace";
           ctx.fillStyle = it.color;
           const txt = it.v.toFixed(2);
           ctx.fillText(txt, x, it.y);
           const w = ctx.measureText(txt).width;
-          ctx.font = "700 7.5px 'SFMono-Regular', Consolas, monospace";
+          ctx.font = "700 8px 'SFMono-Regular', Consolas, monospace";
           if(it.dv === null || Math.abs(it.dv) < 0.005){
-            ctx.fillStyle = '#8a95a1'; ctx.fillText('–', x+w+3, it.y);
+            ctx.fillStyle = '#4a5765'; ctx.fillText('–', x+w+4, it.y);
           }else{
             const good = it.goodUp ? it.dv>0 : it.dv<0;
             ctx.fillStyle = good ? '#1d7d60' : '#c00000';
-            ctx.fillText((it.dv>0?'▲':'▼')+Math.abs(it.dv).toFixed(2), x+w+3, it.y);
+            const dv = Math.abs(it.dv);
+            ctx.fillText((it.dv>0?'▲':'▼') + (dv>=100 ? dv.toFixed(0) : dv.toFixed(2)), x+w+4, it.y);
           }
         });
         ctx.restore();
@@ -4575,7 +4576,7 @@ function renderWeekly(){
       return new Chart(el, { data:{labels:upto, datasets:dsets},
         plugins:[wkEndLabels],
         options:{ responsive:true, maintainAspectRatio:false, animation:false,
-          layout:{ padding:{ right:52, top:6 } },
+          layout:{ padding:{ right:92, top:6 } },   // 오른쪽 끝 [값 + 전주비] 자리
           plugins:{ legend:{display:true, labels:{boxWidth:9, font:{size:9}, usePointStyle:true}},
                     datalabels:{display:false} },
           scales:{ x:{ ticks:{font:{size:9}}, grid:{display:false} },
