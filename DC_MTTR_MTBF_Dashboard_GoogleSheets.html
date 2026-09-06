@@ -688,6 +688,41 @@
                     font-size:10.5px; font-family:inherit; color:#33404f; background:#fff; font-weight:700;}
   .wk-catbar .cur{color:#c9791a;}
 </style>
+
+<style>
+  /* 주간보고 안의 흐린 회색 글씨를 진하게 (인쇄물에서 잘 안 보이던 문제) */
+  .wk-sheet{ color:#26313f; }
+  .wk-sheet .wk-hd .meta{ color:#3d4a59; }
+  .wk-sheet .wk-k .l, .wk-sheet .wk-k .v .u{ color:#3d4a59; }
+  .wk-sheet .wk-flat{ color:#4a5765; }
+  .wk-sheet .wk-tgt{ color:#3d4a59; }
+  .wk-sheet .wkc-k .l, .wk-sheet .wkc-k .d.flat{ color:#3d4a59; }
+  .wk-sheet .wkc-c .s{ color:#4a5765; }
+  .wk-sheet .wkw-card .rk{ color:#4a5765; }
+  .wk-sheet .wkw-m{ color:#3d4a59; }
+  .wk-sheet .wkw-card ul, .wk-sheet .wkc-w{ color:#33404f; }
+  .wk-sheet .wk-issue .ic .is{ color:#33404f; }
+  .wk-sheet .wkc-bar .lb, .wk-sheet .wk-catbar{ color:#4a5765; }
+  .wk-sheet .wk-ppt-note{ color:#4a5765; }
+  .wk-sheet table.wk-t tr.dead td{ color:#7a8698; }
+  .wk-sheet .hw-sub, .wk-sheet .wkw-band, .wk-sheet .wkc-band{ color:#4a5765; }
+  .wk-sheet input::placeholder, .wk-sheet textarea::placeholder{ color:#7a8698; }
+  /* 인라인 스타일로 박힌 회색도 함께 진하게 */
+  .wk-sheet [style*="#8a95a1"]{ color:#4a5765 !important; }
+  .wk-sheet [style*="#9aa4ae"]{ color:#4a5765 !important; }
+  .wk-sheet [style*="#7a8698"]{ color:#4a5765 !important; }
+  .wk-sheet [style*="#7a8794"]{ color:#4a5765 !important; }
+  .wk-sheet [style*="#b9c2cc"]{ color:#6b7a8c !important; }
+  .wk-sheet [style*="#5a6674"]{ color:#3d4a59 !important; }
+  .wk-sheet [style*="#6b7a8c"]{ color:#3d4a59 !important; }
+  @media print{
+    .wk-sheet{ color:#1a2230; }
+    .wk-sheet .wk-k .l, .wk-sheet .wk-hd .meta, .wk-sheet .wk-tgt,
+    .wk-sheet .wkc-k .l, .wk-sheet .wkw-m, .wk-sheet .wk-ppt-note{ color:#33404f; }
+    .wk-sheet [style*="#8a95a1"], .wk-sheet [style*="#9aa4ae"],
+    .wk-sheet [style*="#7a8698"], .wk-sheet [style*="#7a8794"]{ color:#3d4a59 !important; }
+  }
+</style>
 </head>
 <body>
 
@@ -4221,8 +4256,8 @@ function renderWeekly(){
         data:{ labels: WSA.map(x=>x.w), datasets:[
           { type:'bar',  label:'가동률(%)', data:WSA.map(x=>+x.avail.toFixed(1)),
             backgroundColor:'#c8d2dd66', borderWidth:0, yAxisID:'y2', order:3,
-            datalabels: DL ? { display:true, anchor:'start', align:'end', offset:1, color:'#7a8794',
-              font:{ size:7, weight:'700' }, formatter: v => fmt(v,1)+'%' } : undefined },
+            datalabels: DL ? { display:true, anchor:'start', align:'end', offset:1, color:'#4a5765',
+              font:{ size:7.5, weight:'700' }, formatter: v => fmt(v,1)+'%' } : undefined },
           { type:'line', label:'MTTR', data:WS.map(x=>+x.mttr.toFixed(2)),
             borderColor:'#c00000', backgroundColor:'#c00000', borderWidth:2,
             pointRadius: WS.map(x=>x.w===wk?4:2), tension:.25, yAxisID:'y', order:1,
