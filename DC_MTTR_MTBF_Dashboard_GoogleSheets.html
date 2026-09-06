@@ -4509,8 +4509,9 @@ function renderWeekly(){
                 formatter:v=> v>=10000 ? Math.round(v/1000)+'k'
                             : v>=1000  ? (v/1000).toFixed(1)+'k' : Math.round(v) } } ]},
           options:{ responsive:true, maintainAspectRatio:false, animation:false,
-            layout:{ padding:{ top:16 } },
-            plugins:{ legend:{display:true, labels:{boxWidth:9, font:{size:8.5}, usePointStyle:true}} },
+            layout:{ padding:{ top:10 } },
+            plugins:{ legend:{display:true, position:'bottom',   // 위에 두면 최대값 라벨과 겹친다
+                              labels:{boxWidth:9, font:{size:8.5}, usePointStyle:true, padding:8}} },
             scales:{ x:{ stacked:true, ticks:{font:{size:8}}, grid:{display:false} },
                      /* 좌우 축을 같은 비율로 맞추면 막대와 선이 겹쳐 읽기 어렵다.
                         막대는 아래 65%, 선은 위쪽에 놓이도록 각 축 상한을 따로 잡는다. */
@@ -4518,7 +4519,7 @@ function renderWeekly(){
                          ticks:{font:{size:8}, maxTicksLimit:5},
                          title:{display:true, text:'로스시간 (h)', font:{size:8}} },
                      y1:{ beginAtZero:true, position:'right', grid:{drawOnChartArea:false},
-                          max: mxC ? Math.ceil(mxC/0.97/10000)*10000 : undefined,
+                          max: mxC ? Math.ceil(mxC/0.88/10000)*10000 : undefined,   // 최고점 위 라벨 자리
                           ticks:{font:{size:8}, maxTicksLimit:5, callback:v=>Math.round(v/1000)+'k'},
                           title:{display:true, text:'손실비용 (THB)', font:{size:8}} } } }
         });
