@@ -675,6 +675,8 @@
   table.wk-t.down button.del{border:1px solid #e2c9c6; background:#fff; color:#c00000;
                              border-radius:5px; padding:2px 7px; font-size:10.5px; cursor:pointer;}
   table.wk-t.down button.del:hover{background:#fdeceb;}
+  table.wk-t.down button.del:disabled{color:#c7ced5; border-color:#e8edf2; background:#fafbfc; cursor:default;}
+  table.wk-t.down button.del:disabled:hover{background:#fafbfc;}
   @media print{ table.wk-t.down input, table.wk-t.down select{border:1px solid #e2e8ef;}
                 .wk-down-add, table.wk-t.down .delcol{display:none !important;} }
 </style>
@@ -4804,7 +4806,7 @@ function renderWeekly(){
                   : (n['dnEt'+m] ? `<span class="wkk">${esc(n['dnEt'+m])}</span>` : '<span style="color:#b9c2cc">-</span>'))
             }</td>
           <td class="h"><input data-hw="${w}" data-hk="dnOw${m}" value="${iv('dnOw')}" placeholder="담당"></td>
-          <td class="h delcol"><button type="button" class="del" data-hdel="${w}">삭제</button></td></tr>`;
+          <td class="h delcol"><button type="button" class="del" data-hdel="${w}"${has?'':' disabled title="지울 기록이 없습니다"'}>지움</button></td></tr>`;
       }).join('');
 
       box.innerHTML =
@@ -4844,9 +4846,21 @@ function renderWeekly(){
       box.querySelectorAll('button[data-hdel]').forEach(bt=>{
         bt.onclick = ()=>{
           const w = bt.dataset.hdel;
+          if(!histHas(w, m)) return;
+          if(!confirm(`DC${m} 의 ${w} 기록을 지웁니다. 계속할까요?`)) return;
           const n = histGet(w);
           ['dnSt','dnPb','dnPr','dnPl','dnOw','dnEt','dnEm'].forEach(k=>{ delete n[k+m]; });
           wkSaveNotes(w, n);
+          if(w === wk){                                   // 금주면 위 표 입력칸도 비운다
+            ['dnPb','dnPr','dnPl','dnOw','dnEt'].forEach(k=>{
+              const el = dt.querySelector(`tbody [data-note="${k}${m}"]`);
+              if(el) el.value = '';
+            });
+            const st = dt.querySelector(`tbody [data-note="dnSt${m}"]`);
+            if(st) st.value = BROKEN.has(m) ? '불가동' : '수리중';
+            const em = dt.querySelector(`tbody [data-note="dnEm${m}"]`);
+            if(em) em.value = 'date';
+          }
           histBuild(m, tr, box);
         };
       });
