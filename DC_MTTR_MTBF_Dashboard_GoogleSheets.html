@@ -653,6 +653,15 @@
   .wk-down-add button{border:1px solid #1f3864; background:#1f3864; color:#fff; border-radius:6px;
                       padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;}
   .wk-down-add button:disabled{background:#c7ced5; border-color:#c7ced5; cursor:default;}
+  table.wk-t.down button.hist{border:1px solid #cfd8e3; background:#fff; color:#1f3864;
+                              border-radius:5px; padding:1px 6px; font-size:9.5px; cursor:pointer; margin-top:3px;}
+  table.wk-t.down button.hist:hover{background:#eef3f9;}
+  table.wk-t.down button.hist.on{background:#1f3864; color:#fff; border-color:#1f3864;}
+  table.wk-t.down tr.histrow td{background:#fbfcfe; padding:7px 10px;}
+  table.wk-t.down tr.histrow table{width:100%; border-collapse:collapse; font-size:10.2px;}
+  table.wk-t.down tr.histrow th{background:#eef3f9; color:#1f3864; padding:3px 6px; text-align:left; font-weight:700;}
+  table.wk-t.down tr.histrow td.h{padding:3px 6px; border-bottom:1px solid #e6ebf1; vertical-align:top;}
+  table.wk-t.down tr.histrow .wkk{font-family:'SFMono-Regular',Consolas,monospace; font-weight:800; color:#1f3864;}
   table.wk-t.down button.del{border:1px solid #e2c9c6; background:#fff; color:#c00000;
                              border-radius:5px; padding:2px 7px; font-size:10.5px; cursor:pointer;}
   table.wk-t.down button.del:hover{background:#fdeceb;}
@@ -4718,7 +4727,7 @@ function renderWeekly(){
             const done = (stv === '복구 완료');
             const eta = notes['dnEm'+m] || 'date';      // 복구 예정: 날짜 지정 / 미정
             return `<tr class="${done?'':'bad'}">
-              <td class="mc">DC${m}</td>
+              <td class="mc">DC${m}<br><button type="button" class="hist" data-hist="${m}">이력</button></td>
               <td>${MC_TYPE[m]||'-'}</td>
               <td>${lr ? `${lr.w}<br><span style="color:#8a95a1;font-size:9.5px">${lr.ago?lr.ago+'주 경과':'금주 가동'}</span>`
                        : '<span style="color:#c00000">기록 없음</span>'}</td>
@@ -4740,6 +4749,50 @@ function renderWeekly(){
               <td class="delcol"><button type="button" class="del" data-del="${m}">삭제</button></td></tr>`;
           }).join('') + '</tbody>'
       : '<tr><td class="l" style="color:#5a6674">등록된 불가동 설비가 없습니다. 위에서 설비를 추가하세요.</td></tr>';
+
+    /* 설비별 주차 이력 : 주차별로 저장해 둔 문제점·진행사항·계획을 펼쳐 본다 */
+    const HK = [['dnSt','상태'], ['dnPb','문제점'], ['dnPr','진행사항'], ['dnPl','계획']];
+    dt.querySelectorAll('button.hist').forEach(b=>{
+      b.onclick = ()=>{
+        const m  = parseInt(b.dataset.hist, 10);
+        const tr = b.closest('tr');
+        const nx = tr.nextElementSibling;
+        if(nx && nx.classList.contains('histrow')){ nx.remove(); b.classList.remove('on'); return; }
+        dt.querySelectorAll('tr.histrow').forEach(x=>x.remove());
+        dt.querySelectorAll('button.hist.on').forEach(x=>x.classList.remove('on'));
+        b.classList.add('on');
+
+        const rows = [];
+        for(let i = idx; i >= 0; i--){                 // 최신 주차부터
+          const w = allWeeks[i];
+          const n = wkLoadNotes(w) || {};
+          const has = HK.some(k=>String(n[k[0]+m]||'').trim())
+                   || String(n['dnEt'+m]||'').trim() || String(n['dnEm'+m]||'') === '미정';
+          if(!has) continue;
+          const eta = (n['dnEm'+m] === '미정') ? '미정' : (n['dnEt'+m] || '-');
+          rows.push(`<tr><td class="h wkk">${w}</td>
+            <td class="h">${(n['dnSt'+m]||'-')}</td>
+            <td class="h">${(n['dnPb'+m]||'-')}</td>
+            <td class="h">${(n['dnPr'+m]||'-')}</td>
+            <td class="h">${(n['dnPl'+m]||'-')}</td>
+            <td class="h">${eta}</td>
+            <td class="h">${(n['dnOw'+m]||'-')}</td></tr>`);
+        }
+        const cols = tr.children.length;
+        const hr = document.createElement('tr');
+        hr.className = 'histrow';
+        hr.innerHTML = `<td colspan="${cols}">
+          <div style="font-size:10.5px;font-weight:800;color:#1f3864;margin-bottom:4px">DC${m} 주차별 이력 (${rows.length}건)</div>`
+          + (rows.length
+              ? `<table><thead><tr><th style="width:50px">주차</th><th style="width:70px">상태</th>
+                   <th>문제점</th><th>진행사항</th><th>계획</th>
+                   <th style="width:80px">복구 예정</th><th style="width:64px">담당</th></tr></thead>
+                 <tbody>${rows.join('')}</tbody></table>`
+              : '<div style="font-size:10.3px;color:#8a95a1">저장된 이력이 없습니다. 각 주차에서 내용을 입력하면 여기에 쌓입니다.</div>')
+          + '</td>';
+        tr.after(hr);
+      };
+    });
 
     dt.querySelectorAll('button.del').forEach(b=>{
       b.onclick = ()=>{
