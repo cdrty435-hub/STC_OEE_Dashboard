@@ -4458,17 +4458,25 @@ function renderWeekly(){
           data:{ labels: span, datasets:[
             { type:'bar', label:'로스시간 (h)', data: perW.map(x=>+x.h.toFixed(1)),
               backgroundColor: span.map(w=>w===wk?'#c9791a':'#e8c79a'), yAxisID:'y', order:2,
-              datalabels:{display:false} },
+              datalabels:{ display:v=>v.dataset.data[v.dataIndex]>0,   // 막대 안쪽 위에 로스시간
+                anchor:'start', align:'top', offset:2, clamp:true, color:'#6b4d18',
+                textStrokeColor:'#ffffff', textStrokeWidth:2.5,
+                font:{size:8.5, weight:'700', family:"'SFMono-Regular', Consolas, monospace"},
+                formatter:v=>fmt(v,1) } },
             { type:'line', label:'손실비용 (THB)', data: perW.map(x=>Math.round(x.thb)),
               borderColor:'#1f3864', backgroundColor:'#1f3864', borderWidth:2, tension:.25,
               pointRadius: span.map(w=>w===wk?4:2), yAxisID:'y1', order:1,
-              datalabels:{display:false} } ]},
+              datalabels:{ display:v=>v.dataset.data[v.dataIndex]>0,   // 선 위에 손실금액
+                anchor:'end', align:'top', offset:5, clamp:true, color:'#1f3864',
+                textStrokeColor:'#ffffff', textStrokeWidth:2.5,
+                font:{size:8.5, weight:'700', family:"'SFMono-Regular', Consolas, monospace"},
+                formatter:v=> v>=10000 ? Math.round(v/1000)+'k'
+                            : v>=1000  ? (v/1000).toFixed(1)+'k' : Math.round(v) } } ]},
           options:{ responsive:true, maintainAspectRatio:false, animation:false,
-            layout:{ padding:{ top:8 } },
-            plugins:{ legend:{display:true, labels:{boxWidth:9, font:{size:8.5}, usePointStyle:true}},
-                      datalabels:{display:false} },
+            layout:{ padding:{ top:16 } },
+            plugins:{ legend:{display:true, labels:{boxWidth:9, font:{size:8.5}, usePointStyle:true}} },
             scales:{ x:{ ticks:{font:{size:8}}, grid:{display:false} },
-                     y:{ beginAtZero:true, ticks:{font:{size:8}}, title:{display:true,text:'h',font:{size:8}} },
+                     y:{ beginAtZero:true, grace:'10%', ticks:{font:{size:8}}, title:{display:true,text:'h',font:{size:8}} },
                      y1:{ beginAtZero:true, position:'right', grid:{drawOnChartArea:false},
                           ticks:{font:{size:8}, callback:v=>Math.round(v/1000)+'k'},
                           title:{display:true,text:'THB',font:{size:8}} } } }
