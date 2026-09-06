@@ -65,6 +65,7 @@
              padding:5px 11px; font-size:12px; background:#fafbfc; cursor:pointer; user-select:none; line-height:1.2; }
   .wk-chip:hover { border-color:#b9c0c8; }
   .wk-chip .wk { font-weight:700; color:#444; }
+  .wk-chip .wkv { font-weight:700; color:#5a6270; font-size:11.5px; }
   .wk-chip .dt { font-size:10.5px; color:#98a0aa; }
   .wk-chip .dash { display:inline-block; width:14px; height:0; border-top:2px dashed #c6ccd4; }
   .wk-chip.inrange { background:#f2f8ff; border-color:#cfe2f7; }
@@ -149,7 +150,7 @@
     <div class="down-panel">
       <div class="dp-head">
         <span class="dp-title">📈 주차별 가동율 점선 추가</span>
-        <span class="dp-hint">주차를 클릭하면 해당 주차의 설비별 가동율이 점선 그래프로 겹쳐 표시됩니다 (여러 주차 동시 선택 가능 · 막대에 마우스를 올리면 값 비교)</span>
+        <span class="dp-hint">주차를 클릭하면 그 주차의 <b>전체 설비 종합 가동율</b>이 가로 점선으로 차트에 겹쳐 표시됩니다 (여러 주차 동시 선택 가능 · 막대에 마우스를 올리면 설비별 차이 비교)</span>
         <button class="dp-clear" onclick="clearWeekLines()">전체 해제</button>
       </div>
       <div class="wk-grid" id="weekChipGrid"></div>
@@ -171,11 +172,11 @@
       <span><i class="key" style="background:#fff1f0; outline:1px dashed rgba(244,67,54,.6)"></i>고장/정지 (0%)</span>
       <span><i class="key" style="background:#E03131"></i>가동율 저조 TOP4</span>
       <span><i class="key" style="background:#f4f5f7; outline:1px dashed rgba(140,148,158,.6)"></i>데이터 없음 (0%)</span>
-      <span><i class="keyline"></i>주차별 가동율 (선택 시)</span>
+      <span><i class="keyline"></i>주차별 종합 가동율 가로 점선 (선택 시)</span>
     </div>
     <div class="footnote">※ 선택한 기간 <span id="weekRangeLabel">-</span> (<span id="weekCountLabel1">-</span>일) 데이터를 합산한 설비별 가동율입니다. 목표(89%) 미달 설비는 주황색, 그중 <b>가동율이 가장 낮은 4곳은 붉은색 TOP1~TOP4 뱃지</b>로 표시됩니다.<br>
     ※ 고장/정지 설비(<b id="downEquipLabel">-</b>)는 구글시트에 가동 데이터가 없어 자동 집계에서 누락되므로, 차트에는 <b>전체 보유 설비(DC1~DC23, DC14 제외)가 항상 표시</b>됩니다. 해당 주차에 가동 데이터가 없는 설비는 0%로 나오며, 아래 <b>고장/정지 설비 선택</b>에서 체크한 설비는 붉은 점선(고장 정지), 체크하지 않은 설비는 회색 점선(데이터 없음)으로 구분됩니다.<br>
-    ※ <b>주차별 가동율 점선 추가</b>에서 주차를 클릭하면, 기간 합산 막대 위에 <b>해당 주차만의 설비별 가동율이 점선</b>으로 겹쳐 그려집니다. 하늘색 배경 칩은 현재 선택 기간에 포함된 주차입니다.</div>
+    ※ <b>주차별 가동율 점선 추가</b>에서 주차(W27~최신)를 클릭하면, 그 주차의 <b>전체 설비 종합 가동율이 가로 점선</b>으로 차트에 그려집니다(우측에 주차·가동율 라벨 표시). 여러 주차를 동시에 켜서 주차 간 수준 비교가 가능하며, 하늘색 배경 칩은 현재 선택 기간에 포함된 주차입니다.</div>
   </div>
 
   <div class="card">
@@ -504,32 +505,43 @@ function drawRankChart(canvasId, list, target, overlays){
   ctx.fillStyle = 'rgba(244,67,54,0.9)'; ctx.font='10px "Segoe UI", Arial'; ctx.textAlign='left'; ctx.textBaseline='bottom';
   ctx.fillText('Target '+target+'%', left+4, ty-3);
 
-  /* ---- 선택한 주차별 가동율을 점선 그래프로 겹쳐 그리기 ---- */
+  /* ---- 선택한 주차의 전체 가동율을 가로 점선으로 겹쳐 그리기 ---- */
+  const drawnLabelY = [];
   overlays.forEach(ov => {
+    if (!(ov.value > 0)) return;
+    const ly = yToPix(Math.max(0, Math.min(yMax, ov.value)));
     ctx.save();
-    ctx.strokeStyle = ov.color; ctx.lineWidth = 2; ctx.setLineDash([5,4]);
-    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    let started = false;
-    for (let i=0;i<n;i++){
-      const v = ov.map[keyOf(list[i].equip)];
-      const cx = left + i*catW + catW/2;
-      if (v == null || !(v > 0)) { if (started) { ctx.stroke(); started = false; } continue; }
-      const y = yToPix(Math.max(0, Math.min(yMax, v)));
-      if (!started) { ctx.beginPath(); ctx.moveTo(cx, y); started = true; }
-      else ctx.lineTo(cx, y);
-    }
-    if (started) ctx.stroke();
+    ctx.strokeStyle = ov.color; ctx.lineWidth = 1.8; ctx.setLineDash([7,5]);
+    ctx.beginPath(); ctx.moveTo(left, ly); ctx.lineTo(right, ly); ctx.stroke();
     ctx.setLineDash([]);
-    for (let i=0;i<n;i++){
-      const v = ov.map[keyOf(list[i].equip)];
-      if (v == null || !(v > 0)) continue;
-      const cx = left + i*catW + catW/2;
-      const y = yToPix(Math.max(0, Math.min(yMax, v)));
-      ctx.beginPath(); ctx.arc(cx, y, 2.8, 0, Math.PI*2);
-      ctx.fillStyle = ov.color; ctx.fill();
-      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.stroke();
-    }
+
+    // 라벨(주차 + 가동율) — 우측 끝, 겹치면 위아래로 살짝 비켜서 표시
+    const txt = ov.label + ' ' + ov.value.toFixed(1) + '%';
+    ctx.font = 'bold 10px "Segoe UI", Arial';
+    const tw = ctx.measureText(txt).width;
+    const bw = tw + 12, bh = 15;
+    let by = ly - bh/2;
+    let guard = 0;
+    while (drawnLabelY.some(v => Math.abs(v - by) < bh + 2) && guard < 24) { by -= bh + 2; guard++; }
+    if (by < top - 2) by = ly - bh/2 + (bh + 2) * (guard || 1);
+    drawnLabelY.push(by);
+    const bx = right - bw - 2;
+    const rr = 4;
+    ctx.beginPath();
+    ctx.moveTo(bx+rr, by); ctx.lineTo(bx+bw-rr, by);
+    ctx.quadraticCurveTo(bx+bw, by, bx+bw, by+rr);
+    ctx.lineTo(bx+bw, by+bh-rr);
+    ctx.quadraticCurveTo(bx+bw, by+bh, bx+bw-rr, by+bh);
+    ctx.lineTo(bx+rr, by+bh);
+    ctx.quadraticCurveTo(bx, by+bh, bx, by+bh-rr);
+    ctx.lineTo(bx, by+rr);
+    ctx.quadraticCurveTo(bx, by, bx+rr, by);
+    ctx.closePath();
+    ctx.fillStyle = ov.color; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(txt, bx + bw/2, by + bh/2 + 0.5);
     ctx.restore();
+    ctx.textAlign = 'center';
   });
 
   _rankGeom = { left, catW, n, list, overlays, top, bottom };
@@ -554,9 +566,10 @@ function bindRankTooltip(canvas){
                 : (it.nodata ? ' <span style="color:#c8ced6">데이터 없음</span>' : '');
     let html = `<b>${it.equip}</b>${state}<br>기간 합산 <b>${(it.A||0).toFixed(1)}%</b>`;
     g.overlays.forEach(ov => {
-      const v = ov.map[keyOf(it.equip)];
-      html += `<br><span class="tdash" style="border-top-color:${ov.color}"></span>${ov.label} ` +
-              (v != null && v > 0 ? `<b>${v.toFixed(1)}%</b>` : '<span style="color:#c8ced6">-</span>');
+      if (!(ov.value > 0)) return;
+      const diff = (it.A || 0) - ov.value;
+      html += `<br><span class="tdash" style="border-top-color:${ov.color}"></span>${ov.label} 전체 <b>${ov.value.toFixed(1)}%</b>` +
+              (it.A > 0 ? ` <span style="color:${diff>=0?'#8ce99a':'#ffa8a8'}">(${diff>=0?'+':''}${diff.toFixed(1)}p)</span>` : '');
     });
     tip.innerHTML = html;
     tip.style.display = 'block';
@@ -638,23 +651,33 @@ function toggleWeekLine(wk){
 }
 function clearWeekLines(){ WEEK_SET = new Set(); saveWeekLines(); renderAll(); }
 
-// 특정 주차의 설비별 가동율(%) — 기간 선택과 무관하게 전체 데이터에서 계산
-function weeklyAvailMap(rows, wk){
-  const byEquip = {};
+// 특정 주차의 전체 설비 종합 가동율(%) — 기간 선택과 무관하게 전체 데이터에서 계산
+function weeklyOverallAvail(rows, wk){
+  let plan = 0, run = 0;
   for (const r of rows) {
     if (r['주차'] !== wk) continue;
-    const eq = r['설비명']; if (!eq) continue;
-    const k = keyOf(eq);
-    if (!byEquip[k]) byEquip[k] = { plan:0, run:0 };
-    byEquip[k].plan += shiftMinOf(r);
-    byEquip[k].run  += num(r['가동시간_분']);
+    if (!r['설비명']) continue;
+    plan += shiftMinOf(r);
+    run  += num(r['가동시간_분']);
+  }
+  return plan > 0 ? run/plan*100 : 0;
+}
+
+// 주차 목록 전체의 종합 가동율을 한 번에 계산 { W27: 74.2, ... }
+function weeklyOverallAll(rows){
+  const acc = {};
+  for (const r of rows) {
+    const wk = r['주차']; if (!wk || !r['설비명']) continue;
+    if (!acc[wk]) acc[wk] = { plan:0, run:0 };
+    acc[wk].plan += shiftMinOf(r);
+    acc[wk].run  += num(r['가동시간_분']);
   }
   const out = {};
-  for (const [k,t] of Object.entries(byEquip)) out[k] = t.plan>0 ? t.run/t.plan*100 : 0;
+  for (const [wk,t] of Object.entries(acc)) out[wk] = t.plan>0 ? t.run/t.plan*100 : 0;
   return out;
 }
 
-function renderWeekPanel(metaList, colorMap, inRangeSet){
+function renderWeekPanel(metaList, colorMap, inRangeSet, valMap){
   const grid = document.getElementById('weekChipGrid');
   if (!grid) return;
   if (!metaList.length) { grid.innerHTML = '<span style="font-size:12px;color:#9aa1ab;">주차 데이터가 없습니다.</span>'; return; }
@@ -663,12 +686,14 @@ function renderWeekPanel(metaList, colorMap, inRangeSet){
     const c  = colorMap[w.label] || '#7048E8';
     const md = String(w.minDate||'').slice(5).replace('-','/');
     const xd = String(w.maxDate||'').slice(5).replace('-','/');
+    const v  = (valMap||{})[w.label];
+    const vt = (v != null && v > 0) ? v.toFixed(1)+'%' : '-';
     const st = on ? `border-color:${c}; background:${c}14;` : '';
     return `<span class="wk-chip${on?' on':''}${inRangeSet.has(w.label)?' inrange':''}" style="${st}"
-              title="${w.minDate} ~ ${w.maxDate}${inRangeSet.has(w.label)?' (선택 기간 포함)':''}"
+              title="${w.minDate} ~ ${w.maxDate} · 전체 설비 종합 가동율 ${vt}${inRangeSet.has(w.label)?' (선택 기간 포함)':''}"
               onclick="toggleWeekLine('${w.label}')">
       <i class="dash" style="${on?`border-top-color:${c}`:''}"></i>
-      <span class="wk" style="${on?`color:${c}`:''}">${w.label}</span><span class="dt">${md}~${xd}</span>
+      <span class="wk" style="${on?`color:${c}`:''}">${w.label}</span><span class="wkv" style="${on?`color:${c}`:''}">${vt}</span><span class="dt">${md}~${xd}</span>
     </span>`;
   }).join('');
   const last = grid.querySelector('.wk-chip:last-child');
@@ -958,8 +983,9 @@ function renderAll(){
   const selWeeks = metaList.map(w=>w.label).filter(w => WEEK_SET.has(w));
   const colorMap = {};
   selWeeks.forEach((w,i) => { colorMap[w] = WK_COLORS[i % WK_COLORS.length]; });
-  const overlays = selWeeks.map(w => ({ label:w, color:colorMap[w], map: weeklyAvailMap(LAST_A.rows, w) }));
-  renderWeekPanel(metaList, colorMap, new Set(weeks));
+  const wkAvgMap = weeklyOverallAll(LAST_A.rows);
+  const overlays = selWeeks.map(w => ({ label:w, color:colorMap[w], value: wkAvgMap[w] || 0 }));
+  renderWeekPanel(metaList, colorMap, new Set(weeks), wkAvgMap);
 
   drawRankChart('chart-rank', list, TARGET, overlays);
 
