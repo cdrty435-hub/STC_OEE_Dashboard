@@ -4470,7 +4470,7 @@ function renderWeekly(){
     document.getElementById('wkCostKpi').innerHTML = [
       ['금주 손실비용', Math.round(c0.thb).toLocaleString(), 'THB', `<div class="d ${dCls}">${dTxt}</div>`],
       ['로스시간', fmt(c0.h,1), 'h', `<div class="d flat">${cntTxt(fails(LOSS.filter(r=>r.w===wk)).filter(inCat).length)}건</div>`],
-      ['가동률', fmt(c0.avail,1), '%', `<div class="d flat">전체 로스 기준</div>`],
+      [`가동률 (${wk} 금주)`, fmt(c0.avail,1), '%', `<div class="d flat">${wk} 1개 주차 · 전체 로스 기준</div>`],
       ['일평균 손실', Math.round(c0.thb/(c0.days||1)).toLocaleString(), 'THB', `<div class="d flat">${c0.days}일 기준</div>`],
       ['기간 누계', Math.round(sum).toLocaleString(), 'THB', `<div class="d flat">${span.length}개 주차 (${fromW}~)</div>`]
     ].map(k=>`<div class="wkc-k"><div class="l">${k[0]}</div>
@@ -4592,9 +4592,9 @@ function renderWeekly(){
       <div class="c"><div class="k">로스 시간</div>
         <div class="v">${F(mins/60)}<small>시간</small></div>
         <div class="d">${F(mins)}분 · ${cntTxt(Lsel.length)}건</div></div>
-      <div class="c"><div class="k">가동률</div>
+      <div class="c"><div class="k">가동률 (${fw}~${wk} 누계)</div>
         <div class="v">${fmt(avail,1)}<small>%</small></div>
-        <div class="d">목표 ${cfg.availTgt}% · 격차 ${fmt(cfg.availTgt-avail,1)}%p<br>전체 로스 기준</div></div>
+        <div class="d">목표 ${cfg.availTgt}% · 격차 ${fmt(cfg.availTgt-avail,1)}%p<br>${sp2.length}개 주차 평균 · 전체 로스 기준</div></div>
       <div class="c"><div class="k">인건비 환산</div>
         <div class="v">${fmt(heads,1)}<small>명</small></div>
         <div class="d">작업자 한 달 급여 기준<br>(월 ${F(cfg.wage)}밧)</div></div>
