@@ -744,6 +744,36 @@
                 vertical-align:middle;}
   @media print{ .wk-deptbadge{border:1px solid #1f3864;} }
 </style>
+
+<style>
+  .wk-wkrange{display:inline-flex; align-items:center; gap:5px; margin-left:10px;
+              font-family:var(--mono); font-size:10px; color:#4a5765; font-weight:600;}
+  .wk-wkrange select{border:1px solid #d8dfe7; border-radius:6px; padding:2px 7px;
+                     font-size:10.5px; font-weight:700; color:#33404f; background:#fff;}
+  .wk-selnote{font-family:var(--mono); font-size:10.5px; font-weight:700; color:#c9791a; margin-left:8px;}
+  .wk-selnote button{border:1px solid #e0c4a0; background:#fff7ed; color:#9a5a10; border-radius:10px;
+                     padding:1px 8px; font-size:10px; font-weight:700; cursor:pointer; margin-left:5px;}
+  @media print{ .wk-wkrange select{border:none;} .wk-selnote button{display:none;} }
+</style>
+
+<style>
+  .wk-canv{position:relative;}
+  .wk-zoom{position:absolute; top:2px; right:2px; z-index:3;
+           border:1px solid #d3dae2; background:#fff; color:#1f3864; border-radius:6px;
+           padding:1px 7px; font-size:11px; font-weight:800; cursor:pointer; opacity:0; transition:opacity .12s;}
+  .wk-canv:hover .wk-zoom{opacity:1;}
+  .zoom-back{position:fixed; inset:0; background:rgba(16,22,30,.72); z-index:9999;
+             display:flex; align-items:center; justify-content:center; padding:26px;}
+  .zoom-box{background:#fff; border-radius:12px; width:min(1500px,96vw); height:min(900px,92vh);
+            display:flex; flex-direction:column; padding:16px 20px 20px; box-shadow:0 20px 60px rgba(0,0,0,.4);}
+  .zoom-hd{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+  .zoom-hd h4{margin:0; font-size:16px; font-weight:800; color:#1f3864;}
+  .zoom-hd .sub{font-family:var(--mono); font-size:11.5px; color:#4a5765;}
+  .zoom-hd button{margin-left:auto; border:1px solid #d3dae2; background:#fff; color:#33404f;
+                  border-radius:7px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer;}
+  .zoom-cv{flex:1; min-height:0; position:relative;}
+  @media print{ .wk-zoom, .zoom-back{display:none !important;} }
+</style>
 </head>
 <body>
 
@@ -853,7 +883,8 @@
 
       <div class="wk-blk">
         <h4>② 설비별 MTTR / MTBF<span class="wk-catbar">집계 계통
-          <span class="wk-cchips" id="wkCat2"></span><span class="cur" id="wkCat2Note"></span></span></h4>
+          <span class="wk-cchips" id="wkCat2"></span><span class="cur" id="wkCat2Note"></span></span>
+          <span class="wk-selnote" id="wkMcSelNote"></span></h4>
         <div class="wk-2col">
           <div class="wk-canv"><h5 id="wkH1">설비별 MTTR (h/건)</h5>
             <div style="height:185px"><canvas id="wkMttrChart"></canvas></div></div>
@@ -863,7 +894,10 @@
       </div>
 
       <div class="wk-blk">
-        <h4>③ 주차별 추이 (MTTR · MTBF · 가동률)<span class="wk-catbar" id="wkH3Note"></span></h4>
+        <h4>③ 주차별 추이 (MTTR · MTBF · 가동률)<span class="wk-catbar" id="wkH3Note"></span>
+          <span class="wk-wkrange">주차 범위
+            <select id="wkTrFrom"></select> ~ <select id="wkTrTo"></select>
+          </span><span class="wk-selnote" id="wkWkSelNote"></span></h4>
         <div class="wk-canv" style="max-width:820px">
           <div style="height:190px"><canvas id="wkTrendChart"></canvas></div>
         </div>
@@ -4032,6 +4066,8 @@ pptPrefsLoad();
    그대로 재사용하므로, 다른 탭과 항상 같은 숫자가 나온다.
    주차만 바꾸면 KPI·차트·코멘트가 모두 다시 계산된다.                        */
 let wkMttrChart, wkMtbfChart, wkTrendChart, wkCatMttrChart, wkCatMtbfChart, wkCostTrendChart;
+let WK_SEL_MC = null;      // ② 차트에서 클릭한 설비
+let WK_SEL_WEEK = null;    // ③ 차트에서 클릭한 주차
 const WK_SUBS = ['금형','설비-전기','설비-라인','관리'];
 
 function wkFillWeeks(){
@@ -4295,15 +4331,27 @@ function renderWeekly(){
     }
   };
 
+  /* 선택되지 않은 막대는 흐리게 (클릭 하이라이트) */
+  const dimC = c => String(c).length===9 ? String(c).slice(0,7)+'26' : String(c)+'26';
   const mkBar = (ref, id, key, colorFn, tgt)=>{
     const ctx = document.getElementById(id); if(!ctx) return null;
     if(ref) ref.destroy();
+    const base = rows.map(colorFn);
     const ds = [{ data: rows.map(x=>+x[key].toFixed(2)),
-                  backgroundColor: rows.map(colorFn), borderWidth:0, barPercentage:.82 }];
+                  backgroundColor: rows.map((x,i)=> (WK_SEL_MC && x.m!==WK_SEL_MC) ? dimC(base[i]) : base[i]),
+                  borderColor: rows.map(x=> (WK_SEL_MC && x.m===WK_SEL_MC) ? '#1f3864' : 'rgba(0,0,0,0)'),
+                  borderWidth: rows.map(x=> (WK_SEL_MC && x.m===WK_SEL_MC) ? 2 : 0),
+                  barPercentage:.82 }];
     const tgtColor = (key === 'mttr') ? '#c00000' : '#2e75b6';
     return new Chart(ctx, { type:'bar', data:{labels:labels, datasets:ds},
       plugins:[wkTgtLinePlugin],
       options:{ responsive:true, maintainAspectRatio:false, animation:false,
+        onClick:(ev, els)=>{                       // 막대를 누르면 그 설비만 강조
+          if(!els || !els.length) return;
+          const m = rows[els[0].index] && rows[els[0].index].m;
+          WK_SEL_MC = (WK_SEL_MC === m) ? null : m;
+          renderWeekly();
+        },
         layout:{ padding:{ top:34 } },                 // 세로 값 라벨이 잘리지 않도록
         plugins:{ legend:{display:false},
           datalabels: HAS_DL ? {                        // 막대 위에 값 표시 (세로쓰기)
@@ -4324,6 +4372,21 @@ function renderWeekly(){
     x=> (tM && x.mttr>tM) ? '#e2564dcc' : x.mttr>2 ? '#e8a33dcc' : '#34c98ecc', tM);
   wkMtbfChart = mkBar(wkMtbfChart, 'wkMtbfChart', 'mtbf',
     x=> (tB && x.mtbf<tB) ? '#e2564dcc' : '#2e75b6cc', tB);
+  {
+    const sn = document.getElementById('wkMcSelNote');
+    if(sn){
+      if(WK_SEL_MC && mcs[WK_SEL_MC]){
+        const x = mcs[WK_SEL_MC];
+        sn.innerHTML = `DC${x.m} 선택 · MTTR ${fmt(x.mttr,2)} · MTBF ${fmt(x.mtbf,2)} · 로스 ${fmt(x.lossH,1)}h / ${cntTxt(x.cnt)}건`
+          + `<button type="button" id="wkMcSelClr">해제</button>`;
+        const cb = document.getElementById('wkMcSelClr');
+        if(cb) cb.onclick = ()=>{ WK_SEL_MC = null; renderWeekly(); };
+      }else{
+        sn.textContent = '막대를 누르면 그 설비만 강조됩니다';
+        sn.style.color = '#7a8698';
+      }
+    }
+  }
   document.getElementById('wkH1').textContent = `설비별 MTTR (h/건) — ${wk} · ${catLabel(cats2)}`
     + (tM?` · 목표 ${fmt(tM,2)} 초과 적색`:'');
   document.getElementById('wkH2').textContent = `설비별 MTBF (h/건) — ${wk} · ${catLabel(cats2)} · ${mtbfBasisLabel()}`
@@ -4331,6 +4394,34 @@ function renderWeekly(){
 
   /* ---------- ③ 주차별 추이 ---------- */
   {
+    /* 주차 범위 선택 (시작 ~ 종료) */
+    const wAll = WSA.map(x=>x.w);
+    let tf = null, tt = null;
+    try{ tf = localStorage.getItem('stc_wk_tr_from'); tt = localStorage.getItem('stc_wk_tr_to'); }catch(e){}
+    if(wAll.indexOf(tf) < 0) tf = wAll[0];
+    if(wAll.indexOf(tt) < 0) tt = wAll[wAll.length-1];
+    if(wAll.indexOf(tf) > wAll.indexOf(tt)) tf = wAll[0];
+    const fEl = document.getElementById('wkTrFrom'), tEl = document.getElementById('wkTrTo');
+    [[fEl, tf, 'stc_wk_tr_from'], [tEl, tt, 'stc_wk_tr_to']].forEach(([el, v, key])=>{
+      if(!el) return;
+      el.innerHTML = wAll.map(w=>`<option value="${w}"${w===v?' selected':''}>${w}</option>`).join('');
+      el.onchange = ()=>{ try{ localStorage.setItem(key, el.value); }catch(e){} renderWeekly(); };
+    });
+    const WSR = WSA.slice(wAll.indexOf(tf), wAll.indexOf(tt)+1);
+
+    const wsn = document.getElementById('wkWkSelNote');
+    if(wsn){
+      if(WK_SEL_WEEK && WSR.some(x=>x.w===WK_SEL_WEEK)){
+        const x = WSR.find(z=>z.w===WK_SEL_WEEK);
+        wsn.innerHTML = `${x.w} 선택 · MTTR ${fmt(x.mttr,2)} · MTBF ${fmt(x.mtbf,2)} · 가동률 ${fmt(x.avail,1)}%`
+          + `<button type="button" id="wkWkSelClr">해제</button>`;
+        const cb2 = document.getElementById('wkWkSelClr');
+        if(cb2) cb2.onclick = ()=>{ WK_SEL_WEEK = null; renderWeekly(); };
+      }else{
+        wsn.textContent = '주차를 누르면 그 주만 강조됩니다';
+        wsn.style.color = '#7a8698';
+      }
+    }
     const ctx = document.getElementById('wkTrendChart');
     if(ctx){
       if(wkTrendChart) wkTrendChart.destroy();
@@ -4340,18 +4431,22 @@ function renderWeekly(){
         color:color, font:{ size:7.5, weight:'700', family:"'SFMono-Regular', Consolas, monospace" },
         formatter: v => fmt(v,2) } : undefined;
       wkTrendChart = new Chart(ctx, {
-        data:{ labels: WSA.map(x=>x.w), datasets:[
-          { type:'bar',  label:'가동률(%)', data:WSA.map(x=>+x.avail.toFixed(1)),
-            backgroundColor:'#c8d2dd66', borderWidth:0, yAxisID:'y2', order:3,
+        data:{ labels: WSR.map(x=>x.w), datasets:[
+          { type:'bar',  label:'가동률(%)', data:WSR.map(x=>+x.avail.toFixed(1)),
+            backgroundColor: WSR.map(x=> WK_SEL_WEEK ? (x.w===WK_SEL_WEEK ? '#c9791a55' : '#c8d2dd33')
+                                                     : '#c8d2dd66'),
+            borderColor: WSR.map(x=> (WK_SEL_WEEK && x.w===WK_SEL_WEEK) ? '#c9791a' : 'rgba(0,0,0,0)'),
+            borderWidth: WSR.map(x=> (WK_SEL_WEEK && x.w===WK_SEL_WEEK) ? 1.5 : 0),
+            yAxisID:'y2', order:3,
             datalabels: DL ? { display:true, anchor:'start', align:'end', offset:1, color:'#4a5765',
               font:{ size:7.5, weight:'700' }, formatter: v => fmt(v,1)+'%' } : undefined },
-          { type:'line', label:'MTTR', data:WS.map(x=>+x.mttr.toFixed(2)),
+          { type:'line', label:'MTTR', data:WSR.map(x=>+x.mttr.toFixed(2)),
             borderColor:'#c00000', backgroundColor:'#c00000', borderWidth:2,
-            pointRadius: WS.map(x=>x.w===wk?4:2), tension:.25, yAxisID:'y', order:1,
+            pointRadius: WSR.map(x=> (WK_SEL_WEEK && x.w===WK_SEL_WEEK) ? 6 : (x.w===wk?4:2)), tension:.25, yAxisID:'y', order:1,
             datalabels: lineDL('#c00000','bottom') },
-          { type:'line', label:'MTBF', data:WS.map(x=>+x.mtbf.toFixed(2)),
+          { type:'line', label:'MTBF', data:WSR.map(x=>+x.mtbf.toFixed(2)),
             borderColor:'#2e75b6', backgroundColor:'#2e75b6', borderWidth:2, borderDash:[5,3],
-            pointRadius: WS.map(x=>x.w===wk?4:2), tension:.25, yAxisID:'y', order:2,
+            pointRadius: WSR.map(x=> (WK_SEL_WEEK && x.w===WK_SEL_WEEK) ? 6 : (x.w===wk?4:2)), tension:.25, yAxisID:'y', order:2,
             datalabels: lineDL('#2e75b6','top') } ]},
         options:{ responsive:true, maintainAspectRatio:false, animation:false,
           layout:{ padding:{ top:12, bottom:2 } },
@@ -6337,6 +6432,81 @@ function renderHeroWorst(){
   renderHero = function(){
     const r = _renderHero.apply(this, arguments);
     try{ renderHeroWorst(); }catch(e){ console.error(e); }
+    return r;
+  };
+})();
+
+/* ===== 차트 확대 보기 =====
+   차트 카드의 ⤢ 버튼 또는 차트를 더블클릭하면 큰 창으로 열린다.
+   (한 번 클릭은 ②·③의 강조 선택으로 쓰이므로 확대는 더블클릭·버튼으로 분리) */
+let ZOOM_CHART = null;
+
+function zoomClose(){
+  if(ZOOM_CHART){ try{ ZOOM_CHART.destroy(); }catch(e){} ZOOM_CHART = null; }
+  const b = document.getElementById('zoomBack');
+  if(b) b.remove();
+  document.removeEventListener('keydown', zoomEsc);
+}
+function zoomEsc(e){ if(e.key === 'Escape') zoomClose(); }
+
+function zoomOpen(canvasId, title, sub){
+  const src = (typeof Chart !== 'undefined' && Chart.getChart) ? Chart.getChart(canvasId) : null;
+  if(!src) return;
+  zoomClose();
+
+  const back = document.createElement('div');
+  back.className = 'zoom-back';
+  back.id = 'zoomBack';
+  back.innerHTML = `<div class="zoom-box">
+      <div class="zoom-hd">
+        <h4>${title || '차트'}</h4><span class="sub">${sub || ''}</span>
+        <button type="button" id="zoomCloseBtn">닫기 ✕ (ESC)</button>
+      </div>
+      <div class="zoom-cv"><canvas id="zoomCanvas"></canvas></div>
+    </div>`;
+  document.body.appendChild(back);
+  back.addEventListener('click', e=>{ if(e.target === back) zoomClose(); });
+  document.getElementById('zoomCloseBtn').onclick = zoomClose;
+  document.addEventListener('keydown', zoomEsc);
+
+  /* 원본 차트의 설정을 그대로 복제 (데이터셋 객체는 얕은 복사로 분리) */
+  const cfg  = src.config;
+  const data = {
+    labels: (cfg.data.labels || []).slice(),
+    datasets: (cfg.data.datasets || []).map(d=>Object.assign({}, d))
+  };
+  const opt = Object.assign({}, cfg.options, {
+    responsive:true, maintainAspectRatio:false, animation:false,
+    onClick: undefined                                  // 확대 창에서는 선택 클릭을 쓰지 않는다
+  });
+  ZOOM_CHART = new Chart(document.getElementById('zoomCanvas'), {
+    type: cfg.type, data: data, options: opt,
+    plugins: (cfg.plugins || []).slice()
+  });
+}
+
+/* 차트 카드마다 ⤢ 버튼을 달고, 더블클릭으로도 열리게 한다 */
+function zoomAttach(){
+  document.querySelectorAll('.wk-canv').forEach(box=>{
+    const cv = box.querySelector('canvas'); if(!cv) return;
+    const title = ()=>{ const h = box.querySelector('h5'); return h ? h.textContent : '차트'; };
+    if(!box.querySelector('.wk-zoom')){
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'wk-zoom'; b.textContent = '⤢ 확대';
+      b.onclick = (e)=>{ e.stopPropagation(); zoomOpen(cv.id, title(), ''); };
+      box.appendChild(b);
+    }
+    if(!cv.dataset.zoomBound){
+      cv.dataset.zoomBound = '1';
+      cv.addEventListener('dblclick', ()=> zoomOpen(cv.id, title(), ''));
+    }
+  });
+}
+(function(){
+  const _rw = renderWeekly;
+  renderWeekly = function(){
+    const r = _rw.apply(this, arguments);
+    try{ zoomAttach(); }catch(e){ console.error(e); }
     return r;
   };
 })();
