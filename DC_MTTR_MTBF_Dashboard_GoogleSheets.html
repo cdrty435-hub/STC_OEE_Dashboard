@@ -702,9 +702,9 @@
         <h4>⑤ 계통별 주차 추이<span class="wk-tgt" id="wkCatTrendSub"></span></h4>
         <div class="wk-2col">
           <div class="wk-canv"><h5>계통별 MTTR (h/건) — 낮을수록 좋음</h5>
-            <div style="height:150px"><canvas id="wkCatMttrChart"></canvas></div></div>
+            <div style="height:230px"><canvas id="wkCatMttrChart"></canvas></div></div>
           <div class="wk-canv"><h5>계통별 MTBF (h/건) — 높을수록 좋음</h5>
-            <div style="height:150px"><canvas id="wkCatMtbfChart"></canvas></div></div>
+            <div style="height:230px"><canvas id="wkCatMtbfChart"></canvas></div></div>
         </div>
       </div>
 
@@ -4125,7 +4125,7 @@ function renderWeekly(){
       const dsets = cats.map(c=>({
         type:'line', label:c, data: byCat[c].map(r=>+(r[key]||0).toFixed(2)),
         borderColor: CAT_COLOR[c], backgroundColor: CAT_COLOR[c],
-        borderWidth:1.8, tension:.25, pointRadius: upto.map(w=>w===wk?3:1.5),
+        borderWidth:2, tension:.25, pointRadius: upto.map(w=>w===wk?4:2),
         endLabel:{goodUp: key==='mtbf'}, datalabels:{display:false}
       }));
       if(tgt) dsets.push({ type:'line', label:`목표 ${fmt(tgt,2)}`,
@@ -4135,10 +4135,10 @@ function renderWeekly(){
         plugins:[wkEndLabels],
         options:{ responsive:true, maintainAspectRatio:false, animation:false,
           layout:{ padding:{ right:52, top:6 } },
-          plugins:{ legend:{display:true, labels:{boxWidth:8, font:{size:8}, usePointStyle:true}},
+          plugins:{ legend:{display:true, labels:{boxWidth:9, font:{size:9}, usePointStyle:true}},
                     datalabels:{display:false} },
-          scales:{ x:{ ticks:{font:{size:8}}, grid:{display:false} },
-                   y:{ beginAtZero:true, ticks:{font:{size:8}}, grid:{color:'#eef2f7'} } } } });
+          scales:{ x:{ ticks:{font:{size:9}}, grid:{display:false} },
+                   y:{ beginAtZero:true, ticks:{font:{size:9}}, grid:{color:'#eef2f7'} } } } });
     };
     wkCatMttrChart = mkCatLine(wkCatMttrChart, 'wkCatMttrChart', 'mttr', tM, '#e2564d');
     wkCatMtbfChart = mkCatLine(wkCatMtbfChart, 'wkCatMtbfChart', 'mtbf', tB, '#1d7d60');
