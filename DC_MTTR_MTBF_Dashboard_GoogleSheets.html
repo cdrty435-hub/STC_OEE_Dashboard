@@ -634,7 +634,7 @@
   .wkc-w .mc{width:42px; font-weight:800; color:#1f3864; font-family:'SFMono-Regular',Consolas,monospace;}
   .wkc-w .bar{flex:1; height:9px; background:#f0f3f7; border-radius:3px; overflow:hidden;}
   .wkc-w .bar i{display:block; height:100%; background:#c9791a;}
-  .wkc-w .vl{width:110px; text-align:right; font-family:'SFMono-Regular',Consolas,monospace; color:#33404f;}
+  .wkc-w .vl{width:118px; text-align:right; white-space:nowrap; font-family:'SFMono-Regular',Consolas,monospace; color:#33404f;}
 </style>
 </head>
 <body>
@@ -4515,7 +4515,7 @@ function renderWeekly(){
     document.getElementById('wkCostWorst').innerHTML = wArr.length
       ? wArr.map(x=>`<div class="r"><span class="mc">DC${x.m}</span>
           <span class="bar"><i style="width:${Math.max(x.thb/mx*100,2)}%"></i></span>
-          <span class="vl">${Math.round(x.thb).toLocaleString()} · ${fmt(x.thb/totM*100,1)}% · ${fmt(x.h,1)}h</span></div>`).join('')
+          <span class="vl">${Math.round(x.thb).toLocaleString()} THB · ${fmt(x.thb/totM*100,1)}%</span></div>`).join('')
       : '<div style="color:#8a95a1">해당 주차 로스 없음</div>';
   }
 
