@@ -542,6 +542,30 @@
   .hw-band{font-family:var(--mono); font-size:11.5px; letter-spacing:.08em; color:var(--text-faint);
            margin:12px 0 2px; text-transform:uppercase;}
 </style>
+
+<style>
+  /* 주간보고 ④ 워스트 카드 */
+  .wk-tgt{font-family:var(--mono); font-size:10.5px; font-weight:600; color:#5a6674; margin-left:8px;}
+  .wkw-band{font-family:var(--mono); font-size:10px; letter-spacing:.07em; color:#7a8698; margin:6px 0 4px;}
+  .wkw-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:7px;}
+  .wkw-card{border:1px solid #e6ebf1; border-radius:8px; padding:7px 9px; background:#fff;}
+  .wkw-card.bad{border-color:#f0c9c5; background:#fffaf9;}
+  .wkw-h{display:flex; justify-content:space-between; align-items:baseline; gap:6px;}
+  .wkw-h .rk{font-size:9.5px; font-weight:700; color:#7a8698; letter-spacing:.04em;}
+  .wkw-h .mc{font-size:14px; font-weight:800; color:#1f3864;}
+  .wkw-v{font-family:'SFMono-Regular',Consolas,monospace; font-size:10.8px; margin:3px 0 1px; color:#33404f;}
+  .wkw-m{font-size:10px; color:#6b7a8c; margin-bottom:4px;}
+  .wkw-card ul{margin:0; padding-left:13px; font-size:10.3px; line-height:1.4; color:#4a5765;}
+  .wkw-card ul li{margin-bottom:1px;}
+  .wkw-card input.act{width:100%; margin-top:5px; border:1px dashed #d8dfe7; border-radius:5px;
+                      padding:3px 5px; font-size:10.3px; font-family:inherit; color:#33404f;}
+  .wkw-tg{font-weight:700;}
+  .wkw-tg.bad{color:#c00000;} .wkw-tg.ok{color:#0f9d68;}
+  @media print{
+    .wkw-grid{gap:5px;} .wkw-card{padding:5px 7px;}
+    .wkw-card input.act{border:1px solid #e2e8ef;}
+  }
+</style>
 </head>
 <body>
 
@@ -652,8 +676,8 @@
       </div>
 
       <div class="wk-blk">
-        <h4>④ 워스트 설비 및 조치</h4>
-        <table class="wk-t" id="wkWorstTable"></table>
+        <h4>④ 원인분석 워스트 3 및 조치<span class="wk-tgt" id="wkWorstTgt"></span></h4>
+        <div id="wkWorstBox"></div>
       </div>
 
       <div class="wk-blk">
@@ -3825,38 +3849,51 @@ function renderWeekly(){
     }
   }
 
-  /* ---------- ④ 워스트 통합표 + 조치 입력 ---------- */
+  /* ---------- ④ 원인분석 워스트 3 + 조치 입력 (탭1과 동일 구성) ---------- */
   const notes = wkLoadNotes(wk);
-  const seen = {}, worst = [];
-  wMttr.forEach(x=>{ if(!seen[x.m]){ seen[x.m]={t:['MTTR']}; worst.push(x); } });
-  wMtbf.forEach(x=>{ if(seen[x.m]) seen[x.m].t.push('MTBF'); else { seen[x.m]={t:['MTBF']}; worst.push(x); } });
-  worst.sort((a,b)=>b.lossH-a.lossH);
-  const wt = document.getElementById('wkWorstTable');
-  if(!worst.length){
-    wt.innerHTML = `<tr><td class="l" style="color:#5a6674">${wk} 최소 로스건수(${MIN_N}건)를 채운 설비가 없습니다.</td></tr>`;
-  }else{
-    wt.innerHTML =
-      '<thead><tr><th style="width:56px">설비</th><th style="width:70px">구분</th>'+
-      '<th style="width:88px">MTTR (전주)</th><th style="width:88px">MTBF (전주)</th>'+
-      '<th style="width:60px">가동률</th><th style="width:86px">로스 / 건수</th>'+
-      '<th>주요 원인 (로스시간 상위)</th><th style="width:190px">조치 / 담당</th></tr></thead><tbody>'+
-      worst.map(x=>{
-        const p = mcsP && mcsP[x.m] && mcsP[x.m].cnt>=1 ? mcsP[x.m] : null;
-        const dM = p ? wkDelta(x.mttr, p.mttr, false, 2) : '';
-        const dB = p ? wkDelta(x.mtbf, p.mtbf, true, 2) : '';
-        const tc = topCodes(x.rows,2).map(c=>`${c.code} ${fmt(c.h,1)}h/${c.n}건`).join(' · ') || '-';
-        const bad = (tM && x.mttr>tM) || (tB && x.mtbf<tB);
-        return `<tr class="${bad?'bad':''}">
-          <td class="mc">DC${x.m}${BROKEN.has(x.m)?' ⚠':''}</td>
-          <td>${seen[x.m].t.join('+')}</td>
-          <td>${fmt(x.mttr,2)}<br>${dM}</td>
-          <td>${fmt(x.mtbf,2)}<br>${dB}</td>
-          <td>${fmt(x.avail,1)}%</td>
-          <td>${fmt(x.lossH,1)}h / ${cntTxt(x.cnt)}건</td>
-          <td class="l">${tc}</td>
-          <td><input class="act" data-note="act${x.m}" value="${(notes['act'+x.m]||'').replace(/"/g,'&quot;')}" placeholder="조치 내용 / 담당"></td>
-        </tr>`; }).join('') + '</tbody>';
-  }
+  const wbox = document.getElementById('wkWorstBox');
+  const wtgt = document.getElementById('wkWorstTgt');
+  if(wtgt) wtgt.textContent =
+    `목표 MTTR ${tM?fmt(tM,2):'–'} · MTBF ${tB?fmt(tB,2):'–'} h/건 · ${mtbfBasisLabel()} · 고장 ${MIN_N}건 이상 설비 대상`;
+
+  const wkCard = (x, rank, kind)=>{
+    const p  = mcsP && mcsP[x.m] && mcsP[x.m].cnt>=1 ? mcsP[x.m] : null;
+    const t  = topCodes(x.rows,3);
+    const totH = x.lossH || t.reduce((a,c)=>a+c.h,0);
+    const val = kind==='MTTR'
+      ? `MTTR <b>${fmt(x.mttr,2)}</b> h/건 ${p?wkDelta(x.mttr,p.mttr,false,2):''}`
+      : `MTBF <b>${fmt(x.mtbf,2)}</b> h/건 ${p?wkDelta(x.mtbf,p.mtbf,true,2):''}`;
+    let tg = '';
+    if(kind==='MTTR' && tM) tg = x.mttr>tM
+      ? `<span class="wkw-tg bad">목표 대비 +${fmt(x.mttr-tM,2)}</span>`
+      : `<span class="wkw-tg ok">목표 달성</span>`;
+    if(kind==='MTBF' && tB) tg = x.mtbf<tB
+      ? `<span class="wkw-tg bad">목표 대비 ${fmt(x.mtbf-tB,2)}</span>`
+      : `<span class="wkw-tg ok">목표 달성</span>`;
+    const bad = (kind==='MTTR') ? (tM && x.mttr>tM) : (tB && x.mtbf<tB);
+    const li = t.length
+      ? t.map(c=>{
+          const pct = totH ? (c.h/totH*100) : 0;
+          return `<li>${c.code} <span style="color:#7a8698">(${c.s})</span> — ${fmt(c.h,1)}h / ${c.n}건`
+               + ` <b style="color:#c9791a">${pct.toFixed(0)}%</b></li>`;
+        }).join('')
+      : '<li>로스유형 데이터 없음</li>';
+    return `<div class="wkw-card ${bad?'bad':''}">
+      <div class="wkw-h"><span class="rk">${kind} 워스트 ${rank}${BROKEN.has(x.m)?' · 가동중단':''}</span>
+        <span class="mc">DC${x.m}</span></div>
+      <div class="wkw-v">${val}${tg?' · '+tg:''}</div>
+      <div class="wkw-m">로스 ${fmt(x.lossH,1)}h · ${cntTxt(x.cnt)}건 · 가동 ${fmt(x.runH,1)}h · 가동률 ${fmt(x.avail,1)}%</div>
+      <ul>${li}</ul>
+      <input class="act" data-note="act${x.m}" value="${(notes['act'+x.m]||'').replace(/"/g,'&quot;')}" placeholder="조치 내용 / 담당">
+    </div>`;
+  };
+
+  wbox.innerHTML = (wMttr.length || wMtbf.length)
+    ? `<div class="wkw-band">MTTR 워스트 — 수리시간이 긴 설비</div>
+       <div class="wkw-grid">${wMttr.map((x,i)=>wkCard(x,i+1,'MTTR')).join('')}</div>
+       <div class="wkw-band">MTBF 워스트 — 고장이 잦은 설비</div>
+       <div class="wkw-grid">${wMtbf.map((x,i)=>wkCard(x,i+1,'MTBF')).join('')}</div>`
+    : `<div style="font-size:11px;color:#5a6674;">${wk} 최소 로스건수(${MIN_N}건)를 채운 설비가 없습니다.</div>`;
 
   /* ---------- ⑤ 계통별 증감 ---------- */
   const ct = document.getElementById('wkCatTable');
@@ -3933,11 +3970,16 @@ function renderWeekly(){
   const save = ()=>{
     const o = wkLoadNotes(wk);
     o.memo = memo.value;
-    document.querySelectorAll('#wkWorstTable input.act').forEach(el=>{ o[el.dataset.note] = el.value; });
+    document.querySelectorAll('#wkWorstBox input.act').forEach(el=>{ o[el.dataset.note] = el.value; });
     wkSaveNotes(wk, o);
   };
   memo.addEventListener('input', save);
-  document.querySelectorAll('#wkWorstTable input.act').forEach(el=>el.addEventListener('input', save));
+  document.querySelectorAll('#wkWorstBox input.act').forEach(el=>el.addEventListener('input', ()=>{
+    /* MTTR·MTBF 양쪽 워스트에 같은 설비가 걸리면 조치 입력을 서로 맞춘다 */
+    document.querySelectorAll(`#wkWorstBox input.act[data-note="${el.dataset.note}"]`)
+      .forEach(o=>{ if(o !== el) o.value = el.value; });
+    save();
+  }));
 }
 
 ['wkWeek','wkAuthor','wkSeq'].forEach(id=>{
