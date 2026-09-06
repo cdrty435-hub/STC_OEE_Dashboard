@@ -662,6 +662,8 @@
   table.wk-t.down tr.histrow th{background:#eef3f9; color:#1f3864; padding:3px 6px; text-align:left; font-weight:700;}
   table.wk-t.down tr.histrow td.h{padding:3px 6px; border-bottom:1px solid #e6ebf1; vertical-align:top;}
   table.wk-t.down tr.histrow .wkk{font-family:'SFMono-Regular',Consolas,monospace; font-weight:800; color:#1f3864;}
+  table.wk-t.down tr.histrow tr.blank td.h{background:#fdfdfe;}
+  table.wk-t.down tr.histrow tr.blank .wkk{color:#9aa4ae;}
   table.wk-t.down tr.histrow input, table.wk-t.down tr.histrow select{
     width:100%; border:1px dashed #dce3ea; border-radius:4px; padding:2px 4px; font-size:10px;
     font-family:inherit; color:#33404f; background:#fff;}
@@ -4762,24 +4764,32 @@ function renderWeekly(){
     const HK = [['dnSt','상태'], ['dnPb','문제점'], ['dnPr','진행사항'], ['dnPl','계획']];
     const histGet = w => wkLoadNotes(w) || {};
     const histSet = (w, key, val)=>{ const n = histGet(w); n[key] = val; wkSaveNotes(w, n); };
-    const histWeeks = m => allWeeks.slice(0, idx+1).filter(w=>{
+    const histHas = (w, m)=>{
       const n = histGet(w);
       return HK.some(k=>String(n[k[0]+m]||'').trim())
           || String(n['dnEt'+m]||'').trim() || String(n['dnEm'+m]||'') === '미정';
-    }).reverse();                                   // 최신 주차부터
+    };
+    /* 기본은 전 주차를 다 보여준다 (기록 없는 주차도 그 자리에서 입력 가능) */
+    let HIST_ONLY_REC = false;
+    const histWeeks = m => allWeeks.slice(0, idx+1)
+      .filter(w=>!HIST_ONLY_REC || histHas(w, m))
+      .reverse();                                   // 최신 주차부터
 
     /* 이력 표를 그린다 (모든 칸을 그 주차에 바로 저장) */
     function histBuild(m, tr, box){
-      const ws = histWeeks(m);
-      const rest = allWeeks.slice(0, idx+1).filter(w=>ws.indexOf(w)<0).reverse();
+      const ws  = histWeeks(m);
+      const rec = allWeeks.slice(0, idx+1).filter(w=>histHas(w, m)).length;
       const rows = ws.map(w=>{
         const n = histGet(w);
+        const has = histHas(w, m);
         const eta = (n['dnEm'+m] === '미정') ? '미정' : 'date';
         const iv = k => esc(n[k+m]);
-        return `<tr>
+        const stv = n['dnSt'+m] || '';
+        return `<tr class="${has?'':'blank'}">
           <td class="h wkk">${w}${w===wk?' <span style="color:#c9791a">◀ 금주</span>':''}</td>
-          <td class="h"><select data-hw="${w}" data-hk="dnSt${m}">${
-            ST.map(s=>`<option value="${s}"${(n['dnSt'+m]||'불가동')===s?' selected':''}>${s}</option>`).join('')}</select></td>
+          <td class="h"><select data-hw="${w}" data-hk="dnSt${m}">
+            ${stv ? '' : '<option value="" selected>-</option>'}${
+            ST.map(s=>`<option value="${s}"${stv===s?' selected':''}>${s}</option>`).join('')}</select></td>
           <td class="h"><input data-hw="${w}" data-hk="dnPb${m}" value="${iv('dnPb')}" placeholder="문제점"></td>
           <td class="h"><input data-hw="${w}" data-hk="dnPr${m}" value="${iv('dnPr')}" placeholder="진행사항"></td>
           <td class="h"><input data-hw="${w}" data-hk="dnPl${m}" value="${iv('dnPl')}" placeholder="계획"></td>
@@ -4794,21 +4804,22 @@ function renderWeekly(){
 
       box.innerHTML =
         `<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
-           <span style="font-size:10.5px;font-weight:800;color:#1f3864">DC${m} 주차별 이력 (${ws.length}건)</span>
-           <span class="delcol" style="display:flex;align-items:center;gap:5px;margin-left:auto">
-             <span style="font-family:var(--mono);font-size:9.5px;color:#8a95a1">주차 추가</span>
-             <select class="addw" ${rest.length?'':'disabled'}>${
-               rest.length ? rest.map(w=>`<option value="${w}">${w}</option>`).join('')
-                           : '<option value="">추가할 주차 없음</option>'}</select>
-             <button type="button" class="addwbtn" ${rest.length?'':'disabled'}>＋ 추가</button>
-           </span>
+           <span style="font-size:10.5px;font-weight:800;color:#1f3864">DC${m} 주차별 이력</span>
+           <span style="font-family:var(--mono);font-size:9.5px;color:#8a95a1">기록 ${rec}건 / 전체 ${allWeeks.slice(0,idx+1).length}주차 · 어느 주차든 바로 입력됩니다</span>
+           <label class="delcol" style="margin-left:auto;display:flex;align-items:center;gap:4px;font-size:10px;color:#5a6674;cursor:pointer">
+             <input type="checkbox" class="onlyrec"${HIST_ONLY_REC?' checked':''} style="width:12px;height:12px;accent-color:#1f3864">
+             기록 있는 주차만
+           </label>
          </div>`
         + (ws.length
             ? `<table><thead><tr><th style="width:64px">주차</th><th style="width:82px">상태</th>
                  <th>문제점</th><th>진행사항</th><th>계획</th>
                  <th style="width:96px">복구 예정</th><th style="width:74px">담당</th>
                  <th class="delcol" style="width:44px">삭제</th></tr></thead><tbody>${rows}</tbody></table>`
-            : '<div style="font-size:10.3px;color:#8a95a1">저장된 이력이 없습니다. 오른쪽에서 주차를 추가하거나, 위 표에 내용을 입력하세요.</div>');
+            : '<div style="font-size:10.3px;color:#8a95a1">기록된 주차가 없습니다. 체크를 풀면 전 주차가 표시됩니다.</div>');
+
+      const orc = box.querySelector('input.onlyrec');
+      if(orc) orc.onchange = ()=>{ HIST_ONLY_REC = orc.checked; histBuild(m, tr, box); };
 
       /* 이력 칸 편집 → 해당 주차에 바로 저장 */
       box.querySelectorAll('[data-hw]').forEach(el=>{
@@ -4823,16 +4834,6 @@ function renderWeekly(){
         el.addEventListener('input', save1);
         el.addEventListener('change', save1);
       });
-
-      /* 주차 추가 : 그 주차에 기본 상태를 기록해 이력 행을 만든다 */
-      const as = box.querySelector('select.addw'), ab = box.querySelector('button.addwbtn');
-      if(ab) ab.onclick = ()=>{
-        const w = as && as.value; if(!w) return;
-        const n = histGet(w);
-        if(!n['dnSt'+m]) n['dnSt'+m] = notes['dnSt'+m] || (BROKEN.has(m) ? '불가동' : '수리중');
-        wkSaveNotes(w, n);
-        histBuild(m, tr, box);
-      };
 
       /* 주차 삭제 : 그 주차의 이 설비 기록만 지운다 */
       box.querySelectorAll('button[data-hdel]').forEach(bt=>{
