@@ -699,13 +699,23 @@
       </div>
 
       <div class="wk-blk">
+        <h4>⑤ 계통별 주차 추이<span class="wk-tgt" id="wkCatTrendSub"></span></h4>
+        <div class="wk-2col">
+          <div class="wk-canv"><h5>계통별 MTTR (h/건) — 낮을수록 좋음</h5>
+            <div style="height:150px"><canvas id="wkCatMttrChart"></canvas></div></div>
+          <div class="wk-canv"><h5>계통별 MTBF (h/건) — 높을수록 좋음</h5>
+            <div style="height:150px"><canvas id="wkCatMtbfChart"></canvas></div></div>
+        </div>
+      </div>
+
+      <div class="wk-blk">
         <div class="wk-2col">
           <div>
-            <h4>⑤ 계통별 로스 증감 (전주 대비)</h4>
+            <h4>⑥ 계통별 로스 증감 (전주 대비)</h4>
             <table class="wk-t" id="wkCatTable"></table>
           </div>
           <div>
-            <h4>⑥ F-COST 손실비용 TOP 5</h4>
+            <h4>⑦ F-COST 손실비용 TOP 5</h4>
             <table class="wk-t" id="wkCostTable"></table>
           </div>
         </div>
@@ -714,11 +724,11 @@
       <div class="wk-blk">
         <div class="wk-2col">
           <div>
-            <h4>⑦ 설비등급 D·E (PM 우선 대상)</h4>
+            <h4>⑧ 설비등급 D·E (PM 우선 대상)</h4>
             <table class="wk-t" id="wkGradeTable"></table>
           </div>
           <div>
-            <h4>⑧ 특이사항 · 익주 계획</h4>
+            <h4>⑨ 특이사항 · 익주 계획</h4>
             <textarea class="wk-memo" id="wkMemo" placeholder="불가동 설비 조치 현황, PM 진행, 익주 계획 등을 입력하세요 (주차별로 저장됩니다)"></textarea>
           </div>
         </div>
@@ -3751,7 +3761,7 @@ pptPrefsLoad();
    기존 계산 함수(weekStats / mcStats / topCodes / getRates / lastGradeRows)를
    그대로 재사용하므로, 다른 탭과 항상 같은 숫자가 나온다.
    주차만 바꾸면 KPI·차트·코멘트가 모두 다시 계산된다.                        */
-let wkMttrChart, wkMtbfChart, wkTrendChart;
+let wkMttrChart, wkMtbfChart, wkTrendChart, wkCatMttrChart, wkCatMtbfChart;
 const WK_SUBS = ['금형','설비-전기','설비-라인','관리'];
 
 function wkFillWeeks(){
@@ -4053,7 +4063,88 @@ function renderWeekly(){
        <div class="wkw-grid">${wMtbf.map((x,i)=>wkCard(x,i+1,'MTBF')).join('')}</div>`
     : `<div style="font-size:11px;color:#5a6674;">${wk} 최소 로스건수(${MIN_N}건)를 채운 설비가 없습니다.</div>`;
 
-  /* ---------- ⑤ 계통별 증감 ---------- */
+  /* ---------- ⑤ 계통별 주차 추이 (탭2와 동일 구성, 보고 주차까지) ---------- */
+  {
+    const upto  = allWeeks.slice(0, idx+1);          // 보고 주차까지만
+    const cats  = CAT_ORDER.filter(c=>c!=='ALL');
+    const byCat = {};
+    cats.forEach(c=>{
+      const s = weekStats(c);
+      byCat[c] = upto.map(w => s.find(x=>x.w===w) || {w:w, mttr:0, mtbf:0});
+    });
+    const sub = document.getElementById('wkCatTrendSub');
+    if(sub) sub.textContent = `${upto[0]} ~ ${wk} · 오른쪽 끝 = ${wk} 값 및 전주 대비 증감`;
+
+    /* 마지막 주차 값 + 전주 대비 증감을 오른쪽 여백에 표시 (겹치면 자동으로 벌림) */
+    const wkEndLabels = {
+      id:'wkEndLabels',
+      afterDatasetsDraw(chart){
+        const {ctx, chartArea} = chart;
+        const items = [];
+        chart.data.datasets.forEach((d,i)=>{
+          if(!d.endLabel || !chart.isDatasetVisible(i)) return;
+          const a = d.data||[], last = a.length-1;
+          if(last < 0 || a[last] === null || isNaN(a[last])) return;
+          const sc = chart.scales[d.yAxisID||'y']; if(!sc) return;
+          items.push({ y: sc.getPixelForValue(a[last]), v:a[last],
+                       dv: (last>0 && !isNaN(a[last-1])) ? a[last]-a[last-1] : null,
+                       color:d.borderColor, goodUp:!!d.endLabel.goodUp });
+        });
+        if(!items.length) return;
+        const GAP = 10;
+        items.sort((a,b)=>a.y-b.y);
+        for(let i=1;i<items.length;i++)
+          if(items[i].y-items[i-1].y < GAP) items[i].y = items[i-1].y + GAP;
+        const over = items[items.length-1].y - chartArea.bottom;
+        if(over > 0) items.forEach(it=>{ it.y -= over; });
+        items.forEach(it=>{ it.y = Math.max(it.y, chartArea.top + 3); });
+        const x = chartArea.right + 4;
+        ctx.save(); ctx.textBaseline='middle'; ctx.textAlign='left';
+        items.forEach(it=>{
+          ctx.font = "700 8px 'SFMono-Regular', Consolas, monospace";
+          ctx.fillStyle = it.color;
+          const txt = it.v.toFixed(2);
+          ctx.fillText(txt, x, it.y);
+          const w = ctx.measureText(txt).width;
+          ctx.font = "700 7.5px 'SFMono-Regular', Consolas, monospace";
+          if(it.dv === null || Math.abs(it.dv) < 0.005){
+            ctx.fillStyle = '#8a95a1'; ctx.fillText('–', x+w+3, it.y);
+          }else{
+            const good = it.goodUp ? it.dv>0 : it.dv<0;
+            ctx.fillStyle = good ? '#1d7d60' : '#c00000';
+            ctx.fillText((it.dv>0?'▲':'▼')+Math.abs(it.dv).toFixed(2), x+w+3, it.y);
+          }
+        });
+        ctx.restore();
+      }
+    };
+
+    const mkCatLine = (ref, id, key, tgt, tgtColor)=>{
+      const el = document.getElementById(id); if(!el) return null;
+      if(ref) ref.destroy();
+      const dsets = cats.map(c=>({
+        type:'line', label:c, data: byCat[c].map(r=>+(r[key]||0).toFixed(2)),
+        borderColor: CAT_COLOR[c], backgroundColor: CAT_COLOR[c],
+        borderWidth:1.8, tension:.25, pointRadius: upto.map(w=>w===wk?3:1.5),
+        endLabel:{goodUp: key==='mtbf'}, datalabels:{display:false}
+      }));
+      if(tgt) dsets.push({ type:'line', label:`목표 ${fmt(tgt,2)}`,
+        data: upto.map(()=>tgt), borderColor:tgtColor, borderWidth:1.2, borderDash:[3,3],
+        pointRadius:0, datalabels:{display:false} });
+      return new Chart(el, { data:{labels:upto, datasets:dsets},
+        plugins:[wkEndLabels],
+        options:{ responsive:true, maintainAspectRatio:false, animation:false,
+          layout:{ padding:{ right:52, top:6 } },
+          plugins:{ legend:{display:true, labels:{boxWidth:8, font:{size:8}, usePointStyle:true}},
+                    datalabels:{display:false} },
+          scales:{ x:{ ticks:{font:{size:8}}, grid:{display:false} },
+                   y:{ beginAtZero:true, ticks:{font:{size:8}}, grid:{color:'#eef2f7'} } } } });
+    };
+    wkCatMttrChart = mkCatLine(wkCatMttrChart, 'wkCatMttrChart', 'mttr', tM, '#e2564d');
+    wkCatMtbfChart = mkCatLine(wkCatMtbfChart, 'wkCatMtbfChart', 'mtbf', tB, '#1d7d60');
+  }
+
+  /* ---------- ⑥ 계통별 증감 ---------- */
   const ct = document.getElementById('wkCatTable');
   const totC = WK_SUBS.reduce((a,k)=>a+(sc[k]?sc[k].h:0),0);
   ct.innerHTML = '<thead><tr><th>계통</th><th>금주 로스</th><th>건수</th><th>전주 로스</th><th>증감</th><th>비중</th></tr></thead><tbody>'+
@@ -4162,7 +4253,7 @@ function showTab(id){
   [dcMttrChart,dcMtbfChart,paretoChart,heroMttrChart,heroMtbfChart,trendChart,
    repMttrChart,repMtbfChart,repDeltaChart,repTrendChart,repMixChart,
    gradeScoreChart,gradeScatChart,pmGanttChart,costTrendChart,costMcChart,costMixChart,costCmpChart,
-   wkMttrChart,wkMtbfChart,wkTrendChart]
+   wkMttrChart,wkMtbfChart,wkTrendChart,wkCatMttrChart,wkCatMtbfChart]
     .forEach(c=>{ try{ if(c) c.resize(); }catch(e){} });
 }
 document.querySelectorAll('.tabbtn').forEach(b=>{
