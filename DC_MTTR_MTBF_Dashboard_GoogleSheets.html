@@ -606,6 +606,29 @@
   .wk-ppt-note{font-size:9.8px; color:#8a95a1; margin-top:3px;}
   @media print{ table.wk-t.mini th, table.wk-t.mini td{padding:2px 3px; font-size:9px;} }
 </style>
+
+<style>
+  /* ⑦ 로스 비용 현황 */
+  .wkc-kpi{display:grid; grid-template-columns:repeat(5,1fr); gap:7px; margin-bottom:8px;}
+  .wkc-k{border:1px solid #e6ebf1; border-radius:8px; padding:7px 9px; background:#fff;}
+  .wkc-k .l{font-family:var(--mono); font-size:9.3px; letter-spacing:.05em; color:#8a95a1; text-transform:uppercase;}
+  .wkc-k .v{font-size:15px; font-weight:800; color:#1f3864; margin-top:2px; letter-spacing:-.01em;}
+  .wkc-k .v small{font-size:9.5px; font-weight:600; color:#8a95a1; margin-left:3px;}
+  .wkc-k .d{font-family:var(--mono); font-size:9.5px; font-weight:700; margin-top:1px;}
+  .wkc-k .d.up{color:#c00000;} .wkc-k .d.dn{color:#1d7d60;} .wkc-k .d.flat{color:#8a95a1;}
+  .wkc-2{display:grid; grid-template-columns:1.25fr .75fr; gap:11px;}
+  .wkc-cat{display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin-bottom:7px;}
+  .wkc-c{border:1px solid #e6ebf1; border-left-width:4px; border-radius:7px; padding:5px 8px;}
+  .wkc-c .n{font-size:10.5px; font-weight:800; color:#1f3864;}
+  .wkc-c .m{font-family:'SFMono-Regular',Consolas,monospace; font-size:10.3px; color:#33404f;}
+  .wkc-c .s{font-size:9.5px; color:#8a95a1;}
+  .wkc-w{font-size:10.2px;}
+  .wkc-w .r{display:flex; align-items:center; gap:5px; margin-bottom:2px;}
+  .wkc-w .mc{width:42px; font-weight:800; color:#1f3864; font-family:'SFMono-Regular',Consolas,monospace;}
+  .wkc-w .bar{flex:1; height:9px; background:#f0f3f7; border-radius:3px; overflow:hidden;}
+  .wkc-w .bar i{display:block; height:100%; background:#c9791a;}
+  .wkc-w .vl{width:110px; text-align:right; font-family:'SFMono-Regular',Consolas,monospace; color:#33404f;}
+</style>
 </head>
 <body>
 
@@ -740,13 +763,28 @@
       </div>
 
       <div class="wk-blk">
+        <h4>⑦ 로스 비용 현황 (F-COST)<span class="wk-tgt" id="wkCostSub"></span></h4>
+        <div class="wkc-kpi" id="wkCostKpi"></div>
+        <div class="wkc-2">
+          <div class="wk-canv"><h5>주차별 로스시간 · 손실비용</h5>
+            <div style="height:180px"><canvas id="wkCostTrendChart"></canvas></div></div>
+          <div>
+            <div class="mini-title" style="font-size:10.5px;margin-bottom:5px;">계통별 손실비용 (금주)</div>
+            <div class="wkc-cat" id="wkCostCat"></div>
+            <div class="mini-title" style="font-size:10.5px;margin:6px 0 4px;">설비 워스트 (손실금액 TOP 10)</div>
+            <div class="wkc-w" id="wkCostWorst"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wk-blk">
         <div class="wk-2col">
           <div>
-            <h4>⑦ 계통별 로스 증감 (전주 대비)</h4>
+            <h4>⑧ 계통별 로스 증감 (전주 대비)</h4>
             <table class="wk-t" id="wkCatTable"></table>
           </div>
           <div>
-            <h4>⑧ F-COST 손실비용 TOP 5</h4>
+            <h4>⑨ F-COST 손실비용 TOP 5</h4>
             <table class="wk-t" id="wkCostTable"></table>
           </div>
         </div>
@@ -755,11 +793,11 @@
       <div class="wk-blk">
         <div class="wk-2col">
           <div>
-            <h4>⑨ 설비등급 D·E (PM 우선 대상)</h4>
+            <h4>⑩ 설비등급 D·E (PM 우선 대상)</h4>
             <table class="wk-t" id="wkGradeTable"></table>
           </div>
           <div>
-            <h4>⑩ 특이사항 · 익주 계획</h4>
+            <h4>⑪ 특이사항 · 익주 계획</h4>
             <textarea class="wk-memo" id="wkMemo" placeholder="불가동 설비 조치 현황, PM 진행, 익주 계획 등을 입력하세요 (주차별로 저장됩니다)"></textarea>
           </div>
         </div>
@@ -3835,7 +3873,7 @@ pptPrefsLoad();
    기존 계산 함수(weekStats / mcStats / topCodes / getRates / lastGradeRows)를
    그대로 재사용하므로, 다른 탭과 항상 같은 숫자가 나온다.
    주차만 바꾸면 KPI·차트·코멘트가 모두 다시 계산된다.                        */
-let wkMttrChart, wkMtbfChart, wkTrendChart, wkCatMttrChart, wkCatMtbfChart;
+let wkMttrChart, wkMtbfChart, wkTrendChart, wkCatMttrChart, wkCatMtbfChart, wkCostTrendChart;
 const WK_SUBS = ['금형','설비-전기','설비-라인','관리'];
 
 function wkFillWeeks(){
@@ -4328,7 +4366,95 @@ function renderWeekly(){
           <td>${T.ppt?fmt(T.run/T.ppt*100,1)+'%':'-'}</td></tr></tfoot>`;
   }
 
-  /* ---------- ⑦ 계통별 증감 ---------- */
+  /* ---------- ⑦ 로스 비용 현황 (F-COST) ---------- */
+  {
+    const RT   = getRates();
+    const upto = allWeeks.slice(0, idx+1);
+    const cost = r => r.l * (RT[r.m] || 0);
+    const perW = upto.map(w=>{
+      const L = fails(LOSS.filter(r=>r.w===w));
+      const R = RUN.filter(r=>r.w===w);
+      const runH = R.reduce((a,x)=>a+x.r,0)/60;
+      const lsH  = LOSS.filter(r=>r.w===w).reduce((a,x)=>a+x.l,0)/60;
+      return { w:w, h:L.reduce((a,x)=>a+x.l,0)/60, thb:L.reduce((a,x)=>a+cost(x),0),
+               avail:(runH+lsH)>0 ? runH/(runH+lsH)*100 : 0, days:new Set(R.map(x=>x.d)).size||1 };
+    });
+    const c0 = perW[perW.length-1] || {h:0,thb:0,avail:0,days:7};
+    const c1 = perW.length>1 ? perW[perW.length-2] : null;
+    const dPc = (c1 && c1.thb) ? (c0.thb-c1.thb)/c1.thb*100 : null;
+    const sum = perW.reduce((a,x)=>a+x.thb,0);
+
+    const sb = document.getElementById('wkCostSub');
+    if(sb) sb.textContent = `${wk} · 전체 로스 기준 · 설비별 M/C Rate 적용 · 누계 ${upto[0]}~${wk} ${Math.round(sum).toLocaleString()} THB`;
+
+    const dCls = dPc===null ? 'flat' : (dPc>0 ? 'up' : 'dn');
+    const dTxt = dPc===null ? '전주 데이터 없음'
+               : `${dPc>0?'▲':'▼'}${Math.abs(dPc).toFixed(1)}% (전주 ${Math.round(c1.thb).toLocaleString()})`;
+    document.getElementById('wkCostKpi').innerHTML = [
+      ['금주 손실비용', Math.round(c0.thb).toLocaleString(), 'THB', `<div class="d ${dCls}">${dTxt}</div>`],
+      ['로스시간', fmt(c0.h,1), 'h', `<div class="d flat">${cntTxt(fails(LOSS.filter(r=>r.w===wk)).length)}건</div>`],
+      ['가동률', fmt(c0.avail,1), '%', `<div class="d flat">전체 로스 기준</div>`],
+      ['일평균 손실', Math.round(c0.thb/(c0.days||1)).toLocaleString(), 'THB', `<div class="d flat">${c0.days}일 기준</div>`],
+      ['기간 누계', Math.round(sum).toLocaleString(), 'THB', `<div class="d flat">${upto.length}개 주차</div>`]
+    ].map(k=>`<div class="wkc-k"><div class="l">${k[0]}</div>
+        <div class="v">${k[1]}<small>${k[2]}</small></div>${k[3]}</div>`).join('');
+
+    /* 주차별 로스시간(막대) + 손실비용(선) */
+    {
+      const el = document.getElementById('wkCostTrendChart');
+      if(el){
+        if(wkCostTrendChart) wkCostTrendChart.destroy();
+        wkCostTrendChart = new Chart(el, {
+          data:{ labels: upto, datasets:[
+            { type:'bar', label:'로스시간 (h)', data: perW.map(x=>+x.h.toFixed(1)),
+              backgroundColor: upto.map(w=>w===wk?'#c9791a':'#e8c79a'), yAxisID:'y', order:2,
+              datalabels:{display:false} },
+            { type:'line', label:'손실비용 (THB)', data: perW.map(x=>Math.round(x.thb)),
+              borderColor:'#1f3864', backgroundColor:'#1f3864', borderWidth:2, tension:.25,
+              pointRadius: upto.map(w=>w===wk?4:2), yAxisID:'y1', order:1,
+              datalabels:{display:false} } ]},
+          options:{ responsive:true, maintainAspectRatio:false, animation:false,
+            layout:{ padding:{ top:8 } },
+            plugins:{ legend:{display:true, labels:{boxWidth:9, font:{size:8.5}, usePointStyle:true}},
+                      datalabels:{display:false} },
+            scales:{ x:{ ticks:{font:{size:8}}, grid:{display:false} },
+                     y:{ beginAtZero:true, ticks:{font:{size:8}}, title:{display:true,text:'h',font:{size:8}} },
+                     y1:{ beginAtZero:true, position:'right', grid:{drawOnChartArea:false},
+                          ticks:{font:{size:8}, callback:v=>Math.round(v/1000)+'k'},
+                          title:{display:true,text:'THB',font:{size:8}} } } }
+        });
+      }
+    }
+
+    /* 계통별 손실비용 */
+    const Lw = fails(LOSS.filter(r=>r.w===wk));
+    const byS = {}; WK_SUBS.forEach(s=>byS[s]={thb:0,h:0,n:0});
+    Lw.forEach(r=>{ if(!byS[r.s]) byS[r.s]={thb:0,h:0,n:0};
+      byS[r.s].thb += cost(r); byS[r.s].h += r.l/60; byS[r.s].n++; });
+    const totS = Object.values(byS).reduce((a,x)=>a+x.thb,0) || 1;
+    document.getElementById('wkCostCat').innerHTML = WK_SUBS
+      .sort((a,b)=>byS[b].thb-byS[a].thb)
+      .map(s=>`<div class="wkc-c" style="border-left-color:${CAT_COLOR[s]||'#7f7f7f'}">
+        <div class="n">${s}</div>
+        <div class="m">${Math.round(byS[s].thb).toLocaleString()} THB</div>
+        <div class="s">${fmt(byS[s].thb/totS*100,1)}% · ${fmt(byS[s].h,1)}h · ${byS[s].n}건</div></div>`).join('');
+
+    /* 설비 워스트 TOP10 */
+    const byM = {};
+    Lw.forEach(r=>{ byM[r.m] = byM[r.m] || {thb:0,h:0};
+      byM[r.m].thb += cost(r); byM[r.m].h += r.l/60; });
+    const wArr = Object.keys(byM).map(m=>({m:+m, thb:byM[m].thb, h:byM[m].h}))
+                   .sort((a,b)=>b.thb-a.thb).slice(0,10);
+    const mx = wArr.length ? wArr[0].thb : 1;
+    const totM = Object.values(byM).reduce((a,x)=>a+x.thb,0) || 1;
+    document.getElementById('wkCostWorst').innerHTML = wArr.length
+      ? wArr.map(x=>`<div class="r"><span class="mc">DC${x.m}</span>
+          <span class="bar"><i style="width:${Math.max(x.thb/mx*100,2)}%"></i></span>
+          <span class="vl">${Math.round(x.thb).toLocaleString()} · ${fmt(x.thb/totM*100,1)}% · ${fmt(x.h,1)}h</span></div>`).join('')
+      : '<div style="color:#8a95a1">해당 주차 로스 없음</div>';
+  }
+
+  /* ---------- ⑧ 계통별 증감 ---------- */
   const ct = document.getElementById('wkCatTable');
   const totC = WK_SUBS.reduce((a,k)=>a+(sc[k]?sc[k].h:0),0);
   ct.innerHTML = '<thead><tr><th>계통</th><th>금주 로스</th><th>건수</th><th>전주 로스</th><th>증감</th><th>비중</th></tr></thead><tbody>'+
@@ -4440,7 +4566,7 @@ function showTab(id){
   [dcMttrChart,dcMtbfChart,paretoChart,heroMttrChart,heroMtbfChart,trendChart,
    repMttrChart,repMtbfChart,repDeltaChart,repTrendChart,repMixChart,
    gradeScoreChart,gradeScatChart,pmGanttChart,costTrendChart,costMcChart,costMixChart,costCmpChart,
-   wkMttrChart,wkMtbfChart,wkTrendChart,wkCatMttrChart,wkCatMtbfChart]
+   wkMttrChart,wkMtbfChart,wkTrendChart,wkCatMttrChart,wkCatMtbfChart,wkCostTrendChart]
     .forEach(c=>{ try{ if(c) c.resize(); }catch(e){} });
 }
 document.querySelectorAll('.tabbtn').forEach(b=>{
