@@ -636,6 +636,29 @@
   .wkc-w .bar i{display:block; height:100%; background:#c9791a;}
   .wkc-w .vl{width:118px; text-align:right; white-space:nowrap; font-family:'SFMono-Regular',Consolas,monospace; color:#33404f;}
 </style>
+
+<style>
+  /* 불가동 설비 현황 */
+  table.wk-t.down td{vertical-align:middle;}
+  table.wk-t.down td.mc{font-size:12px;}
+  table.wk-t.down input, table.wk-t.down select{
+    width:100%; border:1px dashed #d8dfe7; border-radius:5px; padding:3px 5px;
+    font-size:10.5px; font-family:inherit; color:#33404f; background:#fff;}
+  table.wk-t.down select{border-style:solid;}
+  .wk-down-st{font-family:var(--mono); font-size:10px; font-weight:700; padding:1px 6px; border-radius:9px;}
+  .wk-down-st.stop{background:#fdeceb; color:#c00000;}
+  .wk-down-st.ok{background:#e8f6ef; color:#1d7d60;}
+  .wk-down-add{display:flex; align-items:center; gap:6px; margin:0 0 6px;}
+  .wk-down-add select{border:1px solid #d8dfe7; border-radius:6px; padding:3px 7px; font-size:11px;}
+  .wk-down-add button{border:1px solid #1f3864; background:#1f3864; color:#fff; border-radius:6px;
+                      padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;}
+  .wk-down-add button:disabled{background:#c7ced5; border-color:#c7ced5; cursor:default;}
+  table.wk-t.down button.del{border:1px solid #e2c9c6; background:#fff; color:#c00000;
+                             border-radius:5px; padding:2px 7px; font-size:10.5px; cursor:pointer;}
+  table.wk-t.down button.del:hover{background:#fdeceb;}
+  @media print{ table.wk-t.down input, table.wk-t.down select{border:1px solid #e2e8ef;}
+                .wk-down-add, table.wk-t.down .delcol{display:none !important;} }
+</style>
 </head>
 <body>
 
@@ -815,7 +838,15 @@
       <div class="wk-blk">
         <div>
           <div>
-            <h4>⑪ 특이사항 · 익주 계획</h4>
+            <h4>⑪ 불가동 설비 현황<span class="wk-tgt" id="wkDownSub"></span></h4>
+            <div class="wk-down-add">
+              <span class="lb" style="font-family:var(--mono);font-size:10px;color:#8a95a1">설비 추가</span>
+              <select id="wkDownAdd"></select>
+              <button id="wkDownAddBtn" type="button">＋ 추가</button>
+            </div>
+            <table class="wk-t down" id="wkDownTable"></table>
+
+            <h4 style="margin-top:12px">⑫ 특이사항 · 익주 계획</h4>
             <textarea class="wk-memo" id="wkMemo" placeholder="불가동 설비 조치 현황, PM 진행, 익주 계획 등을 입력하세요 (주차별로 저장됩니다)"></textarea>
           </div>
         </div>
@@ -4626,7 +4657,90 @@ function renderWeekly(){
 
   /* ⑦ 설비등급 D·E 블록은 [설비 등급 / PM] 탭에서 보므로 주간보고에서 제외 */
 
-  /* ---------- ⑧ 메모 + 저장 ---------- */
+  /* ---------- ⑪ 불가동 설비 현황 ----------
+     아래 목록만 고치면 대상 설비가 바뀝니다. 결번(DC14)은 자동으로 빠집니다. */
+  const WK_DOWN_MCS = [1, 7, 11, 17];          // 최초 기본값 (이후에는 화면에서 추가·삭제)
+  function wkDownList(){
+    let a = null;
+    try{ a = JSON.parse(localStorage.getItem('stc_wk_down_mcs')||'null'); }catch(e){}
+    if(!Array.isArray(a)) a = WK_DOWN_MCS.slice();
+    return a.map(Number).filter(m=>ALL_MACHINES.indexOf(m)>=0).sort((x,y)=>x-y);
+  }
+  function wkDownSave(a){
+    try{ localStorage.setItem('stc_wk_down_mcs', JSON.stringify(a.sort((x,y)=>x-y))); }catch(e){}
+  }
+  {
+    const dt = document.getElementById('wkDownTable');
+    const ST = ['불가동', '수리중', '부품 대기', '외주 수리', '복구 완료'];
+    const esc = s => String(s==null?'':s).replace(/"/g,'&quot;');
+    const list = wkDownList();
+
+    /* 추가 드롭다운 : 아직 등록되지 않은 설비만 */
+    const addSel = document.getElementById('wkDownAdd');
+    const addBtn = document.getElementById('wkDownAddBtn');
+    if(addSel){
+      const rest = ALL_MACHINES.filter(m=>list.indexOf(m)<0);
+      addSel.innerHTML = rest.length
+        ? rest.map(m=>`<option value="${m}">DC${m} (${MC_TYPE[m]||'-'} Ton)</option>`).join('')
+        : '<option value="">추가할 설비 없음</option>';
+      addSel.disabled = !rest.length;
+      if(addBtn){
+        addBtn.disabled = !rest.length;
+        addBtn.onclick = ()=>{
+          const m = parseInt(addSel.value, 10);
+          if(!m) return;
+          const a = wkDownList(); if(a.indexOf(m)<0) a.push(m);
+          wkDownSave(a); renderWeekly();
+        };
+      }
+    }
+
+    /* 마지막으로 가동 기록이 있는 주차와 그 이후 경과 주차 수 */
+    const lastRunWeek = m => {
+      for(let i = idx; i >= 0; i--){
+        const w = allWeeks[i];
+        if(RUN.some(r=>r.m===m && r.w===w && r.r>0)) return {w:w, ago: idx-i};
+      }
+      return null;
+    };
+
+    const sub = document.getElementById('wkDownSub');
+    if(sub) sub.textContent = `${wk} 기준 ${list.length}대 · 문제점·진행사항은 주차별로 저장됩니다`;
+
+    dt.innerHTML = list.length
+      ? '<thead><tr><th style="width:58px">설비</th><th style="width:52px">Ton</th>'
+        + '<th style="width:96px">최종 가동</th><th style="width:84px">상태</th>'
+        + '<th>문제점</th><th>진행사항</th><th style="width:90px">담당</th>'
+        + '<th style="width:96px">복구 예정</th><th class="delcol" style="width:44px">삭제</th></tr></thead><tbody>'
+        + list.map(m=>{
+            const lr = lastRunWeek(m);
+            const stv = notes['dnSt'+m] || (BROKEN.has(m) ? '불가동' : '수리중');
+            const done = (stv === '복구 완료');
+            return `<tr class="${done?'':'bad'}">
+              <td class="mc">DC${m}</td>
+              <td>${MC_TYPE[m]||'-'}</td>
+              <td>${lr ? `${lr.w}<br><span style="color:#8a95a1;font-size:9.5px">${lr.ago?lr.ago+'주 경과':'금주 가동'}</span>`
+                       : '<span style="color:#c00000">기록 없음</span>'}</td>
+              <td><select data-note="dnSt${m}">${
+                    ST.map(s=>`<option value="${s}"${s===stv?' selected':''}>${s}</option>`).join('')}</select></td>
+              <td><input data-note="dnPb${m}" value="${esc(notes['dnPb'+m])}" placeholder="고장 내용 / 원인"></td>
+              <td><input data-note="dnPr${m}" value="${esc(notes['dnPr'+m])}" placeholder="조치 진행 상황"></td>
+              <td><input data-note="dnOw${m}" value="${esc(notes['dnOw'+m])}" placeholder="담당"></td>
+              <td><input type="date" data-note="dnEt${m}" value="${esc(notes['dnEt'+m])}"></td>
+              <td class="delcol"><button type="button" class="del" data-del="${m}">삭제</button></td></tr>`;
+          }).join('') + '</tbody>'
+      : '<tr><td class="l" style="color:#5a6674">등록된 불가동 설비가 없습니다. 위에서 설비를 추가하세요.</td></tr>';
+
+    dt.querySelectorAll('button.del').forEach(b=>{
+      b.onclick = ()=>{
+        const m = parseInt(b.dataset.del, 10);
+        const a = wkDownList().filter(x=>x!==m);
+        wkDownSave(a); renderWeekly();
+      };
+    });
+  }
+
+  /* ---------- ⑫ 메모 + 저장 ---------- */
   const memo = document.getElementById('wkMemo');
   memo.value = notes.memo || '';
   document.getElementById('wkFootR').textContent =
@@ -4639,9 +4753,14 @@ function renderWeekly(){
     const o = wkLoadNotes(wk);
     o.memo = memo.value;
     document.querySelectorAll('#wkWorstBox input.act').forEach(el=>{ o[el.dataset.note] = el.value; });
+    document.querySelectorAll('#wkDownTable [data-note]').forEach(el=>{ o[el.dataset.note] = el.value; });
     wkSaveNotes(wk, o);
   };
   memo.addEventListener('input', save);
+  document.querySelectorAll('#wkDownTable [data-note]').forEach(el=>{
+    el.addEventListener('input', save);
+    el.addEventListener('change', ()=>{ save(); renderWeekly(); });   // 상태 바꾸면 색도 갱신
+  });
   document.querySelectorAll('#wkWorstBox input.act').forEach(el=>el.addEventListener('input', ()=>{
     /* MTTR·MTBF 양쪽 워스트에 같은 설비가 걸리면 조치 입력을 서로 맞춘다 */
     document.querySelectorAll(`#wkWorstBox input.act[data-note="${el.dataset.note}"]`)
