@@ -546,6 +546,18 @@
 <style>
   /* 주간보고 ④ 워스트 카드 */
   .wk-tgt{font-family:var(--mono); font-size:10.5px; font-weight:600; color:#5a6674; margin-left:8px;}
+  /* ⑤ 계통별 이슈 */
+  .wk-issue{display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:9px;}
+  .wk-issue .ic{border:1px solid #e6ebf1; border-left-width:4px; border-radius:7px; padding:6px 9px; background:#fff;}
+  .wk-issue .ic .nm{font-size:11.5px; font-weight:800; color:#1f3864;}
+  .wk-issue .ic .vd{font-family:var(--mono); font-size:9.5px; font-weight:700; padding:1px 6px;
+                    border-radius:9px; margin-left:6px;}
+  .wk-issue .ic .vd.up{background:#fdeceb; color:#c00000;}
+  .wk-issue .ic .vd.dn{background:#e8f6ef; color:#1d7d60;}
+  .wk-issue .ic .vd.flat{background:#eef2f7; color:#5a6674;}
+  .wk-issue .ic .mt{font-family:'SFMono-Regular',Consolas,monospace; font-size:10.3px; color:#33404f; margin-top:3px;}
+  .wk-issue .ic .is{font-size:10.5px; color:#4a5765; line-height:1.5; margin-top:3px;}
+  .wk-issue .ic .is b{color:#1f3864;}
   .wkw-band{font-family:var(--mono); font-size:10px; letter-spacing:.07em; color:#7a8698; margin:6px 0 4px;}
   .wkw-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:7px;}
   .wkw-card{border:1px solid #e6ebf1; border-radius:8px; padding:7px 9px; background:#fff;}
@@ -706,6 +718,7 @@
           <div class="wk-canv"><h5>계통별 MTBF (h/건) — 높을수록 좋음</h5>
             <div style="height:230px"><canvas id="wkCatMtbfChart"></canvas></div></div>
         </div>
+        <div class="wk-issue" id="wkCatIssue"></div>
       </div>
 
       <div class="wk-blk">
@@ -4142,6 +4155,61 @@ function renderWeekly(){
     };
     wkCatMttrChart = mkCatLine(wkCatMttrChart, 'wkCatMttrChart', 'mttr', tM, '#e2564d');
     wkCatMtbfChart = mkCatLine(wkCatMtbfChart, 'wkCatMtbfChart', 'mtbf', tB, '#1d7d60');
+
+    /* ----- 계통별 이슈사항 (자동 서술) ----- */
+    const catRows = (week, c) => week ? fails(LOSS.filter(r=>r.w===week && matchCat(r,c))) : [];
+    const sumH    = rs => rs.reduce((a,r)=>a+r.l/60, 0);
+    const dlt = (rs, ps) => {                       // 로스유형별 전주 대비 증감
+      const A={}, B={};
+      rs.forEach(r=>{ A[r.i]=(A[r.i]||0)+r.l/60; });
+      ps.forEach(r=>{ B[r.i]=(B[r.i]||0)+r.l/60; });
+      return [...new Set(Object.keys(A).concat(Object.keys(B)))]
+        .map(k=>({code:k, d:(A[k]||0)-(B[k]||0), cur:A[k]||0}))
+        .sort((x,y)=>Math.abs(y.d)-Math.abs(x.d));
+    };
+    const sg = (v,d)=> (v>0?'+':'') + fmt(v,d);
+
+    const issue = cats.map(c=>{
+      const a = byCat[c], cu = a[a.length-1], pv = a.length>1 ? a[a.length-2] : null;
+      const rs = catRows(wk, c), ps = catRows(pw, c);
+      const lh = sumH(rs), lp = sumH(ps);
+      const dM = pv ? cu.mttr - pv.mttr : null;
+      const dB = pv ? cu.mtbf - pv.mtbf : null;
+      const dL = pw ? lh - lp : null;
+      const top  = topCodes(rs, 2);
+      const mv   = dlt(rs, ps).filter(x=>Math.abs(x.d) >= 0.5)[0] || null;
+
+      /* 판정 : 전주 대비 변화율로 본다 (MTTR 상승 = 악화 / MTBF 상승 = 개선)
+         두 지표가 반대로 움직이면 변화율이 큰 쪽을 따른다 */
+      let vd = 'flat', vt = '보합';
+      if(pv){
+        const pM = pv.mttr ? (cu.mttr - pv.mttr)/pv.mttr : 0;
+        const pB = pv.mtbf ? (cu.mtbf - pv.mtbf)/pv.mtbf : 0;
+        const score = pM - pB;                    // 양수면 악화 쪽
+        if(score >  0.05){ vd='up'; vt='악화'; }
+        else if(score < -0.05){ vd='dn'; vt='개선'; }
+      }
+
+      const L = [];
+      if(mv) L.push(`전주 대비 <b>${mv.code}</b> ${sg(mv.d,1)}h ${mv.d>0?'증가':'감소'}`);
+      if(top.length) L.push(`금주 최다 <b>${top[0].code}</b> ${fmt(top[0].h,1)}h/${top[0].n}건`
+                            + (top[1] ? ` · ${top[1].code} ${fmt(top[1].h,1)}h/${top[1].n}건` : ''));
+      const over = [];
+      if(tM && cu.mttr > tM) over.push(`MTTR 목표 초과 ${sg(cu.mttr-tM,2)}`);
+      if(tB && cu.mtbf < tB) over.push(`MTBF 목표 미달 ${fmt(cu.mtbf-tB,2)}`);
+      if(over.length) L.push(`<b>${over.join(' · ')}</b>`);
+      if(!L.length) L.push('특이 변동 없음');
+
+      return `<div class="ic" style="border-left-color:${CAT_COLOR[c]}">
+        <div><span class="nm">${c}</span><span class="vd ${vd}">${vt}</span></div>
+        <div class="mt">MTTR ${fmt(cu.mttr,2)}${dM!==null?` (${sg(dM,2)})`:''}
+             · MTBF ${fmt(cu.mtbf,2)}${dB!==null?` (${sg(dB,2)})`:''}
+             · 로스 ${fmt(lh,1)}h${dL!==null?` (${sg(dL,1)}h)`:''} / ${rs.length}건</div>
+        <div class="is">· ${L.join('<br>· ')}</div>
+      </div>`;
+    }).join('');
+    const ib = document.getElementById('wkCatIssue');
+    if(ib) ib.innerHTML = issue;
   }
 
   /* ---------- ⑥ 계통별 증감 ---------- */
