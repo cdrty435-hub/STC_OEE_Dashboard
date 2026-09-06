@@ -636,6 +636,24 @@
   .wkc-w .bar i{display:block; height:100%; background:#c9791a;}
   .wkc-w .vl{width:118px; text-align:right; white-space:nowrap; font-family:'SFMono-Regular',Consolas,monospace; color:#33404f;}
 </style>
+
+<style>
+  /* ⑧ 로스 비용 환산 지표 */
+  .wklx{display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr 1fr; gap:7px;}
+  .wklx .c{border:1px solid #e6ebf1; border-radius:8px; padding:7px 10px; background:#fff;}
+  .wklx .c.hero{background:#14181c; border-color:#14181c;}
+  .wklx .c .k{font-family:var(--mono); font-size:9.3px; letter-spacing:.05em; color:#8a95a1; text-transform:uppercase;}
+  .wklx .c.hero .k{color:#9aa4ae;}
+  .wklx .c .v{font-size:17px; font-weight:800; color:#1f3864; margin-top:2px; letter-spacing:-.02em;}
+  .wklx .c.hero .v{color:#ff7a5c; font-size:20px;}
+  .wklx .c .v small{font-size:9.5px; font-weight:600; color:#8a95a1; margin-left:3px;}
+  .wklx .c.hero .v small{color:#9aa4ae;}
+  .wklx .c .d{font-size:9.6px; color:#6b7a8c; margin-top:3px; line-height:1.5;}
+  .wklx .c.hero .d{color:#c7ced5; font-family:'SFMono-Regular',Consolas,monospace;}
+  .wklx-note{font-size:10.5px; color:#4a5765; line-height:1.6; margin-top:7px;
+             border-left:3px solid #c9791a; padding-left:9px;}
+  .wklx-note b{color:#1f3864;}
+</style>
 </head>
 <body>
 
@@ -795,13 +813,19 @@
       </div>
 
       <div class="wk-blk">
+        <h4>⑧ 로스 비용 환산 지표<span class="wk-tgt" id="wkLxSub"></span></h4>
+        <div class="wklx" id="wkLxKpi"></div>
+        <div class="wklx-note" id="wkLxNote"></div>
+      </div>
+
+      <div class="wk-blk">
         <div class="wk-2col">
           <div>
-            <h4>⑧ 계통별 로스 증감 (전주 대비)</h4>
+            <h4>⑨ 계통별 로스 증감 (전주 대비)</h4>
             <table class="wk-t" id="wkCatTable"></table>
           </div>
           <div>
-            <h4>⑨ F-COST 손실비용 TOP 5</h4>
+            <h4>⑩ F-COST 손실비용 TOP 5</h4>
             <table class="wk-t" id="wkCostTable"></table>
           </div>
         </div>
@@ -810,11 +834,11 @@
       <div class="wk-blk">
         <div class="wk-2col">
           <div>
-            <h4>⑩ 설비등급 D·E (PM 우선 대상)</h4>
+            <h4>⑪ 설비등급 D·E (PM 우선 대상)</h4>
             <table class="wk-t" id="wkGradeTable"></table>
           </div>
           <div>
-            <h4>⑪ 특이사항 · 익주 계획</h4>
+            <h4>⑫ 특이사항 · 익주 계획</h4>
             <textarea class="wk-memo" id="wkMemo" placeholder="불가동 설비 조치 현황, PM 진행, 익주 계획 등을 입력하세요 (주차별로 저장됩니다)"></textarea>
           </div>
         </div>
@@ -4529,7 +4553,77 @@ function renderWeekly(){
       : '<div style="color:#8a95a1">해당 주차 로스 없음</div>';
   }
 
-  /* ---------- ⑧ 계통별 증감 ---------- */
+  /* ---------- ⑧ 로스 비용 환산 지표 (⑦의 계통·기간 선택을 그대로 사용) ---------- */
+  {
+    const cfg  = lxCfg();
+    const RT2  = getRates();
+    const cst  = r => r.l * (RT2[r.m] || 0);
+    let cCats2 = null;
+    try{ cCats2 = JSON.parse(localStorage.getItem('stc_wk_cost_cats')||'null'); }catch(e){}
+    if(!Array.isArray(cCats2) || !cCats2.length) cCats2 = WK_SUBS.slice();
+    const sc2  = new Set(cCats2);
+    let fw = null; try{ fw = localStorage.getItem('stc_wk_cost_from'); }catch(e){}
+    const up2  = allWeeks.slice(0, idx+1);
+    if(up2.indexOf(fw) < 0) fw = up2[0];
+    const sp2  = up2.slice(up2.indexOf(fw));
+
+    const Lsel = fails(LOSS.filter(r=>sp2.indexOf(r.w)>=0 && sc2.has(r.s)));
+    const Rsel = RUN.filter(r=>sp2.indexOf(r.w)>=0);
+    const Lall = LOSS.filter(r=>sp2.indexOf(r.w)>=0);
+    const mins = Lsel.reduce((a,r)=>a+r.l, 0);
+    const cost2= Lsel.reduce((a,r)=>a+cst(r), 0);
+    const runH = Rsel.reduce((a,r)=>a+r.r,0)/60;
+    const lsH  = Lall.reduce((a,r)=>a+r.l,0)/60;
+    const avail= (runH+lsH) > 0 ? runH/(runH+lsH)*100 : 0;
+    const days = new Set(Rsel.map(r=>r.d)).size || 1;
+    const heads= cfg.wage ? cost2/cfg.wage : 0;
+    const eaLost = mins/60*cfg.pph;
+    const F  = n => Math.round(n||0).toLocaleString('ko-KR');
+
+    const sb2 = document.getElementById('wkLxSub');
+    if(sb2) sb2.textContent = `${fw} ~ ${wk} · ${sc2.size===WK_SUBS.length?'전체 계통':[...sc2].join('+')}`
+      + ` · ${days}일 · 환산 기준 월 급여 ${F(cfg.wage)}밧 / 시간당 ${cfg.pph}개 / 1 USD ${cfg.fx} THB`;
+
+    document.getElementById('wkLxKpi').innerHTML = `
+      <div class="c hero"><div class="k">손실금액 · ${fw} ~ ${wk}</div>
+        <div class="v">${F(cost2)}<small>THB</small></div>
+        <div class="d">하루 ${F(cost2/days)} · 주차평균 ${F(cost2/sp2.length)} · 연 환산 ${F(cost2/days*365)} THB
+          <br>≈ USD ${F(cost2/(cfg.fx||1))} · ${days}일 / ${sp2.length}개 주차</div></div>
+      <div class="c"><div class="k">로스 시간</div>
+        <div class="v">${F(mins/60)}<small>시간</small></div>
+        <div class="d">${F(mins)}분 · ${cntTxt(Lsel.length)}건</div></div>
+      <div class="c"><div class="k">가동률</div>
+        <div class="v">${fmt(avail,1)}<small>%</small></div>
+        <div class="d">목표 ${cfg.availTgt}% · 격차 ${fmt(cfg.availTgt-avail,1)}%p<br>전체 로스 기준</div></div>
+      <div class="c"><div class="k">인건비 환산</div>
+        <div class="v">${fmt(heads,1)}<small>명</small></div>
+        <div class="d">작업자 한 달 급여 기준<br>(월 ${F(cfg.wage)}밧)</div></div>
+      <div class="c"><div class="k">못 만든 수량</div>
+        <div class="v">${fmt(eaLost/10000,1)}<small>만 개</small></div>
+        <div class="d">약 ${F(eaLost)}개<br>시간당 ${cfg.pph}개 기준</div></div>`;
+
+    /* 해설 : 시간과 금액이 따로 움직이면 단가가 비싼 설비의 로스라는 뜻 */
+    const wSum = w => {
+      const L = fails(LOSS.filter(r=>r.w===w && sc2.has(r.s)));
+      return { m:L.reduce((a,r)=>a+r.l,0), c:L.reduce((a,r)=>a+cst(r),0) };
+    };
+    const A = wSum(sp2[0]), B = wSum(wk);
+    const dM = B.m - A.m, dC = B.c - A.c;
+    const rate = mins ? cost2/(mins/60) : 0;
+    const note = document.getElementById('wkLxNote');
+    if(note) note.innerHTML =
+      `<b>${sp2[0]}</b> ${F(A.m)}분 / ${F(A.c)} THB → <b>${wk}</b> ${F(B.m)}분 / ${F(B.c)} THB`
+      + ` · 시간 ${dM>0?'+':''}${F(dM)}분, 비용 ${dC>0?'+':''}${F(dC)} THB`
+      + ` · 평균 <b>${F(rate)} THB/시간</b><br>`
+      + (dM > 0 && dC <= 0
+          ? '로스시간은 늘었는데 비용은 줄었습니다. 단가가 낮은 설비 위주로 로스가 났다는 뜻입니다.'
+          : dM <= 0 && dC > 0
+          ? '로스시간은 줄었는데 비용은 늘었습니다. <b>단가가 비싼 대형기에서 로스가 났다</b>는 뜻이므로 해당 설비를 먼저 보십시오.'
+          : '시간과 금액이 같은 방향으로 움직였습니다. 로스 총량 자체가 변한 것으로 보면 됩니다.')
+      + ` 같은 사건을 시간과 금액 두 단위로 잰 값이므로, 두 값이 벌어지는 주차가 곧 설비 구성이 달라진 주차입니다.`;
+  }
+
+  /* ---------- ⑨ 계통별 증감 ---------- */
   const ct = document.getElementById('wkCatTable');
   const totC = WK_SUBS.reduce((a,k)=>a+(sc[k]?sc[k].h:0),0);
   ct.innerHTML = '<thead><tr><th>계통</th><th>금주 로스</th><th>건수</th><th>전주 로스</th><th>증감</th><th>비중</th></tr></thead><tbody>'+
