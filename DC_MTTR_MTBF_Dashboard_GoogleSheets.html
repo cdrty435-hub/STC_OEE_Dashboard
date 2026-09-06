@@ -715,8 +715,8 @@
         <span class="mtbf-basis">
             <span class="mb-label">MTBF 기준</span>
             <select id="heroPptMode">
-              <option value="run">실가동시간 (현행)</option>
-              <option value="fixed">PPT 일괄</option>
+              <option value="fixed" selected>PPT 일괄 (사내 기준)</option>
+              <option value="run">실가동시간</option>
               <option value="real">실적 계획시간</option>
             </select>
             <input type="number" id="heroPptHours" value="630" step="10" title="일괄 적용할 PPT 시간">
@@ -3584,11 +3584,40 @@ document.getElementById('costRangeReset').addEventListener('click', ()=>{
 });
 document.getElementById('costCsv').addEventListener('click', costCsvDown);
 
-/* MTBF 산출 기준 변경 → 히어로 차트/KPI 재계산 */
+/* MTBF 산출 기준 변경 → 이 기준을 쓰는 모든 화면을 함께 재계산한다.
+   (예전에는 renderHero() 만 다시 그려서 주간보고·리포트·등급이 옛 기준의 숫자를 그대로 들고 있었다) */
+function mtbfBasisLabel(){
+  const md = (document.getElementById('heroPptMode')||{value:'run'}).value;
+  const ph = parseFloat((document.getElementById('heroPptHours')||{}).value) || 630;
+  return md === 'fixed' ? `PPT ${ph}h 일괄 기준`
+       : md === 'real'  ? '실적 계획시간 기준'
+       : '실가동시간 기준';
+}
+function pptPrefsSave(){
+  try{
+    localStorage.setItem('stc_ppt_mode',  (document.getElementById('heroPptMode')||{}).value || 'run');
+    localStorage.setItem('stc_ppt_hours', (document.getElementById('heroPptHours')||{}).value || '630');
+  }catch(e){}
+}
+function pptPrefsLoad(){
+  try{
+    const m = localStorage.getItem('stc_ppt_mode');
+    const h = localStorage.getItem('stc_ppt_hours');
+    const mEl = document.getElementById('heroPptMode'), hEl = document.getElementById('heroPptHours');
+    if(mEl) mEl.value = m || 'fixed';          // 사내 기준: PPT 일괄
+    if(hEl) hEl.value = h || '630';            //            630h
+    if(mEl && hEl) hEl.disabled = (mEl.value !== 'fixed');
+  }catch(e){}
+}
+function rerenderMtbfViews(){
+  [renderHero, renderWeekly, renderTrend, buildReport, renderGrade, renderDetail]
+    .forEach(fn=>{ try{ if(typeof fn === 'function') fn(); }catch(e){ console.error(e); } });
+}
 ['heroPptMode','heroPptHours'].forEach(id=>{
   const el = document.getElementById(id);
-  if (el) el.addEventListener('change', ()=>{ try{ renderHero(); }catch(e){ console.error(e); } });
+  if (el) el.addEventListener('change', ()=>{ pptPrefsSave(); rerenderMtbfViews(); });
 });
+pptPrefsLoad();
 
 
 /* ==================== 주간보고 (A4 가로 1장) ====================
@@ -3644,7 +3673,8 @@ function renderWeekly(){
   document.getElementById('wkMeta').innerHTML =
     `<b>${wk}</b> · ${cur.from} ~ ${cur.to}<br>` +
     `${au ? au + ' · ' : ''}작성일 ${new Date().toISOString().slice(0,10)}` +
-    ` · 기준 ${STD_MODE?'계획외 고장(UDT)':'전체 로스'} / 최소정지 ${MIN_STOP}분`;
+    ` · 기준 ${STD_MODE?'계획외 고장(UDT)':'전체 로스'} / 최소정지 ${MIN_STOP}분` +
+    ` · MTBF ${mtbfBasisLabel()}`;
 
   /* ---------- ① 요약 KPI ---------- */
   const K = [
@@ -3735,7 +3765,8 @@ function renderWeekly(){
   wkMtbfChart = mkBar(wkMtbfChart, 'wkMtbfChart', 'mtbf',
     x=> (tB && x.mtbf<tB) ? '#e2564dcc' : '#2e75b6cc', tB);
   document.getElementById('wkH1').textContent = `설비별 MTTR (h/건) — ${wk}` + (tM?` · 목표 ${fmt(tM,2)} 초과 적색`:'');
-  document.getElementById('wkH2').textContent = `설비별 MTBF (h/건) — ${wk}` + (tB?` · 목표 ${fmt(tB,2)} 미달 적색`:'');
+  document.getElementById('wkH2').textContent = `설비별 MTBF (h/건) — ${wk} · ${mtbfBasisLabel()}`
+    + (tB?` · 목표 ${fmt(tB,2)} 미달 적색`:'');
 
   /* ---------- ③ 주차별 추이 ---------- */
   {
