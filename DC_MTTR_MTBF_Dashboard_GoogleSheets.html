@@ -819,13 +819,18 @@
       </div>
 
       <div class="wk-blk">
+        <h4>⑨ 설비별 주차 손실금액 (THB)<span class="wk-tgt" id="wkMtxSub"></span></h4>
+        <table class="wk-t mini" id="wkMtxTable"></table>
+      </div>
+
+      <div class="wk-blk">
         <div class="wk-2col">
           <div>
-            <h4>⑨ 계통별 로스 증감 (전주 대비)</h4>
+            <h4>⑩ 계통별 로스 증감 (전주 대비)</h4>
             <table class="wk-t" id="wkCatTable"></table>
           </div>
           <div>
-            <h4>⑩ F-COST 손실비용 TOP 5</h4>
+            <h4>⑪ F-COST 손실비용 TOP 5</h4>
             <table class="wk-t" id="wkCostTable"></table>
           </div>
         </div>
@@ -834,11 +839,11 @@
       <div class="wk-blk">
         <div class="wk-2col">
           <div>
-            <h4>⑪ 설비등급 D·E (PM 우선 대상)</h4>
+            <h4>⑫ 설비등급 D·E (PM 우선 대상)</h4>
             <table class="wk-t" id="wkGradeTable"></table>
           </div>
           <div>
-            <h4>⑫ 특이사항 · 익주 계획</h4>
+            <h4>⑬ 특이사항 · 익주 계획</h4>
             <textarea class="wk-memo" id="wkMemo" placeholder="불가동 설비 조치 현황, PM 진행, 익주 계획 등을 입력하세요 (주차별로 저장됩니다)"></textarea>
           </div>
         </div>
@@ -4624,7 +4629,62 @@ function renderWeekly(){
       + ` 같은 사건을 시간과 금액 두 단위로 잰 값이므로, 두 값이 벌어지는 주차가 곧 설비 구성이 달라진 주차입니다.`;
   }
 
-  /* ---------- ⑨ 계통별 증감 ---------- */
+  /* ---------- ⑨ 설비별 주차 손실금액 매트릭스 (⑦의 계통·기간 선택 사용) ---------- */
+  {
+    const RT3 = getRates();
+    let cc = null;
+    try{ cc = JSON.parse(localStorage.getItem('stc_wk_cost_cats')||'null'); }catch(e){}
+    if(!Array.isArray(cc) || !cc.length) cc = WK_SUBS.slice();
+    const sc3 = new Set(cc);
+    let fw3 = null; try{ fw3 = localStorage.getItem('stc_wk_cost_from'); }catch(e){}
+    const up3 = allWeeks.slice(0, idx+1);
+    if(up3.indexOf(fw3) < 0) fw3 = up3[0];
+    const sp3 = up3.slice(up3.indexOf(fw3));
+
+    const L3 = fails(LOSS.filter(r=>sp3.indexOf(r.w)>=0 && sc3.has(r.s)));
+    const cel = {};                                   // cel[설비][주차] = THB
+    L3.forEach(r=>{
+      const c = r.l * (RT3[r.m] || 0);
+      (cel[r.m] = cel[r.m] || {});
+      cel[r.m][r.w] = (cel[r.m][r.w] || 0) + c;
+    });
+    const F3 = n => Math.round(n||0).toLocaleString('ko-KR');
+    const mcs = ALL_MACHINES.filter(m=>!MISSING.has(m)).sort((a,b)=>a-b);
+    const colT = {}; sp3.forEach(w=>colT[w]=0);
+    let grand = 0;
+
+    const body3 = mcs.map(m=>{
+      const row = cel[m] || {};
+      const tot = sp3.reduce((a,w)=>a+(row[w]||0), 0);
+      grand += tot;
+      sp3.forEach(w=>{ colT[w] += (row[w]||0); });
+      const mx = Math.max(...sp3.map(w=>row[w]||0), 0);
+      return `<tr class="${tot?'':'dead'}">
+        <td class="mc">DC #${m}${BROKEN.has(m)?' ⚠':''}</td>
+        <td>${MC_TYPE[m]||'-'} Ton</td>
+        <td>${(RT3[m]||0).toFixed(1)}</td>
+        ${sp3.map(w=>{
+          const v = row[w] || 0;
+          const hot = (v && v === mx && v >= grand*0.004);
+          return `<td ${hot?'style="color:#c00000;font-weight:700"':''}>${v?F3(v):'-'}</td>`;
+        }).join('')}
+        <td style="font-weight:800">${tot?F3(tot):'0'}</td></tr>`;
+    }).join('');
+
+    const sb3 = document.getElementById('wkMtxSub');
+    if(sb3) sb3.textContent = `${fw3} ~ ${wk} · ${sc3.size===WK_SUBS.length?'전체 계통':[...sc3].join('+')}`
+      + ` · 설비별 M/C Rate(THB/분) 적용 · 붉은 숫자 = 그 설비의 최대 주차`;
+
+    document.getElementById('wkMtxTable').innerHTML =
+      '<thead><tr><th>MC</th><th>Type</th><th>M/C Rate</th>'
+      + sp3.map(w=>`<th>${w}</th>`).join('') + '<th>TTL</th></tr></thead>'
+      + '<tbody>' + body3 + '</tbody>'
+      + `<tfoot><tr><td class="mc">TTL</td><td>—</td><td>—</td>`
+      + sp3.map(w=>`<td>${F3(colT[w])}</td>`).join('')
+      + `<td>${F3(grand)}</td></tr></tfoot>`;
+  }
+
+  /* ---------- ⑩ 계통별 증감 ---------- */
   const ct = document.getElementById('wkCatTable');
   const totC = WK_SUBS.reduce((a,k)=>a+(sc[k]?sc[k].h:0),0);
   ct.innerHTML = '<thead><tr><th>계통</th><th>금주 로스</th><th>건수</th><th>전주 로스</th><th>증감</th><th>비중</th></tr></thead><tbody>'+
