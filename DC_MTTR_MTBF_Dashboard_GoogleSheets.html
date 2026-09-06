@@ -566,6 +566,23 @@
     .wkw-card input.act{border:1px solid #e2e8ef;}
   }
 </style>
+
+<style>
+  /* 가동률 설명 */
+  .wk-k.clickable{cursor:pointer;}
+  .wk-k.clickable:hover{background:#fbfcfe; border-color:#c9d3de;}
+  .wk-k .info{font-family:var(--mono); font-size:9.5px; color:#8a95a1; margin-left:5px; font-weight:700;}
+  .wk-avail-note{border:1px solid #d8e3ef; background:#f6f9fc; border-radius:8px;
+                 padding:10px 13px; margin-top:8px; font-size:11.3px; line-height:1.65; color:#33404f;}
+  .wk-avail-note h5{margin:0 0 5px; font-size:11.5px; font-weight:800; color:#1f3864;}
+  .wk-avail-note table{width:100%; border-collapse:collapse; margin:6px 0 4px; font-size:10.8px;}
+  .wk-avail-note th{background:#e8eef6; color:#1f3864; padding:4px 6px; text-align:left; font-weight:700;}
+  .wk-avail-note td{padding:4px 6px; border-bottom:1px solid #e3eaf2;}
+  .wk-avail-note td.n{text-align:right; font-family:'SFMono-Regular',Consolas,monospace;}
+  .wk-avail-note .fx{font-family:'SFMono-Regular',Consolas,monospace; color:#1f3864;}
+  .wk-avail-note .cls{float:right; border:none; background:none; cursor:pointer; color:#7a8698; font-size:11px;}
+  @media print{ .wk-avail-note{display:none !important;} .wk-k .info{display:none;} }
+</style>
 </head>
 <body>
 
@@ -660,6 +677,7 @@
       <div class="wk-blk">
         <h4>① 주간 요약</h4>
         <div class="wk-kpi" id="wkKpi"></div>
+        <div class="wk-avail-note" id="wkAvailNote" style="display:none;"></div>
         <div class="wk-verdict" id="wkVerdict"></div>
       </div>
 
@@ -3731,9 +3749,50 @@ function renderWeekly(){
     ['로스시간 / 고장횟수', fmt(cur.lossH,1), 'h / '+cntTxt(cur.cnt)+'건', wkDelta(cur.lossH, prv&&prv.lossH, false, 1, 'h')],
     ['F-COST 손실비용', Math.round(cur.cost).toLocaleString(), 'THB', wkDelta(cur.cost, prv&&prv.cost, false, 0, '')]
   ];
-  document.getElementById('wkKpi').innerHTML = K.map(k=>
-    `<div class="wk-k"><div class="l">${k[0]}</div>
+  document.getElementById('wkKpi').innerHTML = K.map((k,i)=>
+    `<div class="wk-k${i===2?' clickable" id="wkAvailCard':''}"><div class="l">${k[0]}${i===2?'<span class="info">ⓘ 계산식</span>':''}</div>
        <div class="v">${k[1]}<span class="u">${k[2]}</span></div>${k[3]}</div>`).join('');
+
+  /* 가동률 계산식 설명 — OEE 가동률과 왜 다른지 */
+  {
+    const R    = RUN.filter(r=>r.w===wk);
+    const lall = LOSS.filter(r=>r.w===wk);
+    const runH = R.reduce((a,x)=>a+x.r,0)/60;
+    const lsH  = lall.reduce((a,x)=>a+x.l,0)/60;
+    const plnH = R.reduce((a,x)=>a+(x.p||0),0)/60;          // 시트 계획시간_분 합계 = PPT
+    const availRep = (runH+lsH)>0 ? runH/(runH+lsH)*100 : 0;
+    const availPpt = plnH>0 ? runH/plnH*100 : null;
+    const gap  = (availPpt!==null) ? availRep-availPpt : null;
+    const note = document.getElementById('wkAvailNote');
+    if(note) note.innerHTML =
+      `<button class="cls" onclick="document.getElementById('wkAvailNote').style.display='none'">닫기 ✕</button>
+       <h5>이 보고서의 가동률과 OEE 가동률은 분모가 다릅니다</h5>
+       <div>· <b>주간보고 가동률</b> = <span class="fx">가동시간 ÷ (가동시간 + 로스시간)</span>
+            — 실제로 기록된 가동·로스 시간만으로 계산합니다. 로스로 기록되지 않은 시간은 분모에 들어가지 않습니다.</div>
+       <div>· <b>OEE 가동률</b> = <span class="fx">가동시간 ÷ 계획생산시간(PPT)</span>
+            — 분모가 계획시간 전체입니다. 계획시간 중 가동·로스 어디에도 기록되지 않은 시간이 있으면 그만큼 낮게 나옵니다.</div>
+       <table>
+         <tr><th>구분</th><th style="text-align:right">시간</th><th style="text-align:right">가동률</th></tr>
+         <tr><td>가동시간</td><td class="n">${fmt(runH,1)} h</td><td class="n">–</td></tr>
+         <tr><td>로스시간 (전체 로스 기준)</td><td class="n">${fmt(lsH,1)} h</td><td class="n">–</td></tr>
+         <tr><td><b>주간보고 기준</b> (가동+로스)</td><td class="n">${fmt(runH+lsH,1)} h</td>
+             <td class="n"><b>${fmt(availRep,1)}%</b></td></tr>
+         <tr><td>계획생산시간 PPT (시트 계획시간_분)</td><td class="n">${plnH>0?fmt(plnH,1)+' h':'기록 없음'}</td>
+             <td class="n">${availPpt!==null?'<b>'+fmt(availPpt,1)+'%</b>':'–'}</td></tr>
+       </table>
+       ${gap!==null
+          ? `<div>· 두 값의 차이 <b>${fmt(Math.abs(gap),1)}%p</b> — 계획시간 ${fmt(plnH,1)}h 중
+               <b>${fmt(Math.max(plnH-runH-lsH,0),1)}h</b> 가 가동·로스 어느 쪽으로도 기록되지 않았기 때문입니다.
+               (식사·교대·조회 등 계획정지가 로스로 입력되지 않은 경우)</div>`
+          : `<div>· 이 주차에는 시트에 계획시간_분 기록이 없어 OEE 기준 값을 산출할 수 없습니다.</div>`}
+       <div>· 가동률은 카테고리(금형/설비/관리)나 UDT 기준과 상관없이 <b>항상 전체 로스</b>로 계산합니다.
+             MTTR·MTBF만 상단 기준 설정의 영향을 받습니다.</div>`;
+    const card = document.getElementById('wkAvailCard');
+    if(card) card.onclick = ()=>{
+      const n = document.getElementById('wkAvailNote');
+      n.style.display = (n.style.display === 'none') ? 'block' : 'none';
+    };
+  }
 
   /* ---------- 자동 코멘트 ---------- */
   const mcs   = mcStats(wk);
@@ -3787,12 +3846,41 @@ function renderWeekly(){
   const rows = ALL_MACHINES.map(m=>mcs[m]).filter(x=>x && x.cnt>0);
   const labels = rows.map(x=>'DC'+x.m);
   const HAS_DL = (typeof ChartDataLabels !== 'undefined');
+  /* 목표선(점선 + 라벨)을 막대차트에 직접 그리는 소형 플러그인 */
+  const wkTgtLinePlugin = {
+    id:'wkTgtLine',
+    afterDatasetsDraw(chart, args, opts){
+      const v = opts && opts.value;
+      if(!v || isNaN(v)) return;
+      const y = chart.scales.y; if(!y) return;
+      if(v < y.min || v > y.max) return;
+      const {ctx, chartArea:{left, right}} = chart;
+      const py = y.getPixelForValue(v);
+      ctx.save();
+      ctx.setLineDash([5,3]); ctx.lineWidth = 1.3;
+      ctx.strokeStyle = opts.color || '#c00000';
+      ctx.beginPath(); ctx.moveTo(left, py); ctx.lineTo(right, py); ctx.stroke();
+      ctx.setLineDash([]);
+      const txt = opts.label || ('목표 ' + v);
+      ctx.font = "700 8.5px 'SFMono-Regular', Consolas, monospace";
+      const w = ctx.measureText(txt).width + 8;
+      const bx = right - w, by = Math.max(py - 11, 1);
+      ctx.fillStyle = opts.color || '#c00000';
+      ctx.beginPath(); ctx.roundRect(bx, by, w, 11, 3); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle';
+      ctx.fillText(txt, bx + 4, by + 6);
+      ctx.restore();
+    }
+  };
+
   const mkBar = (ref, id, key, colorFn, tgt)=>{
     const ctx = document.getElementById(id); if(!ctx) return null;
     if(ref) ref.destroy();
     const ds = [{ data: rows.map(x=>+x[key].toFixed(2)),
                   backgroundColor: rows.map(colorFn), borderWidth:0, barPercentage:.82 }];
+    const tgtColor = (key === 'mttr') ? '#c00000' : '#2e75b6';
     return new Chart(ctx, { type:'bar', data:{labels:labels, datasets:ds},
+      plugins:[wkTgtLinePlugin],
       options:{ responsive:true, maintainAspectRatio:false, animation:false,
         layout:{ padding:{ top:26 } },                 // 세로 값 라벨이 잘리지 않도록
         plugins:{ legend:{display:false},
@@ -3803,9 +3891,12 @@ function renderWeekly(){
                              return (c.indexOf('e2564d')>=0) ? '#c00000' : '#33404f'; },
             font:{ size:7.5, weight:'700', family:"'SFMono-Regular', Consolas, monospace" },
             formatter: v => (v>0 ? fmt(v,2) : '') } : undefined,
-          annotation: undefined },
+          annotation: undefined,
+          wkTgtLine: { value: tgt, color: tgtColor,
+                       label: `목표 ${tgt?fmt(tgt,2):''}` } },
         scales:{ x:{ ticks:{font:{size:8}, maxRotation:90, minRotation:90}, grid:{display:false} },
-                 y:{ beginAtZero:true, ticks:{font:{size:9}}, grid:{color:'#eef2f7'} } } } });
+                 y:{ beginAtZero:true, suggestedMax: tgt ? tgt*1.15 : undefined,
+                     ticks:{font:{size:9}}, grid:{color:'#eef2f7'} } } } });
   };
   wkMttrChart = mkBar(wkMttrChart, 'wkMttrChart', 'mttr',
     x=> (tM && x.mttr>tM) ? '#e2564dcc' : x.mttr>2 ? '#e8a33dcc' : '#34c98ecc', tM);
