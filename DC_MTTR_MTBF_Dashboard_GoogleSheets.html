@@ -555,6 +555,7 @@
   .wk-issue .ic .vd.up{background:#fdeceb; color:#c00000;}
   .wk-issue .ic .vd.dn{background:#e8f6ef; color:#1d7d60;}
   .wk-issue .ic .vd.flat{background:#eef2f7; color:#5a6674;}
+  .wk-issue .ic .is li:first-child, .wk-issue .ic .is div:first-child{color:#1f3864;}
   .wk-issue .ic .mt{font-family:'SFMono-Regular',Consolas,monospace; font-size:10.3px; color:#33404f; margin-top:3px;}
   .wk-issue .ic .is{font-size:10.5px; color:#4a5765; line-height:1.5; margin-top:3px;}
   .wk-issue .ic .is b{color:#1f3864;}
@@ -4655,18 +4656,32 @@ function renderWeekly(){
       const top  = topCodes(rs, 2);
       const mv   = dlt(rs, ps).filter(x=>Math.abs(x.d) >= 0.5)[0] || null;
 
-      /* 판정 : 전주 대비 변화율로 본다 (MTTR 상승 = 악화 / MTBF 상승 = 개선)
-         두 지표가 반대로 움직이면 변화율이 큰 쪽을 따른다 */
-      let vd = 'flat', vt = '보합';
+      /* 판정 : MTTR(수리시간)과 MTBF(고장간격) 두 지표를 함께 본다.
+         MTTR 상승 = 악화 / MTBF 하락 = 악화. 둘이 반대로 움직이면 '혼조'로 표기하고
+         어느 지표가 판정을 끌었는지 카드에 그대로 적는다. */
+      let vd = 'flat', vt = '보합', why = '';
       if(pv){
         const pM = pv.mttr ? (cu.mttr - pv.mttr)/pv.mttr : 0;
         const pB = pv.mtbf ? (cu.mtbf - pv.mtbf)/pv.mtbf : 0;
-        const score = pM - pB;                    // 양수면 악화 쪽
-        if(score >  0.05){ vd='up'; vt='악화'; }
-        else if(score < -0.05){ vd='dn'; vt='개선'; }
+        const TH = 0.03;
+        const mBad = pM >  TH, mGood = pM < -TH;   // 수리시간
+        const bBad = pB < -TH, bGood = pB >  TH;   // 고장간격
+        const pc = v => (v>0?'+':'') + (v*100).toFixed(0) + '%';
+        const bad = [], good = [];
+        if(mBad)  bad.push(`MTTR ${pc(pM)} (수리시간 길어짐)`);
+        if(bBad)  bad.push(`MTBF ${pc(pB)} (고장 간격 짧아짐)`);
+        if(mGood) good.push(`MTTR ${pc(pM)} (수리시간 단축)`);
+        if(bGood) good.push(`MTBF ${pc(pB)} (고장 간격 길어짐)`);
+        if(bad.length && !good.length){ vd='up'; vt='악화'; }
+        else if(good.length && !bad.length){ vd='dn'; vt='개선'; }
+        else if(bad.length && good.length){ vd = (pM - pB > 0) ? 'up' : 'dn'; vt='혼조'; }
+        why = bad.length || good.length
+          ? `판정 근거 — ${bad.concat(good).join(' / ')}`
+          : `판정 근거 — MTTR ${pc(pM)} · MTBF ${pc(pB)} (둘 다 ±3% 이내)`;
       }
 
       const L = [];
+      if(why) L.push(why);
       if(mv) L.push(`전주 대비 <b>${mv.code}</b> ${sg(mv.d,1)}h ${mv.d>0?'증가':'감소'}`);
       if(top.length) L.push(`금주 최다 <b>${top[0].code}</b> ${fmt(top[0].h,1)}h/${top[0].n}건`
                             + (top[1] ? ` · ${top[1].code} ${fmt(top[1].h,1)}h/${top[1].n}건` : ''));
