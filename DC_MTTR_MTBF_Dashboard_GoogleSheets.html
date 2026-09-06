@@ -4421,12 +4421,15 @@ function renderWeekly(){
     const fn = document.getElementById('wkCostFilterNote');
     if(fn) fn.textContent = allCat ? '전체 계통 기준' : `선택 계통만 집계 — ${[...selCats].join(' · ')}`;
 
+    const catList = WK_SUBS.filter(s=>selCats.has(s));      // 표시 순서 고정
     const perW = span.map(w=>{
       const L = fails(LOSS.filter(r=>r.w===w)).filter(inCat);
       const R = RUN.filter(r=>r.w===w);
       const runH = R.reduce((a,x)=>a+x.r,0)/60;
       const lsH  = LOSS.filter(r=>r.w===w).reduce((a,x)=>a+x.l,0)/60;   // 가동률은 항상 전체 로스
-      return { w:w, h:L.reduce((a,x)=>a+x.l,0)/60, thb:L.reduce((a,x)=>a+cost(x),0),
+      const hByCat = {};
+      catList.forEach(c=>{ hByCat[c] = L.filter(r=>r.s===c).reduce((a,x)=>a+x.l,0)/60; });
+      return { w:w, h:L.reduce((a,x)=>a+x.l,0)/60, thb:L.reduce((a,x)=>a+cost(x),0), hByCat:hByCat,
                avail:(runH+lsH)>0 ? runH/(runH+lsH)*100 : 0, days:new Set(R.map(x=>x.d)).size||1 };
     });
     const c0 = perW[perW.length-1] || {h:0,thb:0,avail:0,days:7};
@@ -4454,17 +4457,24 @@ function renderWeekly(){
       const el = document.getElementById('wkCostTrendChart');
       if(el){
         if(wkCostTrendChart) wkCostTrendChart.destroy();
-        const mxH = Math.max(...perW.map(x=>x.h), 0);
+        const mxH = Math.max(...perW.map(x=>x.h), 0);   // 누적 막대이므로 주차 합계 기준
         const mxC = Math.max(...perW.map(x=>x.thb), 0);
         wkCostTrendChart = new Chart(el, {
           data:{ labels: span, datasets:[
-            { type:'bar', label:'로스시간 (h)', data: perW.map(x=>+x.h.toFixed(1)),
-              backgroundColor: span.map(w=>w===wk?'#c9791a':'#e8c79a'), yAxisID:'y', order:2,
-              datalabels:{ display:v=>v.dataset.data[v.dataIndex]>0,   // 막대 안쪽 위에 로스시간
-                anchor:'start', align:'top', offset:2, clamp:true, color:'#6b4d18',
-                textStrokeColor:'#ffffff', textStrokeWidth:2.5,
-                font:{size:8.5, weight:'700', family:"'SFMono-Regular', Consolas, monospace"},
-                formatter:v=>fmt(v,1) } },
+            /* 계통별로 색을 나눠 누적 막대로 쌓는다 (색은 다른 차트의 계통 색과 동일) */
+            ...catList.map(c=>({
+              type:'bar', label:c, stack:'loss', yAxisID:'y', order:2,
+              data: perW.map(x=>+(x.hByCat[c]||0).toFixed(1)),
+              backgroundColor: CAT_COLOR[c] || '#9db8d2',
+              borderColor: span.map(w=>w===wk ? '#1f3864' : 'rgba(0,0,0,0)'),
+              borderWidth: span.map(w=>w===wk ? 1.6 : 0),
+              datalabels:{                                  // 조각이 충분히 클 때만 안쪽에 표기
+                display:v=>v.dataset.data[v.dataIndex] >= mxH*0.09,
+                anchor:'center', align:'center', color:'#ffffff',
+                textStrokeColor:'rgba(0,0,0,.35)', textStrokeWidth:2,
+                font:{size:8, weight:'700', family:"'SFMono-Regular', Consolas, monospace"},
+                formatter:v=>fmt(v,0) }
+            })),
             { type:'line', label:'손실비용 (THB)', data: perW.map(x=>Math.round(x.thb)),
               borderColor:'#1f3864', backgroundColor:'#1f3864', borderWidth:2, tension:.25,
               pointRadius: span.map(w=>w===wk?4:2), yAxisID:'y1', order:1,
@@ -4477,10 +4487,10 @@ function renderWeekly(){
           options:{ responsive:true, maintainAspectRatio:false, animation:false,
             layout:{ padding:{ top:16 } },
             plugins:{ legend:{display:true, labels:{boxWidth:9, font:{size:8.5}, usePointStyle:true}} },
-            scales:{ x:{ ticks:{font:{size:8}}, grid:{display:false} },
+            scales:{ x:{ stacked:true, ticks:{font:{size:8}}, grid:{display:false} },
                      /* 좌우 축을 같은 비율로 맞추면 막대와 선이 겹쳐 읽기 어렵다.
                         막대는 아래 65%, 선은 위쪽에 놓이도록 각 축 상한을 따로 잡는다. */
-                     y:{ beginAtZero:true, max: mxH ? Math.ceil(mxH/0.65/10)*10 : undefined,
+                     y:{ stacked:true, beginAtZero:true, max: mxH ? Math.ceil(mxH/0.65/10)*10 : undefined,
                          ticks:{font:{size:8}, maxTicksLimit:5},
                          title:{display:true, text:'로스시간 (h)', font:{size:8}} },
                      y1:{ beginAtZero:true, position:'right', grid:{drawOnChartArea:false},
