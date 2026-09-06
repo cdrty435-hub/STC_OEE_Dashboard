@@ -4705,17 +4705,18 @@ function renderWeekly(){
     };
 
     const sub = document.getElementById('wkDownSub');
-    if(sub) sub.textContent = `${wk} 기준 ${list.length}대 · 문제점·진행사항은 주차별로 저장됩니다`;
+    if(sub) sub.textContent = `${wk} 기준 ${list.length}대 · 문제점·진행사항·계획은 주차별로 저장됩니다`;
 
     dt.innerHTML = list.length
-      ? '<thead><tr><th style="width:58px">설비</th><th style="width:52px">Ton</th>'
-        + '<th style="width:96px">최종 가동</th><th style="width:84px">상태</th>'
-        + '<th>문제점</th><th>진행사항</th><th style="width:90px">담당</th>'
-        + '<th style="width:96px">복구 예정</th><th class="delcol" style="width:44px">삭제</th></tr></thead><tbody>'
+      ? '<thead><tr><th style="width:54px">설비</th><th style="width:44px">Ton</th>'
+        + '<th style="width:84px">최종 가동</th><th style="width:76px">상태</th>'
+        + '<th>문제점</th><th>진행사항</th><th>계획</th><th style="width:74px">담당</th>'
+        + '<th style="width:112px">복구 예정</th><th class="delcol" style="width:40px">삭제</th></tr></thead><tbody>'
         + list.map(m=>{
             const lr = lastRunWeek(m);
             const stv = notes['dnSt'+m] || (BROKEN.has(m) ? '불가동' : '수리중');
             const done = (stv === '복구 완료');
+            const eta = notes['dnEm'+m] || 'date';      // 복구 예정: 날짜 지정 / 미정
             return `<tr class="${done?'':'bad'}">
               <td class="mc">DC${m}</td>
               <td>${MC_TYPE[m]||'-'}</td>
@@ -4725,8 +4726,17 @@ function renderWeekly(){
                     ST.map(s=>`<option value="${s}"${s===stv?' selected':''}>${s}</option>`).join('')}</select></td>
               <td><input data-note="dnPb${m}" value="${esc(notes['dnPb'+m])}" placeholder="고장 내용 / 원인"></td>
               <td><input data-note="dnPr${m}" value="${esc(notes['dnPr'+m])}" placeholder="조치 진행 상황"></td>
+              <td><input data-note="dnPl${m}" value="${esc(notes['dnPl'+m])}" placeholder="향후 계획 / 대책"></td>
               <td><input data-note="dnOw${m}" value="${esc(notes['dnOw'+m])}" placeholder="담당"></td>
-              <td><input type="date" data-note="dnEt${m}" value="${esc(notes['dnEt'+m])}"></td>
+              <td>
+                <select data-note="dnEm${m}" style="margin-bottom:3px">
+                  <option value="date"${eta!=='미정'?' selected':''}>날짜 지정</option>
+                  <option value="미정"${eta==='미정'?' selected':''}>미정</option>
+                </select>
+                ${eta==='미정'
+                  ? '<div style="text-align:center;color:#c00000;font-weight:700;font-size:10.5px">미정</div>'
+                  : `<input type="date" data-note="dnEt${m}" value="${esc(notes['dnEt'+m])}">`}
+              </td>
               <td class="delcol"><button type="button" class="del" data-del="${m}">삭제</button></td></tr>`;
           }).join('') + '</tbody>'
       : '<tr><td class="l" style="color:#5a6674">등록된 불가동 설비가 없습니다. 위에서 설비를 추가하세요.</td></tr>';
