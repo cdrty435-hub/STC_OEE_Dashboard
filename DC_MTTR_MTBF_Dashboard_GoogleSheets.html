@@ -4454,6 +4454,8 @@ function renderWeekly(){
       const el = document.getElementById('wkCostTrendChart');
       if(el){
         if(wkCostTrendChart) wkCostTrendChart.destroy();
+        const mxH = Math.max(...perW.map(x=>x.h), 0);
+        const mxC = Math.max(...perW.map(x=>x.thb), 0);
         wkCostTrendChart = new Chart(el, {
           data:{ labels: span, datasets:[
             { type:'bar', label:'로스시간 (h)', data: perW.map(x=>+x.h.toFixed(1)),
@@ -4476,10 +4478,15 @@ function renderWeekly(){
             layout:{ padding:{ top:16 } },
             plugins:{ legend:{display:true, labels:{boxWidth:9, font:{size:8.5}, usePointStyle:true}} },
             scales:{ x:{ ticks:{font:{size:8}}, grid:{display:false} },
-                     y:{ beginAtZero:true, grace:'10%', ticks:{font:{size:8}}, title:{display:true,text:'h',font:{size:8}} },
+                     /* 좌우 축을 같은 비율로 맞추면 막대와 선이 겹쳐 읽기 어렵다.
+                        막대는 아래 65%, 선은 위쪽에 놓이도록 각 축 상한을 따로 잡는다. */
+                     y:{ beginAtZero:true, max: mxH ? Math.ceil(mxH/0.65/10)*10 : undefined,
+                         ticks:{font:{size:8}, maxTicksLimit:5},
+                         title:{display:true, text:'로스시간 (h)', font:{size:8}} },
                      y1:{ beginAtZero:true, position:'right', grid:{drawOnChartArea:false},
-                          ticks:{font:{size:8}, callback:v=>Math.round(v/1000)+'k'},
-                          title:{display:true,text:'THB',font:{size:8}} } } }
+                          max: mxC ? Math.ceil(mxC/0.97/10000)*10000 : undefined,
+                          ticks:{font:{size:8}, maxTicksLimit:5, callback:v=>Math.round(v/1000)+'k'},
+                          title:{display:true, text:'손실비용 (THB)', font:{size:8}} } } }
         });
       }
     }
