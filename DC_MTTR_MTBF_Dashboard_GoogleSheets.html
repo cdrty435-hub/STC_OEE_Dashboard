@@ -534,13 +534,13 @@
 </style>
 
 <style>
-  /* 리포트 워스트 카드용 컴팩트 SWOT */
-  .rep-swot{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:10px;}
-  .rep-swot .swot-cell{padding:7px 9px; font-size:11.5px; line-height:1.45;}
-  .rep-swot .swot-cell .swot-label{font-size:10px; margin-bottom:3px; letter-spacing:.05em;}
-  .rep-swot .swot-cell ul{padding-left:13px; margin:0; color:#3d4a59;}
-  .rep-swot .swot-cell ul li{margin-bottom:2px;}
-  @media(max-width:1100px){ .rep-swot{grid-template-columns:1fr;} }
+  /* 탭1 원인분석 워스트3 */
+  .hw-wrap{margin-top:16px; border-top:1px solid var(--border-soft); padding-top:14px;}
+  .hw-head{display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:4px;}
+  .hw-head h3{font-size:13.5px; margin:0; font-weight:800;}
+  .hw-head .hw-sub{font-size:12px; color:var(--text-faint);}
+  .hw-band{font-family:var(--mono); font-size:11.5px; letter-spacing:.08em; color:var(--text-faint);
+           margin:12px 0 2px; text-transform:uppercase;}
 </style>
 </head>
 <body>
@@ -747,6 +747,14 @@
           </div>
         </div>
         <div id="heroAnalysisPanel" class="analysis-panel" style="display:none;"></div>
+
+        <div class="hw-wrap">
+          <div class="hw-head">
+            <h3>원인분석 워스트 3</h3>
+            <span class="hw-sub" id="heroWorstSub"></span>
+          </div>
+          <div id="heroWorstBox"></div>
+        </div>
       </div>
 
       <div class="kpi-grid">
@@ -2288,51 +2296,6 @@ function buildReport(){
     const good = goodUp ? d>0 : d<0;
     return ` <span class="${good?'rep-good':'rep-bad'}">${d>0?'▲':'▼'}${Math.abs(d).toFixed(2)}</span>`;
   };
-  /* --- 워스트 설비 SWOT (탭1 막대클릭 패널에 있던 분석을 이쪽으로 옮김) --- */
-  const validAll  = Object.values(cur).filter(x=>x.cnt>0);
-  const avgMttrR  = validAll.reduce((a,x)=>a+x.mttr,0)/(validAll.length||1);
-  const avgMtbfR  = validAll.reduce((a,x)=>a+x.mtbf,0)/(validAll.length||1);
-  const mttrOrder = [...validAll].sort((a,b)=>b.mttr-a.mttr).map(x=>x.m);   // 큰 순 = 나쁜 순
-  const mtbfOrder = [...validAll].sort((a,b)=>a.mtbf-b.mtbf).map(x=>x.m);   // 작은 순 = 나쁜 순
-  const repSwot = (x, kind, t, p)=>{
-    const S=[], W=[], O=[], T=[];
-    const totH = x.rows.reduce((a,r)=>a+r.l,0)/60;
-    const top  = t[0];
-    const topPct = (top && totH) ? top.h/totH*100 : 0;
-    const rkMttr = mttrOrder.indexOf(x.m)+1, rkMtbf = mtbfOrder.indexOf(x.m)+1;
-
-    if(x.mttr <= avgMttrR) S.push(`MTTR ${fmt(x.mttr,2)} — 전체 평균 ${fmt(avgMttrR,2)} 이하`);
-    if(x.mtbf >= avgMtbfR) S.push(`MTBF ${fmt(x.mtbf,2)} — 전체 평균 ${fmt(avgMtbfR,2)} 이상`);
-    if(p && kind==='MTTR' && x.mttr < p.mttr) S.push(`전주 ${fmt(p.mttr,2)} → ${fmt(x.mttr,2)} 로 단축`);
-    if(p && kind==='MTBF' && x.mtbf > p.mtbf) S.push(`전주 ${fmt(p.mtbf,2)} → ${fmt(x.mtbf,2)} 로 개선`);
-    if(!S.length) S.push('금주 기준 평균 대비 강점 없음');
-
-    if(x.mttr > avgMttrR) W.push(`MTTR ${fmt(x.mttr,2)} — 평균 ${fmt(avgMttrR,2)} 초과 (수리 장시간)`);
-    if(x.mtbf < avgMtbfR) W.push(`MTBF ${fmt(x.mtbf,2)} — 평균 ${fmt(avgMtbfR,2)} 미만 (빈발 고장)`);
-    if(targetMTTR && x.mttr > targetMTTR) W.push(`MTTR 목표 ${fmt(targetMTTR,2)} 대비 +${fmt(x.mttr-targetMTTR,2)}`);
-    if(targetMTBF && x.mtbf < targetMTBF) W.push(`MTBF 목표 ${fmt(targetMTBF,2)} 대비 ${fmt(x.mtbf-targetMTBF,2)}`);
-    if(!W.length) W.push('금주 기준 뚜렷한 약점 없음');
-
-    if(top) O.push(`'${top.code}' 항목이 로스의 ${topPct.toFixed(0)}%(${fmt(top.h,1)}h) — 우선 개선 시 효과 최대`);
-    if(t.length>1) O.push(`상위 ${Math.min(t.length,3)}개 항목 집중 시 ${fmt(t.slice(0,3).reduce((a,c)=>a+c.h,0),1)}h 개선 여지`);
-    O.push(`고장 ${cntTxt(x.cnt)}건 · ${top?top.s:'-'} 계통 재발방지 항목으로 PM 반영 검토`);
-
-    if(BROKEN.has(x.m)) T.push('현재 고장·가동중단 — 복구 전까지 생산손실 지속');
-    if(rkMttr>0 && rkMttr<=3) T.push(`MTTR 워스트 ${rkMttr}위 — 라인 가동률 직접 영향`);
-    if(rkMtbf>0 && rkMtbf<=3) T.push(`MTBF 워스트 ${rkMtbf}위 — 고장 간격 짧아 재발 위험`);
-    if(p && kind==='MTTR' && x.mttr > p.mttr*1.1) T.push(`전주 대비 MTTR ${fmt(x.mttr-p.mttr,2)} 악화 — 추세 확인 필요`);
-    if(p && kind==='MTBF' && x.mtbf < p.mtbf*0.9) T.push(`전주 대비 MTBF ${fmt(x.mtbf-p.mtbf,2)} 악화 — 추세 확인 필요`);
-    if(!T.length) T.push('즉각적 위협 요인 없음');
-
-    const li = a => a.slice(0,3).map(s=>`<li>${s}</li>`).join('');
-    return `<div class="rep-swot">
-      <div class="swot-cell swot-s"><span class="swot-label">STRENGTH</span><ul>${li(S)}</ul></div>
-      <div class="swot-cell swot-w"><span class="swot-label">WEAKNESS</span><ul>${li(W)}</ul></div>
-      <div class="swot-cell swot-o"><span class="swot-label">OPPORTUNITY</span><ul>${li(O)}</ul></div>
-      <div class="swot-cell swot-t"><span class="swot-label">THREAT</span><ul>${li(T)}</ul></div>
-    </div>`;
-  };
-
   const card=(x,rank,kind)=>{
     const t = topCodes(x.rows,3);
     const p = prev&&prev[x.m]&&prev[x.m].cnt>=1 ? prev[x.m] : null;
@@ -2344,7 +2307,6 @@ function buildReport(){
       <div class="mc">DC${x.m}</div>
       <div class="val">${v}<br>로스 ${fmt(x.lossH,1)}h · ${cntTxt(x.cnt)}건 · 가동 ${fmt(x.runH,1)}h · 가동률 ${fmt(x.avail,1)}%</div>
       <ul>${t.map(c=>`<li>${c.code} <span style="color:#5a6674">(${c.s})</span> — ${fmt(c.h,1)}h / ${c.n}건</li>`).join('')}</ul>
-      ${repSwot(x, kind, t, p)}
     </div>`;
   };
   const up = deltas.filter(d=>d.d>0).slice(0,5), dn = deltas.filter(d=>d.d<0).slice(0,5);
@@ -5134,6 +5096,91 @@ document.getElementById('histAiBtn').addEventListener('click', async function(){
   });
   const pane = document.getElementById('tab-history');
   if(pane && pane.classList.contains('show')) histLoad(false);
+})();
+
+/* ===== 탭1 : 선택 주차·카테고리 기준 원인분석 워스트 3 =====
+   막대 클릭 패널의 SWOT 대신, MTTR/MTBF 워스트 3대의 원인(로스유형)을 상시 표시한다. */
+function renderHeroWorst(){
+  const box = document.getElementById('heroWorstBox');
+  const sub = document.getElementById('heroWorstSub');
+  if(!box) return;
+
+  const lossByM = {}, rowsByM = {};
+  (lastHeroLoss||[]).forEach(r=>{
+    lossByM[r.m] = (lossByM[r.m]||0) + r.l/60;
+    (rowsByM[r.m] = rowsByM[r.m] || []).push(r);
+  });
+
+  const all = (lastHeroRows||[]).filter(r=>r.cnt>0).map(r=>{
+    const lH = lossByM[r.m] || 0;
+    return { m:r.m, mttr:r.mttr, mtbf:r.mtbf, cnt:r.cnt, runH:r.runH, lossH:lH,
+             avail:(r.runH+lH)>0 ? r.runH/(r.runH+lH)*100 : 0,
+             rows: rowsByM[r.m] || [] };
+  });
+  if(!all.length){
+    box.innerHTML = '<div style="font-size:12.5px;color:#7a8698;padding:6px 2px;">선택한 주차·카테고리에 로스 데이터가 없습니다.</div>';
+    if(sub) sub.textContent = '';
+    return;
+  }
+
+  /* 표본이 너무 적은 설비는 제외하되, 대상이 3대 미만이면 전체에서 뽑는다 */
+  let pool = all.filter(r=>r.cnt >= MIN_N);
+  const filtered = pool.length >= 3;
+  if(!filtered) pool = all;
+
+  const wMttr = [...pool].sort((a,b)=>b.mttr-a.mttr).slice(0,3);
+  const wMtbf = [...pool].sort((a,b)=>a.mtbf-b.mtbf).slice(0,3);
+
+  const scope = selectedWeeks.size === allWeeks.length
+    ? '전체 주차'
+    : Array.from(selectedWeeks).sort((a,b)=>weekNum(a)-weekNum(b)).join(', ');
+  if(sub) sub.textContent = `${scope} · ${heroCat==='ALL'?'전체 로스':heroCat} 기준`
+    + (filtered ? ` · 고장 ${MIN_N}건 이상 설비 대상` : ' · 표본 부족으로 전체 설비 대상')
+    + ` · MTBF ${mtbfBasisLabel()}`;
+
+  const card = (x, rank, kind)=>{
+    const t = topCodes(x.rows, 3);
+    const totH = x.lossH || t.reduce((a,c)=>a+c.h,0);
+    const val = kind==='MTTR'
+      ? `MTTR <b>${fmt(x.mttr,2)}</b> h/건`
+      : `MTBF <b>${fmt(x.mtbf,2)}</b> h/건`;
+    const tgt = kind==='MTTR'
+      ? (targetMTTR ? (x.mttr>targetMTTR
+          ? ` <span class="rep-bad">목표 ${fmt(targetMTTR,2)} 대비 +${fmt(x.mttr-targetMTTR,2)}</span>`
+          : ` <span class="rep-good">목표 달성</span>`) : '')
+      : (targetMTBF ? (x.mtbf<targetMTBF
+          ? ` <span class="rep-bad">목표 ${fmt(targetMTBF,2)} 대비 ${fmt(x.mtbf-targetMTBF,2)}</span>`
+          : ` <span class="rep-good">목표 달성</span>`) : '');
+    const li = t.length
+      ? t.map(c=>{
+          const pct = totH ? (c.h/totH*100) : 0;
+          return `<li>${c.code} <span style="color:#5a6674">(${c.s})</span> — ${fmt(c.h,1)}h / ${c.n}건`
+               + ` <b style="color:#c9791a">${pct.toFixed(0)}%</b></li>`;
+        }).join('')
+      : '<li>로스유형 데이터 없음</li>';
+    return `<div class="rep-card">
+      <div class="rk">${kind} 워스트 ${rank}${BROKEN.has(x.m)?' <span style="color:#d13a30">· 가동중단</span>':''}</div>
+      <div class="mc">DC${x.m}</div>
+      <div class="val">${val}${tgt}<br>로스 ${fmt(x.lossH,1)}h · ${cntTxt(x.cnt)}건 · 가동 ${fmt(x.runH,1)}h · 가동률 ${fmt(x.avail,1)}%</div>
+      <ul>${li}</ul>
+    </div>`;
+  };
+
+  box.innerHTML =
+    `<div class="hw-band">MTTR 워스트 — 수리시간이 긴 설비</div>
+     <div class="rep-grid">${wMttr.map((x,i)=>card(x,i+1,'MTTR')).join('')}</div>
+     <div class="hw-band">MTBF 워스트 — 고장이 잦은 설비</div>
+     <div class="rep-grid">${wMtbf.map((x,i)=>card(x,i+1,'MTBF')).join('')}</div>`;
+}
+
+/* renderHero 가 끝날 때마다 워스트3도 같이 갱신 */
+(function(){
+  const _renderHero = renderHero;
+  renderHero = function(){
+    const r = _renderHero.apply(this, arguments);
+    try{ renderHeroWorst(); }catch(e){ console.error(e); }
+    return r;
+  };
 })();
 
 loadData();
