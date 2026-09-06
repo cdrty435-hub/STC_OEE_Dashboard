@@ -723,6 +723,17 @@
     .wk-sheet [style*="#7a8698"], .wk-sheet [style*="#7a8794"]{ color:#3d4a59 !important; }
   }
 </style>
+
+<style>
+  .wk-cchips{display:inline-flex; flex-wrap:wrap; gap:4px; vertical-align:middle; margin-left:6px;}
+  .wk-cchips button{border:1px solid #d3dae2; background:#fff; color:#4a5765; border-radius:12px;
+                    padding:2px 9px; font-size:10.5px; font-weight:700; cursor:pointer;
+                    font-family:var(--mono); line-height:1.5;}
+  .wk-cchips button:hover{background:#f3f6fa;}
+  .wk-cchips button.on{background:#c9791a; border-color:#c9791a; color:#fff;}
+  .wk-cchips button.all.on{background:#1f3864; border-color:#1f3864;}
+  @media print{ .wk-cchips button{border-color:#c7ced5;} .wk-cchips button:not(.on){display:none;} }
+</style>
 </head>
 <body>
 
@@ -816,7 +827,7 @@
 
       <div class="wk-blk">
         <h4>① 주간 요약<span class="wk-catbar">집계 계통
-          <select id="wkCat1"></select><span class="cur" id="wkCat1Note"></span></span></h4>
+          <span class="wk-cchips" id="wkCat1"></span><span class="cur" id="wkCat1Note"></span></span></h4>
         <div class="wk-kpi" id="wkKpi"></div>
         <div class="wk-avail-note" id="wkAvailNote" style="display:none;"></div>
         <div class="wk-verdict" id="wkVerdict"></div>
@@ -824,7 +835,7 @@
 
       <div class="wk-blk">
         <h4>② 설비별 MTTR / MTBF<span class="wk-catbar">집계 계통
-          <select id="wkCat2"></select><span class="cur" id="wkCat2Note"></span></span></h4>
+          <span class="wk-cchips" id="wkCat2"></span><span class="cur" id="wkCat2Note"></span></span></h4>
         <div class="wk-2col">
           <div class="wk-canv"><h5 id="wkH1">설비별 MTTR (h/건)</h5>
             <div style="height:185px"><canvas id="wkMttrChart"></canvas></div></div>
@@ -842,7 +853,7 @@
 
       <div class="wk-blk">
         <h4>④ 원인분석 워스트 3 및 조치<span class="wk-catbar">집계 계통
-          <select id="wkCat4"></select></span><span class="wk-tgt" id="wkWorstTgt"></span></h4>
+          <span class="wk-cchips" id="wkCat4"></span></span><span class="wk-tgt" id="wkWorstTgt"></span></h4>
         <div id="wkWorstBox"></div>
       </div>
 
@@ -1692,6 +1703,10 @@ function weekNum(label){
 /* 카테고리 칩 필터: 3분류·4분류 어느 쪽 값이 와도 매칭 */
 function matchCat(r, cat){
   if(!cat || cat === 'ALL') return true;
+  if(Array.isArray(cat)){                       // 여러 계통을 동시에 선택한 경우
+    if(!cat.length || cat.indexOf('ALL') >= 0) return true;
+    return cat.some(c => r.c === c || r.s === c);
+  }
   return r.c === cat || r.s === cat;
 }
 
@@ -2185,7 +2200,9 @@ function weekStats(cat){
   return allWeeks.map(w=>{
     const R = RUN.filter(r=>r.w===w);
     const Lall = LOSS.filter(r=>r.w===w);
-    const L = fails((cat==='ALL') ? Lall : Lall.filter(r=>matchCat(r,cat)));
+    const isAll = (cat==='ALL') || !cat ||
+                  (Array.isArray(cat) && (!cat.length || cat.indexOf('ALL')>=0));
+    const L = fails(isAll ? Lall : Lall.filter(r=>matchCat(r,cat)));
     const runH = R.reduce((a,x)=>a+x.r,0)/60;
     const lossH = L.reduce((a,x)=>a+x.l,0)/60;
     const lossAllH = Lall.reduce((a,x)=>a+x.l,0)/60;
@@ -2584,9 +2601,11 @@ function mcStats(week, cat){
   ALL_MACHINES.forEach(m=>{
     const rr = R.filter(x=>x.m===m);
     const lAllM = L.filter(x=>x.m===m);
-    const ll = fails((cat&&cat!=='ALL') ? lAllM.filter(x=>matchCat(x,cat)) : lAllM);
+    const catAll = !cat || cat==='ALL' ||
+                   (Array.isArray(cat) && (!cat.length || cat.indexOf('ALL')>=0));
+    const ll = fails(catAll ? lAllM : lAllM.filter(x=>matchCat(x,cat)));
     const runH = rr.reduce((a,x)=>a+x.r,0)/60, lossH = ll.reduce((a,x)=>a+x.l,0)/60;
-    const n = nofCount(rr, lAllM, (cat&&cat!=='ALL') ? ll : null);
+    const n = nofCount(rr, lAllM, catAll ? null : ll);
     const planH = rr.reduce((a,x)=>a+(x.p||0),0)/60;
     out[m] = { m:m, runH:runH, lossH:lossH, cnt:n,
                mttr: n?lossH/n:0, mtbf: mtbfBasis(runH, lossH, n, planH),
@@ -4031,26 +4050,53 @@ function renderWeekly(){
   const pw  = idx>0 ? allWeeks[idx-1] : null;
 
   /* 주간보고 전용 계통 선택 (①·②·④ 각각 따로 · 브라우저에 저장) */
-  const WK_CATS = ['ALL'].concat(WK_SUBS);
+  /* 계통 선택 : 칩을 눌러 여러 계통을 함께 볼 수 있다 (①·②·④ 각각 저장) */
   const catName = c => (c==='ALL' ? '전체 로스' : c);
   const catGet = n => {
     let v = null; try{ v = localStorage.getItem('stc_wk_cat'+n); }catch(e){}
-    return WK_CATS.indexOf(v)>=0 ? v : 'ALL';
+    if(!v) return ['ALL'];
+    if(v[0] === '['){                                  // 새 형식: 배열
+      try{ const a = JSON.parse(v).filter(c=>WK_SUBS.indexOf(c)>=0);
+           return a.length ? a : ['ALL']; }catch(e){ return ['ALL']; }
+    }
+    return (WK_SUBS.indexOf(v) >= 0) ? [v] : ['ALL'];   // 예전 형식: 단일 문자열
   };
+  const catIsAll = a => !a.length || a.indexOf('ALL') >= 0;
+  const catLabel = a => catIsAll(a) ? '전체 로스' : a.join(' + ');
+  const catArg   = a => catIsAll(a) ? 'ALL' : a;        // weekStats·mcStats 에 넘길 값
+  const catSave  = (n, a)=>{ try{
+      localStorage.setItem('stc_wk_cat'+n, catIsAll(a) ? 'ALL' : JSON.stringify(a));
+    }catch(e){} };
+
   [1,2,4].forEach(n=>{
     const el = document.getElementById('wkCat'+n); if(!el) return;
-    const v = catGet(n);
-    el.innerHTML = WK_CATS.map(c=>`<option value="${c}"${c===v?' selected':''}>${catName(c)}</option>`).join('');
-    el.onchange = ()=>{ try{ localStorage.setItem('stc_wk_cat'+n, el.value); }catch(e){} renderWeekly(); };
+    const cur0 = catGet(n), all = catIsAll(cur0);
+    el.innerHTML = `<button type="button" class="all${all?' on':''}" data-c="ALL">전체 로스</button>`
+      + WK_SUBS.map(c=>`<button type="button" class="${!all && cur0.indexOf(c)>=0?'on':''}" data-c="${c}">${c}</button>`).join('');
+    el.querySelectorAll('button').forEach(b=>{
+      b.onclick = ()=>{
+        const c = b.dataset.c;
+        let a = catGet(n);
+        if(c === 'ALL'){ a = ['ALL']; }
+        else{
+          if(catIsAll(a)) a = [c];                     // 전체 → 그 계통만
+          else if(a.indexOf(c) >= 0) a = a.filter(x=>x!==c);   // 눌린 것 다시 누르면 해제
+          else a = a.concat([c]);                      // 여러 개 겹쳐 선택
+          if(!a.length) a = ['ALL'];
+        }
+        catSave(n, a); renderWeekly();
+      };
+    });
   });
-  const cat1 = catGet(1), cat2 = catGet(2), cat4 = catGet(4);
+  const cats1 = catGet(1), cats2 = catGet(2), cats4 = catGet(4);
+  const cat1 = catArg(cats1), cat2 = catArg(cats2), cat4 = catArg(cats4);
   [1,2].forEach(n=>{ const el = document.getElementById('wkCat'+n+'Note');
-    if(el) el.textContent = (catGet(n)==='ALL') ? '' : '· 선택 계통만'; });
+    if(el) el.textContent = catIsAll(catGet(n)) ? '' : '· 선택 계통만'; });
   const h3n = document.getElementById('wkH3Note');
   if(h3n) h3n.textContent = '전체 로스 기준 (전 주차 흐름)';
 
   const WS  = weekStats(cat1);
-  const WSA = (cat1==='ALL') ? WS : weekStats('ALL');   // ③ 추이는 항상 전체 기준
+  const WSA = catIsAll(cats1) ? WS : weekStats('ALL');   // ③ 추이는 항상 전체 기준
   const cur = WS.find(x=>x.w===wk) || null;
   const prv = pw ? (WS.find(x=>x.w===pw)||null) : null;
   if(!cur) return;
@@ -4072,7 +4118,7 @@ function renderWeekly(){
 
   /* ---------- ① 요약 KPI ---------- */
   const K = [
-    [`MTTR (평균 수리시간)${cat1==='ALL'?'':' · '+cat1}`, fmt(cur.mttr,2), 'h/건', wkDelta(cur.mttr, prv&&prv.mttr, false, 2)],
+    [`MTTR (평균 수리시간)${catIsAll(cats1)?'':' · '+catLabel(cats1)}`, fmt(cur.mttr,2), 'h/건', wkDelta(cur.mttr, prv&&prv.mttr, false, 2)],
     ['MTBF (평균 무고장시간)', fmt(cur.mtbf,2), 'h/건', wkDelta(cur.mtbf, prv&&prv.mtbf, true, 2)],
     ['가동률', fmt(cur.avail,1), '%', wkDelta(cur.avail, prv&&prv.avail, true, 1, '%p')],
     ['로스시간 / 고장횟수', fmt(cur.lossH,1), 'h / '+cntTxt(cur.cnt)+'건', wkDelta(cur.lossH, prv&&prv.lossH, false, 1, 'h')],
@@ -4125,7 +4171,7 @@ function renderWeekly(){
 
   /* ---------- 자동 코멘트 ---------- */
   const mcs   = mcStats(wk, cat2);                       // ② 차트용
-  const mcs4  = (cat4===cat2) ? mcs : mcStats(wk, cat4);  // ④ 워스트용
+  const mcs4  = (catLabel(cats4)===catLabel(cats2)) ? mcs : mcStats(wk, cat4);  // ④ 워스트용
   const mcsP  = pw ? mcStats(pw, cat4) : null;
   const arr   = Object.values(mcs4).filter(x=>x.cnt>=MIN_N);
   const wMttr = arr.slice().sort((a,b)=>b.mttr-a.mttr).slice(0,3);
@@ -4237,9 +4283,9 @@ function renderWeekly(){
     x=> (tM && x.mttr>tM) ? '#e2564dcc' : x.mttr>2 ? '#e8a33dcc' : '#34c98ecc', tM);
   wkMtbfChart = mkBar(wkMtbfChart, 'wkMtbfChart', 'mtbf',
     x=> (tB && x.mtbf<tB) ? '#e2564dcc' : '#2e75b6cc', tB);
-  document.getElementById('wkH1').textContent = `설비별 MTTR (h/건) — ${wk} · ${catName(cat2)}`
+  document.getElementById('wkH1').textContent = `설비별 MTTR (h/건) — ${wk} · ${catLabel(cats2)}`
     + (tM?` · 목표 ${fmt(tM,2)} 초과 적색`:'');
-  document.getElementById('wkH2').textContent = `설비별 MTBF (h/건) — ${wk} · ${catName(cat2)} · ${mtbfBasisLabel()}`
+  document.getElementById('wkH2').textContent = `설비별 MTBF (h/건) — ${wk} · ${catLabel(cats2)} · ${mtbfBasisLabel()}`
     + (tB?` · 목표 ${fmt(tB,2)} 미달 적색`:'');
 
   /* ---------- ③ 주차별 추이 ---------- */
@@ -4281,7 +4327,7 @@ function renderWeekly(){
   const wbox = document.getElementById('wkWorstBox');
   const wtgt = document.getElementById('wkWorstTgt');
   if(wtgt) wtgt.textContent =
-    `${catName(cat4)} · 목표 MTTR ${tM?fmt(tM,2):'–'} · MTBF ${tB?fmt(tB,2):'–'} h/건 · ${mtbfBasisLabel()} · 고장 ${MIN_N}건 이상 설비 대상`;
+    `${catLabel(cats4)} · 목표 MTTR ${tM?fmt(tM,2):'–'} · MTBF ${tB?fmt(tB,2):'–'} h/건 · ${mtbfBasisLabel()} · 고장 ${MIN_N}건 이상 설비 대상`;
 
   const wkCard = (x, rank, kind)=>{
     const p  = mcsP && mcsP[x.m] && mcsP[x.m].cnt>=1 ? mcsP[x.m] : null;
