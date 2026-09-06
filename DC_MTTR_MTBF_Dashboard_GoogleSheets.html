@@ -829,7 +829,7 @@
       <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:4px;">
         <div>
           <h2>주차별 MTTR / MTBF 추이</h2>
-          <div class="desc">전 주차(W27~) 흐름 · 계통 칩을 여러 개 눌러 겹쳐 볼 수 있습니다 · 위에서 설정한 목표선이 함께 표시됩니다</div>
+          <div class="desc">전 주차(W27~) 흐름 · 계통 칩을 여러 개 눌러 겹쳐 볼 수 있습니다 · 위에서 설정한 목표선이 함께 표시됩니다 · 차트 오른쪽 끝에 <b>최종 주차 값과 전주 대비 증감</b>을 계통별로 표시합니다</div>
         </div>
         <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
           <div class="cat-chips" id="trendMetricChips">
@@ -2010,16 +2010,20 @@ function renderTrend(){
       type:'line', label:`${lbl(c)} MTTR`, data: rows.map(r=>r.mttr), yAxisID:'y',
       borderColor:col, backgroundColor:col, borderWidth:3, tension:.25,
       pointRadius:4, pointHoverRadius:7, order:1,
-      datalabels:{align:'top', anchor:'end', color:col,
-        font:{size: multi?11:12, weight:'700'}, formatter:v=>v?v.toFixed(2):''}
+      endLabel:{goodUp:false},                       // 오른쪽 끝에 최종값 + 전주 대비 증감
+      datalabels:{align:'top', anchor:'end', color:col, clamp:true,
+        font:{size: multi?11:12, weight:'700'},
+        formatter:(v,c)=> (!v || c.dataIndex === c.dataset.data.length-1) ? '' : v.toFixed(2)}
     });
     if(showMtbf) ds.push({
       type:'line', label:`${lbl(c)} MTBF`, data: rows.map(r=>r.mtbf), yAxisID:'y1',
       borderColor:col, backgroundColor:col, borderWidth:3, tension:.25,
       borderDash: (trendMetric==='BOTH' ? [6,4] : []),
       pointRadius:4, pointStyle:(trendMetric==='BOTH'?'rectRot':'circle'), pointHoverRadius:7, order:2,
-      datalabels:{align:'bottom', anchor:'start', color:col,
-        font:{size: multi?11:12, weight:'700'}, formatter:v=>v?v.toFixed(2):''}
+      endLabel:{goodUp:true},
+      datalabels:{align:'bottom', anchor:'start', color:col, clamp:true,
+        font:{size: multi?11:12, weight:'700'},
+        formatter:(v,c)=> (!v || c.dataIndex === c.dataset.data.length-1) ? '' : v.toFixed(2)}
     });
   });
   if(showMttr && targetMTTR !== null && !isNaN(targetMTTR)) ds.push({
@@ -2031,11 +2035,69 @@ function renderTrend(){
     borderColor:'#1d7d60', borderWidth:2, borderDash:[3,3], pointRadius:0, order:0, datalabels:{display:false}
   });
 
+  /* 마지막 주차 값은 점 위에 겹쳐 찍지 않고, 차트 오른쪽 여백에 세로로 정렬해서
+     [최종값 + 전주 대비 증감] 형태로 표시한다. 서로 겹치면 자동으로 벌린다. */
+  const trendEndLabels = {
+    id:'trendEndLabels',
+    afterDatasetsDraw(chart){
+      const {ctx, chartArea} = chart;
+      const items = [];
+      chart.data.datasets.forEach((d,i)=>{
+        if(!d.endLabel || !chart.isDatasetVisible(i)) return;
+        const arr = d.data || [], last = arr.length-1;
+        if(last < 0) return;
+        const v = arr[last], pv = arr[last-1];
+        if(v === null || v === undefined || isNaN(v)) return;
+        const sc = chart.scales[d.yAxisID || 'y'];
+        if(!sc || sc.display === false) return;
+        items.push({ y: sc.getPixelForValue(v), v: v,
+                     dv: (pv === null || pv === undefined || isNaN(pv)) ? null : v-pv,
+                     color: d.borderColor, goodUp: !!d.endLabel.goodUp });
+      });
+      if(!items.length) return;
+
+      const GAP = 13;
+      items.sort((a,b)=>a.y-b.y);
+      for(let i=1;i<items.length;i++)
+        if(items[i].y - items[i-1].y < GAP) items[i].y = items[i-1].y + GAP;
+      const over = items[items.length-1].y - chartArea.bottom;
+      if(over > 0) items.forEach(it=>{ it.y -= over; });
+      items.forEach(it=>{ it.y = Math.max(it.y, chartArea.top + 4); });
+
+      const x = chartArea.right + 8;
+      ctx.save();
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'left';
+      ctx.font = "700 10px 'SFMono-Regular', Consolas, monospace";
+      ctx.fillStyle = '#8a95a1';
+      ctx.fillText(`${labels[labels.length-1]} 전주비`, x, chartArea.top - 8);
+      items.forEach(it=>{
+        ctx.font = "700 11px 'SFMono-Regular', Consolas, monospace";
+        ctx.fillStyle = it.color;
+        const txt = it.v.toFixed(2);
+        ctx.fillText(txt, x, it.y);
+        const w = ctx.measureText(txt).width;
+        ctx.font = "700 10px 'SFMono-Regular', Consolas, monospace";
+        if(it.dv === null || Math.abs(it.dv) < 0.005){
+          ctx.fillStyle = '#8a95a1';
+          ctx.fillText('–', x + w + 5, it.y);
+        }else{
+          const good = it.goodUp ? it.dv > 0 : it.dv < 0;
+          ctx.fillStyle = good ? '#1d7d60' : '#c00000';
+          ctx.fillText((it.dv > 0 ? '▲' : '▼') + Math.abs(it.dv).toFixed(2), x + w + 5, it.y);
+        }
+      });
+      ctx.restore();
+    }
+  };
+
   if(trendChart) trendChart.destroy();
   trendChart = new Chart(document.getElementById('trendChart'), {
     data:{ labels:labels, datasets:ds },
+    plugins:[trendEndLabels],
     options:{
       responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ right:86, top:14 } },
       interaction:{ mode:'index', intersect:false },
       onClick:(evt, elements)=>{
         if(!elements || !elements.length) return;
