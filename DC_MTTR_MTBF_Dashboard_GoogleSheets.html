@@ -495,6 +495,43 @@
     border-top:1px solid var(--lxline); padding-top:14px; margin-top:14px;}
   .lx-foot b{color:var(--lxsub); font-weight:500;}
 </style>
+
+<style>
+  /* ===== 설비 히스토리 ===== */
+  .hist-bar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:12px 15px; margin:12px 0 14px;}
+  .hist-bar label{font-size:12.5px; color:var(--text-dim); font-family:var(--mono); margin-right:4px;}
+  .hist-bar input[type=date], .hist-bar input[type=text], .hist-bar select{
+    border:1px solid #d8dfe7; border-radius:7px; padding:6px 9px; font-size:13px; background:#fff; color:var(--text);}
+  .hist-bar input[type=text]{width:190px;}
+  .hist-kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:14px;}
+  .hist-kpi{background:var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:11px 14px;}
+  .hist-kpi .lb{font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--text-faint); text-transform:uppercase;}
+  .hist-kpi .vl{font-size:21px; font-weight:800; margin-top:3px; letter-spacing:-.02em;}
+  .hist-kpi .vl small{font-size:12px; font-weight:600; color:var(--text-faint); margin-left:3px;}
+  .hist-kpi.bad .vl{color:var(--red);}
+  .hist-tbl-wrap{max-height:620px; overflow:auto; border:1px solid var(--border); border-radius:9px;}
+  .hist-tbl{width:100%; border-collapse:collapse; font-size:12.7px;}
+  .hist-tbl th{background:#1f3864; color:#fff; padding:7px 8px; text-align:left; font-weight:700; white-space:nowrap; position:sticky; top:0; z-index:2; font-family:var(--mono); font-size:12px;}
+  .hist-tbl td{padding:6px 8px; border-bottom:1px solid #e6ebf1; vertical-align:top; line-height:1.5;}
+  .hist-tbl tbody tr{cursor:pointer;}
+  .hist-tbl tbody tr:hover{background:#fff8ec;}
+  .hist-tbl td.dt{font-family:var(--mono); white-space:nowrap; color:var(--text-faint);}
+  .hist-tbl td.mc{font-weight:700; color:#1f3864; white-space:nowrap;}
+  .hist-tbl td.num{text-align:right; font-family:var(--mono); white-space:nowrap;}
+  .hist-tbl tr.open{background:#fff4e0;}
+  .hist-detail td{background:#fbfcfe; font-size:12.3px; color:var(--text-dim); border-bottom:2px solid var(--border);}
+  .hist-detail .og{font-family:var(--mono); font-size:11.8px; color:#7a8698; margin-top:5px; word-break:break-all;}
+  .hist-badge{display:inline-block; font-family:var(--mono); font-size:11px; padding:2px 7px; border-radius:11px; border:1px solid var(--border); background:var(--panel-2); color:var(--text-dim);}
+  .hist-badge.DC{background:#fdeee0; border-color:#f0c79a; color:#9a5a10;}
+  .hist-badge.TP{background:#e3f0fb; border-color:#a9cdeb; color:#15537f;}
+  .hist-badge.EF{background:#fde7e5; border-color:#f0b6b1; color:#a02a20;}
+  .hist-badge.ETC{background:#eceff3; border-color:#d3dae2; color:#5f6c7b;}
+  .hist-open{color:#b91c1c; font-weight:700;}
+  .hist-note{font-size:12px; color:var(--text-faint); margin-top:9px; line-height:1.6;}
+  .hist-charts{display:grid; grid-template-columns:1.15fr .85fr; gap:16px; margin:6px 0 16px;}
+  @media(max-width:900px){ .hist-charts{grid-template-columns:1fr;} }
+  .hist-th-warn{background:#fff7e6; border:1px solid #f0d59a; border-radius:8px; padding:8px 11px; font-size:12.3px; color:#8a5a12; margin-bottom:12px;}
+</style>
 </head>
 <body>
 
@@ -560,6 +597,7 @@
     <button class="tabbtn" data-tab="tab-grade"><span class="no">6</span><span class="tx">설비 등급 / PM</span></button>
     <button class="tabbtn" data-tab="tab-cost"><span class="no">7</span><span class="tx">로스 비용 (F-COST)</span></button>
     <button class="tabbtn" data-tab="tab-pareto"><span class="no">8</span><span class="tx">로스 파레토</span></button>
+    <button class="tabbtn" data-tab="tab-history"><span class="no">9</span><span class="tx">설비 히스토리</span></button>
   </nav>
 
   <div class="panes">
@@ -1171,6 +1209,58 @@
         <span><span class="dot" style="background:var(--teal)"></span>누적 비율(%)</span>
       </div>
       <div id="paretoAnalysisPanel" class="analysis-panel" style="display:none;"></div>
+    </div>
+  </section>
+
+  <!-- ===== 설비 수리 히스토리 ===== -->
+  <section id="tab-history" class="tabpane">
+    <div class="panel">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+        <div>
+          <h2>설비 수리 히스토리</h2>
+          <div class="desc">Facility Management 시트 「3.Repair History」 실시간 연동 · <b>2026-06-21</b> 이후 기록 기준 · 태국어 내용은 한국어로 자동 변환됩니다 · 행을 클릭하면 원문·사진·시각이 열립니다</div>
+        </div>
+        <div class="cat-chips" id="histCatChips">
+          <button class="cat-chip active" data-hcat="DC">1.전체 DC</button>
+          <button class="cat-chip" data-hcat="TP">2.TP설비 전체</button>
+          <button class="cat-chip" data-hcat="EF">3.전기로 설비 전체</button>
+          <button class="cat-chip" data-hcat="ETC">4.기타</button>
+        </div>
+      </div>
+
+      <div class="hist-bar">
+        <div><label for="histStart">시작일</label><input type="date" id="histStart"></div>
+        <div><label for="histEnd">종료일</label><input type="date" id="histEnd"></div>
+        <div><label for="histWork">작업구분</label>
+          <select id="histWork" style="width:130px"><option value="ALL">전체</option></select></div>
+        <div><label for="histQ">검색</label>
+          <input type="text" id="histQ" placeholder="설비 / 증상 / 부품 / 작업자"></div>
+        <div style="margin-left:auto; display:flex; gap:7px; flex-wrap:wrap;">
+          <button class="cat-chip" id="histLangBtn" title="원문(태국어) 병기 표시">원문 병기</button>
+          <button class="cat-chip" id="histAiBtn" title="사전에 없는 태국어 문장을 AI로 번역합니다 (원인분석 탭의 AI 키 사용)">AI 번역</button>
+          <button class="cat-chip" id="histCsvBtn" title="한국어 번역본 CSV 저장 — 구글시트에 붙여넣기">한국어 CSV</button>
+          <button class="cat-chip" id="histReload">새로고침</button>
+        </div>
+      </div>
+
+      <div id="histStatus" class="hist-th-warn" style="display:none;"></div>
+      <div class="hist-kpis" id="histKpis"></div>
+
+      <div class="hist-charts">
+        <div>
+          <div class="mini-title">설비별 수리 건수 / 시간 TOP 10</div>
+          <div style="height:270px;"><canvas id="histCntChart"></canvas></div>
+        </div>
+        <div>
+          <div class="mini-title">월별 수리 건수 · 소요시간 추이</div>
+          <div style="height:270px;"><canvas id="histTrendChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="hist-tbl-wrap">
+        <table class="hist-tbl" id="histTable"><thead></thead><tbody></tbody></table>
+      </div>
+      <div class="hist-note" id="histNote"></div>
     </div>
   </section>
   </div><!-- /panes -->
@@ -4532,6 +4622,443 @@ function showParetoAnalysis(item){
     <ul class="cause-list">${dcListHtml || '<li>데이터 없음</li>'}</ul>
   `;
 }
+
+
+/* ==================================================================
+   설비 수리 히스토리 (Facility Management 2 → 3.Repair History)
+   ================================================================== */
+const HIST_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5M15bkDhvJI703ePjqxLfgkWzym_tm3hFJrmen0hzR9qQqQy8PxirB8sNvW1PxwO9LQVx_RzXzDky/pub?gid=63391473&single=true&output=csv";
+
+/* --- 설비 분류 규칙 : 필요하면 여기만 고치면 됩니다 --------------
+   판정 순서 = DC → 전기로(EF) → TP → 기타(ETC)
+   Serial Number / TYPE / MODEL / LINE 을 합친 문자열에 정규식을 적용합니다. */
+const HIST_CAT_RULES = {
+  DC : [/\bDC\s*-?\s*\d{1,2}\b/i, /다이캐스팅|다이캐스트/, /DIE\s*-?\s*CAST/i, /\bDCM\b/i, /\bTOYO\b/i, /도시바|시바우라|SHIBAURA/i, /\bBUHLER\b/i],
+  EF : [/전기로|용해로|보온로|용해|보온|취탕/, /FURNACE/i, /\bMELT/i, /HOLDING\s*FURNACE/i, /\bEF\s*-?\s*\d{0,2}\b/, /LADLE|래들/i, /เตาหลอม|เตา/],
+  TP : [/\bTP\s*-?\s*\d{0,2}\b/i, /TRIM/i, /트리밍|트림/, /\bPRESS\b/i, /프레스/, /\bHYD\b/i]
+};
+const HIST_CAT_NAME = {DC:'전체 DC', TP:'TP설비', EF:'전기로', ETC:'기타'};
+
+/* --- 집계 기준일 : 이 날짜 이전 기록은 사용하지 않습니다 (여기만 고치면 됩니다) --- */
+const HIST_MIN_DATE = '2026-06-21';
+
+const TH_DICT = [["ช่างกำลังตรวจเช็ค สัญญาณPLC ตอนนี้เกิดปัญหาที่Press1 (แก้ไขยังไม่เสร็จ)", "PLC 신호 점검 중, 현재 프레스1에서 문제 발생 (조치 미완료)"], ["ทำการลื้อกระบอกdie hightออกจากเครื่องแล้วหมุนเกลียวด้วยโฟล์คลิฟท์", "다이하이트 실린더를 탈거 후 지게차로 나사 풀림 작업"], ["ทำการเอาปั๊มไฮดรอลิคของลิฟท์มา เปลี่ยนใส่ให้ใช้งานไปก่อน", "리프트용 유압펌프를 임시 이설하여 가동"], ["ทำการใส่แกนลูกเบี้ยวและแบริ่งของเดิมและทำการตรวจเช็คใหม่", "기존 캠축·베어링으로 원복 후 재점검"], ["เนื่องจากกระบอกลมมีแรงดันลมเยอะเกินไปเกิดการสั่นสะเทือน", "에어실린더 압력 과다로 진동 발생"], ["ทำการถอดเอาสายน้ำมันไฮดรอลิคเครื่อง6มาเปลี่ยนให้ใช้งาน", "6호기 유압호스를 탈거하여 교체 사용"], ["ทำการเปลี่ยรแมกเนติกใหม่1ตัวและตัด-ต่อสายไฟpowerใหม่", "마그네틱 1개 교체 및 파워케이블 절단·재결선"], ["เติมน้ำมันเข้าไปใหม่และแก้ไขโอริงกระบอกใส่กรอกน้ำมัน", "오일 보충 및 주유구 오링 보수"], ["พนักงานปรับกระบอกdie hight ขึ้นสุดจนเกลียวล๊อค", "작업자가 다이하이트 실린더를 상한까지 조작하여 나사 고착"], ["ต้องทำการตรวจเช็คคอมเพรสเซอร์(ยังไม่เสร็จ)", "컴프레서 점검 필요 (미완료)"], ["ทำการset inverterใหม่และปรับสวิตช์Autoใหม่", "인버터 재설정 및 자동 스위치 재조정"], ["เบรกเกอร์ทริปเนื่องจากคอมเพรสเซอร์มีปัญหา", "컴프레서 이상으로 차단기 트립"], ["ค่าแรงดันลมต่ำเนื่องจากfittingมีอากาศรั่ว", "피팅 누설로 에어 압력 저하"], ["ทำการตัดส่วนที่รั่วแล้วทำการใส่ข้อต่อตรง", "누설 부위 절단 후 직선 피팅 삽입"], ["ติดตั้งregulator กรองลมกำจัดสิ่งปนเปื้อน", "이물 제거용 에어 필터 레귤레이터 설치"], ["มีปัญหาที่ interlock ทำการเขียนวงจรใหม่", "인터록 이상으로 회로 재작성"], ["ทำการตัดส่วนที่รั่วออกแล้วต่อสายลมใหม่", "누설 부위 절단 후 에어호스 재연결"], ["แมกเนติกเสีย1ตัวและสายไฟpower ขาด 2เฟส", "마그네틱 스위치 1개 불량 및 파워케이블 2상 단선"], ["ทำการเติมจาระบี แล้วไม่ได้ไล่ระบบอากาศ", "그리스 주입 후 에어빼기 미실시"], ["ทำการถอดสายไฟออกเนื่องจากไม่ได้ใช้งาน", "미사용 설비로 전선 철거"], ["ติดสัญญาณEMG.เนื่องจากสายไฟPendantขาด", "펜던트 케이블 단선으로 비상정지(EMG) 신호 발생"], ["ทำการใส่แบริ่งCopyและแกนลูกเบี้ยวCopy", "복제품 베어링 및 캠축 장착"], ["ทำการรื้อถอดออกและเช็คสเปคลูกปืนใหม่", "분해 후 신규 베어링 사양 확인"], ["ทำการตรวจเช็คฮีตเตอร์(ยังทำไม่เสร็จ)", "히터 점검 진행 중 (미완료)"], ["ทำแกนโรเลอร์ใหม่และเปลี่ยนแบริ่งใหม่", "롤러 축 신규 제작 및 베어링 교체"], ["เชื่อทำโครง ทำถังเก็บsacap , พ่นสี", "프레임 용접, 스크랩 보관통 제작, 도장"], ["เชื่อมsupportและพ่นสีsupportท่อน้ำ", "배관 서포트 용접 및 도장"], ["Off Electrical power แล้ว  On ใหม่", "전원 OFF 후 재투입"], ["Off Electrical power แล้ว On ใหม่", "전원 OFF 후 재투입"], ["ทำการถอดออกมาและทำการส่งซ่อมใหม่", "탈거 후 외주 수리 의뢰"], ["ไม่มีสายเคเบิ้ลเชื่อมกับเครื่อง", "설비 연결 케이블 없음"], ["เช็คที่PLCและจ้ำสัญญาณ ON brake", "PLC 점검 및 브레이크 ON 신호 강제 입력"], ["เอา conveyer ออกมาไห้ infection", "사출 라인용 컨베이어 반출"], ["เครนหนุดทำงานตอนที่กำลังใช้งาน", "사용 중 크레인 정지"], ["มอเตอร์ปั๊มร้ำมันไฮดรอลิคเสีย", "유압펌프 모터 고장"], ["มอเตอร์ปั๊มน้ำมันไฮดรอลิคเสีย", "유압펌프 모터 고장"], ["ส่งซ่อมและนำมาประกอบเรียบร้อน", "외주 수리 후 재조립 완료"], ["ซื้อปั๊มน้ำบาดาลมาเปลี่ยนใหม่", "지하수 펌프 신품 구매 후 교체"], ["electric screwdriver ไม่ทำงาน", "전동 드라이버 작동 불가"], ["ทำการเปลี่ยนสายไฟPendantมหม่", "펜던트 케이블 교체"], ["Test Run Manual-Auto มีปัญหา", "수동·자동 시운전 이상"], ["แบริ่งแคก-แกนโรเลอร์หมดสภาพ", "베어링 파손 및 롤러 축 수명 초과"], ["ทำการเปลี่ยนกล่องVacuumใหม่", "진공 유닛 교체"], ["ทำการถอดปั๊มล้างทำความสะอาด", "펌프 분해 세척"], ["พบข้อผิดพลาดที่สัญญาณVacuum", "진공 신호 이상 확인"], ["ทำการเปลี่ยนcoil coolerใหม่", "쿨러 코일 교체"], ["ขั้วสายลมแว็คคั่วมีการชำรุด", "진공 에어호스 커넥터 손상"], ["Lifter ตัวที่1 ใช้งานไม่ได้", "리프터 1번 작동 불가"], ["การตั้งค่าสัญญาณVacuumใหม่", "진공 신호 재설정"], ["สายลมเริ่มหมดอายุการใช้งาน", "에어호스 사용 수명 도래"], ["จัดเก็บกล่องสายไฟเครนใหม่", "크레인 전선 박스 재정리"], ["กล่องเก็บสายไฟเครน 3Tหลุด", "3톤 크레인 전선 박스 이탈"], ["ทำการถอนเช็ค คาวา เพเนโก", "밸브 분해 점검"], ["ใส่โซ่ใหม่และตึงโซ่ใหม่", "체인 재장착 및 장력 재조정"], ["ติดยึดตัวล๊อคสายแวคคั่ม", "진공 호스 고정 클램프 설치"], ["ตามการใช้งานเครื่องจักร", "설비 사용에 따른 노후"], ["ทำการเปลี่ยนfittingใหม่", "피팅 교체"], ["แบริ่งลูกเบี้ยวทำมาใหม่", "캠 베어링 신규 제작"], ["เปลี่ยนเซฟตี้วาล์วใหม่", "세이프티 밸브 교체"], ["ทำการเปลี่ยนแบริ่งใหม่", "베어링 교체"], ["หยิบชิ้นงานแล้วไม่ว่าง", "제품 픽업 후 해제 불가"], ["ไม่หมุนและใส่พินไม่ได้", "회전 불가 및 핀 삽입 불가"], ["กดหมุนไปข้างหน้าไม่ได้", "정회전 조작 불가"], ["ทำการเปลี่ยนoil fitter", "오일필터 교체"], ["น้ำมันรั่วและน้ำมันหมด", "오일 누유 및 오일 부족"], ["ทำการเชื่อมปิดรอยรั่ว", "누설부 용접 보수"], ["ล้างทำความสะอาดVacuum", "진공 유닛 세척"], ["ถอด สแปร์ ชุดซีลินนอย", "솔레노이드 세트 예비품 탈거"], ["สายลมหมดสภาพการใช้งาน", "에어호스 수명 종료"], ["สายลมหมดอายุการใช้งาน", "에어호스 사용 수명 종료"], ["ทำการไล่ระบบอากาศใหม่", "에어빼기 재실시"], ["ปรับ die hight ไม่ได้", "다이하이트 조정 불가"], ["เซฟตี้วาล์วปรับไม่ได้", "세이프티 밸브 조정 불가"], ["ทำการเปลี่ยนสายลมใหม่", "에어호스 교체"], ["ทำการเปลี่ยนสายไฟใหม่", "전선 교체"], ["ทำการModifyสายไฟใหม่", "배선 개조 작업"], ["ทำการใส่น็อตล็อคใหม่", "락너트 재체결"], ["ปรับdie hight ไม่ได้", "다이하이트 조정 불가"], ["ลมรั่วที่เซฟตี้วาล์ว", "세이프티 밸브 에어 누설"], ["เปลี่ยนสายน้ำมันใหม่", "유압호스 교체"], ["Robotไม่ไปวางชิ้นงาน", "로봇이 제품을 적재하지 않음"], ["ทำการขันแกนล็อคใหม่", "로드 락너트 재체결"], ["ทำการติดตั้งปลั๊กไฟ", "전원 콘센트 설치"], ["แรงดันน้ำมันคลายตัว", "유압 압력 저하"], ["สลักล็อคสวิตช์หลุด", "스위치 잠금핀 이탈"], ["Conveyor tหมุนตลอด", "컨베이어 연속 회전"], ["เครื่องอุณหภูมิสูง", "설비 온도 상승"], ["Robotไม่ดูดชิ้นงาน", "로봇 제품 흡착 불가"], ["ก้านลูกสูบปั๊มค้าง", "펌프 피스톤 로드 고착"], ["Wiring Auto&Manual", "자동·수동 배선 작업"], ["เปลี่ยน spare part", "예비품 교체"], ["ปรับความเร็วไม่ได้", "속도 조정 불가"], ["ไม่ทราบชื่อและขนาด", "품명·규격 미상"], ["Alarm.vacuum error", "진공 에러 알람"], ["ปืนลมใช้งานไม่ได้", "에어건 사용 불가"], ["ทำการต่อสายไฟใหม่", "전선 재결선"], ["Robot Auto ไม่ได้", "로봇 자동운전 불가"], ["ใส่แล้วหมุนไม่ได้", "조립 후 회전 불가"], ["เปลี่ยน คอยดีเลย์", "딜레이 릴레이 교체"], ["Sensor brake เสีย", "브레이크 센서 불량"], ["เปลี่ยนoil fitter", "오일필터 교체"], ["สายน้ำมันไฮดรอลิค", "유압호스"], ["Line Conveyorติด", "라인 컨베이어 걸림"], ["เปลี่ยนสายลมใหม่", "에어호스 교체"], ["ทำการรื้อท่อแก๊ส", "가스 배관 철거"], ["ปั๊มน้ำบาดาลเสีย", "지하수 펌프 고장"], ["ตรวจเช็คประจำวัน", "일상점검"], ["แก้ไขยังไม่เสร็จ", "조치 미완료"], ["แกนกระบอกลมหลุด", "에어실린더 로드 이탈"], ["Conveyorไม่หมุน", "컨베이어 회전 불가"], ["อุณหภูมิสูงเกิน", "온도 과열"], ["Coil cooler ตัน", "쿨러 코일 막힘"], ["ทำการต่อสายใหม่", "전선 재결선"], ["เครื่องไหลลงเอง", "슬라이드 자연 하강"], ["ตรวจสอบประจำวัน", "일상점검"], ["ตรวจสอบปนะจำวัน", "일상점검"], ["ยังซ่อมไม่เสร็จ", "수리 미완료"], ["ข้อต่อตรงสามทาง", "T형 직선 피팅"], ["เครื่องไม่ทำงาน", "설비 작동 불가"], ["มีรอยขาดเยอะมาก", "절단·손상 부위 다수"], ["หน้าจอกล้องดับ", "카메라 화면 꺼짐"], ["น้ำมันไฮดรอลิค", "유압유"], ["โรเลอร์ไม่หมุน", "롤러 회전 불가"], ["Robot 7 error", "로봇 7호기 에러"], ["คอยดีเลย์เสีย", "딜레이 릴레이 불량"], ["ยังทำไม่เสร็จ", "작업 미완료"], ["กลับทางลูกยาง", "패킹 방향 전환 재조립"], ["เบรกเกอร์ทริป", "차단기 트립"], ["กดแล้วไม่ขยับ", "조작해도 동작하지 않음"], ["ไม่ดูดชิ้นงาน", "제품 흡착 불가"], ["ทำการเอาฝาออก", "커버 분리 작업"], ["เขียนวงจรใหม่", "회로 재작성"], ["สายลมหมดสภาพ", "에어호스 수명 종료"], ["สายลมหมดอายุ", "에어호스 수명 종료"], ["ตรวจสอบประจำ", "일상점검"], ["ทำการเปลี่ยน", "교체 실시"], ["สายน้ำมันแคก", "유압호스 파손"], ["สายน้ำมันแตก", "유압호스 파손"], ["Alarm.น้ำมัน", "오일 알람"], ["Alarm.จาระบี", "그리스 알람"], ["ใส่ข้อต่อตรง", "직선 피팅 삽입"], ["Breaker ทริป", "차단기 트립"], ["พัดลมไม่หมุน", "팬 회전 불가"], ["ใช้งานไม่ได้", "사용 불가"], ["ดูดงานไม่ติด", "제품 흡착 불가"], ["คอมเพรสเซอร์", "컴프레서"], ["ทำการติดตั้ง", "설치"], ["ไล่ระบบอากาศ", "에어빼기"], ["Vacuum error", "진공 에러"], ["ยังไม่เสร็จ", "미완료"], ["Test Run Ok", "시운전 정상"], ["มอเตอร์เสีย", "모터 고장"], ["ฮีตเตอร์ขาด", "히터 단선"], ["แค้มไม่ล็อค", "클램프 미고정"], ["เปิดฝาไปออก", "커버 분리 불가"], ["สั่นสะเทือน", "진동"], ["ทำความสะอาด", "세척"], ["เครื่องจักร", "설비"], ["Normal work", "일반 작업"], ["น้ำมันรั่ว", "오일 누유"], ["แบริ่งหลวม", "베어링 유격"], ["สายเคเบิ้ล", "케이블"], ["On breaker", "차단기 투입"], ["แกนโรเลอร์", "롤러 축"], ["Autoไม่ได้", "자동운전 불가"], ["เกลียวล๊อค", "나사 고착"], ["โฟล์คลิฟท์", "지게차"], ["เติมน้ำมัน", "오일 보충"], ["Line Issue", "라인 고장"], ["เรียบร้อย", "완료"], ["สายน้ำมัน", "유압호스"], ["อากาศรั่ว", "에어 누설"], ["ข้อต่อตรง", "직선 피팅"], ["ลูกปืนแตก", "베어링 파손"], ["แบริ่งแตก", "베어링 파손"], ["แบริ่งแคก", "베어링 파손"], ["ลูกยางสึก", "고무패킹 마모"], ["สายไฟช๊อต", "전선 단락"], ["สายไฟหลุด", "전선 이탈"], ["สานไฟหลุด", "전선 이탈"], ["เบรกเกอร์", "차단기"], ["เกลียวติด", "나사 고착"], ["ตู้อบใหญ่", "대형 건조로"], ["ระบบอากาศ", "에어 계통"], ["เนื่องจาก", "원인: "], ["ไฮดรอลิค", "유압"], ["สายลมแตก", "에어호스 파손"], ["แรงดันลม", "에어 압력"], ["กระบอกลม", "에어실린더"], ["สายไฟขาด", "전선 단선"], ["แมกเนติก", "마그네틱 스위치"], ["ฮีตเตอร์", "히터"], ["ไม่มีน้ำ", "용수 공급 없음"], ["ไฟไม่ติด", "점등 불가"], ["ไม่ทำงาน", "작동 불가"], ["ตรวจเช็ค", "점검"], ["ทำการถอด", "탈거"], ["มอเตอร์", "모터"], ["ไม่ร้อน", "가열 불가"], ["โรเลอร์", "롤러"], ["โซ่หลุด", "체인 이탈"], ["ท่อแก๊ส", "가스 배관"], ["ปั๊มน้ำ", "물펌프"], ["ไม่หมุน", "회전 불가"], ["ชิ้นงาน", "제품"], ["เตาหลอม", "용해로"], ["ตรวจสอบ", "점검"], ["ติดตั้ง", "설치"], ["ส่งซ่อม", "외주 수리"], ["เปลี่ยน", "교체"], ["เครื่อง", "설비"], ["พนักงาน", "작업자"], ["ชั่วโมง", "시간"], ["มีปัญหา", " 이상"], ["หมดสภาพ", "수명 종료"], ["หมดอายุ", "수명 종료"], ["จาระบี", "그리스"], ["น้ำมัน", "오일"], ["ลมรั่ว", "에어 누설"], ["ลูกปืน", "베어링"], ["แบริ่ง", "베어링"], ["ลูกยาง", "고무패킹"], ["ท่อแตก", "배관 파손"], ["ท่อน้ำ", "배수 배관"], ["เชื่อม", "용접"], ["ตัวที่", "번"], ["สวิตช์", "스위치"], ["สัญญาณ", "신호"], ["ประกอบ", "조립"], ["ไม่ได้", "불가"], ["สายรัด", "고정 밴드"], ["สายลม", "에어호스"], ["สานลม", "에어호스"], ["ปืนลม", "에어건"], ["สายไฟ", "전선"], ["พัดลม", "팬"], ["พ่นสี", "도장"], ["ทำการ", ""], ["สะอาด", "청결"], ["ไม่มี", "없음"], ["ไม่ม่", "없음"], ["ไม่มึ", "없음"], ["ปัญหา", "이상"], ["กล่อง", "박스"], ["ลิฟท์", "리프트"], ["ชำรุด", "손상"], ["อากาศ", "에어"], ["ปั๊ม", "펌프"], ["ซ่อม", "수리"], ["ช่าง", "정비사"], ["ปกติ", "정상"], ["ไมมี", "없음"], ["ไ่มี", "없음"], ["นาที", "분"], ["นรที", "분"], ["เส้น", "본"], ["ใหม่", "신규"], ["แล้ว", " 후 "], ["หรือ", " 또는 "], ["น็อต", "볼트"], ["เครน", "크레인"], ["วงจร", "회로"], ["ระบบ", "계통"], ["ล้าง", "세척"], ["ปรับ", "조정"], ["ตรวจ", "점검"], ["เติม", "보충"], ["หลุด", " 이탈"], ["เสีย", " 고장"], ["ค้าง", " 고착"], ["รั่ว", " 누설"], ["เตา", "로(爐)"], ["ถอด", "탈거"], ["ต่ำ", "낮음"], ["ตัว", "개"], ["และ", " 및 "], ["แกน", "축"], ["ถัง", "통"], ["ขาด", " 단선"], ["แตก", " 파손"], ["ตัน", " 막힘"], ["ใส่", "장착"], ["ตัด", "절단"], ["ต่อ", "연결"], ["งาน", "작업"], ["ของ", "의 "], ["ไล่", "배출"]];
+const HIST_WORKTYPE = {"Line Issue": "라인 고장", "Normal work": "일반 작업", "PM": "예방보전(PM)", "Daily inspection": "일상점검", "Parts replacement": "부품 교체", "BM": "사후보전(BM)", "TBM": "시간기준보전(TBM)"};
+const HIST_TYPEMAP  = {"PRESS": "프레스", "HYD": "유압장치", "INJ": "사출기", "ROBOT": "로봇", "FEEDER": "피더", "CRANE": "크레인", "COATING": "코팅설비", "Coiler": "코일러", "Compressor": "컴프레서", "ASSY MC": "조립설비", "Assy MC": "조립설비", "Spot": "스폿용접기", "DC": "다이캐스팅기", "TP": "트리밍프레스", "EF": "전기로"};
+
+let HIST_RAW = [], HIST_LOADED = false, HIST_CAT = 'DC', HIST_SHOW_ORG = false;
+let histCntChart = null, histTrendChart = null;
+let HIST_AI_CACHE = {};
+try{ HIST_AI_CACHE = JSON.parse(localStorage.getItem('stc_hist_ai_tr') || '{}'); }catch(e){ HIST_AI_CACHE = {}; }
+
+function histHasThai(s){ return /[\u0E00-\u0E7F]/.test(s || ''); }
+
+/* 태국어 → 한국어 (사전 치환 + AI 번역 캐시) */
+const TH_EXACT = (function(){ const m = {}; TH_DICT.forEach(p => { m[p[0]] = p[1]; }); return m; })();
+function thToKo(s){
+  let t = String(s == null ? '' : s).trim();
+  if(!t || t === '-' ) return t;
+  if(HIST_AI_CACHE[t]) return HIST_AI_CACHE[t];
+  if(TH_EXACT[t]) return TH_EXACT[t];
+  if(!histHasThai(t)) return t;
+  for(let i=0;i<TH_DICT.length;i++){
+    const th = TH_DICT[i][0], ko = TH_DICT[i][1];
+    if(t.indexOf(th) >= 0) t = t.split(th).join(ko);
+  }
+  return t.replace(/\s{2,}/g,' ').replace(/\s+([,.])/g,'$1').trim();
+}
+function histWorkKo(v){
+  const k = String(v||'').trim();
+  if(HIST_WORKTYPE[k]) return HIST_WORKTYPE[k];
+  for(const key in HIST_WORKTYPE){ if(k.toLowerCase() === key.toLowerCase()) return HIST_WORKTYPE[key]; }
+  return thToKo(k);
+}
+function histTypeKo(v){
+  const k = String(v||'').trim();
+  if(!k) return '';
+  if(HIST_TYPEMAP[k]) return HIST_TYPEMAP[k];
+  for(const key in HIST_TYPEMAP){ if(k.toLowerCase() === key.toLowerCase()) return HIST_TYPEMAP[key]; }
+  return k;
+}
+
+/* 분류 */
+function histClassify(hay){
+  const s = String(hay||'');
+  for(const re of HIST_CAT_RULES.DC){ if(re.test(s)) return 'DC'; }
+  for(const re of HIST_CAT_RULES.EF){ if(re.test(s)) return 'EF'; }
+  for(const re of HIST_CAT_RULES.TP){ if(re.test(s)) return 'TP'; }
+  return 'ETC';
+}
+
+/* 유틸 */
+function histNormDate(v){
+  let s = String(v||'').trim();
+  if(!s) return '';
+  s = s.replace(/\./g,'-').replace(/\//g,'-').replace(/\s+/g,'');
+  const m = s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(!m) return '';
+  return m[1] + '-' + String(m[2]).padStart(2,'0') + '-' + String(m[3]).padStart(2,'0');
+}
+function histToMin(v, st, en){
+  const s = String(v||'').trim();
+  if(s){
+    const hr = /ชั่วโมง|시간|\bhour|\bhr/i.test(s);
+    const n = parseFloat((s.match(/[\d.]+/)||[''])[0]);
+    if(!isNaN(n) && n > 0) return hr ? n*60 : n;
+  }
+  const p = t => { const m = String(t||'').match(/(\d{1,2}):(\d{2})/); return m ? (+m[1]*60 + +m[2]) : null; };
+  const a = p(st), b = p(en);
+  if(a != null && b != null){ let d = b - a; if(d < 0) d += 1440; return d; }
+  return 0;
+}
+function histPick(row, names){
+  const keys = Object.keys(row);
+  for(const n of names){
+    for(const k of keys){
+      const kk = String(k).replace(/\s|\(|\)/g,'').toLowerCase();
+      const nn = n.replace(/\s|\(|\)/g,'').toLowerCase();
+      if(kk === nn) return row[k];
+    }
+  }
+  for(const n of names){
+    for(const k of keys){
+      if(String(k).toLowerCase().indexOf(n.toLowerCase()) >= 0) return row[k];
+    }
+  }
+  return '';
+}
+function histEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* 로드 */
+async function histLoad(force){
+  const st = document.getElementById('histStatus');
+  if(HIST_LOADED && !force) return;
+  st.style.display='block'; st.textContent = '수리 히스토리를 불러오는 중…';
+  try{
+    const res = await fetch(HIST_CSV_URL + '&_=' + Date.now());
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const txt = await res.text();
+    const pr = Papa.parse(txt, {header:true, skipEmptyLines:true});
+    HIST_RAW = pr.data.map((r, i) => {
+      const serial = String(histPick(r,['Serial Number','Serial number','설비번호'])||'').trim();
+      const type   = String(histPick(r,['TYPE','타입'])||'').trim();
+      const fac    = String(histPick(r,['FAC','Fac','공장'])||'').trim();
+      const line   = String(histPick(r,['LINE','Line','라인'])||'').trim();
+      const model  = String(histPick(r,['MODEL','Model','모델'])||'').trim();
+      const sym    = String(histPick(r,['Before 증상','증상'])||'').trim();
+      const cause  = String(histPick(r,['Before 문제점','문제점','원인'])||'').trim();
+      const act    = String(histPick(r,['After 수리완료','수리완료','조치'])||'').trim();
+      const part   = String(histPick(r,['PART','부품'])||'').trim();
+      const s1     = String(histPick(r,['수리시작','시작'])||'').trim();
+      const s2     = String(histPick(r,['수리종료','종료'])||'').trim();
+      const dur    = String(histPick(r,['총시간(분)','총시간','소요시간(분)','소요시간'])||'').trim();
+      const man    = String(histPick(r,['작업자','담당자'])||'').trim();
+      const work   = String(histPick(r,['작업구분','구분'])||'').trim();
+      const date   = histNormDate(histPick(r,['Date','DATE','DATA','날짜','일자']));
+      const pics   = ['Before1','Before2','Before3','After1','After2','After3']
+                       .map(k => String(r[k]||'').trim()).filter(Boolean);
+      const hay = [serial, type, model, line].join(' ');
+      const actKo = thToKo(act);
+      const done  = !!act && !/미완료|ยังไม่เสร็จ|ยังทำไม่เสร็จ|แก้ไขยังไม่เสร็จ/.test(act) && !/미완료/.test(actKo);
+      return {
+        i:i, date:date, serial:serial||'-', type:type, typeKo:histTypeKo(type),
+        fac:fac, line:line, model:model, work:work, workKo:histWorkKo(work),
+        sym:sym, cause:cause, act:act, part:part, s1:s1, s2:s2, man:man, pics:pics,
+        min:histToMin(dur, s1, s2), cat:histClassify(hay), done:done
+      };
+    }).filter(r => (r.date || r.serial !== '-' || r.sym)
+                && !(HIST_MIN_DATE && r.date && r.date < HIST_MIN_DATE));
+    HIST_LOADED = true;
+    histFillWorkSelect();
+    histSetDefaultRange();
+    st.style.display = 'none';
+    histRender();
+  }catch(e){
+    st.style.display='block';
+    st.innerHTML = '수리 히스토리 CSV를 불러오지 못했습니다 (' + histEsc(e.message) + ').<br>'
+      + '시트가 <b>웹에 게시</b>되어 있는지 확인하세요 · '
+      + '<a href="' + HIST_CSV_URL + '" target="_blank">CSV 직접 열기</a>';
+  }
+}
+function histFillWorkSelect(){
+  const sel = document.getElementById('histWork');
+  const set = new Set(HIST_RAW.map(r=>r.work).filter(Boolean));
+  sel.innerHTML = '<option value="ALL">전체</option>'
+    + [...set].sort().map(w => '<option value="'+histEsc(w)+'">'+histEsc(histWorkKo(w))+'</option>').join('');
+}
+function histSetDefaultRange(){
+  const s = document.getElementById('histStart'), e = document.getElementById('histEnd');
+  if(HIST_MIN_DATE){ s.min = HIST_MIN_DATE; e.min = HIST_MIN_DATE; }
+  const ds = HIST_RAW.map(r=>r.date).filter(Boolean).sort();
+  if(!ds.length){ if(!s.value) s.value = HIST_MIN_DATE; return; }
+  const first = (HIST_MIN_DATE && ds[0] < HIST_MIN_DATE) ? HIST_MIN_DATE : ds[0];
+  if(!s.value) s.value = first;
+  if(!e.value) e.value = ds[ds.length-1];
+}
+
+/* 필터 */
+function histFiltered(){
+  const s = document.getElementById('histStart').value;
+  const e = document.getElementById('histEnd').value;
+  const w = document.getElementById('histWork').value;
+  const q = document.getElementById('histQ').value.trim().toLowerCase();
+  return HIST_RAW.filter(r=>{
+    if(r.cat !== HIST_CAT) return false;
+    if(HIST_MIN_DATE && r.date && r.date < HIST_MIN_DATE) return false;
+    if(s && r.date && r.date < s) return false;
+    if(e && r.date && r.date > e) return false;
+    if(w !== 'ALL' && r.work !== w) return false;
+    if(q){
+      const hay = [r.serial, r.type, r.typeKo, r.fac, r.line, r.model, r.part, r.man,
+                   thToKo(r.sym), thToKo(r.cause), thToKo(r.act), r.sym, r.cause, r.act]
+                   .join(' ').toLowerCase();
+      if(hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  }).sort((a,b)=> (b.date||'').localeCompare(a.date||'') || b.i - a.i);
+}
+
+/* 렌더 */
+function histRender(){
+  if(!HIST_LOADED) return;
+  const rows = histFiltered();
+  const totMin = rows.reduce((s,r)=>s+r.min, 0);
+  const mcs = new Set(rows.map(r=>r.serial).filter(x=>x && x!=='-'));
+  const open = rows.filter(r=>!r.done).length;
+  const worst = {};
+  rows.forEach(r=>{ const k=r.serial||'-'; (worst[k] = worst[k] || {c:0,m:0}); worst[k].c++; worst[k].m += r.min; });
+  const worstArr = Object.entries(worst).sort((a,b)=>b[1].c-a[1].c);
+
+  document.getElementById('histKpis').innerHTML = [
+    ['수리 건수', rows.length, '건'],
+    ['총 수리시간', (totMin/60).toFixed(1), 'h'],
+    ['평균 소요', rows.length ? Math.round(totMin/rows.length) : 0, '분'],
+    ['대상 설비', mcs.size, '대'],
+    ['미완료', open, '건']
+  ].map((k,idx)=>'<div class="hist-kpi'+(idx===4 && open>0 ? ' bad':'')+'"><div class="lb">'+k[0]+'</div>'
+      + '<div class="vl">'+k[1]+'<small>'+k[2]+'</small></div></div>').join('');
+
+  /* 표 */
+  const thead = document.querySelector('#histTable thead');
+  const tbody = document.querySelector('#histTable tbody');
+  thead.innerHTML = '<tr><th style="width:88px">일자</th><th style="width:120px">설비</th>'
+    + '<th style="width:74px">분류</th><th style="width:96px">작업구분</th>'
+    + '<th>증상</th><th>원인</th><th>조치 내용</th><th style="width:110px">부품</th>'
+    + '<th style="width:62px">소요(분)</th><th style="width:100px">작업자</th></tr>';
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:26px; color:#7a8698;">'
+      + '선택한 조건에 해당하는 수리 이력이 없습니다.</td></tr>';
+  }else{
+    tbody.innerHTML = rows.map(r=>{
+      const org = HIST_SHOW_ORG && histHasThai(r.sym + r.cause + r.act);
+      const cell = (ko, o) => histEsc(ko) + (org && histHasThai(o) ? '<div class="og">'+histEsc(o)+'</div>' : '');
+      return '<tr data-hi="'+r.i+'">'
+        + '<td class="dt">'+histEsc(r.date||'-')+'</td>'
+        + '<td class="mc">'+histEsc(r.serial)+(r.line?'<div class="og">'+histEsc(r.line)+'</div>':'')+'</td>'
+        + '<td><span class="hist-badge '+r.cat+'">'+HIST_CAT_NAME[r.cat]+'</span>'
+        + (r.typeKo?'<div class="og">'+histEsc(r.typeKo)+'</div>':'')+'</td>'
+        + '<td>'+histEsc(r.workKo)+'</td>'
+        + '<td>'+cell(thToKo(r.sym), r.sym)+'</td>'
+        + '<td>'+cell(thToKo(r.cause), r.cause)+'</td>'
+        + '<td>'+cell(thToKo(r.act), r.act)+(r.done?'':' <span class="hist-open">[미완료]</span>')+'</td>'
+        + '<td>'+histEsc(thToKo(r.part))+'</td>'
+        + '<td class="num">'+(r.min?Math.round(r.min):'-')+'</td>'
+        + '<td>'+histEsc(r.man)+'</td></tr>';
+    }).join('');
+  }
+
+  const untr = new Set();
+  HIST_RAW.forEach(r=>[r.sym,r.cause,r.act,r.part].forEach(x=>{
+    if(histHasThai(x) && histHasThai(thToKo(x))) untr.add(x.trim());
+  }));
+  document.getElementById('histNote').innerHTML =
+    '분류 기준 — <b>전체 DC</b>: DC·다이캐스팅·TOYO/시바우라 &nbsp;/&nbsp; <b>TP</b>: TP·TRIM·PRESS·유압장치 &nbsp;/&nbsp; '
+    + '<b>전기로</b>: 전기로·용해/보온로·FURNACE·래들 &nbsp;/&nbsp; <b>기타</b>: 그 외(로봇·컨베이어·컴프레서 등)'
+    + '<br>집계 기준일 <b>' + HIST_MIN_DATE + '</b> 이후 기록만 사용합니다 · 전체 <b>' + HIST_RAW.length + '</b>건 중 현재 분류 <b>' + rows.length + '</b>건'
+    + '<br>사전 미등록 태국어 문장 <b>' + untr.size + '</b>건 — [AI 번역] 버튼으로 보완할 수 있습니다 (원인분석 탭의 AI 키 사용).';
+
+  histCharts(worstArr, rows);
+}
+
+function histCharts(worstArr, rows){
+  const top = worstArr.slice(0,10);
+  if(histCntChart) histCntChart.destroy();
+  histCntChart = new Chart(document.getElementById('histCntChart'), {
+    type:'bar',
+    data:{ labels: top.map(x=>x[0]),
+      datasets:[
+        {label:'건수', data: top.map(x=>x[1].c), backgroundColor:'#c9791a', yAxisID:'y', order:2},
+        {label:'수리시간(h)', data: top.map(x=>+(x[1].m/60).toFixed(1)), type:'line',
+         borderColor:'#0678a8', backgroundColor:'#0678a8', yAxisID:'y1', tension:.25, order:1}
+      ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{labels:{font:{size:11}}}, datalabels:{display:false} },
+      scales:{ x:{ticks:{font:{size:10}, maxRotation:60, minRotation:30}},
+               y:{beginAtZero:true, title:{display:true,text:'건수',font:{size:10}}},
+               y1:{beginAtZero:true, position:'right', grid:{drawOnChartArea:false},
+                   title:{display:true,text:'시간(h)',font:{size:10}}} } }
+  });
+
+  const mm = {};
+  rows.forEach(r=>{ if(!r.date) return; const k = r.date.slice(0,7);
+    (mm[k] = mm[k] || {c:0,m:0}); mm[k].c++; mm[k].m += r.min; });
+  const keys = Object.keys(mm).sort();
+  if(histTrendChart) histTrendChart.destroy();
+  histTrendChart = new Chart(document.getElementById('histTrendChart'), {
+    type:'bar',
+    data:{ labels: keys,
+      datasets:[
+        {label:'건수', data: keys.map(k=>mm[k].c), backgroundColor:'#9db8d2', yAxisID:'y', order:2},
+        {label:'소요시간(h)', data: keys.map(k=>+(mm[k].m/60).toFixed(1)), type:'line',
+         borderColor:'#c9791a', backgroundColor:'#c9791a', yAxisID:'y1', tension:.25, order:1}
+      ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{labels:{font:{size:11}}}, datalabels:{display:false} },
+      scales:{ x:{ticks:{font:{size:10}}},
+               y:{beginAtZero:true, title:{display:true,text:'건수',font:{size:10}}},
+               y1:{beginAtZero:true, position:'right', grid:{drawOnChartArea:false},
+                   title:{display:true,text:'시간(h)',font:{size:10}}} } }
+  });
+}
+
+/* 행 클릭 → 상세 */
+document.getElementById('histTable').addEventListener('click', ev=>{
+  const tr = ev.target.closest('tr[data-hi]');
+  if(!tr) return;
+  const nx = tr.nextElementSibling;
+  if(nx && nx.classList.contains('hist-detail')){ nx.remove(); tr.classList.remove('open'); return; }
+  document.querySelectorAll('#histTable .hist-detail').forEach(d=>d.remove());
+  document.querySelectorAll('#histTable tr.open').forEach(t=>t.classList.remove('open'));
+  const r = HIST_RAW.find(x=>x.i === +tr.dataset.hi);
+  if(!r) return;
+  tr.classList.add('open');
+  const det = document.createElement('tr');
+  det.className = 'hist-detail';
+  det.innerHTML = '<td colspan="10">'
+    + '<b>설비</b> ' + histEsc(r.serial) + ' · ' + histEsc(r.typeKo||r.type)
+    + ' · 공장 ' + histEsc(r.fac||'-') + ' / 라인 ' + histEsc(r.line||'-') + ' / 모델 ' + histEsc(r.model||'-')
+    + ' &nbsp;|&nbsp; <b>시각</b> ' + histEsc(r.s1||'-') + ' ~ ' + histEsc(r.s2||'-')
+    + ' (' + (r.min?Math.round(r.min)+'분':'미기재') + ')'
+    + ' &nbsp;|&nbsp; <b>상태</b> ' + (r.done ? '완료' : '<span class="hist-open">미완료</span>')
+    + '<div style="margin-top:6px;"><b>증상</b> ' + histEsc(thToKo(r.sym)||'-')
+    + ' &nbsp;<b>원인</b> ' + histEsc(thToKo(r.cause)||'-')
+    + ' &nbsp;<b>조치</b> ' + histEsc(thToKo(r.act)||'-')
+    + ' &nbsp;<b>부품</b> ' + histEsc(thToKo(r.part)||'-') + '</div>'
+    + (histHasThai(r.sym+r.cause+r.act)
+        ? '<div class="og">원문 — 증상: ' + histEsc(r.sym||'-') + ' / 원인: ' + histEsc(r.cause||'-')
+          + ' / 조치: ' + histEsc(r.act||'-') + '</div>' : '')
+    + (r.pics.length ? '<div class="og">사진 ' + r.pics.length + '건 — ' + histEsc(r.pics.join(' , ')) + '</div>' : '')
+    + '</td>';
+  tr.after(det);
+});
+
+/* 컨트롤 */
+document.querySelectorAll('#histCatChips .cat-chip').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#histCatChips .cat-chip').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); HIST_CAT = b.dataset.hcat; histRender();
+  });
+});
+['histStart','histEnd','histWork'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', histRender);
+});
+document.getElementById('histQ').addEventListener('input', ()=>{ clearTimeout(window.__hq);
+  window.__hq = setTimeout(histRender, 220); });
+document.getElementById('histReload').addEventListener('click', ()=>histLoad(true));
+document.getElementById('histLangBtn').addEventListener('click', function(){
+  HIST_SHOW_ORG = !HIST_SHOW_ORG;
+  this.classList.toggle('active', HIST_SHOW_ORG);
+  histRender();
+});
+
+/* 한국어 CSV 내보내기 (구글시트 붙여넣기용) */
+document.getElementById('histCsvBtn').addEventListener('click', ()=>{
+  const rows = histFiltered();
+  const head = ['일자','Serial Number','TYPE','TYPE(한국어)','분류','FAC','LINE','MODEL','작업구분','작업구분(한국어)',
+                '증상(한국어)','원인(한국어)','조치(한국어)','부품','수리시작','수리종료','소요(분)','작업자','상태',
+                '원문_증상','원문_원인','원문_조치'];
+  const q = v => '"' + String(v==null?'':v).replace(/"/g,'""') + '"';
+  const body = rows.map(r=>[r.date,r.serial,r.type,r.typeKo,HIST_CAT_NAME[r.cat],r.fac,r.line,r.model,
+      r.work,r.workKo,thToKo(r.sym),thToKo(r.cause),thToKo(r.act),thToKo(r.part),
+      r.s1,r.s2,r.min?Math.round(r.min):'',r.man,r.done?'완료':'미완료',r.sym,r.cause,r.act].map(q).join(','));
+  const csv = '\ufeff' + [head.map(q).join(',')].concat(body).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+  a.download = 'RepairHistory_KO_' + HIST_CAT + '_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+});
+
+/* AI 보조 번역 — 사전에 없는 태국어 문장만 */
+document.getElementById('histAiBtn').addEventListener('click', async function(){
+  const prov = aiGet(AK.p)||'claude', key = aiGet(AK.k), url = aiGet(AK.u);
+  const model = aiGet(AK.m) || (prov==='claude' ? 'claude-sonnet-4-5' : 'gpt-4o-mini');
+  const st = document.getElementById('histStatus');
+  if((prov!=='proxy' && !key) || (prov==='proxy' && !url)){
+    st.style.display='block';
+    st.textContent = 'AI 번역을 쓰려면 [원인분석 리포트] 탭의 「AI 설정」에서 키(또는 프록시 URL)를 먼저 저장하세요.';
+    return;
+  }
+  const set = new Set();
+  HIST_RAW.forEach(r=>[r.sym,r.cause,r.act,r.part].forEach(x=>{
+    const t = String(x||'').trim();
+    if(histHasThai(t) && histHasThai(thToKo(t)) && !HIST_AI_CACHE[t]) set.add(t);
+  }));
+  const list = [...set].slice(0,120);
+  if(!list.length){ st.style.display='block'; st.textContent='추가로 번역할 태국어 문장이 없습니다.'; return; }
+  st.style.display='block'; st.textContent = 'AI 번역 중… (' + list.length + '문장)';
+  this.disabled = true;
+  const prompt = '다음은 태국 공장 설비보전 기록의 태국어 문장 목록입니다. 각 문장을 한국어 설비보전 용어로 간결하게 번역하세요.\n'
+    + '설명·주석 없이 JSON 객체만 출력합니다. 형식: {"태국어원문":"한국어번역", ...}\n\n'
+    + JSON.stringify(list, null, 0);
+  try{
+    let text = '';
+    if(prov === 'claude'){
+      const res = await fetch('https://api.anthropic.com/v1/messages',{ method:'POST',
+        headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01',
+                 'anthropic-dangerous-direct-browser-access':'true'},
+        body: JSON.stringify({model:model, max_tokens:4000, messages:[{role:'user',content:prompt}]}) });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const j = await res.json();
+      text = (j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    }else if(prov === 'openai'){
+      const ep = url || 'https://api.openai.com/v1/chat/completions';
+      const res = await fetch(ep,{ method:'POST',
+        headers:{'content-type':'application/json','Authorization':'Bearer '+key},
+        body: JSON.stringify({model:model, messages:[{role:'user',content:prompt}], max_tokens:4000}) });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const j = await res.json();
+      text = j.choices && j.choices[0] ? j.choices[0].message.content : '';
+    }else{
+      const res = await fetch(url,{ method:'POST', headers:{'content-type':'application/json'},
+        body: JSON.stringify({prompt:prompt}) });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const j = await res.json();
+      text = j.text || j.output || '';
+    }
+    const m = text.match(/\{[\s\S]*\}/);
+    const obj = JSON.parse(m ? m[0] : text);
+    let n = 0;
+    for(const k in obj){ if(obj[k]){ HIST_AI_CACHE[k] = String(obj[k]).trim(); n++; } }
+    try{ localStorage.setItem('stc_hist_ai_tr', JSON.stringify(HIST_AI_CACHE)); }catch(e){}
+    st.textContent = 'AI 번역 완료 — ' + n + '문장 반영 (이 브라우저에 저장됩니다).';
+    histRender();
+  }catch(e){
+    st.innerHTML = 'AI 번역 실패: ' + histEsc(e.message)
+      + '<br>CORS 차단이면 [AI 설정]에서 Apps Script 프록시 방식을 사용하세요. 사전 번역 결과는 그대로 표시됩니다.';
+  }
+  this.disabled = false;
+});
+
+/* 탭 진입 시 지연 로딩 */
+(function histInit(){
+  const btn = document.querySelector('.tabbtn[data-tab="tab-history"]');
+  if(btn) btn.addEventListener('click', ()=>{
+    histLoad(false);
+    setTimeout(()=>{ try{ if(histCntChart) histCntChart.resize(); if(histTrendChart) histTrendChart.resize(); }catch(e){} }, 60);
+  });
+  const pane = document.getElementById('tab-history');
+  if(pane && pane.classList.contains('show')) histLoad(false);
+})();
 
 loadData();
 </script>
