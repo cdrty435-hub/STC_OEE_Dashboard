@@ -646,6 +646,15 @@
     width:100%; border:1px dashed #d8dfe7; border-radius:5px; padding:3px 5px;
     font-size:10.5px; font-family:inherit; color:#33404f; background:#fff;}
   table.wk-t.down select{border-style:solid;}
+  /* 문제점·진행사항·계획 : 긴 글도 자동 줄바꿈 + 높이 자동 확장 */
+  table.wk-t.down textarea{
+    width:100%; box-sizing:border-box; display:block;
+    border:1px dashed #d8dfe7; border-radius:5px; padding:3px 5px;
+    font-size:10.5px; font-family:inherit; color:#33404f; background:#fff;
+    line-height:1.5; min-height:22px; resize:vertical; overflow:hidden;
+    white-space:pre-wrap; overflow-wrap:break-word; word-break:break-word;}
+  table.wk-t.down textarea:focus{outline:none; border-color:#1f3864; border-style:solid;}
+  table.wk-t.down td.txt{vertical-align:top; padding-top:5px;}
   .wk-down-st{font-family:var(--mono); font-size:10px; font-weight:700; padding:1px 6px; border-radius:9px;}
   .wk-down-st.stop{background:#fdeceb; color:#c00000;}
   .wk-down-st.ok{background:#e8f6ef; color:#1d7d60;}
@@ -678,7 +687,8 @@
   table.wk-t.down button.del:hover{background:#fdeceb;}
   table.wk-t.down button.del:disabled{color:#c7ced5; border-color:#e8edf2; background:#fafbfc; cursor:default;}
   table.wk-t.down button.del:disabled:hover{background:#fafbfc;}
-  @media print{ table.wk-t.down input, table.wk-t.down select{border:1px solid #e2e8ef;}
+  @media print{ table.wk-t.down input, table.wk-t.down select, table.wk-t.down textarea{border:1px solid #e2e8ef;}
+                table.wk-t.down textarea{overflow:visible !important; resize:none;}
                 .wk-down-add, table.wk-t.down .delcol{display:none !important;} }
 </style>
 
@@ -5016,7 +5026,8 @@ function renderWeekly(){
   {
     const dt = document.getElementById('wkDownTable');
     const ST = ['불가동', '수리중', '부품 대기', '외주 수리', '복구 완료'];
-    const esc = s => String(s==null?'':s).replace(/"/g,'&quot;');
+    const esc  = s => String(s==null?'':s).replace(/"/g,'&quot;');
+    const escT = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const list = wkDownList();
 
     /* 추가 드롭다운 : 아직 등록되지 않은 설비만 */
@@ -5068,9 +5079,9 @@ function renderWeekly(){
                        : '<span style="color:#c00000">기록 없음</span>'}</td>
               <td><select data-note="dnSt${m}">${
                     ST.map(s=>`<option value="${s}"${s===stv?' selected':''}>${s}</option>`).join('')}</select></td>
-              <td><input data-note="dnPb${m}" value="${esc(notes['dnPb'+m])}" placeholder="고장 내용 / 원인"></td>
-              <td><input data-note="dnPr${m}" value="${esc(notes['dnPr'+m])}" placeholder="조치 진행 상황"></td>
-              <td><input data-note="dnPl${m}" value="${esc(notes['dnPl'+m])}" placeholder="향후 계획 / 대책"></td>
+              <td class="txt"><textarea data-note="dnPb${m}" rows="1" placeholder="고장 내용 / 원인">${escT(notes['dnPb'+m])}</textarea></td>
+              <td class="txt"><textarea data-note="dnPr${m}" rows="1" placeholder="조치 진행 상황">${escT(notes['dnPr'+m])}</textarea></td>
+              <td class="txt"><textarea data-note="dnPl${m}" rows="1" placeholder="향후 계획 / 대책">${escT(notes['dnPl'+m])}</textarea></td>
               <td><input data-note="dnOw${m}" value="${esc(notes['dnOw'+m])}" placeholder="담당"></td>
               <td>
                 <select data-note="dnEm${m}" style="margin-bottom:3px">
@@ -5249,6 +5260,14 @@ function renderWeekly(){
     wkSaveNotes(wk, o);
   };
   memo.addEventListener('input', save);
+  const wkGrow = el=>{ if(!el || el.tagName!=='TEXTAREA') return;
+    el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; };
+  document.querySelectorAll('#wkDownTable textarea').forEach(el=>{
+    wkGrow(el);
+    el.addEventListener('input', ()=>wkGrow(el));
+    /* Enter 로 줄바꿈은 그대로 두고, 표 안에서 실수로 폼 넘어가는 것만 방지 */
+    el.addEventListener('keydown', e=>{ if(e.key==='Enter') e.stopPropagation(); });
+  });
   document.querySelectorAll('#wkDownTable [data-note]').forEach(el=>{
     el.addEventListener('input', save);
     el.addEventListener('change', ()=>{ save(); renderWeekly(); });   // 상태 바꾸면 색도 갱신
