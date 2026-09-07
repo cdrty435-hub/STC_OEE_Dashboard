@@ -57,6 +57,12 @@
   table.mini { width:100%; border-collapse:collapse; font-size:12px; margin-top:auto; table-layout:fixed; }
   table.mini th, table.mini td { border-bottom:1px solid #eee; padding:6px 5px; text-align:center; overflow:hidden; }
   table.mini th { background:#f6f7f9; font-weight:700; color:#444; }
+  table.mini th.hl-col { background:#FFE9A8; color:#7a5200; }
+  table.mini td.hl-col { background:#FFF6DA; font-weight:700; }
+  #monthlyModeBtns { display:inline-flex; gap:4px; }
+  #monthlyModeBtns button { font-size:11px; padding:3px 9px; border:1px solid #cfd6e0; background:#fff;
+    color:#5a6470; border-radius:12px; cursor:pointer; font-weight:600; line-height:1.6; }
+  #monthlyModeBtns button.on { background:#2196F3; border-color:#2196F3; color:#fff; }
   table.mini td.rowlabel, table.mini th.rowlabel { text-align:left; font-weight:600; color:#555; white-space:nowrap; width:72px; }
   .swatch { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; }
 
@@ -141,29 +147,35 @@
           <div class="gauge-name" style="color:#2196F3">A(%)</div>
           <div class="gauge-target-pill">Target 89%</div>
           <canvas id="gauge-a" class="gauge-canvas" width="280" height="170"></canvas>
-          <div class="gauge-sub">(선택 주차 실적)</div>
+          <div class="gauge-sub" id="gsub-a">(선택 주차 실적)</div>
         </div>
         <div class="gauge-card">
           <div class="gauge-name" style="color:#4CAF50">P(%)</div>
           <div class="gauge-target-pill">Target 99%</div>
           <canvas id="gauge-p" class="gauge-canvas" width="280" height="170"></canvas>
-          <div class="gauge-sub">(선택 주차 실적)</div>
+          <div class="gauge-sub" id="gsub-p">(선택 주차 실적)</div>
         </div>
         <div class="gauge-card">
           <div class="gauge-name" style="color:#FF9800">Q(%)</div>
           <div class="gauge-target-pill">Target 96.5%</div>
           <canvas id="gauge-q" class="gauge-canvas" width="280" height="170"></canvas>
-          <div class="gauge-sub">(선택 주차 실적)</div>
+          <div class="gauge-sub" id="gsub-q">(선택 주차 실적)</div>
         </div>
       </div>
     </div>
 
     <div class="quad-card">
-      <div class="quad-title">📈 월별 OEE Trend</div>
+      <div class="quad-title" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+        <span>📈 월별 OEE Trend</span>
+        <span id="monthlyModeBtns">
+          <button type="button" data-mode="trend"  onclick="setMonthlyMode('trend')">전체 추세</button>
+          <button type="button" data-mode="period" onclick="setMonthlyMode('period')">선택 기간</button>
+        </span>
+      </div>
       <div class="chart-title" id="monthlyTitle">KPI PERFORMANCE</div>
       <div class="chart-wrap"><canvas id="chart-monthly" width="720" height="270"></canvas></div>
       <table class="mini" id="table-monthly"></table>
-      <div class="footnote">※ 월별 값은 해당 월에 속한 주차들의 실적을 (일수 가중) 평균한 값입니다. Dec-25~Jun-26은 초기 등록된 고정 이력치입니다.</div>
+      <div class="footnote" id="monthlyFoot">※ 월별 값 산출 기준을 불러오는 중...</div>
     </div>
 
     <div class="quad-card">
@@ -546,26 +558,100 @@ function applyTrendPreset() {
   renderWeekTrendChart();
 }
 
-function monthlyTrend(scope) {
-  // fixed historical months (keyed by YYYY-MM)
-  const rows = Object.entries(DATA.monthSeed).map(([mk, p]) => ({ mk, label: monthKeyToLabel(mk), ...p }));
-  const seedKeys = new Set(Object.keys(DATA.monthSeed));
+function monthEndDate(mk){
+  const [y,m] = mk.split('-').map(Number);
+  const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return mk + '-' + String(last).padStart(2,'0');
+}
 
-  // months derived from uploaded weeks — skip any month already covered by the fixed seed
+// 원자료(일자)와 주차 기록에서 "고정 이력치가 아닌" 월 키를 수집
+function derivedMonthKeys(){
+  const seedKeys = new Set(Object.keys(DATA.monthSeed));
+  const out = new Set();
+  if (DATA.rawA && DATA.rawA.rows) {
+    for (const r of DATA.rawA.rows) {
+      const d = String(r['일자'] || '').trim();
+      if (d.length >= 7) { const mk = d.slice(0,7); if (!seedKeys.has(mk)) out.add(mk); }
+    }
+  }
+  for (const w of Object.values(DATA.weeks)) {
+    if (!w.startDate) continue;
+    for (const d of [w.startDate, w.endDate || w.startDate]) {
+      const mk = String(d).slice(0,7);
+      if (!seedKeys.has(mk)) out.add(mk);
+    }
+  }
+  return [...out];
+}
+
+/* 월별 트렌드
+   - 고정 이력치(monthSeed) 구간은 그대로 유지 (Dec-25 ~ Jun-26)
+   - 그 이후 달은 "해당 월 1일 ~ 말일" 날짜 범위로 원자료에서 직접 집계한다.
+     좌측 게이지와 완전히 같은 periodSummaryFromStore()를 호출하므로
+     같은 기간이면 두 패널 값이 반드시 일치한다.
+   - opts.clip=true 이면 선택 기간과 겹치는 부분만 잘라서 집계한다. */
+function monthlyTrend(scope, opts) {
+  opts = opts || {};
+  const seedKeys = new Set(Object.keys(DATA.monthSeed));
+  const rows = Object.entries(DATA.monthSeed)
+    .map(([mk, p]) => ({ mk, label: monthKeyToLabel(mk), fixed: true, ...p }));
+
+  // 원자료가 아직 없을 때를 위한 주차 기반 폴백 그룹
   const byMonth = {};
   for (const w of Object.values(DATA.weeks)) {
     if (!w.monthKey || seedKeys.has(w.monthKey)) continue;
-    if (!byMonth[w.monthKey]) byMonth[w.monthKey] = [];
-    byMonth[w.monthKey].push(w);
+    (byMonth[w.monthKey] = byMonth[w.monthKey] || []).push(w);
   }
-  for (const mk of Object.keys(byMonth)) {
-    const ws = byMonth[mk];
-    const totalDays = ws.reduce((s,w)=>s+(w.dayCount||1),0);
-    const wsum = (field) => ws.reduce((s,w)=> s + (w.pct[scope][field] ?? 0) * (w.dayCount||1), 0) / totalDays;
-    rows.push({ mk, label: monthKeyToLabel(mk), A: wsum('A'), P: wsum('P'), Q: wsum('Q'), OEE: wsum('OEE') });
+
+  const raw = hasRawRows();
+  for (const mk of derivedMonthKeys()) {
+    let start = mk + '-01', end = monthEndDate(mk);
+    if (opts.clip && opts.start && opts.end) {
+      if (opts.start > start) start = opts.start;
+      if (opts.end   < end)   end   = opts.end;
+      if (start > end) continue;
+    }
+    let v = raw ? periodSummaryFromStore(start, end, scope) : null;
+    let approx = false;
+    if (!v || v.A === null) {
+      const ws = byMonth[mk];
+      if (!ws || !ws.length) continue;
+      const totalDays = ws.reduce((s,w)=>s+(w.dayCount||1),0);
+      const wsum = (f) => ws.reduce((s,w)=> s + (w.pct[scope][f] ?? 0) * (w.dayCount||1), 0) / totalDays;
+      v = { A: wsum('A'), P: wsum('P'), Q: wsum('Q'), OEE: wsum('OEE') };
+      approx = true;
+    }
+    rows.push({ mk, label: monthKeyToLabel(mk), fixed:false, approx, start, end, ...v });
   }
   rows.sort((x,y) => x.mk < y.mk ? -1 : x.mk > y.mk ? 1 : 0);
-  return rows.slice(-7); // sliding window of last 7 months
+  return rows;
+}
+
+/* 월별 트렌드 표시 모드 (전체 추세 / 선택 기간) */
+function monthlyMode(){
+  try { return localStorage.getItem('stc_monthly_mode') || 'trend'; } catch(e){ return 'trend'; }
+}
+function setMonthlyMode(m){
+  try { localStorage.setItem('stc_monthly_mode', m); } catch(e){}
+  syncMonthlyModeBtns();
+  try { renderMonthlyChart(); } catch(e){ console.error(e); }
+}
+function syncMonthlyModeBtns(){
+  const m = monthlyMode();
+  document.querySelectorAll('#monthlyModeBtns button').forEach(b =>
+    b.classList.toggle('on', b.dataset.mode === m));
+}
+
+/* 화면에서 현재 선택된 날짜 구간 — 주차 모드/기간 모드 모두 대응 */
+function selectedDateRange(){
+  if (isPeriodMode()) {
+    return { start: document.getElementById('periodStart').value,
+             end:   document.getElementById('periodEnd').value };
+  }
+  const sub = weekSubRange();
+  if (sub && sub.start) return { start: sub.start, end: sub.end };
+  const b = weekBounds(currentWeekLabel());
+  return { start: b.min, end: b.max };
 }
 
 /* =========================================================================
@@ -851,6 +937,10 @@ function renderGauges(){
     }
   }
   document.getElementById('gaugeWeekTitle').textContent = titleText;
+  const capText = isPeriodMode() ? '(선택 기간 실적)' : '(선택 주차 실적)';
+  ['gsub-a','gsub-p','gsub-q'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = capText;
+  });
   drawGauge('gauge-a', p.A, 89, '#2196F3');
   drawGauge('gauge-p', p.P, 99, '#4CAF50');
   drawGauge('gauge-q', p.Q, 96.5, '#FF9800');
@@ -982,23 +1072,59 @@ function buildMiniTable(elId, labels, rows){
 
 function renderMonthlyChart(){
   const scope = currentScope();
-  const rows = monthlyTrend(scope);
-  const labels = rows.map(r=>r.label);
-  document.getElementById('monthlyTitle').textContent = `KPI PERFORMANCE (${labels[0]||'-'} ~ ${labels[labels.length-1]||'-'})`;
+  const mode  = monthlyMode();
+  const sel   = selectedDateRange();
+  const hasSel = !!(sel.start && sel.end);
+  const overlaps = r => hasSel && !((r.mk + '-01') > sel.end || monthEndDate(r.mk) < sel.start);
+
+  let rows, note, title;
+  if (mode === 'period' && hasSel) {
+    rows = monthlyTrend(scope, { clip:true, start:sel.start, end:sel.end }).filter(overlaps);
+    title = `KPI PERFORMANCE (선택 기간 ${sel.start} ~ ${sel.end})`;
+    if (!rows.length) {
+      note = `※ 선택 기간(${sel.start} ~ ${sel.end})에 해당하는 월별 데이터가 없습니다.`;
+    } else if (rows.every(r => r.fixed)) {
+      note = `※ 선택 기간(${sel.start} ~ ${sel.end})은 초기 등록된 고정 이력치 구간입니다. 원자료가 없어 좌측 게이지와 대조할 수 없습니다.`;
+    } else {
+      note = `※ 선택 기간(${sel.start} ~ ${sel.end})과 겹치는 부분만 집계했습니다. 좌측 게이지와 동일한 원자료·동일 계산식이므로 값이 일치해야 합니다.`;
+    }
+  } else {
+    rows = monthlyTrend(scope).slice(-7);
+    const lb = rows.map(r=>r.label);
+    title = `KPI PERFORMANCE (${lb[0]||'-'} ~ ${lb[lb.length-1]||'-'})`;
+    note = '※ Jul-26부터는 해당 월 1일~말일의 원자료를 좌측 게이지와 동일한 계산식으로 집계한 값입니다. * 표시된 달(Dec-25~Jun-26)은 초기 등록된 고정 이력치입니다.';
+    if (hasSel && rows.some(overlaps)) note += ' 선택 기간에 해당하는 달은 표에 강조 표시됩니다.';
+  }
+  if (rows.some(r => r.approx)) note += ' (일부 달은 원자료 미로딩으로 주차 근사값을 표시 중 — 새로고침을 눌러주세요.)';
+
+  const labels = rows.map(r => r.label + (r.fixed ? '*' : ''));
+  document.getElementById('monthlyTitle').textContent = title;
   drawBarChart('chart-monthly', labels, [
-    { name:'A(%)', color:'#2196F3', colorLight:'#64B5F6', data: rows.map(r=>r.A) },
-    { name:'P(%)', color:'#FB8C00', colorLight:'#FFB74D', data: rows.map(r=>r.P) },
-    { name:'Q(%)', color:'#8E24AA', colorLight:'#BA68C8', data: rows.map(r=>r.Q) },
+    { name:'A(%)',   color:'#2196F3', colorLight:'#64B5F6', data: rows.map(r=>r.A) },
+    { name:'P(%)',   color:'#FB8C00', colorLight:'#FFB74D', data: rows.map(r=>r.P) },
+    { name:'Q(%)',   color:'#8E24AA', colorLight:'#BA68C8', data: rows.map(r=>r.Q) },
     { name:'OEE(%)', color:'#F9A825', colorLight:'#FFD54F', data: rows.map(r=>r.OEE) }
   ], OEE_TARGET, 110);
   buildMiniTable('table-monthly', labels, [
-    {label:'A(%)', values:rows.map(r=>r.A), color:'#2196F3'},
-    {label:'P(%)', values:rows.map(r=>r.P), color:'#FF9800'},
-    {label:'Q(%)', values:rows.map(r=>r.Q), color:'#9C27B0'},
+    {label:'A(%)',   values:rows.map(r=>r.A),   color:'#2196F3'},
+    {label:'P(%)',   values:rows.map(r=>r.P),   color:'#FF9800'},
+    {label:'Q(%)',   values:rows.map(r=>r.Q),   color:'#9C27B0'},
     {label:'OEE(%)', values:rows.map(r=>r.OEE), color:'#FFC107'},
     {label:'Target', values:labels.map(()=>OEE_TARGET), color:'#F44336'}
   ]);
+
+  if (mode === 'trend' && hasSel) {
+    const flags = rows.map(overlaps);
+    document.getElementById('table-monthly').querySelectorAll('tr').forEach(tr => {
+      const c = tr.children;
+      for (let i = 1; i < c.length; i++) if (flags[i-1]) c[i].classList.add('hl-col');
+    });
+  }
+  const foot = document.getElementById('monthlyFoot');
+  if (foot) foot.textContent = note;
+  syncMonthlyModeBtns();
 }
+
 
 function renderWeekTrendChart(){
   const scopeSel = document.getElementById('trendScope');
