@@ -76,6 +76,15 @@
   table.qty td.bad { color:#D32F2F; }
   table.qty td.etc { color:#607D8B; }
   .seedmark { color:#F9A825; font-weight:700; margin-left:2px; }
+  .qty-series { display:flex; flex-wrap:wrap; gap:6px 18px; margin:0 0 10px; padding:8px 12px;
+    background:#f8f9fb; border:1px solid #eceff3; border-radius:6px; }
+  .qty-series label { display:inline-flex; align-items:center; gap:6px; font-size:12px;
+    color:#455; cursor:pointer; user-select:none; white-space:nowrap; }
+  .qty-series input { margin:0; cursor:pointer; }
+  .qty-series em { font-style:normal; color:#9aa1ab; font-size:11px; }
+  .qty-series .sw { display:inline-block; }
+  .qty-series .sw.bar { width:11px; height:11px; border-radius:2px; }
+  .qty-series .sw.line { width:16px; height:3px; border-radius:2px; }
   #qtyModeBtns { display:inline-flex; gap:4px; }
   #qtyModeBtns button { font-size:11px; padding:3px 9px; border:1px solid #cfd6e0; background:#fff;
     color:#5a6470; border-radius:12px; cursor:pointer; font-weight:600; line-height:1.6; }
@@ -250,6 +259,12 @@
         </span>
       </div>
       <div class="chart-title" id="qtyTitle">PRODUCTION QUANTITY</div>
+      <div class="qty-series" id="qtySeriesPick">
+        <label><input type="checkbox" data-key="total" checked onchange="onQtySeriesToggle()"><span class="sw bar"  style="background:#1976D2"></span>총생산량</label>
+        <label><input type="checkbox" data-key="good"  checked onchange="onQtySeriesToggle()"><span class="sw bar"  style="background:#2E7D32"></span>양품</label>
+        <label><input type="checkbox" data-key="ng"    checked onchange="onQtySeriesToggle()"><span class="sw line" style="background:#C62828"></span>불량 <em>(선)</em></label>
+        <label><input type="checkbox" data-key="etc"   checked onchange="onQtySeriesToggle()"><span class="sw line" style="background:#607D8B"></span>웜샷 <em>(선)</em></label>
+      </div>
       <div class="qty-body">
         <table class="qty" id="table-qty"></table>
         <div class="qty-chart-wrap"><canvas id="chart-qty"></canvas></div>
@@ -724,6 +739,16 @@ function monthlyQty(year, scope, opts){
       if (opts.end   < end)   { end   = opts.end;   clipped = true; }
       if (start > end) { out.push({ m, label:m+'월', mk, total:null, good:null, ng:null, etc:null, empty:true }); continue; }
     }
+    // 고정 시드가 있는 달은 시드를 우선한다.
+    // (원자료가 월 중간부터 들어온 경우 부분 집계가 확정 집계치를 덮어쓰는 것을 막는다)
+    const seedFirst = QTY_SEED[mk];
+    if (seedFirst) {
+      if (clipped) { out.push({ m, label:m+'월', mk, total:null, good:null, ng:null, etc:null, empty:true, seedPartial:true }); }
+      else out.push({ m, label:m+'월', mk, start:mStart, end:mEnd, fixed:true,
+                      total:seedFirst.total, good:seedFirst.good, ng:seedFirst.ng,
+                      etc: seedFirst.total - seedFirst.good - seedFirst.ng, empty:false });
+      continue;
+    }
     // 원자료에서 집계
     let total = 0, good = 0, n = 0;
     for (const r of rows) {
@@ -740,18 +765,29 @@ function monthlyQty(year, scope, opts){
                  total, good, ng: total-good, etc: 0, empty:false });
       continue;
     }
-    // 원자료가 없으면 고정 시드 사용 (월 전체가 선택 구간에 들어올 때만)
-    const seed = QTY_SEED[mk];
-    if (seed && !clipped) {
-      out.push({ m, label:m+'월', mk, start:mStart, end:mEnd, fixed:true,
-                 total:seed.total, good:seed.good, ng:seed.ng,
-                 etc: seed.total - seed.good - seed.ng, empty:false });
-      continue;
-    }
-    out.push({ m, label:m+'월', mk, total:null, good:null, ng:null, etc:null,
-               empty:true, seedPartial: !!(seed && clipped) });
+    out.push({ m, label:m+'월', mk, total:null, good:null, ng:null, etc:null, empty:true });
   }
   return out;
+}
+
+const QTY_SERIES_KEYS = ['total','good','ng','etc'];
+function qtySeriesVis(){
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('stc_qty_series') || 'null'); } catch(e){}
+  const v = {};
+  for (const k of QTY_SERIES_KEYS) v[k] = saved ? saved[k] !== false : true;
+  if (!QTY_SERIES_KEYS.some(k => v[k])) v.total = true;   // 전부 끄면 최소 하나는 남긴다
+  return v;
+}
+function onQtySeriesToggle(){
+  const v = {};
+  document.querySelectorAll('#qtySeriesPick input').forEach(i => { v[i.dataset.key] = i.checked; });
+  if (!QTY_SERIES_KEYS.some(k => v[k])) { v.total = true; }
+  try { localStorage.setItem('stc_qty_series', JSON.stringify(v)); } catch(e){}
+  try { renderQtyPanel(); } catch(e){ console.error(e); }
+}
+function syncQtySeriesPick(v){
+  document.querySelectorAll('#qtySeriesPick input').forEach(i => { i.checked = !!v[i.dataset.key]; });
 }
 
 function qtyMode(){
@@ -769,7 +805,18 @@ function syncQtyModeBtns(){
 
 const nf = v => (v===null||v===undefined) ? '-' : Math.round(v).toLocaleString('en-US');
 
-/* 수량용 막대 차트 — 퍼센트 차트와 달리 눈금을 데이터에 맞춰 자동 결정 */
+/* 수량 콤보 차트 — 막대(총생산량/양품) + 꺾은선(불량/웜샷, 우측 보조축)
+   두 축을 쓰는 이유: 불량·웜샷은 총생산량의 2~9% 수준이라 같은 축에 두면
+   바닥에 붙어 변화가 보이지 않는다. */
+function niceScale(peak){
+  if (!(peak > 0)) return { step: 1, max: 1 };
+  const rough = peak / 5;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const u = rough / mag;
+  const step = (u <= 1 ? 1 : u <= 2 ? 2 : u <= 5 ? 5 : 10) * mag;
+  return { step, max: Math.ceil(peak / step) * step || step };
+}
+
 function drawQtyChart(canvasId, labels, series){
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
@@ -779,53 +826,97 @@ function drawQtyChart(canvasId, labels, series){
   const W = cssW, H = cssH;
   ctx.clearRect(0,0,W,H);
 
-  const flat = series.flatMap(s => s.data).filter(v => v !== null && v !== undefined);
-  if (!labels.length || !flat.length) {
+  const vis = series.filter(s => s.visible !== false);
+  const bars  = vis.filter(s => s.type !== 'line');
+  const lines = vis.filter(s => s.type === 'line');
+  const any = vis.some(s => s.data.some(v => v !== null && v !== undefined));
+  if (!labels.length || !any) {
     ctx.fillStyle='#bbb'; ctx.font='13px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText('데이터 없음', W/2, H/2); return;
+    ctx.fillText('표시할 계열이 없습니다', W/2, H/2); return;
   }
-  // 보기 좋은 눈금 간격 계산 (1/2/5 × 10^n)
-  const peak = Math.max(...flat);
-  const rough = peak / 5;
-  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
-  const step = (rough/mag <= 1 ? 1 : rough/mag <= 2 ? 2 : rough/mag <= 5 ? 5 : 10) * mag;
-  const yMax = Math.ceil(peak / step) * step || step;
 
-  const left = 78, right = W - 8, top = 34, bottom = H - 26;
+  const peakOf = arr => { const f = arr.flatMap(s=>s.data).filter(v=>v!==null&&v!==undefined&&v>0);
+                          return f.length ? Math.max(...f) : 0; };
+  const L = niceScale(peakOf(bars));
+  const R = niceScale(peakOf(lines));
+
+  const left = bars.length ? 78 : 20;
+  const right = W - (lines.length ? 68 : 8);
+  const top = 34, bottom = H - 26;
   const plotW = right - left, plotH = bottom - top;
-  const yToPix = v => bottom - (v / yMax) * plotH;
+  const yL = v => bottom - (v / L.max) * plotH;
+  const yR = v => bottom - (v / R.max) * plotH;
 
-  ctx.font='10px "Segoe UI", Arial'; ctx.fillStyle='#9aa1ab'; ctx.textAlign='right'; ctx.textBaseline='middle';
-  ctx.strokeStyle='#eef0f3'; ctx.lineWidth=1;
-  for (let v = 0; v <= yMax + 1e-6; v += step) {
-    const y = yToPix(v);
+  // 가로 격자 + 좌/우 축 라벨
+  const ticks = bars.length ? Math.round(L.max / L.step) : Math.round(R.max / R.step);
+  ctx.strokeStyle='#eef0f3'; ctx.lineWidth=1; ctx.font='10px "Segoe UI", Arial'; ctx.textBaseline='middle';
+  for (let i = 0; i <= ticks; i++){
+    const y = bottom - (i/ticks)*plotH;
     ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(right,y); ctx.stroke();
-    ctx.fillText(nf(v), left-6, y);
+    if (bars.length){ ctx.fillStyle='#9aa1ab'; ctx.textAlign='right'; ctx.fillText(nf(L.step*i), left-6, y); }
+    if (lines.length){ ctx.fillStyle='#C62828'; ctx.textAlign='left'; ctx.fillText(nf(R.max*i/ticks), right+6, y); }
   }
 
-  const n = labels.length, catW = plotW/n, nS = series.length;
-  const groupW = catW*0.74, barW = groupW/nS, gap = catW*0.26;
-  ctx.textAlign='center';
-  for (let i=0;i<n;i++){
-    const cx0 = left + i*catW + gap/2;
-    for (let j=0;j<nS;j++){
-      const v = series[j].data[i];
-      if (v === null || v === undefined) continue;
-      const x0 = cx0 + j*barW;
-      const y0 = yToPix(Math.max(0, Math.min(yMax, v)));
-      fillRoundedBar(ctx, x0, y0, barW*0.86, bottom-y0, 3,
-                     series[j].colorLight || series[j].color, series[j].color);
+  const n = labels.length, catW = plotW/n;
+  // 막대
+  if (bars.length){
+    const groupW = catW*0.62, barW = groupW/bars.length, gap = catW - groupW;
+    for (let i=0;i<n;i++){
+      const cx0 = left + i*catW + gap/2;
+      bars.forEach((s,j)=>{
+        const v = s.data[i];
+        if (v === null || v === undefined) return;
+        const x0 = cx0 + j*barW;
+        const y0 = yL(Math.max(0, Math.min(L.max, v)));
+        fillRoundedBar(ctx, x0, y0, barW*0.86, bottom-y0, 3, s.colorLight || s.color, s.color);
+      });
     }
-    ctx.fillStyle='#666'; ctx.font='10px "Segoe UI", Arial'; ctx.textBaseline='top';
-    ctx.fillText(labels[i], left + i*catW + catW/2, bottom+6);
   }
+  // 꺾은선
+  lines.forEach(s => {
+    ctx.strokeStyle = s.color; ctx.lineWidth = 2.2;
+    ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.beginPath();
+    let started = false;
+    for (let i=0;i<n;i++){
+      const v = s.data[i];
+      const x = left + i*catW + catW/2;
+      if (v === null || v === undefined){ started = false; continue; }
+      const y = yR(Math.max(0, Math.min(R.max, v)));
+      if (!started){ ctx.moveTo(x,y); started = true; } else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    for (let i=0;i<n;i++){
+      const v = s.data[i];
+      if (v === null || v === undefined) continue;
+      const x = left + i*catW + catW/2, y = yR(Math.max(0, Math.min(R.max, v)));
+      ctx.beginPath(); ctx.arc(x,y,3.4,0,Math.PI*2);
+      ctx.fillStyle='#fff'; ctx.fill();
+      ctx.strokeStyle=s.color; ctx.lineWidth=2; ctx.stroke();
+    }
+  });
+  // x축 라벨
+  ctx.fillStyle='#666'; ctx.font='10px "Segoe UI", Arial'; ctx.textAlign='center'; ctx.textBaseline='top';
+  for (let i=0;i<n;i++) ctx.fillText(labels[i], left + i*catW + catW/2, bottom+6);
 
+  // 범례
   ctx.font='11px "Segoe UI", Arial'; ctx.textAlign='left'; ctx.textBaseline='middle';
   let lx = left, ly = 14;
-  for (const s of series){
-    ctx.fillStyle = s.color; ctx.fillRect(lx, ly-5, 11, 11);
-    ctx.fillStyle = '#555'; ctx.fillText(s.name, lx+16, ly);
-    lx += ctx.measureText(s.name).width + 40;
+  for (const s of vis){
+    if (s.type === 'line'){
+      ctx.strokeStyle=s.color; ctx.lineWidth=2.2;
+      ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(lx+14,ly); ctx.stroke();
+      ctx.beginPath(); ctx.arc(lx+7,ly,3,0,Math.PI*2);
+      ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle=s.color; ctx.lineWidth=1.8; ctx.stroke();
+    } else {
+      ctx.fillStyle = s.color; ctx.fillRect(lx, ly-5, 11, 11);
+    }
+    ctx.fillStyle = '#555'; ctx.fillText(s.name, lx+18, ly);
+    lx += ctx.measureText(s.name).width + 42;
+  }
+  if (lines.length){
+    ctx.fillStyle='#C62828'; ctx.font='10px "Segoe UI", Arial'; ctx.textAlign='right';
+    ctx.fillText('우측 축 →', right - 2, top - 16);
   }
 }
 
@@ -879,11 +970,13 @@ function renderQtyPanel(){
     + `<td class="bad">${nf(sum.ng)}</td><td class="etc">${sum.etc ? nf(sum.etc) : '-'}</td>`
     + `<td class="bad">${sumRate}</td></tr></tfoot>`;
 
+  const vis = qtySeriesVis();
+  syncQtySeriesPick(vis);
   drawQtyChart('chart-qty', rows.map(r=>r.label), [
-    { name:'총생산량', color:'#1976D2', colorLight:'#64B5F6', data: rows.map(r=>r.total) },
-    { name:'양품',     color:'#2E7D32', colorLight:'#81C784', data: rows.map(r=>r.good) },
-    { name:'불량',     color:'#C62828', colorLight:'#EF9A9A', data: rows.map(r=>r.ng) },
-    { name:'웜샷',     color:'#78909C', colorLight:'#B0BEC5', data: rows.map(r=>r.etc) }
+    { key:'total', name:'총생산량', type:'bar',  color:'#1976D2', colorLight:'#64B5F6', visible:vis.total, data: rows.map(r=>r.total) },
+    { key:'good',  name:'양품',     type:'bar',  color:'#2E7D32', colorLight:'#81C784', visible:vis.good,  data: rows.map(r=>r.good) },
+    { key:'ng',    name:'불량',     type:'line', color:'#C62828',                        visible:vis.ng,    data: rows.map(r=>r.ng) },
+    { key:'etc',   name:'웜샷',     type:'line', color:'#607D8B',                        visible:vis.etc,   data: rows.map(r=>r.etc) }
   ]);
 
   let note;
