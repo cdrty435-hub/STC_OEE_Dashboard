@@ -393,7 +393,7 @@ const I18N = {
     'th.eqBadRate': '설비별 불량률', 'th.maxGap': '최대 격차',
     'fn.sigmaFormula': '※ Sigma Level = Φ⁻¹(1 − PPM/1,000,000) + 1.5 (장기 표준 1.5σ Shift 적용). 검사수량 대비 불량수량 1건을 1개 결점(Opportunity=1)으로 간주한 근사 DPMO 기준입니다.',
     'fn.ppmLegend': '※ 점선은 목표 시그마 수준의 PPM 기준선입니다. 막대 색상은 해당 설비의 Sigma 등급을 나타냅니다.',
-    'fn.pchartLegend': '※ 회색 밴드는 UCL/LCL(p̄ ± 3σ, 일별 검사수량 반영), 빨간 점은 관리이탈(Out of Control) 일자입니다.',
+    'fn.pchartLegend': '※ 회색 밴드는 UCL/LCL(p̄ ± 3σ, 일별 검사수량 반영), 빨간 점은 관리이탈(Out of Control) 일자입니다. 각 점의 수치는 해당 일자의 불량률입니다.',
     'fn.noData': '※ 데이터 없음',
     'fn.trendNoModel': '※ Q_Model상세 실시간 연동이 아직 설정되지 않아 모델 트렌드를 표시할 수 없습니다 (임베디드 스냅샷은 단일 주차라 트렌드 불가 — 웹에 게시 후 gid를 코드에 넣어주세요).',
     'fn.trendSummary': '※ 전체 누적({n}개 주차) 기준 {label} Worst-5의 주차별 {metricLabel} 추이입니다. 상단 "분석 범위" 선택과 무관하게 항상 전체 기간을 사용합니다.',
@@ -495,7 +495,7 @@ const I18N = {
     'th.eqBadRate': 'อัตราของเสียตามเครื่อง', 'th.maxGap': 'ส่วนต่างสูงสุด',
     'fn.sigmaFormula': '※ Sigma Level = Φ⁻¹(1 − PPM/1,000,000) + 1.5 (ใช้ Shift มาตรฐานระยะยาว 1.5σ) คำนวณ DPMO โดยประมาณ ถือว่าของเสีย 1 ชิ้นเทียบกับจำนวนตรวจสอบ = 1 จุดบกพร่อง (Opportunity=1)',
     'fn.ppmLegend': '※ เส้นประคือเส้นอ้างอิง PPM ของระดับ Sigma เป้าหมาย สีแท่งกราฟแสดงเกรด Sigma ของเครื่องจักรนั้น',
-    'fn.pchartLegend': '※ แถบสีเทาคือ UCL/LCL (p̄ ± 3σ ตามจำนวนตรวจสอบรายวัน) จุดสีแดงคือวันที่หลุดการควบคุม (Out of Control)',
+    'fn.pchartLegend': '※ แถบสีเทาคือ UCL/LCL (p̄ ± 3σ ตามจำนวนตรวจสอบรายวัน) จุดสีแดงคือวันที่หลุดการควบคุม (Out of Control) ตัวเลขบนจุดคืออัตราของเสียของวันนั้น',
     'fn.noData': '※ ไม่มีข้อมูล',
     'fn.trendNoModel': '※ ยังไม่ได้เชื่อมต่อ Q_Model상세 แบบเรียลไทม์ จึงแสดงแนวโน้มตามโมเดลไม่ได้ (ข้อมูลฝังไว้มีแค่สัปดาห์เดียว แสดงแนวโน้มไม่ได้ — กรุณาเผยแพร่เว็บแล้วใส่ gid ในโค้ด)',
     'fn.trendSummary': '※ อ้างอิงข้อมูลสะสมทั้งหมด ({n} สัปดาห์) แสดงแนวโน้ม{metricLabel}รายสัปดาห์ของ Worst-5 ({label}) ไม่ขึ้นกับตัวเลือก "ช่วงการวิเคราะห์" ด้านบน ใช้ข้อมูลทั้งหมดเสมอ',
@@ -597,7 +597,7 @@ const I18N = {
     'th.eqBadRate': 'Defect rate by machine', 'th.maxGap': 'Max gap',
     'fn.sigmaFormula': '※ Sigma Level = Φ⁻¹(1 − PPM/1,000,000) + 1.5 (standard long-term 1.5σ shift applied). Approximate DPMO basis, treating one defect against the inspected quantity as one opportunity (Opportunity = 1).',
     'fn.ppmLegend': '※ The dashed line is the PPM baseline of the target sigma level. Bar colours show the sigma grade of each machine.',
-    'fn.pchartLegend': '※ The grey band is UCL/LCL (p̄ ± 3σ, reflecting the daily inspected quantity); red dots are out-of-control days.',
+    'fn.pchartLegend': '※ The grey band is UCL/LCL (p̄ ± 3σ, reflecting the daily inspected quantity); red dots are out-of-control days. The figure at each point is that day\'s defect rate.',
     'fn.noData': '※ No data',
     'fn.trendNoModel': '※ Live sync for Q_Model detail is not set up yet, so the model trend cannot be shown (the embedded snapshot covers a single week only — publish the tab to the web and put its gid into the code).',
     'fn.trendSummary': '※ Weekly {metricLabel} of the Worst-5 {label} across all accumulated data ({n} weeks). This always uses the full period, regardless of the analysis period selected above.',
@@ -989,9 +989,9 @@ function drawControlChart(canvasId, dailyItems) {
   const { W, H, ctx } = sizeCanvas(canvas);
   ctx.clearRect(0,0,W,H);
   if (!dailyItems.length) { ctx.fillStyle='#bbb'; ctx.textAlign='center'; ctx.fillText(t('canvas.noData'), W/2, H/2); return; }
-  const leftM = 50, rightM = 20, topM = 16, botM = 46;
+  const leftM = 50, rightM = 24, topM = 24, botM = 46;
   const plotW = W - leftM - rightM, plotH = H - topM - botM;
-  const maxP = Math.max(...dailyItems.map(d=>Math.max(d.p,d.ucl))) * 1.15;
+  const maxP = Math.max(...dailyItems.map(d=>Math.max(d.p,d.ucl))) * 1.22;
   const n = dailyItems.length;
   const stepX = n>1 ? plotW/(n-1) : 0;
   const xAt = i => leftM + stepX*i;
@@ -1016,16 +1016,41 @@ function drawControlChart(canvasId, dailyItems) {
   // p line
   ctx.strokeStyle = '#7c4dff'; ctx.lineWidth = 2.2;
   ctx.beginPath(); dailyItems.forEach((d,i)=>{ const x=xAt(i), y=yAt(d.p); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); }); ctx.stroke();
+  // 점 + 수치 라벨 (위/아래로 겹침을 피해 배치)
+  const placed = [];
+  const overlaps = (a,b) => !(a.x1 < b.x0 || a.x0 > b.x1 || a.y1 < b.y0 || a.y0 > b.y1);
   dailyItems.forEach((d,i)=>{
     const x=xAt(i), y=yAt(d.p);
     const outOfControl = d.p > d.ucl || d.p < d.lcl;
     ctx.fillStyle = outOfControl ? '#e53935' : '#7c4dff';
     ctx.beginPath(); ctx.arc(x,y, outOfControl?5:3.5, 0, 7); ctx.fill();
+
+    // 값 라벨
+    const txt = (d.p*100).toFixed(2) + '%';
+    ctx.font = 'bold 9.5px Arial';
+    const tw = ctx.measureText(txt).width, bw = tw + 7, bh = 13;
+    let pos = null;
+    for (const dy of [-14, 15, -27, 28]) {
+      const cy = y + dy;
+      const box = { x0:x-bw/2, x1:x+bw/2, y0:cy-bh/2, y1:cy+bh/2 };
+      if (box.y0 < topM - 2 || box.y1 > topM+plotH + 2) continue;
+      if (box.x0 < 2 || box.x1 > W - 2) continue;
+      if (placed.some(p => overlaps(box,p))) continue;
+      pos = { cy, box }; break;
+    }
+    if (!pos){ const cy = y - 14; pos = { cy, box:{x0:x-bw/2,x1:x+bw/2,y0:cy-bh/2,y1:cy+bh/2} }; }
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.fillRect(pos.box.x0, pos.box.y0, bw, bh);
+    ctx.fillStyle = outOfControl ? '#e53935' : '#5e35b1';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(txt, x, pos.cy + 0.5);
+    placed.push(pos.box);
+
     // x labels
     ctx.save();
     ctx.translate(x, topM+plotH+10);
     ctx.rotate(-Math.PI/4);
-    ctx.fillStyle='#555'; ctx.font='9.5px Arial'; ctx.textAlign='right';
+    ctx.fillStyle='#555'; ctx.font='9.5px Arial'; ctx.textAlign='right'; ctx.textBaseline='alphabetic';
     ctx.fillText(d.date.slice(5), 0, 0);
     ctx.restore();
   });
