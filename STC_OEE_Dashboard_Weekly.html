@@ -262,8 +262,8 @@
       <div class="qty-series" id="qtySeriesPick">
         <label><input type="checkbox" data-key="total" checked onchange="onQtySeriesToggle()"><span class="sw bar"  style="background:#1976D2"></span>총생산량</label>
         <label><input type="checkbox" data-key="good"  checked onchange="onQtySeriesToggle()"><span class="sw bar"  style="background:#2E7D32"></span>양품</label>
-        <label><input type="checkbox" data-key="ng"    checked onchange="onQtySeriesToggle()"><span class="sw line" style="background:#C62828"></span>불량 <em>(선)</em></label>
-        <label><input type="checkbox" data-key="etc"   checked onchange="onQtySeriesToggle()"><span class="sw line" style="background:#607D8B"></span>웜샷 <em>(선)</em></label>
+        <label><input type="checkbox" data-key="ng"    checked onchange="onQtySeriesToggle()"><span class="sw bar"  style="background:#C62828"></span>불량</label>
+        <label><input type="checkbox" data-key="rate"  checked onchange="onQtySeriesToggle()"><span class="sw line" style="background:#E65100"></span>불량률 <em>(선 · 우측 축)</em></label>
       </div>
       <div class="qty-body">
         <table class="qty" id="table-qty"></table>
@@ -770,10 +770,10 @@ function monthlyQty(year, scope, opts){
   return out;
 }
 
-const QTY_SERIES_KEYS = ['total','good','ng','etc'];
+const QTY_SERIES_KEYS = ['total','good','ng','rate'];
 function qtySeriesVis(){
   let saved = null;
-  try { saved = JSON.parse(localStorage.getItem('stc_qty_series') || 'null'); } catch(e){}
+  try { saved = JSON.parse(localStorage.getItem('stc_qty_series_v2') || 'null'); } catch(e){}
   const v = {};
   for (const k of QTY_SERIES_KEYS) v[k] = saved ? saved[k] !== false : true;
   if (!QTY_SERIES_KEYS.some(k => v[k])) v.total = true;   // 전부 끄면 최소 하나는 남긴다
@@ -783,7 +783,7 @@ function onQtySeriesToggle(){
   const v = {};
   document.querySelectorAll('#qtySeriesPick input').forEach(i => { v[i.dataset.key] = i.checked; });
   if (!QTY_SERIES_KEYS.some(k => v[k])) { v.total = true; }
-  try { localStorage.setItem('stc_qty_series', JSON.stringify(v)); } catch(e){}
+  try { localStorage.setItem('stc_qty_series_v2', JSON.stringify(v)); } catch(e){}
   try { renderQtyPanel(); } catch(e){ console.error(e); }
 }
 function syncQtySeriesPick(v){
@@ -805,9 +805,10 @@ function syncQtyModeBtns(){
 
 const nf = v => (v===null||v===undefined) ? '-' : Math.round(v).toLocaleString('en-US');
 
-/* 수량 콤보 차트 — 막대(총생산량/양품) + 꺾은선(불량/웜샷, 우측 보조축)
-   두 축을 쓰는 이유: 불량·웜샷은 총생산량의 2~9% 수준이라 같은 축에 두면
-   바닥에 붙어 변화가 보이지 않는다. */
+/* 수량 콤보 차트
+   막대(좌축·수량) : 총생산량 / 양품 / 불량
+   꺾은선(우축·%)  : 불량률
+   수량과 비율은 단위가 달라 축을 나눈다. 모든 점·막대에 수치를 표기한다. */
 function niceScale(peak){
   if (!(peak > 0)) return { step: 1, max: 1 };
   const rough = peak / 5;
@@ -815,6 +816,14 @@ function niceScale(peak){
   const u = rough / mag;
   const step = (u <= 1 ? 1 : u <= 2 ? 2 : u <= 5 ? 5 : 10) * mag;
   return { step, max: Math.ceil(peak / step) * step || step };
+}
+/* 막대 위 라벨용 축약 표기 (1,009,127 → 1,009K) */
+function nfShort(v){
+  if (v === null || v === undefined) return '';
+  const a = Math.abs(v);
+  if (a >= 1000000) return (v/1000000).toFixed(2) + 'M';
+  if (a >= 10000)   return Math.round(v/1000).toLocaleString('en-US') + 'K';
+  return Math.round(v).toLocaleString('en-US');
 }
 
 function drawQtyChart(canvasId, labels, series){
@@ -826,7 +835,7 @@ function drawQtyChart(canvasId, labels, series){
   const W = cssW, H = cssH;
   ctx.clearRect(0,0,W,H);
 
-  const vis = series.filter(s => s.visible !== false);
+  const vis   = series.filter(s => s.visible !== false);
   const bars  = vis.filter(s => s.type !== 'line');
   const lines = vis.filter(s => s.type === 'line');
   const any = vis.some(s => s.data.some(v => v !== null && v !== undefined));
@@ -840,27 +849,29 @@ function drawQtyChart(canvasId, labels, series){
   const L = niceScale(peakOf(bars));
   const R = niceScale(peakOf(lines));
 
-  const left = bars.length ? 78 : 20;
-  const right = W - (lines.length ? 68 : 8);
-  const top = 34, bottom = H - 26;
+  const left  = bars.length  ? 80 : 20;
+  const right = W - (lines.length ? 56 : 8);
+  const top = 44, bottom = H - 26;              // 막대 위 세로 라벨 공간 확보
   const plotW = right - left, plotH = bottom - top;
   const yL = v => bottom - (v / L.max) * plotH;
   const yR = v => bottom - (v / R.max) * plotH;
 
-  // 가로 격자 + 좌/우 축 라벨
-  const ticks = bars.length ? Math.round(L.max / L.step) : Math.round(R.max / R.step);
+  const ticks = 5;
   ctx.strokeStyle='#eef0f3'; ctx.lineWidth=1; ctx.font='10px "Segoe UI", Arial'; ctx.textBaseline='middle';
   for (let i = 0; i <= ticks; i++){
     const y = bottom - (i/ticks)*plotH;
     ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(right,y); ctx.stroke();
-    if (bars.length){ ctx.fillStyle='#9aa1ab'; ctx.textAlign='right'; ctx.fillText(nf(L.step*i), left-6, y); }
-    if (lines.length){ ctx.fillStyle='#C62828'; ctx.textAlign='left'; ctx.fillText(nf(R.max*i/ticks), right+6, y); }
+    if (bars.length){ ctx.fillStyle='#9aa1ab'; ctx.textAlign='right';
+                      ctx.fillText(nf(L.max*i/ticks), left-6, y); }
+    if (lines.length){ ctx.fillStyle='#C62828'; ctx.textAlign='left';
+                       ctx.fillText((R.max*i/ticks).toFixed(R.max<5?2:1)+'%', right+6, y); }
   }
 
   const n = labels.length, catW = plotW/n;
-  // 막대
+
+  // ---- 막대 + 세로 수치 라벨 ----
   if (bars.length){
-    const groupW = catW*0.62, barW = groupW/bars.length, gap = catW - groupW;
+    const groupW = catW*0.64, barW = groupW/bars.length, gap = catW - groupW;
     for (let i=0;i<n;i++){
       const cx0 = left + i*catW + gap/2;
       bars.forEach((s,j)=>{
@@ -869,13 +880,22 @@ function drawQtyChart(canvasId, labels, series){
         const x0 = cx0 + j*barW;
         const y0 = yL(Math.max(0, Math.min(L.max, v)));
         fillRoundedBar(ctx, x0, y0, barW*0.86, bottom-y0, 3, s.colorLight || s.color, s.color);
+        if (v > 0){
+          ctx.save();
+          ctx.translate(x0 + barW*0.43, y0 - 4);
+          ctx.rotate(-Math.PI/2);
+          ctx.fillStyle = s.color; ctx.font = 'bold 9px "Segoe UI", Arial';
+          ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+          ctx.fillText(nfShort(v), 0, 0);
+          ctx.restore();
+        }
       });
     }
   }
-  // 꺾은선
+
+  // ---- 꺾은선 + 수치 라벨 ----
   lines.forEach(s => {
-    ctx.strokeStyle = s.color; ctx.lineWidth = 2.2;
-    ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.strokeStyle = s.color; ctx.lineWidth = 2.2; ctx.lineJoin='round'; ctx.lineCap='round';
     ctx.beginPath();
     let started = false;
     for (let i=0;i<n;i++){
@@ -890,11 +910,17 @@ function drawQtyChart(canvasId, labels, series){
       const v = s.data[i];
       if (v === null || v === undefined) continue;
       const x = left + i*catW + catW/2, y = yR(Math.max(0, Math.min(R.max, v)));
-      ctx.beginPath(); ctx.arc(x,y,3.4,0,Math.PI*2);
-      ctx.fillStyle='#fff'; ctx.fill();
-      ctx.strokeStyle=s.color; ctx.lineWidth=2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(x,y,3.6,0,Math.PI*2);
+      ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle=s.color; ctx.lineWidth=2; ctx.stroke();
+      const txt = v.toFixed(2) + '%';
+      ctx.font = 'bold 10px "Segoe UI", Arial'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+      const tw = ctx.measureText(txt).width;
+      ctx.fillStyle = 'rgba(255,255,255,0.88)';
+      ctx.fillRect(x - tw/2 - 3, y - 19, tw + 6, 14);
+      ctx.fillStyle = s.color; ctx.fillText(txt, x, y - 7);
     }
   });
+
   // x축 라벨
   ctx.fillStyle='#666'; ctx.font='10px "Segoe UI", Arial'; ctx.textAlign='center'; ctx.textBaseline='top';
   for (let i=0;i<n;i++) ctx.fillText(labels[i], left + i*catW + catW/2, bottom+6);
@@ -916,7 +942,7 @@ function drawQtyChart(canvasId, labels, series){
   }
   if (lines.length){
     ctx.fillStyle='#C62828'; ctx.font='10px "Segoe UI", Arial'; ctx.textAlign='right';
-    ctx.fillText('우측 축 →', right - 2, top - 16);
+    ctx.fillText('불량률 → 우측 축', right - 2, 14);
   }
 }
 
@@ -975,8 +1001,9 @@ function renderQtyPanel(){
   drawQtyChart('chart-qty', rows.map(r=>r.label), [
     { key:'total', name:'총생산량', type:'bar',  color:'#1976D2', colorLight:'#64B5F6', visible:vis.total, data: rows.map(r=>r.total) },
     { key:'good',  name:'양품',     type:'bar',  color:'#2E7D32', colorLight:'#81C784', visible:vis.good,  data: rows.map(r=>r.good) },
-    { key:'ng',    name:'불량',     type:'line', color:'#C62828',                        visible:vis.ng,    data: rows.map(r=>r.ng) },
-    { key:'etc',   name:'웜샷',     type:'line', color:'#607D8B',                        visible:vis.etc,   data: rows.map(r=>r.etc) }
+    { key:'ng',    name:'불량',     type:'bar',  color:'#C62828', colorLight:'#EF9A9A', visible:vis.ng,    data: rows.map(r=>r.ng) },
+    { key:'rate',  name:'불량률',   type:'line', color:'#E65100',                        visible:vis.rate,
+      data: rows.map(r => (r.empty || !r.total) ? null : +(r.ng / r.total * 100).toFixed(2)) }
   ]);
 
   let note;
