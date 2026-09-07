@@ -1809,6 +1809,22 @@ const LOSS_HEADERS = ['금형수리','금형파손','핀파손','설비수리','
 function filteredA(){ if (!RAW_A || !RAW_A.length) return []; const b = getPeriodBounds(); return RAW_A.filter(r=>inPeriod(r,b) && !isOutsideWeekFix(r)); }
 function filteredP(){ if (!RAW_P || !RAW_P.length) return []; const b = getPeriodBounds(); return RAW_P.filter(r=>inPeriod(r,b) && !isOutsideWeekFix(r)); }
 
+let WA_P_SOURCE = null, WA_P_ROWS = 0;
+
+/* 콘솔 진단: pDiagSix() — P 탭 컬럼과 산출 경로를 출력한다 */
+function pDiagSix(){
+  const rows = filteredP();
+  console.log('P 탭 행수(기간 필터 후):', rows.length);
+  if (RAW_P && RAW_P.length) console.log('P 탭 컬럼:', Object.keys(RAW_P[0]).join(' | '));
+  else console.warn('RAW_P 가 비어 있습니다 — P_GID 게시 상태를 확인하세요.');
+  if (rows.length) console.log('첫 행 샘플:', rows[0]);
+  const wa = computeWeeklyAnalysis();
+  console.log('산출 경로:', WA_P_SOURCE === 'col' ? "성능(P) 컬럼 사용"
+            : WA_P_SOURCE === 'calc' ? "Avg_shot×CT_STD÷60÷가동시간 직접 계산" : '산출 불가');
+  console.log('집계 행수:', WA_P_ROWS, '/ P =', wa && wa.overallP!=null ? (wa.overallP*100).toFixed(2)+'%' : '-');
+  return { source: WA_P_SOURCE, rows: WA_P_ROWS, P: wa && wa.overallP };
+}
+
 function computeWeeklyAnalysis(){
   const aRows = filteredA(), pRows = filteredP(), qRows = filteredRows();
   if (!aRows.length && !qRows.length) return null;
@@ -1823,17 +1839,31 @@ function computeWeeklyAnalysis(){
   const overallA = planSum>0 ? runSum/planSum : null;
 
   /* 성능(P) — OEE 대시보드(STC_OEE_Dashboard_Weekly)와 동일한 산출식.
-     원자료 '성능(P)' 컬럼 값의 단순 산술평균이며, 행 단위 100% 상한을 두지 않는다.
-     (기존: (Avg_shot × CT_STD ÷ 60) ÷ 가동시간을 100% 캡 후 가동시간 가중평균)
-     두 대시보드가 같은 P_성능 탭을 읽으므로 같은 기간이면 값이 일치한다. */
+     행 단위 P를 단순 산술평균한다 (가동시간 가중 없음, 100% 상한 없음).
+     행 단위 P는 시트의 '성능(P)' 컬럼을 우선 쓰고, 그 컬럼이 없으면
+     (Avg_shot × CT_STD ÷ 60) ÷ 가동시간 으로 직접 계산한다 — 같은 값이다.
+     (기존: 위 비율을 100% 캡 후 가동시간 가중평균) */
+  const P_PCT_KEYS = ['성능(P)','성능(P) ',' 성능(P)','성능 (P)','성능','Performance','P(%)','성능(P)%'];
+  const pctColOf = r => {
+    for (const k of P_PCT_KEYS){
+      const v = r[k];
+      if (v!==undefined && v!==null && String(v).trim()!=='') { const n = parseFloat(v); if (!isNaN(n) && n) return n; }
+    }
+    return null;
+  };
   let pSum=0, pCnt=0;
+  WA_P_SOURCE = null;
   pRows.forEach(r=>{
-    const raw = r['성능(P)'];
-    if (raw===undefined || raw===null || String(raw).trim()==='') return;
-    const p = Number(raw)||0;
-    if (!p) return;
+    let p = pctColOf(r);
+    if (p === null){                       // 컬럼이 없으면 원천값으로 직접 계산
+      const run = Number(r['가동시간_분'])||0;
+      const ctstd = Number(r['CT_STD'])||0, avgshot = Number(r['Avg_shot'])||0;
+      if (run>0 && ctstd>0 && avgshot>0){ p = (avgshot*ctstd/60)/run*100; WA_P_SOURCE = WA_P_SOURCE || 'calc'; }
+    } else { WA_P_SOURCE = WA_P_SOURCE || 'col'; }
+    if (p===null || !p) return;
     pSum += p; pCnt++;
   });
+  WA_P_ROWS = pCnt;
   const overallP = pCnt>0 ? (pSum/pCnt)/100 : null;   // 화면은 비율(0~1)로 표시
 
   const qtyTotal = qRows.reduce((s,r)=>s+(Number(r['Qty_Total'])||0),0);
