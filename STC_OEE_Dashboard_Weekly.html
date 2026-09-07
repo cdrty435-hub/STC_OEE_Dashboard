@@ -63,6 +63,25 @@
   #monthlyModeBtns button { font-size:11px; padding:3px 9px; border:1px solid #cfd6e0; background:#fff;
     color:#5a6470; border-radius:12px; cursor:pointer; font-weight:600; line-height:1.6; }
   #monthlyModeBtns button.on { background:#2196F3; border-color:#2196F3; color:#fff; }
+  .qty-card { grid-column:1 / -1; }
+  .qty-body { display:grid; grid-template-columns:minmax(300px,360px) 1fr; gap:20px; align-items:start; }
+  @media (max-width:900px){ .qty-body{ grid-template-columns:1fr; } }
+  table.qty { width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.qty th, table.qty td { border-bottom:1px solid #eee; padding:6px 8px; text-align:right; white-space:nowrap; }
+  table.qty th { background:#f6f7f9; font-weight:700; color:#444; text-align:right; }
+  table.qty th:first-child, table.qty td:first-child { text-align:left; font-weight:600; color:#555; }
+  table.qty tr.empty td { color:#c3c8d0; }
+  table.qty tr.hl-row td { background:#FFF6DA; }
+  table.qty tfoot td { border-top:2px solid #d7dce3; font-weight:700; background:#fafbfc; }
+  table.qty td.bad { color:#D32F2F; }
+  table.qty td.etc { color:#607D8B; }
+  .seedmark { color:#F9A825; font-weight:700; margin-left:2px; }
+  #qtyModeBtns { display:inline-flex; gap:4px; }
+  #qtyModeBtns button { font-size:11px; padding:3px 9px; border:1px solid #cfd6e0; background:#fff;
+    color:#5a6470; border-radius:12px; cursor:pointer; font-weight:600; line-height:1.6; }
+  #qtyModeBtns button.on { background:#2196F3; border-color:#2196F3; color:#fff; }
+  .qty-chart-wrap { position:relative; height:300px; }
+  .qty-chart-wrap canvas { width:100%; height:100%; display:block; }
   table.mini td.rowlabel, table.mini th.rowlabel { text-align:left; font-weight:600; color:#555; white-space:nowrap; width:72px; }
   .swatch { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; }
 
@@ -217,6 +236,25 @@
       <div class="chart-wrap"><canvas id="chart-daily-a"></canvas></div>
       <table class="mini" id="table-daily"></table>
       <div class="footnote">※ 일자별 가동율은 상단 "범위" 선택(전체/정규만)을 그대로 따릅니다. 정규만 선택 시 특근일은 표에서 공란으로 표시됩니다.</div>
+    </div>
+
+    <div class="quad-card qty-card">
+      <div class="quad-title" style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+        <span>📦 월별 생산량 집계</span>
+        <span style="display:inline-flex; align-items:center; gap:10px;">
+          <select id="qtyYear" onchange="renderQtyPanel()" style="padding:4px 8px; border:1px solid #cfd6e0; border-radius:4px; font-size:12px;"></select>
+          <span id="qtyModeBtns">
+            <button type="button" data-mode="year"   onclick="setQtyMode('year')">연간 전체</button>
+            <button type="button" data-mode="period" onclick="setQtyMode('period')">선택 구간</button>
+          </span>
+        </span>
+      </div>
+      <div class="chart-title" id="qtyTitle">PRODUCTION QUANTITY</div>
+      <div class="qty-body">
+        <table class="qty" id="table-qty"></table>
+        <div class="qty-chart-wrap"><canvas id="chart-qty"></canvas></div>
+      </div>
+      <div class="footnote" id="qtyFoot">※ 생산량 집계 기준을 불러오는 중...</div>
     </div>
 
   </div>
@@ -640,6 +678,232 @@ function syncMonthlyModeBtns(){
   const m = monthlyMode();
   document.querySelectorAll('#monthlyModeBtns button').forEach(b =>
     b.classList.toggle('on', b.dataset.mode === m));
+}
+
+/* =========================================================================
+   5-B. 월별 생산량 집계 (총생산량 / 양품 / 불량)
+        Q 원자료(Qty_Total, Qty_Good)를 일자 기준으로 월별 합산한다.
+        상단 "범위"(전체/정규만) 선택을 그대로 따르며,
+        주차 모드·기간 모드 어느 쪽이든 선택된 날짜 구간과 연동된다.
+   ========================================================================= */
+function qtyDataYears(){
+  const ys = new Set();
+  if (DATA && DATA.rawQ && DATA.rawQ.rows) {
+    for (const r of DATA.rawQ.rows) {
+      const d = String(r['일자'] || '').trim();
+      if (d.length >= 4) ys.add(d.slice(0,4));
+    }
+  }
+  for (const mk of Object.keys(QTY_SEED)) ys.add(mk.slice(0,4));
+  if (!ys.size) ys.add(String(new Date().getFullYear()));
+  return [...ys].sort();
+}
+
+/* 초기 등록 고정 생산량 (원자료 이전 구간 · 사내 집계표 기준)
+   전체수량 = 양품 + 불량 + 웜샷 이며, 웜샷은 그대로 보존해 표시한다. */
+const QTY_SEED = {
+  '2026-01': { total:1009127, good: 949031, ng:23024 },
+  '2026-02': { total: 876877, good: 832762, ng:17974 },
+  '2026-03': { total:1134960, good:1069588, ng:34972 },
+  '2026-04': { total: 937540, good: 878308, ng:31736 },
+  '2026-05': { total: 968363, good: 905526, ng:31357 },
+  '2026-06': { total:1138117, good:1049013, ng:52776 }
+};
+
+/* 지정한 연도의 1~12월 생산량. opts.clip 이면 선택 구간과 겹치는 부분만 집계 */
+function monthlyQty(year, scope, opts){
+  opts = opts || {};
+  const out = [];
+  const rows = (DATA && DATA.rawQ && DATA.rawQ.rows) ? DATA.rawQ.rows : [];
+  for (let m = 1; m <= 12; m++) {
+    const mk = year + '-' + String(m).padStart(2,'0');
+    const mStart = mk + '-01', mEnd = monthEndDate(mk);
+    let start = mStart, end = mEnd, clipped = false;
+    if (opts.clip && opts.start && opts.end) {
+      if (opts.start > start) { start = opts.start; clipped = true; }
+      if (opts.end   < end)   { end   = opts.end;   clipped = true; }
+      if (start > end) { out.push({ m, label:m+'월', mk, total:null, good:null, ng:null, etc:null, empty:true }); continue; }
+    }
+    // 원자료에서 집계
+    let total = 0, good = 0, n = 0;
+    for (const r of rows) {
+      const d = String(r['일자'] || '').trim();
+      if (d < start || d > end) continue;
+      if (scope === 'regular' && r['구분'] !== '정규') continue;
+      if (isOutsideWeekFix(r)) continue;
+      const t = num(r['Qty_Total']);
+      if (t <= 0) continue;
+      total += t; good += num(r['Qty_Good']); n++;
+    }
+    if (n) {
+      out.push({ m, label:m+'월', mk, start, end, clipped, fixed:false,
+                 total, good, ng: total-good, etc: 0, empty:false });
+      continue;
+    }
+    // 원자료가 없으면 고정 시드 사용 (월 전체가 선택 구간에 들어올 때만)
+    const seed = QTY_SEED[mk];
+    if (seed && !clipped) {
+      out.push({ m, label:m+'월', mk, start:mStart, end:mEnd, fixed:true,
+                 total:seed.total, good:seed.good, ng:seed.ng,
+                 etc: seed.total - seed.good - seed.ng, empty:false });
+      continue;
+    }
+    out.push({ m, label:m+'월', mk, total:null, good:null, ng:null, etc:null,
+               empty:true, seedPartial: !!(seed && clipped) });
+  }
+  return out;
+}
+
+function qtyMode(){
+  try { return localStorage.getItem('stc_qty_mode') || 'year'; } catch(e){ return 'year'; }
+}
+function setQtyMode(m){
+  try { localStorage.setItem('stc_qty_mode', m); } catch(e){}
+  syncQtyModeBtns();
+  try { renderQtyPanel(); } catch(e){ console.error(e); }
+}
+function syncQtyModeBtns(){
+  const m = qtyMode();
+  document.querySelectorAll('#qtyModeBtns button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+}
+
+const nf = v => (v===null||v===undefined) ? '-' : Math.round(v).toLocaleString('en-US');
+
+/* 수량용 막대 차트 — 퍼센트 차트와 달리 눈금을 데이터에 맞춰 자동 결정 */
+function drawQtyChart(canvasId, labels, series){
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const cssW = canvas.clientWidth || 720, cssH = canvas.clientHeight || 300;
+  canvas.width = cssW; canvas.height = cssH;
+  const ctx = canvas.getContext('2d');
+  const W = cssW, H = cssH;
+  ctx.clearRect(0,0,W,H);
+
+  const flat = series.flatMap(s => s.data).filter(v => v !== null && v !== undefined);
+  if (!labels.length || !flat.length) {
+    ctx.fillStyle='#bbb'; ctx.font='13px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('데이터 없음', W/2, H/2); return;
+  }
+  // 보기 좋은 눈금 간격 계산 (1/2/5 × 10^n)
+  const peak = Math.max(...flat);
+  const rough = peak / 5;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const step = (rough/mag <= 1 ? 1 : rough/mag <= 2 ? 2 : rough/mag <= 5 ? 5 : 10) * mag;
+  const yMax = Math.ceil(peak / step) * step || step;
+
+  const left = 78, right = W - 8, top = 34, bottom = H - 26;
+  const plotW = right - left, plotH = bottom - top;
+  const yToPix = v => bottom - (v / yMax) * plotH;
+
+  ctx.font='10px "Segoe UI", Arial'; ctx.fillStyle='#9aa1ab'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  ctx.strokeStyle='#eef0f3'; ctx.lineWidth=1;
+  for (let v = 0; v <= yMax + 1e-6; v += step) {
+    const y = yToPix(v);
+    ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(right,y); ctx.stroke();
+    ctx.fillText(nf(v), left-6, y);
+  }
+
+  const n = labels.length, catW = plotW/n, nS = series.length;
+  const groupW = catW*0.74, barW = groupW/nS, gap = catW*0.26;
+  ctx.textAlign='center';
+  for (let i=0;i<n;i++){
+    const cx0 = left + i*catW + gap/2;
+    for (let j=0;j<nS;j++){
+      const v = series[j].data[i];
+      if (v === null || v === undefined) continue;
+      const x0 = cx0 + j*barW;
+      const y0 = yToPix(Math.max(0, Math.min(yMax, v)));
+      fillRoundedBar(ctx, x0, y0, barW*0.86, bottom-y0, 3,
+                     series[j].colorLight || series[j].color, series[j].color);
+    }
+    ctx.fillStyle='#666'; ctx.font='10px "Segoe UI", Arial'; ctx.textBaseline='top';
+    ctx.fillText(labels[i], left + i*catW + catW/2, bottom+6);
+  }
+
+  ctx.font='11px "Segoe UI", Arial'; ctx.textAlign='left'; ctx.textBaseline='middle';
+  let lx = left, ly = 14;
+  for (const s of series){
+    ctx.fillStyle = s.color; ctx.fillRect(lx, ly-5, 11, 11);
+    ctx.fillStyle = '#555'; ctx.fillText(s.name, lx+16, ly);
+    lx += ctx.measureText(s.name).width + 40;
+  }
+}
+
+function renderQtyPanel(){
+  const scope = currentScope();
+  const mode  = qtyMode();
+  const sel   = selectedDateRange();
+  const hasSel = !!(sel.start && sel.end);
+
+  // 연도 드롭다운 채우기 (한 번만)
+  const ySel = document.getElementById('qtyYear');
+  if (ySel) {
+    const years = qtyDataYears();
+    const want = ySel.value && years.includes(ySel.value) ? ySel.value
+               : (hasSel ? sel.start.slice(0,4) : years[years.length-1]);
+    if (ySel.options.length !== years.length || ![...ySel.options].every((o,i)=>o.value===years[i])) {
+      ySel.innerHTML = years.map(y=>`<option value="${y}">${y}년</option>`).join('');
+    }
+    ySel.value = years.includes(want) ? want : years[years.length-1];
+  }
+  const year = ySel ? ySel.value : String(new Date().getFullYear());
+
+  const clip = (mode === 'period' && hasSel);
+  const rows = monthlyQty(year, scope, clip ? {clip:true, start:sel.start, end:sel.end} : {});
+
+  const sum = rows.reduce((a,r)=>{ if(!r.empty){ a.total+=r.total; a.good+=r.good; a.ng+=r.ng; a.etc+=(r.etc||0); } return a; },
+                          {total:0, good:0, ng:0, etc:0});
+
+  document.getElementById('qtyTitle').textContent =
+    clip ? `PRODUCTION QUANTITY (${sel.start} ~ ${sel.end})` : `PRODUCTION QUANTITY (${year}년)`;
+
+  // 좌측 표 — 세로 1월~12월
+  const inSel = r => hasSel && !r.empty && !(r.start > sel.end || r.end < sel.start);
+  const body = rows.map(r => {
+    if (r.empty) {
+      const lab = r.seedPartial ? `${r.label}<span class="seedmark" title="고정 집계치는 일부 구간으로 나눌 수 없습니다">*</span>` : r.label;
+      return `<tr class="empty"><td>${lab}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>`;
+    }
+    const rate = r.total > 0 ? (r.ng / r.total * 100) : null;
+    const hl = (mode === 'year' && inSel(r)) ? ' class="hl-row"' : '';
+    const lab = r.fixed ? `${r.label}<span class="seedmark" title="초기 등록된 고정 집계치">*</span>` : r.label;
+    return `<tr${hl}><td>${lab}</td><td>${nf(r.total)}</td><td>${nf(r.good)}</td>`
+         + `<td class="bad">${nf(r.ng)}</td><td class="etc">${r.etc ? nf(r.etc) : '-'}</td>`
+         + `<td class="bad">${rate===null?'-':rate.toFixed(2)+'%'}</td></tr>`;
+  }).join('');
+  const sumRate = sum.total > 0 ? (sum.ng/sum.total*100).toFixed(2)+'%' : '-';
+  document.getElementById('table-qty').innerHTML =
+    '<thead><tr><th>월</th><th>총생산량</th><th>양품</th><th>불량</th><th>웜샷</th><th>불량률</th></tr></thead>'
+    + '<tbody>' + body + '</tbody>'
+    + `<tfoot><tr><td>합계</td><td>${nf(sum.total)}</td><td>${nf(sum.good)}</td>`
+    + `<td class="bad">${nf(sum.ng)}</td><td class="etc">${sum.etc ? nf(sum.etc) : '-'}</td>`
+    + `<td class="bad">${sumRate}</td></tr></tfoot>`;
+
+  drawQtyChart('chart-qty', rows.map(r=>r.label), [
+    { name:'총생산량', color:'#1976D2', colorLight:'#64B5F6', data: rows.map(r=>r.total) },
+    { name:'양품',     color:'#2E7D32', colorLight:'#81C784', data: rows.map(r=>r.good) },
+    { name:'불량',     color:'#C62828', colorLight:'#EF9A9A', data: rows.map(r=>r.ng) },
+    { name:'웜샷',     color:'#78909C', colorLight:'#B0BEC5', data: rows.map(r=>r.etc) }
+  ]);
+
+  let note;
+  if (!hasRawRows()) {
+    note = '※ 생산량 집계는 구글시트 원자료가 필요합니다. 상단 새로고침 버튼을 눌러주세요.';
+  } else if (clip) {
+    note = `※ 선택 구간(${sel.start} ~ ${sel.end})과 겹치는 부분만 집계했습니다. 데이터가 없는 달은 "-"로 표시됩니다.`;
+  } else {
+    note = `※ ${year}년 1~12월을 해당 월 1일~말일 기준으로 집계했습니다. 상단 "범위"(${scope==='regular'?'정규만':'전체'}) 선택을 그대로 따릅니다. 데이터가 없는 달은 "-"로 표시됩니다.`;
+    if (hasSel && rows.some(inSel)) note += ' 선택 구간에 해당하는 달은 표에 강조 표시됩니다.';
+  }
+  if (rows.some(r => r.fixed)) {
+    note += ' * 표시된 달은 초기 등록된 고정 집계치입니다.';
+  }
+  if (sum.etc > 0) {
+    note += ` 웜샷 = 총생산량 - 양품 - 불량 (합계 ${nf(sum.etc)}개, ${(sum.etc/sum.total*100).toFixed(2)}%).`;
+  }
+  note += ' 원자료 집계 구간은 불량 = 총생산량 - 양품으로 산출합니다.';
+  document.getElementById('qtyFoot').textContent = note;
+  syncQtyModeBtns();
 }
 
 /* 화면에서 현재 선택된 날짜 구간 — 주차 모드/기간 모드 모두 대응 */
@@ -1239,6 +1503,7 @@ function renderAll(){
   try { renderMonthlyChart(); } catch(e){ console.error('monthly render error', e); }
   try { renderWeekTrendChart(); } catch(e){ console.error('5week render error', e); }
   try { renderDailyChart(); } catch(e){ console.error('daily render error', e); }
+  try { renderQtyPanel(); } catch(e){ console.error('qty render error', e); }
 }
 
 /* =========================================================================
@@ -1412,6 +1677,7 @@ window.addEventListener('resize', () => {
     if (!DATA) return;
     try { renderGauges(); } catch(e){ console.error(e); }
     try { renderMonthlyChart(); } catch(e){ console.error(e); }
+    try { renderQtyPanel(); } catch(e){ console.error(e); }
     try { renderWeekTrendChart(); } catch(e){ console.error(e); }
   }, 150);
 });
