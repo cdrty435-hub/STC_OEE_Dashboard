@@ -805,6 +805,15 @@
                   font-weight:800; cursor:pointer;}
   .wk-lang button.on{background:#1f3864; color:#fff;}
   @media print{ .wk-lang{display:none;} }
+  .wk-aitr{border:1px solid #1f3864; background:#fff; color:#1f3864; border-radius:8px;
+           padding:4px 11px; font-size:12px; font-weight:700; cursor:pointer; margin-left:6px;}
+  .wk-aitr:hover{background:#eef3f9;}
+  .wk-aitr:disabled{color:#9aa4ae; border-color:#d8dfe7; cursor:default; background:#fafbfc;}
+  .wk-aitr-st{font-size:11px; color:#1f3864; margin-left:8px;}
+  /* 번역되어 표시 중인 입력칸 : 원문 보호를 위해 읽기전용 */
+  table.wk-t.down textarea.tr-th, table.wk-t.down input.tr-th, textarea.wk-memo.tr-th{
+    background:#f7fbff; border-style:solid; border-color:#bcd3ec;}
+  @media print{ .wk-aitr, .wk-aitr-st{display:none !important;} }
 </style>
 
 <style>
@@ -916,8 +925,11 @@
         <button type="button" data-lang="ko">한국어</button>
         <button type="button" data-lang="th">ไทย</button>
       </span>
+      <button type="button" class="wk-aitr" id="wkAiTrBtn"
+              title="⑪·⑫에 직접 입력한 한국어 문장을 AI로 태국어 번역합니다 (원인분석 탭의 AI 키 사용 · 브라우저에 저장)">AI 내용번역</button>
       <button class="wk-print" id="wkPrint">인쇄 / PDF 저장</button>
       <label class="wk-thbar"><input type="checkbox" id="wkThOn" checked>태국어 병기 (ภาษาไทย)</label>
+      <span class="wk-aitr-st" id="wkAiTrSt"></span>
       <span style="color:#5a6674;font-size:11.5px;margin-left:auto">
         주차만 바꾸면 숫자·차트·코멘트가 전부 자동으로 다시 계산됩니다 · 조치/특이사항 입력은 주차별로 저장됩니다
       </span>
@@ -6701,10 +6713,111 @@ function wkTr(s){
 }
 const hasKo = s => /[가-힣]/.test(s || '');
 
+/* ===== ⑪·⑫ 직접 입력 내용의 AI 태국어 번역 =====
+   사전(TH_UI)은 고정 문구용이라 자유입력 문장은 못 잡는다.
+   한국어 원문을 키로 번역문을 브라우저에 캐시하고, 태국어 모드에서 화면에만 바꿔 보여준다.
+   원문(localStorage 주차별 노트)은 절대 건드리지 않는다 → 번역 표시 중에는 읽기전용. */
+let WK_AI_TR = {};
+try{ WK_AI_TR = JSON.parse(localStorage.getItem('stc_wk_ai_tr') || '{}') || {}; }catch(e){ WK_AI_TR = {}; }
+const wkTrKey = s => String(s==null?'':s).replace(/\s+/g,' ').trim();
+
+/* 번역 대상 입력칸 모음 : ⑪ 표의 문제점·진행사항·계획 + ⑫ 메모 */
+function wkTrFields(root){
+  const r = root || document;
+  return [...r.querySelectorAll('#wkDownTable textarea[data-note], #wkMemo')];
+}
+function wkTrApplyNotes(root){
+  wkTrFields(root).forEach(el=>{
+    const ko = el.dataset.trKo || el.value;
+    if(!hasKo(ko)) return;
+    const th = WK_AI_TR[wkTrKey(ko)];
+    if(!th) return;
+    el.dataset.trKo = ko;
+    el.value = th;
+    el.readOnly = true;
+    el.classList.add('tr-th');
+    el.title = '원문(한국어): ' + ko;
+    if(el.tagName === 'TEXTAREA'){ el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; }
+  });
+}
+
+(function(){
+  const btn = document.getElementById('wkAiTrBtn');
+  const st  = document.getElementById('wkAiTrSt');
+  if(!btn) return;
+  btn.addEventListener('click', async ()=>{
+    const prov = aiGet(AK.p)||'claude', key = aiGet(AK.k), url = aiGet(AK.u);
+    const model = aiGet(AK.m) || (prov==='claude' ? 'claude-sonnet-4-5' : 'gpt-4o-mini');
+    if((prov!=='proxy' && !key) || (prov==='proxy' && !url)){
+      st.textContent = 'AI 키가 없습니다 — [원인분석 리포트] 탭의 「AI 설정」에서 키(또는 프록시 URL)를 먼저 저장하세요.';
+      return;
+    }
+    const set = new Set();
+    wkTrFields(document).forEach(el=>{
+      const ko = wkTrKey(el.dataset.trKo || el.value);
+      if(ko && hasKo(ko) && !WK_AI_TR[ko]) set.add(ko);
+    });
+    const list = [...set].slice(0,80);
+    if(!list.length){ st.textContent = '새로 번역할 한국어 문장이 없습니다.'; return; }
+    st.textContent = 'AI 번역 중… (' + list.length + '문장)';
+    btn.disabled = true;
+    const prompt = '다음은 태국 공장 다이캐스팅 설비보전 주간보고의 한국어 입력 문장 목록입니다.\n'
+      + '태국 현장 작업자가 읽을 수 있도록 각 문장을 태국어로 번역하세요.\n'
+      + '· 설비명(DC1, TP 등)·약어(ACC, D-SOL, PLC)·숫자·단위는 원문 그대로 둡니다.\n'
+      + '· 줄바꿈과 "1) 2)" 같은 번호 구조는 그대로 유지합니다.\n'
+      + '· 설명·주석 없이 JSON 객체만 출력합니다. 형식: {"한국어원문":"คำแปลภาษาไทย", ...}\n\n'
+      + JSON.stringify(list, null, 0);
+    try{
+      let text = '';
+      if(prov === 'claude'){
+        const res = await fetch('https://api.anthropic.com/v1/messages',{ method:'POST',
+          headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01',
+                   'anthropic-dangerous-direct-browser-access':'true'},
+          body: JSON.stringify({model:model, max_tokens:4000, messages:[{role:'user',content:prompt}]}) });
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        const j = await res.json();
+        text = (j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+      }else if(prov === 'openai'){
+        const ep = url || 'https://api.openai.com/v1/chat/completions';
+        const res = await fetch(ep,{ method:'POST',
+          headers:{'content-type':'application/json','Authorization':'Bearer '+key},
+          body: JSON.stringify({model:model, messages:[{role:'user',content:prompt}], max_tokens:4000}) });
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        const j = await res.json();
+        text = j.choices && j.choices[0] ? j.choices[0].message.content : '';
+      }else{
+        const res = await fetch(url,{ method:'POST', headers:{'content-type':'application/json'},
+          body: JSON.stringify({prompt:prompt}) });
+        if(!res.ok) throw new Error('HTTP ' + res.status);
+        const j = await res.json();
+        text = j.text || j.output || '';
+      }
+      const m = text.match(/\{[\s\S]*\}/);
+      const obj = JSON.parse(m ? m[0] : text);
+      let n = 0;
+      for(const k in obj){ if(obj[k]){ WK_AI_TR[wkTrKey(k)] = String(obj[k]).trim(); n++; } }
+      try{ localStorage.setItem('stc_wk_ai_tr', JSON.stringify(WK_AI_TR)); }catch(e){}
+      st.textContent = 'AI 번역 완료 — ' + n + '문장 (이 브라우저에 저장 · [ไทย] 에서 표시됩니다)';
+      renderWeekly();
+    }catch(e){
+      st.textContent = 'AI 번역 실패: ' + e.message + ' · CORS 차단이면 [AI 설정]에서 Apps Script 프록시를 쓰세요.';
+    }
+    btn.disabled = false;
+  });
+})();
+
 function applyWkLang(){
   const btns = document.querySelectorAll('#wkLang button');
   btns.forEach(b=>b.classList.toggle('on', b.dataset.lang === WK_LANG));
-  if(WK_LANG !== 'th') return;                 // 한국어면 그대로 둔다 (다시 그릴 때 원문 복귀)
+  if(WK_LANG !== 'th'){                        // 한국어면 그대로 둔다 (다시 그릴 때 원문 복귀)
+    wkTrFields(document).forEach(el=>{          // ⑫ 메모는 다시 그려지지 않으므로 직접 되돌린다
+      if(!el.classList.contains('tr-th')) return;
+      el.classList.remove('tr-th'); el.readOnly = false;
+      el.removeAttribute('title'); delete el.dataset.trKo;
+      if(el.tagName === 'TEXTAREA'){ el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; }
+    });
+    return;
+  }
 
   const root = document.getElementById('tab-weekly');
   if(!root) return;
@@ -6729,6 +6842,9 @@ function applyWkLang(){
     const p = el.getAttribute('title');
     if(hasKo(p)) el.setAttribute('title', wkTr(p));
   });
+
+  /* 2-b) ⑪·⑫ 에 직접 입력한 내용 (AI 번역 캐시가 있는 것만) */
+  wkTrApplyNotes(root);
 
   /* 3) 차트 범례 · 축 제목 · 목표선 라벨 */
   ['wkMttrChart','wkMtbfChart','wkTrendChart','wkCatMttrChart','wkCatMtbfChart','wkCostTrendChart']
