@@ -242,7 +242,7 @@
   </div>
 
   <div class="quad-card">
-    <div class="quad-title" data-i18n="q.modelStatus">🧩 모델별 품질 현황 (Model-level PPM/Sigma) — W28 기준 스냅샷</div>
+    <div class="quad-title" data-i18n="q.modelStatus">🧩 모델별 품질 현황 (Model-level PPM/Sigma)</div>
     <div class="chart-wrap tall"><canvas id="chart-model"></canvas></div>
     <div style="margin-top:12px;">
       <input type="text" id="modelSearchInput" placeholder="🔍 모델명 검색 (전체 모델 관리)" data-i18n-ph="model.searchPh" oninput="renderModelTable()"
@@ -254,7 +254,7 @@
         <tbody></tbody>
       </table>
     </div>
-    <div class="footnote" data-i18n="model.footnote">※ 이 표는 2026-07-01~07-07(W28) 업로드된 원본 참고자료(Model 컬럼 포함)를 기준으로 한 스냅샷입니다. 실시간 구글시트(A/P/Q 3탭)에는 Model 컬럼이 없어 자동 갱신되지 않습니다 — 지속적인 모델별 추적을 원하시면 품질(Q) 시트에 Model 컬럼 추가를 권장드립니다.</div>
+    <div class="footnote" id="modelFootnote" data-i18n="model.snapshot">※ 이 표는 2026-07-01~07-07(W28) 업로드된 원본 참고자료(Model 컬럼 포함)를 기준으로 한 스냅샷입니다. 실시간 구글시트(A/P/Q 3탭)에는 Model 컬럼이 없어 자동 갱신되지 않습니다 — 지속적인 모델별 추적을 원하시면 품질(Q) 시트에 Model 컬럼 추가를 권장드립니다.</div>
   </div>
 
   <div class="quad-card">
@@ -370,7 +370,7 @@ const I18N = {
     'q.ppmRank': '🏭 설비별 PPM 랭킹 (Worst → Best)',
     'q.pchart': '📉 일별 불량률 관리도 (p-Chart)',
     'q.trend': '📉 Worst-5 트렌드 (설비 / 모델별 불량율 · 점유율 추이)',
-    'q.modelStatus': '🧩 모델별 품질 현황 (Model-level PPM/Sigma) — W28 기준 스냅샷',
+    'q.modelStatus': '🧩 모델별 품질 현황 (Model-level PPM/Sigma)',
     'q.eqDetail': '📋 설비별 상세 (PPM / Sigma / 등급)',
     'q.pdca': '🔄 PDCA 개선관리 (Worst 항목 개선 전 · 후 비교)',
     'q.tonnage': '⚖️ 톤수별 설비 비교 (동톤수 · 동모델 교차비교)',
@@ -378,6 +378,10 @@ const I18N = {
     'trend.metric': '지표', 'trend.rate': '불량율 추이', 'trend.share': '불량 점유율 추이',
     'th.modelName': '모델명', 'th.grade': '등급', 'th.topDefect': '주요 불량유형',
     'model.searchPh': '🔍 모델명 검색 (전체 모델 관리)',
+    'model.liveOk': '※ Model상세 탭 실시간 연동 결과입니다 (현재 분석 범위 기준).',
+    'model.notModel': '※ Model상세 탭의 Model 컬럼에 실제 모델명 대신 구분(정규/특근) 값이 들어 있어 실시간 집계를 쓸 수 없습니다. 아래는 W28(2026-07-01~07-07) 스냅샷입니다. 콘솔에서 modelDiag() 로 컬럼 상태를 확인하세요.',
+    'model.noBad': '※ Model상세 탭에 불량수량이 비어 있어 PPM/Sigma를 산출할 수 없습니다. 아래는 W28(2026-07-01~07-07) 스냅샷입니다. 콘솔에서 modelDiag() 로 컬럼 상태를 확인하세요.',
+    'model.snapshot': '※ Model상세 탭 실시간 연동이 없어 W28(2026-07-01~07-07) 스냅샷을 표시합니다. 품질(Q) 시트에 Model·불량수량 컬럼을 추가하면 자동 갱신됩니다.',
     'model.footnote': '※ 이 표는 2026-07-01~07-07(W28) 업로드된 원본 참고자료(Model 컬럼 포함)를 기준으로 한 스냅샷입니다. 실시간 구글시트(A/P/Q 3탭)에는 Model 컬럼이 없어 자동 갱신되지 않습니다 — 지속적인 모델별 추적을 원하시면 품질(Q) 시트에 Model 컬럼 추가를 권장드립니다.',
     'th.badRate': '불량률(%)',
     'th.division': '구분', 'th.target': '대상', 'th.plan.p': '문제현상 (Plan)', 'th.goal': '목표',
@@ -472,7 +476,11 @@ const I18N = {
     'q.ppmRank': '🏭 อันดับ PPM ตามเครื่องจักร (แย่ → ดี)',
     'q.pchart': '📉 แผนภูมิควบคุมอัตราของเสียรายวัน (p-Chart)',
     'q.trend': '📉 แนวโน้ม Worst-5 (อัตรา/สัดส่วนของเสีย ตามเครื่องจักร/โมเดล)',
-    'q.modelStatus': '🧩 สถานะคุณภาพตามโมเดล (PPM/Sigma ระดับโมเดล) — ข้อมูล ณ สัปดาห์ W28',
+    'model.liveOk': '※ ผลการเชื่อมต่อแท็บ Model상세 แบบเรียลไทม์ (ตามช่วงการวิเคราะห์ปัจจุบัน)',
+    'model.notModel': '※ คอลัมน์ Model ในแท็บ Model상세 มีค่าประเภทกะ (ปกติ/ล่วงเวลา) แทนชื่อโมเดลจริง จึงใช้การรวมข้อมูลแบบเรียลไทม์ไม่ได้ ด้านล่างคือข้อมูล ณ สัปดาห์ W28 (2026-07-01~07-07) ตรวจสอบคอลัมน์ได้ด้วย modelDiag() ในคอนโซล',
+    'model.noBad': '※ แท็บ Model상세 ไม่มีจำนวนของเสีย จึงคำนวณ PPM/Sigma ไม่ได้ ด้านล่างคือข้อมูล ณ สัปดาห์ W28 (2026-07-01~07-07) ตรวจสอบคอลัมน์ได้ด้วย modelDiag() ในคอนโซล',
+    'model.snapshot': '※ ยังไม่ได้เชื่อมต่อแท็บ Model상세 แบบเรียลไทม์ จึงแสดงข้อมูล ณ สัปดาห์ W28 (2026-07-01~07-07) หากเพิ่มคอลัมน์ Model และจำนวนของเสียในชีตคุณภาพ (Q) ระบบจะอัปเดตอัตโนมัติ',
+    'q.modelStatus': '🧩 สถานะคุณภาพตามโมเดล (PPM/Sigma ระดับโมเดล)',
     'q.eqDetail': '📋 รายละเอียดตามเครื่องจักร (PPM / Sigma / เกรด)',
     'q.pdca': '🔄 บริหารการปรับปรุงด้วย PDCA (เปรียบเทียบก่อน-หลัง รายการ Worst)',
     'q.tonnage': '⚖️ เปรียบเทียบเครื่องจักรตามตัน (เครื่องตันเท่ากัน·โมเดลเดียวกัน)',
@@ -574,7 +582,11 @@ const I18N = {
     'q.ppmRank': '🏭 PPM ranking by machine (Worst → Best)',
     'q.pchart': '📉 Daily defect rate control chart (p-Chart)',
     'q.trend': '📉 Worst-5 trend (defect rate · share by machine / model)',
-    'q.modelStatus': '🧩 Quality by model (model-level PPM/Sigma) — W28 snapshot',
+    'model.liveOk': '※ Live sync from the Model detail tab (current analysis period).',
+    'model.notModel': '※ The Model column in the Model detail tab holds shift values (regular / overtime) instead of actual model names, so live aggregation cannot be used. Shown below is the W28 (2026-07-01~07-07) snapshot. Run modelDiag() in the console to inspect the columns.',
+    'model.noBad': '※ The Model detail tab has no defect quantity, so PPM/Sigma cannot be calculated. Shown below is the W28 (2026-07-01~07-07) snapshot. Run modelDiag() in the console to inspect the columns.',
+    'model.snapshot': '※ Live sync for the Model detail tab is not available, so the W28 (2026-07-01~07-07) snapshot is shown. Adding Model and defect-quantity columns to the quality (Q) sheet enables automatic updates.',
+    'q.modelStatus': '🧩 Quality by model (model-level PPM/Sigma)',
     'q.eqDetail': '📋 Machine detail (PPM / Sigma / grade)',
     'q.pdca': '🔄 PDCA improvement management (before · after comparison)',
     'q.tonnage': '⚖️ Machine comparison by tonnage (same tonnage · same model cross-check)',
@@ -1516,17 +1528,28 @@ function renderEqTable(stats) {
 }
 
 let MODEL_LIVE = null; // deprecated flag kept for status-line note; real data lives in RAW_MODEL
+let MODEL_ISSUE = null;
 
 function renderModelTable() {
   const tbody = document.querySelector('#table-model tbody');
   tbody.innerHTML = '';
-  let source;
+  const foot = document.getElementById('modelFootnote');
+  let source = null, live = false;
   if (RAW_MODEL && RAW_MODEL.length) {
     const bounds = getPeriodBounds();
     const rows = RAW_MODEL.filter(r => inPeriod(r, bounds));
-    source = aggregateModelRows(rows);
-  } else {
-    source = MODEL_SNAPSHOT; // 스냅샷은 W28 고정 데이터이므로 분석 범위 필터가 적용되지 않음
+    const agg = aggregateModelRows(rows);
+    if (!modelDataIssue(agg.items)) { source = agg; live = true; }
+    else MODEL_ISSUE = modelDataIssue(agg.items);
+  }
+  if (!source) {
+    // 실시간 데이터가 쓸 수 없는 상태 → 스냅샷으로 대체하고 사유를 안내
+    source = MODEL_SNAPSHOT;
+    if (foot) foot.textContent = t(MODEL_ISSUE === 'notModel' ? 'model.notModel'
+                                 : MODEL_ISSUE === 'noBad'    ? 'model.noBad'
+                                 : 'model.snapshot');
+  } else if (foot) {
+    foot.textContent = t('model.liveOk');
   }
   const ranked = source.items.map(m=>{
     const ppm = m.total ? m.bad/m.total*1e6 : null;
@@ -1625,16 +1648,39 @@ function modelCsvUrl(){ return `https://docs.google.com/spreadsheets/d/e/${MODEL
 
 let RAW_MODEL = null; // raw Q_Model상세 rows from Google Sheets (period filtering applied at render time)
 
+/* Model 컬럼에 실제 모델명이 아니라 구분(정규/특근) 값이 들어오는 경우가 있어
+   집계 결과가 유효한지 판정한다. 유효하지 않으면 표를 비우고 안내를 띄운다. */
+const SHIFT_LIKE = ['정규','특근','특근(주말)','주말','주중','전체','합계','평일'];
+function modelDataIssue(items){
+  if (!items.length) return 'empty';
+  const names = items.map(m => String(m.model).trim());
+  if (names.every(nm => SHIFT_LIKE.includes(nm))) return 'notModel';   // 구분값이 모델명 자리에 들어옴
+  const totalBad = items.reduce((s,m)=>s+(m.bad||0),0);
+  const totalQty = items.reduce((s,m)=>s+(m.total||0),0);
+  if (totalQty > 0 && totalBad === 0) return 'noBad';                  // 불량수량 컬럼이 비어 있음
+  return null;
+}
+
 function aggregateModelRows(rows) {
   if (!rows.length) return { items: [] };
+  const cols = Object.keys(rows[0]);
+  const defectCols = cols.filter(k => !['일자','주차','설비명','교대','Model','구분','Qty_Total','Qty_Good','불량수량','품질(Q)'].includes(k));
+  const BAD_KEYS = ['불량수량','Qty_Bad','불량','불량 수량','Bad_Qty','NG수량'];
+  const badOf = r => {
+    for (const k of BAD_KEYS){
+      const v = r[k];
+      if (v!==undefined && v!==null && String(v).trim()!=='') { const n = Number(v); if (!isNaN(n)) return n; }
+    }
+    const t = Number(r['Qty_Total'])||0, g = Number(r['Qty_Good']);
+    return (!isNaN(g) && String(r['Qty_Good']??'').trim()!=='') ? Math.max(0, t-g) : 0;   // 폴백: 총 - 양품
+  };
   const agg = {};
-  const defectCols = Object.keys(rows[0]).filter(k => !['일자','주차','설비명','교대','Model','구분','Qty_Total','Qty_Good','불량수량','품질(Q)'].includes(k));
   rows.forEach(r => {
     const m = r['Model']; if (!m) return;
     if (!agg[m]) agg[m] = { model:m, eqs:new Set(), total:0, bad:0, defects:{} };
-    agg[m].eqs.add(r['설비명']);
+    if (r['설비명']) agg[m].eqs.add(r['설비명']);
     agg[m].total += Number(r['Qty_Total'])||0;
-    agg[m].bad += Number(r['불량수량'])||0;
+    agg[m].bad += badOf(r);
     defectCols.forEach(c => { agg[m].defects[c] = (agg[m].defects[c]||0) + (Number(r[c])||0); });
   });
   return {
@@ -1643,6 +1689,20 @@ function aggregateModelRows(rows) {
       return { model:m.model, eqs:[...m.eqs], total:m.total, bad:m.bad, topDefect: top?top[0]:null, topDefectCount: top?top[1]:0 };
     })
   };
+}
+
+/* 콘솔 진단: modelDiag() — Model상세 탭의 컬럼과 값 상태를 출력 */
+function modelDiag(){
+  if (!RAW_MODEL || !RAW_MODEL.length){ console.warn('RAW_MODEL 비어 있음 — MODEL_GID 게시 상태 확인'); return null; }
+  const cols = Object.keys(RAW_MODEL[0]);
+  console.log('Model상세 탭 행수:', RAW_MODEL.length);
+  console.log('컬럼:', cols.join(' | '));
+  console.log('첫 행:', RAW_MODEL[0]);
+  const models = [...new Set(RAW_MODEL.map(r=>String(r['Model']||'').trim()).filter(Boolean))];
+  console.log('Model 컬럼 고유값 ('+models.length+'개):', models.slice(0,20));
+  const agg = aggregateModelRows(RAW_MODEL);
+  console.log('판정:', modelDataIssue(agg.items) || '정상');
+  return { cols, models, issue: modelDataIssue(agg.items) };
 }
 
 async function fetchModelDetailLive(){
