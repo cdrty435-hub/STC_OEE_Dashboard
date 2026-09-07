@@ -940,7 +940,8 @@
       </div>
 
       <div class="wk-blk">
-        <h4>③ 주차별 추이 (MTTR · MTBF · 가동률)<span class="wk-catbar" id="wkH3Note"></span>
+        <h4>③ 주차별 추이 (MTTR · MTBF · 가동률)<span class="wk-catbar">집계 계통
+          <span class="wk-cchips" id="wkCat3"></span><span class="cur" id="wkH3Note"></span></span>
           <span class="wk-wkrange">주차 범위
             <select id="wkTrFrom"></select> ~ <select id="wkTrTo"></select>
           </span><span class="wk-selnote" id="wkWkSelNote"></span></h4>
@@ -4164,7 +4165,7 @@ function renderWeekly(){
         const v = dep.value;
         try{
           localStorage.setItem('stc_wk_dept', v);
-          [1,2,4,6].forEach(n=>localStorage.setItem('stc_wk_cat'+n, v==='ALL' ? 'ALL' : JSON.stringify([v])));
+          [1,2,3,4,6].forEach(n=>localStorage.setItem('stc_wk_cat'+n, v==='ALL' ? 'ALL' : JSON.stringify([v])));
           localStorage.setItem('stc_wk_cost_cats', JSON.stringify(v==='ALL' ? WK_SUBS : [v]));
         }catch(e){}
         renderWeekly();
@@ -4190,7 +4191,7 @@ function renderWeekly(){
       localStorage.setItem('stc_wk_cat'+n, catIsAll(a) ? 'ALL' : JSON.stringify(a));
     }catch(e){} };
 
-  [1,2,4,6].forEach(n=>{
+  [1,2,3,4,6].forEach(n=>{
     const el = document.getElementById('wkCat'+n); if(!el) return;
     const cur0 = catGet(n), all = catIsAll(cur0);
     el.innerHTML = `<button type="button" class="all${all?' on':''}" data-c="ALL">전체 로스</button>`
@@ -4210,15 +4211,15 @@ function renderWeekly(){
       };
     });
   });
-  const cats1 = catGet(1), cats2 = catGet(2), cats4 = catGet(4), cats6 = catGet(6);
-  const cat1 = catArg(cats1), cat2 = catArg(cats2), cat4 = catArg(cats4), cat6 = catArg(cats6);
+  const cats1 = catGet(1), cats2 = catGet(2), cats3 = catGet(3), cats4 = catGet(4), cats6 = catGet(6);
+  const cat1 = catArg(cats1), cat2 = catArg(cats2), cat3 = catArg(cats3), cat4 = catArg(cats4), cat6 = catArg(cats6);
   [1,2].forEach(n=>{ const el = document.getElementById('wkCat'+n+'Note');
     if(el) el.textContent = catIsAll(catGet(n)) ? '' : '· 선택 계통만'; });
   const h3n = document.getElementById('wkH3Note');
-  if(h3n) h3n.textContent = '전체 로스 기준 (전 주차 흐름)';
+  if(h3n) h3n.textContent = catIsAll(cats3) ? '· 전체 로스 기준 (전 주차 흐름)' : '· 선택 계통만 (전 주차 흐름)';
 
   const WS  = weekStats(cat1);
-  const WSA = catIsAll(cats1) ? WS : weekStats('ALL');   // ③ 추이는 항상 전체 기준
+  const WSA = catIsAll(cats3) && catIsAll(cats1) ? WS : weekStats(cat3);   // ③ 추이는 자체 계통 칩 기준
   const cur = WS.find(x=>x.w===wk) || null;
   const prv = pw ? (WS.find(x=>x.w===pw)||null) : null;
   if(!cur) return;
