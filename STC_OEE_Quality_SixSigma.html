@@ -18,6 +18,11 @@
   input[type=date] { padding:6px 10px; border:none; border-radius:4px; background:#fff; font-size:13px; color:#222; }
   #btnRefresh { padding:8px 16px; border:none; border-radius:4px; font-size:13px; font-weight:700; cursor:pointer; background:#ff6b6b; color:#fff; }
   #btnRefresh:hover { background:#ff5252; }
+  #langSwitch { display:flex; border:1px solid rgba(255,255,255,.55); border-radius:4px; overflow:hidden; }
+  #langSwitch .lang-btn { padding:8px 12px; border:none; background:transparent; color:#fff; font-size:12px; font-weight:700; cursor:pointer; line-height:1.2; }
+  #langSwitch .lang-btn + .lang-btn { border-left:1px solid rgba(255,255,255,.35); }
+  #langSwitch .lang-btn:hover { background:rgba(255,255,255,.18); }
+  #langSwitch .lang-btn.active { background:#fff; color:#1e3c72; }
   .status-line { font-size:12px; margin-top:10px; color:#e8f0ff; min-height:16px; }
   .status-line.err { color:#ffd2d2; font-weight:700; }
 
@@ -131,7 +136,11 @@
         </select>
       </div>
       <button id="btnRefresh" onclick="onRefreshClick()" data-i18n="ctrl.refresh">🔄 구글시트 새로고침</button>
-      <button id="btnLang" onclick="toggleLang()" style="padding:8px 16px;border:none;border-radius:4px;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:#1e3c72;">🌐 <span id="btnLangLabel">ภาษาไทย</span></button>
+      <div id="langSwitch" role="group" aria-label="Language">
+        <button type="button" class="lang-btn" data-lang="ko" onclick="setLang('ko')">🌐 한국어</button>
+        <button type="button" class="lang-btn" data-lang="th" onclick="setLang('th')">ไทย</button>
+        <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">English</button>
+      </div>
     </div>
     <div class="status-line" id="statusLine">초기화 중...</div>
   </header>
@@ -305,7 +314,10 @@
 /* =========================================================================
    0b. 다국어 지원 (한국어 / ภาษาไทย)
    ========================================================================= */
+const LANG_KEY = 'stc_oee_lang';
+const LANGS = ['ko','th','en'];
 let LANG = 'ko';
+try { const _sv = localStorage.getItem(LANG_KEY); if (LANGS.indexOf(_sv) >= 0) LANG = _sv; } catch(e){}
 
 const I18N = {
   ko: {
@@ -511,6 +523,108 @@ const I18N = {
     'status.sandboxHint': ' → หน้าต่างแสดงตัวอย่างของ Claude มีแซนด์บ็อกซ์ความปลอดภัยที่บล็อกคำขอเครือข่ายภายนอก กรุณาดาวน์โหลดไฟล์ HTML นี้แล้วเปิดด้วยเบราว์เซอร์จริง (เช่น Chrome) แล้วลองใหม่อีกครั้ง',
     'status.cacheLoaded': 'แสดงผลเบื้องต้นจากข้อมูลแคชแล้ว กำลังซิงค์กับ Google Sheets...',
     'status.firstLoad': 'กำลังโหลดข้อมูลครั้งแรกจาก Google Sheets...'
+  },
+  en: {
+    'page.title': 'STC Quality Six Sigma Dashboard',
+    'header.title': '🎯 STC Quality Six Sigma Analysis Dashboard',
+    'header.sub': 'Focused quality control based on PPM / DPMO / Sigma Level — DC1~DC23 · defects against raw material input',
+    'ctrl.scope': 'Analysis period',
+    'ctrl.scope.all': 'All periods (entire sheet)',
+    'ctrl.scope.last1': 'Last 1 week',
+    'ctrl.scope.last2': 'Last 2 weeks',
+    'ctrl.scope.week': 'Select week',
+    'ctrl.scope.custom': 'Custom date range',
+    'ctrl.week': 'Week',
+    'ctrl.startDate': 'Start date',
+    'ctrl.endDate': 'End date',
+    'ctrl.targetSigma': 'Target sigma level',
+    'ctrl.sigma3': '3σ (66,807 PPM · industry average)',
+    'ctrl.sigma4': '4σ (6,210 PPM · industry good)',
+    'ctrl.sigma5': '5σ (233 PPM · industry best)',
+    'ctrl.sigma6': '6σ (3.4 PPM · World Class)',
+    'ctrl.refresh': '🔄 Refresh Google Sheets',
+    'wa.title': '📅 Weekly analysis (OEE = Availability × Performance × Quality)',
+    'wa.A': 'Availability (A)', 'wa.P': 'Performance (P)', 'wa.Q': 'Quality (Q)', 'wa.OEE': 'Overall OEE',
+    'wa.total': 'Total production qty', 'wa.bad': 'Total defect qty',
+    'wa.eqRankTitle': 'Availability (A) · defect rate ranking by machine (Worst → Best)',
+    'eqm.title': '{eq} · defect type detail',
+    'eqm.hint': 'Click a machine row or bar to open its defect types',
+    'eqm.close': 'Close',
+    'eqm.total': 'Inspected qty', 'eqm.bad': 'Defect qty', 'eqm.rate': 'Defect rate',
+    'eqm.ppm': 'PPM', 'eqm.sigma': 'Sigma', 'eqm.grade': 'Grade',
+    'eqm.thType': 'Defect type', 'eqm.thQty': 'Qty', 'eqm.thShare': 'Share', 'eqm.thCum': 'Cumulative',
+    'eqm.thPpm': 'PPM', 'eqm.rank': 'Rank',
+    'eqm.none': 'No detailed defect type records for this machine.',
+    'eqm.unclassNote': 'Unclassified = defect qty minus the sum of the detailed types. A large value means the cause was not recorded on the floor.',
+    'eqm.period': 'Analysis period',
+    'eqm.models': 'Main models produced',
+    'wa.eqChartTitle': 'Planned / production / defect qty · defect rate by machine (chart)',
+    'wa.lossTitle': 'Top 10 downtime (loss) reasons (minutes)',
+    'th.eq': 'Machine', 'th.plan': 'Planned (min)', 'th.run': 'Running (min)', 'th.A': 'Availability (A)',
+    'th.total': 'Production qty', 'th.badQty': 'Defect qty', 'th.Q': 'Defect rate (%)',
+    'th.rank': 'Rank', 'th.reason': 'Reason', 'th.sumMin': 'Total (min)', 'th.share': 'Share',
+    'kpi.total': 'Total inspected qty', 'kpi.bad': 'Total defect qty', 'kpi.ppm': 'Defect PPM',
+    'kpi.sigmaSub': '1.5σ shift applied (long term)', 'kpi.grade': 'Quality grade',
+    'kpi.badSub': 'Defect rate {pct}%',
+    'kpi.ppmSub': '{result} against the {target} PPM target',
+    'kpi.achieved': 'achieved', 'kpi.notAchieved': 'not achieved',
+    'kpi.gradeSub': 'Based on {total} inspected pcs',
+    'q.gauge': '📊 Sigma level gauge',
+    'q.pareto': '📈 Defect type Pareto analysis (80/20 rule)',
+    'q.ppmRank': '🏭 PPM ranking by machine (Worst → Best)',
+    'q.pchart': '📉 Daily defect rate control chart (p-Chart)',
+    'q.trend': '📉 Worst-5 trend (defect rate · share by machine / model)',
+    'q.modelStatus': '🧩 Quality by model (model-level PPM/Sigma) — W28 snapshot',
+    'q.eqDetail': '📋 Machine detail (PPM / Sigma / grade)',
+    'q.pdca': '🔄 PDCA improvement management (before · after comparison)',
+    'q.tonnage': '⚖️ Machine comparison by tonnage (same tonnage · same model cross-check)',
+    'trend.group': 'Group by', 'trend.eq': 'Machine', 'trend.model': 'Model',
+    'trend.metric': 'Metric', 'trend.rate': 'Defect rate trend', 'trend.share': 'Defect share trend',
+    'th.modelName': 'Model', 'th.grade': 'Grade', 'th.topDefect': 'Top defect type',
+    'model.searchPh': '🔍 Search model name (all models)',
+    'model.footnote': '※ This table is a snapshot taken from the reference file uploaded for 2026-07-01~07-07 (W28), which contains a Model column. The live Google Sheets (A/P/Q tabs) have no Model column, so it does not refresh automatically — to track models continuously, adding a Model column to the Quality (Q) sheet is recommended.',
+    'th.badRate': 'Defect rate (%)',
+    'th.division': 'Type', 'th.target': 'Target', 'th.plan.p': 'Problem (Plan)', 'th.goal': 'Goal',
+    'th.do': 'Action (Do)', 'th.before': 'Defect rate before', 'th.after': 'Defect rate after',
+    'th.effect': 'Improvement', 'th.status': 'Status',
+    'pdca.desc': 'Managed as Plan (problem · goal) → Do (action) → Check (automatic before/after comparison) → Act (standardisation).\n      Enter only the target periods (before/after start and end dates) in the sheet; the actual defect rates are calculated automatically from the A/P/Q and Model detail data.',
+    'pdca.waiting': 'Awaiting measurement', 'pdca.waitingAfter': 'Awaiting post-improvement data',
+    'ton.desc': 'Compares average availability and quality among machines of the same tonnage, and where the same model is produced on two or more machines\n      it contrasts the defect rate gap between them directly (for example, DC1 and DC3 are both 350T but behave differently).',
+    'ton.groupTitle': 'Summary by tonnage group',
+    'th.tonnage': 'Tonnage', 'th.eqList': 'Machines', 'th.eqCount': 'No. of machines',
+    'th.avgQ': 'Avg quality (Q)', 'th.worstEq': 'Worst machine in group',
+    'ton.crossTitle': 'Same tonnage · same model cross-check (defect rate gap by machine)',
+    'th.eqBadRate': 'Defect rate by machine', 'th.maxGap': 'Max gap',
+    'fn.sigmaFormula': '※ Sigma Level = Φ⁻¹(1 − PPM/1,000,000) + 1.5 (standard long-term 1.5σ shift applied). Approximate DPMO basis, treating one defect against the inspected quantity as one opportunity (Opportunity = 1).',
+    'fn.ppmLegend': '※ The dashed line is the PPM baseline of the target sigma level. Bar colours show the sigma grade of each machine.',
+    'fn.pchartLegend': '※ The grey band is UCL/LCL (p̄ ± 3σ, reflecting the daily inspected quantity); red dots are out-of-control days.',
+    'fn.noData': '※ No data',
+    'fn.trendNoModel': '※ Live sync for Q_Model detail is not set up yet, so the model trend cannot be shown (the embedded snapshot covers a single week only — publish the tab to the web and put its gid into the code).',
+    'fn.trendSummary': '※ Weekly {metricLabel} of the Worst-5 {label} across all accumulated data ({n} weeks). This always uses the full period, regardless of the analysis period selected above.',
+    'fn.paretoNote': '※ Items with no recorded reason (defect qty − sum of reasons) are counted separately as Unclassified. Current top cause: {worstLabel}.',
+    'fn.pdcaNoLink': 'The PDCA sheet is not linked yet — publish the STC_OEE_PDCA sheet to the web and enter PDCA_SHEET_PUB_KEY / PDCA_GID in the code.',
+    'fn.pdcaSummary': '※ Before/after defect rates are calculated automatically from the actual data for the periods entered in the sheet. {n} items under management.',
+    'fn.tonnageNoModel': 'Live sync for Model detail is not set up, so the same tonnage · same model cross-check cannot be shown (MODEL_SHEET_PUB_KEY / MODEL_GID required).',
+    'fn.tonnageNoCross': 'Within the current analysis period there is no case where two or more machines of the same tonnage produced the same model.',
+    'fn.tonnageSummary': '※ Sorted by gap (highest − lowest defect rate, %p). 10%p and above is shown in red, 5%p and above in orange — when tonnage and model are the same but the defect rates differ widely, inspecting that machine (tie-bar parallelism, ejector pins, heaters and so on) is recommended.',
+    'fn.waNeedAP': 'Live sync of the A (availability) / P (performance) tabs is required — publish each tab to the web as CSV and enter A_GID / P_GID in the code.',
+    'fn.waMissing': '※ The {tabs} tab is not linked, so those metrics are not calculated.',
+    'fn.waOk': '※ Real-time calculation for the current analysis period. Performance (P) is (Avg_shot × CT_STD ÷ 60) ÷ running time, capped at 100% per row and then weighted by running time.',
+    'grade.worldClass': 'World Class (6σ)', 'grade.best': 'Best (5~6σ)', 'grade.good': 'Good (4~5σ)',
+    'grade.avg': 'Average (3~4σ)', 'grade.needImprove': 'Needs improvement (2~3σ)', 'grade.urgent': 'Urgent improvement (<2σ)',
+    'unit.ton': 'T', 'unit.units': ' units',
+    'canvas.noData': 'No data', 'canvas.target': 'Target',
+    'status.loadingQ': 'Loading from Google Sheets (Quality tab)...',
+    'status.syncDone': 'Sync complete — {start} ~ {end} ({n} days) loaded',
+    'status.modelLive': ' / Model detail live sync ({n} rows)',
+    'status.modelSnapshot': ' / Model detail is using the embedded snapshot',
+    'status.pdcaLive': ' / PDCA {n} items linked',
+    'status.waLive': ' / Weekly analysis (A·P·Q) linked',
+    'status.waNeedLink': ' / Weekly analysis needs the A·P tabs linked',
+    'status.syncError': 'Google Sheets sync error: {msg}',
+    'status.sandboxHint': ' → Inside the Claude preview window (artifact) the security sandbox blocks external network requests. Please download this HTML file and open it in a real browser (Chrome and so on), then try again.',
+    'status.cacheLoaded': 'Initial render from cached data complete. Syncing with Google Sheets...',
+    'status.firstLoad': 'Loading from Google Sheets for the first time...'
   }
 };
 
@@ -533,18 +647,39 @@ const TERM_TH = {
   '히터수리':'ซ่อมฮีตเตอร์','펌프이상':'ปั๊มผิดปกติ','로트마크, 사상':'ทำเครื่องหมายล็อต/ตกแต่งผิวงาน','진공설비':'อุปกรณ์สุญญากาศ'
 };
 
+// Loss/defect reason terms in English (raw sheet column names shown in tables & charts)
+const TERM_EN = {
+  '미분류':'Unclassified',
+  '미성형':'Short shot','깨짐':'Crack','찍힘':'Dent','자동불량':'Auto-inspection reject','표면오염':'Surface contamination',
+  '기포':'Porosity / blister','핀파손':'Pin damage','부풀음':'Swelling','박리':'Peeling','수축':'Shrinkage','스크래치':'Scratch',
+  '소착':'Die soldering','언밸런스':'Unbalance','품질확인':'Pending quality check','버':'Burr','변형':'Deformation',
+  '제품끼임':'Part stuck','밀핀짧음':'Ejector pin too short','밀핀긺':'Ejector pin too long','게이트파임':'Gate gouge',
+  '홀틀어짐':'Hole misalignment','게이트파손':'Gate breakage','중량미달':'Underweight','스펙미달':'Out of spec',
+  '비스켓두께미달':'Biscuit thickness below spec','기타':'Other',
+  '금형수리':'Mold repair','금형파손':'Mold damage','설비수리':'Machine repair','전기로수리':'Electric furnace repair',
+  '취출기수리':'Extractor repair','스프레이수리':'Spray unit repair','슬라이드코어수리':'Slide core repair',
+  '팁교체':'Tip replacement','노즐막힘':'Nozzle clogging','플런저오일막힘':'Plunger oil clogging','래들수리':'Ladle repair',
+  '조건변경':'Condition change','탈산처리':'Deoxidation treatment','스크랩용해':'Scrap melting','전기로회전':'Furnace rotation',
+  '금형교체':'Mold change','휴식, 설비교대':'Break / shift change','청소':'Cleaning','미팅/정전':'Meeting / power outage',
+  '금형냉각라인':'Mold cooling line','제품소착':'Part soldering','컨베이어수리':'Conveyor repair',
+  '설비냉각수':'Machine cooling water','스프레이조정':'Spray adjustment','바가지교체':'Ladle cup replacement',
+  '히터수리':'Heater repair','펌프이상':'Pump abnormality','로트마크, 사상':'Lot marking / deburring','진공설비':'Vacuum unit'
+};
+
 function t(key, vars){
   let s = (I18N[LANG] && I18N[LANG][key]) || I18N.ko[key] || key;
   if (vars) Object.keys(vars).forEach(k => { s = s.replace(new RegExp('\\{'+k+'\\}','g'), vars[k]); });
   return s;
 }
 function trTerm(koText){
-  if (LANG !== 'th' || !koText) return koText;
-  return TERM_TH[koText] || koText;
+  if (!koText) return koText;
+  if (LANG === 'th') return TERM_TH[koText] || koText;
+  if (LANG === 'en') return TERM_EN[koText] || koText;
+  return koText;
 }
 
 function applyStaticI18n(){
-  document.documentElement.lang = (LANG === 'th') ? 'th' : 'ko';
+  document.documentElement.lang = LANG;
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     const val = t(key);
@@ -554,14 +689,23 @@ function applyStaticI18n(){
   document.querySelectorAll('[data-i18n-ph]').forEach(el => {
     el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph')));
   });
-  const langLabel = document.getElementById('btnLangLabel');
-  if (langLabel) langLabel.textContent = (LANG === 'ko') ? 'ภาษาไทย' : '한국어';
+  document.querySelectorAll('#langSwitch .lang-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-lang') === LANG);
+    b.setAttribute('aria-pressed', b.getAttribute('data-lang') === LANG ? 'true' : 'false');
+  });
 }
 
-function toggleLang(){
-  LANG = (LANG === 'ko') ? 'th' : 'ko';
+function setLang(lang){
+  if (LANGS.indexOf(lang) < 0 || lang === LANG) { applyStaticI18n(); return; }
+  LANG = lang;
+  try { localStorage.setItem(LANG_KEY, LANG); } catch(e){}
   applyStaticI18n();
-  if (RAW_Q && RAW_Q.length) { renderAll(); renderPDCATable(); }
+  if (typeof RAW_Q !== 'undefined' && RAW_Q && RAW_Q.length) { renderAll(); renderPDCATable(); }
+}
+
+/* kept for backward compatibility: cycles ko -> th -> en -> ko */
+function toggleLang(){
+  setLang(LANGS[(LANGS.indexOf(LANG) + 1) % LANGS.length]);
 }
 
 /* =========================================================================
