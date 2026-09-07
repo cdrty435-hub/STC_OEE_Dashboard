@@ -64,9 +64,9 @@
     color:#5a6470; border-radius:12px; cursor:pointer; font-weight:600; line-height:1.6; }
   #monthlyModeBtns button.on { background:#2196F3; border-color:#2196F3; color:#fff; }
   .qty-card { grid-column:1 / -1; }
-  .qty-body { display:grid; grid-template-columns:minmax(300px,360px) 1fr; gap:20px; align-items:start; }
+  .qty-body { display:grid; grid-template-columns:minmax(300px,360px) 1fr; gap:20px; align-items:stretch; }
   @media (max-width:900px){ .qty-body{ grid-template-columns:1fr; } }
-  table.qty { width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.qty { width:100%; border-collapse:collapse; font-size:12.5px; align-self:start; }
   table.qty th, table.qty td { border-bottom:1px solid #eee; padding:6px 8px; text-align:right; white-space:nowrap; }
   table.qty th { background:#f6f7f9; font-weight:700; color:#444; text-align:right; }
   table.qty th:first-child, table.qty td:first-child { text-align:left; font-weight:600; color:#555; }
@@ -89,7 +89,9 @@
   #qtyModeBtns button { font-size:11px; padding:3px 9px; border:1px solid #cfd6e0; background:#fff;
     color:#5a6470; border-radius:12px; cursor:pointer; font-weight:600; line-height:1.6; }
   #qtyModeBtns button.on { background:#2196F3; border-color:#2196F3; color:#fff; }
-  .qty-chart-wrap { position:relative; height:300px; }
+  /* 좌측 표와 같은 높이로 늘어난다 (그리드 행 높이를 그대로 받음) */
+  .qty-chart-wrap { position:relative; height:100%; min-height:420px; }
+  @media (max-width:900px){ .qty-chart-wrap{ height:360px; min-height:360px; } }
   .qty-chart-wrap canvas { width:100%; height:100%; display:block; }
   table.mini td.rowlabel, table.mini th.rowlabel { text-align:left; font-weight:600; color:#555; white-space:nowrap; width:72px; }
   .swatch { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:5px; }
@@ -1012,21 +1014,21 @@ function renderQtyPanel(){
   const body = rows.map(r => {
     if (r.empty) {
       const lab = r.seedPartial ? `${r.label}<span class="seedmark" title="고정 집계치는 일부 구간으로 나눌 수 없습니다">*</span>` : r.label;
-      return `<tr class="empty"><td>${lab}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>`;
+      return `<tr class="empty"><td>${lab}</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>`;
     }
     const rate = r.total > 0 ? (r.ng / r.total * 100) : null;
     const hl = (mode === 'year' && inSel(r)) ? ' class="hl-row"' : '';
     const lab = r.fixed ? `${r.label}<span class="seedmark" title="초기 등록된 고정 집계치">*</span>` : r.label;
     return `<tr${hl}><td>${lab}</td><td>${nf(r.total)}</td><td>${nf(r.good)}</td>`
-         + `<td class="bad">${nf(r.ng)}</td><td class="etc">${r.etc ? nf(r.etc) : '-'}</td>`
+         + `<td class="bad">${nf(r.ng)}</td>`
          + `<td class="bad">${rate===null?'-':rate.toFixed(2)+'%'}</td></tr>`;
   }).join('');
   const sumRate = sum.total > 0 ? (sum.ng/sum.total*100).toFixed(2)+'%' : '-';
   document.getElementById('table-qty').innerHTML =
-    '<thead><tr><th>월</th><th>총생산량</th><th>양품</th><th>불량</th><th>웜샷</th><th>불량률</th></tr></thead>'
+    '<thead><tr><th>월</th><th>총생산량</th><th>양품</th><th>불량</th><th>불량률</th></tr></thead>'
     + '<tbody>' + body + '</tbody>'
     + `<tfoot><tr><td>합계</td><td>${nf(sum.total)}</td><td>${nf(sum.good)}</td>`
-    + `<td class="bad">${nf(sum.ng)}</td><td class="etc">${sum.etc ? nf(sum.etc) : '-'}</td>`
+    + `<td class="bad">${nf(sum.ng)}</td>`
     + `<td class="bad">${sumRate}</td></tr></tfoot>`;
 
   const vis = qtySeriesVis();
@@ -1052,7 +1054,7 @@ function renderQtyPanel(){
     note += ' * 표시된 달은 초기 등록된 고정 집계치입니다.';
   }
   if (sum.etc > 0) {
-    note += ` 웜샷 = 총생산량 - 양품 - 불량 (합계 ${nf(sum.etc)}개, ${(sum.etc/sum.total*100).toFixed(2)}%).`;
+    note += ` 고정 집계치 구간은 총생산량 - 양품 - 불량 = ${nf(sum.etc)}개(${(sum.etc/sum.total*100).toFixed(2)}%)의 차이가 있습니다.`;
   }
   note += ' 원자료 집계 구간은 불량 = 총생산량 - 양품으로 산출합니다.';
   document.getElementById('qtyFoot').textContent = note;
