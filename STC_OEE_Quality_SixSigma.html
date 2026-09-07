@@ -405,7 +405,7 @@ const I18N = {
     'fn.tonnageSummary': '※ 격차(최고-최저 불량률, %p) 큰 순으로 정렬. 10%p 이상은 빨강, 5%p 이상은 주황으로 표시 — 같은 톤수·같은 모델인데도 불량률 차이가 크면 해당 설비(타이바 평행도, 취출핀, 히터 등) 점검을 권장합니다.',
     'fn.waNeedAP': 'A_가동률 / P_성능 탭 실시간 연동이 필요합니다 — 각 탭을 웹에 게시(CSV)하고 A_GID / P_GID를 코드에 입력해주세요.',
     'fn.waMissing': '※ {tabs} 탭이 연동되지 않아 해당 지표는 계산되지 않습니다.',
-    'fn.waOk': '※ 현재 분석 범위 기준 실시간 계산 결과입니다. 성능(P)은 (Avg_shot × CT_STD ÷ 60) ÷ 가동시간을 행 단위 100% 상한 적용 후 가동시간 가중평균한 값입니다.',
+    'fn.waOk': '※ 현재 분석 범위 기준 실시간 계산 결과입니다. 성능(P)은 OEE 대시보드와 동일하게 원자료 성능(P) 컬럼의 단순 평균으로 산출합니다 (행 단위 상한 없음).',
     'grade.worldClass': 'World Class (6σ)', 'grade.best': '최우수 (5~6σ)', 'grade.good': '우수 (4~5σ)',
     'grade.avg': '평균 (3~4σ)', 'grade.needImprove': '개선필요 (2~3σ)', 'grade.urgent': '긴급개선 (<2σ)',
     'unit.ton': '톤', 'unit.units': '대',
@@ -507,7 +507,7 @@ const I18N = {
     'fn.tonnageSummary': '※ เรียงตามส่วนต่าง (อัตราของเสียสูงสุด-ต่ำสุด, %p) จากมากไปน้อย ส่วนต่างตั้งแต่ 10%p ขึ้นไปแสดงสีแดง 5%p ขึ้นไปแสดงสีส้ม — หากตันเท่ากัน โมเดลเดียวกัน แต่อัตราของเสียต่างกันมาก แนะนำตรวจสอบเครื่องจักรนั้น (ความขนานไทบาร์ พินดันชิ้นงาน ฮีตเตอร์ ฯลฯ)',
     'fn.waNeedAP': 'ต้องเชื่อมต่อแท็บ A_가동률 / P_성능 แบบเรียลไทม์ — กรุณาเผยแพร่แต่ละแท็บเป็น CSV แล้วกรอก A_GID / P_GID ในโค้ด',
     'fn.waMissing': '※ ยังไม่ได้เชื่อมต่อแท็บ {tabs} จึงไม่สามารถคำนวณตัวชี้วัดดังกล่าวได้',
-    'fn.waOk': '※ ผลคำนวณแบบเรียลไทม์ตามช่วงการวิเคราะห์ปัจจุบัน Performance(P) คำนวณจาก (Avg_shot × CT_STD ÷ 60) ÷ เวลาเดินเครื่อง โดยจำกัดสูงสุด 100% ต่อแถวก่อนถ่วงน้ำหนักเฉลี่ยตามเวลาเดินเครื่อง',
+    'fn.waOk': '※ ผลคำนวณแบบเรียลไทม์ตามช่วงการวิเคราะห์ปัจจุบัน Performance(P) คำนวณเป็นค่าเฉลี่ยอย่างง่ายของคอลัมน์ Performance(P) เช่นเดียวกับแดชบอร์ด OEE (ไม่จำกัดเพดานต่อแถว)',
     'grade.worldClass': 'World Class (6σ)', 'grade.best': 'ดีที่สุด (5~6σ)', 'grade.good': 'ดี (4~5σ)',
     'grade.avg': 'ปานกลาง (3~4σ)', 'grade.needImprove': 'ต้องปรับปรุง (2~3σ)', 'grade.urgent': 'ต้องปรับปรุงด่วน (<2σ)',
     'unit.ton': ' ตัน', 'unit.units': ' เครื่อง',
@@ -609,7 +609,7 @@ const I18N = {
     'fn.tonnageSummary': '※ Sorted by gap (highest − lowest defect rate, %p). 10%p and above is shown in red, 5%p and above in orange — when tonnage and model are the same but the defect rates differ widely, inspecting that machine (tie-bar parallelism, ejector pins, heaters and so on) is recommended.',
     'fn.waNeedAP': 'Live sync of the A (availability) / P (performance) tabs is required — publish each tab to the web as CSV and enter A_GID / P_GID in the code.',
     'fn.waMissing': '※ The {tabs} tab is not linked, so those metrics are not calculated.',
-    'fn.waOk': '※ Real-time calculation for the current analysis period. Performance (P) is (Avg_shot × CT_STD ÷ 60) ÷ running time, capped at 100% per row and then weighted by running time.',
+    'fn.waOk': '※ Real-time calculation for the current analysis period. Performance (P) is the simple average of the raw Performance (P) column, matching the OEE dashboard (no per-row cap).',
     'grade.worldClass': 'World Class (6σ)', 'grade.best': 'Best (5~6σ)', 'grade.good': 'Good (4~5σ)',
     'grade.avg': 'Average (3~4σ)', 'grade.needImprove': 'Needs improvement (2~3σ)', 'grade.urgent': 'Urgent improvement (<2σ)',
     'unit.ton': 'T', 'unit.units': ' units',
@@ -1302,6 +1302,20 @@ function getPeriodBounds() {
   return null;
 }
 
+/* ---- OEE 대시보드와 동일한 주차 날짜 보정 ----
+   시트에 W34 행 중 실제 주차 범위를 벗어난 일자가 섞여 있어,
+   OEE 대시보드는 이를 제외하고 집계한다. 대상 행을 맞추기 위해 동일 규칙을 적용한다. */
+const WEEK_DATE_FIX = {
+  'W34': { start: '2026-08-12', end: '2026-08-18' }
+};
+function weekDateFixOf(label){ return WEEK_DATE_FIX[label] || null; }
+function isOutsideWeekFix(r){
+  const fix = weekDateFixOf(r['주차']);
+  if (!fix) return false;
+  const d = String(r['일자'] || '').trim();
+  return !d || d < fix.start || d > fix.end;
+}
+
 function inPeriod(row, bounds) {
   if (!bounds) return true;
   if (bounds.week) return row['주차'] === bounds.week;
@@ -1792,8 +1806,8 @@ function renderTonnageCrossTable() {
    ========================================================================= */
 const LOSS_HEADERS = ['금형수리','금형파손','핀파손','설비수리','전기로수리','취출기수리','스프레이수리','슬라이드코어수리','팁교체','노즐막힘','플런저오일막힘','래들수리','조건변경','탈산처리','스크랩용해','전기로회전','금형교체','휴식, 설비교대','청소','미팅/정전','금형냉각라인','제품소착','컨베이어수리','설비냉각수','스프레이조정','바가지교체','히터수리','펌프이상','로트마크, 사상','진공설비','기타'];
 
-function filteredA(){ if (!RAW_A || !RAW_A.length) return []; const b = getPeriodBounds(); return RAW_A.filter(r=>inPeriod(r,b)); }
-function filteredP(){ if (!RAW_P || !RAW_P.length) return []; const b = getPeriodBounds(); return RAW_P.filter(r=>inPeriod(r,b)); }
+function filteredA(){ if (!RAW_A || !RAW_A.length) return []; const b = getPeriodBounds(); return RAW_A.filter(r=>inPeriod(r,b) && !isOutsideWeekFix(r)); }
+function filteredP(){ if (!RAW_P || !RAW_P.length) return []; const b = getPeriodBounds(); return RAW_P.filter(r=>inPeriod(r,b) && !isOutsideWeekFix(r)); }
 
 function computeWeeklyAnalysis(){
   const aRows = filteredA(), pRows = filteredP(), qRows = filteredRows();
@@ -1808,15 +1822,19 @@ function computeWeeklyAnalysis(){
   const runSum = aRows.reduce((s,r)=>s+(Number(r['가동시간_분'])||0),0);
   const overallA = planSum>0 ? runSum/planSum : null;
 
-  let pNum=0, pDen=0;
+  /* 성능(P) — OEE 대시보드(STC_OEE_Dashboard_Weekly)와 동일한 산출식.
+     원자료 '성능(P)' 컬럼 값의 단순 산술평균이며, 행 단위 100% 상한을 두지 않는다.
+     (기존: (Avg_shot × CT_STD ÷ 60) ÷ 가동시간을 100% 캡 후 가동시간 가중평균)
+     두 대시보드가 같은 P_성능 탭을 읽으므로 같은 기간이면 값이 일치한다. */
+  let pSum=0, pCnt=0;
   pRows.forEach(r=>{
-    const run = Number(r['가동시간_분'])||0;
-    if (run<=0) return;
-    const ctstd = Number(r['CT_STD'])||0, avgshot = Number(r['Avg_shot'])||0;
-    const p = Math.min((avgshot*ctstd/60)/run, 1);
-    pNum += p*run; pDen += run;
+    const raw = r['성능(P)'];
+    if (raw===undefined || raw===null || String(raw).trim()==='') return;
+    const p = Number(raw)||0;
+    if (!p) return;
+    pSum += p; pCnt++;
   });
-  const overallP = pDen>0 ? pNum/pDen : null;
+  const overallP = pCnt>0 ? (pSum/pCnt)/100 : null;   // 화면은 비율(0~1)로 표시
 
   const qtyTotal = qRows.reduce((s,r)=>s+(Number(r['Qty_Total'])||0),0);
   const qtyGood = qRows.reduce((s,r)=>s+(Number(r['Qty_Good'])||0),0);
