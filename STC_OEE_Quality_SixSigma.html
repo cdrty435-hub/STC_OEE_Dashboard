@@ -169,6 +169,7 @@
     @page{size:A4 landscape;margin:8mm;}
     body{background:#fff;}
     header,#viewNav,.qr-noprint,.status-line{display:none !important;}
+    body.qr-report-mode #qrWrap{display:block !important;}
     .container{max-width:none;padding:0;}
     .qr-sheet{border:none;padding:0;}
     .qr-box{break-inside:avoid;}
@@ -2287,6 +2288,8 @@ Object.assign(I18N.ko, {
   'qr.alert.noWS':'※ 이 주차는 웜샷 수량이 0으로 집계됩니다. 시트의 Qty_Good이 이미 웜샷을 제외한 값이면 WARM SHOT 표가 비게 됩니다 — Q시트에 웜샷 수량이 별도 입력되고 있는지 확인해주세요.',
   'qr.alert.noData':'※ 선택한 주차에 품질(Q) 데이터가 없습니다.',
   'qr.foot':'집계기준: {scope} · 제외설비: {ex} · 데이터: 품질(Q) 시트 {n}행 · 작성 {who} · 출력일 {d}',
+  'qr.diagHint':'상단 헤더의 [🔄 구글시트 새로고침]을 눌러 Q시트를 다시 불러와 주세요.',
+  'qr.diagWeeks':'시트에 있는 주차', 'qr.diagCols':'시트 컬럼',
   'qr.mode.seed':'월간 추이는 사내 확정치(고정값) 기준입니다.',
   'qr.mode.auto':'월간 추이는 Q 원자료 자동계산 기준입니다 (확정치와 다를 수 있습니다).'
 });
@@ -2315,6 +2318,8 @@ Object.assign(I18N.th, {
   'qr.alert.noWS':'※ สัปดาห์นี้ยอด warm shot เป็น 0 หาก Qty_Good ในชีตหักยอด warm shot ไปแล้ว ตาราง WARM SHOT จะว่าง — โปรดตรวจสอบการบันทึกในชีต Q',
   'qr.alert.noData':'※ ไม่มีข้อมูลคุณภาพ (Q) ในสัปดาห์ที่เลือก',
   'qr.foot':'เกณฑ์: {scope} · ไม่รวมเครื่อง: {ex} · ข้อมูล: ชีต Q {n} แถว · ผู้จัดทำ {who} · วันที่พิมพ์ {d}',
+  'qr.diagHint':'กรุณากด [🔄 รีเฟรช Google Sheet] ด้านบนเพื่อโหลดชีต Q ใหม่',
+  'qr.diagWeeks':'สัปดาห์ที่มีในชีต', 'qr.diagCols':'คอลัมน์ในชีต',
   'qr.mode.seed':'แนวโน้มรายเดือนใช้ค่ายืนยันของบริษัท', 'qr.mode.auto':'แนวโน้มรายเดือนคำนวณจากข้อมูลดิบ'
 });
 Object.assign(I18N.en, {
@@ -2342,6 +2347,8 @@ Object.assign(I18N.en, {
   'qr.alert.noWS':'※ Warm shot is zero for this week. If Qty_Good already excludes warm shots, the WARM SHOT table stays empty — check how it is entered in the Q sheet.',
   'qr.alert.noData':'※ No quality (Q) data for the selected week.',
   'qr.foot':'Basis: {scope} · Excluded: {ex} · Source: Q sheet, {n} rows · By {who} · Printed {d}',
+  'qr.diagHint':'Press [🔄 Refresh Google Sheet] in the header to reload the Q sheet.',
+  'qr.diagWeeks':'Weeks found in the sheet', 'qr.diagCols':'Sheet columns',
   'qr.mode.seed':'Monthly trend uses company confirmed figures.', 'qr.mode.auto':'Monthly trend is auto-calculated from raw data.'
 });
 
@@ -2365,16 +2372,22 @@ function qrDashBlocks(){
   if (QR_DASH_BLOCKS) return QR_DASH_BLOCKS;
   const c = document.querySelector('.container');
   QR_DASH_BLOCKS = Array.prototype.filter.call(c.children,
-    el => el.tagName !== 'HEADER' && el.id !== 'qrWrap' && el.id !== 'viewNav');
+    el => el.tagName !== 'HEADER' && el.id !== 'qrWrap' && el.id !== 'viewNav')
+    .map(el => ({ el, disp: el.style.display || '' }));   // 원래 inline display 보존
   return QR_DASH_BLOCKS;
 }
 function qrSetView(v){
   QR_VIEW = v;
-  qrDashBlocks().forEach(el => { el.style.display = (v === 'report') ? 'none' : ''; });
-  document.getElementById('qrWrap').style.display = (v === 'report') ? '' : 'none';
+  const report = (v === 'report');
+  qrDashBlocks().forEach(o => { o.el.style.display = report ? 'none' : o.disp; });
+  /* #qrWrap 은 스타일시트에서 display:none 이므로 반드시 명시적으로 block 을 넣어야 한다.
+     빈 문자열을 넣으면 인라인 선언이 사라져 CSS 의 display:none 이 그대로 적용된다. */
+  const wrap = document.getElementById('qrWrap');
+  wrap.style.setProperty('display', report ? 'block' : 'none', 'important');
+  document.body.classList.toggle('qr-report-mode', report);
   document.querySelectorAll('#viewNav button').forEach(b =>
     b.classList.toggle('active', b.getAttribute('data-view') === v));
-  if (v === 'report') renderQReport();
+  if (report) renderQReport();
   else if (RAW_Q && RAW_Q.length) renderAll();
 }
 
@@ -2664,13 +2677,26 @@ function renderQFoot(){
 
 /* ---------- 메인 렌더 ---------- */
 function renderQReport(){
+  try { renderQReportInner(); }
+  catch(e){
+    console.error('renderQReport failed:', e);
+    const box = document.getElementById('qrAlert');
+    if (box) box.innerHTML = '<div class="qr-alert">⚠ ' + (e && e.message ? e.message : e) + '</div>';
+  }
+}
+function renderQReportInner(){
   if (!document.getElementById('qrWrap')) return;
   if (!QR_STORE_LOADED) qrLoadStore();
   qrPopulateWeeks();
   const week = qrCurWeek();
   const alertBox = document.getElementById('qrAlert');
   if (!week || !RAW_Q || !RAW_Q.length){
-    alertBox.innerHTML = `<div class="qr-alert">${t('qr.alert.noData')}</div>`;
+    alertBox.innerHTML = `<div class="qr-alert">${t('qr.alert.noData')}` +
+      `<br>· RAW_Q rows = ${(RAW_Q||[]).length} · 주차 = ${week || '(없음)'}` +
+      `<br>· ${t('qr.diagHint')}</div>`;
+    ['qrKpis','qrTblWS','qrTblNG','qrTblTOT','qrComment'].forEach(id=>{
+      const el = document.getElementById(id); if (el) el.innerHTML = '';
+    });
     return;
   }
   const weeks = qrWeekList();
@@ -2684,7 +2710,9 @@ function renderQReport(){
   document.getElementById('qrTargetBadge').textContent = `Targeting ${QR_TARGET_Q.toFixed(1)}% - OEE QUALITY`;
 
   let alerts = '';
-  if (!a.rows) alerts += `<div class="qr-alert">${t('qr.alert.noData')}</div>`;
+  if (!a.rows) alerts += `<div class="qr-alert">${t('qr.alert.noData')}` +
+    `<br>· ${t('qr.diagWeeks')}: ${weeks.map(qrWkLabel).join(', ') || '-'}` +
+    `<br>· ${t('qr.diagCols')}: ${Object.keys(RAW_Q[0]||{}).slice(0,12).join(' | ')}</div>`;
   else if (a.ws <= 0) alerts += `<div class="qr-alert">${t('qr.alert.noWS')}</div>`;
   alertBox.innerHTML = alerts;
 
