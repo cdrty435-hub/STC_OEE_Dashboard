@@ -97,6 +97,88 @@
   tr.eq-clickable:hover{background:#eef4ff !important;}
   tr.eq-clickable td:first-child::after{content:' 🔍';font-size:10px;opacity:.45;}
   #chart-eqrank{cursor:pointer;}
+
+  /* ===================== 주간 품질보고 (Weekly Quality Report) ===================== */
+  #viewNav{display:flex;gap:8px;margin:0 0 18px;}
+  #viewNav button{padding:9px 20px;border:1px solid #cfd6de;background:#fff;color:#4a545e;
+    border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;}
+  #viewNav button:hover{border-color:#1e3c72;color:#1e3c72;}
+  #viewNav button.active{background:#1e3c72;border-color:#1e3c72;color:#fff;}
+  #qrWrap{display:none;}
+  .qr-sheet{background:#fff;border:1px solid #d7dde3;border-radius:6px;padding:16px 20px 20px;}
+  .qr-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+    border-bottom:2.5px solid #1e3c72;padding-bottom:7px;margin-bottom:14px;}
+  .qr-head h2{margin:0;font-size:18px;font-weight:800;color:#12233f;letter-spacing:-.01em;}
+  .qr-head .rt{font-size:17px;font-weight:700;color:#243a5e;white-space:nowrap;}
+  .qr-head .pd{font-size:11.5px;color:#8a949e;font-weight:500;margin-left:10px;}
+  .qr-toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px;
+    padding:10px 12px;background:#f6f8fa;border:1px solid #e4e9ee;border-radius:8px;font-size:12.5px;}
+  .qr-toolbar label{font-size:11px;color:#7a848e;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+  .qr-toolbar select,.qr-toolbar input[type=text]{padding:5px 8px;border:1px solid #cfd6de;border-radius:6px;font-size:12.5px;}
+  .qr-toolbar button{padding:6px 14px;border:1px solid #1e3c72;background:#1e3c72;color:#fff;
+    border-radius:6px;font-size:12.5px;font-weight:700;cursor:pointer;}
+  .qr-toolbar button.ghost{background:#fff;color:#1e3c72;}
+  .qr-toolbar .hint{font-size:11px;color:#8a949e;}
+
+  .qr-chartbox{position:relative;border:1px solid #c9d0d8;border-radius:4px;padding:10px 10px 4px;margin-bottom:16px;}
+  .qr-chartbox .cap{position:absolute;left:50%;top:-13px;transform:translateX(-50%);
+    background:#1e3c72;color:#fff;font-size:13px;font-weight:800;padding:4px 22px;border-radius:4px;letter-spacing:.02em;}
+  .qr-chartbox .tgt{position:absolute;right:10px;top:8px;background:#2e75b6;color:#fff;
+    font-size:11px;font-weight:700;padding:4px 10px;border-radius:3px;}
+  #chart-qr-trend{width:100%;height:230px;display:block;}
+
+  .qr-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px;}
+  .qr-kpi{border:1px solid #dde3e9;border-top:3px solid #1e3c72;border-radius:6px;padding:8px 10px;background:#fff;}
+  .qr-kpi .l{font-size:10.5px;color:#7a848e;font-weight:700;letter-spacing:.03em;}
+  .qr-kpi .v{font-size:19px;font-weight:800;color:#12233f;margin-top:2px;}
+  .qr-kpi .s{font-size:10.5px;color:#8a949e;margin-top:1px;}
+  .qr-kpi.ok{border-top-color:#43a047;} .qr-kpi.bad{border-top-color:#e53935;} .qr-kpi.warn{border-top-color:#fb8c00;}
+
+  .qr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+  .qr-box{border:1.5px solid #8c98a6;border-radius:2px;overflow:hidden;}
+  .qr-box .bt{text-align:center;font-size:13px;font-weight:800;color:#12233f;padding:5px;
+    background:#eef1f5;border-bottom:1.5px solid #8c98a6;letter-spacing:.03em;}
+  .qr-box table{width:100%;border-collapse:collapse;font-size:11px;}
+  .qr-box th{background:#1e3c72;color:#fff;font-size:10px;font-weight:700;padding:5px 4px;
+    text-align:center;letter-spacing:.02em;white-space:nowrap;}
+  .qr-box td{padding:3px 7px;text-align:right;border-bottom:1px solid #eef1f4;white-space:nowrap;}
+  .qr-box td.l{text-align:left;font-weight:700;color:#243a5e;}
+  .qr-box tbody tr:nth-child(even){background:#fafbfc;}
+  .qr-box tr.zero td{color:#2e56a8;}
+  .qr-box tr.tot td{background:#fff !important;font-weight:800;border-top:2px solid #1e3c72;
+    border-bottom:none;font-size:11.5px;padding:5px 7px;}
+  .qr-box tr.tot td.hl{background:#ffff00 !important;color:#c00;}
+  .qr-box tr.wst td.l::before{content:'▲ ';color:#e53935;font-size:9px;}
+
+  .qr-comment{border:1px solid #dde3e9;border-left:4px solid #1e3c72;border-radius:4px;
+    background:#f9fbfd;padding:11px 14px;font-size:12.5px;line-height:1.85;color:#2c3742;margin-bottom:14px;}
+  .qr-comment b{color:#12233f;}
+  .qr-comment .warn{color:#c62828;font-weight:700;}
+  .qr-comment .up{color:#c62828;} .qr-comment .down{color:#2e7d32;}
+  .qr-note{border:1px solid #dde3e9;border-radius:6px;padding:10px 12px;}
+  .qr-note .h{font-size:12px;font-weight:800;color:#12233f;margin-bottom:6px;}
+  .qr-note textarea{width:100%;min-height:64px;border:1px solid #d7dde3;border-radius:5px;
+    padding:8px;font-size:12.5px;font-family:inherit;line-height:1.7;resize:vertical;}
+  .qr-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;
+    font-size:10.5px;color:#98a2ac;}
+  .qr-foot .cf{color:#c62828;font-weight:800;font-size:11px;}
+  .qr-alert{background:#fff8e1;border:1px solid #ffe082;border-radius:5px;padding:8px 12px;
+    font-size:11.5px;color:#795548;line-height:1.7;margin-bottom:12px;}
+
+  @media print{
+    @page{size:A4 landscape;margin:8mm;}
+    body{background:#fff;}
+    header,#viewNav,.qr-noprint,.status-line{display:none !important;}
+    .container{max-width:none;padding:0;}
+    .qr-sheet{border:none;padding:0;}
+    .qr-box{break-inside:avoid;}
+    .qr-grid{gap:8px;}
+    #chart-qr-trend{height:190px;}
+  }
+  @media(max-width:900px){
+    .qr-grid{grid-template-columns:1fr;}
+    .qr-kpis{grid-template-columns:repeat(3,1fr);}
+  }
 </style>
 </head>
 <body>
@@ -144,6 +226,76 @@
     </div>
     <div class="status-line" id="statusLine">초기화 중...</div>
   </header>
+
+  <div id="viewNav" class="qr-noprint">
+    <button type="button" data-view="dash" class="active" onclick="qrSetView('dash')" data-i18n="nav.dash">📊 분석 대시보드</button>
+    <button type="button" data-view="report" onclick="qrSetView('report')" data-i18n="nav.report">📄 주간 품질보고</button>
+  </div>
+
+  <div id="qrWrap">
+    <div class="qr-toolbar qr-noprint">
+      <div><label data-i18n="qr.week">보고 주차</label>&nbsp;
+        <select id="qrWeek" onchange="renderQReport()"></select></div>
+      <div><label data-i18n="qr.scope">집계 대상</label>&nbsp;
+        <select id="qrScope" onchange="renderQReport()">
+          <option value="all" data-i18n="qr.scope.all">전체 (정규+특근)</option>
+          <option value="regular" data-i18n="qr.scope.reg">정규만</option>
+        </select></div>
+      <div><label data-i18n="qr.mtrend">월간 추이 기준</label>&nbsp;
+        <select id="qrMonthMode" onchange="renderQReport()">
+          <option value="seed" data-i18n="qr.mtrend.seed">사내 확정치 우선</option>
+          <option value="auto" data-i18n="qr.mtrend.auto">원자료 자동계산</option>
+        </select></div>
+      <div><label data-i18n="qr.writer">작성</label>&nbsp;
+        <input type="text" id="qrWriter" size="10" data-i18n-ph="qr.writer.ph" placeholder="공무팀" oninput="qrSaveWriter()"></div>
+      <button type="button" onclick="window.print()" data-i18n="qr.print">🖨 인쇄 / PDF 저장</button>
+      <span class="hint" data-i18n="qr.hint">주차만 바꾸면 차트·표·코멘트가 전부 다시 계산됩니다</span>
+    </div>
+
+    <div class="qr-sheet" id="qrSheet">
+      <div class="qr-head">
+        <h2><span data-i18n="qr.title">품질 보고서 – Quality Report</span> <span id="qrWkLabel">-</span>
+          <span class="pd" id="qrPeriod"></span></h2>
+        <div class="rt" data-i18n="qr.define">Define / 정의</div>
+      </div>
+
+      <div id="qrAlert"></div>
+
+      <div class="qr-chartbox">
+        <div class="cap">OEE - Quality</div>
+        <div class="tgt" id="qrTargetBadge">Targeting 96.5% - OEE QUALITY</div>
+        <canvas id="chart-qr-trend"></canvas>
+      </div>
+
+      <div class="qr-kpis" id="qrKpis"></div>
+
+      <div class="qr-grid">
+        <div class="qr-box"><div class="bt">WARM SHOT</div>
+          <table><thead><tr><th>M/C No.</th><th>PROD QTY</th><th>W/S QTY</th><th>REJ %</th></tr></thead>
+          <tbody id="qrTblWS"></tbody></table></div>
+        <div class="qr-box"><div class="bt">NG QTY</div>
+          <table><thead><tr><th>M/C No.</th><th>PROD QTY</th><th>RET QTY</th><th>REJ %</th></tr></thead>
+          <tbody id="qrTblNG"></tbody></table></div>
+        <div class="qr-box"><div class="bt">TOTAL NG</div>
+          <table><thead><tr><th>M/C No.</th><th>PROD QTY</th><th>NG QTY</th><th>REJ %</th></tr></thead>
+          <tbody id="qrTblTOT"></tbody></table></div>
+      </div>
+
+      <div class="qr-comment" id="qrComment"></div>
+
+      <div class="qr-note">
+        <div class="h"><span data-i18n="qr.note">특이사항 · 개선조치 · 익주 계획</span>
+          <span id="qrNoteState" style="color:#43a047;font-weight:700;margin-left:8px;"></span></div>
+        <textarea id="qrNote" data-i18n-ph="qr.note.ph" placeholder="이번 주 특이사항과 조치 내용을 입력하세요. 주차별로 저장됩니다." onblur="qrSaveNote()"></textarea>
+      </div>
+
+      <div class="qr-foot">
+        <div id="qrFootInfo"></div>
+        <div class="cf">Confidential</div>
+      </div>
+    </div>
+  </div>
+
 
   <div class="quad-card" style="margin-bottom:20px;">
     <div class="quad-title" data-i18n="wa.title">📅 주간분석 (종합 OEE = 가동률 × 성능 × 품질)</div>
@@ -1606,6 +1758,7 @@ function renderAll() {
   renderWeeklyAnalysis();
 
   renderTrendChart();
+  if (typeof renderQReport === 'function' && QR_VIEW === 'report') renderQReport();
 }
 
 /* =========================================================================
@@ -2099,6 +2252,458 @@ window.addEventListener('resize', () => {
   clearTimeout(_resizeTimer);
   _resizeTimer = setTimeout(() => { if (RAW_Q.length) renderAll(); }, 150);
 });
+
+/* =========================================================================
+   9. 주간 품질보고 (Weekly Quality Report)
+      사내 PPT 서식(WARM SHOT / NG QTY / TOTAL NG + OEE-Quality 추이) 재현.
+      Q 원자료 정의:  Qty_Total = Qty_Good + 불량수량 + 웜샷
+        · PROD QTY  = Qty_Total
+        · TOTAL NG  = Qty_Total - Qty_Good
+        · NG(RET)   = 불량수량
+        · WARM SHOT = TOTAL NG - 불량수량
+   ========================================================================= */
+Object.assign(I18N.ko, {
+  'nav.dash':'📊 분석 대시보드', 'nav.report':'📄 주간 품질보고',
+  'qr.week':'보고 주차', 'qr.scope':'집계 대상', 'qr.scope.all':'전체 (정규+특근)', 'qr.scope.reg':'정규만',
+  'qr.mtrend':'월간 추이 기준', 'qr.mtrend.seed':'사내 확정치 우선', 'qr.mtrend.auto':'원자료 자동계산',
+  'qr.writer':'작성', 'qr.writer.ph':'공무팀', 'qr.print':'🖨 인쇄 / PDF 저장',
+  'qr.hint':'주차만 바꾸면 차트·표·코멘트가 전부 다시 계산됩니다',
+  'qr.title':'품질 보고서 – Quality Report', 'qr.define':'Define / 정의',
+  'qr.note':'특이사항 · 개선조치 · 익주 계획',
+  'qr.note.ph':'이번 주 특이사항과 조치 내용을 입력하세요. 주차별로 저장됩니다.',
+  'qr.saved':'저장됨', 'qr.total':'TOTAL',
+  'qr.k.prod':'총 생산수량', 'qr.k.ws':'WARM SHOT', 'qr.k.ng':'NG QTY',
+  'qr.k.tot':'TOTAL NG', 'qr.k.q':'품질(Q)', 'qr.k.gap':'목표 대비',
+  'qr.k.vsPrev':'전주 대비 {v}', 'qr.k.noPrev':'전주 데이터 없음',
+  'qr.k.share':'TOTAL NG의 {v}%',
+  'qr.gap.over':'목표 달성 (+{v}%p)', 'qr.gap.under':'미달 ({v}%p)',
+  'qr.cmt.head':'<b>{wk}</b> 품질(Q) <b>{q}%</b> — 목표 {tg}% 대비 <b>{gap}</b>.',
+  'qr.cmt.prev':' 전주 {pw}({pq}%) 대비 <span class="{cls}">{diff}%p</span>.',
+  'qr.cmt.mix':' TOTAL NG {tot}% 중 웜샷 {ws}%p · 불량 {ng}%p로 <b>웜샷 비중 {share}%</b>.',
+  'qr.cmt.worst':' 워스트 설비: {list}.',
+  'qr.cmt.defect':' 주요 불량유형: {list}.',
+  'qr.cmt.wsWarn':' <span class="warn">웜샷이 전체 로스의 절반을 넘습니다 — 초기 샷 조건·금형 예열 관리가 최우선 개선 대상입니다.</span>',
+  'qr.cmt.ngWarn':' <span class="warn">불량(NG) 비중이 웜샷보다 큽니다 — 공정 불량유형 파레토 분석을 우선하십시오.</span>',
+  'qr.alert.noWS':'※ 이 주차는 웜샷 수량이 0으로 집계됩니다. 시트의 Qty_Good이 이미 웜샷을 제외한 값이면 WARM SHOT 표가 비게 됩니다 — Q시트에 웜샷 수량이 별도 입력되고 있는지 확인해주세요.',
+  'qr.alert.noData':'※ 선택한 주차에 품질(Q) 데이터가 없습니다.',
+  'qr.foot':'집계기준: {scope} · 제외설비: {ex} · 데이터: 품질(Q) 시트 {n}행 · 작성 {who} · 출력일 {d}',
+  'qr.mode.seed':'월간 추이는 사내 확정치(고정값) 기준입니다.',
+  'qr.mode.auto':'월간 추이는 Q 원자료 자동계산 기준입니다 (확정치와 다를 수 있습니다).'
+});
+Object.assign(I18N.th, {
+  'nav.dash':'📊 แดชบอร์ดวิเคราะห์', 'nav.report':'📄 รายงานคุณภาพรายสัปดาห์',
+  'qr.week':'สัปดาห์ที่รายงาน', 'qr.scope':'ขอบเขตข้อมูล', 'qr.scope.all':'ทั้งหมด (ปกติ+ล่วงเวลา)', 'qr.scope.reg':'เฉพาะกะปกติ',
+  'qr.mtrend':'เกณฑ์แนวโน้มรายเดือน', 'qr.mtrend.seed':'ใช้ค่ายืนยันของบริษัท', 'qr.mtrend.auto':'คำนวณจากข้อมูลดิบ',
+  'qr.writer':'ผู้จัดทำ', 'qr.writer.ph':'แผนกซ่อมบำรุง', 'qr.print':'🖨 พิมพ์ / บันทึก PDF',
+  'qr.hint':'เปลี่ยนสัปดาห์แล้ว กราฟ ตาราง และคำอธิบายจะคำนวณใหม่ทั้งหมด',
+  'qr.title':'รายงานคุณภาพ – Quality Report', 'qr.define':'Define / นิยาม',
+  'qr.note':'หมายเหตุ · การแก้ไข · แผนสัปดาห์หน้า',
+  'qr.note.ph':'กรอกหมายเหตุและการแก้ไขของสัปดาห์นี้ ระบบบันทึกแยกตามสัปดาห์',
+  'qr.saved':'บันทึกแล้ว', 'qr.total':'รวม',
+  'qr.k.prod':'ยอดผลิตรวม', 'qr.k.ws':'WARM SHOT', 'qr.k.ng':'ของเสีย NG',
+  'qr.k.tot':'ของเสียรวม', 'qr.k.q':'คุณภาพ (Q)', 'qr.k.gap':'เทียบเป้าหมาย',
+  'qr.k.vsPrev':'เทียบสัปดาห์ก่อน {v}', 'qr.k.noPrev':'ไม่มีข้อมูลสัปดาห์ก่อน',
+  'qr.k.share':'{v}% ของของเสียรวม',
+  'qr.gap.over':'บรรลุเป้าหมาย (+{v}%p)', 'qr.gap.under':'ต่ำกว่าเป้า ({v}%p)',
+  'qr.cmt.head':'<b>{wk}</b> คุณภาพ (Q) <b>{q}%</b> — เทียบเป้าหมาย {tg}% : <b>{gap}</b>.',
+  'qr.cmt.prev':' เทียบ {pw}({pq}%) <span class="{cls}">{diff}%p</span>.',
+  'qr.cmt.mix':' ของเสียรวม {tot}% แบ่งเป็น warm shot {ws}%p · NG {ng}%p — <b>warm shot คิดเป็น {share}%</b>.',
+  'qr.cmt.worst':' เครื่องที่แย่ที่สุด: {list}.',
+  'qr.cmt.defect':' ประเภทของเสียหลัก: {list}.',
+  'qr.cmt.wsWarn':' <span class="warn">warm shot เกินครึ่งหนึ่งของความสูญเสีย — ต้องแก้ที่การอุ่นแม่พิมพ์และเงื่อนไขช็อตแรกก่อน</span>',
+  'qr.cmt.ngWarn':' <span class="warn">สัดส่วน NG มากกว่า warm shot — ให้วิเคราะห์พาเรโตของประเภทของเสียก่อน</span>',
+  'qr.alert.noWS':'※ สัปดาห์นี้ยอด warm shot เป็น 0 หาก Qty_Good ในชีตหักยอด warm shot ไปแล้ว ตาราง WARM SHOT จะว่าง — โปรดตรวจสอบการบันทึกในชีต Q',
+  'qr.alert.noData':'※ ไม่มีข้อมูลคุณภาพ (Q) ในสัปดาห์ที่เลือก',
+  'qr.foot':'เกณฑ์: {scope} · ไม่รวมเครื่อง: {ex} · ข้อมูล: ชีต Q {n} แถว · ผู้จัดทำ {who} · วันที่พิมพ์ {d}',
+  'qr.mode.seed':'แนวโน้มรายเดือนใช้ค่ายืนยันของบริษัท', 'qr.mode.auto':'แนวโน้มรายเดือนคำนวณจากข้อมูลดิบ'
+});
+Object.assign(I18N.en, {
+  'nav.dash':'📊 Analysis Dashboard', 'nav.report':'📄 Weekly Quality Report',
+  'qr.week':'Report week', 'qr.scope':'Scope', 'qr.scope.all':'All (regular + OT)', 'qr.scope.reg':'Regular only',
+  'qr.mtrend':'Monthly trend basis', 'qr.mtrend.seed':'Company confirmed figures', 'qr.mtrend.auto':'Auto from raw data',
+  'qr.writer':'Prepared by', 'qr.writer.ph':'Maintenance', 'qr.print':'🖨 Print / Save PDF',
+  'qr.hint':'Change the week and the chart, tables and comment all recalculate',
+  'qr.title':'Quality Report', 'qr.define':'Define',
+  'qr.note':'Remarks · Actions · Next week plan',
+  'qr.note.ph':'Enter this week\u2019s remarks and actions. Saved per week.',
+  'qr.saved':'Saved', 'qr.total':'TOTAL',
+  'qr.k.prod':'Production qty', 'qr.k.ws':'Warm shot', 'qr.k.ng':'NG qty',
+  'qr.k.tot':'Total NG', 'qr.k.q':'Quality (Q)', 'qr.k.gap':'vs target',
+  'qr.k.vsPrev':'vs prev week {v}', 'qr.k.noPrev':'No previous week data',
+  'qr.k.share':'{v}% of total NG',
+  'qr.gap.over':'Target met (+{v}%p)', 'qr.gap.under':'Short by {v}%p',
+  'qr.cmt.head':'<b>{wk}</b> Quality (Q) <b>{q}%</b> — against the {tg}% target: <b>{gap}</b>.',
+  'qr.cmt.prev':' Versus {pw} ({pq}%): <span class="{cls}">{diff}%p</span>.',
+  'qr.cmt.mix':' Total NG {tot}% splits into warm shot {ws}%p and defects {ng}%p — <b>warm shot is {share}%</b>.',
+  'qr.cmt.worst':' Worst machines: {list}.',
+  'qr.cmt.defect':' Main defect types: {list}.',
+  'qr.cmt.wsWarn':' <span class="warn">Warm shot is over half of the loss — die preheating and first-shot conditions come first.</span>',
+  'qr.cmt.ngWarn':' <span class="warn">Defects outweigh warm shot — start from the defect-type Pareto.</span>',
+  'qr.alert.noWS':'※ Warm shot is zero for this week. If Qty_Good already excludes warm shots, the WARM SHOT table stays empty — check how it is entered in the Q sheet.',
+  'qr.alert.noData':'※ No quality (Q) data for the selected week.',
+  'qr.foot':'Basis: {scope} · Excluded: {ex} · Source: Q sheet, {n} rows · By {who} · Printed {d}',
+  'qr.mode.seed':'Monthly trend uses company confirmed figures.', 'qr.mode.auto':'Monthly trend is auto-calculated from raw data.'
+});
+
+const QR_TARGET_Q   = 96.5;                    // 사내 품질 목표 (%)
+const QR_EXCLUDE_EQ = ['DC14'];                // 실제 보유 설비가 아닌 호기
+const QR_MON_ABBR   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+/* 사내 확정 월간 품질(Q) — 보고서 원본 그래프 값 */
+const QR_MONTH_SEED = {
+  '2025-09':87.00, '2025-10':87.00, '2025-11':92.20, '2025-12':91.30,
+  '2026-01':92.50, '2026-02':93.90, '2026-03':93.40, '2026-04':92.40,
+  '2026-05':93.50, '2026-06':92.17, '2026-07':90.20, '2026-08':93.80
+};
+const QR_NOTE_KEY   = 'stc_q_weekly_report_v1';
+let QR_STORE = { notes:{}, writer:'' };
+let QR_STORE_LOADED = false;
+let QR_VIEW = 'dash';
+let QR_DASH_BLOCKS = null;
+
+/* ---------- 뷰 전환 ---------- */
+function qrDashBlocks(){
+  if (QR_DASH_BLOCKS) return QR_DASH_BLOCKS;
+  const c = document.querySelector('.container');
+  QR_DASH_BLOCKS = Array.prototype.filter.call(c.children,
+    el => el.tagName !== 'HEADER' && el.id !== 'qrWrap' && el.id !== 'viewNav');
+  return QR_DASH_BLOCKS;
+}
+function qrSetView(v){
+  QR_VIEW = v;
+  qrDashBlocks().forEach(el => { el.style.display = (v === 'report') ? 'none' : ''; });
+  document.getElementById('qrWrap').style.display = (v === 'report') ? '' : 'none';
+  document.querySelectorAll('#viewNav button').forEach(b =>
+    b.classList.toggle('active', b.getAttribute('data-view') === v));
+  if (v === 'report') renderQReport();
+  else if (RAW_Q && RAW_Q.length) renderAll();
+}
+
+/* ---------- 저장 (주차별 메모 + 작성자) ---------- */
+async function qrLoadStore(){
+  if (QR_STORE_LOADED) return;
+  QR_STORE = (await Store.get(QR_NOTE_KEY)) || { notes:{}, writer:'' };
+  if (!QR_STORE.notes) QR_STORE.notes = {};
+  QR_STORE_LOADED = true;
+  const w = document.getElementById('qrWriter');
+  if (w && QR_STORE.writer) w.value = QR_STORE.writer;
+  qrFillNote();
+}
+function qrFillNote(){
+  const el = document.getElementById('qrNote');
+  if (el) el.value = QR_STORE.notes[qrCurWeek()] || '';
+}
+async function qrSaveNote(){
+  const wk = qrCurWeek(); if (!wk) return;
+  QR_STORE.notes[wk] = document.getElementById('qrNote').value;
+  await Store.set(QR_NOTE_KEY, QR_STORE);
+  const s = document.getElementById('qrNoteState');
+  if (s){ s.textContent = t('qr.saved'); setTimeout(()=>{ s.textContent=''; }, 1800); }
+}
+let _qrWriterTimer = null;
+function qrSaveWriter(){
+  clearTimeout(_qrWriterTimer);
+  _qrWriterTimer = setTimeout(async ()=>{
+    QR_STORE.writer = document.getElementById('qrWriter').value;
+    await Store.set(QR_NOTE_KEY, QR_STORE);
+    renderQFoot();
+  }, 500);
+}
+
+/* ---------- 주차/집계 ---------- */
+function qrCurWeek(){
+  const s = document.getElementById('qrWeek');
+  return s ? s.value : null;
+}
+function qrWeekNum(w){ const m = String(w||'').match(/(\d+)/); return m ? parseInt(m[1],10) : null; }
+function qrWkLabel(w){ const n = qrWeekNum(w); return n ? ('WK' + n) : (w || '-'); }
+function qrEqNum(eq){ const m = String(eq||'').match(/(\d+)/); return m ? parseInt(m[1],10) : 9999; }
+function qrScope(){ const s = document.getElementById('qrScope'); return s ? s.value : 'all'; }
+
+function qrWeekList(){
+  return [...new Set((RAW_Q||[]).map(r=>r['주차']))].filter(Boolean)
+    .sort((a,b)=>(qrWeekNum(a)||0)-(qrWeekNum(b)||0));
+}
+function qrPopulateWeeks(){
+  const sel = document.getElementById('qrWeek'); if (!sel) return;
+  const weeks = qrWeekList();
+  const prev = sel.value;
+  const cur = Array.prototype.map.call(sel.options, o=>o.value).join('|');
+  if (cur !== weeks.join('|')){
+    sel.innerHTML = weeks.map(w=>`<option value="${w}">${qrWkLabel(w)}</option>`).join('');
+    if (weeks.includes(prev)) sel.value = prev;
+    else if (weeks.length) sel.value = weeks[weeks.length-1];
+  }
+}
+
+/* 주차 원본 행 (주차 날짜 보정 + 정규/특근 범위 반영) */
+function qrRows(week){
+  const sc = qrScope();
+  return (RAW_Q||[]).filter(r=>{
+    if (r['주차'] !== week) return false;
+    if (isOutsideWeekFix(r)) return false;
+    if (sc === 'regular' && r['구분'] !== '정규') return false;
+    return true;
+  });
+}
+
+function qrAgg(week){
+  const rows = qrRows(week);
+  const byEq = {}, dates = [], defects = {};
+  DEFECT_COLS.forEach(c => defects[c] = 0);
+  rows.forEach(r=>{
+    const eq = String(r['설비명']||'').trim();
+    if (!eq || QR_EXCLUDE_EQ.includes(eq)) return;
+    const tt = num(r['Qty_Total']), gg = num(r['Qty_Good']), bb = num(r['불량수량']);
+    if (!byEq[eq]) byEq[eq] = { eq, prod:0, good:0, ng:0 };
+    byEq[eq].prod += tt; byEq[eq].good += gg; byEq[eq].ng += bb;
+    const d = String(r['일자']||'').trim(); if (d) dates.push(d);
+    DEFECT_COLS.forEach(c => { const v = num(r[c]); if (v) defects[c] += v; });
+  });
+  const list = Object.values(byEq).map(e=>{
+    const totalNg = Math.max(0, e.prod - e.good);
+    const ng = Math.min(e.ng, totalNg);
+    return { eq:e.eq, prod:e.prod, good:e.good, ng, ws: Math.max(0, totalNg - ng), totalNg };
+  });
+  const sum = k => list.reduce((s,x)=>s+x[k], 0);
+  dates.sort();
+  return {
+    week, rows: rows.length, list,
+    prod: sum('prod'), ws: sum('ws'), ng: sum('ng'), totalNg: sum('totalNg'),
+    start: dates[0] || null, end: dates[dates.length-1] || null,
+    defects
+  };
+}
+function qrQ(a){ return a && a.prod > 0 ? (1 - a.totalNg/a.prod) * 100 : null; }
+
+/* ---------- 월간 품질(Q) ---------- */
+function qrMonthAuto(mk){
+  const sc = qrScope();
+  let total = 0, good = 0, n = 0;
+  (RAW_Q||[]).forEach(r=>{
+    const d = String(r['일자']||'').trim();
+    if (d.slice(0,7) !== mk) return;
+    if (isOutsideWeekFix(r)) return;
+    if (sc === 'regular' && r['구분'] !== '정규') return;
+    const eq = String(r['설비명']||'').trim();
+    if (QR_EXCLUDE_EQ.includes(eq)) return;
+    const tt = num(r['Qty_Total']); if (tt <= 0) return;
+    total += tt; good += num(r['Qty_Good']); n++;
+  });
+  return n && total > 0 ? good/total*100 : null;
+}
+function qrMonthQ(mk){
+  const mode = (document.getElementById('qrMonthMode')||{}).value || 'seed';
+  if (mode === 'seed') return (QR_MONTH_SEED[mk] != null) ? QR_MONTH_SEED[mk] : qrMonthAuto(mk);
+  const a = qrMonthAuto(mk);
+  return (a != null) ? a : (QR_MONTH_SEED[mk] != null ? QR_MONTH_SEED[mk] : null);
+}
+function qrMonthSeries(endDate){
+  const base = endDate ? new Date(endDate + 'T00:00:00') : new Date();
+  const out = [];
+  for (let i = 11; i >= 0; i--){
+    const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+    const mk = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    out.push({ mk, label: QR_MON_ABBR[d.getMonth()] + "'" + String(d.getFullYear()).slice(2), val: qrMonthQ(mk) });
+  }
+  return out;
+}
+
+/* ---------- 추이 차트 ---------- */
+function drawQTrendChart(canvasId, months, wkPoint, futureLabels){
+  const canvas = document.getElementById(canvasId); if (!canvas) return;
+  const { W, H, ctx } = sizeCanvas(canvas);
+  ctx.clearRect(0,0,W,H);
+  const padL = 58, padR = 16, padT = 30, padB = 26;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  if (plotW <= 20 || plotH <= 20) return;
+  const yMin = 75, yMax = 101;
+  const cols  = months.length + 1 + futureLabels.length;
+  const cw    = plotW / cols;
+  const yOf   = v => padT + plotH * (1 - (v - yMin) / (yMax - yMin));
+  const xOf   = i => padL + cw * i + cw/2;
+
+  ctx.font = '10px Arial'; ctx.textBaseline = 'middle';
+  for (let v = 75; v <= 100; v += 5){
+    const yy = yOf(v);
+    ctx.strokeStyle = '#edf0f4'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(W - padR, yy); ctx.stroke();
+    ctx.fillStyle = '#8a949e'; ctx.textAlign = 'right';
+    ctx.fillText(v.toFixed(2) + '%', padL - 7, yy);
+  }
+  /* 목표선 */
+  const ty = yOf(QR_TARGET_Q);
+  ctx.setLineDash([5,4]); ctx.strokeStyle = '#2e75b6'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(padL, ty); ctx.lineTo(W - padR, ty); ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* 막대 + 값 */
+  const bw = Math.min(cw * 0.46, 34);
+  const pts = [];
+  months.forEach((m,i)=>{
+    const x = xOf(i);
+    ctx.fillStyle = '#8a949e'; ctx.font = '9.5px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(m.label, x, H - padB + 7);
+    if (m.val == null) return;
+    const y0 = yOf(Math.max(yMin, m.val));
+    ctx.fillStyle = '#1f3864';
+    ctx.fillRect(x - bw/2, y0, bw, (H - padB) - y0);
+    ctx.fillStyle = '#12233f'; ctx.font = 'bold 9.5px Arial'; ctx.textBaseline = 'bottom';
+    ctx.fillText(m.val.toFixed(2) + '%', x, y0 - 4);
+    pts.push({ x, y: y0 });
+  });
+  /* 점선 추이 */
+  if (pts.length > 1){
+    ctx.setLineDash([2,3]); ctx.strokeStyle = '#b6c2d2'; ctx.lineWidth = 2;
+    ctx.beginPath(); pts.forEach((p,i)=> i ? ctx.lineTo(p.x, p.y - 16) : ctx.moveTo(p.x, p.y - 16));
+    ctx.lineTo(W - padR, pts[pts.length-1].y - 16);
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  /* 이번 주차 포인트 */
+  const wi = months.length;
+  if (wkPoint && wkPoint.val != null){
+    const x = xOf(wi), y = yOf(Math.min(yMax - 0.5, wkPoint.val));
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2);
+    ctx.fillStyle = '#f5c518'; ctx.fill();
+    ctx.strokeStyle = '#b58900'; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.fillStyle = '#12233f'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText(wkPoint.val.toFixed(2) + '%', x, y - 8);
+    ctx.fillStyle = '#b58900'; ctx.font = 'bold 9.5px Arial'; ctx.textBaseline = 'top';
+    ctx.fillText(wkPoint.label, x, H - padB + 7);
+  }
+  ctx.fillStyle = '#8a949e'; ctx.font = '9.5px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  futureLabels.forEach((lb,i)=> ctx.fillText(lb, xOf(wi + 1 + i), H - padB + 7));
+
+  ctx.strokeStyle = '#d7dde3'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, H - padB); ctx.lineTo(W - padR, H - padB); ctx.stroke();
+}
+
+/* ---------- 표 ---------- */
+function qrRowsHtml(list, key, totProd, totVal){
+  const rate = x => x.prod > 0 ? x[key]/x.prod*100 : 0;
+  const nz = list.filter(x => rate(x) > 0).sort((a,b)=> rate(b) - rate(a));
+  const zr = list.filter(x => rate(x) <= 0).sort((a,b)=> qrEqNum(a.eq) - qrEqNum(b.eq));
+  const line = (x, i) => {
+    const r = rate(x);
+    const cls = (r <= 0) ? ' class="zero"' : (i < 3 ? ' class="wst"' : '');
+    return `<tr${cls}><td class="l">${x.eq}</td><td>${x.prod.toLocaleString()}</td>` +
+           `<td>${x[key].toLocaleString()}</td><td>${r.toFixed(2)}%</td></tr>`;
+  };
+  const body = nz.map(line).concat(zr.map(x=>line(x,99))).join('');
+  const pct = totProd > 0 ? (totVal/totProd*100).toFixed(2) : '0.00';
+  return body +
+    `<tr class="tot"><td class="l">${t('qr.total')}</td><td>${totProd.toLocaleString()}</td>` +
+    `<td>${totVal.toLocaleString()}</td><td class="hl">${pct}%</td></tr>`;
+}
+
+/* ---------- KPI ---------- */
+function qrKpiHtml(a, prevA){
+  const q = qrQ(a), pq = qrQ(prevA);
+  const gap = (q != null) ? q - QR_TARGET_Q : null;
+  const pct = (v) => a.prod > 0 ? (v/a.prod*100).toFixed(2) + '%' : '-';
+  const diff = (q != null && pq != null) ? (q - pq) : null;
+  const diffTxt = (diff == null) ? t('qr.k.noPrev')
+        : t('qr.k.vsPrev', { v: (diff >= 0 ? '+' : '') + diff.toFixed(2) + '%p' });
+  const cards = [
+    ['', t('qr.k.prod'), a.prod.toLocaleString(), '&nbsp;'],
+    ['warn', t('qr.k.ws'), a.ws.toLocaleString(), pct(a.ws) + ' · ' +
+      t('qr.k.share', { v: a.totalNg > 0 ? (a.ws/a.totalNg*100).toFixed(1) : '0.0' })],
+    ['bad', t('qr.k.ng'), a.ng.toLocaleString(), pct(a.ng) + ' · ' +
+      t('qr.k.share', { v: a.totalNg > 0 ? (a.ng/a.totalNg*100).toFixed(1) : '0.0' })],
+    ['bad', t('qr.k.tot'), a.totalNg.toLocaleString(), pct(a.totalNg)],
+    [(gap != null && gap >= 0) ? 'ok' : 'bad', t('qr.k.q'), (q != null ? q.toFixed(2) + '%' : '-'), diffTxt],
+    [(gap != null && gap >= 0) ? 'ok' : 'warn', t('qr.k.gap'),
+      (gap == null) ? '-' : (gap >= 0 ? '+' : '') + gap.toFixed(2) + '%p',
+      QR_TARGET_Q.toFixed(1) + '% target']
+  ];
+  return cards.map(c =>
+    `<div class="qr-kpi ${c[0]}"><div class="l">${c[1]}</div><div class="v">${c[2]}</div><div class="s">${c[3]}</div></div>`
+  ).join('');
+}
+
+/* ---------- 자동 코멘트 ---------- */
+function qrCommentHtml(a, prevA){
+  const q = qrQ(a); if (q == null) return t('qr.alert.noData');
+  const gap = q - QR_TARGET_Q;
+  let s = t('qr.cmt.head', {
+    wk: qrWkLabel(a.week), q: q.toFixed(2), tg: QR_TARGET_Q.toFixed(1),
+    gap: gap >= 0 ? t('qr.gap.over', { v: gap.toFixed(2) }) : t('qr.gap.under', { v: Math.abs(gap).toFixed(2) })
+  });
+  const pq = qrQ(prevA);
+  if (pq != null){
+    const d = q - pq;
+    s += t('qr.cmt.prev', { pw: qrWkLabel(prevA.week), pq: pq.toFixed(2),
+      cls: d >= 0 ? 'down' : 'up', diff: (d >= 0 ? '+' : '') + d.toFixed(2) });
+  }
+  if (a.prod > 0){
+    const share = a.totalNg > 0 ? a.ws/a.totalNg*100 : 0;
+    s += t('qr.cmt.mix', {
+      tot: (a.totalNg/a.prod*100).toFixed(2), ws: (a.ws/a.prod*100).toFixed(2),
+      ng: (a.ng/a.prod*100).toFixed(2), share: share.toFixed(1) });
+    const worst = a.list.filter(x=>x.prod>0).sort((x,y)=> (y.totalNg/y.prod) - (x.totalNg/x.prod)).slice(0,3);
+    if (worst.length) s += t('qr.cmt.worst', {
+      list: worst.map(x=>`<b>${x.eq}</b> ${(x.totalNg/x.prod*100).toFixed(2)}%`).join(' · ') });
+    const dtop = Object.entries(a.defects).filter(d=>d[1]>0).sort((x,y)=>y[1]-x[1]).slice(0,3);
+    if (dtop.length) s += t('qr.cmt.defect', {
+      list: dtop.map(d=>`${trTerm(d[0])} ${d[1].toLocaleString()}`).join(' · ') });
+    if (a.totalNg > 0) s += (share >= 50) ? t('qr.cmt.wsWarn') : t('qr.cmt.ngWarn');
+  }
+  return s;
+}
+
+function renderQFoot(){
+  const a = window.__QR_LAST; if (!a) return;
+  const el = document.getElementById('qrFootInfo'); if (!el) return;
+  const who = (document.getElementById('qrWriter')||{}).value || '-';
+  const mode = ((document.getElementById('qrMonthMode')||{}).value === 'auto') ? t('qr.mode.auto') : t('qr.mode.seed');
+  el.textContent = t('qr.foot', {
+    scope: t(qrScope() === 'regular' ? 'qr.scope.reg' : 'qr.scope.all'),
+    ex: QR_EXCLUDE_EQ.join(', '), n: a.rows, who,
+    d: new Date().toISOString().slice(0,10)
+  }) + ' · ' + mode;
+}
+
+/* ---------- 메인 렌더 ---------- */
+function renderQReport(){
+  if (!document.getElementById('qrWrap')) return;
+  if (!QR_STORE_LOADED) qrLoadStore();
+  qrPopulateWeeks();
+  const week = qrCurWeek();
+  const alertBox = document.getElementById('qrAlert');
+  if (!week || !RAW_Q || !RAW_Q.length){
+    alertBox.innerHTML = `<div class="qr-alert">${t('qr.alert.noData')}</div>`;
+    return;
+  }
+  const weeks = qrWeekList();
+  const idx = weeks.indexOf(week);
+  const a = qrAgg(week);
+  const prevA = idx > 0 ? qrAgg(weeks[idx-1]) : null;
+  window.__QR_LAST = a;
+
+  document.getElementById('qrWkLabel').textContent = qrWkLabel(week);
+  document.getElementById('qrPeriod').textContent = (a.start && a.end) ? `(${a.start} ~ ${a.end})` : '';
+  document.getElementById('qrTargetBadge').textContent = `Targeting ${QR_TARGET_Q.toFixed(1)}% - OEE QUALITY`;
+
+  let alerts = '';
+  if (!a.rows) alerts += `<div class="qr-alert">${t('qr.alert.noData')}</div>`;
+  else if (a.ws <= 0) alerts += `<div class="qr-alert">${t('qr.alert.noWS')}</div>`;
+  alertBox.innerHTML = alerts;
+
+  document.getElementById('qrKpis').innerHTML = qrKpiHtml(a, prevA);
+  document.getElementById('qrTblWS').innerHTML  = qrRowsHtml(a.list, 'ws',      a.prod, a.ws);
+  document.getElementById('qrTblNG').innerHTML  = qrRowsHtml(a.list, 'ng',      a.prod, a.ng);
+  document.getElementById('qrTblTOT').innerHTML = qrRowsHtml(a.list, 'totalNg', a.prod, a.totalNg);
+  document.getElementById('qrComment').innerHTML = qrCommentHtml(a, prevA);
+
+  const wn = qrWeekNum(week);
+  drawQTrendChart('chart-qr-trend',
+    qrMonthSeries(a.end),
+    { label: qrWkLabel(week), val: qrQ(a) },
+    wn ? [wn+1, wn+2, wn+3].map(n=>'WK'+n) : []);
+
+  qrFillNote();
+  renderQFoot();
+}
+
 </script>
 
 <div id="eqModal" role="dialog" aria-modal="true" aria-labelledby="eqmTitle">
