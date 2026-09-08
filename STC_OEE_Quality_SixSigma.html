@@ -242,6 +242,11 @@
           <option value="all" data-i18n="qr.scope.all">전체 (정규+특근)</option>
           <option value="regular" data-i18n="qr.scope.reg">정규만</option>
         </select></div>
+      <div><label data-i18n="qr.wkbase">주차 번호</label>&nbsp;
+        <select id="qrWkOffset" onchange="renderQReport()">
+          <option value="0" data-i18n="qr.wkbase.sheet">시트 주차 그대로</option>
+          <option value="-1" data-i18n="qr.wkbase.report">사내 보고 기준 (−1주)</option>
+        </select></div>
       <div><label data-i18n="qr.mtrend">월간 추이 기준</label>&nbsp;
         <select id="qrMonthMode" onchange="renderQReport()">
           <option value="seed" data-i18n="qr.mtrend.seed">사내 확정치 우선</option>
@@ -2323,6 +2328,8 @@ Object.assign(I18N.ko, {
   'qr.alert.noWS':'※ 이 주차는 웜샷 수량이 0으로 집계됩니다. 세부 불량유형 합계가 (전체수량−양품)과 같다는 뜻입니다 — 변환기(DataConverter)로 웜샷 열을 포함해 다시 붙여넣었는지 확인해주세요.',
   'qr.alert.noData':'※ 선택한 주차에 품질(Q) 데이터가 없습니다.',
   'qr.foot':'집계기준: {scope} · 제외설비: {ex} · 데이터: 품질(Q) 시트 {n}행 · 작성 {who} · 출력일 {d}',
+  'qr.wkbase':'주차 번호', 'qr.wkbase.sheet':'시트 주차 그대로', 'qr.wkbase.report':'사내 보고 기준 (−1주)',
+  'qr.wed2tue':'수~화 7일',
   'qr.wsCol':'웜샷: Q시트 웜샷 열 사용', 'qr.wsCalc':'웜샷: 전체−양품−불량유형 잔차로 계산',
   'qr.diagHint':'상단 헤더의 [🔄 구글시트 새로고침]을 눌러 Q시트를 다시 불러와 주세요.',
   'qr.diagWeeks':'시트에 있는 주차', 'qr.diagCols':'시트 컬럼',
@@ -2354,6 +2361,8 @@ Object.assign(I18N.th, {
   'qr.alert.noWS':'※ สัปดาห์นี้ยอด warm shot เป็น 0 หาก Qty_Good ในชีตหักยอด warm shot ไปแล้ว ตาราง WARM SHOT จะว่าง — โปรดตรวจสอบการบันทึกในชีต Q',
   'qr.alert.noData':'※ ไม่มีข้อมูลคุณภาพ (Q) ในสัปดาห์ที่เลือก',
   'qr.foot':'เกณฑ์: {scope} · ไม่รวมเครื่อง: {ex} · ข้อมูล: ชีต Q {n} แถว · ผู้จัดทำ {who} · วันที่พิมพ์ {d}',
+  'qr.wkbase':'เลขสัปดาห์', 'qr.wkbase.sheet':'ตามชีต', 'qr.wkbase.report':'ตามรายงานบริษัท (−1)',
+  'qr.wed2tue':'พุธ–อังคาร 7 วัน',
   'qr.wsCol':'warm shot: ใช้คอลัมน์ในชีต Q', 'qr.wsCalc':'warm shot: คำนวณจากส่วนต่าง',
   'qr.diagHint':'กรุณากด [🔄 รีเฟรช Google Sheet] ด้านบนเพื่อโหลดชีต Q ใหม่',
   'qr.diagWeeks':'สัปดาห์ที่มีในชีต', 'qr.diagCols':'คอลัมน์ในชีต',
@@ -2384,6 +2393,8 @@ Object.assign(I18N.en, {
   'qr.alert.noWS':'※ Warm shot is zero for this week. If Qty_Good already excludes warm shots, the WARM SHOT table stays empty — check how it is entered in the Q sheet.',
   'qr.alert.noData':'※ No quality (Q) data for the selected week.',
   'qr.foot':'Basis: {scope} · Excluded: {ex} · Source: Q sheet, {n} rows · By {who} · Printed {d}',
+  'qr.wkbase':'Week number', 'qr.wkbase.sheet':'As in the sheet', 'qr.wkbase.report':'Company report (−1)',
+  'qr.wed2tue':'Wed–Tue, 7 days',
   'qr.wsCol':'Warm shot: from the Q sheet column', 'qr.wsCalc':'Warm shot: derived residual',
   'qr.diagHint':'Press [🔄 Refresh Google Sheet] in the header to reload the Q sheet.',
   'qr.diagWeeks':'Weeks found in the sheet', 'qr.diagCols':'Sheet columns',
@@ -2466,7 +2477,25 @@ function qrCurWeek(){
   return s ? s.value : null;
 }
 function qrWeekNum(w){ const m = String(w||'').match(/(\d+)/); return m ? parseInt(m[1],10) : null; }
-function qrWkLabel(w){ const n = qrWeekNum(w); return n ? ('WK' + n) : (w || '-'); }
+function qrWkOffset(){ return Number((document.getElementById('qrWkOffset')||{}).value || 0); }
+function qrWkLabel(w){ const n = qrWeekNum(w); return n ? ('WK' + (n + qrWkOffset())) : (w || '-'); }
+
+/* ---- 주차 = 수요일~화요일 7일 (사내 기준) ----
+   시트의 주차 라벨은 변환 파일 단위로 붙기 때문에 7일을 넘는 경우가 있다
+   (예: W36 에 8/26~9/3 9일치가 들어옴). 보고서는 라벨이 아니라 날짜로 자른다.
+   기준점: W28 = 2026-07-01(수) ~ 07-07(화)  — W34 = 08-12~08-18 과도 일치. */
+const QR_WEEK_ANCHOR = { n: 28, start: '2026-07-01' };
+function qrDateAdd(iso, days){
+  const d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function qrWeekRange(week){
+  const n = qrWeekNum(week);
+  if (n == null) return null;
+  const start = qrDateAdd(QR_WEEK_ANCHOR.start, (n - QR_WEEK_ANCHOR.n) * 7);
+  return { start, end: qrDateAdd(start, 6) };
+}
 function qrEqNum(eq){ const m = String(eq||'').match(/(\d+)/); return m ? parseInt(m[1],10) : 9999; }
 function qrScope(){ const s = document.getElementById('qrScope'); return s ? s.value : 'all'; }
 
@@ -2479,7 +2508,9 @@ function qrPopulateWeeks(){
   const weeks = qrWeekList();
   const prev = sel.value;
   const cur = Array.prototype.map.call(sel.options, o=>o.value).join('|');
-  if (cur !== weeks.join('|')){
+  const off = String(qrWkOffset());
+  if (cur !== weeks.join('|') || sel.getAttribute('data-off') !== off){
+    sel.setAttribute('data-off', off);
     sel.innerHTML = weeks.map(w=>`<option value="${w}">${qrWkLabel(w)}</option>`).join('');
     if (weeks.includes(prev)) sel.value = prev;
     else if (weeks.length) sel.value = weeks[weeks.length-1];
@@ -2489,12 +2520,20 @@ function qrPopulateWeeks(){
 /* 주차 원본 행 (주차 날짜 보정 + 정규/특근 범위 반영) */
 function qrRows(week){
   const sc = qrScope();
-  return (RAW_Q||[]).filter(r=>{
-    if (r['주차'] !== week) return false;
-    if (isOutsideWeekFix(r)) return false;
-    if (sc === 'regular' && r['구분'] !== '정규') return false;
-    return true;
-  });
+  const rg = qrWeekRange(week);
+  const scopeOk = r => !(sc === 'regular' && r['구분'] !== '정규');
+  let rows = [];
+  if (rg){
+    rows = (RAW_Q||[]).filter(r=>{
+      const d = String(r['일자']||'').trim();
+      return d >= rg.start && d <= rg.end && scopeOk(r);
+    });
+  }
+  /* 날짜가 비어 있거나 기준점이 맞지 않는 시트를 위한 폴백 — 주차 라벨로 자른다 */
+  if (!rows.length){
+    rows = (RAW_Q||[]).filter(r => r['주차'] === week && !isOutsideWeekFix(r) && scopeOk(r));
+  }
+  return rows;
 }
 
 function qrAgg(week){
@@ -2519,8 +2558,9 @@ function qrAgg(week){
   });
   const sum = k => list.reduce((s,x)=>s+x[k], 0);
   dates.sort();
+  const rg = qrWeekRange(week);
   return {
-    week, rows: rows.length, list,
+    week, range: rg, rows: rows.length, list,
     prod: sum('prod'), ws: sum('ws'), ng: sum('ng'), totalNg: sum('totalNg'),
     start: dates[0] || null, end: dates[dates.length-1] || null,
     defects
@@ -2747,7 +2787,9 @@ function renderQReportInner(){
   window.__QR_LAST = a;
 
   document.getElementById('qrWkLabel').textContent = qrWkLabel(week);
-  document.getElementById('qrPeriod').textContent = (a.start && a.end) ? `(${a.start} ~ ${a.end})` : '';
+  const rg = a.range;
+  document.getElementById('qrPeriod').textContent = rg ? `(${rg.start} ~ ${rg.end}, ${t('qr.wed2tue')})`
+        : ((a.start && a.end) ? `(${a.start} ~ ${a.end})` : '');
   document.getElementById('qrTargetBadge').textContent = `Targeting ${QR_TARGET_Q.toFixed(1)}% - OEE QUALITY`;
 
   let alerts = '';
@@ -2765,7 +2807,7 @@ function renderQReportInner(){
 
   const wn = qrWeekNum(week);
   drawQTrendChart('chart-qr-trend',
-    qrMonthSeries(a.end),
+    qrMonthSeries((rg && rg.start) || a.start),   /* 주차 시작월까지의 12개월 */
     { label: qrWkLabel(week), val: qrQ(a) },
     wn ? [wn+1, wn+2, wn+3].map(n=>'WK'+n) : []);
 
