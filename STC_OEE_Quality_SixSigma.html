@@ -218,6 +218,13 @@
           <option value="6" data-i18n="ctrl.sigma6">6σ (3.4 PPM · World Class)</option>
         </select>
       </div>
+      <div class="control-group">
+        <label data-i18n="ctrl.basis">불량 산정 기준</label>
+        <select id="qBasisSelect" onchange="renderAll()">
+          <option value="all" selected data-i18n="ctrl.basis.all">전체 로스 (웜샷 포함) · 사내 보고 기준</option>
+          <option value="defect" data-i18n="ctrl.basis.defect">순수 불량만 (웜샷 제외)</option>
+        </select>
+      </div>
       <button id="btnRefresh" onclick="onRefreshClick()" data-i18n="ctrl.refresh">🔄 구글시트 새로고침</button>
       <div id="langSwitch" role="group" aria-label="Language">
         <button type="button" class="lang-btn" data-lang="ko" onclick="setLang('ko')">🌐 한국어</button>
@@ -247,11 +254,6 @@
           <option value="0" data-i18n="qr.wkbase.sheet">시트 주차 그대로</option>
           <option value="-1" data-i18n="qr.wkbase.report">사내 보고 기준 (−1주)</option>
         </select></div>
-      <div><label data-i18n="qr.mtrend">월간 추이 기준</label>&nbsp;
-        <select id="qrMonthMode" onchange="renderQReport()">
-          <option value="seed" data-i18n="qr.mtrend.seed">사내 확정치 우선</option>
-          <option value="auto" data-i18n="qr.mtrend.auto">원자료 자동계산</option>
-        </select></div>
       <div><label data-i18n="qr.writer">작성</label>&nbsp;
         <input type="text" id="qrWriter" size="10" data-i18n-ph="qr.writer.ph" placeholder="공무팀" oninput="qrSaveWriter()"></div>
       <button type="button" onclick="window.print()" data-i18n="qr.print">🖨 인쇄 / PDF 저장</button>
@@ -268,7 +270,7 @@
       <div id="qrAlert"></div>
 
       <div class="qr-chartbox">
-        <div class="cap">OEE - Quality</div>
+        <div class="cap" data-i18n="qr.wcap">Weekly Quality Trend</div>
         <div class="tgt" id="qrTargetBadge">Targeting 96.5% - OEE QUALITY</div>
         <canvas id="chart-qr-trend"></canvas>
       </div>
@@ -466,6 +468,23 @@
     <div class="footnote" id="tonnageFootnote">※ Model상세 실시간 연동이 필요합니다.</div>
   </div>
 
+  <div class="quad-card">
+    <div class="quad-title" data-i18n="mq.title">📆 월별 품질(Q) 추이 (최근 12개월)</div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px;">
+      <label style="font-size:11px;color:#7a848e;font-weight:700;" data-i18n="qr.mtrend">월간 추이 기준</label>
+      <select id="qrMonthMode" onchange="renderMonthlyQPanel()" style="padding:5px 8px;border:1px solid #cfd6de;border-radius:6px;font-size:12.5px;">
+        <option value="seed" data-i18n="qr.mtrend.seed">사내 확정치 우선</option>
+        <option value="auto" data-i18n="qr.mtrend.auto">원자료 자동계산</option>
+      </select>
+      <span id="mqNote" style="font-size:11px;color:#8a949e;"></span>
+    </div>
+    <div style="position:relative;border:1px solid #e4e9ee;border-radius:6px;padding:12px 10px 6px;">
+      <div style="position:absolute;right:10px;top:8px;background:#2e75b6;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:3px;">Targeting 96.5% - OEE QUALITY</div>
+      <canvas id="chart-month-q" style="width:100%;height:250px;display:block;"></canvas>
+    </div>
+    <div class="footnote" data-i18n="mq.foot">※ 월간은 확정 집계, 주간은 조업일수·특근 편차가 커서 기준이 다릅니다. 주차 단위 추이는 [주간 품질보고] 탭에서 보십시오.</div>
+  </div>
+
 </div>
 
 <script>
@@ -496,6 +515,15 @@ const I18N = {
     'ctrl.sigma4': '4σ (6,210 PPM · 업계 우수)',
     'ctrl.sigma5': '5σ (233 PPM · 업계 최우수)',
     'ctrl.sigma6': '6σ (3.4 PPM · World Class)',
+    'ctrl.basis': '불량 산정 기준',
+    'ctrl.basis.all': '전체 로스 (웜샷 포함) · 사내 보고 기준',
+    'ctrl.basis.defect': '순수 불량만 (웜샷 제외)',
+    'ctrl.basis': 'เกณฑ์นับของเสีย',
+    'ctrl.basis.all': 'รวมทั้งหมด (รวม warm shot) · ตามรายงานบริษัท',
+    'ctrl.basis.defect': 'เฉพาะของเสียจริง (ไม่รวม warm shot)',
+    'ctrl.basis': 'Defect basis',
+    'ctrl.basis.all': 'All loss (incl. warm shot) · company report basis',
+    'ctrl.basis.defect': 'True defects only (excl. warm shot)',
     'ctrl.refresh': '🔄 구글시트 새로고침',
     'wa.title': '📅 주간분석 (종합 OEE = 가동률 × 성능 × 품질)',
     'wa.A': '가동률(A)', 'wa.P': '성능(P)', 'wa.Q': '품질(Q)', 'wa.OEE': '종합 OEE',
@@ -995,6 +1023,8 @@ const DEFECT_COLS = ['미성형','깨짐','찍힘','자동불량','표면오염'
    (전체수량 - 양품 - 세부 불량유형 합계) 잔차를 사용한다.
    기존에 붙여넣은 주차(웜샷 열 없음)도 같은 값이 나오도록 하기 위한 폴백이다. */
 const WS_KEYS = ['웜샷','웜샷수량','Warm_Shot','WarmShot','W/S','WS_Qty'];
+/* PPM·Sigma·파레토를 '전체 로스(웜샷 포함)'로 볼지 '순수 불량만'으로 볼지 */
+function qBasis(){ const el = document.getElementById('qBasisSelect'); return el ? el.value : 'all'; }
 function defectSumOf(r){
   let sum = 0;
   for (const c of DEFECT_COLS) sum += num(r[c]);
@@ -1024,7 +1054,11 @@ function computeQualityStats(rows) {
   for (const r of rows) {
     const t = num(r['Qty_Total']);
     if (t <= 0) continue;
-    const g = num(r['Qty_Good']), b = num(r['불량수량']);
+    const g = num(r['Qty_Good']);
+    const lost = Math.max(0, t - g);                 // 전체 로스 = 전체수량 - 양품
+    const wsRow = Math.min(lost, warmShotOf(r));     // 그중 웜샷
+    const excludeWS = (qBasis() === 'defect');
+    const b = excludeWS ? Math.max(0, lost - wsRow) : lost;
     total += t; good += g; bad += b;
     const eq = r['설비명'];
     if (!byEq[eq]) byEq[eq] = { total:0, bad:0, defects:{}, models:{} };
@@ -1045,7 +1079,7 @@ function computeQualityStats(rows) {
     if (gap > 0) {
       /* 불량수량(=전체-양품)에서 세부 유형 합계를 뺀 잔차.
          이 중 웜샷으로 확인되는 몫은 '웜샷'으로, 나머지만 '미분류'로 집계한다. */
-      const wsv = Math.min(gap, warmShotOf(r));
+      const wsv = excludeWS ? 0 : Math.min(gap, wsRow);
       if (wsv > 0) {
         paretoRaw['웜샷'] = (paretoRaw['웜샷']||0) + wsv;
         eqD['웜샷'] = (eqD['웜샷']||0) + wsv;
@@ -1811,6 +1845,7 @@ function renderAll() {
   renderWeeklyAnalysis();
 
   renderTrendChart();
+  if (typeof renderMonthlyQPanel === 'function') renderMonthlyQPanel();
   if (typeof renderQReport === 'function' && QR_VIEW === 'report') renderQReport();
 }
 
@@ -2340,6 +2375,10 @@ Object.assign(I18N.ko, {
   'qr.alert.noWS':'※ 이 주차는 웜샷 수량이 0으로 집계됩니다. 세부 불량유형 합계가 (전체수량−양품)과 같다는 뜻입니다 — 변환기(DataConverter)로 웜샷 열을 포함해 다시 붙여넣었는지 확인해주세요.',
   'qr.alert.noData':'※ 선택한 주차에 품질(Q) 데이터가 없습니다.',
   'qr.foot':'집계기준: {scope} · 제외설비: {ex} · 데이터: 품질(Q) 시트 {n}행 · 작성 {who} · 출력일 {d}',
+  'qr.wcap':'주차별 품질 추이 (불량율 · 품질Q)',
+  'qr.lg.ws':'웜샷', 'qr.lg.ng':'불량', 'qr.lg.q':'품질(Q)',
+  'mq.title':'📆 월별 품질(Q) 추이 (최근 12개월)',
+  'mq.foot':'※ 월간은 확정 집계, 주간은 조업일수·특근 편차가 커서 기준이 다릅니다. 주차 단위 추이는 [주간 품질보고] 탭에서 보십시오.',
   'qr.wkbase':'주차 번호', 'qr.wkbase.sheet':'시트 주차 그대로', 'qr.wkbase.report':'사내 보고 기준 (−1주)',
   'qr.wed2tue':'수~화 7일',
   'qr.wsCol':'웜샷: Q시트 웜샷 열 사용', 'qr.wsCalc':'웜샷: 전체−양품−불량유형 잔차로 계산',
@@ -2373,6 +2412,10 @@ Object.assign(I18N.th, {
   'qr.alert.noWS':'※ สัปดาห์นี้ยอด warm shot เป็น 0 หาก Qty_Good ในชีตหักยอด warm shot ไปแล้ว ตาราง WARM SHOT จะว่าง — โปรดตรวจสอบการบันทึกในชีต Q',
   'qr.alert.noData':'※ ไม่มีข้อมูลคุณภาพ (Q) ในสัปดาห์ที่เลือก',
   'qr.foot':'เกณฑ์: {scope} · ไม่รวมเครื่อง: {ex} · ข้อมูล: ชีต Q {n} แถว · ผู้จัดทำ {who} · วันที่พิมพ์ {d}',
+  'qr.wcap':'แนวโน้มคุณภาพรายสัปดาห์ (ของเสีย · คุณภาพ Q)',
+  'qr.lg.ws':'warm shot', 'qr.lg.ng':'ของเสีย', 'qr.lg.q':'คุณภาพ (Q)',
+  'mq.title':'📆 แนวโน้มคุณภาพ (Q) รายเดือน (12 เดือนล่าสุด)',
+  'mq.foot':'※ รายเดือนเป็นค่ายืนยันแล้ว ส่วนรายสัปดาห์ผันผวนตามวันทำงานและล่วงเวลา — ดูแนวโน้มรายสัปดาห์ได้ที่แท็บรายงานคุณภาพรายสัปดาห์',
   'qr.wkbase':'เลขสัปดาห์', 'qr.wkbase.sheet':'ตามชีต', 'qr.wkbase.report':'ตามรายงานบริษัท (−1)',
   'qr.wed2tue':'พุธ–อังคาร 7 วัน',
   'qr.wsCol':'warm shot: ใช้คอลัมน์ในชีต Q', 'qr.wsCalc':'warm shot: คำนวณจากส่วนต่าง',
@@ -2405,6 +2448,10 @@ Object.assign(I18N.en, {
   'qr.alert.noWS':'※ Warm shot is zero for this week. If Qty_Good already excludes warm shots, the WARM SHOT table stays empty — check how it is entered in the Q sheet.',
   'qr.alert.noData':'※ No quality (Q) data for the selected week.',
   'qr.foot':'Basis: {scope} · Excluded: {ex} · Source: Q sheet, {n} rows · By {who} · Printed {d}',
+  'qr.wcap':'Weekly quality trend (reject rate · quality Q)',
+  'qr.lg.ws':'Warm shot', 'qr.lg.ng':'Defects', 'qr.lg.q':'Quality (Q)',
+  'mq.title':'📆 Monthly quality (Q) trend — last 12 months',
+  'mq.foot':'※ Monthly figures are confirmed; weekly ones swing with working days and overtime, so the two are read separately. Weekly trend lives in the Weekly Quality Report tab.',
   'qr.wkbase':'Week number', 'qr.wkbase.sheet':'As in the sheet', 'qr.wkbase.report':'Company report (−1)',
   'qr.wed2tue':'Wed–Tue, 7 days',
   'qr.wsCol':'Warm shot: from the Q sheet column', 'qr.wsCalc':'Warm shot: derived residual',
@@ -2622,7 +2669,7 @@ function drawQTrendChart(canvasId, months, wkPoint, futureLabels){
   const plotW = W - padL - padR, plotH = H - padT - padB;
   if (plotW <= 20 || plotH <= 20) return;
   const yMin = 75, yMax = 101;
-  const cols  = months.length + 1 + futureLabels.length;
+  const cols  = months.length + ((wkPoint && wkPoint.val != null) ? 1 : 0) + futureLabels.length;
   const cw    = plotW / cols;
   const yOf   = v => padT + plotH * (1 - (v - yMin) / (yMax - yMin));
   const xOf   = i => padL + cw * i + cw/2;
@@ -2680,6 +2727,132 @@ function drawQTrendChart(canvasId, months, wkPoint, futureLabels){
 
   ctx.strokeStyle = '#d7dde3'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(padL, H - padB); ctx.lineTo(W - padR, H - padB); ctx.stroke();
+}
+
+/* ---------- 주차별 추이 (주간보고 전용) ---------- */
+const QR_TREND_WEEKS = 12;
+function qrWeeklySeries(week, n){
+  const weeks = qrWeekList();
+  const idx = weeks.indexOf(week);
+  if (idx < 0) return [];
+  const from = Math.max(0, idx - (n - 1));
+  return weeks.slice(from, idx + 1).map(w=>{
+    const a = qrAgg(w);
+    const p = a.prod || 0;
+    return { week:w, label:qrWkLabel(w), prod:p, ws:a.ws, ng:a.ng, tot:a.totalNg,
+             wsr: p ? a.ws/p*100 : 0, ngr: p ? a.ng/p*100 : 0,
+             rej: p ? a.totalNg/p*100 : 0, q: p ? 100 - a.totalNg/p*100 : null };
+  });
+}
+
+/* 적층 막대(웜샷+불량 = 불량율 %) + 품질(Q) 꺾은선, 이중 축 */
+function drawQWeeklyChart(canvasId, items, selWeek){
+  const canvas = document.getElementById(canvasId); if (!canvas) return;
+  const { W, H, ctx } = sizeCanvas(canvas);
+  ctx.clearRect(0,0,W,H);
+  if (!items.length) return;
+  const padL = 46, padR = 50, padT = 34, padB = 26;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  if (plotW <= 30 || plotH <= 30) return;
+
+  const maxRej = Math.max(1, ...items.map(i=>i.rej));
+  const lMax = Math.ceil(maxRej * 1.35);
+  const qs = items.map(i=>i.q).filter(v=>v!=null);
+  const rMin = Math.min(85, Math.floor(Math.min(...qs, QR_TARGET_Q) - 1));
+  const rMax = 100;
+  const cw = plotW / items.length;
+  const xOf = i => padL + cw*i + cw/2;
+  const yL  = v => padT + plotH * (1 - v/lMax);
+  const yR  = v => padT + plotH * (1 - (v - rMin)/(rMax - rMin));
+
+  /* 격자 + 좌우 축 눈금 */
+  ctx.font = '9.5px Arial'; ctx.textBaseline = 'middle';
+  for (let k = 0; k <= 4; k++){
+    const yy = padT + plotH*k/4;
+    ctx.strokeStyle = '#edf0f4'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(W-padR, yy); ctx.stroke();
+    ctx.fillStyle = '#c0392b'; ctx.textAlign = 'right';
+    ctx.fillText((lMax*(1-k/4)).toFixed(1)+'%', padL-6, yy);
+    ctx.fillStyle = '#1e3c72'; ctx.textAlign = 'left';
+    ctx.fillText((rMin + (rMax-rMin)*(1-k/4)).toFixed(1)+'%', W-padR+6, yy);
+  }
+  /* 목표선 */
+  const ty = yR(QR_TARGET_Q);
+  ctx.setLineDash([5,4]); ctx.strokeStyle = '#2e75b6'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(padL, ty); ctx.lineTo(W-padR, ty); ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* 적층 막대 */
+  const bw = Math.min(cw*0.5, 38);
+  items.forEach((it,i)=>{
+    const x = xOf(i), base = padT + plotH;
+    const hWs = plotH * (it.wsr/lMax), hNg = plotH * (it.ngr/lMax);
+    ctx.fillStyle = '#f5a623'; ctx.fillRect(x-bw/2, base-hWs, bw, hWs);
+    ctx.fillStyle = '#e53935'; ctx.fillRect(x-bw/2, base-hWs-hNg, bw, hNg);
+    if (it.week === selWeek){
+      ctx.strokeStyle = '#1e3c72'; ctx.lineWidth = 2;
+      ctx.strokeRect(x-bw/2-1.5, base-hWs-hNg-1.5, bw+3, hWs+hNg+3);
+    }
+    ctx.fillStyle = '#c0392b'; ctx.font = 'bold 9.5px Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText(it.rej.toFixed(2)+'%', x, base-hWs-hNg-6);
+    ctx.fillStyle = (it.week === selWeek) ? '#1e3c72' : '#8a949e';
+    ctx.font = (it.week === selWeek) ? 'bold 9.5px Arial' : '9.5px Arial';
+    ctx.textBaseline = 'top';
+    ctx.fillText(it.label, x, H-padB+7);
+  });
+
+  /* 품질(Q) 꺾은선 */
+  const pts = items.map((it,i)=> it.q==null ? null : { x:xOf(i), y:yR(it.q), q:it.q, sel: it.week===selWeek })
+                   .filter(Boolean);
+  if (pts.length){
+    ctx.strokeStyle = '#1e3c72'; ctx.lineWidth = 2;
+    ctx.beginPath(); pts.forEach((p,i)=> i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y)); ctx.stroke();
+    pts.forEach(p=>{
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.sel ? 5 : 3.2, 0, Math.PI*2);
+      ctx.fillStyle = p.sel ? '#f5c518' : '#1e3c72'; ctx.fill();
+      if (p.sel){ ctx.strokeStyle = '#1e3c72'; ctx.lineWidth = 1.4; ctx.stroke(); }
+      ctx.fillStyle = '#1e3c72'; ctx.font = (p.sel?'bold ':'') + '9.5px Arial';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(p.q.toFixed(2)+'%', p.x, p.y - 8);
+    });
+  }
+
+  /* 범례 */
+  const lg = [['#e53935', t('qr.lg.ng')], ['#f5a623', t('qr.lg.ws')], ['#1e3c72', t('qr.lg.q')]];
+  let lx = padL;
+  ctx.font = '10px Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  lg.forEach(([c,lb])=>{
+    ctx.fillStyle = c; ctx.fillRect(lx, padT-22, 10, 10);
+    ctx.fillStyle = '#4a545e'; ctx.fillText(lb, lx+14, padT-17);
+    lx += 22 + ctx.measureText(lb).width;
+  });
+
+  ctx.strokeStyle = '#d7dde3'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, padT+plotH); ctx.lineTo(W-padR, padT+plotH); ctx.stroke();
+}
+
+/* ---------- 월별 품질(Q) 추이 (대시보드 패널) ---------- */
+function qrLastCompleteMonth(){
+  const ds = (RAW_Q||[]).map(r=>String(r['일자']||'').trim()).filter(Boolean).sort();
+  if (!ds.length) return null;
+  const last = ds[ds.length-1];
+  const d = new Date(last + 'T00:00:00');
+  const lastDayOfMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+  if (d.getDate() >= lastDayOfMonth) return last;                 // 월 마감됨
+  return new Date(d.getFullYear(), d.getMonth(), 0).toISOString().slice(0,10); // 전월 말일
+}
+function renderMonthlyQPanel(){
+  const cv = document.getElementById('chart-month-q'); if (!cv) return;
+  const end = qrLastCompleteMonth();
+  const months = qrMonthSeries(end);
+  drawQTrendChart('chart-month-q', months, null, []);
+  const note = document.getElementById('mqNote');
+  if (note){
+    const mode = ((document.getElementById('qrMonthMode')||{}).value === 'auto') ? t('qr.mode.auto') : t('qr.mode.seed');
+    const first = months[0], lastM = months[months.length-1];
+    note.textContent = (first && lastM ? first.label + ' ~ ' + lastM.label + ' · ' : '') + mode;
+  }
 }
 
 /* ---------- 표 ---------- */
@@ -2817,11 +2990,7 @@ function renderQReportInner(){
   document.getElementById('qrTblTOT').innerHTML = qrRowsHtml(a.list, 'totalNg', a.prod, a.totalNg);
   document.getElementById('qrComment').innerHTML = qrCommentHtml(a, prevA);
 
-  const wn = qrWeekNum(week);
-  drawQTrendChart('chart-qr-trend',
-    qrMonthSeries((rg && rg.start) || a.start),   /* 주차 시작월까지의 12개월 */
-    { label: qrWkLabel(week), val: qrQ(a) },
-    wn ? [wn+1, wn+2, wn+3].map(n=>'WK'+n) : []);
+  drawQWeeklyChart('chart-qr-trend', qrWeeklySeries(week, QR_TREND_WEEKS), week);
 
   qrFillNote();
   renderQFoot();
