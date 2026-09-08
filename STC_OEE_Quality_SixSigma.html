@@ -921,6 +921,18 @@ function parseCSV(text) {
 }
 const num = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
 
+/* 설비명 표기 통일 — 시트에 8 / 08 / DC8 / DC12 가 섞여 들어와도 한 호기로 묶는다.
+   DC 계열이 아닌 이름은 건드리지 않는다. */
+function normEqName(v){
+  const s = String(v == null ? '' : v).trim();
+  const m = s.match(/^(?:DC|dc|Dc)?[\s\-_]*0*(\d{1,2})$/);
+  return m ? ('DC' + String(m[1]).padStart(2,'0')) : s;
+}
+function normalizeQRows(rows){
+  (rows||[]).forEach(r => { if (r && r['설비명'] !== undefined) r['설비명'] = normEqName(r['설비명']); });
+  return rows;
+}
+
 /* =========================================================================
    2. Six Sigma math — inverse normal CDF (Acklam's rational approximation)
    ========================================================================= */
@@ -2233,7 +2245,7 @@ async function onRefreshClick(){
     const text = await res.text();
     const rows = parseCSV(text);
     if (!rows.length || !('Qty_Total' in rows[0])) throw new Error('품질(Q) 탭 컬럼 구조를 확인해주세요.');
-    RAW_Q = rows;
+    RAW_Q = normalizeQRows(rows);
     populateWeekSelect();
     const cache = (await Store.get(STORE_KEY)) || {};
     cache.rawQ = { header: Object.keys(rows[0]), rows, fetchedAt: Date.now() };
@@ -2277,7 +2289,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const cache = await Store.get(STORE_KEY);
     if (cache && cache.rawQ && cache.rawQ.rows && cache.rawQ.rows.length) {
-      RAW_Q = cache.rawQ.rows;
+      RAW_Q = normalizeQRows(cache.rawQ.rows);
       populateWeekSelect();
       renderAll();
       setStatus(t('status.cacheLoaded'));

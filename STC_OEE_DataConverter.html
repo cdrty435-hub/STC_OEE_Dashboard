@@ -145,6 +145,14 @@ function parseRawCSV(text) {
 
 const num = v => { if (v==null) return 0; const s = String(v).trim().replace(/,/g,'').replace(/\s/g,''); if (s==='' || s.startsWith('#')) return 0; const n = parseFloat(s); return isNaN(n) ? 0 : n; };
 function cleanStr(v){ return v==null ? '' : String(v).trim(); }
+/* 설비명 표기 통일: 8 / 08 / dc-8 / DC8 → DC08.
+   원본에 숫자와 'DC12' 표기가 섞여 있어 대시보드에서 같은 호기가 둘로 갈라지는 것을 막는다.
+   DC 계열이 아닌 이름(예: TRIM1)은 그대로 둔다. */
+function normEquip(v){
+  const s = cleanStr(v);
+  const m = s.match(/^(?:DC|dc|Dc)?[\s\-_]*0*(\d{1,2})$/);
+  return m ? ('DC' + String(m[1]).padStart(2,'0')) : s;
+}
 function cleanPct(v){
   const s = cleanStr(v);
   if (!s || s.startsWith('#')) return '';
@@ -266,7 +274,7 @@ function convert(rawRows, year, weekLabel){
   for (const r of data) {
     const iso = parseRefDate(r[COL.date], year);
     if (!iso) { skipped++; continue; }
-    const equip = cleanStr(r[COL.equip]);
+    const equip = normEquip(r[COL.equip]);
     const shift = cleanStr(r[COL.shift]);
     const gubun = classifyRegular(iso);
 
