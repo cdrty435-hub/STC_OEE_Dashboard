@@ -355,7 +355,7 @@
     <div class="quad-card">
       <div class="quad-title" data-i18n="q.pareto">📈 불량유형 Pareto 분석 (80/20 법칙)</div>
       <div class="chart-wrap"><canvas id="chart-pareto"></canvas></div>
-      <div class="footnote" id="paretoNote">※ 세부 사유 미기재(불량수량 - 사유합계) 건은 '미분류'로 별도 집계됩니다.</div>
+      <div class="footnote" id="paretoNote">※ 불량수량(전체−양품)에서 세부 유형 합계를 뺀 잔차는 '웜샷'(주황)으로, 웜샷으로도 설명되지 않는 몫만 '미분류'(회색)로 집계됩니다.</div>
     </div>
 
     <div class="quad-card">
@@ -504,7 +504,7 @@ const I18N = {
     'eqm.thType': '불량 유형', 'eqm.thQty': '수량', 'eqm.thShare': '비중', 'eqm.thCum': '누적',
     'eqm.thPpm': 'PPM', 'eqm.rank': '순위',
     'eqm.none': '이 설비에는 세부 불량 유형 기록이 없습니다.',
-    'eqm.unclassNote': '미분류 = 불량수량에서 세부 유형 합계를 뺀 값입니다. 이 값이 크면 현장 사유 기재가 누락된 것입니다.',
+    'eqm.unclassNote': '웜샷 = 전체수량−양품−불량유형 합계(초기 샷). 미분류 = 그러고도 남는 잔차로, 크면 현장 사유 기재가 누락된 것입니다.',
     'eqm.period': '분석 기간',
     'eqm.models': '주요 생산 모델',
     'wa.eqChartTitle': '설비별 계획/생산/불량수량 · 불량율 (그래프)',
@@ -554,7 +554,7 @@ const I18N = {
     'fn.noData': '※ 데이터 없음',
     'fn.trendNoModel': '※ Q_Model상세 실시간 연동이 아직 설정되지 않아 모델 트렌드를 표시할 수 없습니다 (임베디드 스냅샷은 단일 주차라 트렌드 불가 — 웹에 게시 후 gid를 코드에 넣어주세요).',
     'fn.trendSummary': '※ 전체 누적({n}개 주차) 기준 {label} Worst-5의 주차별 {metricLabel} 추이입니다. 상단 "분석 범위" 선택과 무관하게 항상 전체 기간을 사용합니다.',
-    'fn.paretoNote': "※ 세부 사유 미기재(불량수량-사유합계) 건은 '미분류'로 별도 집계됩니다. 현재 1위 원인: {worstLabel}.",
+    'fn.paretoNote': "※ 잔차는 '웜샷'(주황)으로, 웜샷으로 설명되지 않는 몫만 '미분류'(회색)로 집계됩니다. 현재 1위 원인: {worstLabel}.",
     'fn.pdcaNoLink': 'PDCA 시트가 아직 연동되지 않았습니다 — STC_OEE_PDCA_개선관리 시트를 웹에 게시하고 PDCA_SHEET_PUB_KEY / PDCA_GID를 코드에 입력해주세요.',
     'fn.pdcaSummary': '※ 개선전/후 불량률은 시트에 입력된 기간을 기준으로 실제 데이터에서 자동 계산됩니다. 총 {n}개 항목 관리 중.',
     'fn.tonnageNoModel': 'Model상세 실시간 연동이 설정되지 않아 동톤수·동모델 교차비교를 표시할 수 없습니다 (MODEL_SHEET_PUB_KEY/MODEL_GID 설정 필요).',
@@ -795,7 +795,7 @@ const I18N = {
 
 // 손실/불량 사유 데이터 용어 번역 (표/차트에 표시되는 원자료 컬럼명)
 const TERM_TH = {
-  '미분류':'ไม่ระบุสาเหตุ',
+  '미분류':'ไม่ระบุสาเหตุ', '웜샷':'วอร์มช็อต (Warm shot)',
   '미성형':'ฉีดไม่เต็ม','깨짐':'แตก','찍힘':'รอยกด','자동불량':'ไม่ผ่านอัตโนมัติ','표면오염':'ผิวเปื้อน',
   '기포':'ฟองอากาศ','핀파손':'พินชำรุด','부풀음':'บวม','박리':'หลุดล่อน','수축':'หดตัว','스크래치':'รอยขีดข่วน',
   '소착':'ติดแม่พิมพ์','언밸런스':'ไม่สมดุล','품질확인':'รอตรวจสอบคุณภาพ','버':'ครีบ','변형':'บิดเบี้ยว',
@@ -814,7 +814,7 @@ const TERM_TH = {
 
 // Loss/defect reason terms in English (raw sheet column names shown in tables & charts)
 const TERM_EN = {
-  '미분류':'Unclassified',
+  '미분류':'Unclassified', '웜샷':'Warm shot',
   '미성형':'Short shot','깨짐':'Crack','찍힘':'Dent','자동불량':'Auto-inspection reject','표면오염':'Surface contamination',
   '기포':'Porosity / blister','핀파손':'Pin damage','부풀음':'Swelling','박리':'Peeling','수축':'Shrinkage','스크래치':'Scratch',
   '소착':'Die soldering','언밸런스':'Unbalance','품질확인':'Pending quality check','버':'Burr','변형':'Deformation',
@@ -974,6 +974,31 @@ function colorFromSigma(sigma) {
 let LAST_STATS = null;
 const DEFECT_COLS = ['미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스','품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타'];
 
+/* 웜샷(WARM SHOT) — Q시트에 '웜샷' 열이 있으면 그 값을, 없으면
+   (전체수량 - 양품 - 세부 불량유형 합계) 잔차를 사용한다.
+   기존에 붙여넣은 주차(웜샷 열 없음)도 같은 값이 나오도록 하기 위한 폴백이다. */
+const WS_KEYS = ['웜샷','웜샷수량','Warm_Shot','WarmShot','W/S','WS_Qty'];
+function defectSumOf(r){
+  let sum = 0;
+  for (const c of DEFECT_COLS) sum += num(r[c]);
+  return sum;
+}
+function warmShotOf(r){
+  for (const k of WS_KEYS){
+    const v = r[k];
+    if (v !== undefined && v !== null && String(v).trim() !== ''){
+      const n = Number(String(v).replace(/,/g,''));
+      if (!isNaN(n)) return Math.max(0, n);
+    }
+  }
+  const lost = Math.max(0, num(r['Qty_Total']) - num(r['Qty_Good']));
+  return Math.max(0, Math.min(lost, lost - defectSumOf(r)));
+}
+function hasWarmShotColumn(){
+  if (!RAW_Q || !RAW_Q.length) return false;
+  return WS_KEYS.some(k => k in RAW_Q[0]);
+}
+
 function computeQualityStats(rows) {
   let total = 0, bad = 0, good = 0;
   const byEq = {}, byDay = {};
@@ -1001,8 +1026,18 @@ function computeQualityStats(rows) {
     }
     const gap = b - rowDetailSum;
     if (gap > 0) {
-      paretoRaw['미분류'] = (paretoRaw['미분류']||0) + gap;
-      eqD['미분류'] = (eqD['미분류']||0) + gap;
+      /* 불량수량(=전체-양품)에서 세부 유형 합계를 뺀 잔차.
+         이 중 웜샷으로 확인되는 몫은 '웜샷'으로, 나머지만 '미분류'로 집계한다. */
+      const wsv = Math.min(gap, warmShotOf(r));
+      if (wsv > 0) {
+        paretoRaw['웜샷'] = (paretoRaw['웜샷']||0) + wsv;
+        eqD['웜샷'] = (eqD['웜샷']||0) + wsv;
+      }
+      const rest = gap - wsv;
+      if (rest > 0) {
+        paretoRaw['미분류'] = (paretoRaw['미분류']||0) + rest;
+        eqD['미분류'] = (eqD['미분류']||0) + rest;
+      }
     }
   }
   const ppm = total>0 ? bad/total*1e6 : null;
@@ -1079,7 +1114,7 @@ function drawParetoChart(canvasId, items) {
     const x = leftM + gap*i + (gap-barW)/2;
     const h = plotH * (it.value/maxV);
     const y = topM + plotH - h;
-    ctx.fillStyle = it.label === '미분류' ? '#bdbdbd' : '#7c4dff';
+    ctx.fillStyle = (it.label === '미분류') ? '#bdbdbd' : (it.label === '웜샷' ? '#f5a623' : '#7c4dff');
     ctx.fillRect(x,y,barW,h);
     ctx.fillStyle = '#333'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
     ctx.fillText(it.value.toLocaleString(), x+barW/2, y-6);
@@ -1623,7 +1658,7 @@ function openEqDetail(eq){
     let acc = 0;
     const rows = items.map(([name,n],i)=>{
       acc += n;
-      const isUn = (name === '미분류');
+      const isUn = (name === '미분류' || name === '웜샷');
       return `<tr class="${isUn?'unclass':''}">
         <td class="l">${i+1}</td>
         <td class="l">${trTerm(name)}</td>
@@ -2285,9 +2320,10 @@ Object.assign(I18N.ko, {
   'qr.cmt.defect':' 주요 불량유형: {list}.',
   'qr.cmt.wsWarn':' <span class="warn">웜샷이 전체 로스의 절반을 넘습니다 — 초기 샷 조건·금형 예열 관리가 최우선 개선 대상입니다.</span>',
   'qr.cmt.ngWarn':' <span class="warn">불량(NG) 비중이 웜샷보다 큽니다 — 공정 불량유형 파레토 분석을 우선하십시오.</span>',
-  'qr.alert.noWS':'※ 이 주차는 웜샷 수량이 0으로 집계됩니다. 시트의 Qty_Good이 이미 웜샷을 제외한 값이면 WARM SHOT 표가 비게 됩니다 — Q시트에 웜샷 수량이 별도 입력되고 있는지 확인해주세요.',
+  'qr.alert.noWS':'※ 이 주차는 웜샷 수량이 0으로 집계됩니다. 세부 불량유형 합계가 (전체수량−양품)과 같다는 뜻입니다 — 변환기(DataConverter)로 웜샷 열을 포함해 다시 붙여넣었는지 확인해주세요.',
   'qr.alert.noData':'※ 선택한 주차에 품질(Q) 데이터가 없습니다.',
   'qr.foot':'집계기준: {scope} · 제외설비: {ex} · 데이터: 품질(Q) 시트 {n}행 · 작성 {who} · 출력일 {d}',
+  'qr.wsCol':'웜샷: Q시트 웜샷 열 사용', 'qr.wsCalc':'웜샷: 전체−양품−불량유형 잔차로 계산',
   'qr.diagHint':'상단 헤더의 [🔄 구글시트 새로고침]을 눌러 Q시트를 다시 불러와 주세요.',
   'qr.diagWeeks':'시트에 있는 주차', 'qr.diagCols':'시트 컬럼',
   'qr.mode.seed':'월간 추이는 사내 확정치(고정값) 기준입니다.',
@@ -2318,6 +2354,7 @@ Object.assign(I18N.th, {
   'qr.alert.noWS':'※ สัปดาห์นี้ยอด warm shot เป็น 0 หาก Qty_Good ในชีตหักยอด warm shot ไปแล้ว ตาราง WARM SHOT จะว่าง — โปรดตรวจสอบการบันทึกในชีต Q',
   'qr.alert.noData':'※ ไม่มีข้อมูลคุณภาพ (Q) ในสัปดาห์ที่เลือก',
   'qr.foot':'เกณฑ์: {scope} · ไม่รวมเครื่อง: {ex} · ข้อมูล: ชีต Q {n} แถว · ผู้จัดทำ {who} · วันที่พิมพ์ {d}',
+  'qr.wsCol':'warm shot: ใช้คอลัมน์ในชีต Q', 'qr.wsCalc':'warm shot: คำนวณจากส่วนต่าง',
   'qr.diagHint':'กรุณากด [🔄 รีเฟรช Google Sheet] ด้านบนเพื่อโหลดชีต Q ใหม่',
   'qr.diagWeeks':'สัปดาห์ที่มีในชีต', 'qr.diagCols':'คอลัมน์ในชีต',
   'qr.mode.seed':'แนวโน้มรายเดือนใช้ค่ายืนยันของบริษัท', 'qr.mode.auto':'แนวโน้มรายเดือนคำนวณจากข้อมูลดิบ'
@@ -2347,6 +2384,7 @@ Object.assign(I18N.en, {
   'qr.alert.noWS':'※ Warm shot is zero for this week. If Qty_Good already excludes warm shots, the WARM SHOT table stays empty — check how it is entered in the Q sheet.',
   'qr.alert.noData':'※ No quality (Q) data for the selected week.',
   'qr.foot':'Basis: {scope} · Excluded: {ex} · Source: Q sheet, {n} rows · By {who} · Printed {d}',
+  'qr.wsCol':'Warm shot: from the Q sheet column', 'qr.wsCalc':'Warm shot: derived residual',
   'qr.diagHint':'Press [🔄 Refresh Google Sheet] in the header to reload the Q sheet.',
   'qr.diagWeeks':'Weeks found in the sheet', 'qr.diagCols':'Sheet columns',
   'qr.mode.seed':'Monthly trend uses company confirmed figures.', 'qr.mode.auto':'Monthly trend is auto-calculated from raw data.'
@@ -2466,16 +2504,18 @@ function qrAgg(week){
   rows.forEach(r=>{
     const eq = String(r['설비명']||'').trim();
     if (!eq || QR_EXCLUDE_EQ.includes(eq)) return;
-    const tt = num(r['Qty_Total']), gg = num(r['Qty_Good']), bb = num(r['불량수량']);
-    if (!byEq[eq]) byEq[eq] = { eq, prod:0, good:0, ng:0 };
-    byEq[eq].prod += tt; byEq[eq].good += gg; byEq[eq].ng += bb;
+    const tt = num(r['Qty_Total']), gg = num(r['Qty_Good']);
+    const lost = Math.max(0, tt - gg);
+    const wsq  = Math.min(lost, warmShotOf(r));      // WARM SHOT
+    if (!byEq[eq]) byEq[eq] = { eq, prod:0, good:0, ws:0 };
+    byEq[eq].prod += tt; byEq[eq].good += gg; byEq[eq].ws += wsq;
     const d = String(r['일자']||'').trim(); if (d) dates.push(d);
     DEFECT_COLS.forEach(c => { const v = num(r[c]); if (v) defects[c] += v; });
   });
   const list = Object.values(byEq).map(e=>{
     const totalNg = Math.max(0, e.prod - e.good);
-    const ng = Math.min(e.ng, totalNg);
-    return { eq:e.eq, prod:e.prod, good:e.good, ng, ws: Math.max(0, totalNg - ng), totalNg };
+    const ws = Math.min(e.ws, totalNg);
+    return { eq:e.eq, prod:e.prod, good:e.good, ws, ng: Math.max(0, totalNg - ws), totalNg };
   });
   const sum = k => list.reduce((s,x)=>s+x[k], 0);
   dates.sort();
@@ -2668,11 +2708,12 @@ function renderQFoot(){
   const el = document.getElementById('qrFootInfo'); if (!el) return;
   const who = (document.getElementById('qrWriter')||{}).value || '-';
   const mode = ((document.getElementById('qrMonthMode')||{}).value === 'auto') ? t('qr.mode.auto') : t('qr.mode.seed');
+  const wsSrc = hasWarmShotColumn() ? t('qr.wsCol') : t('qr.wsCalc');
   el.textContent = t('qr.foot', {
     scope: t(qrScope() === 'regular' ? 'qr.scope.reg' : 'qr.scope.all'),
     ex: QR_EXCLUDE_EQ.join(', '), n: a.rows, who,
     d: new Date().toISOString().slice(0,10)
-  }) + ' · ' + mode;
+  }) + ' · ' + mode + ' · ' + wsSrc;
 }
 
 /* ---------- 메인 렌더 ---------- */
