@@ -113,6 +113,8 @@
       ※ <b>품질(Q) + Model 상세</b> CSV는 Model(모델명) 컬럼이 추가로 포함된 품질 데이터입니다 — Six Sigma 품질 대시보드의 "모델별 품질 현황"에서 사용하는
       별도 구글시트(<b>STC_OEE_Quality_Model_Detail</b>)에 헤더 행 포함하여 붙여넣으시면(또는 새 주차 데이터를 맨 아래에 이어 붙이면) 대시보드가 자동으로 반영합니다.<br>
       ※ <b>구분(정규/특근)</b>은 요일로 자동 판정했습니다 (일요일 → 특근(주말), 그 외(토요일 포함) → 정규 — 실제 시트 데이터 기준으로 확인한 규칙입니다). 특정 주에 이 규칙과 다르면 붙여넣기 전에 수동으로 고쳐주세요.<br>
+      ※ <b>웜샷(WARM SHOT)</b> 열이 품질(Q)·Model상세 CSV 맨 끝에 추가되었습니다 — 값은 <b>전체수량 − 양품 − 세부 불량유형 합계</b>입니다.<br>
+      &nbsp;&nbsp;&nbsp;구글시트 <b>Q_품질</b> 탭의 마지막 열(기타) 오른쪽에 <b>웜샷</b> 열을 하나 추가한 뒤 붙여넣어 주세요. 기존 주차 행은 비워두어도 대시보드가 같은 식으로 자동 계산합니다.<br>
       ※ 원본에 없는 값(예: 활동이 없는 설비의 Avg shot/성능%)은 빈 값으로 남겨둡니다.
     </div>
   </div>
@@ -224,8 +226,8 @@ function nofVal(raw){
 
 const A_HEADER = ['일자','주차','설비명','교대','구분','쉬프트시간_분','계획시간_분','가동시간_분','Losstime_분','금형수리','금형파손','핀파손','설비수리','전기로수리','취출기수리','스프레이수리','슬라이드코어수리','팁교체','노즐막힘','플런저오일막힘','래들수리','조건변경','탈산처리','스크랩용해','전기로회전','금형교체','휴식, 설비교대','청소','미팅/정전','금형냉각라인','제품소착','컨베이어수리','설비냉각수','스프레이조정','바가지교체','히터수리','펌프이상','로트마크, 사상','진공설비','기타','가동률(A)','NOF'];
 const P_HEADER = ['일자','주차','설비명','교대','구분','Model','CAV','CT_STD','CT_Real','Qty_Total','Avg_shot','가동시간_분','성능(P)'];
-const Q_HEADER = ['일자','주차','설비명','교대','구분','Qty_Total','Qty_Good','불량수량','품질(Q)','미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스','품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타'];
-const Q_MODEL_HEADER = ['일자','주차','설비명','교대','Model','구분','Qty_Total','Qty_Good','불량수량','품질(Q)','미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스','품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타'];
+const Q_HEADER = ['일자','주차','설비명','교대','구분','Qty_Total','Qty_Good','불량수량','품질(Q)','미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스','품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타','웜샷'];
+const Q_MODEL_HEADER = ['일자','주차','설비명','교대','Model','구분','Qty_Total','Qty_Good','불량수량','품질(Q)','미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스','품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타','웜샷'];
 
 function parseRefDate(raw, year){
   // raw like "6.24" -> "2026-06-24"
@@ -280,11 +282,16 @@ function convert(rawRows, year, weekLabel){
     const qualReasons = [];
     for (let i = COL.qualReasonsStart; i <= COL.qualReasonsEnd; i++) qualReasons.push(num(r[i]));
     const badQty = num(r[COL.qtyTotal]) - num(r[COL.qtyGood]);
-    qRows.push([iso, weekLabel, equip, shift, gubun, num(r[COL.qtyTotal]), num(r[COL.qtyGood]), badQty, cleanPct(r[COL.quality]), ...qualReasons]);
+    /* 웜샷(WARM SHOT) = 전체수량 - 양품 - 세부 불량유형 합계.
+       원본 로데이터에 웜샷 전용 열이 없어 잔차로 산출한다
+       (사내 집계 정의: 전체수량 = 양품 + 불량 + 웜샷). */
+    const defectSum = qualReasons.reduce((a,b)=>a+(Number(b)||0), 0);
+    const warmShot = Math.max(0, Math.round((badQty - defectSum) * 100) / 100);
+    qRows.push([iso, weekLabel, equip, shift, gubun, num(r[COL.qtyTotal]), num(r[COL.qtyGood]), badQty, cleanPct(r[COL.quality]), ...qualReasons, warmShot]);
 
     // Q + Model row (only meaningful when Qty_Total > 0, matches the quality dashboard's own filter)
     if (num(r[COL.qtyTotal]) > 0) {
-      qModelRows.push([iso, weekLabel, equip, shift, cleanStr(r[COL.model]), gubun, num(r[COL.qtyTotal]), num(r[COL.qtyGood]), badQty, cleanPct(r[COL.quality]), ...qualReasons]);
+      qModelRows.push([iso, weekLabel, equip, shift, cleanStr(r[COL.model]), gubun, num(r[COL.qtyTotal]), num(r[COL.qtyGood]), badQty, cleanPct(r[COL.quality]), ...qualReasons, warmShot]);
     }
   }
 
