@@ -995,7 +995,8 @@
         <table class="wk-t mini" id="wkPptTable"></table>
         <div class="wk-ppt-note" id="wkPptNote2" style="margin-bottom:2px"></div>
         <div class="wk-ppt-note">PPT=계획생산시간 · NOT=고장정지시간 · NOF=설비고장횟수 · AOT=PPT−NOT ·
-          MTBF=AOT÷NOF · MTTR=NOT÷NOF · NOR=NOT÷PPT · OR=MTBF÷(MTBF+MTTR) · 실가동률=가동시간÷PPT</div>
+          MTBF=실가동시간÷NOF · MTTR=NOT÷NOF · NOR=NOT÷PPT · OR=MTBF÷(MTBF+MTTR) · 실가동률=가동시간÷PPT
+          <br><b>NOF·NOT 은 계획외 고장(UDT)만 집계</b> — 금형교체·청소·휴식·조건변경 등 계획정지는 제외</div>
       </div>
 
       <div class="wk-blk">
@@ -1101,8 +1102,8 @@
         <span class="mtbf-basis">
             <span class="mb-label">MTBF 기준</span>
             <select id="heroPptMode">
-              <option value="fixed" selected>PPT 일괄 (사내 기준)</option>
-              <option value="run">실가동시간</option>
+              <option value="fixed">PPT 일괄 (사내 기준)</option>
+              <option value="run" selected>실가동시간</option>
               <option value="real">실적 계획시간</option>
             </select>
             <input type="number" id="heroPptHours" value="630" step="10" title="일괄 적용할 PPT 시간">
@@ -1331,7 +1332,7 @@
       </div>
       <div class="legend-note">
         <span>PPT=계획생산시간 · NOT=고장정지시간 · NOF=설비고장횟수(A_가동률 시트 기록값) · AOT=PPT−NOT</span>
-        <span>MTBF=AOT÷NOF · MTTR=NOT÷NOF · NOR=NOT÷PPT · OR=MTBF÷(MTBF+MTTR)</span>
+        <span>MTBF=실가동시간÷NOF · MTTR=NOT÷NOF · NOR=NOT÷PPT · OR=MTBF÷(MTBF+MTTR) · NOF/NOT=계획외 고장(UDT)만</span>
       </div>
     </div>
   </section>
@@ -1714,6 +1715,12 @@ let MIN_STOP = 10;        // 고장 인정 최소 정지시간(분)
 try{
   const a=localStorage.getItem('stc_std_mode'); if(a!==null) STD_MODE = (a==='1');
   const b=localStorage.getItem('stc_min_stop'); if(b!==null) MIN_STOP = parseFloat(b)||0;
+  /* v3: 계통별 지표를 국제표준(UDT 기준)으로 전면 전환. 구 설정('전체 로스')은 1회 강제 해제. */
+  if(!localStorage.getItem('stc_udt_scope_v3')){
+    STD_MODE = true;
+    localStorage.setItem('stc_std_mode','1');
+    localStorage.setItem('stc_udt_scope_v3','1');
+  }
 }catch(e){}
 /* 고장(failure) 판정 : MTBF·MTTR·고장건수에만 적용 */
 function isFail(r){ return (!STD_MODE || r.u) && r.l >= MIN_STOP; }
@@ -3437,17 +3444,15 @@ function refreshCostCats(){
     const box = lb.querySelector('input');
     lb.classList.toggle('on', !!(box && box.checked));
   });
-  const udt = isUdtOnly();
-  document.querySelectorAll('.ccBox').forEach(b=>{ b.disabled = udt; });
-  document.querySelectorAll('#costCats .cc-chip:not(.cc-udt)').forEach(lb=>{
-    lb.style.opacity = udt ? .45 : 1;
-  });
-  ['ccAll','ccEq'].forEach(id=>{ const b=document.getElementById(id); if(b) b.disabled = udt; });
+  /* UDT 는 계통과 다른 축이므로 더 이상 계통 칩을 잠그지 않는다 (예: 설비-전기 ∩ UDT) */
+  document.querySelectorAll('.ccBox').forEach(b=>{ b.disabled = false; });
+  document.querySelectorAll('#costCats .cc-chip:not(.cc-udt)').forEach(lb=>{ lb.style.opacity = 1; });
+  ['ccAll','ccEq'].forEach(id=>{ const b=document.getElementById(id); if(b) b.disabled = false; });
 }
 function costBasisLabel(){
-  if(isUdtOnly()) return '계획외 고장(UDT)만';
   const on = selectedCostCats();
-  return on.length === COST_G.length ? '전체 유형' : on.join('+');
+  const catTxt = (on.length === COST_G.length) ? '전체 유형' : on.join('+');
+  return isUdtOnly() ? (catTxt + ' · 계획외 고장(UDT)만') : catTxt;
 }
 function basisSet(){
   return new Set(selectedCostCats());
@@ -3464,7 +3469,10 @@ function renderCost(){
   COST_RANGE_LABEL = (rg.s||'전체') + ' ~ ' + (rg.e||'전체');
   const per   = periodsOf(mode, RUNr);
   const keep  = basisSet();
-  const src   = (basis==='udt') ? fails(LOSSr) : LOSSr.filter(r=>keep.has(r.s));
+  /* 계통(금형/설비-전기/설비-라인/관리)으로 먼저 거른 뒤, UDT 체크 시 그 안에서 계획외 고장만 남긴다.
+     두 필터는 서로 다른 축이므로 교집합으로 적용한다. */
+  const selRows = LOSSr.filter(r=>keep.has(r.s));
+  const src   = (basis==='udt') ? fails(selRows) : selRows;
   refreshCostCats();
   const cost  = r => r.l * (RATE[r.m]||0);
   const mcs   = ALL_MACHINES.slice();
@@ -3601,7 +3609,8 @@ function renderCost(){
      목록이 아니라 전체 데이터의 주차(W27~) 를 그대로 넘긴다. 유형(카테고리) 필터는 그대로 적용. */
   try{
     const perFull = periodsOf(mode, RUN);
-    const srcFull = (basis==='udt') ? fails(LOSS) : LOSS.filter(r=>keep.has(r.s));
+    const selFull = LOSS.filter(r=>keep.has(r.s));
+    const srcFull = (basis==='udt') ? fails(selFull) : selFull;
     renderLossX({ RATE, per:perFull, mode, src:srcFull, LOSSr:LOSS, RUNr:RUN,
                   cell, rowT, colT, grand, keep, pName, tgt });
   }catch(e){ console.error('renderLossX', e); }
@@ -4060,7 +4069,8 @@ function costCsvDown(){
   const RUNr=RUN.filter(rg.f), LOSSr=LOSS.filter(rg.f);
   COST_RANGE_LABEL=(rg.s||'전체')+' ~ '+(rg.e||'전체');
   const per=periodsOf(mode,RUNr), keep=basisSet();
-  const src=(basis==='udt')?fails(LOSSr):LOSSr.filter(r=>keep.has(r.s));
+  const selRows=LOSSr.filter(r=>keep.has(r.s));
+  const src=(basis==='udt')?fails(selRows):selRows;
   const idx={}; src.forEach(r=>{const k=r.m+'|'+periodKey(r,mode); idx[k]=(idx[k]||0)+r.l*(RATE[r.m]||0);});
   const esc=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
   const lines=[['MC','Type','M/C Rate(THB/min)'].concat(per).concat(['TTL']).join(',')];
@@ -4116,8 +4126,18 @@ function pptPrefsLoad(){
     const m = localStorage.getItem('stc_ppt_mode');
     const h = localStorage.getItem('stc_ppt_hours');
     const mEl = document.getElementById('heroPptMode'), hEl = document.getElementById('heroPptHours');
-    if(mEl) mEl.value = m || 'fixed';          // 사내 기준: PPT 일괄
-    if(hEl) hEl.value = h || '630';            //            630h
+    /* v3: MTBF 기준을 국제표준(실가동시간)으로 전면 전환.
+       이전 버전에서 'fixed'(PPT 630h 일괄)가 저장된 브라우저도 1회 강제 전환한다. */
+    let mv = m || 'run';
+    try{
+      if(!localStorage.getItem('stc_mtbf_basis_v3')){
+        mv = 'run';
+        localStorage.setItem('stc_ppt_mode', 'run');
+        localStorage.setItem('stc_mtbf_basis_v3', '1');
+      }
+    }catch(e){ mv = 'run'; }
+    if(mEl) mEl.value = mv;                    // 국제표준: 실가동시간
+    if(hEl) hEl.value = h || '630';            // (fixed 모드 선택 시에만 사용)
     if(mEl && hEl) hEl.disabled = (mEl.value !== 'fixed');
   }catch(e){}
 }
@@ -4728,16 +4748,18 @@ function renderWeekly(){
 
   /* ---------- ⑥ 설비별 PPT 기준 지표 (보고 주차 기준) ---------- */
   {
-    const md  = (document.getElementById('heroPptMode')||{value:'fixed'}).value;
+    const md  = (document.getElementById('heroPptMode')||{value:'run'}).value;
     const ph  = parseFloat((document.getElementById('heroPptHours')||{}).value) || 630;
     const R0  = RUN.filter(r=>r.w===wk);
     const L0  = LOSS.filter(r=>r.w===wk);
     const isAll6 = catIsAll(cats6);
     const Lok = fails(isAll6 ? L0 : L0.filter(r=>matchCat(r, cat6)));
     const sub = document.getElementById('wkPptSub');
-    if(sub) sub.textContent = `${wk} · PPT ${md==='real' ? '실적 계획시간' : ph+'h 일괄'} · ${catLabel(cats6)} 기준`;
+    const mdTxt = md==='run' ? '실가동시간' : md==='real' ? '실적 계획시간' : ph+'h 일괄';
+    if(sub) sub.textContent = `${wk} · PPT ${mdTxt} · ${catLabel(cats6)} 기준 · 계획외 고장(UDT)`;
 
-    const head = ['MC','Ton','PPT (h)','NOT (h)','NOF','AOT (h)','MTBF (h)','MTTR (h)','NOR','OR','실가동률'];
+    const aotHead = (md === 'run') ? 'AOT (h)<br><small>=실가동</small>' : 'AOT (h)';
+    const head = ['MC','Ton','PPT (h)','NOT (h)','NOF',aotHead,'MTBF (h)','MTTR (h)','NOR','OR','실가동률'];
     let T = {ppt:0, not:0, nof:0, run:0};
     const body = ALL_MACHINES.concat([...MISSING]).sort((a,b)=>a-b).map(mc=>{
       const R = R0.filter(x=>x.m===mc);
@@ -4745,10 +4767,12 @@ function renderWeekly(){
       const Lall = L0.filter(x=>x.m===mc);
       const planReal = R.reduce((a,x)=>a+(x.p||0),0)/60;
       const runH = R.reduce((a,x)=>a+x.r,0)/60;
-      const ppt  = (md === 'real') ? planReal : ph;
+      /* PPT 열 : fixed = 입력 시간 일괄 · real/run = 시트의 실적 계획시간
+         AOT 열 : run = 실가동시간(가동시간 그 자체) · 그 외 = PPT − NOT        */
+      const ppt  = (md === 'fixed') ? ph : planReal;
       const not  = L.reduce((a,x)=>a+x.l,0)/60;
       const nof  = nofCount(R, Lall, isAll6 ? null : L);   // 계통 선택 시 그 계통 고장만 집계
-      const aot  = Math.max(ppt-not, 0);
+      const aot  = (md === 'run') ? runH : Math.max(ppt-not, 0);
       const mtbf = nof ? aot/nof : 0;
       const mttr = nof ? not/nof : 0;
       const or   = (mtbf+mttr) ? mtbf/(mtbf+mttr) : 0;
@@ -4766,11 +4790,12 @@ function renderWeekly(){
         <td>${ppt?fmt(runH/ppt*100,1)+'%':'-'}</td></tr>`;
     }).join('');
 
-    const aotT  = Math.max(T.ppt-T.not, 0);
+    const aotT  = (md === 'run') ? T.run : Math.max(T.ppt-T.not, 0);
     const mtbfT = T.nof ? aotT/T.nof : 0, mttrT = T.nof ? T.not/T.nof : 0;
     const n2 = document.getElementById('wkPptNote2');
-    if(n2) n2.textContent = isAll6 ? ''
-      : `※ ${catLabel(cats6)} 계통 로스만 NOT·NOF 에 반영했습니다 · PPT 는 설비 기준이라 그대로입니다`;
+    if(n2) n2.textContent =
+      `※ NOT·NOF 는 계획외 고장(UDT)만 집계 · MTBF = ${md==='run' ? '실가동시간' : 'AOT'} ÷ NOF`
+      + (isAll6 ? '' : ` · ${catLabel(cats6)} 계통 로스만 반영 (PPT 는 설비 기준이라 그대로)`);
     document.getElementById('wkPptTable').innerHTML =
       '<thead><tr>' + head.map(h=>`<th>${h}</th>`).join('') + '</tr></thead><tbody>' + body + '</tbody>'
       + `<tfoot><tr><td class="mc">TTL</td><td>—</td>
@@ -5004,7 +5029,12 @@ function renderWeekly(){
   /* ---------- ⑥ F-COST TOP5 ---------- */
   const RT = getRates();
   const byM = {};
-  LOSS.filter(r=>r.w===wk).forEach(r=>{
+  /* ⑦·⑧ 과 같은 기준으로 통일 : 계획외 고장(UDT) + ⑦에서 고른 계통만 집계 */
+  let ccTop = null;
+  try{ ccTop = JSON.parse(localStorage.getItem('stc_wk_cost_cats')||'null'); }catch(e){}
+  if(!Array.isArray(ccTop) || !ccTop.length) ccTop = WK_SUBS.slice();
+  const scTop = new Set(ccTop);
+  fails(LOSS.filter(r=>r.w===wk && scTop.has(r.s))).forEach(r=>{
     byM[r.m] = byM[r.m] || {c:0, h:0};
     byM[r.m].c += r.l*(RT[r.m]||0); byM[r.m].h += r.l/60;
   });
@@ -5672,7 +5702,7 @@ function filterParetoData(){
   const e = document.getElementById('paretoEndDate').value;
   let loss = LOSS.filter(r => r.d >= s && r.d <= e);
   if(paretoCat !== 'ALL') loss = loss.filter(r => matchCat(r, paretoCat));
-  return loss;
+  return fails(loss);   // 계통별 파레토도 계획외 고장(UDT) 기준으로 통일
 }
 
 function renderParetoSection(){
