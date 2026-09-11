@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>STC 원본 데이터 변환기</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>if(typeof XLSX==="undefined"){document.write('<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"><\/script>');}</script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f2f4f7; color:#222; }
@@ -65,8 +67,8 @@
     <div class="card-title">1️⃣ 원본 파일 업로드 &amp; 설정</div>
     <div class="form-row">
       <div class="field">
-        <label>원본 raw CSV 파일</label>
-        <input type="file" id="fileInput" accept=".csv">
+        <label>원본 raw 파일 (XLSX 또는 CSV)</label>
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xlsm">
       </div>
       <div class="field">
         <label>연도</label>
@@ -75,6 +77,12 @@
       <div class="field">
         <label>주차 라벨 (예: W28)</label>
         <input type="text" id="weekInput" placeholder="W28">
+      </div>
+      <div class="field">
+        <label>주차 산출 방식</label>
+        <label style="font-weight:500;font-size:12.5px;color:#333;display:flex;align-items:center;gap:6px;">
+          <input type="checkbox" id="weekAuto"> 일자별 자동 주차(ISO)
+        </label>
       </div>
       <div class="field">
         <button class="convert-btn" id="convertBtn" onclick="onConvertClick()">⚙️ 변환하기</button>
@@ -115,6 +123,9 @@
       ※ <b>구분(정규/특근)</b>은 요일로 자동 판정했습니다 (일요일 → 특근(주말), 그 외(토요일 포함) → 정규 — 실제 시트 데이터 기준으로 확인한 규칙입니다). 특정 주에 이 규칙과 다르면 붙여넣기 전에 수동으로 고쳐주세요.<br>
       ※ <b>웜샷(WARM SHOT)</b> 열이 품질(Q)·Model상세 CSV 맨 끝에 추가되었습니다 — 값은 <b>전체수량 − 양품 − 세부 불량유형 합계</b>입니다.<br>
       &nbsp;&nbsp;&nbsp;구글시트 <b>Q_품질</b> 탭의 마지막 열(기타) 오른쪽에 <b>웜샷</b> 열을 하나 추가한 뒤 붙여넣어 주세요. 기존 주차 행은 비워두어도 대시보드가 같은 식으로 자동 계산합니다.<br>
+      ※ <b>NOF(고장횟수)</b>는 가동률(A) CSV의 <b>마지막 열(AP, 헤더명 NOF)</b>로 출력됩니다 — 구글시트 <b>A_가동률</b> 탭에도 같은 위치에 <b>NOF</b> 열이 있어야 MTTR/MTBF 대시보드가 "시트 NOF 열" 원천으로 읽어갑니다.<br>
+      ※ <b>엑셀(.xlsx) 원본을 그대로 올려도</b> 변환됩니다 — CSV로 저장할 때 생기던 빈 행/빈 열, 한글 깨짐, 줄바꿈 헤더 문제가 없어 이쪽을 권장합니다.<br>
+      ※ <b>일자별 자동 주차(ISO)</b>를 켜면 주차 라벨을 무시하고 각 행의 일자로 W번호를 계산합니다 — 여러 주가 섞인 원본을 한 번에 변환할 때 사용하세요.<br>
       ※ 원본에 없는 값(예: 활동이 없는 설비의 Avg shot/성능%)은 빈 값으로 남겨둡니다.
     </div>
   </div>
@@ -159,6 +170,45 @@ function cleanPct(v){
   return s;
 }
 
+/* ---------- 헤더 위치 자동 정렬 ----------
+   원본 엑셀은 1행이 비어 있거나(빈 행 삽입) A열이 비어 있는 등 파일마다 시작 위치가 다르다.
+   '일자'+'설비명' 이 함께 있는 행을 헤더 1행으로 잡고, '일자'가 항상 2번째 칸(idx 1)에
+   오도록 열을 맞춘 뒤 기존 열 매핑을 그대로 적용한다. */
+let LAST_GRID = null;
+function alignGrid(rawRows){
+  const txt = v => String(v==null?'':v).replace(/\s+/g,'');
+  let hr = -1, dateIdx = -1;
+  for (let r = 0; r < Math.min(rawRows.length, 12); r++){
+    const row = rawRows[r] || [];
+    let di = -1, ei = -1;
+    for (let i=0;i<row.length;i++){
+      if (di < 0 && txt(row[i]) === '일자') di = i;
+      if (ei < 0 && txt(row[i]) === '설비명') ei = i;
+    }
+    if (di >= 0 && ei > di){ hr = r; dateIdx = di; break; }
+  }
+  if (hr < 0){ LAST_GRID = { found:false, headerRow:-1, shift:0 }; return rawRows; }
+  let rows = rawRows.slice(hr);
+  const shift = dateIdx - 1;                       // '일자'를 idx 1 로 맞춘다
+  if (shift > 0)      rows = rows.map(r => r.slice(shift));
+  else if (shift < 0) rows = rows.map(r => new Array(-shift).fill('').concat(r));
+  LAST_GRID = { found:true, headerRow:hr, shift:shift };
+  return rows;
+}
+
+/* ISO 주차 라벨 (월요일 시작) — 2026-09-08 → W37 */
+function isoWeekLabel(iso){
+  const d = new Date(iso + 'T00:00:00');
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dow = (t.getUTCDay() + 6) % 7;             // 월=0 … 일=6
+  t.setUTCDate(t.getUTCDate() - dow + 3);          // 그 주의 목요일
+  const firstThu = new Date(Date.UTC(t.getUTCFullYear(), 0, 4));
+  const fdow = (firstThu.getUTCDay() + 6) % 7;
+  firstThu.setUTCDate(firstThu.getUTCDate() - fdow + 3);
+  const wk = 1 + Math.round((t - firstThu) / (7 * 24 * 3600 * 1000));
+  return 'W' + String(wk).padStart(2, '0');
+}
+
 /* Column index map for the original wide-format reference file (0-indexed) */
 /* 원본 P열(idx 15)의 NOF 유무를 자동 감지해 인덱스를 잡는다.
    - NOF 있는 신규 원본(Rawdata12~)  : offset 1
@@ -186,7 +236,7 @@ function buildColMap(rawRows){
 
   /* 2단계: NOF 열 찾기 — ① 헤더에 NOF 표기 ② P열 삽입형 ③ 맨 뒤 이동형 */
   let nofIdx = -1;
-  for (let i=0;i<h0.length;i++){ if ((h0[i]||'').indexOf('NOF') >= 0) { nofIdx = i; break; } }
+  for (let i=0;i<h0.length;i++){ const t = h0[i]||''; if (t.indexOf('NOF') >= 0 || t.indexOf('고장횟수') >= 0) { nofIdx = i; break; } }
   if (nofIdx < 0 && o === 1) nofIdx = 15;
   if (nofIdx < 0){
     // 불량합계(75+o) '다음' 칸부터 탐색. 불량합계와 값이 같은 열은 제외한다.
@@ -263,7 +313,7 @@ function toCSV(header, rows){
   return [header.map(csvEscape).join(',')].concat(rows.map(r=>r.map(csvEscape).join(','))).join('\r\n');
 }
 
-function convert(rawRows, year, weekLabel){
+function convert(rawRows, year, weekLabel, autoWeek){
   // rawRows: array of row-arrays from parseRawCSV, including the 3 header rows
   const COL = buildColMap(rawRows);
   const data = rawRows.slice(3).filter(r => r.length > 1 && cleanStr(r[COL.date]));
@@ -277,14 +327,15 @@ function convert(rawRows, year, weekLabel){
     const equip = normEquip(r[COL.equip]);
     const shift = cleanStr(r[COL.shift]);
     const gubun = classifyRegular(iso);
+    const wkLabel = autoWeek ? isoWeekLabel(iso) : weekLabel;
 
     // A row
     const lossReasons = [];
     for (let i = COL.lossReasonsStart; i <= COL.lossReasonsEnd; i++) lossReasons.push(num(r[i]));
-    aRows.push([iso, weekLabel, equip, shift, gubun, num(r[COL.shiftTime]), num(r[COL.plan]), num(r[COL.run]), num(r[COL.loss]), ...lossReasons, cleanPct(r[COL.availability]), (COL.hasNof ? nofVal(r[COL.nof]) : '')]);
+    aRows.push([iso, wkLabel, equip, shift, gubun, num(r[COL.shiftTime]), num(r[COL.plan]), num(r[COL.run]), num(r[COL.loss]), ...lossReasons, cleanPct(r[COL.availability]), (COL.hasNof ? nofVal(r[COL.nof]) : '')]);
 
     // P row (only meaningful if there's real cycle-time data; still emit the row to preserve structure)
-    pRows.push([iso, weekLabel, equip, shift, gubun, cleanStr(r[COL.model]), cleanStr(r[COL.cav]).trim(), num(r[COL.ctStd]), num(r[COL.ctReal]), num(r[COL.qtyTotal]), num(r[COL.avgShot]), num(r[COL.run]), cleanPct(r[COL.performance])]);
+    pRows.push([iso, wkLabel, equip, shift, gubun, cleanStr(r[COL.model]), cleanStr(r[COL.cav]).trim(), num(r[COL.ctStd]), num(r[COL.ctReal]), num(r[COL.qtyTotal]), num(r[COL.avgShot]), num(r[COL.run]), cleanPct(r[COL.performance])]);
 
     // Q row
     const qualReasons = [];
@@ -295,20 +346,34 @@ function convert(rawRows, year, weekLabel){
        (사내 집계 정의: 전체수량 = 양품 + 불량 + 웜샷). */
     const defectSum = qualReasons.reduce((a,b)=>a+(Number(b)||0), 0);
     const warmShot = Math.max(0, Math.round((badQty - defectSum) * 100) / 100);
-    qRows.push([iso, weekLabel, equip, shift, gubun, num(r[COL.qtyTotal]), num(r[COL.qtyGood]), badQty, cleanPct(r[COL.quality]), ...qualReasons, warmShot]);
+    qRows.push([iso, wkLabel, equip, shift, gubun, num(r[COL.qtyTotal]), num(r[COL.qtyGood]), badQty, cleanPct(r[COL.quality]), ...qualReasons, warmShot]);
 
     // Q + Model row (only meaningful when Qty_Total > 0, matches the quality dashboard's own filter)
     if (num(r[COL.qtyTotal]) > 0) {
-      qModelRows.push([iso, weekLabel, equip, shift, cleanStr(r[COL.model]), gubun, num(r[COL.qtyTotal]), num(r[COL.qtyGood]), badQty, cleanPct(r[COL.quality]), ...qualReasons, warmShot]);
+      qModelRows.push([iso, wkLabel, equip, shift, cleanStr(r[COL.model]), gubun, num(r[COL.qtyTotal]), num(r[COL.qtyGood]), badQty, cleanPct(r[COL.quality]), ...qualReasons, warmShot]);
     }
   }
 
+    const weekSet = Array.from(new Set(aRows.map(r=>r[1]))).sort();
     let nofCount = 0, nofSum = 0;
   if (COL.hasNof){ for (const a of aRows){ const v = a[a.length-1]; if (v !== '' ) { nofCount++; nofSum += Number(v)||0; } } }
-  return { aRows, pRows, qRows, qModelRows, skipped, total: data.length, layout: COL, nofCount, nofSum };
+  return { aRows, pRows, qRows, qModelRows, skipped, total: data.length, layout: COL, nofCount, nofSum, weekSet };
 }
 
-/* ---------- File reading with CP949/EUC-KR fallback ---------- */
+/* ---------- 파일 읽기 : XLSX 직접 지원 + CSV(CP949/EUC-KR) ---------- */
+function isExcel(file){ return /\.(xlsx|xlsm|xlsb|xls)$/i.test(file.name || ''); }
+
+/* 엑셀 원본을 시트 화면 그대로(표시 형식 유지) 2차원 배열로 읽는다.
+   CSV로 내보낼 때 생기던 빈 행/빈 열·인코딩·줄바꿈 헤더 문제를 원천적으로 없앤다. */
+async function readExcelRows(file){
+  if (typeof XLSX === 'undefined') throw new Error('엑셀 읽기 모듈(XLSX)을 불러오지 못했습니다. 인터넷 연결을 확인하거나 CSV로 저장해서 올려주세요.');
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type:'array', cellDates:false });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  if (!ws) throw new Error('엑셀 파일에서 시트를 찾지 못했습니다.');
+  return XLSX.utils.sheet_to_json(ws, { header:1, raw:false, defval:'', blankrows:true });
+}
+
 async function readFileSmart(file){
   const buf = await file.arrayBuffer();
   // try UTF-8 first (in case the file is already UTF-8)
@@ -353,11 +418,18 @@ async function onConvertClick(){
 
   try {
     setStatus('변환 중...');
-    const text = await readFileSmart(file);
-    const rawRows = parseRawCSV(text);
+    let rawRows;
+    if (isExcel(file)) {
+      rawRows = await readExcelRows(file);
+    } else {
+      rawRows = parseRawCSV(await readFileSmart(file));
+    }
     if (rawRows.length < 4) throw new Error('파일 형식을 인식할 수 없습니다 (행이 너무 적음).');
+    rawRows = alignGrid(rawRows);
+    if (!LAST_GRID.found) throw new Error('헤더 행을 찾지 못했습니다 — "일자"와 "설비명"이 같은 행에 있는 원본인지 확인해주세요.');
 
-    const result = convert(rawRows, year, week);
+    const autoWeek = document.getElementById('weekAuto').checked;
+    const result = convert(rawRows, year, week, autoWeek);
     const { aRows, pRows, qRows, qModelRows, skipped, total } = result;
     if (!aRows.length) throw new Error('변환된 데이터가 없습니다. 파일 형식(3행 헤더 + 데이터)을 확인해주세요.');
 
@@ -377,14 +449,19 @@ async function onConvertClick(){
     document.getElementById('resultCard').style.display = 'block';
     renderPreview(aRows);
 
+    const colLetter = n => { let x=''; n+=1; while(n){ const m=(n-1)%26; x=String.fromCharCode(65+m)+x; n=Math.floor((n-1)/26);} return x; };
+    const srcCol = i => colLetter(i + (LAST_GRID.shift||0));   // 정렬 전(원본 파일) 열 문자
     let diag;
     if (!LAST_LAYOUT || LAST_LAYOUT.nofIdx < 0) {
-      diag = ' ⚠ NOF(고장횟수) 열을 원본에서 찾지 못했습니다 — AP열은 공란으로 출력됩니다.';
+      diag = ' ⚠ NOF(고장횟수) 열을 원본에서 찾지 못했습니다 — A탭 NOF열은 공란으로 출력됩니다.';
     } else {
-      const colLetter = n => { let x=''; n+=1; while(n){ const m=(n-1)%26; x=String.fromCharCode(65+m)+x; n=Math.floor((n-1)/26);} return x; };
-      diag = ` · NOF 열 감지: 원본 ${colLetter(LAST_LAYOUT.nofIdx)}열 → 입력 ${result.nofCount}행 / 합계 ${result.nofSum}건 (미기록 ${aRows.length - result.nofCount}행은 공란).`;
+      diag = ` · NOF 열 감지: 원본 ${srcCol(LAST_LAYOUT.nofIdx)}열 → 값 있는 행 ${result.nofCount} / 합계 ${result.nofSum}건 (미기록 ${aRows.length - result.nofCount}행은 공란).`;
     }
-    setStatus(`변환 완료 — 총 ${total}개 데이터 행 중 ${aRows.length}행 변환${skipped ? `, ${skipped}행 건너뜀(일자 인식 불가)` : ''}.` + diag, LAST_LAYOUT && LAST_LAYOUT.nofIdx >= 0 ? 'ok' : 'err');
+    const wkNote = result.weekSet.length > 1
+      ? ` · 주차: ${result.weekSet.join(', ')}`
+      : ` · 주차: ${result.weekSet[0] || week}`;
+    const gridNote = ` · 헤더 ${LAST_GRID.headerRow + 1}번째 행 인식${LAST_GRID.shift ? `, 열 ${LAST_GRID.shift > 0 ? LAST_GRID.shift + '칸 왼쪽' : (-LAST_GRID.shift) + '칸 오른쪽'}으로 정렬` : ''}`;
+    setStatus(`변환 완료 — 총 ${total}개 데이터 행 중 ${aRows.length}행 변환${skipped ? `, ${skipped}행 건너뜀(일자 인식 불가)` : ''}.` + gridNote + wkNote + diag, LAST_LAYOUT && LAST_LAYOUT.nofIdx >= 0 ? 'ok' : 'err');
   } catch(e){
     console.error(e);
     setStatus('변환 오류: ' + e.message, 'err');
