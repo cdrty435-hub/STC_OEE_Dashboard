@@ -163,6 +163,19 @@
   .cat-btn.active{background:var(--amber); color:#1a1206; border-color:var(--amber); font-weight:700;}
 
   .cat-chips{display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;}
+  /* ⑬ 심층분석 */
+  .dp-2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .dp-3{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:12px;}
+  .dp-cap{font-size:12px; font-weight:700; color:#33404e; margin:2px 0 6px;}
+  .dp-t{width:100%; border-collapse:collapse; font-size:12px;}
+  .dp-t th,.dp-t td{border:1px solid #e3e8ee; padding:5px 7px; text-align:right;}
+  .dp-t th{background:#f4f7fa; font-weight:700; text-align:center; color:#33404e;}
+  .dp-t td:first-child,.dp-t th:first-child{text-align:left;}
+  .dp-t tr.sum td{background:#f7f9fc; font-weight:800;}
+  .dp-t td.pos{color:#c0392b;} .dp-t td.neg{color:#1f6f3f;}
+  .dp-t tr.hot td{background:#fff6ea;}
+  @media(max-width:900px){ .dp-2,.dp-3{grid-template-columns:1fr;} }
+  @media print{ .dp-2,.dp-3{grid-template-columns:1fr 1fr;} }
   /* ── UDT 단일기준 전환 : 계통 선택 UI 일괄 제거 ───────────────────────── */
   #heroCatChips, #trendCatChips, #dcCatChips, #paretoCatChips, #pptBasisChips,
   #costCats, .wk-catbar, .wk-dept,
@@ -1060,6 +1073,60 @@
 
             <h4 style="margin-top:12px">⑫ 특이사항 · 익주 계획</h4>
             <textarea class="wk-memo" id="wkMemo" placeholder="불가동 설비 조치 현황, PM 진행, 익주 계획 등을 입력하세요 (주차별로 저장됩니다)"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="wk-blk">
+        <div>
+          <div>
+            <h4>⑬ 심층 분석 — 증감 요인분해 · 로스유형 · 개선 우선순위<span class="wk-tgt" id="wkDeepSub"></span></h4>
+
+            <div class="dp-2">
+              <div>
+                <div class="dp-cap">전주 대비 KPI 변화율 (%)</div>
+                <div style="height:210px"><canvas id="wkDeepKpiChart"></canvas></div>
+              </div>
+              <div>
+                <div class="dp-cap">지표 요약</div>
+                <table class="dp-t" id="wkDeepKpiTable"></table>
+              </div>
+            </div>
+
+            <div class="dp-3">
+              <div>
+                <div class="dp-cap">F-COST 증감 요인분해 — 수량(로스시간) vs 단가</div>
+                <table class="dp-t" id="wkDeepCostTable"></table>
+              </div>
+              <div>
+                <div class="dp-cap">로스시간 증감 요인분해 — 수리시간 vs 고장건수</div>
+                <table class="dp-t" id="wkDeepHourTable"></table>
+              </div>
+            </div>
+
+            <div class="dp-3">
+              <div>
+                <div class="dp-cap">로스유형별 로스시간 · MTTR</div>
+                <div style="height:230px"><canvas id="wkDeepTypeChart"></canvas></div>
+              </div>
+              <div>
+                <div class="dp-cap">로스유형 분해 (금주)</div>
+                <table class="dp-t" id="wkDeepTypeTable"></table>
+              </div>
+            </div>
+
+            <div class="dp-3">
+              <div>
+                <div class="dp-cap">개선효과 순 — 로스시간 기여 (건수 × MTTR)</div>
+                <table class="dp-t" id="wkDeepMcA"></table>
+              </div>
+              <div>
+                <div class="dp-cap">MTTR 순 — 건당 수리시간</div>
+                <table class="dp-t" id="wkDeepMcB"></table>
+              </div>
+            </div>
+
+            <div class="wk-issue" id="wkDeepIssue"></div>
           </div>
         </div>
       </div>
@@ -2346,9 +2413,10 @@ function weekStats(cat){
     const nMc = new Set(R.map(x=>x.m)).size || 1;
     const ds = R.map(x=>x.d).sort();
     const RT = getRates();
-    const costAll = Lall.reduce((a,x)=>a+x.l*(RT[x.m]||0),0);
-    const costEq  = Lall.filter(x=>x.s==='설비-전기'||x.s==='설비-라인')
-                        .reduce((a,x)=>a+x.l*(RT[x.m]||0),0);
+    /* 비용도 계획외 고장(UDT) 기준으로 통일 — ⑦·⑧·⑩ 과 같은 값이 나오도록 */
+    const costAll = L.reduce((a,x)=>a+x.l*(RT[x.m]||0),0);
+    const costEq  = L.filter(x=>x.s==='설비-전기'||x.s==='설비-라인')
+                     .reduce((a,x)=>a+x.l*(RT[x.m]||0),0);
     return { w:w, runH:runH, lossH:lossH, cnt:n,
       mttr: n? lossH/n : 0, mtbf: mtbfBasis(runH, lossH, n, planH, nMc),
       avail: (runH+lossAllH)>0 ? runH/(runH+lossAllH)*100 : 0,
@@ -4163,6 +4231,7 @@ pptPrefsLoad();
    그대로 재사용하므로, 다른 탭과 항상 같은 숫자가 나온다.
    주차만 바꾸면 KPI·차트·코멘트가 모두 다시 계산된다.                        */
 let wkMttrChart, wkMtbfChart, wkTrendChart, wkCatMttrChart, wkCatMtbfChart, wkCostTrendChart;
+let wkDeepKpiChart, wkDeepTypeChart;
 let WK_SEL_MC = null;      // ② 차트에서 클릭한 설비
 let WK_SEL_WEEK = null;    // ③ 차트에서 클릭한 주차
 const WK_SUBS = ['금형','설비-전기','설비-라인','관리'];
@@ -5283,6 +5352,202 @@ function renderWeekly(){
         wkDownSave(a); renderWeekly();
       };
     });
+  }
+
+  /* ---------- ⑬ 심층 분석 (전 지표 UDT + 실가동시간) ---------- */
+  {
+    const RTd = getRates();
+    const F0 = n => Math.round(n||0).toLocaleString('ko-KR');
+    const sg = n => (n>0?'+':'') + n;
+    const cls = (v, goodDown)=> v===0 ? '' : ((v>0) === !!goodDown ? 'pos' : 'neg');
+
+    /* 금주·전주 UDT 집계 */
+    const pack = (week)=>{
+      if(!week) return null;
+      const R = RUN.filter(r=>r.w===week);
+      const L = fails(LOSS.filter(r=>r.w===week));
+      const runH = R.reduce((a,x)=>a+x.r,0)/60;
+      const h    = L.reduce((a,x)=>a+x.l,0)/60;
+      const n    = L.length;
+      const thb  = L.reduce((a,x)=>a+x.l*(RTd[x.m]||0),0);
+      return { w:week, runH:runH, h:h, n:n, thb:thb,
+               mttr: n? h/n : 0, mtbf: n? runH/n : 0,
+               rate: h? thb/h : 0, rows:L };
+    };
+    const A = pack(wk), B = pack(pw);
+    const sub = document.getElementById('wkDeepSub');
+    if(sub) sub.textContent = B ? `${wk} vs ${pw} · 계획외 고장(UDT) · 실가동시간 기준`
+                                : `${wk} · 전주 데이터 없음`;
+
+    /* ── 1. KPI 변화율 ───────────────────────────── */
+    const met = [
+      ['MTTR',    A.mttr, B&&B.mttr, 2, 'h/건', true ],
+      ['MTBF',    A.mtbf, B&&B.mtbf, 2, 'h/건', false],
+      ['가동률',  (cur?cur.avail:0), (prv?prv.avail:null), 1, '%', false],
+      ['로스시간',A.h,    B&&B.h,    1, 'h',    true ],
+      ['고장건수',A.n,    B&&B.n,    0, '건',   true ],
+      ['F-COST',  A.thb,  B&&B.thb,  0, 'THB',  true ]
+    ];
+    document.getElementById('wkDeepKpiTable').innerHTML =
+      `<thead><tr><th>지표</th><th>${pw||'전주'}</th><th>${wk}</th><th>증감</th></tr></thead><tbody>`
+      + met.map(m=>{
+          const [nm, c, p, dg, u, gd] = m;
+          if(p===null||p===undefined) return `<tr><td>${nm}</td><td>-</td><td>${fmt(c,dg)} ${u}</td><td>-</td></tr>`;
+          const d = c-p;
+          return `<tr><td>${nm}</td><td>${dg?fmt(p,dg):F0(p)} ${u}</td><td><b>${dg?fmt(c,dg):F0(c)}</b> ${u}</td>`
+               + `<td class="${cls(d,gd)}">${d>0?'+':''}${dg?fmt(d,dg):F0(d)}</td></tr>`;
+        }).join('') + '</tbody>';
+
+    {
+      const el = document.getElementById('wkDeepKpiChart');
+      if(el){
+        if(wkDeepKpiChart) wkDeepKpiChart.destroy();
+        const lb = met.map(m=>m[0]);
+        const pc = met.map(m=>(m[2]? (m[1]-m[2])/Math.abs(m[2])*100 : 0));
+        wkDeepKpiChart = new Chart(el, { type:'bar',
+          data:{ labels:lb, datasets:[{ label:'전주 대비 %', data:pc.map(v=>+v.toFixed(1)),
+            backgroundColor: met.map((m,i)=> (pc[i]>0)===!!m[5] ? '#e2564d' : '#3f7d58'), borderRadius:3 }]},
+          options:{ responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{display:false},
+              tooltip:{callbacks:{label:c=>`${c.parsed.y>0?'+':''}${c.parsed.y}%`}} },
+            scales:{ y:{ title:{display:true,text:'%'}, grid:{color:'#eef2f6'} },
+                     x:{ grid:{display:false} } } } });
+      }
+    }
+
+    /* ── 2. F-COST 요인분해 : 수량효과 + 단가효과 ── */
+    const ct = document.getElementById('wkDeepCostTable');
+    if(B && B.h > 0){
+      const dH = A.h - B.h, dR = A.rate - B.rate;
+      const qty = dH * B.rate;          // 로스시간 증가분 × 전주 단가
+      const prc = dR * A.h;             // 단가 변화분 × 금주 로스시간
+      ct.innerHTML =
+        `<thead><tr><th>요인</th><th>계산</th><th>금액 (THB)</th></tr></thead><tbody>`
+        + `<tr><td>수량효과 — 로스시간 ${dH>=0?'증가':'감소'}</td>`
+        + `<td>${fmt(dH,1)}h × ${F0(B.rate)}</td><td class="${cls(qty,true)}">${qty>0?'+':''}${F0(qty)}</td></tr>`
+        + `<tr><td>단가효과 — 시간당 손실 ${dR>=0?'상승':'하락'}</td>`
+        + `<td>${dR>0?'+':''}${F0(dR)} × ${fmt(A.h,1)}h</td><td class="${cls(prc,true)}">${prc>0?'+':''}${F0(prc)}</td></tr>`
+        + `<tr class="sum"><td>합계</td><td>실적 ${(A.thb-B.thb)>0?'+':''}${F0(A.thb-B.thb)}</td>`
+        + `<td>${(qty+prc)>0?'+':''}${F0(qty+prc)}</td></tr>`
+        + `<tr><td>시간당 손실단가</td><td>${F0(B.rate)} → ${F0(A.rate)} THB/h</td>`
+        + `<td class="${cls(dR,true)}">${dR>0?'+':''}${F0(dR)}</td></tr></tbody>`;
+    } else ct.innerHTML = '<tbody><tr><td>전주 데이터가 없어 분해할 수 없습니다</td></tr></tbody>';
+
+    /* ── 3. 로스시간 증분분해 : MTTR × 건수 ── */
+    const ht = document.getElementById('wkDeepHourTable');
+    if(B && B.n > 0){
+      const dN = A.n - B.n, dM = A.mttr - B.mttr;
+      const eM = B.n * dM, eN = dN * B.mttr, eX = dN * dM;
+      const tot = eM + eN + eX || 1;
+      const row = (nm, calc, v)=>`<tr><td>${nm}</td><td>${calc}</td>`
+        + `<td class="${cls(v,true)}">${v>0?'+':''}${fmt(v,1)}h</td>`
+        + `<td>${Math.round(Math.abs(v)/Math.abs(tot)*100)}%</td></tr>`;
+      ht.innerHTML = `<thead><tr><th>요인</th><th>계산</th><th>시간</th><th>비중</th></tr></thead><tbody>`
+        + row('수리시간(MTTR) 변화', `${B.n}건 × ${dM>0?'+':''}${fmt(dM,3)}`, eM)
+        + row('고장건수 변화',       `${dN>0?'+':''}${dN}건 × ${fmt(B.mttr,3)}`, eN)
+        + row('교차항',              `${dN} × ${fmt(dM,3)}`, eX)
+        + `<tr class="sum"><td>합계</td><td>실적 ${(A.h-B.h)>0?'+':''}${fmt(A.h-B.h,1)}h</td>`
+        + `<td>${(eM+eN+eX)>0?'+':''}${fmt(eM+eN+eX,1)}h</td><td>100%</td></tr></tbody>`;
+    } else ht.innerHTML = '<tbody><tr><td>전주 데이터가 없어 분해할 수 없습니다</td></tr></tbody>';
+
+    /* ── 4. 로스유형 분해 ── */
+    const byT = {};
+    A.rows.forEach(r=>{
+      const k = r.i || '기타';
+      (byT[k] = byT[k] || {n:0,h:0,thb:0});
+      byT[k].n++; byT[k].h += r.l/60; byT[k].thb += r.l*(RTd[r.m]||0);
+    });
+    const T = Object.keys(byT).map(k=>({k:k, ...byT[k], mttr: byT[k].h/byT[k].n}))
+                .sort((a,b)=>b.h-a.h);
+    const tH = T.reduce((a,x)=>a+x.h,0) || 1;
+    document.getElementById('wkDeepTypeTable').innerHTML =
+      `<thead><tr><th>로스유형</th><th>건수</th><th>로스시간</th><th>MTTR</th><th>점유</th><th>THB</th></tr></thead><tbody>`
+      + T.slice(0,10).map((x,i)=>`<tr class="${i===0?'hot':''}">`
+          + `<td>${i===0?'<b>'+x.k+'</b>':x.k}</td><td>${x.n}건</td><td>${fmt(x.h,1)}h</td>`
+          + `<td>${fmt(x.mttr,2)}</td><td><b>${Math.round(x.h/tH*100)}%</b></td><td>${F0(x.thb)}</td></tr>`).join('')
+      + `<tr class="sum"><td>계</td><td>${A.n}건</td><td>${fmt(A.h,1)}h</td>`
+      + `<td>${fmt(A.mttr,2)}</td><td>100%</td><td>${F0(A.thb)}</td></tr></tbody>`;
+
+    {
+      const el = document.getElementById('wkDeepTypeChart');
+      if(el){
+        if(wkDeepTypeChart) wkDeepTypeChart.destroy();
+        const t8 = T.slice(0,8);
+        wkDeepTypeChart = new Chart(el, {
+          data:{ labels: t8.map(x=>x.k), datasets:[
+            { type:'bar', label:'로스시간 (h)', data:t8.map(x=>+x.h.toFixed(1)),
+              backgroundColor:'#5b8ff9', borderRadius:3, yAxisID:'y', order:2 },
+            { type:'line', label:'MTTR (h/건)', data:t8.map(x=>+x.mttr.toFixed(2)),
+              borderColor:'#e2564d', backgroundColor:'#e2564d', tension:.25,
+              pointRadius:3, yAxisID:'y1', order:1 } ]},
+          options:{ responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{position:'bottom', labels:{boxWidth:10,font:{size:10}}} },
+            scales:{ y:{ position:'left', title:{display:true,text:'h'}, grid:{color:'#eef2f6'} },
+                     y1:{ position:'right', title:{display:true,text:'h/건'}, grid:{display:false} },
+                     x:{ grid:{display:false}, ticks:{font:{size:10}, maxRotation:40, minRotation:0} } } } });
+      }
+    }
+
+    /* ── 5. 호기 우선순위 2축 ── */
+    const byM2 = {};
+    A.rows.forEach(r=>{ (byM2[r.m] = byM2[r.m] || {n:0,h:0,thb:0});
+      byM2[r.m].n++; byM2[r.m].h += r.l/60; byM2[r.m].thb += r.l*(RTd[r.m]||0); });
+    const M = Object.keys(byM2).map(m=>({m:+m, ...byM2[m], mttr: byM2[m].h/byM2[m].n}));
+    const topH = M.slice().sort((a,b)=>b.h-a.h).slice(0,5);
+    const topM = M.filter(x=>x.n>=3).sort((a,b)=>b.mttr-a.mttr).slice(0,5);
+    const setH = new Set(topH.map(x=>x.m)), setM = new Set(topM.map(x=>x.m));
+    document.getElementById('wkDeepMcA').innerHTML =
+      `<thead><tr><th>호기</th><th>로스</th><th>건수</th><th>MTTR</th><th>THB</th></tr></thead><tbody>`
+      + (topH.length ? topH.map(x=>`<tr class="${setM.has(x.m)?'hot':''}"><td>DC${x.m}${setM.has(x.m)?' ★':''}</td>`
+          + `<td><b>${fmt(x.h,1)}h</b></td><td>${x.n}</td><td>${fmt(x.mttr,2)}</td><td>${F0(x.thb)}</td></tr>`).join('')
+          : '<tr><td colspan="5">금주 고장 없음</td></tr>') + '</tbody>';
+    document.getElementById('wkDeepMcB').innerHTML =
+      `<thead><tr><th>호기</th><th>MTTR</th><th>건수</th><th>로스</th><th>THB</th></tr></thead><tbody>`
+      + (topM.length ? topM.map(x=>`<tr class="${setH.has(x.m)?'hot':''}"><td>DC${x.m}${setH.has(x.m)?' ★':''}</td>`
+          + `<td><b>${fmt(x.mttr,2)}</b></td><td>${x.n}</td><td>${fmt(x.h,1)}h</td><td>${F0(x.thb)}</td></tr>`).join('')
+          : '<tr><td colspan="5">3건 이상 발생한 설비 없음</td></tr>') + '</tbody>';
+
+    /* ── 6. 자동 코멘트 ── */
+    const D = [];
+    if(B && B.h>0){
+      const dH = A.h-B.h, dR = A.rate-B.rate, dC = A.thb-B.thb;
+      if(Math.abs(dC) >= 1){
+        const qty = dH*B.rate, prc = dR*A.h;
+        D.push(`F-COST ${dC>0?'증가':'감소'} <b>${F0(Math.abs(dC))} THB</b> — `
+          + (Math.abs(qty)>=Math.abs(prc)
+             ? `주원인은 <b>로스시간 ${dH>0?'증가':'감소'}</b>(${F0(Math.abs(qty))}), 시간당 단가 영향은 ${F0(Math.abs(prc))}`
+             : `주원인은 <b>시간당 손실단가 ${dR>0?'상승':'하락'}</b>(${F0(Math.abs(prc))}), 로스시간 영향은 ${F0(Math.abs(qty))}`));
+      }
+      if(B.n>0){
+        const dM = A.mttr-B.mttr, dN = A.n-B.n;
+        const eM = Math.abs(B.n*dM), eN = Math.abs(dN*B.mttr);
+        if(eM+eN > 0.5) D.push(`로스시간 변동은 ${eM>=eN?'<b>수리시간(MTTR)</b>':'<b>고장건수</b>'} 쪽 기여가 더 큽니다 `
+          + `(MTTR ${fmt(eM,1)}h · 건수 ${fmt(eN,1)}h) → ${eM>=eN?'한 건을 빨리 끝내는 대책':'발생 자체를 줄이는 대책'}이 효과가 큽니다`);
+      }
+    }
+    if(T.length){
+      const t0 = T[0];
+      D.push(`로스유형 1위 <b>${t0.k}</b> — ${t0.n}건 ${fmt(t0.h,1)}h로 전체의 <b>${Math.round(t0.h/tH*100)}%</b> · `
+        + `MTTR을 ${fmt(t0.mttr,2)}에서 ${fmt(t0.mttr*0.6,2)}로만 낮춰도 주당 ${fmt(t0.h*0.4,1)}h · 약 ${F0(t0.thb*0.4)} THB 절감`);
+    }
+    const both = topH.filter(x=>setM.has(x.m)).map(x=>'DC'+x.m);
+    if(both.length) D.push(`<b>${both.join(' · ')}</b> 는 로스시간·MTTR 양쪽 상위 → 이론의 여지 없는 최우선 대상`);
+    else if(topH.length && topM.length && topH[0].m !== topM[0].m)
+      D.push(`정렬축에 따라 1순위가 갈립니다 — 개선효과는 <b>DC${topH[0].m}</b>(${fmt(topH[0].h,1)}h), `
+        + `건당 수리시간은 <b>DC${topM[0].m}</b>(${fmt(topM[0].mttr,2)}) · 금액 기준이면 DC${topH[0].m} 부터`);
+    /* 기저효과 : 최근 10주 평균과 비교 */
+    {
+      const recent = allWeeks.slice(Math.max(0, idx-9), idx+1).map(pack).filter(Boolean);
+      if(recent.length >= 4){
+        const avg = recent.reduce((a,x)=>a+x.h,0)/recent.length;
+        const dv  = A.h - avg;
+        D.push(`최근 ${recent.length}주 평균 로스 ${fmt(avg,1)}h 대비 <b>${dv>0?'+':''}${fmt(dv,1)}h</b>`
+          + (B ? ` · 비교주 ${pw}는 ${B.h < avg ? '평균보다 낮았던 주라 전주 대비 악화폭이 커 보입니다 (기저효과 유의)'
+                                              : '평균 이상이었던 주입니다'}` : ''));
+      }
+    }
+    const di = document.getElementById('wkDeepIssue');
+    if(di) di.innerHTML = D.length ? D.map(x=>'· '+x).join('<br>') : '· 분석할 데이터가 부족합니다';
   }
 
   /* ---------- ⑫ 메모 + 저장 ---------- */
@@ -6642,7 +6907,7 @@ function zoomAttach(){
 
 /* ===== 주간보고 태국어 병기 =====
    한국어 아래에 태국어를 한 줄 덧붙인다. 숫자·계산에는 손대지 않는다. */
-const WK_TH = {"① 주간 요약": "สรุปประจำสัปดาห์", "② 설비별 MTTR / MTBF": "MTTR / MTBF รายเครื่องจักร", "③ 주차별 추이 (MTTR · MTBF · 가동률)": "แนวโน้มรายสัปดาห์ (MTTR · MTBF · อัตราเดินเครื่อง)", "④ 원인분석 워스트 3 및 조치": "วิเคราะห์สาเหตุ 3 อันดับแย่สุด และการแก้ไข", "⑤ 계통별 주차 추이": "แนวโน้มรายสัปดาห์ แยกตามระบบ", "⑥ 설비별 PPT 기준 지표 (NOR / OR / AOT)": "ตัวชี้วัดตามเวลาผลิตตามแผน PPT (NOR / OR / AOT)", "⑦ 로스 비용 현황 (F-COST)": "มูลค่าความสูญเสียจากการหยุดเครื่อง (F-COST)", "⑧ 설비별 주차 손실금액 (THB)": "มูลค่าความสูญเสียรายเครื่อง รายสัปดาห์ (บาท)", "⑨ 계통별 로스 증감 (전주 대비)": "การเปลี่ยนแปลงลอสแยกตามระบบ (เทียบสัปดาห์ก่อน)", "⑩ F-COST 손실비용 TOP 5": "มูลค่าความสูญเสีย 5 อันดับแรก", "⑪ 불가동 설비 현황": "สถานะเครื่องจักรที่หยุดใช้งาน", "⑫ 특이사항 · 익주 계획": "ข้อสังเกต · แผนสัปดาห์หน้า", "MTTR (평균 수리시간)": "เวลาซ่อมเฉลี่ยต่อครั้ง", "MTBF (평균 무고장시간)": "เวลาเฉลี่ยระหว่างการเสีย", "가동률": "อัตราการเดินเครื่อง", "로스시간 / 고장횟수": "เวลาลอส / จำนวนครั้งที่เสีย", "F-COST 손실비용": "มูลค่าความสูญเสีย (F-COST)", "금주 손실비용": "มูลค่าความสูญเสียสัปดาห์นี้", "로스시간": "เวลาลอส", "일평균 손실": "ความสูญเสียเฉลี่ยต่อวัน", "기간 누계": "ยอดสะสมในช่วง", "설비별 MTTR (h/건)": "MTTR รายเครื่องจักร (ชม./ครั้ง)", "설비별 MTBF (h/건)": "MTBF รายเครื่องจักร (ชม./ครั้ง)", "계통별 MTTR (h/건) — 낮을수록 좋음": "MTTR แยกตามระบบ (ยิ่งน้อยยิ่งดี)", "계통별 MTBF (h/건) — 높을수록 좋음": "MTBF แยกตามระบบ (ยิ่งมากยิ่งดี)", "주차별 로스시간 · 손실비용": "เวลาลอส · มูลค่าความสูญเสีย รายสัปดาห์", "계통별 손실비용 (금주)": "มูลค่าความสูญเสียแยกตามระบบ (สัปดาห์นี้)", "설비 워스트 (손실금액 TOP 10)": "10 อันดับเครื่องจักรที่สูญเสียสูงสุด", "MTTR 워스트 — 수리시간이 긴 설비": "MTTR แย่สุด — เครื่องที่ใช้เวลาซ่อมนาน", "MTBF 워스트 — 고장이 잦은 설비": "MTBF แย่สุด — เครื่องที่เสียบ่อย", "설비": "เครื่องจักร", "상태": "สถานะ", "문제점": "ปัญหา", "진행사항": "ความคืบหน้า", "계획": "แผนงาน", "담당": "ผู้รับผิดชอบ", "복구 예정": "กำหนดแล้วเสร็จ", "삭제": "ลบ", "주차": "สัปดาห์", "최종 가동": "เดินเครื่องล่าสุด", "계통": "ระบบ", "금주 로스": "ลอสสัปดาห์นี้", "건수": "จำนวนครั้ง", "전주 로스": "ลอสสัปดาห์ก่อน", "증감": "เปลี่ยนแปลง", "비중": "สัดส่วน", "순위": "อันดับ", "합계": "รวม", "주간 합계": "รวมทั้งสัปดาห์", "손실비용 (THB)": "มูลค่าความสูญเสีย (บาท)", "실가동률": "อัตราเดินเครื่องจริง", "고장정지시간": "เวลาหยุดเพราะเสีย", "계획생산시간": "เวลาผลิตตามแผน", "설비고장횟수": "จำนวนครั้งที่เครื่องเสีย", "보고 주차": "สัปดาห์ที่รายงาน", "작성": "ผู้จัดทำ", "차수": "ครั้งที่", "부서": "แผนก", "인쇄 / PDF 저장": "พิมพ์ / บันทึก PDF", "집계 계통": "ระบบที่นำมารวม", "주차 범위": "ช่วงสัปดาห์", "누계 시작": "เริ่มสะสม", "설비 추가": "เพิ่มเครื่องจักร", "이력": "ประวัติ", "지움": "ล้างข้อมูล", "＋ 추가": "＋ เพิ่ม", "해제": "ยกเลิก", "⤢ 확대": "⤢ ขยาย", "전 주차 보기": "ดูทุกสัปดาห์", "기록 있는 주차만": "เฉพาะสัปดาห์ที่มีบันทึก", "전체 로스": "ลอสทั้งหมด", "금형": "แม่พิมพ์", "설비-전기": "เครื่องจักร-ไฟฟ้า", "설비-라인": "เครื่องจักร-ไลน์", "관리": "บริหารจัดการ", "전체 (공무팀)": "ทั้งหมด (ฝ่ายซ่อมบำรุง)", "불가동": "หยุดใช้งาน", "수리중": "กำลังซ่อม", "부품 대기": "รออะไหล่", "외주 수리": "ส่งซ่อมภายนอก", "복구 완료": "ซ่อมเสร็จแล้ว", "미정": "ยังไม่กำหนด", "날짜 지정": "ระบุวันที่", "조치 내용 / 담당": "การแก้ไข / ผู้รับผิดชอบ", "고장 내용 / 원인": "อาการเสีย / สาเหตุ", "조치 진행 상황": "ความคืบหน้าการแก้ไข", "향후 계획 / 대책": "แผนงาน / มาตรการต่อไป"};
+const WK_TH = {"① 주간 요약": "สรุปประจำสัปดาห์", "② 설비별 MTTR / MTBF": "MTTR / MTBF รายเครื่องจักร", "③ 주차별 추이 (MTTR · MTBF · 가동률)": "แนวโน้มรายสัปดาห์ (MTTR · MTBF · อัตราเดินเครื่อง)", "④ 원인분석 워스트 3 및 조치": "วิเคราะห์สาเหตุ 3 อันดับแย่สุด และการแก้ไข", "⑤ 계통별 주차 추이": "แนวโน้มรายสัปดาห์ แยกตามระบบ", "⑥ 설비별 PPT 기준 지표 (NOR / OR / AOT)": "ตัวชี้วัดตามเวลาผลิตตามแผน PPT (NOR / OR / AOT)", "⑦ 로스 비용 현황 (F-COST)": "มูลค่าความสูญเสียจากการหยุดเครื่อง (F-COST)", "⑧ 설비별 주차 손실금액 (THB)": "มูลค่าความสูญเสียรายเครื่อง รายสัปดาห์ (บาท)", "⑨ 계통별 로스 증감 (전주 대비)": "การเปลี่ยนแปลงลอสแยกตามระบบ (เทียบสัปดาห์ก่อน)", "⑩ F-COST 손실비용 TOP 5": "มูลค่าความสูญเสีย 5 อันดับแรก", "⑪ 불가동 설비 현황": "สถานะเครื่องจักรที่หยุดใช้งาน", "⑫ 특이사항 · 익주 계획": "ข้อสังเกต · แผนสัปดาห์หน้า", "⑬ 심층 분석 — 증감 요인분해 · 로스유형 · 개선 우선순위": "⑬ วิเคราะห์เชิงลึก — แยกปัจจัย · ประเภทลอส · ลำดับความสำคัญ", "MTTR (평균 수리시간)": "เวลาซ่อมเฉลี่ยต่อครั้ง", "MTBF (평균 무고장시간)": "เวลาเฉลี่ยระหว่างการเสีย", "가동률": "อัตราการเดินเครื่อง", "로스시간 / 고장횟수": "เวลาลอส / จำนวนครั้งที่เสีย", "F-COST 손실비용": "มูลค่าความสูญเสีย (F-COST)", "금주 손실비용": "มูลค่าความสูญเสียสัปดาห์นี้", "로스시간": "เวลาลอส", "일평균 손실": "ความสูญเสียเฉลี่ยต่อวัน", "기간 누계": "ยอดสะสมในช่วง", "설비별 MTTR (h/건)": "MTTR รายเครื่องจักร (ชม./ครั้ง)", "설비별 MTBF (h/건)": "MTBF รายเครื่องจักร (ชม./ครั้ง)", "계통별 MTTR (h/건) — 낮을수록 좋음": "MTTR แยกตามระบบ (ยิ่งน้อยยิ่งดี)", "계통별 MTBF (h/건) — 높을수록 좋음": "MTBF แยกตามระบบ (ยิ่งมากยิ่งดี)", "주차별 로스시간 · 손실비용": "เวลาลอส · มูลค่าความสูญเสีย รายสัปดาห์", "계통별 손실비용 (금주)": "มูลค่าความสูญเสียแยกตามระบบ (สัปดาห์นี้)", "설비 워스트 (손실금액 TOP 10)": "10 อันดับเครื่องจักรที่สูญเสียสูงสุด", "MTTR 워스트 — 수리시간이 긴 설비": "MTTR แย่สุด — เครื่องที่ใช้เวลาซ่อมนาน", "MTBF 워스트 — 고장이 잦은 설비": "MTBF แย่สุด — เครื่องที่เสียบ่อย", "설비": "เครื่องจักร", "상태": "สถานะ", "문제점": "ปัญหา", "진행사항": "ความคืบหน้า", "계획": "แผนงาน", "담당": "ผู้รับผิดชอบ", "복구 예정": "กำหนดแล้วเสร็จ", "삭제": "ลบ", "주차": "สัปดาห์", "최종 가동": "เดินเครื่องล่าสุด", "계통": "ระบบ", "금주 로스": "ลอสสัปดาห์นี้", "건수": "จำนวนครั้ง", "전주 로스": "ลอสสัปดาห์ก่อน", "증감": "เปลี่ยนแปลง", "비중": "สัดส่วน", "순위": "อันดับ", "합계": "รวม", "주간 합계": "รวมทั้งสัปดาห์", "손실비용 (THB)": "มูลค่าความสูญเสีย (บาท)", "실가동률": "อัตราเดินเครื่องจริง", "고장정지시간": "เวลาหยุดเพราะเสีย", "계획생산시간": "เวลาผลิตตามแผน", "설비고장횟수": "จำนวนครั้งที่เครื่องเสีย", "보고 주차": "สัปดาห์ที่รายงาน", "작성": "ผู้จัดทำ", "차수": "ครั้งที่", "부서": "แผนก", "인쇄 / PDF 저장": "พิมพ์ / บันทึก PDF", "집계 계통": "ระบบที่นำมารวม", "주차 범위": "ช่วงสัปดาห์", "누계 시작": "เริ่มสะสม", "설비 추가": "เพิ่มเครื่องจักร", "이력": "ประวัติ", "지움": "ล้างข้อมูล", "＋ 추가": "＋ เพิ่ม", "해제": "ยกเลิก", "⤢ 확대": "⤢ ขยาย", "전 주차 보기": "ดูทุกสัปดาห์", "기록 있는 주차만": "เฉพาะสัปดาห์ที่มีบันทึก", "전체 로스": "ลอสทั้งหมด", "금형": "แม่พิมพ์", "설비-전기": "เครื่องจักร-ไฟฟ้า", "설비-라인": "เครื่องจักร-ไลน์", "관리": "บริหารจัดการ", "전체 (공무팀)": "ทั้งหมด (ฝ่ายซ่อมบำรุง)", "불가동": "หยุดใช้งาน", "수리중": "กำลังซ่อม", "부품 대기": "รออะไหล่", "외주 수리": "ส่งซ่อมภายนอก", "복구 완료": "ซ่อมเสร็จแล้ว", "미정": "ยังไม่กำหนด", "날짜 지정": "ระบุวันที่", "조치 내용 / 담당": "การแก้ไข / ผู้รับผิดชอบ", "고장 내용 / 원인": "อาการเสีย / สาเหตุ", "조치 진행 상황": "ความคืบหน้าการแก้ไข", "향후 계획 / 대책": "แผนงาน / มาตรการต่อไป"};
 const WK_TH_KEYS = Object.keys(WK_TH).sort((a,b)=>b.length-a.length);
 let WK_TH_ON = true;
 try{ WK_TH_ON = (localStorage.getItem('stc_wk_th') !== '0'); }catch(e){}
