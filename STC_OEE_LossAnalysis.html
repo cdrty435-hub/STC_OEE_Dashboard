@@ -251,6 +251,26 @@ function parseCSV(text) {
 
 const num = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
 
+/* ---------- 설비명 표기 통일 ----------
+   시트 입력이 DC2 / DC02 / dc-2 / "DC 2" 처럼 섞여도 모두 같은 설비(DC2)로 합친다.
+   (2026-09 W37부터 일부 행이 DC01~DC09 형태 0-패딩으로 입력되어 별도 설비로 갈라지는 문제) */
+function canonEquip(name){
+  const raw = String(name == null ? '' : name).trim();
+  const m = raw.match(/^([A-Za-z]+)\s*[-_ ]?0*(\d+)\s*$/);
+  return m ? (m[1].toUpperCase() + parseInt(m[2], 10)) : raw;
+}
+function normalizeEquipNames(rows){
+  let changed = 0;
+  for (const r of rows || []) {
+    const raw = r['설비명'];
+    if (raw == null || String(raw).trim() === '') continue;
+    const c = canonEquip(raw);
+    if (c !== raw) { r['설비명'] = c; changed++; }
+  }
+  if (changed) console.log(`[STC] 설비명 표기 통일: ${changed}행 (예: DC02 → DC2)`);
+  return changed;
+}
+
 function classifyColumns(rows){
   if (!rows.length) return null;
   const cols = Object.keys(rows[0]);
@@ -715,6 +735,7 @@ function restoreDownEquip(){
     const saved = localStorage.getItem(DOWN_KEY);
     if (saved !== null) DOWN_SET = new Set(JSON.parse(saved));
   } catch(e){ DOWN_SET = new Set(DEFAULT_DOWN); }
+  DOWN_SET = new Set([...DOWN_SET].map(canonEquip));
 }
 function saveDownEquip(){
   try { localStorage.setItem(DOWN_KEY, JSON.stringify([...DOWN_SET])); } catch(e){}
@@ -828,6 +849,7 @@ async function fetchOwnA(){
 
 async function syncFromGoogleSheets(){
   const aData = await fetchOwnA();
+  normalizeEquipNames(aData.rows);
   LAST_A = aData;
   if (!SHARED_DATA) SHARED_DATA = seedData(); // keep the shared store's shape valid even if this page runs first
   SHARED_DATA.rawA = aData; // write into the shared store so the main dashboard sees the same live data too
@@ -970,7 +992,7 @@ function renderAll(){
   // 선택 기간에 실제 데이터가 존재하는 설비
   const inRange = rowsInRange(LAST_A.rows);
   const dataEquips = new Set();
-  for (const r of inRange) { if (r['설비명']) dataEquips.add(r['설비명']); }
+  for (const r of inRange) { if (r['설비명']) dataEquips.add(canonEquip(r['설비명'])); }
   const roster = equipRoster(dataEquips);   // 전체 보유 설비 (항상 차트에 표시)
 
   const { filtered, list } = equipmentAvailability(inRange, downList, roster);
@@ -1142,6 +1164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (SHARED_DATA && SHARED_DATA.rawA && SHARED_DATA.rawA.rows && SHARED_DATA.rawA.rows.length) {
     // Reuse the exact same live data the main dashboard already fetched — no separate request needed.
     LAST_A = SHARED_DATA.rawA;
+    normalizeEquipNames(LAST_A.rows);
     renderAll();
     setStatus(`대시보드와 공유된 캐시를 불러왔습니다 (${new Date(LAST_A.fetchedAt).toLocaleString('ko-KR')} 기준). 최신 상태로 다시 확인하려면 새로고침을 눌러주세요.`);
   } else {
