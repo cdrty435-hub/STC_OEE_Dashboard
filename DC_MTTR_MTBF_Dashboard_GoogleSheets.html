@@ -184,6 +184,24 @@
   .stdbar{display:flex; gap:12px; flex-wrap:wrap; align-items:center; padding:9px 13px;
      background:#fff8ec; border:1px solid #f0d9b5; border-radius:10px; margin-bottom:10px; font-size:13px;}
   .stdbar .lb{color:#8b6b3d; font-weight:700; font-size:12px;}
+  .udt-btn{border:1px solid #d9a441; background:#fff8ec; color:#8a5a10; font-weight:700;
+    font-size:12px; border-radius:7px; padding:4px 10px; cursor:pointer;}
+  .udt-btn:hover{background:#fdefd6;}
+  .udt-panel{display:none; padding:10px 13px; background:#fffdf7;
+    border-bottom:1px solid #f0e2c8;}
+  .udt-panel.on{display:block;}
+  .udt-grp{margin-bottom:8px;}
+  .udt-grp > b{display:block; font-size:11.5px; color:#8b6b3d; margin-bottom:4px;}
+  .udt-codes{display:flex; flex-wrap:wrap; gap:5px;}
+  .udt-c{display:inline-flex; align-items:center; gap:4px; font-size:12px; cursor:pointer;
+    border:1px solid #e3d7bf; border-radius:14px; padding:3px 9px; background:#fff; color:#5a6674;}
+  .udt-c.on{background:#fdeceb; border-color:#e2564d; color:#a3241c; font-weight:700;}
+  .udt-c small{font-family:var(--mono); font-size:10px; opacity:.75;}
+  .udt-act{display:flex; gap:6px; align-items:center; margin-top:6px; flex-wrap:wrap;}
+  .udt-act button{border:1px solid #d8dfe7; background:#fff; border-radius:6px;
+    padding:3px 9px; font-size:11.5px; cursor:pointer;}
+  .udt-act .note{font-size:11.5px; color:#8a95a1; margin-left:auto;}
+  @media print{ .udt-panel{display:none !important;} }
   .stdbar label{display:flex; align-items:center; gap:5px; cursor:pointer; color:#33404f;}
   .stdbar input[type=number]{border:1px solid #e0cba8; border-radius:6px; padding:4px 7px; font-size:13px;}
   .layout{display:flex; gap:18px; align-items:flex-start;}
@@ -899,7 +917,17 @@
       <option value="prorate">전체 고장 기준 → 계통별 안분</option>
       <option value="direct">이미 설비고장만 집계 → 그대로 사용</option>
     </select>
+    <button type="button" class="udt-btn" id="udtPickBtn">UDT 코드 선택</button>
     <span class="lb" style="margin-left:auto" id="stdNote"></span>
+  </div>
+  <div class="udt-panel" id="udtPanel">
+    <div id="udtBody"></div>
+    <div class="udt-act">
+      <button type="button" id="udtEq">설비 계통 전체</button>
+      <button type="button" id="udtDef">초기값 (12종)</button>
+      <button type="button" id="udtNone">전체 해제</button>
+      <span class="note">체크한 코드만 고장(UDT)으로 집계됩니다 · 괄호는 전 기간 건수·로스시간</span>
+    </div>
   </div>
   <div class="stdbar">
     <span class="lb" id="nofNote"></span>
@@ -1778,9 +1806,22 @@ const normCode = t => String(t||'').replace(/\s+/g,'').trim();
      계획정지(금형교체·휴식·미팅·청소·조건변경·소모품 계획교체 등)는 제외.
    · 마이크로스톱을 고장으로 세지 않도록 최소 정지시간 임계값 적용(기본 10분).
    · 가동률(Availability)은 전체 로스 기준으로 별도 산출(생산 관점 유지).            */
-const UDT_SET = new Set(['금형수리','금형파손','핀파손','슬라이드코어수리','금형냉각라인','제품소착',
-  '설비수리','전기로수리','취출기수리','스프레이수리','노즐막힘','플런저오일막힘','래들수리',
-  '컨베이어수리','설비냉각수','히터수리','펌프이상','진공설비']);
+/* UDT = 계획외 고장으로 인정할 로스코드.
+   상단 [지표 산출 기준] → [UDT 코드 선택] 에서 화면으로 바꿀 수 있고,
+   고른 값은 브라우저에 저장된다. 아래는 저장값이 없을 때의 초기값(12종).   */
+const UDT_DEFAULT = [
+  '설비수리','취출기수리','스프레이수리','래들수리',
+  '컨베이어수리','히터수리','펌프이상','진공설비',
+  '노즐막힘','플런저오일막힘','설비냉각수',
+  '금형수리'];
+let UDT_SET = new Set(UDT_DEFAULT);
+try{
+  const sv = JSON.parse(localStorage.getItem('stc_udt_codes')||'null');
+  if(Array.isArray(sv) && sv.length) UDT_SET = new Set(sv);
+}catch(e){}
+function udtSave(){
+  try{ localStorage.setItem('stc_udt_codes', JSON.stringify([...UDT_SET])); }catch(e){}
+}
 function isUDT(code){ return UDT_SET.has(normCode(code)); }
 let STD_MODE = true;      // true = 표준(UDT만) · false = 전체 로스(구 방식)
 let MIN_STOP = 10;        // 고장 인정 최소 정지시간(분)
@@ -2129,7 +2170,8 @@ async function loadData(){
           c: (r['카테고리']||'').trim() || catOf(code),
           i: code, l: toNum(r['로스분']),
           s: (r['세분류']||'').trim() || subOf(code),
-          w: weekLabel(r['주차'], normDate(r['일자']))
+          w: weekLabel(r['주차'], normDate(r['일자'])),
+          u: isUDT(code)                      /* 폴백 경로에도 UDT 판정을 붙인다 */
         };
       }).filter(r=>r.d && r.m);
       DATA_SOURCE = '파생 탭(0.가동데이터/0.로스데이터)';
@@ -3401,12 +3443,16 @@ document.getElementById('pmCsv').addEventListener('click', pmCsvDownload);
 document.getElementById('pmStart').addEventListener('change', buildPM);
 
 /* ---------- 지표 산출 기준 컨트롤 ---------- */
+function udtPanelRefreshIfOpen(){
+  const pn = document.getElementById('udtPanel');
+  if(pn && pn.classList.contains('on')) udtPanelFill();
+}
 function stdApplyUI(){
   document.getElementById('stdOn').checked = STD_MODE;
   document.getElementById('stdOff').checked = !STD_MODE;
   document.getElementById('minStop').value = MIN_STOP;
   document.getElementById('stdNote').textContent = STD_MODE
-    ? `SEMI E10 기준 · 계획외 고장 ${UDT_SET.size}개 코드만 집계 · ${MIN_STOP}분 미만 정지는 마이크로스톱으로 제외`
+    ? `SEMI E10 기준 · 계획외 고장 ${UDT_SET.size}개 코드만 집계 (우측 [UDT 코드 선택]에서 변경) · ${MIN_STOP}분 미만 정지는 마이크로스톱으로 제외`
     : `전체 로스 기준(계획정지 포함) — 업계 MTBF 정의와 다르므로 사내 비교용으로만 사용`;
 }
 function stdChanged(){
@@ -3421,6 +3467,59 @@ function stdChanged(){
   document.getElementById(id).addEventListener('change', stdChanged);
 });
 stdApplyUI();
+
+/* ---------- UDT 코드 선택 ---------- */
+function udtReflow(){                        // 코드 집합이 바뀌면 로스행 판정을 다시 매긴다
+  LOSS.forEach(r=>{ r.u = isUDT(r.i); });
+  udtSave(); udtPanelFill(); stdApplyUI();
+  if(RUN.length) render();
+}
+function udtPanelFill(){
+  const box = document.getElementById('udtBody');
+  if(!box) return;
+  if(!LOSS.length){ box.innerHTML = '<span class="lb">데이터를 불러온 뒤 표시됩니다</span>'; return; }
+  /* 실제 로데이터에 존재하는 코드만 계통별로 묶어 보여준다 */
+  const agg = {};
+  LOSS.forEach(r=>{
+    const k = normCode(r.i); if(!k) return;
+    (agg[k] = agg[k] || {s:r.s||'기타', n:0, h:0, label:r.i});
+    agg[k].n++; agg[k].h += r.l/60;
+  });
+  const grps = ['설비-전기','설비-라인','금형','관리','기타'];
+  const out = [];
+  grps.forEach(g=>{
+    const ks = Object.keys(agg).filter(k=>agg[k].s===g).sort((a,b)=>agg[b].h-agg[a].h);
+    if(!ks.length) return;
+    const onN = ks.filter(k=>UDT_SET.has(k)).length;
+    out.push(`<div class="udt-grp"><b>${g} — ${onN}/${ks.length} 선택</b><div class="udt-codes">`
+      + ks.map(k=>`<label class="udt-c ${UDT_SET.has(k)?'on':''}">`
+          + `<input type="checkbox" class="udtBox" value="${k}" ${UDT_SET.has(k)?'checked':''}>`
+          + `${agg[k].label} <small>${agg[k].n}건 ${agg[k].h.toFixed(0)}h</small></label>`).join('')
+      + '</div></div>');
+  });
+  box.innerHTML = out.join('');
+  box.querySelectorAll('.udtBox').forEach(b=>{
+    b.onchange = ()=>{
+      if(b.checked) UDT_SET.add(b.value); else UDT_SET.delete(b.value);
+      udtReflow();
+    };
+  });
+}
+{
+  const bt = document.getElementById('udtPickBtn'), pn = document.getElementById('udtPanel');
+  if(bt && pn) bt.onclick = ()=>{ pn.classList.toggle('on'); if(pn.classList.contains('on')) udtPanelFill(); };
+  const setAll = arr=>{ UDT_SET = new Set(arr); udtReflow(); };
+  const eq = document.getElementById('udtEq');
+  if(eq) eq.onclick = ()=>{
+    const ks = new Set();
+    LOSS.forEach(r=>{ if(r.s==='설비-전기'||r.s==='설비-라인') ks.add(normCode(r.i)); });
+    setAll([...ks]);
+  };
+  const df = document.getElementById('udtDef');
+  if(df) df.onclick = ()=> setAll(UDT_DEFAULT);
+  const nn = document.getElementById('udtNone');
+  if(nn) nn.onclick = ()=> setAll([]);
+}
 
 /* ---------- 고장횟수(NOF) 원천 컨트롤 ---------- */
 function nofApplyUI(){
