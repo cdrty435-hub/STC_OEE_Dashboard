@@ -428,6 +428,40 @@
   </div>
 
   <div class="quad-card">
+    <div class="quad-title" data-i18n="ws.title">🔥 웜샷 구조로스 분석 (금형 온조 사양 기준)</div>
+    <div class="footnote" style="margin-top:0;margin-bottom:6px;" data-i18n="ws.desc">웜샷은 공정 불량이 아니라, 금형 온조 설비 없이 초도 승온을 샷으로 대신하기 때문에 생기는 구조적 로스입니다. 설비별 금형 온조 사양을 지정하면 사양별 기동당 웜샷 발수가 자동 비교되어 온조기 도입 근거자료가 됩니다.</div>
+    <div class="controls" style="margin-bottom:14px;">
+      <div class="control-group"><label style="color:#555;" data-i18n="ws.cycle">평균 사이클타임(초)</label>
+        <input type="number" id="ws_cycle" min="1" step="1" style="width:80px;" onchange="saveWSParams()"></div>
+      <div class="control-group"><label style="color:#555;" data-i18n="ws.cavity">캐비티 수</label>
+        <input type="number" id="ws_cavity" min="1" step="1" style="width:64px;" onchange="saveWSParams()"></div>
+      <div class="control-group"><label style="color:#555;" data-i18n="ws.starts">일평균 기동 횟수</label>
+        <input type="number" id="ws_starts" min="0.1" step="0.1" style="width:70px;" onchange="saveWSParams()"></div>
+      <div class="control-group"><label style="color:#555;" data-i18n="ws.rate">시간당 생산가치(THB/h)</label>
+        <input type="number" id="ws_rate" min="0" step="10" style="width:90px;" onchange="saveWSParams()"></div>
+      <div class="control-group"><label style="color:#555;" data-i18n="ws.unitWt">제품 단중(g)</label>
+        <input type="number" id="ws_unitWt" min="0" step="1" style="width:78px;" onchange="saveWSParams()"></div>
+      <div class="control-group"><label style="color:#555;" data-i18n="ws.remelt">재용해 단가(THB/kg)</label>
+        <input type="number" id="ws_remelt" min="0" step="0.5" style="width:80px;" onchange="saveWSParams()"></div>
+    </div>
+    <div class="kpi-strip" id="wsKpis" style="margin-bottom:16px;"></div>
+    <div class="chart-wrap tall"><canvas id="chart-ws"></canvas></div>
+    <div class="footnote" data-i18n="ws.chartNote">※ 막대는 설비별 기동당 웜샷 발수(추정)입니다. 색상은 금형 온조 사양 — 빨강: 미적용, 주황: 냉각수 유로만, 초록: 온조 적용.</div>
+    <div class="table-wrap scroll-x" style="margin-top:12px;">
+      <table class="dtable" id="table-ws">
+        <thead><tr>
+          <th data-i18n="ws.th.eq">설비</th><th data-i18n="ws.th.days">조업일수</th><th data-i18n="ws.th.starts">기동(추정)</th>
+          <th data-i18n="ws.th.ws">웜샷수량</th><th data-i18n="ws.th.shots">샷수</th><th data-i18n="ws.th.perStart">기동당 발수</th>
+          <th data-i18n="ws.th.share">로스중 비중</th><th data-i18n="ws.th.hours">로스시간(h)</th><th data-i18n="ws.th.cost">환산액(THB)</th>
+          <th data-i18n="ws.th.spec">금형 온조 사양</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="footnote" id="wsFootnote"></div>
+  </div>
+
+  <div class="quad-card">
     <div class="quad-title" data-i18n="q.pdca">🔄 PDCA 개선관리 (Worst 항목 개선 전 · 후 비교)</div>
     <div class="footnote" style="margin-bottom:10px;" data-i18n="pdca.desc">
       Plan(문제·목표) → Do(조치) → Check(개선 전/후 실측 자동비교) → Act(표준화) 흐름으로 관리합니다.
@@ -558,6 +592,23 @@ const I18N = {
     'q.trend': '📉 Worst-5 트렌드 (설비 / 모델별 불량율 · 점유율 추이)',
     'q.modelStatus': '🧩 모델별 품질 현황 (Model-level PPM/Sigma)',
     'q.eqDetail': '📋 설비별 상세 (PPM / Sigma / 등급)',
+    'ws.title': '🔥 웜샷 구조로스 분석 (금형 온조 사양 기준)',
+    'ws.desc': '웜샷은 공정 불량이 아니라, 금형 온조 설비 없이 초도 승온을 샷으로 대신하기 때문에 생기는 구조적 로스입니다. 설비별 금형 온조 사양을 지정하면 사양별 기동당 웜샷 발수가 자동 비교되어 온조기 도입 근거자료가 됩니다.',
+    'ws.cycle': '평균 사이클타임(초)', 'ws.cavity': '캐비티 수', 'ws.starts': '일평균 기동 횟수',
+    'ws.rate': '시간당 생산가치(THB/h)', 'ws.unitWt': '제품 단중(g)', 'ws.remelt': '재용해 단가(THB/kg)',
+    'ws.kpi.qty': '웜샷 총수량', 'ws.kpi.share': '전체 로스 중 웜샷 비중', 'ws.kpi.perStart': '기동당 웜샷 발수',
+    'ws.kpi.time': '웜샷 손실시간', 'ws.kpi.cost': '웜샷 환산 손실액',
+    'ws.kpi.qty.sub': '기간 합계 (기준 설정과 무관하게 항상 전체 웜샷)', 'ws.kpi.share.sub': '전체 로스 = 전체수량 − 양품',
+    'ws.kpi.perStart.sub': '조업일수 × 일평균 기동 횟수 기준', 'ws.kpi.time.sub': '샷수 × 사이클타임',
+    'ws.kpi.cost.sub': '가동시간 손실 + 재용해비',
+    'ws.th.eq': '설비', 'ws.th.days': '조업일수', 'ws.th.starts': '기동(추정)', 'ws.th.ws': '웜샷수량',
+    'ws.th.shots': '샷수', 'ws.th.perStart': '기동당 발수', 'ws.th.share': '로스중 비중',
+    'ws.th.hours': '로스시간(h)', 'ws.th.cost': '환산액(THB)', 'ws.th.spec': '금형 온조 사양',
+    'ws.spec.none': '미적용', 'ws.spec.water': '냉각수 유로만', 'ws.spec.mtc': '온조 적용',
+    'ws.chartNote': '※ 막대는 설비별 기동당 웜샷 발수(추정)입니다. 색상은 금형 온조 사양 — 빨강: 미적용, 주황: 냉각수 유로만, 초록: 온조 적용.',
+    'ws.note': '※ 기동 횟수는 시트에 실측값이 없어 [조업일수 × 일평균 기동 횟수]로 추정합니다. 금형교체가 잦은 설비는 위 입력값을 올려주십시오. 샷수 = 웜샷수량 ÷ 캐비티 수. 온조 사양은 브라우저에 저장되며 새로고침해도 유지됩니다.',
+    'ws.cmp': '✅ 사양별 비교 — {a}: 기동당 {av}발 · {b}: 기동당 {bv}발 → 차이 {diff}발 ({pct}%). 이 격차가 온조기 투자 회수 계산의 근거 수치입니다.',
+    'ws.cmp.none': 'ℹ 아직 온조 사양이 서로 다른 설비군이 없어 비교가 나오지 않습니다. 시험 도입 설비의 사양을 [온조 적용]으로 바꾸면 도입 전후 격차가 자동 계산됩니다.',
     'q.pdca': '🔄 PDCA 개선관리 (Worst 항목 개선 전 · 후 비교)',
     'q.tonnage': '⚖️ 톤수별 설비 비교 (동톤수 · 동모델 교차비교)',
     'trend.group': '구분', 'trend.eq': '설비', 'trend.model': '모델',
@@ -668,6 +719,23 @@ const I18N = {
     'model.snapshot': '※ ยังไม่ได้เชื่อมต่อแท็บ Model상세 แบบเรียลไทม์ จึงแสดงข้อมูล ณ สัปดาห์ W28 (2026-07-01~07-07) หากเพิ่มคอลัมน์ Model และจำนวนของเสียในชีตคุณภาพ (Q) ระบบจะอัปเดตอัตโนมัติ',
     'q.modelStatus': '🧩 สถานะคุณภาพตามโมเดล (PPM/Sigma ระดับโมเดล)',
     'q.eqDetail': '📋 รายละเอียดตามเครื่องจักร (PPM / Sigma / เกรด)',
+    'ws.title': '🔥 วิเคราะห์ความสูญเสียเชิงโครงสร้างจาก Warm Shot (ตามสเปกควบคุมอุณหภูมิแม่พิมพ์)',
+    'ws.desc': 'Warm shot ไม่ใช่ของเสียจากกระบวนการ แต่เกิดจากการใช้ช็อตแรกอุ่นแม่พิมพ์แทนเครื่องควบคุมอุณหภูมิ เมื่อระบุสเปกของแต่ละเครื่องแล้ว ระบบจะเปรียบเทียบจำนวน warm shot ต่อการเริ่มเดินเครื่องให้อัตโนมัติ',
+    'ws.cycle': 'รอบเวลาเฉลี่ย (วินาที)', 'ws.cavity': 'จำนวนคาวิตี้', 'ws.starts': 'จำนวนครั้งเริ่มเดินเครื่อง/วัน',
+    'ws.rate': 'มูลค่าผลิตต่อชั่วโมง (THB/h)', 'ws.unitWt': 'น้ำหนักชิ้นงาน (g)', 'ws.remelt': 'ค่าหลอมซ้ำ (THB/kg)',
+    'ws.kpi.qty': 'จำนวน warm shot รวม', 'ws.kpi.share': 'สัดส่วนใน loss ทั้งหมด', 'ws.kpi.perStart': 'warm shot ต่อการเริ่มเดินเครื่อง',
+    'ws.kpi.time': 'เวลาที่สูญเสีย', 'ws.kpi.cost': 'มูลค่าความสูญเสีย',
+    'ws.kpi.qty.sub': 'รวมทั้งช่วงเวลา', 'ws.kpi.share.sub': 'loss ทั้งหมด = ผลิตทั้งหมด − ของดี',
+    'ws.kpi.perStart.sub': 'วันทำงาน × ครั้งเริ่มเดินเครื่อง/วัน', 'ws.kpi.time.sub': 'จำนวนช็อต × รอบเวลา',
+    'ws.kpi.cost.sub': 'เวลาเดินเครื่องที่เสียไป + ค่าหลอมซ้ำ',
+    'ws.th.eq': 'เครื่องจักร', 'ws.th.days': 'วันทำงาน', 'ws.th.starts': 'เริ่มเดินเครื่อง (ประมาณ)', 'ws.th.ws': 'จำนวน warm shot',
+    'ws.th.shots': 'จำนวนช็อต', 'ws.th.perStart': 'ต่อการเริ่มเดินเครื่อง', 'ws.th.share': 'สัดส่วนใน loss',
+    'ws.th.hours': 'เวลาที่เสีย (ชม.)', 'ws.th.cost': 'มูลค่า (THB)', 'ws.th.spec': 'สเปกควบคุมอุณหภูมิแม่พิมพ์',
+    'ws.spec.none': 'ไม่มี', 'ws.spec.water': 'มีเฉพาะรูน้ำหล่อเย็น', 'ws.spec.mtc': 'ติดตั้งเครื่องควบคุมอุณหภูมิ',
+    'ws.chartNote': '※ แท่งกราฟคือจำนวน warm shot ต่อการเริ่มเดินเครื่อง สีแดง: ไม่มี, ส้ม: มีเฉพาะรูน้ำหล่อเย็น, เขียว: ติดตั้งแล้ว',
+    'ws.note': '※ จำนวนครั้งเริ่มเดินเครื่องประมาณจาก [วันทำงาน × ครั้ง/วัน] เนื่องจากไม่มีค่าจริงในชีต · จำนวนช็อต = จำนวน warm shot ÷ คาวิตี้ · สเปกที่ตั้งไว้จะถูกบันทึกในเบราว์เซอร์',
+    'ws.cmp': '✅ เปรียบเทียบตามสเปก — {a}: {av} ต่อครั้ง · {b}: {bv} ต่อครั้ง → ต่างกัน {diff} ({pct}%) ใช้เป็นฐานคำนวณความคุ้มค่าการลงทุน',
+    'ws.cmp.none': 'ℹ ยังไม่มีกลุ่มเครื่องที่สเปกต่างกันจึงยังเปรียบเทียบไม่ได้',
     'q.pdca': '🔄 บริหารการปรับปรุงด้วย PDCA (เปรียบเทียบก่อน-หลัง รายการ Worst)',
     'q.tonnage': '⚖️ เปรียบเทียบเครื่องจักรตามตัน (เครื่องตันเท่ากัน·โมเดลเดียวกัน)',
     'trend.group': 'ประเภท', 'trend.eq': 'เครื่องจักร', 'trend.model': 'โมเดล',
@@ -774,6 +842,23 @@ const I18N = {
     'model.snapshot': '※ Live sync for the Model detail tab is not available, so the W28 (2026-07-01~07-07) snapshot is shown. Adding Model and defect-quantity columns to the quality (Q) sheet enables automatic updates.',
     'q.modelStatus': '🧩 Quality by model (model-level PPM/Sigma)',
     'q.eqDetail': '📋 Machine detail (PPM / Sigma / grade)',
+    'ws.title': '🔥 Warm-shot structural loss (by mold thermal spec)',
+    'ws.desc': 'Warm shots are not process defects — they are a structural loss caused by heating the die with production shots instead of a mold temperature controller. Set each machine\u2019s thermal spec below and warm shots per start-up are compared automatically across specs.',
+    'ws.cycle': 'Avg cycle time (s)', 'ws.cavity': 'Cavities', 'ws.starts': 'Start-ups per day',
+    'ws.rate': 'Machine value (THB/h)', 'ws.unitWt': 'Part weight (g)', 'ws.remelt': 'Remelt cost (THB/kg)',
+    'ws.kpi.qty': 'Total warm shots', 'ws.kpi.share': 'Share of total loss', 'ws.kpi.perStart': 'Warm shots per start-up',
+    'ws.kpi.time': 'Lost run time', 'ws.kpi.cost': 'Converted loss',
+    'ws.kpi.qty.sub': 'Period total (always full warm shot, regardless of basis)', 'ws.kpi.share.sub': 'Total loss = produced − good',
+    'ws.kpi.perStart.sub': 'Working days × start-ups per day', 'ws.kpi.time.sub': 'Shots × cycle time',
+    'ws.kpi.cost.sub': 'Lost run time + remelt cost',
+    'ws.th.eq': 'Machine', 'ws.th.days': 'Working days', 'ws.th.starts': 'Start-ups (est.)', 'ws.th.ws': 'Warm shot qty',
+    'ws.th.shots': 'Shots', 'ws.th.perStart': 'Per start-up', 'ws.th.share': 'Share of loss',
+    'ws.th.hours': 'Lost time (h)', 'ws.th.cost': 'Cost (THB)', 'ws.th.spec': 'Mold thermal spec',
+    'ws.spec.none': 'None', 'ws.spec.water': 'Cooling channel only', 'ws.spec.mtc': 'MTC applied',
+    'ws.chartNote': '※ Bars show warm shots per start-up. Red: none, orange: cooling channel only, green: MTC applied.',
+    'ws.note': '※ Start-ups are estimated as [working days × start-ups per day] because the sheet has no actual count. Shots = warm shot qty ÷ cavities. Thermal specs are stored in this browser.',
+    'ws.cmp': '✅ Spec comparison — {a}: {av} per start-up · {b}: {bv} per start-up → gap {diff} ({pct}%). This gap is the basis for the MTC payback calculation.',
+    'ws.cmp.none': 'ℹ No two different specs are set yet, so no comparison is available. Switch a trial machine to [MTC applied] and the before/after gap is computed automatically.',
     'q.pdca': '🔄 PDCA improvement management (before · after comparison)',
     'q.tonnage': '⚖️ Machine comparison by tonnage (same tonnage · same model cross-check)',
     'trend.group': 'Group by', 'trend.eq': 'Machine', 'trend.model': 'Model',
@@ -1809,6 +1894,152 @@ function renderModelTable() {
   return ranked;
 }
 
+
+/* =========================================================================
+   6b. 웜샷 구조로스 분석 (금형 온조 사양) — WARM SHOT STRUCTURAL LOSS
+   웜샷은 '불량 산정 기준' 설정과 무관하게 항상 전량을 집계한다.
+   ========================================================================= */
+const WS_PARAM_KEY = 'stc_ws_thermal_params_v1';
+const WS_SPEC_KEY  = 'stc_ws_mold_spec_v1';
+const WS_FIELDS = ['cycle','cavity','starts','rate','unitWt','remelt'];
+const WS_SPEC_COLOR = { none:'#e53935', water:'#fb8c00', mtc:'#43a047' };
+let WS_PARAMS = { cycle:60, cavity:1, starts:1, rate:800, unitWt:0, remelt:0 };
+let WS_SPEC = {};   // { 'DC1':'none' | 'water' | 'mtc' }
+
+async function loadWSSettings(){
+  const p = await Store.get(WS_PARAM_KEY);
+  if (p && typeof p === 'object') WS_PARAMS = Object.assign(WS_PARAMS, p);
+  const sp = await Store.get(WS_SPEC_KEY);
+  if (sp && typeof sp === 'object') WS_SPEC = sp;
+  WS_FIELDS.forEach(k => { const el = document.getElementById('ws_'+k); if (el) el.value = WS_PARAMS[k]; });
+}
+function saveWSParams(){
+  WS_FIELDS.forEach(k => {
+    const el = document.getElementById('ws_'+k);
+    if (el){ const v = Number(el.value); if (!isNaN(v) && v >= 0) WS_PARAMS[k] = v; }
+  });
+  if (!WS_PARAMS.cavity || WS_PARAMS.cavity < 1) WS_PARAMS.cavity = 1;
+  if (!WS_PARAMS.starts || WS_PARAMS.starts <= 0) WS_PARAMS.starts = 1;
+  Store.set(WS_PARAM_KEY, WS_PARAMS);
+  if (typeof RAW_Q !== 'undefined' && RAW_Q && RAW_Q.length) renderWarmShotPanel(filteredRows());
+}
+function setWSSpec(eq, val){
+  WS_SPEC[eq] = val;
+  Store.set(WS_SPEC_KEY, WS_SPEC);
+  if (typeof RAW_Q !== 'undefined' && RAW_Q && RAW_Q.length) renderWarmShotPanel(filteredRows());
+}
+function wsSpecOf(eq){ return WS_SPEC[eq] || 'none'; }
+
+function computeWarmShotStats(rows){
+  const byEq = {};
+  let ws = 0, lostAll = 0, total = 0;
+  for (const r of rows){
+    const tq = num(r['Qty_Total']); if (tq <= 0) continue;
+    const lost = Math.max(0, tq - num(r['Qty_Good']));
+    const w = Math.min(lost, warmShotOf(r));
+    const eq = r['설비명']; if (!eq) continue;
+    if (!byEq[eq]) byEq[eq] = { eq, ws:0, lost:0, total:0, days:new Set() };
+    byEq[eq].ws += w; byEq[eq].lost += lost; byEq[eq].total += tq;
+    if (r['일자']) byEq[eq].days.add(r['일자']);
+    ws += w; lostAll += lost; total += tq;
+  }
+  return { byEq, ws, lostAll, total };
+}
+
+function drawWSChart(canvasId, items){
+  const canvas = document.getElementById(canvasId); if (!canvas) return;
+  const { W, H, ctx } = sizeCanvas(canvas);
+  ctx.clearRect(0,0,W,H);
+  if (!items.length){ ctx.fillStyle='#bbb'; ctx.font='13px Arial'; ctx.textAlign='center'; ctx.fillText(t('canvas.noData'), W/2, H/2); return; }
+  const leftM = 56, rightM = 74, topM = 10, botM = 10;
+  const plotW = W - leftM - rightM, plotH = H - topM - botM;
+  const maxV = Math.max.apply(null, items.map(i=>i.perStart)) * 1.12 || 1;
+  const rowH = plotH / items.length, barH = Math.min(rowH * 0.62, 26);
+  ctx.font = '10.5px Arial';
+  items.forEach((it,i)=>{
+    const y = topM + rowH*i + (rowH-barH)/2;
+    const w = plotW * (it.perStart / maxV);
+    ctx.fillStyle = WS_SPEC_COLOR[it.spec] || '#999';
+    ctx.fillRect(leftM, y, w, barH);
+    ctx.fillStyle = '#333'; ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText(it.eq, leftM-6, y+barH/2);
+    ctx.textAlign='left';
+    ctx.fillText(it.perStart.toFixed(1), leftM+w+6, y+barH/2);
+  });
+}
+
+function renderWarmShotPanel(rows){
+  const kpiBox = document.getElementById('wsKpis');
+  const tbody  = document.querySelector('#table-ws tbody');
+  const foot   = document.getElementById('wsFootnote');
+  if (!kpiBox || !tbody) return;
+  const st = computeWarmShotStats(rows || []);
+  const cav = Math.max(1, WS_PARAMS.cavity), spd = Math.max(0.1, WS_PARAMS.starts);
+
+  const items = Object.values(st.byEq).map(e=>{
+    const days   = e.days.size || 0;
+    const starts = Math.max(1, days * spd);
+    const shots  = e.ws / cav;
+    const hours  = shots * WS_PARAMS.cycle / 3600;
+    const cost   = hours * WS_PARAMS.rate + e.ws * (WS_PARAMS.unitWt/1000) * WS_PARAMS.remelt;
+    return { eq:e.eq, days, starts, ws:e.ws, shots, perStart: shots/starts,
+             share: e.lost ? e.ws/e.lost*100 : 0, hours, cost, spec: wsSpecOf(e.eq) };
+  }).sort((a,b)=> b.ws - a.ws);
+
+  const totShots = st.ws / cav;
+  const totHours = totShots * WS_PARAMS.cycle / 3600;
+  const totCost  = totHours * WS_PARAMS.rate + st.ws * (WS_PARAMS.unitWt/1000) * WS_PARAMS.remelt;
+  const totStarts = items.reduce((a,b)=>a+b.starts, 0);
+  const perStartAll = totStarts ? totShots/totStarts : 0;
+
+  const kpi = (label, value, sub, color) =>
+    `<div class="kpi-card" style="border-top-color:${color};"><div class="kpi-label">${label}</div>
+     <div class="kpi-value">${value}</div><div class="kpi-sub">${sub}</div></div>`;
+  kpiBox.innerHTML =
+    kpi(t('ws.kpi.qty'),   Math.round(st.ws).toLocaleString(),        t('ws.kpi.qty.sub'),   '#f5a623') +
+    kpi(t('ws.kpi.share'), (st.lostAll ? st.ws/st.lostAll*100 : 0).toFixed(1)+'%', t('ws.kpi.share.sub'), '#f5a623') +
+    kpi(t('ws.kpi.perStart'), perStartAll.toFixed(1),                 t('ws.kpi.perStart.sub'), '#e53935') +
+    kpi(t('ws.kpi.time'),  totHours.toFixed(1)+' h',                  t('ws.kpi.time.sub'),  '#7c4dff') +
+    kpi(t('ws.kpi.cost'),  Math.round(totCost).toLocaleString()+' ฿', t('ws.kpi.cost.sub'),  '#1e88e5');
+
+  tbody.innerHTML = '';
+  items.forEach(it=>{
+    const opts = ['none','water','mtc'].map(v=>
+      `<option value="${v}"${it.spec===v?' selected':''}>${t('ws.spec.'+v)}</option>`).join('');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${it.eq}</td><td>${it.days.toLocaleString()}</td><td>${it.starts.toFixed(1)}</td>
+      <td>${Math.round(it.ws).toLocaleString()}</td><td>${Math.round(it.shots).toLocaleString()}</td>
+      <td><b>${it.perStart.toFixed(1)}</b></td><td>${it.share.toFixed(1)}%</td>
+      <td>${it.hours.toFixed(1)}</td><td>${Math.round(it.cost).toLocaleString()}</td>
+      <td style="text-align:center;"><select onchange="setWSSpec('${it.eq.replace(/'/g,"\\'")}', this.value)"
+        style="font-size:11.5px;padding:2px 4px;border:1px solid ${WS_SPEC_COLOR[it.spec]};border-radius:4px;color:${WS_SPEC_COLOR[it.spec]};font-weight:700;">${opts}</select></td>`;
+    tbody.appendChild(tr);
+  });
+
+  drawWSChart('chart-ws', items.slice(0, 25));
+
+  // 사양 그룹별 비교 — 온조기 도입 근거 수치
+  const g = {};
+  items.forEach(it=>{
+    if (!g[it.spec]) g[it.spec] = { shots:0, starts:0 };
+    g[it.spec].shots += it.shots; g[it.spec].starts += it.starts;
+  });
+  const keys = Object.keys(g).filter(k=>g[k].starts>0);
+  let cmp = t('ws.cmp.none');
+  if (keys.length >= 2){
+    const rank = { none:0, water:1, mtc:2 };
+    keys.sort((a,b)=>rank[a]-rank[b]);
+    const a = keys[0], b = keys[keys.length-1];
+    const av = g[a].shots/g[a].starts, bv = g[b].shots/g[b].starts;
+    const diff = av - bv;
+    const pct = av > 0 ? (diff/av*100) : 0;
+    cmp = t('ws.cmp', { a: t('ws.spec.'+a), b: t('ws.spec.'+b),
+                        av: av.toFixed(1), bv: bv.toFixed(1),
+                        diff: diff.toFixed(1), pct: pct.toFixed(0) });
+  }
+  if (foot) foot.innerHTML = cmp + '<br>' + t('ws.note');
+}
+
 function renderAll() {
   const rows = filteredRows();
   const stats = computeQualityStats(rows);
@@ -1840,6 +2071,7 @@ function renderAll() {
   const modelTop = modelRanked.map(m=>({label:m.model, ppm:m.ppm, sigma:m.sigma}));
   drawModelRankChart('chart-model', modelTop, targetPPMValue());
 
+  renderWarmShotPanel(rows);
   renderTonnageGroupTable(stats);
   renderTonnageCrossTable();
   renderWeeklyAnalysis();
@@ -2321,6 +2553,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener('DOMContentLoaded', async () => {
   applyStaticI18n();
+  await loadWSSettings();
   try {
     const cache = await Store.get(STORE_KEY);
     if (cache && cache.rawQ && cache.rawQ.rows && cache.rawQ.rows.length) {
