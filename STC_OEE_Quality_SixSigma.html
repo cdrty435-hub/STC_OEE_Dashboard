@@ -180,6 +180,51 @@
     .qr-grid{grid-template-columns:1fr;}
     .qr-kpis{grid-template-columns:repeat(3,1fr);}
   }
+
+  /* ===================== 공정품질 경영관리 (Process Quality Mgmt) ===================== */
+  .pq-card .quad-title { border-bottom-color:#00897b; }
+  .pq-desc { font-size:11.5px; color:#8a949e; line-height:1.7; margin:-6px 0 12px; }
+  .pq-tools { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; padding:10px 12px;
+    background:#f6f8fa; border:1px solid #e4e9ee; border-radius:8px; font-size:12.5px; margin-bottom:14px; }
+  .pq-tools label { font-size:11px; color:#7a848e; font-weight:700; letter-spacing:.03em; }
+  .pq-tools input[type=number], .pq-tools input[type=text], .pq-tools input[type=date], .pq-tools select {
+    padding:5px 8px; border:1px solid #cfd6de; border-radius:6px; font-size:12.5px; background:#fff; color:#222; min-width:0; }
+  .pq-tools input[type=number] { width:92px; text-align:right; }
+  .pq-btn { padding:6px 14px; border:1px solid #00695c; background:#00796b; color:#fff;
+    border-radius:6px; font-size:12.5px; font-weight:700; cursor:pointer; }
+  .pq-btn.ghost { background:#fff; color:#00695c; }
+  .pq-btn:hover { filter:brightness(1.08); }
+  details.pq-fold { border:1px solid #e4e9ee; border-radius:8px; padding:8px 12px; margin-bottom:14px; background:#fbfcfd; }
+  details.pq-fold > summary { cursor:pointer; font-size:12.5px; font-weight:700; color:#00695c; }
+  .pq-map-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px 10px; margin-top:10px; }
+  .pq-map-grid div { display:flex; align-items:center; gap:6px; font-size:11.5px; color:#4a545e; }
+  .pq-map-grid select { flex:1; padding:3px 5px; border:1px solid #d9e0e7; border-radius:5px; font-size:11px; min-width:0; }
+
+  table.pqm { border-collapse:collapse; font-size:11.5px; white-space:nowrap; width:100%; }
+  table.pqm th, table.pqm td { border:1px solid #e3e8ee; padding:4px 7px; text-align:right; }
+  table.pqm th { background:#eef4f9; color:#25507f; text-align:center; font-weight:700; }
+  table.pqm th.yr { background:#e7f0e9; }
+  table.pqm td.l, table.pqm th.l { text-align:left; }
+  table.pqm td.gname { background:#f7fbfd; font-weight:700; color:#25507f; text-align:left; vertical-align:middle; }
+  table.pqm td.rowlbl { text-align:left; color:#4a545e; }
+  table.pqm tr.r-rate td { color:#c62828; font-weight:700; }
+  table.pqm tr.r-tot td { background:#eaf7ee; font-weight:700; }
+  table.pqm tr.r-tot.r-rate td { color:#b71c1c; }
+  table.pqm tr.r-cost td { background:#fdf3e6; }
+  table.pqm td.yrcell { background:#f4f8f4; font-weight:700; }
+  table.pqm input.pq-in { width:94px; border:1px solid #d9e0e7; border-radius:4px; padding:2px 4px;
+    font-size:11px; text-align:right; background:#fff; }
+  table.pqm td.hi { background:#ffe9ec; }
+
+  .pq-legend { display:flex; flex-wrap:wrap; gap:14px; margin-top:8px; font-size:11.5px; color:#555; }
+  .pq-legend span i { display:inline-block; width:14px; height:3px; border-radius:2px; margin-right:5px; vertical-align:middle; }
+  .pq-bar { background:#eef1f5; border-radius:6px; height:9px; overflow:hidden; min-width:70px; }
+  .pq-bar i { display:block; height:100%; background:#43a047; }
+  .pq-st { display:inline-block; padding:2px 9px; border-radius:11px; font-size:10.5px; font-weight:700; color:#fff; }
+  .pq-st.done { background:#2e7d32; } .pq-st.run { background:#1e88e5; }
+  .pq-st.late { background:#e53935; } .pq-st.hold { background:#8a949e; }
+  .pq-two { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:1100px){ .pq-two { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -517,6 +562,126 @@
       <canvas id="chart-month-q" style="width:100%;height:250px;display:block;"></canvas>
     </div>
     <div class="footnote" data-i18n="mq.foot">※ 월간은 확정 집계, 주간은 조업일수·특근 편차가 커서 기준이 다릅니다. 주차 단위 추이는 [주간 품질보고] 탭에서 보십시오.</div>
+  </div>
+
+
+  <!-- ===================== 공정품질 경영관리 (보고서 서식 연계) ===================== -->
+  <div class="quad-card pq-card">
+    <div class="quad-title" data-i18n="pq.s1.title">📊 월별 공정품질 현황 (공정군 × 월 매트릭스)</div>
+    <div class="pq-desc" data-i18n="pq.s1.desc">사내 「공정품질 현황」 보고서 서식을 그대로 재현합니다 — 공정군별 생산수량 · 불량수량 · 실패비용(F-AMOUNT) · 불량률을 월 단위로 집계하고, 전년 대비 개선폭을 자동 계산합니다.</div>
+
+    <div class="kpi-strip" id="pqKpis" style="margin-bottom:16px;"></div>
+
+    <details class="pq-fold">
+      <summary data-i18n="pq.setup">⚙ 공정군 매핑 · 실패비용 단가 설정</summary>
+      <div class="pq-tools" style="margin-top:10px;">
+        <div><label data-i18n="pq.costMode">실패비용 산정</label>&nbsp;
+          <select id="pq_costMode" onchange="pqSaveParam()">
+            <option value="auto" data-i18n="pq.costMode.auto">자동 (단중 × 재용해단가 + 부가비)</option>
+            <option value="fixed" data-i18n="pq.costMode.fixed">직접입력 (불량 1개당 THB)</option>
+          </select></div>
+        <div><label data-i18n="pq.unitWt">단중(g)</label>&nbsp;
+          <input type="number" id="pq_unitWt" min="0" step="1" onchange="pqSaveParam()"></div>
+        <div><label data-i18n="pq.remelt">재용해 단가(THB/kg)</label>&nbsp;
+          <input type="number" id="pq_remelt" min="0" step="0.5" onchange="pqSaveParam()"></div>
+        <div><label data-i18n="pq.addCost">개당 부가비(THB)</label>&nbsp;
+          <input type="number" id="pq_addCost" min="0" step="0.5" onchange="pqSaveParam()"></div>
+        <div><label data-i18n="pq.fixedCost">직접입력 단가(THB/개)</label>&nbsp;
+          <input type="number" id="pq_fixed" min="0" step="0.5" onchange="pqSaveParam()"></div>
+        <div><label data-i18n="pq.months">표시 개월수</label>&nbsp;
+          <select id="pq_months" onchange="renderPQAll()">
+            <option value="6">6</option><option value="12" selected>12</option><option value="18">18</option>
+          </select></div>
+      </div>
+      <div style="font-size:11.5px;font-weight:700;color:#00695c;margin-top:6px;" data-i18n="pq.mapTitle">설비 → 공정군 매핑 (미지정 시 톤수 기준 자동분류)</div>
+      <div class="pq-map-grid" id="pqMapGrid"></div>
+    </details>
+
+    <div class="pq-two">
+      <div>
+        <div style="font-size:12.5px;font-weight:700;color:#25507f;margin-bottom:6px;" data-i18n="pq.chart.status">PROCESS QUALITY STATUS — 월별 생산수량 · 불량률</div>
+        <div class="chart-wrap"><canvas id="chart-pq-status"></canvas></div>
+      </div>
+      <div>
+        <div style="font-size:12.5px;font-weight:700;color:#25507f;margin-bottom:6px;" data-i18n="pq.chart.trend">PROCESS QUALITY TREND by MONTHLY — 공정군별 불량률</div>
+        <div class="chart-wrap"><canvas id="chart-pq-trend"></canvas></div>
+        <div class="pq-legend" id="pqTrendLegend"></div>
+      </div>
+    </div>
+
+    <div class="table-wrap scroll-x" style="margin-top:18px;max-height:none;">
+      <table class="pqm" id="table-pq-matrix"><thead></thead><tbody></tbody></table>
+    </div>
+    <div class="footnote" id="pqMatrixFoot"></div>
+  </div>
+
+  <div class="quad-card pq-card">
+    <div class="quad-title" data-i18n="pq.s2.title">💰 품질실패비용 (F-COST) 관리 — 매출 대비 품질비용</div>
+    <div class="pq-desc" data-i18n="pq.s2.desc">불량수량에 단가를 적용한 실패비용과 매출 대비 비율(F-COST RATE)을 월별로 관리합니다. 매출은 위 매트릭스의 SALES 행에 입력하면 자동 반영됩니다.</div>
+    <div class="chart-wrap tall"><canvas id="chart-pq-cost"></canvas></div>
+    <div class="footnote" id="pqCostFoot"></div>
+  </div>
+
+  <div class="quad-card pq-card">
+    <div class="quad-title" data-i18n="pq.s3.title">📈 품질수준 Level-Up 로드맵 (반기별 목표 · PDCA)</div>
+    <div class="pq-desc" data-i18n="pq.s3.desc">반기 단위로 목표 불량률을 설정하고 실적을 계단형으로 비교합니다 — 개선(Level Up) 구간과 유지(Hold) 구간을 구분해 PDCA 사이클로 관리합니다.</div>
+    <div class="chart-wrap tall"><canvas id="chart-pq-level"></canvas></div>
+    <div class="table-wrap scroll-x" style="margin-top:14px;max-height:none;">
+      <table class="pqm" id="table-pq-level"><thead></thead><tbody></tbody></table>
+    </div>
+    <div class="footnote" id="pqLevelFoot"></div>
+  </div>
+
+  <div class="quad-card pq-card">
+    <div class="quad-title" data-i18n="pq.s4.title">🎯 집중개선 아이템 (현재 → 목표 관리)</div>
+    <div class="pq-desc" data-i18n="pq.s4.desc">보고서의 집중개선 아이템 표와 동일한 방식입니다 — 대상(설비 / 모델)과 목표 불량률만 입력하면 현재 실적과 달성 진척률이 원자료에서 자동 계산됩니다.</div>
+    <div class="pq-tools">
+      <div><label data-i18n="pq.f.kind">대상구분</label>&nbsp;
+        <select id="pqf_kind" onchange="pqFillTargetOptions()">
+          <option value="eq" data-i18n="pq.f.eq">설비</option>
+          <option value="model" data-i18n="pq.f.model">모델</option>
+        </select></div>
+      <div><label data-i18n="pq.f.target">대상</label>&nbsp;
+        <select id="pqf_target" style="min-width:170px;"></select></div>
+      <div><label data-i18n="pq.f.goal">목표 불량률(%)</label>&nbsp;
+        <input type="number" id="pqf_goal" min="0" step="0.01" style="width:80px;"></div>
+      <div><label data-i18n="pq.f.owner">담당</label>&nbsp;
+        <input type="text" id="pqf_owner" size="8"></div>
+      <div><label data-i18n="pq.f.due">완료목표</label>&nbsp;
+        <input type="date" id="pqf_due"></div>
+      <button type="button" class="pq-btn" onclick="pqAddFocus()" data-i18n="pq.f.add">＋ 추가</button>
+      <button type="button" class="pq-btn ghost" onclick="pqAutoFocus()" data-i18n="pq.f.auto">⚡ Worst 자동추천</button>
+      <span style="font-size:11px;color:#8a949e;" data-i18n="pq.f.hint">현재 불량률은 최근 3개월 실적 기준으로 매 조회 시 재계산됩니다</span>
+    </div>
+    <div class="table-wrap scroll-x">
+      <table class="dtable" id="table-pq-focus">
+        <thead><tr>
+          <th data-i18n="pq.th.div">구분</th><th data-i18n="pq.th.target">대상</th><th data-i18n="pq.th.ton">톤수</th>
+          <th data-i18n="pq.th.base">기준 불량률</th><th data-i18n="pq.th.cur">현재 불량률</th><th data-i18n="pq.th.goal">목표</th>
+          <th data-i18n="pq.th.prog">진척</th><th data-i18n="pq.th.owner">담당</th><th data-i18n="pq.th.due">완료목표</th>
+          <th data-i18n="pq.th.status">상태</th><th></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="footnote" id="pqFocusFoot"></div>
+  </div>
+
+  <div class="quad-card pq-card">
+    <div class="quad-title" data-i18n="pq.s5.title">📉 불량유형 WORST-5 월별 추이 (점유율 · 불량률)</div>
+    <div class="pq-desc" data-i18n="pq.s5.desc">보고서 하단의 WORST-5 2단 차트와 동일한 구성입니다 — 왼쪽은 전체 불량 중 점유율, 오른쪽은 생산수량 대비 불량률입니다.</div>
+    <div class="pq-two">
+      <div>
+        <div style="font-size:12.5px;font-weight:700;color:#25507f;margin-bottom:6px;" data-i18n="pq.share">WORST-5 불량 점유율 추이</div>
+        <div class="chart-wrap"><canvas id="chart-pq-d5-share"></canvas></div>
+      </div>
+      <div>
+        <div style="font-size:12.5px;font-weight:700;color:#25507f;margin-bottom:6px;" data-i18n="pq.rate">WORST-5 불량률 추이</div>
+        <div class="chart-wrap"><canvas id="chart-pq-d5-rate"></canvas></div>
+      </div>
+    </div>
+    <div class="pq-legend" id="pqD5Legend"></div>
+    <div class="footnote" id="pqD5Foot"></div>
   </div>
 
 </div>
@@ -2078,6 +2243,7 @@ function renderAll() {
 
   renderTrendChart();
   if (typeof renderMonthlyQPanel === 'function') renderMonthlyQPanel();
+  if (typeof renderPQAll === 'function') renderPQAll();
   if (typeof renderQReport === 'function' && QR_VIEW === 'report') renderQReport();
 }
 
@@ -2272,8 +2438,10 @@ function renderPDCATable() {
       톤수는 자주 바뀌지 않는 참조정보라 코드에 직접 내장 — 톤수 변경 시 이 표만 수정)
    ========================================================================= */
 const EQUIP_TONNAGE = {
-  DC1:200, DC2:125, DC3:350, DC4:350, DC5:350, DC6:350, DC7:350, DC8:280,
-  DC9:350, DC10:350, DC11:500, DC12:500, DC13:350, DC15:650, DC16:125,
+  /* 키는 normEqName() 정규화 결과(DC01~DC23)와 동일하게 둔다 —
+     시트의 '설비명'이 DC01 형태로 정규화되므로 DC1 표기면 톤수 조회가 실패한다 */
+  DC01:200, DC02:125, DC03:350, DC04:350, DC05:350, DC06:350, DC07:350, DC08:280,
+  DC09:350, DC10:350, DC11:500, DC12:500, DC13:350, DC15:650, DC16:125,
   DC17:125, DC18:125, DC19:90, DC20:800, DC21:650, DC22:350, DC23:350
 };
 
@@ -2554,6 +2722,7 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', async () => {
   applyStaticI18n();
   await loadWSSettings();
+  await pqLoadSettings();
   try {
     const cache = await Store.get(STORE_KEY);
     if (cache && cache.rawQ && cache.rawQ.rows && cache.rawQ.rows.length) {
@@ -3227,6 +3396,906 @@ function renderQReportInner(){
 
   qrFillNote();
   renderQFoot();
+}
+
+
+/* =========================================================================
+   12. 공정품질 경영관리 (Process Quality Management)
+       사내 「공정품질 현황 / 공정품질 개선방향」 보고서 서식을 대시보드에 접목.
+       · 공정군(톤수군) × 월 매트릭스 : PROD / DEFECT / F-AMOUNT / DEFECT RATE
+       · 품질실패비용(F-COST) 과 매출 대비 비율
+       · 반기별 Level-Up 로드맵 (목표 계단 + 실적)
+       · 집중개선 아이템 (현재 → 목표, 진척 자동계산)
+       · 불량유형 WORST-5 월별 추이 (점유율 / 불량률)
+   ========================================================================= */
+Object.assign(I18N.ko, {
+  'pq.s1.title':'📊 월별 공정품질 현황 (공정군 × 월 매트릭스)',
+  'pq.s1.desc':'사내 「공정품질 현황」 보고서 서식을 그대로 재현합니다 — 공정군별 생산수량 · 불량수량 · 실패비용(F-AMOUNT) · 불량률을 월 단위로 집계하고, 전년 대비 개선폭을 자동 계산합니다.',
+  'pq.s2.title':'💰 품질실패비용 (F-COST) 관리 — 매출 대비 품질비용',
+  'pq.s2.desc':'불량수량에 단가를 적용한 실패비용과 매출 대비 비율(F-COST RATE)을 월별로 관리합니다. 매출은 위 매트릭스의 SALES 행에 입력하면 자동 반영됩니다.',
+  'pq.s3.title':'📈 품질수준 Level-Up 로드맵 (반기별 목표 · PDCA)',
+  'pq.s3.desc':'반기 단위로 목표 불량률을 설정하고 실적을 계단형으로 비교합니다 — 개선(Level Up) 구간과 유지(Hold) 구간을 구분해 PDCA 사이클로 관리합니다.',
+  'pq.s4.title':'🎯 집중개선 아이템 (현재 → 목표 관리)',
+  'pq.s4.desc':'보고서의 집중개선 아이템 표와 동일한 방식입니다 — 대상(설비 / 모델)과 목표 불량률만 입력하면 현재 실적과 달성 진척률이 원자료에서 자동 계산됩니다.',
+  'pq.s5.title':'📉 불량유형 WORST-5 월별 추이 (점유율 · 불량률)',
+  'pq.s5.desc':'보고서 하단의 WORST-5 2단 차트와 동일한 구성입니다 — 왼쪽은 전체 불량 중 점유율, 오른쪽은 생산수량 대비 불량률입니다.',
+  'pq.setup':'⚙ 공정군 매핑 · 실패비용 단가 설정',
+  'pq.costMode':'실패비용 산정', 'pq.costMode.auto':'자동 (단중 × 재용해단가 + 부가비)', 'pq.costMode.fixed':'직접입력 (불량 1개당 THB)',
+  'pq.unitWt':'단중(g)', 'pq.remelt':'재용해 단가(THB/kg)', 'pq.addCost':'개당 부가비(THB)',
+  'pq.fixedCost':'직접입력 단가(THB/개)', 'pq.months':'표시 개월수',
+  'pq.mapTitle':'설비 → 공정군 매핑 (미지정 시 톤수 기준 자동분류)',
+  'pq.chart.status':'PROCESS QUALITY STATUS — 월별 생산수량 · 불량률',
+  'pq.chart.trend':'PROCESS QUALITY TREND by MONTHLY — 공정군별 불량률',
+  'pq.g.S':'소형 (~125T)', 'pq.g.M':'중형 (200~350T)', 'pq.g.L':'대형 (500T~)', 'pq.g.X':'미지정',
+  'pq.detail':'DETAIL', 'pq.yearly':'YEARLY', 'pq.monthly':'MONTHLY',
+  'pq.row.prod':'PRODUCTION QTY', 'pq.row.def':'DEFECT QTY', 'pq.row.famt':'F-AMOUNT (THB)',
+  'pq.row.rate':'DEFECT RATE (%)', 'pq.row.sales':'SALES (THB)', 'pq.row.fcost':'F-COST RATE (%)',
+  'pq.total':'TOTAL', 'pq.qcost':'QUALITY COST',
+  'pq.k.curY':'당해년 불량률', 'pq.k.vsPrevY':'전년({y}) {v}', 'pq.k.noPrevY':'전년 실적 없음',
+  'pq.k.curM':'당월 불량률', 'pq.k.vsPrevM':'전월 대비 {v}', 'pq.k.fcostY':'당해년 실패비용',
+  'pq.k.fcostRate':'매출 대비 F-COST', 'pq.k.worstG':'Worst 공정군 (최근 3개월)',
+  'pq.k.noSales':'매출 미입력', 'pq.k.perPc':'불량 1개당 {v} THB',
+  'pq.foot.matrix':'※ 불량률은 상단 [불량 산정 기준] 선택({basis})을 따릅니다. 실패비용 = 불량수량 × {cost} THB/개. 매출(SALES) 칸은 직접 입력하면 브라우저에 저장됩니다. 제외 설비: {ex}',
+  'pq.basis.all':'전체 로스(웜샷 포함)', 'pq.basis.defect':'순수 불량만',
+  'pq.foot.cost':'※ 막대는 월별 실패비용(THB), 선은 매출 대비 F-COST RATE(%)입니다. 매출이 입력된 달만 비율이 표시됩니다. 당해년 누계 실패비용 {c} THB · 매출 입력분 {s} THB · 평균 {r}',
+  'pq.lv.half':'반기', 'pq.lv.actual':'실적 불량률', 'pq.lv.target':'목표 불량률', 'pq.lv.gap':'목표 대비',
+  'pq.lv.kind':'구분', 'pq.lv.up':'개선 (Level Up)', 'pq.lv.hold':'유지 (Hold)', 'pq.lv.na':'미설정',
+  'pq.lv.axis':'불량률(%) — 위로 갈수록 개선',
+  'pq.foot.level':'※ 목표(%) 칸에 반기 목표를 입력하면 계단 차트와 달성 판정이 자동 갱신됩니다. 실적은 원자료 기준 자동 집계입니다.',
+  'pq.f.kind':'대상구분', 'pq.f.eq':'설비', 'pq.f.model':'모델', 'pq.f.target':'대상',
+  'pq.f.goal':'목표 불량률(%)', 'pq.f.owner':'담당', 'pq.f.due':'완료목표',
+  'pq.f.add':'＋ 추가', 'pq.f.auto':'⚡ Worst 자동추천',
+  'pq.f.hint':'현재 불량률은 최근 3개월 실적 기준으로 매 조회 시 재계산됩니다',
+  'pq.th.div':'구분', 'pq.th.target':'대상', 'pq.th.ton':'톤수', 'pq.th.base':'기준 불량률',
+  'pq.th.cur':'현재 불량률', 'pq.th.goal':'목표', 'pq.th.prog':'진척', 'pq.th.owner':'담당',
+  'pq.th.due':'완료목표', 'pq.th.status':'상태',
+  'pq.st.done':'달성', 'pq.st.run':'진행중', 'pq.st.late':'악화', 'pq.st.hold':'대기',
+  'pq.f.empty':'※ 등록된 집중개선 아이템이 없습니다 — [Worst 자동추천]을 누르면 최근 3개월 실적 기준 Worst 대상이 자동 등록됩니다.',
+  'pq.f.foot':'※ 기준 불량률은 등록 시점 실적, 현재 불량률은 최근 3개월({p}) 실적입니다. 진척 = (기준−현재) ÷ (기준−목표).',
+  'pq.share':'WORST-5 불량 점유율 추이', 'pq.rate':'WORST-5 불량률 추이',
+  'pq.foot.d5':'※ 점유율은 해당 월 전체 불량 중 비중, 불량률은 해당 월 생산수량 대비 비율입니다. 대상 기간 누계 상위 5개 유형만 표시합니다.',
+  'pq.nodata':'데이터 없음'
+});
+Object.assign(I18N.th, {
+  'pq.s1.title':'📊 สถานะคุณภาพกระบวนการรายเดือน (กลุ่มกระบวนการ × เดือน)',
+  'pq.s1.desc':'ทำซ้ำแบบฟอร์มรายงาน «สถานะคุณภาพกระบวนการ» ของบริษัท — รวมยอดผลิต ของเสีย ต้นทุนความล้มเหลว และอัตราของเสียรายเดือนตามกลุ่มกระบวนการ พร้อมเทียบกับปีก่อนอัตโนมัติ',
+  'pq.s2.title':'💰 การจัดการต้นทุนคุณภาพ (F-COST) เทียบยอดขาย',
+  'pq.s2.desc':'จัดการต้นทุนความล้มเหลวและสัดส่วนต่อยอดขายรายเดือน กรอกยอดขายในแถว SALES ของตารางด้านบนแล้วระบบจะคำนวณให้',
+  'pq.s3.title':'📈 แผน Level-Up ระดับคุณภาพ (เป้าหมายรายครึ่งปี · PDCA)',
+  'pq.s3.desc':'ตั้งเป้าอัตราของเสียรายครึ่งปีและเทียบผลจริงแบบขั้นบันได — แยกช่วงปรับปรุงกับช่วงรักษาระดับตามวงจร PDCA',
+  'pq.s4.title':'🎯 รายการปรับปรุงเน้นหนัก (ปัจจุบัน → เป้าหมาย)',
+  'pq.s4.desc':'รูปแบบเดียวกับตารางรายการปรับปรุงในรายงาน — กรอกเป้าหมายแล้วระบบคำนวณผลปัจจุบันและความคืบหน้าจากข้อมูลดิบ',
+  'pq.s5.title':'📉 แนวโน้มรายเดือน WORST-5 ตามประเภทของเสีย',
+  'pq.s5.desc':'เหมือนกราฟ 2 ช่องด้านล่างของรายงาน — ซ้ายคือสัดส่วนในของเสียทั้งหมด ขวาคืออัตราต่อยอดผลิต',
+  'pq.setup':'⚙ ตั้งค่ากลุ่มกระบวนการ · ต้นทุนความล้มเหลว',
+  'pq.costMode':'วิธีคิดต้นทุน', 'pq.costMode.auto':'อัตโนมัติ (น้ำหนัก × ค่าหลอมซ้ำ + ค่าเพิ่ม)', 'pq.costMode.fixed':'กรอกเอง (THB/ชิ้น)',
+  'pq.unitWt':'น้ำหนักชิ้น (g)', 'pq.remelt':'ค่าหลอมซ้ำ (THB/kg)', 'pq.addCost':'ค่าเพิ่มต่อชิ้น (THB)',
+  'pq.fixedCost':'ต้นทุนกรอกเอง (THB/ชิ้น)', 'pq.months':'จำนวนเดือนที่แสดง',
+  'pq.mapTitle':'จับคู่เครื่อง → กลุ่มกระบวนการ (ถ้าไม่กำหนดจะแบ่งตามขนาดตัน)',
+  'pq.chart.status':'PROCESS QUALITY STATUS — ยอดผลิต · อัตราของเสียรายเดือน',
+  'pq.chart.trend':'PROCESS QUALITY TREND by MONTHLY — อัตราของเสียตามกลุ่ม',
+  'pq.g.S':'เล็ก (~125T)', 'pq.g.M':'กลาง (200~350T)', 'pq.g.L':'ใหญ่ (500T~)', 'pq.g.X':'ยังไม่กำหนด',
+  'pq.detail':'DETAIL', 'pq.yearly':'YEARLY', 'pq.monthly':'MONTHLY',
+  'pq.row.prod':'PRODUCTION QTY', 'pq.row.def':'DEFECT QTY', 'pq.row.famt':'F-AMOUNT (THB)',
+  'pq.row.rate':'DEFECT RATE (%)', 'pq.row.sales':'SALES (THB)', 'pq.row.fcost':'F-COST RATE (%)',
+  'pq.total':'TOTAL', 'pq.qcost':'QUALITY COST',
+  'pq.k.curY':'อัตราของเสียปีนี้', 'pq.k.vsPrevY':'ปีก่อน({y}) {v}', 'pq.k.noPrevY':'ไม่มีข้อมูลปีก่อน',
+  'pq.k.curM':'อัตราของเสียเดือนนี้', 'pq.k.vsPrevM':'เทียบเดือนก่อน {v}', 'pq.k.fcostY':'ต้นทุนความล้มเหลวปีนี้',
+  'pq.k.fcostRate':'F-COST ต่อยอดขาย', 'pq.k.worstG':'กลุ่มแย่สุด (3 เดือนล่าสุด)',
+  'pq.k.noSales':'ยังไม่กรอกยอดขาย', 'pq.k.perPc':'{v} THB ต่อชิ้นเสีย',
+  'pq.foot.matrix':'※ อัตราของเสียอิงตัวเลือก [เกณฑ์ของเสีย] ด้านบน ({basis}) · ต้นทุน = จำนวนของเสีย × {cost} THB/ชิ้น · ช่อง SALES กรอกแล้วบันทึกในเบราว์เซอร์ · เครื่องที่ยกเว้น: {ex}',
+  'pq.basis.all':'ความสูญเสียรวม (รวม warm shot)', 'pq.basis.defect':'ของเสียล้วน',
+  'pq.foot.cost':'※ แท่ง = ต้นทุนความล้มเหลว (THB) เส้น = F-COST RATE (%) แสดงเฉพาะเดือนที่กรอกยอดขาย · สะสมปีนี้ {c} THB · ยอดขายที่กรอก {s} THB · เฉลี่ย {r}',
+  'pq.lv.half':'ครึ่งปี', 'pq.lv.actual':'อัตราจริง', 'pq.lv.target':'เป้าหมาย', 'pq.lv.gap':'เทียบเป้า',
+  'pq.lv.kind':'ประเภท', 'pq.lv.up':'ปรับปรุง (Level Up)', 'pq.lv.hold':'รักษาระดับ (Hold)', 'pq.lv.na':'ยังไม่ตั้ง',
+  'pq.lv.axis':'อัตราของเสีย (%) — สูงขึ้น = ดีขึ้น',
+  'pq.foot.level':'※ กรอกเป้าหมายรายครึ่งปีแล้วกราฟขั้นบันไดและผลการประเมินจะอัปเดตอัตโนมัติ',
+  'pq.f.kind':'ประเภทเป้าหมาย', 'pq.f.eq':'เครื่อง', 'pq.f.model':'โมเดล', 'pq.f.target':'เป้าหมาย',
+  'pq.f.goal':'อัตราเป้าหมาย (%)', 'pq.f.owner':'ผู้รับผิดชอบ', 'pq.f.due':'กำหนดเสร็จ',
+  'pq.f.add':'＋ เพิ่ม', 'pq.f.auto':'⚡ แนะนำ Worst อัตโนมัติ',
+  'pq.f.hint':'อัตราปัจจุบันคำนวณใหม่จากผล 3 เดือนล่าสุดทุกครั้ง',
+  'pq.th.div':'ประเภท', 'pq.th.target':'เป้าหมาย', 'pq.th.ton':'ตัน', 'pq.th.base':'อัตราตั้งต้น',
+  'pq.th.cur':'อัตราปัจจุบัน', 'pq.th.goal':'เป้าหมาย', 'pq.th.prog':'ความคืบหน้า', 'pq.th.owner':'ผู้รับผิดชอบ',
+  'pq.th.due':'กำหนดเสร็จ', 'pq.th.status':'สถานะ',
+  'pq.st.done':'สำเร็จ', 'pq.st.run':'ดำเนินการ', 'pq.st.late':'แย่ลง', 'pq.st.hold':'รอ',
+  'pq.f.empty':'※ ยังไม่มีรายการ — กด [แนะนำ Worst อัตโนมัติ] เพื่อเพิ่มรายการจากผล 3 เดือนล่าสุด',
+  'pq.f.foot':'※ อัตราตั้งต้น = ตอนเพิ่มรายการ · อัตราปัจจุบัน = 3 เดือนล่าสุด ({p}) · ความคืบหน้า = (ตั้งต้น−ปัจจุบัน) ÷ (ตั้งต้น−เป้าหมาย)',
+  'pq.share':'แนวโน้มสัดส่วนของเสีย WORST-5', 'pq.rate':'แนวโน้มอัตราของเสีย WORST-5',
+  'pq.foot.d5':'※ สัดส่วน = ในของเสียทั้งเดือน · อัตรา = เทียบยอดผลิตของเดือน · แสดงเฉพาะ 5 ประเภทสูงสุดของช่วงเวลา',
+  'pq.nodata':'ไม่มีข้อมูล'
+});
+Object.assign(I18N.en, {
+  'pq.s1.title':'📊 Monthly Process Quality Status (process group × month)',
+  'pq.s1.desc':'Reproduces the in-house Process Quality Status report — production, defect qty, failure cost (F-AMOUNT) and defect rate by process group per month, with automatic year-on-year comparison.',
+  'pq.s2.title':'💰 Quality Failure Cost (F-COST) vs Sales',
+  'pq.s2.desc':'Tracks monthly failure cost and its ratio to sales. Enter sales in the SALES row of the matrix above and the ratio updates automatically.',
+  'pq.s3.title':'📈 Quality Level-Up Roadmap (half-year targets · PDCA)',
+  'pq.s3.desc':'Set a defect-rate target per half-year and compare actuals on a staircase chart — improvement (Level Up) and hold phases are distinguished for PDCA management.',
+  'pq.s4.title':'🎯 Focused Improvement Items (current → target)',
+  'pq.s4.desc':'Same structure as the report\u2019s improvement item table — enter a target and the current rate and progress are computed from the raw data.',
+  'pq.s5.title':'📉 WORST-5 Defect Types — monthly trend (share · rate)',
+  'pq.s5.desc':'Mirrors the two-panel WORST-5 charts in the report — left is share of total defects, right is rate against production.',
+  'pq.setup':'⚙ Process group mapping · failure cost settings',
+  'pq.costMode':'Failure cost basis', 'pq.costMode.auto':'Auto (unit weight × remelt rate + add-on)', 'pq.costMode.fixed':'Manual (THB per defective piece)',
+  'pq.unitWt':'Unit weight (g)', 'pq.remelt':'Remelt rate (THB/kg)', 'pq.addCost':'Add-on cost (THB/pc)',
+  'pq.fixedCost':'Manual rate (THB/pc)', 'pq.months':'Months shown',
+  'pq.mapTitle':'Equipment → process group (auto-classified by tonnage if unset)',
+  'pq.chart.status':'PROCESS QUALITY STATUS — monthly production · defect rate',
+  'pq.chart.trend':'PROCESS QUALITY TREND by MONTHLY — defect rate by group',
+  'pq.g.S':'Small (≤125T)', 'pq.g.M':'Medium (200–350T)', 'pq.g.L':'Large (500T+)', 'pq.g.X':'Unassigned',
+  'pq.detail':'DETAIL', 'pq.yearly':'YEARLY', 'pq.monthly':'MONTHLY',
+  'pq.row.prod':'PRODUCTION QTY', 'pq.row.def':'DEFECT QTY', 'pq.row.famt':'F-AMOUNT (THB)',
+  'pq.row.rate':'DEFECT RATE (%)', 'pq.row.sales':'SALES (THB)', 'pq.row.fcost':'F-COST RATE (%)',
+  'pq.total':'TOTAL', 'pq.qcost':'QUALITY COST',
+  'pq.k.curY':'Defect rate, this year', 'pq.k.vsPrevY':'vs {y}: {v}', 'pq.k.noPrevY':'No prior-year data',
+  'pq.k.curM':'Defect rate, this month', 'pq.k.vsPrevM':'vs last month {v}', 'pq.k.fcostY':'Failure cost YTD',
+  'pq.k.fcostRate':'F-COST vs sales', 'pq.k.worstG':'Worst group (last 3 months)',
+  'pq.k.noSales':'Sales not entered', 'pq.k.perPc':'{v} THB per defective piece',
+  'pq.foot.matrix':'※ Defect rate follows the [defect basis] selector above ({basis}). Failure cost = defect qty × {cost} THB/pc. SALES cells are editable and stored in this browser. Excluded equipment: {ex}',
+  'pq.basis.all':'total loss (warm shot included)', 'pq.basis.defect':'pure defects only',
+  'pq.foot.cost':'※ Bars are monthly failure cost (THB); the line is F-COST RATE (%), shown only for months with sales entered. YTD failure cost {c} THB · sales entered {s} THB · average {r}',
+  'pq.lv.half':'Half-year', 'pq.lv.actual':'Actual defect rate', 'pq.lv.target':'Target', 'pq.lv.gap':'vs target',
+  'pq.lv.kind':'Phase', 'pq.lv.up':'Improve (Level Up)', 'pq.lv.hold':'Hold', 'pq.lv.na':'Not set',
+  'pq.lv.axis':'Defect rate (%) — higher on the chart is better',
+  'pq.foot.level':'※ Enter a target per half-year; the staircase chart and the achievement verdict update automatically. Actuals are aggregated from raw data.',
+  'pq.f.kind':'Target type', 'pq.f.eq':'Equipment', 'pq.f.model':'Model', 'pq.f.target':'Target',
+  'pq.f.goal':'Target rate (%)', 'pq.f.owner':'Owner', 'pq.f.due':'Due',
+  'pq.f.add':'＋ Add', 'pq.f.auto':'⚡ Auto-suggest worst',
+  'pq.f.hint':'Current rate is recomputed from the last three months on every refresh',
+  'pq.th.div':'Type', 'pq.th.target':'Target', 'pq.th.ton':'Tonnage', 'pq.th.base':'Baseline rate',
+  'pq.th.cur':'Current rate', 'pq.th.goal':'Goal', 'pq.th.prog':'Progress', 'pq.th.owner':'Owner',
+  'pq.th.due':'Due', 'pq.th.status':'Status',
+  'pq.st.done':'Achieved', 'pq.st.run':'In progress', 'pq.st.late':'Worsened', 'pq.st.hold':'Pending',
+  'pq.f.empty':'※ No focused improvement items yet — press [Auto-suggest worst] to register the worst targets from the last three months.',
+  'pq.f.foot':'※ Baseline is the rate at registration; current is the last three months ({p}). Progress = (baseline − current) ÷ (baseline − goal).',
+  'pq.share':'WORST-5 defect share trend', 'pq.rate':'WORST-5 defect rate trend',
+  'pq.foot.d5':'※ Share is within that month\u2019s total defects; rate is against that month\u2019s production. Only the top five types over the window are shown.',
+  'pq.nodata':'No data'
+});
+
+const PQ_K = { group:'stc_q_pq_group_v1', param:'stc_q_pq_param_v1', sales:'stc_q_pq_sales_v1',
+               target:'stc_q_pq_target_v1', focus:'stc_q_pq_focus_v1' };
+const PQ_GROUPS = [
+  { id:'S', color:'#2e7d32' }, { id:'M', color:'#1e88e5' },
+  { id:'L', color:'#8e24aa' }, { id:'X', color:'#8a949e' }
+];
+const PQ_D5_COLORS = ['#3f51b5','#e53935','#43a047','#8e24aa','#00acc1','#fb8c00'];
+let PQ_MAP    = {};
+let PQ_PARAM  = { mode:'auto', unitWt:0, remelt:0, addCost:0, fixed:0 };
+let PQ_SALES  = {};
+let PQ_TARGET = {};
+let PQ_FOCUS  = [];
+
+/* ---------- 공통 헬퍼 ---------- */
+function pqMonName(mk){
+  const p = String(mk||'').split('-');
+  const mi = Number(p[1]) - 1;
+  return (QR_MON_ABBR[mi] || p[1] || '?') + "'" + String(p[0]||'').slice(2);
+}
+function pqInt(v){ return (v==null || isNaN(v)) ? '-' : Math.round(v).toLocaleString(); }
+function pqPct(v, dp){ return (v==null || isNaN(v)) ? '-' : v.toFixed(dp==null?2:dp) + '%'; }
+function pqGroupName(gid){ return t('pq.g.' + gid); }
+function pqGroupColor(gid){ const g = PQ_GROUPS.find(x=>x.id===gid); return g ? g.color : '#8a949e'; }
+function pqAutoGroup(eq){
+  const ton = (typeof EQUIP_TONNAGE !== 'undefined') ? EQUIP_TONNAGE[eq] : null;
+  if (ton == null) return 'X';
+  if (ton <= 125) return 'S';
+  if (ton <= 350) return 'M';
+  return 'L';
+}
+function pqGroupOf(eq){ return PQ_MAP[eq] || pqAutoGroup(eq); }
+function pqEqList(){
+  const set = {};
+  Object.keys(EQUIP_TONNAGE).forEach(k => set[k] = 1);
+  (RAW_Q || []).forEach(r => { const e = String(r['설비명']||'').trim(); if (e) set[e] = 1; });
+  return Object.keys(set).filter(e => QR_EXCLUDE_EQ.indexOf(e) < 0).sort((a,b)=>qrEqNum(a)-qrEqNum(b));
+}
+function pqUnitCost(){
+  if (PQ_PARAM.mode === 'fixed') return Math.max(0, Number(PQ_PARAM.fixed)||0);
+  return Math.max(0, (Number(PQ_PARAM.unitWt)||0)/1000 * (Number(PQ_PARAM.remelt)||0) + (Number(PQ_PARAM.addCost)||0));
+}
+function pqMonthsShown(){ const el = document.getElementById('pq_months'); return el ? Number(el.value)||12 : 12; }
+
+/* ---------- 설정 로드 / 저장 ---------- */
+async function pqLoadSettings(){
+  try {
+    const g = await Store.get(PQ_K.group);  if (g && typeof g === 'object') PQ_MAP = g;
+    const p = await Store.get(PQ_K.param);  if (p && typeof p === 'object') PQ_PARAM = Object.assign(PQ_PARAM, p);
+    const s = await Store.get(PQ_K.sales);  if (s && typeof s === 'object') PQ_SALES = s;
+    const g2 = await Store.get(PQ_K.target);if (g2 && typeof g2 === 'object') PQ_TARGET = g2;
+    const f = await Store.get(PQ_K.focus);  if (Array.isArray(f)) PQ_FOCUS = f;
+  } catch(e){ console.warn('PQ settings load failed', e); }
+  if (!PQ_PARAM.unitWt && typeof WS_PARAMS !== 'undefined') PQ_PARAM.unitWt = WS_PARAMS.unitWt || 0;
+  if (!PQ_PARAM.remelt && typeof WS_PARAMS !== 'undefined') PQ_PARAM.remelt = WS_PARAMS.remelt || 0;
+  pqFillParamInputs();
+  pqRenderMapGrid();
+}
+function pqFillParamInputs(){
+  const set = (id,v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  set('pq_costMode', PQ_PARAM.mode || 'auto');
+  set('pq_unitWt', PQ_PARAM.unitWt || 0);
+  set('pq_remelt', PQ_PARAM.remelt || 0);
+  set('pq_addCost', PQ_PARAM.addCost || 0);
+  set('pq_fixed', PQ_PARAM.fixed || 0);
+}
+function pqSaveParam(){
+  const g = id => { const el = document.getElementById(id); return el ? el.value : null; };
+  PQ_PARAM.mode    = g('pq_costMode') || 'auto';
+  PQ_PARAM.unitWt  = Math.max(0, Number(g('pq_unitWt'))||0);
+  PQ_PARAM.remelt  = Math.max(0, Number(g('pq_remelt'))||0);
+  PQ_PARAM.addCost = Math.max(0, Number(g('pq_addCost'))||0);
+  PQ_PARAM.fixed   = Math.max(0, Number(g('pq_fixed'))||0);
+  Store.set(PQ_K.param, PQ_PARAM);
+  renderPQAll();
+}
+function pqRenderMapGrid(){
+  const box = document.getElementById('pqMapGrid'); if (!box) return;
+  box.innerHTML = pqEqList().map(eq => {
+    const cur = pqGroupOf(eq);
+    const opts = PQ_GROUPS.map(g =>
+      `<option value="${g.id}"${g.id===cur?' selected':''}>${pqGroupName(g.id)}</option>`).join('');
+    return `<div><b style="min-width:44px;">${eq}</b><select onchange="pqSetMap('${eq}',this.value)">${opts}</select></div>`;
+  }).join('');
+}
+function pqSetMap(eq, gid){ PQ_MAP[eq] = gid; Store.set(PQ_K.group, PQ_MAP); renderPQAll(); }
+function pqSetSales(el){
+  const mk = el.getAttribute('data-mk');
+  const v = Number(String(el.value).replace(/,/g,''));
+  if (!mk) return;
+  if (!v || v <= 0) delete PQ_SALES[mk]; else PQ_SALES[mk] = v;
+  Store.set(PQ_K.sales, PQ_SALES);
+  renderPQAll();
+}
+function pqSetTarget(el){
+  const hk = el.getAttribute('data-hk');
+  const v = Number(el.value);
+  if (!hk) return;
+  if (!v || v <= 0) delete PQ_TARGET[hk]; else PQ_TARGET[hk] = v;
+  Store.set(PQ_K.target, PQ_TARGET);
+  renderPQLevel();
+}
+
+/* ---------- 집계 ---------- */
+function pqRowsAll(){
+  return (RAW_Q || []).filter(r => {
+    if (typeof isOutsideWeekFix === 'function' && isOutsideWeekFix(r)) return false;
+    const eq = String(r['설비명']||'').trim();
+    if (!eq || QR_EXCLUDE_EQ.indexOf(eq) >= 0) return false;
+    return num(r['Qty_Total']) > 0;
+  });
+}
+function pqDefOf(r){
+  const tt = num(r['Qty_Total']), gd = num(r['Qty_Good']);
+  const lost = Math.max(0, tt - gd);
+  if (qBasis() === 'defect'){ const ws = Math.min(lost, warmShotOf(r)); return Math.max(0, lost - ws); }
+  return lost;
+}
+function pqMonthOf(r){ return String(r['일자']||'').slice(0,7); }
+function pqLastMonth(){
+  let mx = '';
+  pqRowsAll().forEach(r => { const m = pqMonthOf(r); if (m && m > mx) mx = m; });
+  return mx || new Date().toISOString().slice(0,7);
+}
+function pqMonthList(n){
+  const last = pqLastMonth();
+  const y = Number(last.slice(0,4)), m = Number(last.slice(5,7));
+  const out = [];
+  for (let i = n-1; i >= 0; i--){
+    const d = new Date(y, m-1-i, 1);
+    out.push(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
+  }
+  return out;
+}
+function pqAgg(months){
+  const set = {}; months.forEach(m => set[m] = 1);
+  const G = {}, tot = { byM:{}, prod:0, def:0, yr:{} }, yrAll = {};
+  PQ_GROUPS.forEach(g => { G[g.id] = { byM:{}, prod:0, def:0, yr:{}, eqs:{} }; });
+  months.forEach(mk => { PQ_GROUPS.forEach(g => G[g.id].byM[mk] = { prod:0, def:0 }); tot.byM[mk] = { prod:0, def:0 }; });
+  pqRowsAll().forEach(r => {
+    const mk = pqMonthOf(r); if (!mk) return;
+    const eq = String(r['설비명']||'').trim();
+    const gid = pqGroupOf(eq);
+    const p = num(r['Qty_Total']), d = pqDefOf(r);
+    const y = mk.slice(0,4);
+    if (!yrAll[y]) yrAll[y] = { prod:0, def:0 };
+    yrAll[y].prod += p; yrAll[y].def += d;
+    if (!G[gid].yr[y]) G[gid].yr[y] = { prod:0, def:0 };
+    G[gid].yr[y].prod += p; G[gid].yr[y].def += d;
+    if (!set[mk]) return;
+    G[gid].byM[mk].prod += p; G[gid].byM[mk].def += d;
+    G[gid].prod += p; G[gid].def += d; G[gid].eqs[eq] = 1;
+    tot.byM[mk].prod += p; tot.byM[mk].def += d;
+    tot.prod += p; tot.def += d;
+  });
+  tot.yr = yrAll;
+  return { G, tot, months };
+}
+function pqRate(o){ return (o && o.prod > 0) ? o.def / o.prod * 100 : null; }
+
+/* ---------- 차트: 막대 + 선 (이중축) ---------- */
+function pqDrawComboBarLine(canvasId, labels, bar, lines, opts){
+  const cv = document.getElementById(canvasId); if (!cv) return;
+  const { W, H, ctx } = sizeCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  opts = opts || {};
+  if (!labels.length){ ctx.fillStyle='#bbb'; ctx.font='12px Arial'; ctx.textAlign='center'; ctx.fillText(t('pq.nodata'), W/2, H/2); return; }
+  const L = 62, R = 52, T = 24, B = 34;
+  const pw = Math.max(10, W-L-R), ph = Math.max(10, H-T-B);
+  const barVals = (bar && bar.values) ? bar.values.filter(v=>v!=null && !isNaN(v)) : [];
+  const lineVals = (lines||[]).reduce((a,s)=>a.concat(s.values.filter(v=>v!=null && !isNaN(v))), []);
+  const maxBar = barVals.length ? Math.max.apply(null, barVals) * 1.25 : 1;
+  const maxLine = lineVals.length ? Math.max.apply(null, lineVals) * 1.4 : 1;
+  const n = labels.length;
+  const step = pw / n;
+  const bw = Math.min(38, step * 0.52);
+  const xAt = i => L + step*i + step/2;
+  const yBar = v => T + ph - ph * (v / (maxBar||1));
+  const yLine = v => T + ph - ph * (v / (maxLine||1));
+  ctx.strokeStyle = '#eef1f5'; ctx.fillStyle = '#98a2ac'; ctx.font = '9px Arial';
+  for (let i=0;i<=4;i++){
+    const y = T + ph - ph*i/4;
+    ctx.beginPath(); ctx.moveTo(L,y); ctx.lineTo(L+pw,y); ctx.stroke();
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText(Math.round(maxBar*i/4).toLocaleString(), L-6, y);
+    ctx.textAlign = 'left';
+    ctx.fillText((maxLine*i/4).toFixed(2)+'%', L+pw+6, y);
+  }
+  if (bar && bar.values){
+    bar.values.forEach((v,i) => {
+      if (v == null || isNaN(v)) return;
+      const h = T + ph - yBar(v);
+      ctx.fillStyle = bar.color || '#9fc5e8';
+      ctx.fillRect(xAt(i)-bw/2, yBar(v), bw, Math.max(0,h));
+    });
+  }
+  (lines||[]).forEach(s => {
+    ctx.strokeStyle = s.color; ctx.lineWidth = 2.2;
+    if (s.dash) ctx.setLineDash([6,4]); else ctx.setLineDash([]);
+    ctx.beginPath(); let started = false;
+    s.values.forEach((v,i) => {
+      if (v == null || isNaN(v)) { started = false; return; }
+      const x = xAt(i), y = yLine(v);
+      if (!started){ ctx.moveTo(x,y); started = true; } else ctx.lineTo(x,y);
+    });
+    ctx.stroke(); ctx.setLineDash([]);
+    s.values.forEach((v,i) => {
+      if (v == null || isNaN(v)) return;
+      const x = xAt(i), y = yLine(v);
+      ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(x,y,3.2,0,7); ctx.fill();
+      if (s.showValue !== false){
+        ctx.fillStyle = s.color; ctx.font = 'bold 9px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillText(v.toFixed(2)+'%', x, y-6);
+      }
+    });
+  });
+  ctx.fillStyle = '#5a646e'; ctx.font = '9.5px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  labels.forEach((lb,i) => ctx.fillText(lb, xAt(i), T+ph+8));
+}
+
+/* ---------- 차트: 다중 라인 (% 축) ---------- */
+function pqDrawLines(canvasId, labels, series, opts){
+  const cv = document.getElementById(canvasId); if (!cv) return;
+  const { W, H, ctx } = sizeCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  opts = opts || {};
+  const vals = (series||[]).reduce((a,s)=>a.concat(s.values.filter(v=>v!=null && !isNaN(v))), []);
+  if (!labels.length || !vals.length){ ctx.fillStyle='#bbb'; ctx.font='12px Arial'; ctx.textAlign='center'; ctx.fillText(t('pq.nodata'), W/2, H/2); return; }
+  const L = 52, R = 18, T = 22, B = 32;
+  const pw = Math.max(10, W-L-R), ph = Math.max(10, H-T-B);
+  const maxV = Math.max.apply(null, vals) * 1.25 || 1;
+  const n = labels.length;
+  const stepX = n > 1 ? pw/(n-1) : 0;
+  const xAt = i => L + stepX*i + (n>1 ? 0 : pw/2);
+  const yAt = v => T + ph - ph*(v/maxV);
+  ctx.strokeStyle = '#eef1f5'; ctx.fillStyle = '#98a2ac'; ctx.font = '9px Arial';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let i=0;i<=4;i++){
+    const y = T + ph - ph*i/4;
+    ctx.beginPath(); ctx.moveTo(L,y); ctx.lineTo(L+pw,y); ctx.stroke();
+    ctx.fillText((maxV*i/4).toFixed(2)+'%', L-6, y);
+  }
+  (series||[]).forEach(s => {
+    ctx.strokeStyle = s.color; ctx.lineWidth = s.width || 2.2;
+    if (s.dash) ctx.setLineDash([6,4]); else ctx.setLineDash([]);
+    ctx.beginPath(); let started = false;
+    s.values.forEach((v,i) => {
+      if (v == null || isNaN(v)) { started = false; return; }
+      const x = xAt(i), y = yAt(v);
+      if (!started){ ctx.moveTo(x,y); started = true; } else ctx.lineTo(x,y);
+    });
+    ctx.stroke(); ctx.setLineDash([]);
+    s.values.forEach((v,i) => {
+      if (v == null || isNaN(v)) return;
+      ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(xAt(i), yAt(v), 3, 0, 7); ctx.fill();
+    });
+  });
+  ctx.fillStyle = '#5a646e'; ctx.font = '9.5px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  labels.forEach((lb,i) => ctx.fillText(lb, xAt(i), T+ph+8));
+}
+
+/* ---------- 차트: Level-Up 계단 ---------- */
+function pqDrawStairs(canvasId, stages){
+  const cv = document.getElementById(canvasId); if (!cv) return;
+  const { W, H, ctx } = sizeCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  const vals = stages.reduce((a,s)=>{ if (s.actual!=null) a.push(s.actual); if (s.target!=null) a.push(s.target); return a; }, []);
+  if (!stages.length || !vals.length){ ctx.fillStyle='#bbb'; ctx.font='12px Arial'; ctx.textAlign='center'; ctx.fillText(t('pq.nodata'), W/2, H/2); return; }
+  const L = 58, R = 22, T = 30, B = 44;
+  const pw = Math.max(10, W-L-R), ph = Math.max(10, H-T-B);
+  const maxV = Math.max.apply(null, vals) * 1.3 || 1;
+  const n = stages.length, step = pw/n;
+  /* y축 반전: 값이 작을수록(불량률 낮을수록) 위 */
+  const yAt = v => T + ph * (v/maxV);
+  ctx.strokeStyle = '#eef1f5'; ctx.fillStyle = '#98a2ac'; ctx.font = '9px Arial';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let i=0;i<=4;i++){
+    const val = maxV*i/4, y = yAt(val);
+    ctx.beginPath(); ctx.moveTo(L,y); ctx.lineTo(L+pw,y); ctx.stroke();
+    ctx.fillText(val.toFixed(2)+'%', L-6, y);
+  }
+  /* 목표 계단 */
+  ctx.strokeStyle = '#1e50a2'; ctx.lineWidth = 2.6;
+  ctx.beginPath(); let prevY = null;
+  stages.forEach((s,i) => {
+    if (s.target == null) { prevY = null; return; }
+    const x0 = L + step*i + step*0.12, x1 = L + step*i + step*0.88, y = yAt(s.target);
+    if (prevY != null){ ctx.lineTo(x0, prevY); ctx.lineTo(x0, y); } else { ctx.moveTo(x0, y); }
+    ctx.lineTo(x1, y); prevY = y;
+  });
+  ctx.stroke();
+  /* 실적 라인 */
+  ctx.strokeStyle = '#e53935'; ctx.lineWidth = 2.2; ctx.setLineDash([5,3]);
+  ctx.beginPath(); let started = false;
+  stages.forEach((s,i) => {
+    if (s.actual == null){ started = false; return; }
+    const x = L + step*i + step/2, y = yAt(s.actual);
+    if (!started){ ctx.moveTo(x,y); started = true; } else ctx.lineTo(x,y);
+  });
+  ctx.stroke(); ctx.setLineDash([]);
+  stages.forEach((s,i) => {
+    const x = L + step*i + step/2;
+    if (s.actual != null){
+      const y = yAt(s.actual);
+      ctx.fillStyle = '#e53935'; ctx.beginPath(); ctx.arc(x,y,4,0,7); ctx.fill();
+      ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(s.actual.toFixed(2)+'%', x, y-7);
+    }
+    if (s.target != null){
+      const y = yAt(s.target);
+      ctx.fillStyle = '#1e50a2'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(s.target.toFixed(2)+'%', x, y+6);
+    }
+    ctx.fillStyle = '#5a646e'; ctx.font = '10px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(s.label, x, T+ph+10);
+    if (s.kind){
+      ctx.fillStyle = s.kind === 'up' ? '#2e7d32' : '#8a949e';
+      ctx.font = 'bold 9.5px Arial';
+      ctx.fillText(s.kind === 'up' ? '▲ ' + t('pq.lv.up') : '= ' + t('pq.lv.hold'), x, T+ph+24);
+    }
+  });
+  ctx.fillStyle = '#7a848e'; ctx.font = '9.5px Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillText(t('pq.lv.axis'), L, 8);
+}
+
+/* ---------- 1) 월별 공정품질 매트릭스 ---------- */
+function renderPQMatrix(){
+  const tbl = document.getElementById('table-pq-matrix'); if (!tbl) return;
+  const months = pqMonthList(pqMonthsShown());
+  const A = pqAgg(months);
+  const unit = pqUnitCost();
+  const curY = months[months.length-1].slice(0,4);
+  const prevY = String(Number(curY)-1);
+
+  /* --- 헤더 --- */
+  const thead = tbl.querySelector('thead');
+  thead.innerHTML =
+    `<tr><th class="l" rowspan="2" colspan="2">${t('pq.detail')}</th>` +
+    `<th class="yr" colspan="2">${t('pq.yearly')}</th>` +
+    `<th colspan="${months.length}">${t('pq.monthly')}</th></tr>` +
+    `<tr><th class="yr">${prevY}Y</th><th class="yr">${curY}Y</th>` +
+    months.map(mk => `<th>${pqMonName(mk)}</th>`).join('') + `</tr>`;
+
+  /* --- 본문 --- */
+  const cellsFor = (byM, yrObj, kind) => {
+    const yv = y => {
+      const o = yrObj[y];
+      if (!o) return '-';
+      if (kind === 'prod') return pqInt(o.prod);
+      if (kind === 'def')  return pqInt(o.def);
+      if (kind === 'famt') return pqInt(o.def * unit);
+      return pqPct(pqRate(o));
+    };
+    const mv = mk => {
+      const o = byM[mk] || { prod:0, def:0 };
+      if (kind === 'prod') return o.prod ? pqInt(o.prod) : '-';
+      if (kind === 'def')  return o.prod ? pqInt(o.def) : '-';
+      if (kind === 'famt') return o.prod ? pqInt(o.def * unit) : '-';
+      return pqPct(pqRate(o));
+    };
+    return `<td class="yrcell">${yv(prevY)}</td><td class="yrcell">${yv(curY)}</td>` +
+           months.map(mk => `<td>${mv(mk)}</td>`).join('');
+  };
+  const blockFor = (name, byM, yrObj, extraCls) => {
+    const rows = [
+      ['prod', t('pq.row.prod'), ''],
+      ['def',  t('pq.row.def'),  ''],
+      ['famt', t('pq.row.famt'), ''],
+      ['rate', t('pq.row.rate'), ' r-rate']
+    ];
+    return rows.map((r,i) =>
+      `<tr class="${extraCls||''}${r[2]}">` +
+      (i === 0 ? `<td class="gname" rowspan="4">${name}</td>` : '') +
+      `<td class="rowlbl">${r[1]}</td>` + cellsFor(byM, yrObj, r[0]) + `</tr>`
+    ).join('');
+  };
+
+  let html = '';
+  PQ_GROUPS.forEach(g => {
+    const G = A.G[g.id];
+    const hasWindow = months.some(mk => G.byM[mk] && G.byM[mk].prod > 0);
+    const hasYear = (G.yr[curY] && G.yr[curY].prod > 0) || (G.yr[prevY] && G.yr[prevY].prod > 0);
+    if (!hasWindow && !hasYear) return;
+    const eqs = Object.keys(G.eqs).sort((a,b)=>qrEqNum(a)-qrEqNum(b));
+    const nm = `${pqGroupName(g.id)}<div style="font-weight:400;font-size:10px;color:#8a949e;">${eqs.join(', ')}</div>`;
+    html += blockFor(nm, G.byM, G.yr, '');
+  });
+  html += blockFor(t('pq.total'), A.tot.byM, A.tot.yr, 'r-tot');
+
+  /* QUALITY COST 블록 */
+  const salesOf = mk => PQ_SALES[mk] || 0;
+  const salesYear = y => months.concat(Object.keys(PQ_SALES))
+      .filter((v,i,arr)=>arr.indexOf(v)===i)
+      .filter(mk => mk.slice(0,4) === y)
+      .reduce((s,mk)=>s+salesOf(mk), 0);
+  const fcostYear = y => (A.tot.yr[y] ? A.tot.yr[y].def * unit : 0);
+  const rateYear = y => { const s = salesYear(y); return s > 0 ? fcostYear(y)/s*100 : null; };
+  html += `<tr class="r-cost"><td class="gname" rowspan="2">${t('pq.qcost')}</td>` +
+    `<td class="rowlbl">${t('pq.row.sales')}</td>` +
+    `<td class="yrcell">${salesYear(prevY) ? pqInt(salesYear(prevY)) : '-'}</td>` +
+    `<td class="yrcell">${salesYear(curY) ? pqInt(salesYear(curY)) : '-'}</td>` +
+    months.map(mk => `<td><input class="pq-in" type="text" inputmode="numeric" data-mk="${mk}" ` +
+      `value="${PQ_SALES[mk] ? PQ_SALES[mk].toLocaleString() : ''}" onchange="pqSetSales(this)"></td>`).join('') + `</tr>`;
+  html += `<tr class="r-cost r-rate"><td class="rowlbl">${t('pq.row.fcost')}</td>` +
+    `<td class="yrcell">${pqPct(rateYear(prevY))}</td><td class="yrcell">${pqPct(rateYear(curY))}</td>` +
+    months.map(mk => {
+      const s = salesOf(mk), o = A.tot.byM[mk] || { def:0 };
+      return `<td>${s > 0 ? pqPct(o.def*unit/s*100) : '-'}</td>`;
+    }).join('') + `</tr>`;
+
+  tbl.querySelector('tbody').innerHTML = html;
+
+  /* --- 차트 --- */
+  const labels = months.map(pqMonName);
+  pqDrawComboBarLine('chart-pq-status', labels,
+    { values: months.map(mk => (A.tot.byM[mk]||{}).prod || 0), color:'#9fc5e8' },
+    [{ values: months.map(mk => pqRate(A.tot.byM[mk])), color:'#e53935', dash:true }]);
+
+  const series = [];
+  PQ_GROUPS.forEach(g => {
+    const G = A.G[g.id];
+    if (!months.some(mk => G.byM[mk] && G.byM[mk].prod > 0)) return;
+    series.push({ name: pqGroupName(g.id), color: pqGroupColor(g.id),
+                  values: months.map(mk => pqRate(G.byM[mk])) });
+  });
+  series.push({ name: t('pq.total'), color:'#e53935', dash:true, width:2.6,
+                values: months.map(mk => pqRate(A.tot.byM[mk])) });
+  pqDrawLines('chart-pq-trend', labels, series);
+  const lg = document.getElementById('pqTrendLegend');
+  if (lg) lg.innerHTML = series.map(s => `<span><i style="background:${s.color}"></i>${s.name}</span>`).join('');
+
+  /* --- KPI --- */
+  const kpi = document.getElementById('pqKpis');
+  if (kpi){
+    const cy = pqRate(A.tot.yr[curY]), py = pqRate(A.tot.yr[prevY]);
+    const lastMk = months[months.length-1], prevMk = months[months.length-2];
+    const cm = pqRate(A.tot.byM[lastMk]), pm = prevMk ? pqRate(A.tot.byM[prevMk]) : null;
+    const fY = fcostYear(curY), sY = salesYear(curY);
+    const last3 = pqMonthList(3);
+    const A3 = pqAgg(last3);
+    let worst = null;
+    PQ_GROUPS.forEach(g => {
+      const o = { prod:0, def:0 };
+      last3.forEach(mk => { const v = A3.G[g.id].byM[mk]; if (v){ o.prod += v.prod; o.def += v.def; } });
+      const r = pqRate(o);
+      if (r != null && (!worst || r > worst.r)) worst = { g:g.id, r };
+    });
+    const cards = [
+      { l: t('pq.k.curY'), v: pqPct(cy), s: (py != null && cy != null)
+          ? t('pq.k.vsPrevY', { y: prevY, v: (cy-py >= 0 ? '+' : '') + (cy-py).toFixed(2) + '%p' })
+          : t('pq.k.noPrevY'), c:'#00897b' },
+      { l: t('pq.k.curM') + ' (' + pqMonName(lastMk) + ')', v: pqPct(cm),
+        s: (cm != null && pm != null) ? t('pq.k.vsPrevM', { v: (cm-pm >= 0 ? '+' : '') + (cm-pm).toFixed(2) + '%p' }) : '&nbsp;',
+        c: (cm != null && pm != null && cm > pm) ? '#e53935' : '#43a047' },
+      { l: t('pq.k.fcostY') + ' (' + curY + ')', v: pqInt(fY), s: t('pq.k.perPc', { v: unit.toFixed(2) }), c:'#fb8c00' },
+      { l: t('pq.k.fcostRate'), v: sY > 0 ? pqPct(fY/sY*100) : '-', s: sY > 0 ? pqInt(sY) + ' THB' : t('pq.k.noSales'), c:'#8e24aa' },
+      { l: t('pq.k.worstG'), v: worst ? pqGroupName(worst.g) : '-', s: worst ? pqPct(worst.r) : '&nbsp;', c:'#e53935' }
+    ];
+    kpi.innerHTML = cards.map(c =>
+      `<div class="kpi-card" style="border-top-color:${c.c}"><div class="kpi-label">${c.l}</div>` +
+      `<div class="kpi-value" style="font-size:21px;">${c.v}</div><div class="kpi-sub">${c.s}</div></div>`).join('');
+  }
+
+  const foot = document.getElementById('pqMatrixFoot');
+  if (foot) foot.textContent = t('pq.foot.matrix', {
+    basis: t(qBasis() === 'defect' ? 'pq.basis.defect' : 'pq.basis.all'),
+    cost: unit.toFixed(2), ex: QR_EXCLUDE_EQ.join(', ') || '-' });
+
+  return { A, months, unit, curY, prevY };
+}
+
+/* ---------- 2) 품질실패비용 ---------- */
+function renderPQCost(ctxData){
+  const months = ctxData ? ctxData.months : pqMonthList(pqMonthsShown());
+  const A = ctxData ? ctxData.A : pqAgg(months);
+  const unit = ctxData ? ctxData.unit : pqUnitCost();
+  const curY = months[months.length-1].slice(0,4);
+  const labels = months.map(pqMonName);
+  const costs = months.map(mk => ((A.tot.byM[mk]||{}).def || 0) * unit);
+  const rates = months.map(mk => {
+    const s = PQ_SALES[mk] || 0;
+    return s > 0 ? ((A.tot.byM[mk]||{}).def || 0) * unit / s * 100 : null;
+  });
+  pqDrawComboBarLine('chart-pq-cost', labels, { values: costs, color:'#ffcc80' },
+    [{ values: rates, color:'#c62828' }]);
+  const foot = document.getElementById('pqCostFoot');
+  if (foot){
+    let cY = 0, sY = 0;
+    months.forEach(mk => {
+      if (mk.slice(0,4) !== curY) return;
+      cY += ((A.tot.byM[mk]||{}).def || 0) * unit;
+      sY += PQ_SALES[mk] || 0;
+    });
+    foot.textContent = t('pq.foot.cost', { c: pqInt(cY), s: sY ? pqInt(sY) : '-',
+      r: sY > 0 ? pqPct(cY/sY*100) : '-' });
+  }
+}
+
+/* ---------- 3) Level-Up 로드맵 ---------- */
+function pqHalfKey(mk){ return mk.slice(0,4) + (Number(mk.slice(5,7)) <= 6 ? '-H1' : '-H2'); }
+function pqHalfLabel(hk){
+  const y = hk.slice(0,4), h = hk.slice(5);
+  if (LANG === 'ko') return y + '년 ' + (h === 'H1' ? '상반기' : '하반기');
+  if (LANG === 'th') return (h === 'H1' ? 'ครึ่งแรก ' : 'ครึ่งหลัง ') + y;
+  return y + ' ' + h;
+}
+function pqHalfStages(){
+  const agg = {};
+  pqRowsAll().forEach(r => {
+    const mk = pqMonthOf(r); if (!mk) return;
+    const hk = pqHalfKey(mk);
+    if (!agg[hk]) agg[hk] = { prod:0, def:0 };
+    agg[hk].prod += num(r['Qty_Total']); agg[hk].def += pqDefOf(r);
+  });
+  const keys = Object.keys(agg).sort();
+  /* 다음 반기(목표만 설정하는 미래 구간) 1개 추가 */
+  if (keys.length){
+    const last = keys[keys.length-1];
+    const y = Number(last.slice(0,4)), h = last.slice(5);
+    keys.push(h === 'H1' ? (y + '-H2') : ((y+1) + '-H1'));
+  }
+  Object.keys(PQ_TARGET).forEach(k => { if (keys.indexOf(k) < 0) keys.push(k); });
+  keys.sort();
+  const shown = keys.slice(-6);
+  return shown.map(hk => ({
+    hk, label: pqHalfLabel(hk),
+    actual: agg[hk] ? pqRate(agg[hk]) : null,
+    target: PQ_TARGET[hk] != null ? Number(PQ_TARGET[hk]) : null
+  }));
+}
+function renderPQLevel(){
+  const tbl = document.getElementById('table-pq-level'); if (!tbl) return;
+  const stages = pqHalfStages();
+  stages.forEach((s,i) => {
+    const prev = stages[i-1];
+    if (s.target == null || !prev || prev.target == null) { s.kind = null; return; }
+    s.kind = (s.target < prev.target - 0.001) ? 'up' : 'hold';
+  });
+  pqDrawStairs('chart-pq-level', stages);
+  tbl.querySelector('thead').innerHTML =
+    `<tr><th class="l">${t('pq.lv.half')}</th><th>${t('pq.lv.actual')}</th><th>${t('pq.lv.target')}</th>` +
+    `<th>${t('pq.lv.gap')}</th><th>${t('pq.lv.kind')}</th></tr>`;
+  tbl.querySelector('tbody').innerHTML = stages.map(s => {
+    const gap = (s.actual != null && s.target != null) ? s.actual - s.target : null;
+    const gapTxt = gap == null ? '-' : (gap <= 0 ? '<span class="pq-st done">' + t('pq.st.done') + ' ' + gap.toFixed(2) + '%p</span>'
+                                                 : '<span class="pq-st late">+' + gap.toFixed(2) + '%p</span>');
+    const kind = s.kind === 'up' ? t('pq.lv.up') : (s.kind === 'hold' ? t('pq.lv.hold') : t('pq.lv.na'));
+    return `<tr><td class="l">${s.label}</td><td>${pqPct(s.actual)}</td>` +
+      `<td><input class="pq-in" type="number" min="0" step="0.01" data-hk="${s.hk}" ` +
+      `value="${s.target != null ? s.target : ''}" onchange="pqSetTarget(this)"></td>` +
+      `<td>${gapTxt}</td><td>${kind}</td></tr>`;
+  }).join('');
+  const foot = document.getElementById('pqLevelFoot');
+  if (foot) foot.textContent = t('pq.foot.level');
+}
+
+/* ---------- 4) 집중개선 아이템 ---------- */
+function pqModelRows(){
+  if (typeof RAW_MODEL !== 'undefined' && RAW_MODEL && RAW_MODEL.length){
+    return RAW_MODEL.map(r => ({
+      mk: String(r['일자']||'').slice(0,7),
+      model: String(r['Model']||r['모델']||r['모델명']||'').trim(),
+      eq: String(r['설비명']||'').trim(),
+      prod: num(r['Qty_Total']),
+      def: num(r['불량수량']) || Math.max(0, num(r['Qty_Total']) - num(r['Qty_Good']))
+    })).filter(x => x.model && x.prod > 0);
+  }
+  return pqRowsAll().map(r => ({
+    mk: pqMonthOf(r),
+    model: String(r['Model']||r['모델']||r['모델명']||'').trim(),
+    eq: String(r['설비명']||'').trim(),
+    prod: num(r['Qty_Total']),
+    def: pqDefOf(r)
+  })).filter(x => x.model && x.prod > 0);
+}
+function pqRateFor(kind, target, months){
+  const set = {}; (months||[]).forEach(m => set[m] = 1);
+  let prod = 0, def = 0;
+  if (kind === 'model'){
+    pqModelRows().forEach(x => { if (x.model === target && set[x.mk]){ prod += x.prod; def += x.def; } });
+  } else {
+    pqRowsAll().forEach(r => {
+      if (String(r['설비명']||'').trim() !== target) return;
+      if (!set[pqMonthOf(r)]) return;
+      prod += num(r['Qty_Total']); def += pqDefOf(r);
+    });
+  }
+  return prod > 0 ? def/prod*100 : null;
+}
+function pqFillTargetOptions(){
+  const kindEl = document.getElementById('pqf_kind'), selEl = document.getElementById('pqf_target');
+  if (!kindEl || !selEl) return;
+  const kind = kindEl.value;
+  let list = [];
+  if (kind === 'eq') list = pqEqList();
+  else list = [...new Set(pqModelRows().map(x => x.model))].sort();
+  selEl.innerHTML = list.map(v => `<option value="${v}">${v}</option>`).join('') ||
+    `<option value="">${t('pq.nodata')}</option>`;
+}
+function pqAddFocus(){
+  const kind = (document.getElementById('pqf_kind')||{}).value || 'eq';
+  const target = (document.getElementById('pqf_target')||{}).value || '';
+  const goal = Number((document.getElementById('pqf_goal')||{}).value);
+  if (!target || !goal || goal <= 0) return;
+  const base = pqRateFor(kind, target, pqMonthList(3));
+  PQ_FOCUS.push({
+    id: 'f' + Date.now(), kind, target, goal,
+    base: base != null ? Number(base.toFixed(3)) : null,
+    owner: (document.getElementById('pqf_owner')||{}).value || '',
+    due: (document.getElementById('pqf_due')||{}).value || ''
+  });
+  Store.set(PQ_K.focus, PQ_FOCUS);
+  const gEl = document.getElementById('pqf_goal'); if (gEl) gEl.value = '';
+  renderPQFocus();
+}
+function pqAutoFocus(){
+  const months = pqMonthList(3);
+  const eqStat = {};
+  pqRowsAll().forEach(r => {
+    const mk = pqMonthOf(r); if (months.indexOf(mk) < 0) return;
+    const eq = String(r['설비명']||'').trim();
+    if (!eqStat[eq]) eqStat[eq] = { prod:0, def:0 };
+    eqStat[eq].prod += num(r['Qty_Total']); eqStat[eq].def += pqDefOf(r);
+  });
+  const worst = Object.entries(eqStat)
+    .filter(([,v]) => v.prod >= 1000)
+    .map(([eq,v]) => ({ eq, r: v.def/v.prod*100 }))
+    .sort((a,b) => b.r - a.r).slice(0,5);
+  worst.forEach(w => {
+    if (PQ_FOCUS.some(f => f.kind === 'eq' && f.target === w.eq)) return;
+    PQ_FOCUS.push({ id:'f'+Date.now()+w.eq, kind:'eq', target:w.eq,
+      goal: Number((w.r * 0.6).toFixed(2)), base: Number(w.r.toFixed(3)), owner:'', due:'' });
+  });
+  Store.set(PQ_K.focus, PQ_FOCUS);
+  renderPQFocus();
+}
+function pqDelFocus(id){
+  PQ_FOCUS = PQ_FOCUS.filter(f => f.id !== id);
+  Store.set(PQ_K.focus, PQ_FOCUS);
+  renderPQFocus();
+}
+function pqEditFocus(id, field, el){
+  const f = PQ_FOCUS.find(x => x.id === id); if (!f) return;
+  f[field] = (field === 'goal') ? Number(el.value) : el.value;
+  Store.set(PQ_K.focus, PQ_FOCUS);
+  renderPQFocus();
+}
+function renderPQFocus(){
+  const tbl = document.getElementById('table-pq-focus'); if (!tbl) return;
+  const months = pqMonthList(3);
+  const tbody = tbl.querySelector('tbody');
+  if (!PQ_FOCUS.length){
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#8a949e;padding:14px;">${t('pq.f.empty')}</td></tr>`;
+  } else {
+    tbody.innerHTML = PQ_FOCUS.map(f => {
+      const cur = pqRateFor(f.kind, f.target, months);
+      const ton = (f.kind === 'eq' && EQUIP_TONNAGE[f.target] != null) ? EQUIP_TONNAGE[f.target] + 'T' : '-';
+      let prog = null;
+      if (f.base != null && cur != null && f.base > f.goal) prog = Math.max(0, Math.min(1, (f.base - cur)/(f.base - f.goal)));
+      let st = 'hold', stTxt = t('pq.st.hold');
+      if (cur != null){
+        if (cur <= f.goal){ st = 'done'; stTxt = t('pq.st.done'); }
+        else if (f.base != null && cur > f.base){ st = 'late'; stTxt = t('pq.st.late'); }
+        else { st = 'run'; stTxt = t('pq.st.run'); }
+      }
+      return `<tr><td>${t(f.kind === 'eq' ? 'pq.f.eq' : 'pq.f.model')}</td>` +
+        `<td style="font-weight:700;">${f.target}</td><td>${ton}</td>` +
+        `<td>${pqPct(f.base)}</td><td style="color:${st==='late'?'#c62828':'#222'};font-weight:700;">${pqPct(cur)}</td>` +
+        `<td><input class="pq-in" style="width:64px;" type="number" min="0" step="0.01" value="${f.goal}" ` +
+        `onchange="pqEditFocus('${f.id}','goal',this)"></td>` +
+        `<td><div class="pq-bar"><i style="width:${prog!=null?(prog*100).toFixed(0):0}%;background:${st==='done'?'#2e7d32':(st==='late'?'#e53935':'#1e88e5')}"></i></div>` +
+        `<span style="font-size:10.5px;color:#7a848e;">${prog!=null?(prog*100).toFixed(0)+'%':'-'}</span></td>` +
+        `<td><input class="pq-in" style="width:70px;text-align:left;" type="text" value="${f.owner||''}" onchange="pqEditFocus('${f.id}','owner',this)"></td>` +
+        `<td><input class="pq-in" style="width:112px;" type="date" value="${f.due||''}" onchange="pqEditFocus('${f.id}','due',this)"></td>` +
+        `<td><span class="pq-st ${st}">${stTxt}</span></td>` +
+        `<td><button type="button" class="pq-btn ghost" style="padding:2px 8px;" onclick="pqDelFocus('${f.id}')">✕</button></td></tr>`;
+    }).join('');
+  }
+  const foot = document.getElementById('pqFocusFoot');
+  if (foot) foot.textContent = t('pq.f.foot', { p: pqMonName(months[0]) + '~' + pqMonName(months[months.length-1]) });
+  pqFillTargetOptions();
+}
+
+/* ---------- 5) 불량유형 WORST-5 월별 추이 ---------- */
+function pqDefectAgg(months){
+  const set = {}; months.forEach(m => set[m] = 1);
+  const byType = {}, monthTot = {};
+  months.forEach(m => monthTot[m] = { prod:0, def:0 });
+  const excl = (qBasis() === 'defect');
+  pqRowsAll().forEach(r => {
+    const mk = pqMonthOf(r); if (!set[mk]) return;
+    const p = num(r['Qty_Total']);
+    const lost = Math.max(0, p - num(r['Qty_Good']));
+    const ws = Math.min(lost, warmShotOf(r));
+    const tot = excl ? Math.max(0, lost - ws) : lost;
+    monthTot[mk].prod += p; monthTot[mk].def += tot;
+    let detail = 0;
+    DEFECT_COLS.forEach(c => {
+      const v = num(r[c]);
+      if (v){ byType[c] = byType[c] || {}; byType[c][mk] = (byType[c][mk]||0) + v; }
+      detail += v;
+    });
+    const gap = tot - detail;
+    if (gap > 0){
+      const wsv = excl ? 0 : Math.min(gap, ws);
+      if (wsv > 0){ byType['웜샷'] = byType['웜샷'] || {}; byType['웜샷'][mk] = (byType['웜샷'][mk]||0) + wsv; }
+      const rest = gap - wsv;
+      if (rest > 0){ byType['미분류'] = byType['미분류'] || {}; byType['미분류'][mk] = (byType['미분류'][mk]||0) + rest; }
+    }
+  });
+  const totals = Object.entries(byType).map(([k,v]) => ({ k, sum: Object.values(v).reduce((a,b)=>a+b,0) }))
+    .filter(x => x.sum > 0).sort((a,b) => b.sum - a.sum).slice(0,5);
+  return { byType, monthTot, top: totals.map(x => x.k) };
+}
+function renderPQDefect5(){
+  if (!document.getElementById('chart-pq-d5-share')) return;
+  const months = pqMonthList(pqMonthsShown());
+  const labels = months.map(pqMonName);
+  const D = pqDefectAgg(months);
+  const shareSeries = [], rateSeries = [];
+  D.top.forEach((k,i) => {
+    const color = PQ_D5_COLORS[i % PQ_D5_COLORS.length];
+    shareSeries.push({ name: trTerm(k), color, values: months.map(mk => {
+      const tt = D.monthTot[mk].def; return tt > 0 ? ((D.byType[k]||{})[mk]||0)/tt*100 : null; }) });
+    rateSeries.push({ name: trTerm(k), color, values: months.map(mk => {
+      const pp = D.monthTot[mk].prod; return pp > 0 ? ((D.byType[k]||{})[mk]||0)/pp*100 : null; }) });
+  });
+  pqDrawLines('chart-pq-d5-share', labels, shareSeries);
+  pqDrawLines('chart-pq-d5-rate', labels, rateSeries);
+  const lg = document.getElementById('pqD5Legend');
+  if (lg) lg.innerHTML = shareSeries.map(s => `<span><i style="background:${s.color}"></i>${s.name}</span>`).join('');
+  const foot = document.getElementById('pqD5Foot');
+  if (foot) foot.textContent = t('pq.foot.d5');
+}
+
+/* ---------- 통합 렌더 ---------- */
+function renderPQAll(){
+  if (!document.getElementById('table-pq-matrix')) return;
+  let ctxData = null;
+  try { ctxData = renderPQMatrix(); } catch(e){ console.error('renderPQMatrix', e); }
+  try { renderPQCost(ctxData); }      catch(e){ console.error('renderPQCost', e); }
+  try { renderPQLevel(); }            catch(e){ console.error('renderPQLevel', e); }
+  try { renderPQFocus(); }            catch(e){ console.error('renderPQFocus', e); }
+  try { renderPQDefect5(); }          catch(e){ console.error('renderPQDefect5', e); }
 }
 
 </script>
