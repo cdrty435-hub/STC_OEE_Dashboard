@@ -763,12 +763,6 @@ const I18N = {
     'ctrl.basis': '불량 산정 기준',
     'ctrl.basis.all': '전체 로스 (웜샷 포함) · 사내 보고 기준',
     'ctrl.basis.defect': '순수 불량만 (웜샷 제외)',
-    'ctrl.basis': 'เกณฑ์นับของเสีย',
-    'ctrl.basis.all': 'รวมทั้งหมด (รวม warm shot) · ตามรายงานบริษัท',
-    'ctrl.basis.defect': 'เฉพาะของเสียจริง (ไม่รวม warm shot)',
-    'ctrl.basis': 'Defect basis',
-    'ctrl.basis.all': 'All loss (incl. warm shot) · company report basis',
-    'ctrl.basis.defect': 'True defects only (excl. warm shot)',
     'ctrl.refresh': '🔄 구글시트 새로고침',
     'wa.title': '📅 주간분석 (종합 OEE = 가동률 × 성능 × 품질)',
     'wa.A': '가동률(A)', 'wa.P': '성능(P)', 'wa.Q': '품질(Q)', 'wa.OEE': '종합 OEE',
@@ -892,6 +886,9 @@ const I18N = {
     'ctrl.sigma4': '4σ (6,210 PPM · ดีเยี่ยมในอุตสาหกรรม)',
     'ctrl.sigma5': '5σ (233 PPM · ดีที่สุดในอุตสาหกรรม)',
     'ctrl.sigma6': '6σ (3.4 PPM · World Class)',
+    'ctrl.basis': 'เกณฑ์นับของเสีย',
+    'ctrl.basis.all': 'รวมทั้งหมด (รวม warm shot) · ตามรายงานบริษัท',
+    'ctrl.basis.defect': 'เฉพาะของเสียจริง (ไม่รวม warm shot)',
     'ctrl.refresh': '🔄 รีเฟรช Google Sheets',
     'wa.title': '📅 วิเคราะห์รายสัปดาห์ (OEE รวม = Availability × Performance × Quality)',
     'wa.A': 'Availability(A)', 'wa.P': 'Performance(P)', 'wa.Q': 'Quality(Q)', 'wa.OEE': 'OEE รวม',
@@ -1015,6 +1012,9 @@ const I18N = {
     'ctrl.sigma4': '4σ (6,210 PPM · industry good)',
     'ctrl.sigma5': '5σ (233 PPM · industry best)',
     'ctrl.sigma6': '6σ (3.4 PPM · World Class)',
+    'ctrl.basis': 'Defect basis',
+    'ctrl.basis.all': 'All loss (incl. warm shot) · company report basis',
+    'ctrl.basis.defect': 'True defects only (excl. warm shot)',
     'ctrl.refresh': '🔄 Refresh Google Sheets',
     'wa.title': '📅 Weekly analysis (OEE = Availability × Performance × Quality)',
     'wa.A': 'Availability (A)', 'wa.P': 'Performance (P)', 'wa.Q': 'Quality (Q)', 'wa.OEE': 'Overall OEE',
@@ -1614,7 +1614,9 @@ function drawModelRankChart(canvasId, items, targetPPM) {
   const maxV = Math.max(top[0].ppm, targetPPM) * 1.08;
   const rowH = plotH/top.length, barH = rowH*0.6;
   ctx.font='10px Arial';
+  MODELRANK_HITS = [];
   top.forEach((it,i)=>{
+    MODELRANK_HITS.push({ label: it.label, y0: topM + rowH*i, y1: topM + rowH*(i+1) });
     const y = topM+rowH*i+(rowH-barH)/2;
     const w = plotW*(it.ppm/maxV);
     ctx.fillStyle = colorFromSigma(it.sigma);
@@ -2090,6 +2092,8 @@ function renderModelTable() {
     const ppm = m.total ? m.bad/m.total*1e6 : null;
     return {...m, ppm, sigma: sigmaFromPPM(ppm)};
   }).sort((a,b)=>b.ppm-a.ppm);
+  LAST_MODEL_MAP = {};
+  ranked.forEach(m => { LAST_MODEL_MAP[m.model] = m; });
   const q = (document.getElementById('modelSearchInput')?.value || '').trim().toLowerCase();
   const visible = q ? ranked.filter(m => m.model.toLowerCase().includes(q)) : ranked;
   visible.forEach(m=>{
@@ -2100,6 +2104,9 @@ function renderModelTable() {
       <td>${Math.round(m.ppm).toLocaleString()}</td><td>${m.sigma.toFixed(2)}σ</td>
       <td><span class="grade-badge ${grade.cls}">${grade.label}</span></td>
       <td style="text-align:left;">${m.topDefect ? trTerm(m.topDefect)+' ('+m.topDefectCount.toLocaleString()+')' : '-'}</td>`;
+    tr.classList.add('eq-clickable');
+    tr.title = t('mdm.hint');
+    tr.onclick = () => openModelDetail(m.model);
     tbody.appendChild(tr);
   });
   return ranked;
@@ -2366,12 +2373,20 @@ function aggregateModelRows(rows) {
     if (r['설비명']) agg[m].eqs.add(r['설비명']);
     agg[m].total += Number(r['Qty_Total'])||0;
     agg[m].bad += badOf(r);
+    const _eq = r['설비명'];
+    if (_eq){
+      agg[m].byEq = agg[m].byEq || {};
+      agg[m].byEq[_eq] = agg[m].byEq[_eq] || { total:0, bad:0 };
+      agg[m].byEq[_eq].total += Number(r['Qty_Total'])||0;
+      agg[m].byEq[_eq].bad += badOf(r);
+    }
     defectCols.forEach(c => { agg[m].defects[c] = (agg[m].defects[c]||0) + (Number(r[c])||0); });
   });
   return {
     items: Object.values(agg).map(m => {
       const top = Object.entries(m.defects).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])[0];
-      return { model:m.model, eqs:[...m.eqs], total:m.total, bad:m.bad, topDefect: top?top[0]:null, topDefectCount: top?top[1]:0 };
+      return { model:m.model, eqs:[...m.eqs], total:m.total, bad:m.bad, defects:m.defects, byEq:m.byEq||{},
+               topDefect: top?top[0]:null, topDefectCount: top?top[1]:0 };
     })
   };
 }
@@ -4662,6 +4677,141 @@ async function navInit(){
   try { saved = await Store.get(NAV_KEY); } catch(e){}
   navGo((typeof saved === 'string' && navItemOf(saved)) ? saved : 'weekly', true);
 }
+
+/* 언어 전환 시 동기화 상태줄 재번역 (setStatus 로 찍힌 문자열은 정적 i18n 대상이 아니다) */
+function refreshStatusLine(){
+  if (typeof RAW_Q === 'undefined' || !RAW_Q || !RAW_Q.length) return;
+  const dates = [...new Set(RAW_Q.map(r => r['일자']))].filter(Boolean).sort();
+  const modelNote = RAW_MODEL ? t('status.modelLive', { n: RAW_MODEL.length }) : t('status.modelSnapshot');
+  const pdcaNote  = RAW_PDCA ? t('status.pdcaLive', { n: RAW_PDCA.length }) : '';
+  const waNote    = (RAW_A && RAW_P) ? t('status.waLive') : t('status.waNeedLink');
+  setStatus(t('status.syncDone', { start: dates[0]||'-', end: dates[dates.length-1]||'-', n: dates.length })
+            + modelNote + pdcaNote + waNote);
+}
+const _setLangBase = setLang;
+setLang = function(lang){ _setLangBase(lang); try { refreshStatusLine(); } catch(e){ console.warn(e); } };
+
+
+/* =========================================================================
+   14. 모델별 불량유형 상세 (모델 행/막대 클릭 → 팝업)
+       설비 상세(openEqDetail)와 같은 모달을 쓰되, 모델 기준으로
+       불량유형 파레토 + 생산 설비별 불량률 편차를 함께 보여준다.
+   ========================================================================= */
+Object.assign(I18N.ko, {
+  'mdm.title':'{model} · 불량유형 상세',
+  'mdm.hint':'클릭하면 이 모델의 불량유형 상세가 열립니다',
+  'mdm.eqTitle':'생산 설비별 실적 (같은 모델 · 설비간 편차)',
+  'mdm.thEq':'설비', 'mdm.thTotal':'검사수량', 'mdm.thBad':'불량수량', 'mdm.thRate':'불량률', 'mdm.thPpm':'PPM',
+  'mdm.gap':'설비간 최대 격차 {v}%p — 같은 모델인데 설비별 불량률 차이가 크면 해당 설비(금형 셋업 · 냉각 · 취출) 점검을 권장합니다.',
+  'mdm.none':'이 모델의 세부 불량유형 데이터가 없습니다.',
+  'mdm.snapshot':'※ 현재 스냅샷 데이터라 세부 불량유형이 제한적입니다 — 실시간 Model상세 연동 시 전체 유형이 표시됩니다.',
+  'mdm.eqs':'생산 설비'
+});
+Object.assign(I18N.th, {
+  'mdm.title':'{model} · รายละเอียดประเภทของเสีย',
+  'mdm.hint':'คลิกเพื่อดูรายละเอียดประเภทของเสียของโมเดลนี้',
+  'mdm.eqTitle':'ผลตามเครื่องที่ผลิต (โมเดลเดียวกัน · ส่วนต่างระหว่างเครื่อง)',
+  'mdm.thEq':'เครื่อง', 'mdm.thTotal':'จำนวนตรวจ', 'mdm.thBad':'ของเสีย', 'mdm.thRate':'อัตราของเสีย', 'mdm.thPpm':'PPM',
+  'mdm.gap':'ส่วนต่างสูงสุดระหว่างเครื่อง {v}%p — โมเดลเดียวกันแต่ต่างกันมาก ควรตรวจแม่พิมพ์ · ระบบหล่อเย็น · การปลดชิ้นงานของเครื่องนั้น',
+  'mdm.none':'ไม่มีข้อมูลประเภทของเสียของโมเดลนี้',
+  'mdm.snapshot':'※ ขณะนี้เป็นข้อมูลสแนปช็อต จึงมีประเภทของเสียจำกัด — เชื่อมต่อ Model แบบเรียลไทม์เพื่อดูครบ',
+  'mdm.eqs':'เครื่องที่ผลิต'
+});
+Object.assign(I18N.en, {
+  'mdm.title':'{model} · defect type detail',
+  'mdm.hint':'Click to open the defect breakdown for this model',
+  'mdm.eqTitle':'Performance by producing equipment (same model · spread across machines)',
+  'mdm.thEq':'Equipment', 'mdm.thTotal':'Inspected', 'mdm.thBad':'Defects', 'mdm.thRate':'Defect rate', 'mdm.thPpm':'PPM',
+  'mdm.gap':'Largest gap between machines: {v}%p — a wide spread on the same model suggests checking that machine (die setup, cooling, ejection).',
+  'mdm.none':'No detailed defect-type data for this model.',
+  'mdm.snapshot':'※ This is snapshot data, so defect types are limited — connect the live Model detail sheet for the full breakdown.',
+  'mdm.eqs':'Producing equipment'
+});
+
+let MODELRANK_HITS = [];
+let LAST_MODEL_MAP = {};
+
+function openModelDetail(model){
+  const m = LAST_MODEL_MAP[model]; if (!m) return;
+  const ppm = m.total ? m.bad/m.total*1e6 : null;
+  const sig = sigmaFromPPM(ppm);
+  const grade = gradeFromSigma(sig);
+
+  document.getElementById('eqmTitle').textContent = t('mdm.title', { model });
+  const pl = periodLabelText();
+  document.getElementById('eqmPeriod').textContent =
+    (pl ? (t('eqm.period') + ' · ' + pl + ' · ') : '') + t('mdm.eqs') + ': ' + (m.eqs||[]).join(', ');
+
+  document.getElementById('eqmKpis').innerHTML = [
+    [t('eqm.total'), m.total.toLocaleString()],
+    [t('eqm.bad'),   m.bad.toLocaleString()],
+    [t('eqm.rate'),  m.total ? (m.bad/m.total*100).toFixed(2)+'%' : '-'],
+    [t('eqm.ppm'),   ppm==null ? '-' : Math.round(ppm).toLocaleString()],
+    [t('eqm.sigma'), sig==null ? '-' : sig.toFixed(2)+'σ'],
+    [t('eqm.grade'), grade.label]
+  ].map(([k,v])=>`<div><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+
+  /* 불량유형 파레토 */
+  let items = Object.entries(m.defects || {}).filter(([,n]) => n > 0).sort((a,b) => b[1]-a[1]);
+  if (!items.length && m.topDefect) items = [[m.topDefect, m.topDefectCount||0]];
+  let html = '';
+  if (!items.length){
+    html = `<div class="note">${t('mdm.none')}</div>`;
+  } else {
+    const sum = items.reduce((a,[,n])=>a+n, 0);
+    const mx = items[0][1];
+    let acc = 0;
+    const rows = items.map(([name,n],i) => {
+      acc += n;
+      const isUn = (name === '미분류' || name === '웜샷');
+      return `<tr class="${isUn?'unclass':''}">
+        <td class="l">${i+1}</td><td class="l">${trTerm(name)}</td>
+        <td>${n.toLocaleString()}</td><td>${(n/sum*100).toFixed(1)}%</td>
+        <td>${(acc/sum*100).toFixed(0)}%</td>
+        <td>${m.total ? Math.round(n/m.total*1e6).toLocaleString() : '-'}</td>
+        <td class="barcell"><i style="width:${(n/mx*100).toFixed(1)}%;background:${isUn?'#c7a008':'#e53935'}"></i></td>
+      </tr>`;
+    }).join('');
+    html = `<table><thead><tr>
+        <th class="l">${t('eqm.rank')}</th><th class="l">${t('eqm.thType')}</th>
+        <th>${t('eqm.thQty')}</th><th>${t('eqm.thShare')}</th><th>${t('eqm.thCum')}</th>
+        <th>${t('eqm.thPpm')}</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  /* 생산 설비별 편차 */
+  const eqRows = Object.entries(m.byEq || {}).filter(([,v]) => v.total > 0)
+    .map(([eq,v]) => ({ eq, total:v.total, bad:v.bad, rate: v.bad/v.total*100 }))
+    .sort((a,b) => b.rate - a.rate);
+  if (eqRows.length){
+    const body = eqRows.map(r => `<tr>
+        <td class="l">${r.eq}</td><td>${r.total.toLocaleString()}</td><td>${r.bad.toLocaleString()}</td>
+        <td>${r.rate.toFixed(2)}%</td><td>${Math.round(r.rate*1e4).toLocaleString()}</td></tr>`).join('');
+    html += `<div class="mdl" style="margin-top:16px;"><b>${t('mdm.eqTitle')}</b></div>
+      <table style="margin-top:6px;"><thead><tr>
+        <th class="l">${t('mdm.thEq')}</th><th>${t('mdm.thTotal')}</th><th>${t('mdm.thBad')}</th>
+        <th>${t('mdm.thRate')}</th><th>${t('mdm.thPpm')}</th></tr></thead><tbody>${body}</tbody></table>`;
+    if (eqRows.length > 1){
+      const gap = eqRows[0].rate - eqRows[eqRows.length-1].rate;
+      html += `<div class="note" style="color:${gap>=5?'#c62828':'#8a949e'};">${t('mdm.gap', { v: gap.toFixed(2) })}</div>`;
+    }
+  }
+  if (!m.defects) html += `<div class="note">${t('mdm.snapshot')}</div>`;
+
+  document.getElementById('eqmBody').innerHTML = html;
+  document.getElementById('eqModal').classList.add('open');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const cv = document.getElementById('chart-model');
+  if (!cv) return;
+  cv.style.cursor = 'pointer';
+  cv.addEventListener('click', e => {
+    const r = cv.getBoundingClientRect();
+    const y = (e.clientY - r.top) * (cv.height / r.height);
+    const hit = MODELRANK_HITS.find(h => y >= h.y0 && y <= h.y1);
+    if (hit) openModelDetail(hit.label);
+  });
+});
 
 </script>
 
