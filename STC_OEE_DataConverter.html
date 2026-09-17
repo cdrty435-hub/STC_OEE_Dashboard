@@ -123,6 +123,10 @@
       ※ <b>구분(정규/특근)</b>은 요일로 자동 판정했습니다 (일요일 → 특근(주말), 그 외(토요일 포함) → 정규 — 실제 시트 데이터 기준으로 확인한 규칙입니다). 특정 주에 이 규칙과 다르면 붙여넣기 전에 수동으로 고쳐주세요.<br>
       ※ <b>웜샷(WARM SHOT)</b> 열이 품질(Q)·Model상세 CSV 맨 끝에 추가되었습니다 — 값은 <b>전체수량 − 양품 − 세부 불량유형 합계</b>입니다.<br>
       &nbsp;&nbsp;&nbsp;구글시트 <b>Q_품질</b> 탭의 마지막 열(기타) 오른쪽에 <b>웜샷</b> 열을 하나 추가한 뒤 붙여넣어 주세요. 기존 주차 행은 비워두어도 대시보드가 같은 식으로 자동 계산합니다.<br>
+      ※ <b>NG · Warm(STD) · Warm(Excess)</b> 3개 열이 품질(Q)·Model상세 CSV <b>맨 오른쪽(웜샷 다음)</b>에 추가되었습니다 — 원본 <b>K/L/M열의 실측값을 그대로</b> 옮긴 것입니다(계산값 아님).<br>
+      &nbsp;&nbsp;&nbsp;구글시트 <b>Q_품질</b> · <b>STC_OEE_Quality_Model_Detail</b> 의 <b>웜샷</b> 열 오른쪽에 <b>NG · Warm(STD) · Warm(Excess)</b> 열 3개를 추가한 뒤 붙여넣어 주세요.<br>
+      &nbsp;&nbsp;&nbsp;원본에 이 3개 열이 없는 <b>과거 주차 파일</b>을 변환하면 해당 3열은 <b>0이 아닌 공란</b>으로 출력됩니다(미기록과 0건 구분). 열 위치는 헤더로 자동 감지하므로 신·구 원본 모두 그대로 올리시면 됩니다.<br>
+      &nbsp;&nbsp;&nbsp;참고: 계산식 <b>웜샷</b>과 원본 <b>Warm(STD)+Warm(Excess)</b> 를 나란히 두면 원본 입력값 검증(교차확인)에 쓸 수 있습니다.<br>
       ※ <b>NOF(고장횟수)</b>는 가동률(A) CSV의 <b>마지막 열(AP, 헤더명 NOF)</b>로 출력됩니다 — 구글시트 <b>A_가동률</b> 탭에도 같은 위치에 <b>NOF</b> 열이 있어야 MTTR/MTBF 대시보드가 "시트 NOF 열" 원천으로 읽어갑니다.<br>
       ※ <b>엑셀(.xlsx) 원본을 그대로 올려도</b> 변환됩니다 — CSV로 저장할 때 생기던 빈 행/빈 열, 한글 깨짐, 줄바꿈 헤더 문제가 없어 이쪽을 권장합니다.<br>
       ※ <b>일자별 자동 주차(ISO)</b>를 켜면 주차 라벨을 무시하고 각 행의 일자로 W번호를 계산합니다 — 여러 주가 섞인 원본을 한 번에 변환할 때 사용하세요.<br>
@@ -209,6 +213,23 @@ function isoWeekLabel(iso){
   return 'W' + String(wk).padStart(2, '0');
 }
 
+/* ---------- 원본 K/L/M(NG · Warm(STD) · Warm(Excess)) 열 자동 감지 ----------
+   2026-09 원본부터 Q'ty Good 바로 다음에 NG / Warm(STD) / Warm(Excess) 3개 열이 추가되었다.
+   이 3열이 있으면 Avg shot 이후의 모든 열이 3칸씩 오른쪽으로 밀리므로 ext=3 으로 전체
+   인덱스를 보정한다. 3열이 없는 과거 원본은 ext=0 이라 기존과 100% 동일하게 변환된다. */
+function detectExtCols(rawRows){
+  // 괄호·공백을 지워 '(Warm(Excess))' 같은 표기도 잡는다.
+  const norm = v => String(v==null?'':v).replace(/[\s()]/g,'').toUpperCase();
+  const hRows = [rawRows[0]||[], rawRows[1]||[], rawRows[2]||[]];
+  for (let i = 9; i <= 13; i++){
+    if (!hRows.some(r => norm(r[i]) === 'NG')) continue;
+    const w1 = hRows.some(r => norm(r[i+1]).indexOf('WARM') >= 0);
+    const w2 = hRows.some(r => norm(r[i+2]).indexOf('WARM') >= 0);
+    if (w1 && w2) return { ext:3, ng:i, warmStd:i+1, warmExc:i+2 };
+  }
+  return { ext:0, ng:-1, warmStd:-1, warmExc:-1 };
+}
+
 /* Column index map for the original wide-format reference file (0-indexed) */
 /* 원본 P열(idx 15)의 NOF 유무를 자동 감지해 인덱스를 잡는다.
    - NOF 있는 신규 원본(Rawdata12~)  : offset 1
@@ -219,6 +240,9 @@ function buildColMap(rawRows){
   const h0 = (rawRows[0]||[]).map(norm);
   const body = rawRows.slice(3).filter(r => r.length > 40);
 
+  const E = detectExtCols(rawRows);
+  const ext = E.ext;                                // 0 = 구 원본, 3 = NG/Warm 열 추가 원본
+
   /* 1단계: 가동률/성능/품질은 '%'로 끝나는 3개 연속 칸이다.
      헤더 글자에 의존하지 않고 이 구조로 전체 오프셋을 판정한다. */
   const pctRatio = i => {
@@ -227,40 +251,51 @@ function buildColMap(rawRows){
     for (const r of body){ const v = String(r[i]==null?'':r[i]).trim(); if (v==='') continue; seen++; if (/%$/.test(v)) hit++; }
     return seen ? hit/seen : 0;
   };
-  let pctIdx = -1;
-  for (let i = 44; i <= 50; i++){
-    if (pctRatio(i) > 0.8 && pctRatio(i+1) > 0.8 && pctRatio(i+2) > 0.8){ pctIdx = i; break; }
+  const findPct = (from, to) => {
+    for (let i = from; i <= to; i++){
+      if (pctRatio(i) > 0.8 && pctRatio(i+1) > 0.8 && pctRatio(i+2) > 0.8) return i;
+    }
+    return -1;
+  };
+  const pctIdx = findPct(44+ext, 53);
+  const o = pctIdx >= 0 ? (pctIdx - 46 - ext) : ((h0[15+ext]||'').indexOf('NOF') >= 0 ? 1 : 0);
+  if (o < 0 || o > 1){
+    // 오차가 정확히 3칸이면 NG/Warm 열은 있는데 헤더를 못 읽은 경우다 — 조용히 틀리지 않고 원인을 알려준다.
+    if (ext === 0 && (o === 3 || o === 4)){
+      throw new Error('원본에 NG · Warm(STD) · Warm(Excess) 3개 열이 추가된 것으로 보이는데 헤더 제목을 인식하지 못했습니다. 해당 3개 열의 제목 칸에 "NG", "Warm(STD)", "Warm(Excess)" 가 들어 있는지 확인해주세요.');
+    }
+    throw new Error('원본 열 구조를 인식하지 못했습니다. 가동률/성능/품질 열의 위치가 예상 범위를 벗어났습니다.');
   }
-  const o = pctIdx >= 0 ? (pctIdx - 46) : ((h0[15]||'').indexOf('NOF') >= 0 ? 1 : 0);
-  if (o < 0 || o > 1) throw new Error('원본 열 구조를 인식하지 못했습니다. 가동률/성능/품질 열의 위치가 예상 범위를 벗어났습니다.');
 
   /* 2단계: NOF 열 찾기 — ① 헤더에 NOF 표기 ② P열 삽입형 ③ 맨 뒤 이동형 */
   let nofIdx = -1;
   for (let i=0;i<h0.length;i++){ const t = h0[i]||''; if (t.indexOf('NOF') >= 0 || t.indexOf('고장횟수') >= 0) { nofIdx = i; break; } }
-  if (nofIdx < 0 && o === 1) nofIdx = 15;
+  if (nofIdx < 0 && o === 1) nofIdx = 15+ext;
   if (nofIdx < 0){
-    // 불량합계(75+o) '다음' 칸부터 탐색. 불량합계와 값이 같은 열은 제외한다.
-    for (let i = 76+o; i <= 79+o; i++){
+    // 불량합계(75+ext+o) '다음' 칸부터 탐색. 불량합계와 값이 같은 열은 제외한다.
+    for (let i = 76+ext+o; i <= 79+ext+o; i++){
       let ok=0, seen=0, sameAsTotal=0;
       for (const r of body){
         const v=String(r[i]==null?'':r[i]).trim();
         if(v===''||v==='-') continue;
         seen++;
         if(/^\d{1,2}$/.test(v) && Number(v) <= 99) ok++;
-        if(v === String(r[75+o]==null?'':r[75+o]).trim()) sameAsTotal++;
+        if(v === String(r[75+ext+o]==null?'':r[75+ext+o]).trim()) sameAsTotal++;
       }
       if (seen >= 20 && ok/seen > 0.9 && sameAsTotal/seen < 0.5){ nofIdx = i; break; }
     }
   }
   const hasNof = nofIdx >= 0;
-  LAST_LAYOUT = { offset:o, nofIdx:nofIdx, pctIdx:pctIdx };
+  LAST_LAYOUT = { offset:o, nofIdx:nofIdx, pctIdx:pctIdx, ext:ext, ngIdx:E.ng };
   const C = {
-    date:1, equip:2, shift:3, model:4, cav:5, ctStd:6, ctReal:7, qtyTotal:8, qtyGood:9, avgShot:10,
-    shiftTime:11, plan:12, run:13, loss:14,
+    date:1, equip:2, shift:3, model:4, cav:5, ctStd:6, ctReal:7, qtyTotal:8, qtyGood:9,
+    hasExt: ext === 3, ng: E.ng, warmStd: E.warmStd, warmExc: E.warmExc,
+    avgShot:10+ext,
+    shiftTime:11+ext, plan:12+ext, run:13+ext, loss:14+ext,
     hasNof: hasNof, nof: nofIdx,
-    lossReasonsStart:15+o, lossReasonsEnd:45+o,   // 31 columns
-    availability:46+o, performance:47+o, quality:48+o,
-    qualReasonsStart:49+o, qualReasonsEnd:74+o    // 26 columns
+    lossReasonsStart:15+ext+o, lossReasonsEnd:45+ext+o,   // 31 columns
+    availability:46+ext+o, performance:47+ext+o, quality:48+ext+o,
+    qualReasonsStart:49+ext+o, qualReasonsEnd:74+ext+o    // 26 columns
   };
   // 안전장치: 3번째 헤더행의 라벨로 위치 검증. 어긋나면 조용히 틀리지 않고 즉시 중단.
   const h2 = (rawRows[2]||[]).map(v=>String(v==null?'':v).trim());
@@ -284,8 +319,8 @@ function nofVal(raw){
 
 const A_HEADER = ['일자','주차','설비명','교대','구분','쉬프트시간_분','계획시간_분','가동시간_분','Losstime_분','금형수리','금형파손','핀파손','설비수리','전기로수리','취출기수리','스프레이수리','슬라이드코어수리','팁교체','노즐막힘','플런저오일막힘','래들수리','조건변경','탈산처리','스크랩용해','전기로회전','금형교체','휴식, 설비교대','청소','미팅/정전','금형냉각라인','제품소착','컨베이어수리','설비냉각수','스프레이조정','바가지교체','히터수리','펌프이상','로트마크, 사상','진공설비','기타','가동률(A)','NOF'];
 const P_HEADER = ['일자','주차','설비명','교대','구분','Model','CAV','CT_STD','CT_Real','Qty_Total','Avg_shot','가동시간_분','성능(P)'];
-const Q_HEADER = ['일자','주차','설비명','교대','구분','Qty_Total','Qty_Good','불량수량','품질(Q)','미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스','품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타','웜샷'];
-const Q_MODEL_HEADER = ['일자','주차','설비명','교대','Model','구분','Qty_Total','Qty_Good','불량수량','품질(Q)','미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스','품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타','웜샷'];
+const Q_HEADER = ['일자','주차','설비명','교대','구분','Qty_Total','Qty_Good','불량수량','품질(Q)','미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스','품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타','웜샷','NG','Warm(STD)','Warm(Excess)'];
+const Q_MODEL_HEADER = ['일자','주차','설비명','교대','Model','구분','Qty_Total','Qty_Good','불량수량','품질(Q)','미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스','품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타','웜샷','NG','Warm(STD)','Warm(Excess)'];
 
 function parseRefDate(raw, year){
   // raw like "6.24" -> "2026-06-24"
@@ -346,11 +381,16 @@ function convert(rawRows, year, weekLabel, autoWeek){
        (사내 집계 정의: 전체수량 = 양품 + 불량 + 웜샷). */
     const defectSum = qualReasons.reduce((a,b)=>a+(Number(b)||0), 0);
     const warmShot = Math.max(0, Math.round((badQty - defectSum) * 100) / 100);
-    qRows.push([iso, wkLabel, equip, shift, gubun, num(r[COL.qtyTotal]), num(r[COL.qtyGood]), badQty, cleanPct(r[COL.quality]), ...qualReasons, warmShot]);
+    /* 원본 K/L/M 실측값(NG · Warm(STD) · Warm(Excess))을 맨 오른쪽 3열로 그대로 내보낸다.
+       해당 열이 없는 과거 원본은 0이 아니라 공란으로 남겨 '미기록'과 '0건'을 구분한다. */
+    const extVals = COL.hasExt
+      ? [num(r[COL.ng]), num(r[COL.warmStd]), num(r[COL.warmExc])]
+      : ['', '', ''];
+    qRows.push([iso, wkLabel, equip, shift, gubun, num(r[COL.qtyTotal]), num(r[COL.qtyGood]), badQty, cleanPct(r[COL.quality]), ...qualReasons, warmShot, ...extVals]);
 
     // Q + Model row (only meaningful when Qty_Total > 0, matches the quality dashboard's own filter)
     if (num(r[COL.qtyTotal]) > 0) {
-      qModelRows.push([iso, wkLabel, equip, shift, cleanStr(r[COL.model]), gubun, num(r[COL.qtyTotal]), num(r[COL.qtyGood]), badQty, cleanPct(r[COL.quality]), ...qualReasons, warmShot]);
+      qModelRows.push([iso, wkLabel, equip, shift, cleanStr(r[COL.model]), gubun, num(r[COL.qtyTotal]), num(r[COL.qtyGood]), badQty, cleanPct(r[COL.quality]), ...qualReasons, warmShot, ...extVals]);
     }
   }
 
@@ -457,11 +497,14 @@ async function onConvertClick(){
     } else {
       diag = ` · NOF 열 감지: 원본 ${srcCol(LAST_LAYOUT.nofIdx)}열 → 값 있는 행 ${result.nofCount} / 합계 ${result.nofSum}건 (미기록 ${aRows.length - result.nofCount}행은 공란).`;
     }
+    const extNote = (LAST_LAYOUT && LAST_LAYOUT.ext === 3)
+      ? ` · NG/Warm 열 감지: 원본 ${srcCol(LAST_LAYOUT.ngIdx)}·${srcCol(LAST_LAYOUT.ngIdx+1)}·${srcCol(LAST_LAYOUT.ngIdx+2)}열 → 품질(Q)/Model상세 CSV 맨 오른쪽 3열로 출력`
+      : ' · NG/Warm 열 없음(구 원본) → 맨 오른쪽 3열은 공란으로 출력';
     const wkNote = result.weekSet.length > 1
       ? ` · 주차: ${result.weekSet.join(', ')}`
       : ` · 주차: ${result.weekSet[0] || week}`;
     const gridNote = ` · 헤더 ${LAST_GRID.headerRow + 1}번째 행 인식${LAST_GRID.shift ? `, 열 ${LAST_GRID.shift > 0 ? LAST_GRID.shift + '칸 왼쪽' : (-LAST_GRID.shift) + '칸 오른쪽'}으로 정렬` : ''}`;
-    setStatus(`변환 완료 — 총 ${total}개 데이터 행 중 ${aRows.length}행 변환${skipped ? `, ${skipped}행 건너뜀(일자 인식 불가)` : ''}.` + gridNote + wkNote + diag, LAST_LAYOUT && LAST_LAYOUT.nofIdx >= 0 ? 'ok' : 'err');
+    setStatus(`변환 완료 — 총 ${total}개 데이터 행 중 ${aRows.length}행 변환${skipped ? `, ${skipped}행 건너뜀(일자 인식 불가)` : ''}.` + gridNote + wkNote + extNote + diag, LAST_LAYOUT && LAST_LAYOUT.nofIdx >= 0 ? 'ok' : 'err');
   } catch(e){
     console.error(e);
     setStatus('변환 오류: ' + e.message, 'err');
