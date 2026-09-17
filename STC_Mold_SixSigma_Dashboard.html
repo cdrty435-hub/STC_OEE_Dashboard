@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STC 금형 수리 6시그마 대시보드 | Mold Repair Six Sigma Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --line:#2a3140;
+  --ink:#e6edf3; --sub:#8b98a9; --dim:#5c6774;
+  --accent:#00d3a7; --accent2:#3fb7ff; --warn:#ffb02e; --bad:#ff5d5d;
+  --grid:#232a36;
+  --mono:'SF Mono',ui-monospace,'Cascadia Code','Consolas',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Pretendard','Segoe UI',-apple-system,'Noto Sans Thai',sans-serif;line-height:1.5;padding-bottom:60px}
+.wrap{max-width:1320px;margin:0 auto;padding:0 20px}
+
+/* Header */
+header{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#11161f,transparent);position:sticky;top:0;z-index:50;backdrop-filter:blur(8px)}
+.hbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;max-width:1320px;margin:0 auto;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:12px}
+.sigma{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--accent);letter-spacing:-1px}
+.sigma b{color:var(--ink)}
+.brand h1{font-size:15px;font-weight:600}
+.brand .sub{font-size:11.5px;color:var(--dim);font-family:var(--mono)}
+.period{font-family:var(--mono);font-size:12px;color:var(--sub);text-align:right}
+.period .p{color:var(--accent2)}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-top:8px;overflow-x:auto}
+.tab{padding:11px 18px;font-size:13px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-weight:500;transition:.15s}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--accent);border-color:var(--accent)}
+.tab .th{font-size:10px;color:var(--dim);display:block;font-weight:400}
+
+section{display:none;padding-top:24px}
+section.on{display:block;animation:fade .3s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* KPI cards */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.kpi.a2::before{background:var(--accent2)}.kpi.w::before{background:var(--warn)}.kpi.b::before{background:var(--bad)}
+.kpi .lab{font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono)}
+.kpi .val{font-size:28px;font-weight:700;margin:6px 0 2px;font-family:var(--mono);letter-spacing:-1px}
+.kpi .unit{font-size:13px;color:var(--dim);font-weight:400}
+.kpi .note{font-size:11px;color:var(--dim)}
+
+/* Grid + panels */
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:2fr 1fr}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+.panel h3{font-size:13px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.panel h3 .tag{font-size:10px;color:var(--dim);font-family:var(--mono);font-weight:400}
+.panel .desc{font-size:11.5px;color:var(--dim);margin-bottom:14px}
+.chartbox{position:relative;height:300px}
+.chartbox.tall{height:360px}
+
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--grid)}
+th{color:var(--sub);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.4px;font-family:var(--mono)}
+td{color:var(--ink)}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+tr:hover td{background:var(--panel2)}
+.bar-cell{position:relative}
+.bar-cell .bar{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(0,211,167,.18),rgba(0,211,167,.04));z-index:0;border-radius:3px}
+.bar-cell span{position:relative;z-index:1}
+.rank{color:var(--dim);font-family:var(--mono);font-size:11px}
+.chip{display:inline-block;padding:1px 7px;border-radius:4px;font-size:11px;font-family:var(--mono)}
+.chip.hi{background:rgba(255,93,93,.12);color:var(--bad)}
+.chip.mid{background:rgba(255,176,46,.12);color:var(--warn)}
+.chip.lo{background:rgba(0,211,167,.12);color:var(--accent)}
+
+.insight{background:linear-gradient(135deg,rgba(0,211,167,.06),rgba(63,183,255,.04));border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--sub)}
+.insight b{color:var(--ink)}
+.insight .h{font-size:11px;color:var(--accent);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+
+.foot{text-align:center;color:var(--dim);font-size:11px;font-family:var(--mono);margin-top:30px;padding-top:20px;border-top:1px solid var(--line)}
+
+@media(max-width:860px){.g2,.g3{grid-template-columns:1fr}.period{text-align:left}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hbar">
+    <div class="brand">
+      <div class="sigma">6<b>σ</b></div>
+      <div>
+        <h1>STC 금형 수리이력 품질분석 대시보드</h1>
+        <div class="sub">MOLD REPAIR SIX-SIGMA ANALYSIS · การวิเคราะห์การซ่อมแม่พิมพ์</div>
+      </div>
+    </div>
+    <div class="period">
+      분석기간 <span class="p" id="hd-period">-</span><br>
+      총 <span class="p" id="hd-cnt">-</span>건 · 금형 <span class="p" id="hd-mold">-</span>종
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="tabs">
+      <div class="tab on" data-t="ov">개요 <span class="th">Overview</span></div>
+      <div class="tab" data-t="tr">추이 <span class="th">Trend</span></div>
+      <div class="tab" data-t="pa">파레토 <span class="th">Pareto</span></div>
+      <div class="tab" data-t="eq">설비/금형 <span class="th">Equipment</span></div>
+      <div class="tab" data-t="op">운영 <span class="th">Operation</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- OVERVIEW -->
+<section id="ov" class="on">
+  <div class="kpis" id="kpi-row"></div>
+  <div class="insight" id="ov-insight"></div>
+  <div class="grid g2">
+    <div class="panel">
+      <h3>월별 수리 건수 & 총 다운타임 <span class="tag">Volume vs Downtime</span></h3>
+      <div class="desc">막대=수리건수, 선=총 수리시간(시간). 물량과 손실시간의 상관을 본다.</div>
+      <div class="chartbox"><canvas id="c-ovmonthly"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>원인 상위 6 <span class="tag">Top Causes</span></h3>
+      <div class="desc">발생건수 기준. 상위 소수 원인이 대부분을 차지 (파레토 법칙).</div>
+      <div class="chartbox"><canvas id="c-ovcause"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- TREND -->
+<section id="tr">
+  <div class="insight" id="tr-insight"></div>
+  <div class="grid g2">
+    <div class="panel">
+      <h3>월별 수리건수 <span class="tag">Cases / Month</span></h3>
+      <div class="desc">물량 추이. 관리한계선(평균±관리폭)으로 이상 월 식별.</div>
+      <div class="chartbox"><canvas id="c-trcnt"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>월별 수리시간 중앙값 <span class="tag">Median Time (min)</span></h3>
+      <div class="desc">건당 소요시간 추세. 목표 60분(USL) 대비 관리상태 확인.</div>
+      <div class="chartbox"><canvas id="c-trtime"></canvas></div>
+    </div>
+  </div>
+  <div class="grid" style="margin-top:16px">
+    <div class="panel">
+      <h3>월별 수리비용 <span class="tag">Cost / Month (USD)</span></h3>
+      <div class="desc">부품·수리 비용 추이. 스파이크 월은 대형 금형손상 집중 시점.</div>
+      <div class="chartbox"><canvas id="c-trcost"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- PARETO -->
+<section id="pa">
+  <div class="insight" id="pa-insight"></div>
+  <div class="grid g2">
+    <div class="panel">
+      <h3>수리유형 파레토 <span class="tag">Repair Type</span></h3>
+      <div class="desc">막대=건수, 선=누적%. 80% 지점까지가 핵심 개선대상.</div>
+      <div class="chartbox tall"><canvas id="c-paRepair"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>원인 파레토 <span class="tag">Root Cause</span></h3>
+      <div class="desc">막대=건수, 선=누적%. Vital Few 원인 집중.</div>
+      <div class="chartbox tall"><canvas id="c-paCause"></canvas></div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:16px">
+    <h3>원인별 손실 3대 지표 <span class="tag">Cause × Freq / Time / Cost</span></h3>
+    <div class="desc">발생빈도가 낮아도 시간·비용 손실이 큰 원인을 놓치지 않기 위한 교차표.</div>
+    <div id="t-cause"></div>
+  </div>
+</section>
+
+<!-- EQUIPMENT -->
+<section id="eq">
+  <div class="insight" id="eq-insight"></div>
+  <div class="grid g2">
+    <div class="panel">
+      <h3>설비(DC)별 수리건수 & 다운타임 <span class="tag">By Machine</span></h3>
+      <div class="desc">건수 상위 15개 설비. 다운타임 큰 설비는 예방보전 우선대상.</div>
+      <div class="chartbox tall"><canvas id="c-eqdc"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>금형(Mold)별 수리빈도 상위 15 <span class="tag">By Mold</span></h3>
+      <div class="desc">반복 고장 금형. 정밀점검·재제작 검토 후보.</div>
+      <div id="t-mold"></div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:16px">
+    <h3>설비별 3대 지표 상세 <span class="tag">DC Detail</span></h3>
+    <div id="t-dc"></div>
+  </div>
+</section>
+
+<!-- OPERATION -->
+<section id="op">
+  <div class="insight" id="op-insight"></div>
+  <div class="grid g2">
+    <div class="panel">
+      <h3>주/야간 교대별 <span class="tag">Day / Night</span></h3>
+      <div class="desc">교대 간 발생량·소요시간 비교. 야간 대응력 점검.</div>
+      <div class="chartbox"><canvas id="c-opshift"></canvas></div>
+    </div>
+    <div class="panel">
+      <h3>수리 담당자별 처리건수 <span class="tag">By Repairer</span></h3>
+      <div class="desc">업무 편중도 확인. 상위 2명 집중 여부.</div>
+      <div class="chartbox"><canvas id="c-oprep"></canvas></div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:16px">
+    <h3>담당자별 처리 상세 <span class="tag">Repairer Detail</span></h3>
+    <div id="t-rep"></div>
+  </div>
+</section>
+
+<div class="foot">STC Co., Ltd. · Maintenance Engineering · Six Sigma Mold Repair Analysis · 데이터 자동집계 (Google Sheets → CSV → Dashboard)</div>
+</div>
+
+<script>
+const DATA = {"summary": {"period": "2025-07-01 ~ 2026-07-09", "total_cases": 4176, "unique_molds": 173, "unique_dc": 25, "total_downtime_min": 279989, "total_downtime_hr": 4666.5, "time_mean": 67.2, "time_median": 30.0, "time_std": 346.9, "time_p95": 184.0, "total_cost_usd": 1773620.0, "cost_cases": 2982, "avg_cost_usd": 595.0, "top_cause": "Core pin broken", "top_cause_pct": 12.3, "top_mold": "350", "top_mold_cnt": 308, "usl_60_z": -0.02, "pct_over_60": 18.8, "pct_over_120": 8.7}, "monthly": [{"ym": "2025-07", "cnt": 214, "time_sum": 24196.0, "time_med": 70.0, "cost_sum": 8180.0, "molds": 57}, {"ym": "2025-08", "cnt": 305, "time_sum": 35750.0, "time_med": 40.0, "cost_sum": 36202.0, "molds": 69}, {"ym": "2025-09", "cnt": 348, "time_sum": 14605.0, "time_med": 30.0, "cost_sum": 21741.0, "molds": 65}, {"ym": "2025-10", "cnt": 462, "time_sum": 16179.0, "time_med": 24.0, "cost_sum": 215061.0, "molds": 64}, {"ym": "2025-11", "cnt": 322, "time_sum": 11115.0, "time_med": 25.0, "cost_sum": 142079.0, "molds": 54}, {"ym": "2025-12", "cnt": 362, "time_sum": 12676.0, "time_med": 25.0, "cost_sum": 139460.0, "molds": 57}, {"ym": "2026-01", "cnt": 469, "time_sum": 21111.0, "time_med": 19.0, "cost_sum": 248982.0, "molds": 50}, {"ym": "2026-02", "cnt": 441, "time_sum": 10903.0, "time_med": 19.0, "cost_sum": 111801.0, "molds": 56}, {"ym": "2026-03", "cnt": 346, "time_sum": 23938.0, "time_med": 30.0, "cost_sum": 103370.0, "molds": 58}, {"ym": "2026-04", "cnt": 234, "time_sum": 25830.0, "time_med": 45.0, "cost_sum": 138966.0, "molds": 47}, {"ym": "2026-05", "cnt": 273, "time_sum": 41469.0, "time_med": 50.0, "cost_sum": 188446.0, "molds": 53}, {"ym": "2026-06", "cnt": 325, "time_sum": 33338.0, "time_med": 55.0, "cost_sum": 307118.0, "molds": 57}, {"ym": "2026-07", "cnt": 75, "time_sum": 8879.0, "time_med": 35.0, "cost_sum": 112215.0, "molds": 24}], "by_dc": [{"DC": "DC22", "cnt": 451, "time_sum": 37053.0, "time_med": 30.0, "cost_sum": 337983.0}, {"DC": "DC3", "cnt": 376, "time_sum": 16959.0, "time_med": 28.0, "cost_sum": 68352.0}, {"DC": "DC12", "cnt": 358, "time_sum": 17670.0, "time_med": 25.0, "cost_sum": 116243.0}, {"DC": "DC13", "cnt": 340, "time_sum": 14092.0, "time_med": 22.0, "cost_sum": 92341.0}, {"DC": "DC23", "cnt": 321, "time_sum": 29681.0, "time_med": 38.0, "cost_sum": 231489.0}, {"DC": "DC10", "cnt": 298, "time_sum": 17943.0, "time_med": 35.0, "cost_sum": 95018.0}, {"DC": "DC9", "cnt": 273, "time_sum": 27555.0, "time_med": 30.0, "cost_sum": 136774.0}, {"DC": "DC4", "cnt": 229, "time_sum": 19186.0, "time_med": 30.0, "cost_sum": 69974.0}, {"DC": "DC2", "cnt": 222, "time_sum": 9035.0, "time_med": 30.0, "cost_sum": 82394.0}, {"DC": "DC21", "cnt": 183, "time_sum": 10908.0, "time_med": 30.0, "cost_sum": 36367.0}, {"DC": "DC15", "cnt": 183, "time_sum": 10658.0, "time_med": 30.0, "cost_sum": 60025.0}, {"DC": "DC17", "cnt": 169, "time_sum": 23852.0, "time_med": 26.0, "cost_sum": 67292.0}, {"DC": "DC8", "cnt": 150, "time_sum": 6231.0, "time_med": 29.0, "cost_sum": 24931.0}, {"DC": "DC11", "cnt": 131, "time_sum": 6058.0, "time_med": 20.0, "cost_sum": 53340.0}, {"DC": "DC19", "cnt": 112, "time_sum": 5166.0, "time_med": 25.0, "cost_sum": 34770.0}], "by_mold": [{"Mold_no": "350", "cnt": 308, "time_sum": 12234.0, "cost_sum": 30890.0}, {"Mold_no": "321", "cnt": 215, "time_sum": 9941.0, "cost_sum": 63339.0}, {"Mold_no": "267", "cnt": 176, "time_sum": 7209.0, "cost_sum": 52906.0}, {"Mold_no": "279", "cnt": 129, "time_sum": 6486.0, "cost_sum": 35604.0}, {"Mold_no": "257", "cnt": 127, "time_sum": 4495.0, "cost_sum": 38904.0}, {"Mold_no": "280", "cnt": 121, "time_sum": 7261.0, "cost_sum": 60606.0}, {"Mold_no": "334", "cnt": 118, "time_sum": 8314.0, "cost_sum": 154913.0}, {"Mold_no": "347", "cnt": 118, "time_sum": 4888.0, "cost_sum": 33112.0}, {"Mold_no": "320", "cnt": 116, "time_sum": 4801.0, "cost_sum": 36157.0}, {"Mold_no": "359", "cnt": 112, "time_sum": 3197.0, "cost_sum": 20786.0}, {"Mold_no": "318", "cnt": 103, "time_sum": 5220.0, "cost_sum": 15763.0}, {"Mold_no": "333", "cnt": 90, "time_sum": 6102.0, "cost_sum": 59666.0}, {"Mold_no": "332", "cnt": 84, "time_sum": 16085.0, "cost_sum": 154264.0}, {"Mold_no": "348", "cnt": 84, "time_sum": 2673.0, "cost_sum": 23203.0}, {"Mold_no": "356", "cnt": 83, "time_sum": 4283.0, "cost_sum": 59180.0}], "repair_pareto": [{"Repair_type": "Disassembly, assembly 분해,조립", "cnt": 740, "time_sum": 15906.0, "cum_pct": 17.7}, {"Repair_type": "Core Pin Replacement 코어핀 교체", "cnt": 714, "time_sum": 46036.0, "cum_pct": 34.9}, {"Repair_type": "Clean dry ice 드라이 아이스 청소", "cnt": 579, "time_sum": 40925.0, "cum_pct": 48.8}, {"Repair_type": "Ejector Pin replacement 에젝터핀 교체", "cnt": 545, "time_sum": 41568.0, "cum_pct": 61.8}, {"Repair_type": "Polishing", "cnt": 486, "time_sum": 25817.0, "cum_pct": 73.5}, {"Repair_type": "Algon welding 알곤용접", "cnt": 248, "time_sum": 40303.0, "cum_pct": 79.4}, {"Repair_type": "Grinding", "cnt": 228, "time_sum": 15445.0, "cum_pct": 84.9}, {"Repair_type": "Other 다른", "cnt": 129, "time_sum": 11020.0, "cum_pct": 88.0}, {"Repair_type": "Sticking 제품 박힘", "cnt": 126, "time_sum": 10514.0, "cum_pct": 91.0}, {"Repair_type": "Leakage Test 냉각수, 윤활유 누출 확인", "cnt": 83, "time_sum": 8269.0, "cum_pct": 93.0}, {"Repair_type": "Replacing Lot Marking 로트마킹 교체", "cnt": 78, "time_sum": 3274.0, "cum_pct": 94.9}, {"Repair_type": "Discharge coating 방전 코팅", "cnt": 47, "time_sum": 1807.0, "cum_pct": 96.0}], "cause_pareto": [{"Cause_norm": "Core pin broken", "cnt": 513, "time_sum": 32017.0, "cost_sum": 25575.0, "cum_pct": 12.3}, {"Cause_norm": "Cleaning", "cnt": 462, "time_sum": 35410.0, "cost_sum": 532130.0, "cum_pct": 23.3}, {"Cause_norm": "Ejector pin broken", "cnt": 432, "time_sum": 34195.0, "cost_sum": 36841.0, "cum_pct": 33.7}, {"Cause_norm": "Disassembly", "cnt": 360, "time_sum": 6998.0, "cost_sum": 58317.0, "cum_pct": 42.3}, {"Cause_norm": "Overheat", "cnt": 176, "time_sum": 6031.0, "cost_sum": 34407.0, "cum_pct": 46.5}, {"Cause_norm": "Assembly", "cnt": 110, "time_sum": 2800.0, "cost_sum": 23068.0, "cum_pct": 49.2}, {"Cause_norm": "Crack", "cnt": 105, "time_sum": 4690.0, "cost_sum": 136377.0, "cum_pct": 51.7}, {"Cause_norm": "Sticking", "cnt": 101, "time_sum": 7031.0, "cost_sum": 36768.0, "cum_pct": 54.1}, {"Cause_norm": "Weld mark", "cnt": 66, "time_sum": 6380.0, "cost_sum": 42613.0, "cum_pct": 55.7}, {"Cause_norm": "Mold Broken", "cnt": 60, "time_sum": 5540.0, "cost_sum": 144297.0, "cum_pct": 57.1}, {"Cause_norm": "Replacing lot mark", "cnt": 50, "time_sum": 1712.0, "cost_sum": 708.0, "cum_pct": 58.3}, {"Cause_norm": "Mold crack", "cnt": 45, "time_sum": 4793.0, "cost_sum": 24697.0, "cum_pct": 59.4}], "by_shift": [{"Shift_norm": "Day", "cnt": 2634, "time_med": 30.0}, {"Shift_norm": "Night", "cnt": 1542, "time_med": 29.0}], "by_repairer": [{"Repairer": "AEKKACHAI", "cnt": 1626, "time_sum": 105460.0}, {"Repairer": "VENKI", "cnt": 1107, "time_sum": 74625.0}, {"Repairer": "Jetsadagorn", "cnt": 572, "time_sum": 31581.0}, {"Repairer": "CHINNAWUT", "cnt": 294, "time_sum": 22624.0}, {"Repairer": "SARUNYU", "cnt": 231, "time_sum": 8013.0}, {"Repairer": "CHINAWUT", "cnt": 152, "time_sum": 6867.0}, {"Repairer": "LEE FIRSY", "cnt": 49, "time_sum": 4033.0}, {"Repairer": "NEANG", "cnt": 40, "time_sum": 3319.0}, {"Repairer": "KIRAN", "cnt": 20, "time_sum": 396.0}, {"Repairer": "NITIPAN", "cnt": 16, "time_sum": 1030.0}, {"Repairer": "KORRAKOD", "cnt": 12, "time_sum": 747.0}, {"Repairer": "CHAWANWIT", "cnt": 11, "time_sum": 308.0}, {"Repairer": "SARUNYA", "cnt": 9, "time_sum": 324.0}, {"Repairer": "TEERAMETH", "cnt": 6, "time_sum": 157.0}, {"Repairer": "THEERAMET", "cnt": 5, "time_sum": 302.0}]};
+const F=n=>Number(n).toLocaleString();
+const FK=n=>n>=1000?(n/1000).toFixed(1)+'k':F(n);
+const S=DATA.summary;
+
+// palette
+const AC='#00d3a7',AC2='#3fb7ff',WARN='#ffb02e',BAD='#ff5d5d',GRID='#232a36',SUB='#8b98a9';
+Chart.defaults.color=SUB; Chart.defaults.font.family="'SF Mono',monospace"; Chart.defaults.font.size=11;
+Chart.defaults.plugins.legend.labels.boxWidth=10;
+
+// header
+hd_period.textContent=S.period;
+hd_cnt.textContent=F(S.total_cases);
+hd_mold.textContent=S.unique_molds;
+
+// KPI cards
+const kpis=[
+ {l:'총 수리건수',v:F(S.total_cases),u:'건',n:'유효 이슈 기준',c:''},
+ {l:'총 다운타임',v:F(S.total_downtime_hr),u:'시간',n:'수리시간 합계',c:'a2'},
+ {l:'건당 중앙값',v:S.time_median,u:'분',n:'평균 '+S.time_mean+'분',c:''},
+ {l:'총 수리비용',v:'$'+FK(S.total_cost_usd),u:'',n:F(S.cost_cases)+'건 집계',c:'w'},
+ {l:'60분 초과율',v:S.pct_over_60,u:'%',n:'목표시간 USL 초과',c:S.pct_over_60>15?'b':''},
+ {l:'최다 고장금형',v:'#'+S.top_mold,u:'',n:S.top_mold_cnt+'건 반복',c:'b'},
+];
+kpi_row.innerHTML=kpis.map(k=>`<div class="kpi ${k.c}"><div class="lab">${k.l}</div><div class="val">${k.v}<span class="unit"> ${k.u}</span></div><div class="note">${k.n}</div></div>`).join('');
+
+// insights
+ov_insight.innerHTML=`<div class="h">핵심 요약 · Executive Summary</div>분석기간 동안 <b>${F(S.total_cases)}건</b>의 금형 수리가 발생했으며 총 <b>${F(S.total_downtime_hr)}시간</b>의 설비 손실과 <b>$${F(S.total_cost_usd)}</b>의 비용이 집계되었다. 최다 원인은 <b>${S.top_cause}</b>(${S.top_cause_pct}%)이며, 금형 <b>#${S.top_mold}</b>이 ${S.top_mold_cnt}건으로 반복 고장이 가장 심하다. 건당 소요시간은 중앙값 ${S.time_median}분이지만 표준편차가 ${S.time_std}분으로 편차가 커, 장시간 수리 건에 대한 표준화가 개선 포인트다.`;
+
+tr_insight.innerHTML=`<div class="h">추이 관점</div>수리 물량은 <b>2025-10(462건)·2026-01(469건)</b>에 정점을 보였고, 최근 수리시간 중앙값이 다시 상승하는 구간이 있어 관리상태 점검이 필요하다. 비용은 특정 월에 <b>대형 금형손상</b>이 집중되며 급증한다.`;
+
+pa_insight.innerHTML=`<div class="h">파레토 관점 · Vital Few</div>상위 5개 수리유형(분해조립·코어핀·드라이아이스청소·에젝터핀·연마)이 전체의 <b>73.5%</b>를 차지한다. 빈도 대비 <b>알곤용접</b>은 건수는 적으나 총 소요시간이 매우 커, 시간손실 관점의 우선순위가 다르다는 점에 주목.`;
+
+eq_insight.innerHTML=`<div class="h">설비/금형 관점</div><b>DC22</b>가 건수·비용 모두 1위(451건, $${F(337983)})로 집중 관리 대상이다. 금형 <b>#350</b>은 308건으로 최다 반복 고장이나 건당 시간·비용은 낮아 경미·반복형이며, <b>#334·#332</b>는 건수 대비 비용이 매우 높은 <b>고비용 손상형</b>이다.`;
+
+op_insight.innerHTML=`<div class="h">운영 관점</div>주간 수리가 야간의 약 1.7배이며 건당 소요시간은 주야 유사하다. 담당자 <b>AEKKACHAI·VENKI</b> 2명이 전체의 65%를 처리해 <b>업무 편중</b>이 뚜렷하다 — 인력 리스크 및 교육 필요.`;
+
+// ---- charts ----
+const M=DATA.monthly, months=M.map(x=>x.ym.slice(2));
+const gridOpt={grid:{color:GRID},border:{color:GRID}};
+const noGrid={grid:{display:false}};
+
+new Chart(c_ovmonthly,{data:{labels:months,datasets:[
+ {type:'bar',label:'수리건수',data:M.map(x=>x.cnt),backgroundColor:AC+'cc',yAxisID:'y',borderRadius:3},
+ {type:'line',label:'다운타임(h)',data:M.map(x=>Math.round(x.time_sum/60)),borderColor:AC2,backgroundColor:AC2,yAxisID:'y1',tension:.35,pointRadius:2}
+]},options:{maintainAspectRatio:false,scales:{x:noGrid,y:{...gridOpt,position:'left'},y1:{...noGrid,position:'right'}}}});
+
+new Chart(c_ovcause,{type:'bar',data:{labels:DATA.cause_pareto.slice(0,6).map(x=>x.Cause_norm),datasets:[{data:DATA.cause_pareto.slice(0,6).map(x=>x.cnt),backgroundColor:[BAD,AC,WARN,AC2,'#a78bfa','#f472b6'],borderRadius:4}]},options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:gridOpt,y:noGrid}}});
+
+// trend
+const meanCnt=M.reduce((a,b)=>a+b.cnt,0)/M.length;
+new Chart(c_trcnt,{data:{labels:months,datasets:[
+ {type:'line',label:'건수',data:M.map(x=>x.cnt),borderColor:AC,backgroundColor:AC+'22',fill:true,tension:.3,pointRadius:3},
+ {type:'line',label:'평균',data:M.map(()=>Math.round(meanCnt)),borderColor:SUB,borderDash:[5,4],pointRadius:0}
+]},options:{maintainAspectRatio:false,scales:{x:noGrid,y:gridOpt}}});
+
+new Chart(c_trtime,{data:{labels:months,datasets:[
+ {type:'line',label:'중앙값(분)',data:M.map(x=>x.time_med),borderColor:WARN,backgroundColor:WARN+'22',fill:true,tension:.3,pointRadius:3},
+ {type:'line',label:'목표 60분(USL)',data:M.map(()=>60),borderColor:BAD,borderDash:[5,4],pointRadius:0}
+]},options:{maintainAspectRatio:false,scales:{x:noGrid,y:gridOpt}}});
+
+new Chart(c_trcost,{type:'bar',data:{labels:months,datasets:[{label:'수리비($)',data:M.map(x=>x.cost_sum),backgroundColor:M.map(x=>x.cost_sum>200000?BAD+'cc':AC2+'cc'),borderRadius:3}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:noGrid,y:{...gridOpt,ticks:{callback:v=>'$'+FK(v)}}}}});
+
+// pareto builder
+function pareto(cv,rows,labelKey){
+ const labels=rows.map(r=>r[labelKey]);
+ new Chart(cv,{data:{labels,datasets:[
+  {type:'bar',label:'건수',data:rows.map(r=>r.cnt),backgroundColor:AC+'cc',yAxisID:'y',borderRadius:3},
+  {type:'line',label:'누적%',data:rows.map(r=>r.cum_pct),borderColor:WARN,backgroundColor:WARN,yAxisID:'y1',tension:.2,pointRadius:3}
+ ]},options:{maintainAspectRatio:false,scales:{
+  x:{...noGrid,ticks:{maxRotation:60,minRotation:40,font:{size:9}}},
+  y:{...gridOpt,position:'left'},
+  y1:{...noGrid,position:'right',min:0,max:100,ticks:{callback:v=>v+'%'}}
+ }}});
+}
+pareto(c_paRepair,DATA.repair_pareto,'Repair_type');
+pareto(c_paCause,DATA.cause_pareto,'Cause_norm');
+
+// cause table
+(function(){
+ const rows=DATA.cause_pareto;
+ const mx=Math.max(...rows.map(r=>r.cnt));
+ let h='<table><thead><tr><th>#</th><th>원인 Cause</th><th class="num">건수</th><th class="num">시간(분)</th><th class="num">비용($)</th></tr></thead><tbody>';
+ rows.forEach((r,i)=>{h+=`<tr><td class="rank">${i+1}</td><td class="bar-cell"><div class="bar" style="width:${r.cnt/mx*100}%"></div><span>${r.Cause_norm}</span></td><td class="num">${F(r.cnt)}</td><td class="num">${F(r.time_sum)}</td><td class="num">$${F(r.cost_sum)}</td></tr>`});
+ h+='</tbody></table>'; t_cause.innerHTML=h;
+})();
+
+// mold table
+(function(){
+ const rows=DATA.by_mold; const mx=Math.max(...rows.map(r=>r.cnt));
+ let h='<table><thead><tr><th>#</th><th>금형 Mold</th><th class="num">건수</th><th class="num">시간</th><th class="num">비용($)</th><th>유형</th></tr></thead><tbody>';
+ rows.forEach((r,i)=>{
+   const cpc=r.cost_sum/r.cnt;
+   const tag=cpc>800?'<span class="chip hi">고비용</span>':(r.cnt>150?'<span class="chip mid">반복다발</span>':'<span class="chip lo">경미</span>');
+   h+=`<tr><td class="rank">${i+1}</td><td class="bar-cell"><div class="bar" style="width:${r.cnt/mx*100}%"></div><span>#${r.Mold_no}</span></td><td class="num">${F(r.cnt)}</td><td class="num">${F(r.time_sum)}</td><td class="num">$${F(r.cost_sum)}</td><td>${tag}</td></tr>`});
+ h+='</tbody></table>'; t_mold.innerHTML=h;
+})();
+
+// dc chart + table
+(function(){
+ const rows=DATA.by_dc;
+ new Chart(c_eqdc,{data:{labels:rows.map(r=>r.DC),datasets:[
+  {type:'bar',label:'건수',data:rows.map(r=>r.cnt),backgroundColor:AC+'cc',yAxisID:'y',borderRadius:3},
+  {type:'line',label:'다운타임(h)',data:rows.map(r=>Math.round(r.time_sum/60)),borderColor:AC2,yAxisID:'y1',tension:.3,pointRadius:2}
+ ]},options:{maintainAspectRatio:false,scales:{x:{...noGrid,ticks:{font:{size:9}}},y:{...gridOpt},y1:{...noGrid,position:'right'}}}});
+ const mx=Math.max(...rows.map(r=>r.cnt));
+ let h='<table><thead><tr><th>설비 DC</th><th class="num">건수</th><th class="num">총시간(분)</th><th class="num">중앙값</th><th class="num">비용($)</th></tr></thead><tbody>';
+ rows.forEach(r=>{h+=`<tr><td class="bar-cell"><div class="bar" style="width:${r.cnt/mx*100}%"></div><span>${r.DC}</span></td><td class="num">${F(r.cnt)}</td><td class="num">${F(r.time_sum)}</td><td class="num">${r.time_med}</td><td class="num">$${F(r.cost_sum)}</td></tr>`});
+ h+='</tbody></table>'; t_dc.innerHTML=h;
+})();
+
+// operation
+(function(){
+ const sh=DATA.by_shift;
+ new Chart(c_opshift,{type:'bar',data:{labels:sh.map(x=>x.Shift_norm),datasets:[
+  {label:'건수',data:sh.map(x=>x.cnt),backgroundColor:[AC,AC2],borderRadius:5,yAxisID:'y'},
+ ]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:noGrid,y:gridOpt}}});
+ const rp=DATA.by_repairer.slice(0,8);
+ new Chart(c_oprep,{type:'bar',data:{labels:rp.map(x=>x.Repairer),datasets:[{label:'건수',data:rp.map(x=>x.cnt),backgroundColor:AC+'cc',borderRadius:3}]},options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:gridOpt,y:{...noGrid,ticks:{font:{size:10}}}}}});
+ const rows=DATA.by_repairer; const tot=rows.reduce((a,b)=>a+b.cnt,0); const mx=Math.max(...rows.map(r=>r.cnt));
+ let h='<table><thead><tr><th>담당자 Repairer</th><th class="num">처리건수</th><th class="num">비중</th><th class="num">총시간(분)</th></tr></thead><tbody>';
+ rows.forEach(r=>{h+=`<tr><td class="bar-cell"><div class="bar" style="width:${r.cnt/mx*100}%"></div><span>${r.Repairer}</span></td><td class="num">${F(r.cnt)}</td><td class="num">${(r.cnt/tot*100).toFixed(1)}%</td><td class="num">${F(r.time_sum)}</td></tr>`});
+ h+='</tbody></table>'; t_rep.innerHTML=h;
+})();
+
+// tabs
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+ document.querySelectorAll('section').forEach(x=>x.classList.remove('on'));
+ t.classList.add('on'); document.getElementById(t.dataset.t).classList.add('on');
+});
+</script>
+</body>
+</html>
