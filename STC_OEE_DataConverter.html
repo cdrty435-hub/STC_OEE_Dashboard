@@ -121,13 +121,17 @@
       ※ <b>품질(Q) + Model 상세</b> CSV는 Model(모델명) 컬럼이 추가로 포함된 품질 데이터입니다 — Six Sigma 품질 대시보드의 "모델별 품질 현황"에서 사용하는
       별도 구글시트(<b>STC_OEE_Quality_Model_Detail</b>)에 헤더 행 포함하여 붙여넣으시면(또는 새 주차 데이터를 맨 아래에 이어 붙이면) 대시보드가 자동으로 반영합니다.<br>
       ※ <b>구분(정규/특근)</b>은 요일로 자동 판정했습니다 (일요일 → 특근(주말), 그 외(토요일 포함) → 정규 — 실제 시트 데이터 기준으로 확인한 규칙입니다). 특정 주에 이 규칙과 다르면 붙여넣기 전에 수동으로 고쳐주세요.<br>
-      ※ <b>웜샷(WARM SHOT)</b> 열이 품질(Q)·Model상세 CSV 맨 끝에 추가되었습니다 — 값은 <b>전체수량 − 양품 − 세부 불량유형 합계</b>입니다.<br>
+      ※ <b>불량수량 = 순수 NG</b> (웜샷 제외). 사내 집계 정의는 <b>전체수량 = 양품 + 순수NG + 웜샷(STD+Excess)</b> 입니다.<br>
+      &nbsp;&nbsp;&nbsp;예) 9.15 DC22 야간: 1,800 − 1,727 = 73 이지만 이 73은 NG 33 + Warm(STD) 22 + Warm(Excess) 18 이므로 <b>불량수량은 33</b>으로 나갑니다.<br>
+      &nbsp;&nbsp;&nbsp;<b>품질(Q)% 는 원본 시트 계산값을 그대로</b> 옮깁니다(변환기가 다시 계산하지 않음) — 웜샷 제외 기준으로 바꾸시려면 원본 산식을 고쳐주세요.<br>
+      ※ <b>웜샷(WARM SHOT)</b> 열 = <b>Warm(STD) + Warm(Excess)</b> 실측 합계입니다.<br>
+      &nbsp;&nbsp;&nbsp;NG/Warm 열이 없는 <b>과거 원본</b>은 종전 방식(불량수량 = 전체수량−양품, 웜샷 = 잔차)으로 그대로 변환되므로 지난 주차 재변환도 안전합니다.<br>
       &nbsp;&nbsp;&nbsp;구글시트 <b>Q_품질</b> 탭의 마지막 열(기타) 오른쪽에 <b>웜샷</b> 열을 하나 추가한 뒤 붙여넣어 주세요. 기존 주차 행은 비워두어도 대시보드가 같은 식으로 자동 계산합니다.<br>
       ※ <b>NG · Warm(STD) · Warm(Excess)</b> 3개 열이 <b>성능(P)·품질(Q)·Model상세</b> CSV <b>맨 오른쪽</b>에 추가되었습니다 — 원본 <b>K/L/M열의 실측값을 그대로</b> 옮긴 것입니다(계산값 아님).<br>
       &nbsp;&nbsp;&nbsp;구글시트 <b>P_성능</b>: 마지막 열 <b>성능(P)=M열</b> 오른쪽의 <b>N · O · P열</b>에 각각 <b>NG · Warm(STD) · Warm(Excess)</b> 제목을 넣어주세요.<br>
       &nbsp;&nbsp;&nbsp;구글시트 <b>Q_품질</b> · <b>STC_OEE_Quality_Model_Detail</b>: <b>웜샷</b> 열 오른쪽에 같은 이름의 열 3개를 추가해 주세요(Q_품질 → AK·AL·AM, Model상세 → AL·AM·AN).<br>
       &nbsp;&nbsp;&nbsp;원본에 이 3개 열이 없는 <b>과거 주차 파일</b>을 변환하면 해당 3열은 <b>0이 아닌 공란</b>으로 출력됩니다(미기록과 0건 구분). 열 위치는 헤더로 자동 감지하므로 신·구 원본 모두 그대로 올리시면 됩니다.<br>
-      &nbsp;&nbsp;&nbsp;참고: 계산식 <b>웜샷</b>과 원본 <b>Warm(STD)+Warm(Excess)</b> 를 나란히 두면 원본 입력값 검증(교차확인)에 쓸 수 있습니다.<br>
+      &nbsp;&nbsp;&nbsp;변환할 때 <b>전체수량−양품 = NG+웜샷</b> 과 <b>NG = 세부 불량유형 합계</b> 를 행마다 자동 교차검증해, 어긋나는 행이 있으면 상태줄에 ⚠ 로 행 수를 알려드립니다(원본 입력 오류 조기 발견용).<br>
       ※ <b>NOF(고장횟수)</b>는 가동률(A) CSV의 <b>마지막 열(AP, 헤더명 NOF)</b>로 출력됩니다 — 구글시트 <b>A_가동률</b> 탭에도 같은 위치에 <b>NOF</b> 열이 있어야 MTTR/MTBF 대시보드가 "시트 NOF 열" 원천으로 읽어갑니다.<br>
       ※ <b>엑셀(.xlsx) 원본을 그대로 올려도</b> 변환됩니다 — CSV로 저장할 때 생기던 빈 행/빈 열, 한글 깨짐, 줄바꿈 헤더 문제가 없어 이쪽을 권장합니다.<br>
       ※ <b>일자별 자동 주차(ISO)</b>를 켜면 주차 라벨을 무시하고 각 행의 일자로 W번호를 계산합니다 — 여러 주가 섞인 원본을 한 번에 변환할 때 사용하세요.<br>
@@ -355,7 +359,7 @@ function convert(rawRows, year, weekLabel, autoWeek){
   const data = rawRows.slice(3).filter(r => r.length > 1 && cleanStr(r[COL.date]));
 
   const aRows = [], pRows = [], qRows = [], qModelRows = [];
-  let skipped = 0;
+  let skipped = 0, ngMismatch = 0, sumMismatch = 0;
 
   for (const r of data) {
     const iso = parseRefDate(r[COL.date], year);
@@ -383,12 +387,26 @@ function convert(rawRows, year, weekLabel, autoWeek){
     // Q row
     const qualReasons = [];
     for (let i = COL.qualReasonsStart; i <= COL.qualReasonsEnd; i++) qualReasons.push(num(r[i]));
-    const badQty = num(r[COL.qtyTotal]) - num(r[COL.qtyGood]);
-    /* 웜샷(WARM SHOT) = 전체수량 - 양품 - 세부 불량유형 합계.
-       원본 로데이터에 웜샷 전용 열이 없어 잔차로 산출한다
-       (사내 집계 정의: 전체수량 = 양품 + 불량 + 웜샷). */
     const defectSum = qualReasons.reduce((a,b)=>a+(Number(b)||0), 0);
-    const warmShot = Math.max(0, Math.round((badQty - defectSum) * 100) / 100);
+    const gap = num(r[COL.qtyTotal]) - num(r[COL.qtyGood]);   // 전체수량 - 양품 = 순수NG + 웜샷
+
+    /* 불량수량 · 웜샷 산출 — 사내 집계 정의: 전체수량 = 양품 + 순수NG + 웜샷(STD+Excess)
+       ① 원본에 NG/Warm 열이 있으면(신규 원본): 실측값을 그대로 쓴다.
+          불량수량 = NG 만(웜샷 제외), 웜샷 = Warm(STD) + Warm(Excess).
+          예) 9.15 DC22 야간: 1,800 - 1,727 = 73 = NG 33 + Warm 22 + Excess 18 → 불량수량 33 · 웜샷 40
+       ② 없으면(과거 원본): 종전처럼 잔차로 역산한다.
+          불량수량 = 전체수량 - 양품, 웜샷 = 불량수량 - 세부 불량유형 합계 */
+    let badQty, warmShot;
+    if (COL.hasExt) {
+      badQty   = num(r[COL.ng]);
+      warmShot = Math.round((num(r[COL.warmStd]) + num(r[COL.warmExc])) * 100) / 100;
+      // 원본 입력값 교차검증: 순수NG 와 세부 불량유형 합계가 어긋나는 행을 세어 알려준다.
+      if (Math.abs(badQty - defectSum) > 0.005) ngMismatch++;
+      if (Math.abs((badQty + warmShot) - gap) > 0.005) sumMismatch++;
+    } else {
+      badQty   = gap;
+      warmShot = Math.max(0, Math.round((gap - defectSum) * 100) / 100);
+    }
     qRows.push([iso, wkLabel, equip, shift, gubun, num(r[COL.qtyTotal]), num(r[COL.qtyGood]), badQty, cleanPct(r[COL.quality]), ...qualReasons, warmShot, ...extVals]);
 
     // Q + Model row (only meaningful when Qty_Total > 0, matches the quality dashboard's own filter)
@@ -400,7 +418,7 @@ function convert(rawRows, year, weekLabel, autoWeek){
     const weekSet = Array.from(new Set(aRows.map(r=>r[1]))).sort();
     let nofCount = 0, nofSum = 0;
   if (COL.hasNof){ for (const a of aRows){ const v = a[a.length-1]; if (v !== '' ) { nofCount++; nofSum += Number(v)||0; } } }
-  return { aRows, pRows, qRows, qModelRows, skipped, total: data.length, layout: COL, nofCount, nofSum, weekSet };
+  return { aRows, pRows, qRows, qModelRows, skipped, total: data.length, layout: COL, nofCount, nofSum, weekSet, ngMismatch, sumMismatch };
 }
 
 /* ---------- 파일 읽기 : XLSX 직접 지원 + CSV(CP949/EUC-KR) ---------- */
@@ -501,8 +519,10 @@ async function onConvertClick(){
       diag = ` · NOF 열 감지: 원본 ${srcCol(LAST_LAYOUT.nofIdx)}열 → 값 있는 행 ${result.nofCount} / 합계 ${result.nofSum}건 (미기록 ${aRows.length - result.nofCount}행은 공란).`;
     }
     const extNote = (LAST_LAYOUT && LAST_LAYOUT.ext === 3)
-      ? ` · NG/Warm 열 감지: 원본 ${srcCol(LAST_LAYOUT.ngIdx)}·${srcCol(LAST_LAYOUT.ngIdx+1)}·${srcCol(LAST_LAYOUT.ngIdx+2)}열 → 성능(P) N·O·P열 / 품질(Q)·Model상세 맨 오른쪽 3열로 출력`
-      : ' · NG/Warm 열 없음(구 원본) → 맨 오른쪽 3열은 공란으로 출력';
+      ? ` · NG/Warm 열 감지: 원본 ${srcCol(LAST_LAYOUT.ngIdx)}·${srcCol(LAST_LAYOUT.ngIdx+1)}·${srcCol(LAST_LAYOUT.ngIdx+2)}열 → 불량수량=순수NG · 웜샷=Warm(STD)+Warm(Excess) 적용`
+        + (result.sumMismatch ? ` ⚠ 합계 불일치 ${result.sumMismatch}행(전체수량−양품 ≠ NG+웜샷)` : '')
+        + (result.ngMismatch ? ` ⚠ NG≠세부불량합계 ${result.ngMismatch}행` : ' · NG=세부불량합계 전행 일치')
+      : ' · NG/Warm 열 없음(구 원본) → 종전 방식(불량수량=전체수량−양품, 웜샷=잔차)으로 변환';
     const wkNote = result.weekSet.length > 1
       ? ` · 주차: ${result.weekSet.join(', ')}`
       : ` · 주차: ${result.weekSet[0] || week}`;
