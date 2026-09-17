@@ -123,8 +123,9 @@
       ※ <b>구분(정규/특근)</b>은 요일로 자동 판정했습니다 (일요일 → 특근(주말), 그 외(토요일 포함) → 정규 — 실제 시트 데이터 기준으로 확인한 규칙입니다). 특정 주에 이 규칙과 다르면 붙여넣기 전에 수동으로 고쳐주세요.<br>
       ※ <b>웜샷(WARM SHOT)</b> 열이 품질(Q)·Model상세 CSV 맨 끝에 추가되었습니다 — 값은 <b>전체수량 − 양품 − 세부 불량유형 합계</b>입니다.<br>
       &nbsp;&nbsp;&nbsp;구글시트 <b>Q_품질</b> 탭의 마지막 열(기타) 오른쪽에 <b>웜샷</b> 열을 하나 추가한 뒤 붙여넣어 주세요. 기존 주차 행은 비워두어도 대시보드가 같은 식으로 자동 계산합니다.<br>
-      ※ <b>NG · Warm(STD) · Warm(Excess)</b> 3개 열이 품질(Q)·Model상세 CSV <b>맨 오른쪽(웜샷 다음)</b>에 추가되었습니다 — 원본 <b>K/L/M열의 실측값을 그대로</b> 옮긴 것입니다(계산값 아님).<br>
-      &nbsp;&nbsp;&nbsp;구글시트 <b>Q_품질</b> · <b>STC_OEE_Quality_Model_Detail</b> 의 <b>웜샷</b> 열 오른쪽에 <b>NG · Warm(STD) · Warm(Excess)</b> 열 3개를 추가한 뒤 붙여넣어 주세요.<br>
+      ※ <b>NG · Warm(STD) · Warm(Excess)</b> 3개 열이 <b>성능(P)·품질(Q)·Model상세</b> CSV <b>맨 오른쪽</b>에 추가되었습니다 — 원본 <b>K/L/M열의 실측값을 그대로</b> 옮긴 것입니다(계산값 아님).<br>
+      &nbsp;&nbsp;&nbsp;구글시트 <b>P_성능</b>: 마지막 열 <b>성능(P)=M열</b> 오른쪽의 <b>N · O · P열</b>에 각각 <b>NG · Warm(STD) · Warm(Excess)</b> 제목을 넣어주세요.<br>
+      &nbsp;&nbsp;&nbsp;구글시트 <b>Q_품질</b> · <b>STC_OEE_Quality_Model_Detail</b>: <b>웜샷</b> 열 오른쪽에 같은 이름의 열 3개를 추가해 주세요(Q_품질 → AK·AL·AM, Model상세 → AL·AM·AN).<br>
       &nbsp;&nbsp;&nbsp;원본에 이 3개 열이 없는 <b>과거 주차 파일</b>을 변환하면 해당 3열은 <b>0이 아닌 공란</b>으로 출력됩니다(미기록과 0건 구분). 열 위치는 헤더로 자동 감지하므로 신·구 원본 모두 그대로 올리시면 됩니다.<br>
       &nbsp;&nbsp;&nbsp;참고: 계산식 <b>웜샷</b>과 원본 <b>Warm(STD)+Warm(Excess)</b> 를 나란히 두면 원본 입력값 검증(교차확인)에 쓸 수 있습니다.<br>
       ※ <b>NOF(고장횟수)</b>는 가동률(A) CSV의 <b>마지막 열(AP, 헤더명 NOF)</b>로 출력됩니다 — 구글시트 <b>A_가동률</b> 탭에도 같은 위치에 <b>NOF</b> 열이 있어야 MTTR/MTBF 대시보드가 "시트 NOF 열" 원천으로 읽어갑니다.<br>
@@ -318,7 +319,7 @@ function nofVal(raw){
 }
 
 const A_HEADER = ['일자','주차','설비명','교대','구분','쉬프트시간_분','계획시간_분','가동시간_분','Losstime_분','금형수리','금형파손','핀파손','설비수리','전기로수리','취출기수리','스프레이수리','슬라이드코어수리','팁교체','노즐막힘','플런저오일막힘','래들수리','조건변경','탈산처리','스크랩용해','전기로회전','금형교체','휴식, 설비교대','청소','미팅/정전','금형냉각라인','제품소착','컨베이어수리','설비냉각수','스프레이조정','바가지교체','히터수리','펌프이상','로트마크, 사상','진공설비','기타','가동률(A)','NOF'];
-const P_HEADER = ['일자','주차','설비명','교대','구분','Model','CAV','CT_STD','CT_Real','Qty_Total','Avg_shot','가동시간_분','성능(P)'];
+const P_HEADER = ['일자','주차','설비명','교대','구분','Model','CAV','CT_STD','CT_Real','Qty_Total','Avg_shot','가동시간_분','성능(P)','NG','Warm(STD)','Warm(Excess)'];
 const Q_HEADER = ['일자','주차','설비명','교대','구분','Qty_Total','Qty_Good','불량수량','품질(Q)','미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스','품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타','웜샷','NG','Warm(STD)','Warm(Excess)'];
 const Q_MODEL_HEADER = ['일자','주차','설비명','교대','Model','구분','Qty_Total','Qty_Good','불량수량','품질(Q)','미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스','품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타','웜샷','NG','Warm(STD)','Warm(Excess)'];
 
@@ -364,13 +365,20 @@ function convert(rawRows, year, weekLabel, autoWeek){
     const gubun = classifyRegular(iso);
     const wkLabel = autoWeek ? isoWeekLabel(iso) : weekLabel;
 
+    /* 원본 K/L/M 실측값(NG · Warm(STD) · Warm(Excess)) — 성능(P)·품질(Q)·Model상세 CSV의
+       맨 오른쪽 3열로 그대로 내보낸다(계산값 아님).
+       해당 열이 없는 과거 원본은 0이 아니라 공란으로 남겨 '미기록'과 '0건'을 구분한다. */
+    const extVals = COL.hasExt
+      ? [num(r[COL.ng]), num(r[COL.warmStd]), num(r[COL.warmExc])]
+      : ['', '', ''];
+
     // A row
     const lossReasons = [];
     for (let i = COL.lossReasonsStart; i <= COL.lossReasonsEnd; i++) lossReasons.push(num(r[i]));
     aRows.push([iso, wkLabel, equip, shift, gubun, num(r[COL.shiftTime]), num(r[COL.plan]), num(r[COL.run]), num(r[COL.loss]), ...lossReasons, cleanPct(r[COL.availability]), (COL.hasNof ? nofVal(r[COL.nof]) : '')]);
 
     // P row (only meaningful if there's real cycle-time data; still emit the row to preserve structure)
-    pRows.push([iso, wkLabel, equip, shift, gubun, cleanStr(r[COL.model]), cleanStr(r[COL.cav]).trim(), num(r[COL.ctStd]), num(r[COL.ctReal]), num(r[COL.qtyTotal]), num(r[COL.avgShot]), num(r[COL.run]), cleanPct(r[COL.performance])]);
+    pRows.push([iso, wkLabel, equip, shift, gubun, cleanStr(r[COL.model]), cleanStr(r[COL.cav]).trim(), num(r[COL.ctStd]), num(r[COL.ctReal]), num(r[COL.qtyTotal]), num(r[COL.avgShot]), num(r[COL.run]), cleanPct(r[COL.performance]), ...extVals]);
 
     // Q row
     const qualReasons = [];
@@ -381,11 +389,6 @@ function convert(rawRows, year, weekLabel, autoWeek){
        (사내 집계 정의: 전체수량 = 양품 + 불량 + 웜샷). */
     const defectSum = qualReasons.reduce((a,b)=>a+(Number(b)||0), 0);
     const warmShot = Math.max(0, Math.round((badQty - defectSum) * 100) / 100);
-    /* 원본 K/L/M 실측값(NG · Warm(STD) · Warm(Excess))을 맨 오른쪽 3열로 그대로 내보낸다.
-       해당 열이 없는 과거 원본은 0이 아니라 공란으로 남겨 '미기록'과 '0건'을 구분한다. */
-    const extVals = COL.hasExt
-      ? [num(r[COL.ng]), num(r[COL.warmStd]), num(r[COL.warmExc])]
-      : ['', '', ''];
     qRows.push([iso, wkLabel, equip, shift, gubun, num(r[COL.qtyTotal]), num(r[COL.qtyGood]), badQty, cleanPct(r[COL.quality]), ...qualReasons, warmShot, ...extVals]);
 
     // Q + Model row (only meaningful when Qty_Total > 0, matches the quality dashboard's own filter)
@@ -498,7 +501,7 @@ async function onConvertClick(){
       diag = ` · NOF 열 감지: 원본 ${srcCol(LAST_LAYOUT.nofIdx)}열 → 값 있는 행 ${result.nofCount} / 합계 ${result.nofSum}건 (미기록 ${aRows.length - result.nofCount}행은 공란).`;
     }
     const extNote = (LAST_LAYOUT && LAST_LAYOUT.ext === 3)
-      ? ` · NG/Warm 열 감지: 원본 ${srcCol(LAST_LAYOUT.ngIdx)}·${srcCol(LAST_LAYOUT.ngIdx+1)}·${srcCol(LAST_LAYOUT.ngIdx+2)}열 → 품질(Q)/Model상세 CSV 맨 오른쪽 3열로 출력`
+      ? ` · NG/Warm 열 감지: 원본 ${srcCol(LAST_LAYOUT.ngIdx)}·${srcCol(LAST_LAYOUT.ngIdx+1)}·${srcCol(LAST_LAYOUT.ngIdx+2)}열 → 성능(P) N·O·P열 / 품질(Q)·Model상세 맨 오른쪽 3열로 출력`
       : ' · NG/Warm 열 없음(구 원본) → 맨 오른쪽 3열은 공란으로 출력';
     const wkNote = result.weekSet.length > 1
       ? ` · 주차: ${result.weekSet.join(', ')}`
