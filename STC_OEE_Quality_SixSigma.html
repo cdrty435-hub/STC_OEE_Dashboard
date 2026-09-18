@@ -246,7 +246,9 @@
   /* 설비별 생산 모델·수량 — 사내 PPT 의 가로형 행렬 표 서식
      (설비/PART NAME 를 가로로 깔고 PROD·OK·NG·W/S 를 행으로 둔다) */
   .mxwrap{overflow-x:auto;}
-  table.mxt{border-collapse:collapse;font-size:10.5px;font-variant-numeric:tabular-nums;}
+  /* 위쪽 ① 막대그래프와 좌우 폭을 맞춘다 — 열이 적어도 표가 끝까지 늘어나고,
+     열이 많으면 자연폭을 지키면서 가로 스크롤로 넘어간다. */
+  table.mxt{border-collapse:collapse;width:100%;font-size:10.5px;font-variant-numeric:tabular-nums;}
   table.mxt th,table.mxt td{border:1px solid #c2ccd6;padding:2px 5px;text-align:right;
     white-space:nowrap;}
   table.mxt th.eq{background:#1e3c72;color:#fff;font-size:10.5px;font-weight:800;text-align:center;
