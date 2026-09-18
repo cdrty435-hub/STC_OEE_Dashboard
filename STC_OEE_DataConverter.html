@@ -223,14 +223,38 @@ function isoWeekLabel(iso){
    2026-09 원본부터 Q'ty Good 바로 다음에 NG / Warm(STD) / Warm(Excess) 3개 열이 추가되었다.
    이 3열이 있으면 Avg shot 이후의 모든 열이 3칸씩 오른쪽으로 밀리므로 ext=3 으로 전체
    인덱스를 보정한다. 3열이 없는 과거 원본은 ext=0 이라 기존과 100% 동일하게 변환된다. */
-function detectExtCols(rawRows){
-  // 괄호·공백을 지워 '(Warm(Excess))' 같은 표기도 잡는다.
-  const norm = v => String(v==null?'':v).replace(/[\s()]/g,'').toUpperCase();
+const hdrNorm = v => String(v==null?'':v).replace(/[\s()\.]/g,'').toUpperCase();
+
+/* ---------- 원본 'Part no.' / 'edition no.' 열 자동 감지 ----------
+   2026-09 원본부터 Model 앞에 Part no., Model 뒤에 edition no. 가 추가되었다.
+     … 주/야 | Part no. | Model | edition no. | CAV | C/T …
+   두 열이 있으면 CAV 이후 모든 열이 2칸 밀리므로 ext2 로 전체 인덱스를 보정한다.
+   둘 중 하나만 있어도(또는 없어도) 동작하도록 각각 따로 찾는다. */
+function detectPartCols(rawRows){
   const hRows = [rawRows[0]||[], rawRows[1]||[], rawRows[2]||[]];
-  for (let i = 9; i <= 13; i++){
-    if (!hRows.some(r => norm(r[i]) === 'NG')) continue;
-    const w1 = hRows.some(r => norm(r[i+1]).indexOf('WARM') >= 0);
-    const w2 = hRows.some(r => norm(r[i+2]).indexOf('WARM') >= 0);
+  const findAt = (from, to, want) => {
+    for (let i = from; i <= to; i++){
+      if (hRows.some(r => hdrNorm(r[i]) === want)) return i;
+    }
+    return -1;
+  };
+  const pn = findAt(3, 6, 'PARTNO');       // 주/야 다음 ~ CAV 전
+  const ed = findAt(4, 8, 'EDITIONNO');    // Model 다음 ~ C/T 전
+  return { ext2:(pn>=0?1:0)+(ed>=0?1:0), partNo:pn, edition:ed };
+}
+
+/* ---------- 원본 NG · Warm(STD) · Warm(Excess) 열 자동 감지 ----------
+   2026-09 원본부터 Q'ty Good 바로 다음에 NG / Warm(STD) / Warm(Excess) 3개 열이 추가되었다.
+   이 3열이 있으면 Avg shot 이후의 모든 열이 3칸씩 오른쪽으로 밀리므로 ext=3 으로 전체
+   인덱스를 보정한다. 3열이 없는 과거 원본은 ext=0 이라 기존과 100% 동일하게 변환된다.
+   ext2(Part no./edition no.)만큼 시작 위치가 밀려 있으므로 그만큼 옮겨서 찾는다. */
+function detectExtCols(rawRows, ext2){
+  ext2 = ext2 || 0;
+  const hRows = [rawRows[0]||[], rawRows[1]||[], rawRows[2]||[]];
+  for (let i = 9+ext2; i <= 13+ext2; i++){
+    if (!hRows.some(r => hdrNorm(r[i]) === 'NG')) continue;
+    const w1 = hRows.some(r => hdrNorm(r[i+1]).indexOf('WARM') >= 0);
+    const w2 = hRows.some(r => hdrNorm(r[i+2]).indexOf('WARM') >= 0);
     if (w1 && w2) return { ext:3, ng:i, warmStd:i+1, warmExc:i+2 };
   }
   return { ext:0, ng:-1, warmStd:-1, warmExc:-1 };
@@ -246,8 +270,11 @@ function buildColMap(rawRows){
   const h0 = (rawRows[0]||[]).map(norm);
   const body = rawRows.slice(3).filter(r => r.length > 40);
 
-  const E = detectExtCols(rawRows);
+  const PE = detectPartCols(rawRows);
+  const ext2 = PE.ext2;                             // 0~2 = Part no. / edition no. 추가분
+  const E = detectExtCols(rawRows, ext2);
   const ext = E.ext;                                // 0 = 구 원본, 3 = NG/Warm 열 추가 원본
+  const SH = ext + ext2;                            // CAV 이후 전체 열이 밀린 칸 수
 
   /* 1단계: 가동률/성능/품질은 '%'로 끝나는 3개 연속 칸이다.
      헤더 글자에 의존하지 않고 이 구조로 전체 오프셋을 판정한다. */
@@ -263,45 +290,53 @@ function buildColMap(rawRows){
     }
     return -1;
   };
-  const pctIdx = findPct(44+ext, 53);
-  const o = pctIdx >= 0 ? (pctIdx - 46 - ext) : ((h0[15+ext]||'').indexOf('NOF') >= 0 ? 1 : 0);
+  const pctIdx = findPct(44+SH, 57);
+  const o = pctIdx >= 0 ? (pctIdx - 46 - SH) : ((h0[15+SH]||'').indexOf('NOF') >= 0 ? 1 : 0);
   if (o < 0 || o > 1){
-    // 오차가 정확히 3칸이면 NG/Warm 열은 있는데 헤더를 못 읽은 경우다 — 조용히 틀리지 않고 원인을 알려준다.
-    if (ext === 0 && (o === 3 || o === 4)){
-      throw new Error('원본에 NG · Warm(STD) · Warm(Excess) 3개 열이 추가된 것으로 보이는데 헤더 제목을 인식하지 못했습니다. 해당 3개 열의 제목 칸에 "NG", "Warm(STD)", "Warm(Excess)" 가 들어 있는지 확인해주세요.');
+    /* 남은 오차만큼 '못 읽은 열'이 있다는 뜻이다. 조용히 틀리지 않고 원인을 짚어준다. */
+    const miss = [];
+    if (ext  === 0 && o >= 3) miss.push('NG · Warm(STD) · Warm(Excess)');
+    if (ext2 === 0 && (o === 2 || o === 3 || o === 5 || o === 6)) miss.push('Part no. · edition no.');
+    if (miss.length){
+      throw new Error('원본에 ' + miss.join(' / ') + ' 열이 추가된 것으로 보이는데 헤더 제목을 인식하지 못했습니다. 해당 열의 제목 칸이 비어 있지 않은지(정확히 "NG", "Warm(STD)", "Warm(Excess)", "Part no.", "edition no.") 확인해주세요.');
     }
-    throw new Error('원본 열 구조를 인식하지 못했습니다. 가동률/성능/품질 열의 위치가 예상 범위를 벗어났습니다.');
+    throw new Error('원본 열 구조를 인식하지 못했습니다. 가동률/성능/품질 열의 위치가 예상 범위를 벗어났습니다(' + (o>0?('예상보다 '+o+'칸 오른쪽'):'예상보다 왼쪽') + ').');
   }
 
   /* 2단계: NOF 열 찾기 — ① 헤더에 NOF 표기 ② P열 삽입형 ③ 맨 뒤 이동형 */
   let nofIdx = -1;
   for (let i=0;i<h0.length;i++){ const t = h0[i]||''; if (t.indexOf('NOF') >= 0 || t.indexOf('고장횟수') >= 0) { nofIdx = i; break; } }
-  if (nofIdx < 0 && o === 1) nofIdx = 15+ext;
+  if (nofIdx < 0 && o === 1) nofIdx = 15+SH;
   if (nofIdx < 0){
-    // 불량합계(75+ext+o) '다음' 칸부터 탐색. 불량합계와 값이 같은 열은 제외한다.
-    for (let i = 76+ext+o; i <= 79+ext+o; i++){
+    // 불량합계(75+SH+o) '다음' 칸부터 탐색. 불량합계와 값이 같은 열은 제외한다.
+    for (let i = 76+SH+o; i <= 79+SH+o; i++){
       let ok=0, seen=0, sameAsTotal=0;
       for (const r of body){
         const v=String(r[i]==null?'':r[i]).trim();
         if(v===''||v==='-') continue;
         seen++;
         if(/^\d{1,2}$/.test(v) && Number(v) <= 99) ok++;
-        if(v === String(r[75+ext+o]==null?'':r[75+ext+o]).trim()) sameAsTotal++;
+        if(v === String(r[75+SH+o]==null?'':r[75+SH+o]).trim()) sameAsTotal++;
       }
       if (seen >= 20 && ok/seen > 0.9 && sameAsTotal/seen < 0.5){ nofIdx = i; break; }
     }
   }
   const hasNof = nofIdx >= 0;
-  LAST_LAYOUT = { offset:o, nofIdx:nofIdx, pctIdx:pctIdx, ext:ext, ngIdx:E.ng };
+  LAST_LAYOUT = { offset:o, nofIdx:nofIdx, pctIdx:pctIdx, ext:ext, ngIdx:E.ng,
+                  ext2:ext2, pnIdx:PE.partNo, edIdx:PE.edition };
   const C = {
-    date:1, equip:2, shift:3, model:4, cav:5, ctStd:6, ctReal:7, qtyTotal:8, qtyGood:9,
+    date:1, equip:2, shift:3,
+    /* Part no. 가 있으면 Model 이 한 칸 뒤로, edition no. 까지 있으면 CAV 는 두 칸 뒤로 간다. */
+    partNo: PE.partNo, edition: PE.edition, hasPart: PE.partNo >= 0, hasEdition: PE.edition >= 0,
+    model: 4 + (PE.partNo >= 0 ? 1 : 0),
+    cav:5+ext2, ctStd:6+ext2, ctReal:7+ext2, qtyTotal:8+ext2, qtyGood:9+ext2,
     hasExt: ext === 3, ng: E.ng, warmStd: E.warmStd, warmExc: E.warmExc,
-    avgShot:10+ext,
-    shiftTime:11+ext, plan:12+ext, run:13+ext, loss:14+ext,
+    avgShot:10+SH,
+    shiftTime:11+SH, plan:12+SH, run:13+SH, loss:14+SH,
     hasNof: hasNof, nof: nofIdx,
-    lossReasonsStart:15+ext+o, lossReasonsEnd:45+ext+o,   // 31 columns
-    availability:46+ext+o, performance:47+ext+o, quality:48+ext+o,
-    qualReasonsStart:49+ext+o, qualReasonsEnd:74+ext+o    // 26 columns
+    lossReasonsStart:15+SH+o, lossReasonsEnd:45+SH+o,   // 31 columns
+    availability:46+SH+o, performance:47+SH+o, quality:48+SH+o,
+    qualReasonsStart:49+SH+o, qualReasonsEnd:74+SH+o    // 26 columns
   };
   // 안전장치: 3번째 헤더행의 라벨로 위치 검증. 어긋나면 조용히 틀리지 않고 즉시 중단.
   const h2 = (rawRows[2]||[]).map(v=>String(v==null?'':v).trim());
