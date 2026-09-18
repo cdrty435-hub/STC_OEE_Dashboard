@@ -4475,7 +4475,7 @@ function msPairTableHtml(pairs, hasSplit){
       '<td style="font-weight:700;color:' + col + '">' + x.rate.toFixed(2) + '%</td></tr>';
   }).join('');
   const tp = sum('prod') || 1;
-  return '<div class="mwrap"><table class="mtbl"><thead><tr>' +
+  return '<div class="mwrap full"><table class="mtbl"><thead><tr>' +
     '<th class="l">' + t('ms.eq') + '</th><th class="l">' + t('ms.part') + '</th>' +
     '<th>PROD EA</th><th>OK EA</th><th>NG EA</th>' +
     '<th>' + t('ms.wstd') + '</th><th>' + t('ms.wexc') + '</th><th>TOTAL NG%</th>' +
