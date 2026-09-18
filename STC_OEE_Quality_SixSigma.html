@@ -222,7 +222,8 @@
   /* 막대 하나가 웜샷(STD·Excess) + 불량 으로 쌓인다 — 아래에서 위로 누적 */
   .vb .vf{width:66%;min-height:2px;display:flex;flex-direction:column-reverse;
     border-radius:2px 2px 0 0;overflow:hidden;}
-  .vb .vs{width:100%;min-height:0;}
+  .vb .vs{width:100%;min-height:0;display:flex;align-items:center;justify-content:center;
+    font-size:8.5px;font-weight:700;line-height:1;overflow:hidden;letter-spacing:-.01em;}
   .vb.top .vf{outline:1.5px solid #c62828;outline-offset:1px;border-radius:2px;}
   .vb .vl{font-size:9.5px;font-weight:700;color:#4a545e;margin-top:5px;white-space:nowrap;}
   .vb .vc{font-size:8.5px;color:#a8b0b9;margin-top:1px;font-variant-numeric:tabular-nums;}
@@ -3978,6 +3979,9 @@ const MS_COL = {
   etc:'#bdbdbd'
 };
 
+/* 막대 안 수치 표기 기준 — MS_BAR_H 는 CSS '.vb .vt' 의 height 와 같아야 한다 */
+const MS_BAR_H = 132, MS_LABEL_MIN = 13;
+
 function qrModelRows(week){
   const sc = qrScope();
   const rg = qrWeekRange(week);
@@ -4055,8 +4059,17 @@ function msParetoHtml(eqs){
     const top = i < 3;
     const h = Math.max(2, x.rate/maxR*100);
     const tn = x.totalNg || 1;
-    /* 막대 안의 세 조각은 TOTAL NG 대비 비율이다 */
-    const seg = (v, c) => v > 0 ? '<div class="vs" style="height:' + (v/tn*100) + '%;background:' + c + '"></div>' : '';
+    /* 막대 안의 세 조각은 TOTAL NG 대비 비율이다.
+       조각 안에 수량을 찍되, 글자가 들어갈 만큼 높은 조각에만 넣는다(작으면 생략 — 툴팁에 전량 있음).
+       글자색은 바탕 밝기에 따라 고르 자동으로 정한다(노랑 위 흰 글씨는 안 보인다). */
+    const barPx = MS_BAR_H * h / 100;
+    const seg = (v, c, ink) => {
+      if (v <= 0) return '';
+      const segPx = barPx * v / tn;
+      const label = segPx >= MS_LABEL_MIN ? v.toLocaleString() : '';
+      return '<div class="vs" style="height:' + (v/tn*100) + '%;background:' + c +
+             ';color:' + ink + '">' + label + '</div>';
+    };
     const pctOf = v => (v/tn*100).toFixed(0);
     const tip = x.eq + ' · TOTAL NG ' + x.rate.toFixed(2) + '%'
       + '\n' + t('ms.wstd') + ' ' + x.std.toLocaleString() + ' (' + pctOf(x.std) + '%)'
@@ -4067,7 +4080,7 @@ function msParetoHtml(eqs){
       '<div class="vv">' + x.rate.toFixed(2) + '%</div>' +
       '<div class="vt"><div class="vf" style="height:' + h + '%">' +
         /* column-reverse 라 먼저 쓴 것이 아래로 간다 */
-        seg(x.std, MS_COL.std) + seg(x.exc, MS_COL.exc) + seg(x.ng, MS_COL.ngbar) +
+        seg(x.std, MS_COL.std, '#4a3000') + seg(x.exc, MS_COL.exc, '#fff') + seg(x.ng, MS_COL.ngbar, '#fff') +
       '</div></div>' +
       '<div class="vl"' + (top?(' data-rk="'+(i+1)+'"'):'') + '>' + x.eq + '</div>' +
       '<div class="vc">' + (cum/sumNg*100).toFixed(0) + '%</div></div>';
