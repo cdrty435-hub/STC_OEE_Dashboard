@@ -134,14 +134,20 @@
   .qr-kpi .s{font-size:10.5px;color:#8a949e;margin-top:1px;}
   .qr-kpi.ok{border-top-color:#43a047;} .qr-kpi.bad{border-top-color:#e53935;} .qr-kpi.warn{border-top-color:#fb8c00;}
 
-  .qr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+  .qr-grid{display:grid;grid-template-columns:1.45fr 1fr 1fr;gap:12px;margin-bottom:16px;}
   .qr-box{border:1.5px solid #8c98a6;border-radius:2px;overflow:hidden;}
   .qr-box .bt{text-align:center;font-size:13px;font-weight:800;color:#12233f;padding:5px;
     background:#eef1f5;border-bottom:1.5px solid #8c98a6;letter-spacing:.03em;}
   .qr-box table{width:100%;border-collapse:collapse;font-size:11px;}
   .qr-box th{background:#1e3c72;color:#fff;font-size:10px;font-weight:700;padding:5px 4px;
     text-align:center;letter-spacing:.02em;white-space:nowrap;}
-  .qr-box td{padding:3px 7px;text-align:right;border-bottom:1px solid #eef1f4;white-space:nowrap;}
+  .qr-box td{padding:3px 5px;text-align:right;border-bottom:1px solid #eef1f4;white-space:nowrap;}
+  .qr-box th{padding-left:3px;padding-right:3px;}
+  .qr-box td.sub{color:#5b6773;}                         /* Warm(STD)/Warm(Excess) 분할 셀 */
+  .qr-box td.dn{color:#0ca30c;font-weight:700;}          /* 등락: 개선(불량률 하락) */
+  .qr-box td.up{color:#d03b3b;font-weight:700;}          /* 등락: 악화(불량률 상승) */
+  .qr-box td.fl{color:#9aa3ad;}                          /* 등락: 변화 없음/전주 없음 */
+  .qr-box tr.tot td.dn,.qr-box tr.tot td.up{font-weight:800;}
   .qr-box td.l{text-align:left;font-weight:700;color:#243a5e;}
   .qr-box tbody tr:nth-child(even){background:#fafbfc;}
   .qr-box tr.zero td{color:#2e56a8;}
@@ -173,7 +179,13 @@
     .container{max-width:none;padding:0;}
     .qr-sheet{border:none;padding:0;}
     .qr-box{break-inside:avoid;}
-    .qr-grid{gap:8px;}
+    /* 열이 8개(WARM SHOT)로 늘어 A4 가로 인쇄폭(≈1062px)을 넘겼다 — 인쇄에서만 더 조인다. */
+    .qr-grid{gap:4px;grid-template-columns:1.35fr 1fr 1fr;}
+    .qr-box table{font-size:8.6px;table-layout:auto;}
+    .qr-box th{font-size:7.6px;padding:3px 1px;letter-spacing:0;}
+    .qr-box td{padding:2px 2px;}
+    .qr-box td.l{padding-left:4px;}
+    .qr-box .bt{font-size:11px;padding:3px;}
     #chart-qr-trend{height:190px;}
   }
   @media(max-width:900px){
@@ -350,14 +362,14 @@
       <div class="qr-kpis" id="qrKpis"></div>
 
       <div class="qr-grid">
-        <div class="qr-box"><div class="bt">WARM SHOT</div>
-          <table><thead><tr><th>M/C No.</th><th>PROD QTY</th><th>W/S QTY</th><th>REJ %</th></tr></thead>
+        <div class="qr-box wide"><div class="bt">WARM SHOT</div>
+          <table><thead id="qrHeadWS"></thead>
           <tbody id="qrTblWS"></tbody></table></div>
         <div class="qr-box"><div class="bt">NG QTY</div>
-          <table><thead><tr><th>M/C No.</th><th>PROD QTY</th><th>RET QTY</th><th>REJ %</th></tr></thead>
+          <table><thead id="qrHeadNG"></thead>
           <tbody id="qrTblNG"></tbody></table></div>
         <div class="qr-box"><div class="bt">TOTAL NG</div>
-          <table><thead><tr><th>M/C No.</th><th>PROD QTY</th><th>NG QTY</th><th>REJ %</th></tr></thead>
+          <table><thead id="qrHeadTOT"></thead>
           <tbody id="qrTblTOT"></tbody></table></div>
       </div>
 
@@ -1319,6 +1331,21 @@ const DEFECT_COLS = ['미성형','깨짐','찍힘','자동불량','표면오염'
    (전체수량 - 양품 - 세부 불량유형 합계) 잔차를 사용한다.
    기존에 붙여넣은 주차(웜샷 열 없음)도 같은 값이 나오도록 하기 위한 폴백이다. */
 const WS_KEYS = ['웜샷','웜샷수량','Warm_Shot','WarmShot','W/S','WS_Qty'];
+/* 웜샷 2분할 — 2026-09 원본부터 Warm(STD)(표준 승온분) / Warm(Excess)(초과분)로 나뉜다.
+   과거 주차는 이 열이 비어 있으므로 '분할 없음'으로 보고 합계만 표시한다. */
+const WS_STD_KEYS = ['Warm(STD)','Warm (STD)','WarmSTD','Warm_STD','웜샷(STD)','웜샷STD'];
+const WS_EXC_KEYS = ['Warm(Excess)','Warm (Excess)','WarmExcess','Warm_Excess','(Warm(Excess))','웜샷(Excess)','웜샷초과'];
+function cellNumOf(r, keys){
+  for (const k of keys){
+    const v = r[k];
+    if (v === undefined || v === null) continue;
+    const sv = String(v).trim();
+    if (sv === '' || sv === '-') continue;
+    const n = Number(sv.replace(/,/g,''));
+    if (!isNaN(n)) return { has:true, val:Math.max(0, n) };
+  }
+  return { has:false, val:0 };
+}
 /* PPM·Sigma·파레토를 '전체 로스(웜샷 포함)'로 볼지 '순수 불량만'으로 볼지 */
 function qBasis(){ const el = document.getElementById('qBasisSelect'); return el ? el.value : 'all'; }
 function defectSumOf(r){
@@ -2824,6 +2851,9 @@ Object.assign(I18N.ko, {
   'qr.note':'특이사항 · 개선조치 · 익주 계획',
   'qr.note.ph':'이번 주 특이사항과 조치 내용을 입력하세요. 주차별로 저장됩니다.',
   'qr.saved':'저장됨', 'qr.total':'TOTAL',
+  'qr.h.wstd':'Warm(STD)', 'qr.h.wexc':'Warm(Excess)', 'qr.h.ws':'W/S QTY',
+  'qr.h.ret':'RET QTY', 'qr.h.ng':'NG QTY',
+  'qr.h.prev':'전주', 'qr.h.cur':'금주', 'qr.h.delta':'등락 %p',
   'qr.k.prod':'총 생산수량', 'qr.k.ws':'WARM SHOT', 'qr.k.ng':'NG QTY',
   'qr.k.tot':'TOTAL NG', 'qr.k.q':'품질(Q)', 'qr.k.gap':'목표 대비',
   'qr.k.vsPrev':'전주 대비 {v}', 'qr.k.noPrev':'전주 데이터 없음',
@@ -2861,6 +2891,9 @@ Object.assign(I18N.th, {
   'qr.note':'หมายเหตุ · การแก้ไข · แผนสัปดาห์หน้า',
   'qr.note.ph':'กรอกหมายเหตุและการแก้ไขของสัปดาห์นี้ ระบบบันทึกแยกตามสัปดาห์',
   'qr.saved':'บันทึกแล้ว', 'qr.total':'รวม',
+  'qr.h.wstd':'Warm(STD)', 'qr.h.wexc':'Warm(Excess)', 'qr.h.ws':'W/S QTY',
+  'qr.h.ret':'RET QTY', 'qr.h.ng':'NG QTY',
+  'qr.h.prev':'สัปดาห์ก่อน', 'qr.h.cur':'สัปดาห์นี้', 'qr.h.delta':'เปลี่ยนแปลง %p',
   'qr.k.prod':'ยอดผลิตรวม', 'qr.k.ws':'WARM SHOT', 'qr.k.ng':'ของเสีย NG',
   'qr.k.tot':'ของเสียรวม', 'qr.k.q':'คุณภาพ (Q)', 'qr.k.gap':'เทียบเป้าหมาย',
   'qr.k.vsPrev':'เทียบสัปดาห์ก่อน {v}', 'qr.k.noPrev':'ไม่มีข้อมูลสัปดาห์ก่อน',
@@ -2897,6 +2930,9 @@ Object.assign(I18N.en, {
   'qr.note':'Remarks · Actions · Next week plan',
   'qr.note.ph':'Enter this week\u2019s remarks and actions. Saved per week.',
   'qr.saved':'Saved', 'qr.total':'TOTAL',
+  'qr.h.wstd':'Warm(STD)', 'qr.h.wexc':'Warm(Excess)', 'qr.h.ws':'W/S QTY',
+  'qr.h.ret':'RET QTY', 'qr.h.ng':'NG QTY',
+  'qr.h.prev':'Prev wk', 'qr.h.cur':'This wk', 'qr.h.delta':'Change %p',
   'qr.k.prod':'Production qty', 'qr.k.ws':'Warm shot', 'qr.k.ng':'NG qty',
   'qr.k.tot':'Total NG', 'qr.k.q':'Quality (Q)', 'qr.k.gap':'vs target',
   'qr.k.vsPrev':'vs prev week {v}', 'qr.k.noPrev':'No previous week data',
@@ -3062,6 +3098,7 @@ function qrRows(week){
 function qrAgg(week){
   const rows = qrRows(week);
   const byEq = {}, dates = [], defects = {};
+  let hasSplit = false;                              // 이 주차에 Warm 분할 값이 하나라도 있는가
   DEFECT_COLS.forEach(c => defects[c] = 0);
   rows.forEach(r=>{
     const eq = String(r['설비명']||'').trim();
@@ -3069,15 +3106,20 @@ function qrAgg(week){
     const tt = num(r['Qty_Total']), gg = num(r['Qty_Good']);
     const lost = Math.max(0, tt - gg);
     const wsq  = Math.min(lost, warmShotOf(r));      // WARM SHOT
-    if (!byEq[eq]) byEq[eq] = { eq, prod:0, good:0, ws:0 };
+    if (!byEq[eq]) byEq[eq] = { eq, prod:0, good:0, ws:0, wsStd:0, wsExc:0 };
     byEq[eq].prod += tt; byEq[eq].good += gg; byEq[eq].ws += wsq;
+    /* 웜샷 2분할 — 열이 있는 주차만 채워진다 */
+    const cStd = cellNumOf(r, WS_STD_KEYS), cExc = cellNumOf(r, WS_EXC_KEYS);
+    if (cStd.has || cExc.has) hasSplit = true;
+    byEq[eq].wsStd += cStd.val; byEq[eq].wsExc += cExc.val;
     const d = String(r['일자']||'').trim(); if (d) dates.push(d);
     DEFECT_COLS.forEach(c => { const v = num(r[c]); if (v) defects[c] += v; });
   });
   const list = Object.values(byEq).map(e=>{
     const totalNg = Math.max(0, e.prod - e.good);
     const ws = Math.min(e.ws, totalNg);
-    return { eq:e.eq, prod:e.prod, good:e.good, ws, ng: Math.max(0, totalNg - ws), totalNg };
+    return { eq:e.eq, prod:e.prod, good:e.good, ws, ng: Math.max(0, totalNg - ws), totalNg,
+             wsStd:e.wsStd, wsExc:e.wsExc };
   });
   const sum = k => list.reduce((s,x)=>s+x[k], 0);
   dates.sort();
@@ -3085,6 +3127,7 @@ function qrAgg(week){
   return {
     week, range: rg, rows: rows.length, list,
     prod: sum('prod'), ws: sum('ws'), ng: sum('ng'), totalNg: sum('totalNg'),
+    wsStd: sum('wsStd'), wsExc: sum('wsExc'), hasSplit,
     start: dates[0] || null, end: dates[dates.length-1] || null,
     defects
   };
@@ -3320,21 +3363,73 @@ function renderMonthlyQPanel(){
 }
 
 /* ---------- 표 ---------- */
-function qrRowsHtml(list, key, totProd, totVal){
-  const rate = x => x.prod > 0 ? x[key]/x.prod*100 : 0;
+/* 표 머리글 — 전주/금주 주차 라벨이 들어가므로 JS에서 만든다.
+   split=true 이면 WARM SHOT 표에 Warm(STD)/Warm(Excess) 2열을 더 붙인다. */
+function qrHeadHtml(qtyLabel, prevWk, curWk, split){
+  const wk = w => w ? qrWkLabel(w) : '–';
+  return '<tr>' +
+    `<th>M/C No.</th><th>PROD QTY</th>` +
+    (split ? `<th>${t('qr.h.wstd')}</th><th>${t('qr.h.wexc')}</th>` : '') +
+    `<th>${qtyLabel}</th>` +
+    `<th>${wk(prevWk)}<br><span style="font-weight:500;opacity:.85">${t('qr.h.prev')}</span></th>` +
+    `<th>${wk(curWk)}<br><span style="font-weight:500;opacity:.85">${t('qr.h.cur')}</span></th>` +
+    `<th>${t('qr.h.delta')}</th></tr>`;
+}
+
+/* 등락 셀 — 불량률은 '내려가는 것'이 개선이므로 음수를 녹색으로 본다. */
+function qrDeltaCell(cur, prev, tot){
+  if (prev == null) return `<td class="fl">–</td>`;
+  const d = cur - prev;
+  if (Math.abs(d) < 0.005) return `<td class="fl">0.00</td>`;
+  const cls = d < 0 ? 'dn' : 'up';
+  const arrow = d < 0 ? '▼' : '▲';
+  return `<td class="${cls}">${arrow} ${(d>0?'+':'')}${d.toFixed(2)}</td>`;
+}
+
+/* list      : 금주 설비별 집계 · key: 'ws' | 'ng' | 'totalNg'
+   prevList  : 전주 설비별 집계(없으면 null) · split: Warm 분할 2열 표시 여부 */
+function qrRowsHtml(list, key, totProd, totVal, opt){
+  opt = opt || {};
+  const prevList = opt.prevList || null, split = !!opt.split, hasSplit = !!opt.hasSplit;
+  const prevMap = {};
+  if (prevList) prevList.forEach(x=>{ prevMap[x.eq] = x; });
+  const rateOf = x => x && x.prod > 0 ? x[key]/x.prod*100 : (x ? 0 : null);
+  const prevRate = eq => { const px = prevMap[eq]; return px ? rateOf(px) : null; };
+
+  const rate = x => rateOf(x) || 0;
   const nz = list.filter(x => rate(x) > 0).sort((a,b)=> rate(b) - rate(a));
   const zr = list.filter(x => rate(x) <= 0).sort((a,b)=> qrEqNum(a.eq) - qrEqNum(b.eq));
   const line = (x, i) => {
-    const r = rate(x);
+    const r = rate(x), pr = prevRate(x.eq);
     const cls = (r <= 0) ? ' class="zero"' : (i < 3 ? ' class="wst"' : '');
     return `<tr${cls}><td class="l">${x.eq}</td><td>${x.prod.toLocaleString()}</td>` +
-           `<td>${x[key].toLocaleString()}</td><td>${r.toFixed(2)}%</td></tr>`;
+      (split ? (hasSplit
+          ? `<td class="sub">${(x.wsStd||0).toLocaleString()}</td><td class="sub">${(x.wsExc||0).toLocaleString()}</td>`
+          : `<td class="sub">–</td><td class="sub">–</td>`) : '') +
+      `<td>${x[key].toLocaleString()}</td>` +
+      `<td>${pr==null?'–':pr.toFixed(2)+'%'}</td>` +
+      `<td>${r.toFixed(2)}%</td>` +
+      qrDeltaCell(r, pr) + `</tr>`;
   };
   const body = nz.map(line).concat(zr.map(x=>line(x,99))).join('');
-  const pct = totProd > 0 ? (totVal/totProd*100).toFixed(2) : '0.00';
+
+  const pctNum = totProd > 0 ? (totVal/totProd*100) : 0;
+  let prevPct = null;
+  if (prevList){
+    const pProd = prevList.reduce((s,x)=>s+x.prod,0);
+    const pVal  = prevList.reduce((s,x)=>s+x[key],0);
+    if (pProd > 0) prevPct = pVal/pProd*100;
+  }
+  const sumStd = list.reduce((s,x)=>s+(x.wsStd||0),0);
+  const sumExc = list.reduce((s,x)=>s+(x.wsExc||0),0);
   return body +
     `<tr class="tot"><td class="l">${t('qr.total')}</td><td>${totProd.toLocaleString()}</td>` +
-    `<td>${totVal.toLocaleString()}</td><td class="hl">${pct}%</td></tr>`;
+    (split ? (hasSplit ? `<td>${sumStd.toLocaleString()}</td><td>${sumExc.toLocaleString()}</td>`
+                       : `<td>–</td><td>–</td>`) : '') +
+    `<td>${totVal.toLocaleString()}</td>` +
+    `<td>${prevPct==null?'–':prevPct.toFixed(2)+'%'}</td>` +
+    `<td class="hl">${pctNum.toFixed(2)}%</td>` +
+    qrDeltaCell(pctNum, prevPct, true) + `</tr>`;
 }
 
 /* ---------- KPI ---------- */
@@ -3424,7 +3519,7 @@ function renderQReportInner(){
     alertBox.innerHTML = `<div class="qr-alert">${t('qr.alert.noData')}` +
       `<br>· RAW_Q rows = ${(RAW_Q||[]).length} · 주차 = ${week || '(없음)'}` +
       `<br>· ${t('qr.diagHint')}</div>`;
-    ['qrKpis','qrTblWS','qrTblNG','qrTblTOT','qrComment'].forEach(id=>{
+    ['qrKpis','qrHeadWS','qrHeadNG','qrHeadTOT','qrTblWS','qrTblNG','qrTblTOT','qrComment'].forEach(id=>{
       const el = document.getElementById(id); if (el) el.innerHTML = '';
     });
     return;
@@ -3449,9 +3544,17 @@ function renderQReportInner(){
   alertBox.innerHTML = alerts;
 
   document.getElementById('qrKpis').innerHTML = qrKpiHtml(a, prevA);
-  document.getElementById('qrTblWS').innerHTML  = qrRowsHtml(a.list, 'ws',      a.prod, a.ws);
-  document.getElementById('qrTblNG').innerHTML  = qrRowsHtml(a.list, 'ng',      a.prod, a.ng);
-  document.getElementById('qrTblTOT').innerHTML = qrRowsHtml(a.list, 'totalNg', a.prod, a.totalNg);
+  const prevWk = (idx > 0) ? weeks[idx-1] : null;
+  const pList  = prevA ? prevA.list : null;
+  document.getElementById('qrHeadWS').innerHTML  = qrHeadHtml(t('qr.h.ws'),  prevWk, week, true);
+  document.getElementById('qrHeadNG').innerHTML  = qrHeadHtml(t('qr.h.ret'), prevWk, week, false);
+  document.getElementById('qrHeadTOT').innerHTML = qrHeadHtml(t('qr.h.ng'),  prevWk, week, false);
+  document.getElementById('qrTblWS').innerHTML  = qrRowsHtml(a.list, 'ws',      a.prod, a.ws,
+      { prevList:pList, split:true, hasSplit:a.hasSplit });
+  document.getElementById('qrTblNG').innerHTML  = qrRowsHtml(a.list, 'ng',      a.prod, a.ng,
+      { prevList:pList });
+  document.getElementById('qrTblTOT').innerHTML = qrRowsHtml(a.list, 'totalNg', a.prod, a.totalNg,
+      { prevList:pList });
   document.getElementById('qrComment').innerHTML = qrCommentHtml(a, prevA);
 
   drawQWeeklyChart('chart-qr-trend', qrWeeklySeries(week, QR_TREND_WEEKS), week);
