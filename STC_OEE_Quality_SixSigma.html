@@ -308,6 +308,20 @@
      · 3. 공정관리 현황 / 3-1 워스트 3 은 품질(Q) 원자료에서 자동 계산된다.
      · 나머지 절은 데이터 출처가 없으므로 양식만 두고 값은 브라우저에 저장한다.
      ========================================================================= */
+  /* ===== 일일 품질보고 ===== */
+  #dqWrap{display:none;}
+  .dq-quick{display:inline-flex;gap:4px;}
+  .dq-quick button{font-size:11px;padding:3px 9px;border:1px solid #c9d3de;background:#f7f9fc;
+    border-radius:3px;cursor:pointer;color:#1e3c72;font-weight:700;font-family:inherit;}
+  .dq-quick button:hover{background:#eef2f7;}
+  .dq-basis{font-size:11px;color:#8a949e;margin:-6px 0 12px;}
+  .dq-sub{font-size:12px;font-weight:800;color:#1e3c72;margin:16px 0 6px;letter-spacing:.02em;}
+  .dq-daywrap{overflow-x:auto;margin-bottom:16px;}
+  table.dq-day{width:100%;}
+  table.dq-day td.h{text-align:center;font-variant-numeric:tabular-nums;}
+  #chart-dq-trend{width:100%;height:230px;display:block;}
+  @media print{ #chart-dq-trend{height:190px;} .dq-quick{display:none;} }
+
   #qr2Wrap{display:none;}           /* 좌측 메뉴가 표시를 결정한다 */
   .r2sheet{background:#fff;border:1px solid #c9d0d8;border-radius:4px;padding:16px 18px;}
   .r2head{display:flex;justify-content:space-between;align-items:flex-end;
@@ -580,6 +594,32 @@
   <div id="viewNav" class="qr-noprint">
     <button type="button" data-view="dash" class="active" onclick="qrSetView('dash')" data-i18n="nav.dash">📊 분석 대시보드</button>
     <button type="button" data-view="report" onclick="qrSetView('report')" data-i18n="nav.report">📄 주간 품질보고</button>
+  </div>
+
+  <!-- ===== 일일 품질보고 ===== -->
+  <div id="dqWrap">
+    <div class="qr-toolbar qr-noprint">
+      <div><label id="dqLbFrom">시작일</label>&nbsp;<input type="date" id="dqFrom"></div>
+      <div><label id="dqLbTo">종료일</label>&nbsp;<input type="date" id="dqTo"></div>
+      <div><label id="dqLbQuick">빠른 선택</label>&nbsp;
+        <span class="dq-quick">
+          <button type="button" id="dqQ1" onclick="dqQuick('d1')">최신 1일</button>
+          <button type="button" id="dqQ3" onclick="dqQuick('d3')">최근 3일</button>
+          <button type="button" id="dqQ7" onclick="dqQuick('d7')">최근 7일</button>
+          <button type="button" id="dqQW" onclick="dqQuick('wk')">이번 주(수~화)</button>
+          <button type="button" id="dqQM" onclick="dqQuick('mo')">이번 달</button>
+        </span></div>
+      <div><label id="dqLbScope">집계 대상</label>&nbsp;
+        <select id="dqScope">
+          <option value="all" data-i18n="qr.scope.all">전체 (정규+특근)</option>
+          <option value="regular" data-i18n="qr.scope.reg">정규만</option>
+        </select></div>
+      <div><label id="dqLbWho">작성</label>&nbsp;
+        <input id="dqWho" size="10" style="width:96px" placeholder="공무팀"></div>
+      <button type="button" class="qr-print" id="dqPrintBtn" onclick="window.print()">🖨 인쇄 / PDF 저장</button>
+      <span class="hint" id="dqHint"></span>
+    </div>
+    <div id="dqSheet"></div>
   </div>
 
   <div id="qrWrap">
@@ -1498,6 +1538,8 @@ function setLang(lang){
     const lb = { r2LbWeek:'week', r2LbYear:'year', r2LbWho:'who', r2Hint:'hint', r2PrintBtn:'print' };
     for (const id in lb){ const el = document.getElementById(id); if (el) el.textContent = r2t(lb[id]); }
     if (NAV_CUR === 'report2' && typeof renderQReport2 === 'function') renderQReport2();
+    if (typeof dqRelabel === 'function') dqRelabel();
+    if (NAV_CUR === 'daily' && typeof renderDaily === 'function') renderDaily();
   }catch(e){}
   if (typeof RAW_Q !== 'undefined' && RAW_Q && RAW_Q.length) { renderAll(); renderPDCATable(); }
 }
@@ -2619,6 +2661,7 @@ function renderAll() {
   if (typeof renderPQAll === 'function') renderPQAll();
   if (typeof renderQReport === 'function' && QR_VIEW === 'report') renderQReport();
   if (typeof renderQReport2 === 'function' && NAV_CUR === 'report2') renderQReport2();
+  if (typeof renderDaily === 'function' && NAV_CUR === 'daily') renderDaily();
 }
 
 /* =========================================================================
@@ -3382,7 +3425,8 @@ function qrDashBlocks(){
   if (QR_DASH_BLOCKS) return QR_DASH_BLOCKS;
   const c = document.querySelector('.container');
   QR_DASH_BLOCKS = Array.prototype.filter.call(c.children,
-    el => el.tagName !== 'HEADER' && el.id !== 'qrWrap' && el.id !== 'qr2Wrap' && el.id !== 'viewNav')
+    el => el.tagName !== 'HEADER' && el.id !== 'qrWrap' && el.id !== 'qr2Wrap'
+       && el.id !== 'dqWrap' && el.id !== 'viewNav')
     .map(el => ({ el, disp: el.style.display || '' }));   // 원래 inline display 보존
   return QR_DASH_BLOCKS;
 }
@@ -3479,17 +3523,22 @@ function qrPopulateWeeks(){
 }
 
 /* 주차 원본 행 (주차 날짜 보정 + 정규/특근 범위 반영) */
+/* 기간(시작~종료, 둘 다 포함)으로 원자료를 자른다 — 주간·일일 보고가 같이 쓴다.
+   sc 를 넘기지 않으면 주간 보고의 집계 대상 선택을 따른다. */
+function qrRowsBetween(start, end, sc){
+  const scope = sc || qrScope();
+  const scopeOk = r => !(scope === 'regular' && r['구분'] !== '정규');
+  return (RAW_Q||[]).filter(r=>{
+    const d = String(r['일자']||'').trim();
+    return d && d >= start && d <= end && scopeOk(r);
+  });
+}
 function qrRows(week){
   const sc = qrScope();
   const rg = qrWeekRange(week);
   const scopeOk = r => !(sc === 'regular' && r['구분'] !== '정규');
   let rows = [];
-  if (rg){
-    rows = (RAW_Q||[]).filter(r=>{
-      const d = String(r['일자']||'').trim();
-      return d >= rg.start && d <= rg.end && scopeOk(r);
-    });
-  }
+  if (rg) rows = qrRowsBetween(rg.start, rg.end, sc);
   /* 날짜가 비어 있거나 기준점이 맞지 않는 시트를 위한 폴백 — 주차 라벨로 자른다 */
   if (!rows.length){
     rows = (RAW_Q||[]).filter(r => r['주차'] === week && !isOutsideWeekFix(r) && scopeOk(r));
@@ -3497,8 +3546,15 @@ function qrRows(week){
   return rows;
 }
 
+/* 주차 집계 = 그 주차 행을 모은 것. 일일 보고는 qrAggBetween 으로 같은 계산을 쓴다. */
 function qrAgg(week){
-  const rows = qrRows(week);
+  return qrAggOf(qrRows(week), { week:week, range:qrWeekRange(week) });
+}
+function qrAggBetween(start, end, sc, label){
+  return qrAggOf(qrRowsBetween(start, end, sc),
+                 { week:null, range:{ start:start, end:end }, label:label || null });
+}
+function qrAggOf(rows, meta){
   const byEq = {}, dates = [], defects = {};
   let hasSplit = false;                              // 이 주차에 Warm 분할 값이 하나라도 있는가
   DEFECT_COLS.forEach(c => defects[c] = 0);
@@ -3528,9 +3584,9 @@ function qrAgg(week){
   });
   const sum = k => list.reduce((s,x)=>s+x[k], 0);
   dates.sort();
-  const rg = qrWeekRange(week);
+  const rg = meta.range;
   return {
-    week, range: rg, rows: rows.length, list,
+    week: meta.week, label: meta.label || null, range: rg, rows: rows.length, list,
     prod: sum('prod'), ws: sum('ws'), ng: sum('ng'), totalNg: sum('totalNg'),
     wsStd: sum('wsStd'), wsExc: sum('wsExc'), hasSplit,
     start: dates[0] || null, end: dates[dates.length-1] || null,
@@ -3725,7 +3781,7 @@ function qcChip(ctx, text, cx, bottomY, color, strong, placed, altY){
   return { x:x, y:y, w:boxW, h:boxH };   /* 실제로 놓인 자리 — 브래킷이 이 위에서 시작한다 */
 }
 
-function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek){
+function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek, opt){
   const canvas = document.getElementById(canvasId); if (!canvas) return;
   const { W, H, ctx } = sizeCanvas(canvas);
   ctx.clearRect(0,0,W,H);
@@ -3769,8 +3825,19 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek){
 
   /* 적층 막대 */
   const bw = Math.min(cw*0.5, 38);
-  /* 비교 대상 두 주차(전주 → 금주)만 진하게, 나머지는 흐리게 —
-     보고 주차는 남색 실선 테두리, 전주는 회색 점선 테두리로 구분한다. */
+  /* 값 라벨을 전부 찍을지 — 일일 보고처럼 칸이 많으면 최고/최저와 비교 대상만 찍는다 */
+  const HI_SET = (opt && opt.hiSet) || null;     /* 선택 구간 전체를 진하게 */
+  const SPARSE = !!(opt && opt.sparseLabels);
+  const SPARSE_KEEP = {};
+  if (SPARSE && items.length){
+    const withQ = items.filter(x=>x.rej != null);
+    if (withQ.length){
+      SPARSE_KEEP[withQ.reduce((a,b)=>b.rej>a.rej?b:a).week] = 1;
+      SPARSE_KEEP[withQ.reduce((a,b)=>b.rej<a.rej?b:a).week] = 1;
+    }
+  }
+  /* 비교 대상 두 구간만 진하게, 나머지는 흐리게 —
+     보고 기준은 남색 실선 테두리, 비교 대상은 회색 점선 테두리로 구분한다. */
   const DIM = 0.34;
   const placed = [];          // 놓인 값 칩 — 서로 겹치지 않게 관리
   const barTags = [];         // 막대 값 칩은 꺾은선을 그린 뒤에 얹는다
@@ -3779,7 +3846,7 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek){
   items.forEach((it,i)=>{
     const x = xOf(i), base = padT + plotH;
     const isSel = (it.week === selWeek), isCmp = (it.week === cmpWeek && cmpWeek !== selWeek);
-    const hi = isSel || isCmp;
+    const hi = isSel || isCmp || !!(HI_SET && HI_SET[it.week]);
     const hWs = plotH * (it.wsr/lMax), hNg = plotH * (it.ngr/lMax);
     tops[it.week] = { x:x, y:base-hWs-hNg };
     ctx.save();
@@ -3794,7 +3861,8 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek){
       ctx.strokeRect(x-bw/2-1.5, base-hWs-hNg-1.5, bw+3, hWs+hNg+3);
       ctx.setLineDash([]);
     }
-    barTags.push({ week:it.week, x:x, y:base-hWs-hNg-5, txt:it.rej.toFixed(2)+'%', sel:hi });
+    if (!SPARSE || hi || SPARSE_KEEP[it.week])
+      barTags.push({ week:it.week, x:x, y:base-hWs-hNg-5, txt:it.rej.toFixed(2)+'%', sel:hi });
     ctx.save();
     ctx.globalAlpha = hi ? 1 : 0.6;
     ctx.fillStyle = isSel ? '#1e3c72' : (isCmp ? '#4a545e' : '#8a949e');
@@ -3806,7 +3874,7 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek){
 
   /* 품질(Q) 꺾은선 */
   const pts = items.map((it,i)=> it.q==null ? null
-        : { x:xOf(i), y:yR(it.q), q:it.q,
+        : { x:xOf(i), y:yR(it.q), q:it.q, week:it.week,
             sel: (it.week===selWeek || it.week===cmpWeek) })
                    .filter(Boolean);
   if (pts.length){
@@ -3825,7 +3893,10 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek){
       placed.push({ x:p.x-7, y:p.y-7, w:14, h:14 });
     });
     barTags.forEach(b=> { tagRect[b.week] = qcChip(ctx, b.txt, b.x, b.y, '#c0392b', b.sel, placed); });
-    pts.forEach(p=> qcChip(ctx, p.q.toFixed(2)+'%', p.x, p.y - 9, '#1e3c72', p.sel, placed, p.y + 9));
+    pts.forEach(p=>{
+      if (SPARSE && !p.sel && !SPARSE_KEEP[p.week]) return;
+      qcChip(ctx, p.q.toFixed(2)+'%', p.x, p.y - 9, '#1e3c72', p.sel, placed, p.y + 9);
+    });
   } else {
     barTags.forEach(b=> { tagRect[b.week] = qcChip(ctx, b.txt, b.x, b.y, '#c0392b', b.sel, placed); });
   }
@@ -3904,16 +3975,18 @@ function renderMonthlyQPanel(){
 /* ---------- 표 ---------- */
 /* 표 머리글 — 전주/금주 주차 라벨이 들어가므로 JS에서 만든다.
    split=true 이면 WARM SHOT 표에 Warm(STD)/Warm(Excess) 2열을 더 붙인다. */
-function qrHeadHtml(qtyLabel, prevWk, curWk, split){
-  const wk = w => w ? qrWkLabel(w) : '–';
+function qrHeadHtml(qtyLabel, prevWk, curWk, split, rawLabels, words){
+  const wk = w => w ? (rawLabels ? w : qrWkLabel(w)) : '–';
+  const wCur  = (words && words.cur)  || t('qr.h.cur');
+  const wPrev = (words && words.prev) || t('qr.h.prev');
   return '<tr>' +
     `<th>M/C No.</th><th>PROD QTY</th>` +
     /* Warm(STD)/Warm(Excess) 는 한 칸에 'STD / Excess' 로 묶는다.
        8열로 두면 6열짜리 표와 같은 폭에서 맨 끝 등락 열이 잘린다. */
     (split ? `<th>${t('qr.h.wsplit')}</th>` : '') +
     `<th>${qtyLabel}</th>` +
-    `<th>${wk(curWk)} <span style="font-weight:500;opacity:.85">${t('qr.h.cur')}</span></th>` +
-    `<th>${wk(prevWk)} <span style="font-weight:500;opacity:.85">${t('qr.h.prev')}</span></th>` +
+    `<th>${wk(curWk)} <span style="font-weight:500;opacity:.85">${wCur}</span></th>` +
+    `<th>${wk(prevWk)} <span style="font-weight:500;opacity:.85">${wPrev}</span></th>` +
     `<th>${t('qr.h.delta')}</th></tr>`;
 }
 
@@ -4195,7 +4268,7 @@ function qrTopDefects(x, n){
   return arr.slice(0, n||2);
 }
 
-function qrWorstHtml(b, pa){
+function qrWorstHtml(b, pa, labels){
   if (!b || !b.list || !b.list.length) return '';
   const prevMap = {};
   if (pa) pa.list.forEach(x=>{ prevMap[x.eq] = x; });
@@ -4270,7 +4343,8 @@ function qrWorstHtml(b, pa){
       (items || `<div class="wnone">${t('qr.w.none')}</div>`) + `</div>`;
 
   return `<div class="wh"><span>${t('qr.w.title')}</span>` +
-    `<span class="sub">${t('qr.w.basis', { b: qrWkLabel(QR_CMP.b), a: QR_CMP.a ? qrWkLabel(QR_CMP.a) : '–' })}</span></div>` +
+    `<span class="sub">${t('qr.w.basis', labels ? { b: labels.b, a: labels.a || '–' }
+        : { b: qrWkLabel(QR_CMP.b), a: QR_CMP.a ? qrWkLabel(QR_CMP.a) : '–' })}</span></div>` +
     sec('WARM SHOT ' + t('qr.w.worst3'), wsItems) +
     sec('NG QTY ' + t('qr.w.worst3'), ngItems) +
     sec('TOTAL NG ' + t('qr.w.worst3'), totItems);
@@ -4561,13 +4635,13 @@ function qrCommentHtml(a, prevA){
   const q = qrQ(a); if (q == null) return t('qr.alert.noData');
   const gap = q - QR_TARGET_Q;
   let s = t('qr.cmt.head', {
-    wk: qrWkLabel(a.week), q: q.toFixed(2), tg: QR_TARGET_Q.toFixed(1),
+    wk: a.label || qrWkLabel(a.week), q: q.toFixed(2), tg: QR_TARGET_Q.toFixed(1),
     gap: gap >= 0 ? t('qr.gap.over', { v: gap.toFixed(2) }) : t('qr.gap.under', { v: Math.abs(gap).toFixed(2) })
   });
   const pq = qrQ(prevA);
   if (pq != null){
     const d = q - pq;
-    s += t('qr.cmt.prev', { pw: qrWkLabel(prevA.week), pq: pq.toFixed(2),
+    s += t('qr.cmt.prev', { pw: prevA.label || qrWkLabel(prevA.week), pq: pq.toFixed(2),
       cls: d >= 0 ? 'down' : 'up', diff: (d >= 0 ? '+' : '') + d.toFixed(2) });
   }
   if (a.prod > 0){
@@ -5737,7 +5811,7 @@ Object.assign(I18N.ko, {
   'nav.tonnage':'톤수별 설비 비교', 'nav.pqmatrix':'공정품질 매트릭스',
   'nav.pqcost':'품질실패비용 (F-COST)', 'nav.pqlevel':'Level-Up 로드맵',
   'nav.improve':'개선관리 (PDCA · 집중개선)', 'nav.report2':'주간 품질보고',
-  'nav.report2b':'주간 품질보고 2 (사내 서식)'
+  'nav.report2b':'주간 품질보고 2 (사내 서식)', 'nav.daily':'일일 품질보고'
 });
 Object.assign(I18N.th, {
   'nav.cat.status':'ภาพรวม', 'nav.cat.defect':'วิเคราะห์ของเสีย', 'nav.cat.equip':'จัดการเครื่องจักร',
@@ -5748,7 +5822,7 @@ Object.assign(I18N.th, {
   'nav.tonnage':'เปรียบเทียบตามขนาดตัน', 'nav.pqmatrix':'เมทริกซ์คุณภาพกระบวนการ',
   'nav.pqcost':'ต้นทุนคุณภาพ (F-COST)', 'nav.pqlevel':'แผน Level-Up',
   'nav.improve':'การปรับปรุง (PDCA · เน้นหนัก)', 'nav.report2':'รายงานคุณภาพรายสัปดาห์',
-  'nav.report2b':'รายงานคุณภาพรายสัปดาห์ 2 (แบบฟอร์มบริษัท)'
+  'nav.report2b':'รายงานคุณภาพรายสัปดาห์ 2 (แบบฟอร์มบริษัท)', 'nav.daily':'รายงานคุณภาพรายวัน'
 });
 Object.assign(I18N.en, {
   'nav.cat.status':'Overview', 'nav.cat.defect':'Defect analysis', 'nav.cat.equip':'Equipment',
@@ -5759,7 +5833,7 @@ Object.assign(I18N.en, {
   'nav.tonnage':'Tonnage comparison', 'nav.pqmatrix':'Process quality matrix',
   'nav.pqcost':'Failure cost (F-COST)', 'nav.pqlevel':'Level-Up roadmap',
   'nav.improve':'Improvement (PDCA · focus items)', 'nav.report2':'Weekly quality report',
-  'nav.report2b':'Weekly quality report 2 (corporate form)'
+  'nav.report2b':'Weekly quality report 2 (corporate form)', 'nav.daily':'Daily quality report'
 });
 
 const NAV_KEY = 'stc_q_nav_v1';
@@ -5778,6 +5852,7 @@ const NAV_MARKERS = [
   ['pqcost',   '#chart-pq-cost'],
   ['pqlevel',  '#chart-pq-level'],
   ['defect5',  '#chart-pq-d5-share'],
+  ['daily',    '#dqSheet'],
   ['report',   '#qrSheet'],
   ['report2',  '#qr2Sheet']
 ];
@@ -5801,6 +5876,7 @@ const NAV_SECTIONS = [
       { id:'pqlevel',  icon:'🚀', key:'nav.pqlevel' },
       { id:'improve',  icon:'🔄', key:'nav.improve' } ] },
   { cat:'nav.cat.report', items:[
+      { id:'daily',    icon:'🗓️', key:'nav.daily' },
       { id:'report',   icon:'📄', key:'nav.report2' },
       { id:'report2',  icon:'📋', key:'nav.report2b' } ] }
 ];
@@ -5846,14 +5922,15 @@ function navGo(id, skipRender){
   try { Store.set(NAV_KEY, id); } catch(e){}
   const isReport  = (id === 'report');
   const isReport2 = (id === 'report2');
+  const isDaily   = (id === 'daily');
   QR_VIEW = isReport ? 'report' : 'dash';
-  /* 두 주간 품질보고는 표를 나란히 놓아야 해서 본문 폭을 넓게 준다 */
-  try{ document.body.classList.toggle('qr-view', isReport || isReport2); }catch(e){}
+  /* 보고서 화면들은 표를 나란히 놓아야 해서 본문 폭을 넓게 준다 */
+  try{ document.body.classList.toggle('qr-view', isReport || isReport2 || isDaily); }catch(e){}
 
   document.querySelectorAll('#mainArea > [data-nav]').forEach(el => {
     const sec = el.getAttribute('data-nav');
     const show = (id === 'all') ? (sec !== 'report') : (sec === id);
-    const forceBlock = (el.id === 'qrWrap' || el.id === 'qr2Wrap');
+    const forceBlock = (el.id === 'qrWrap' || el.id === 'qr2Wrap' || el.id === 'dqWrap');
     el.style.display = show ? (forceBlock ? 'block' : (el.getAttribute('data-disp') || '')) : 'none';
   });
   document.querySelectorAll('#sideNav button').forEach(b =>
@@ -5868,6 +5945,7 @@ function navGo(id, skipRender){
     /* 숨겨져 있던 캔버스는 폭이 0이라, 표시 후 다시 그려야 정확히 맞는다 */
     if (isReport) { if (typeof renderQReport === 'function') renderQReport(); }
     else if (isReport2) { if (typeof renderQReport2 === 'function') renderQReport2(); }
+    else if (isDaily) { if (typeof renderDaily === 'function') renderDaily(); }
     else renderAll();
   }
 }
@@ -6660,6 +6738,284 @@ try{ document.addEventListener('DOMContentLoaded', ()=>{
   const lb = { r2LbWeek:'week', r2LbYear:'year', r2LbWho:'who', r2Hint:'hint', r2PrintBtn:'print' };
   for (const id in lb){ const el = document.getElementById(id); if (el) el.textContent = r2t(lb[id]); }
 }); }catch(e){}
+
+
+
+/* =========================================================================
+   14. 일일 품질보고 — 주간 품질보고와 같은 구성, 기간만 직접 고른다.
+       기준·계산식은 전부 주간 보고와 동일하다 (qrAggBetween / qrKpiHtml /
+       qrRowsHtml / qrWorstHtml / qrCommentHtml 을 그대로 쓴다).
+       비교 대상은 '바로 앞의 같은 길이 기간' 이다 — 1일이면 전일, 3일이면 직전 3일.
+   ========================================================================= */
+const DQ_TXT = {
+  ko:{ from:'시작일', to:'종료일', scope:'집계 대상', who:'작성', print:'🖨 인쇄 / PDF 저장',
+       title:'일일 품질보고', head:'품질 보고서 – Daily Quality Report',
+       quick:'빠른 선택', q1:'최신 1일', q3:'최근 3일', q7:'최근 7일', qw:'이번 주(수~화)', qm:'이번 달',
+       cap:'일자별 품질 추이 (불량률 · 품질Q)', cmp:'비교 기간', days:'{n}일',
+       nodata:'선택한 기간에 품질(Q) 데이터가 없습니다.',
+       noprev:'비교할 직전 기간 데이터가 없습니다.',
+       range:'{a} ~ {b}', one:'{a}', basis:'기준 {r} · 품질(Q) {n}행 · 집계 {s}',
+       tblWS:'WARM SHOT', tblNG:'NG QTY', tblTOT:'TOTAL NG',
+       worst:'워스트 선정 · 원인 및 개선 검토', cmt:'자동 코멘트',
+       hint:'기간을 바꾸면 표·차트·코멘트가 전부 다시 계산됩니다',
+       daily:'일자별 요약', dDate:'일자', dProd:'생산수량', dWs:'웜샷', dNg:'순수 NG',
+       dTot:'TOTAL NG', dRej:'불량률', dQ:'품질(Q)', dSum:'합  계',
+       wCur:'당기', wPrev:'전기' },
+  en:{ from:'From', to:'To', scope:'Scope', who:'Prepared by', print:'🖨 Print / Save PDF',
+       title:'Daily quality report', head:'Quality Report – Daily',
+       quick:'Quick pick', q1:'Latest day', q3:'Last 3 days', q7:'Last 7 days',
+       qw:'This week (Wed–Tue)', qm:'This month',
+       cap:'Daily quality trend (defect rate · quality Q)', cmp:'Compared with', days:'{n} days',
+       nodata:'No Quality(Q) data in the selected period.',
+       noprev:'No preceding period to compare with.',
+       range:'{a} ~ {b}', one:'{a}', basis:'{r} · Quality(Q) {n} rows · scope {s}',
+       tblWS:'WARM SHOT', tblNG:'NG QTY', tblTOT:'TOTAL NG',
+       worst:'Worst items · cause & countermeasure', cmt:'Auto comment',
+       hint:'Changing the period recalculates every table, chart and comment',
+       daily:'Day by day', dDate:'Date', dProd:'Production', dWs:'Warm shot', dNg:'Pure NG',
+       dTot:'TOTAL NG', dRej:'Defect rate', dQ:'Quality (Q)', dSum:'Total',
+       wCur:'this', wPrev:'prev' },
+  th:{ from:'วันเริ่ม', to:'วันสิ้นสุด', scope:'ขอบเขต', who:'ผู้จัดทำ', print:'🖨 พิมพ์ / PDF',
+       title:'รายงานคุณภาพรายวัน', head:'รายงานคุณภาพ – รายวัน',
+       quick:'เลือกด่วน', q1:'วันล่าสุด', q3:'3 วันล่าสุด', q7:'7 วันล่าสุด',
+       qw:'สัปดาห์นี้ (พ.-อ.)', qm:'เดือนนี้',
+       cap:'แนวโน้มคุณภาพรายวัน (อัตราของเสีย · คุณภาพ Q)', cmp:'เทียบกับ', days:'{n} วัน',
+       nodata:'ไม่มีข้อมูล Quality(Q) ในช่วงที่เลือก',
+       noprev:'ไม่มีช่วงก่อนหน้าให้เปรียบเทียบ',
+       range:'{a} ~ {b}', one:'{a}', basis:'{r} · Quality(Q) {n} แถว · ขอบเขต {s}',
+       tblWS:'WARM SHOT', tblNG:'NG QTY', tblTOT:'TOTAL NG',
+       worst:'รายการแย่สุด · สาเหตุและมาตรการ', cmt:'ความเห็นอัตโนมัติ',
+       hint:'เมื่อเปลี่ยนช่วงเวลา ตาราง กราฟ และความเห็นจะคำนวณใหม่ทั้งหมด',
+       daily:'สรุปรายวัน', dDate:'วันที่', dProd:'ผลิต', dWs:'Warm shot', dNg:'NG สุทธิ',
+       dTot:'TOTAL NG', dRej:'อัตราของเสีย', dQ:'คุณภาพ (Q)', dSum:'รวม',
+       wCur:'ช่วงนี้', wPrev:'ก่อนหน้า' }
+};
+function dqt(k, vars){
+  const tb = DQ_TXT[LANG] || {};
+  let s = Object.prototype.hasOwnProperty.call(tb,k) ? tb[k]
+        : (Object.prototype.hasOwnProperty.call(DQ_TXT.ko,k) ? DQ_TXT.ko[k] : k);
+  if (vars) for (const x in vars) s = s.split('{'+x+'}').join(vars[x]);
+  return s;
+}
+const DQ_KEY = 'stc_daily_report_v1';
+function dqDates(){
+  return [...new Set((RAW_Q||[]).map(r=>String(r['일자']||'').trim()))].filter(Boolean).sort();
+}
+function dqDiff(a, b){   /* b - a, 일수 */
+  return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00')) / 864e5);
+}
+function dqSpan(){
+  const f = document.getElementById('dqFrom'), t2 = document.getElementById('dqTo');
+  if (!f || !t2) return null;
+  let a = f.value, b = t2.value;
+  if (!a && !b) return null;
+  if (!a) a = b; if (!b) b = a;
+  if (a > b){ const x = a; a = b; b = x; f.value = a; t2.value = b; }
+  return { from:a, to:b, n: dqDiff(a,b) + 1 };
+}
+function dqSetSpan(a, b){
+  const f = document.getElementById('dqFrom'), t2 = document.getElementById('dqTo');
+  if (f) f.value = a; if (t2) t2.value = b;
+  try{ localStorage.setItem(DQ_KEY, JSON.stringify({ from:a, to:b })); }catch(e){}
+  renderDaily();
+}
+function dqQuick(kind){
+  const ds = dqDates(); if (!ds.length) return;
+  const last = ds[ds.length-1];
+  if (kind === 'd1') return dqSetSpan(last, last);
+  if (kind === 'd3') return dqSetSpan(qrDateAdd(last,-2), last);
+  if (kind === 'd7') return dqSetSpan(qrDateAdd(last,-6), last);
+  if (kind === 'wk'){
+    /* 사내 주차 = 수요일~화요일 7일 */
+    const dow = new Date(last+'T00:00:00').getDay();      // 0=일 … 3=수
+    const back = (dow - 3 + 7) % 7;
+    const st = qrDateAdd(last, -back);
+    return dqSetSpan(st, qrDateAdd(st, 6));
+  }
+  if (kind === 'mo') return dqSetSpan(last.slice(0,8) + '01', last);
+}
+/* 일자별 요약 표 + 추이 차트에 쓸 계열 */
+function dqSeries(span, sc){
+  const ds = dqDates().filter(d => d >= span.from && d <= span.to);
+  return ds.map(d=>{
+    const a = qrAggBetween(d, d, sc, d);
+    const p = a.prod || 0;
+    return { week:d, label:d.slice(5).replace('-','/'), agg:a, prod:p, ws:a.ws, ng:a.ng,
+             tot:a.totalNg,
+             wsr: p ? a.ws/p*100 : 0, ngr: p ? a.ng/p*100 : 0,
+             rej: p ? a.totalNg/p*100 : 0, q: p ? 100 - a.totalNg/p*100 : null };
+  });
+}
+
+function renderDaily(){
+  const wrap = document.getElementById('dqWrap'); if (!wrap) return;
+  const box = document.getElementById('dqSheet'); if (!box) return;
+  const ds = dqDates();
+  const f = document.getElementById('dqFrom'), t2 = document.getElementById('dqTo');
+  if (ds.length && f && t2){
+    f.min = t2.min = ds[0]; f.max = t2.max = ds[ds.length-1];
+    if (!f.value || !t2.value){
+      let saved = null;
+      try{ saved = JSON.parse(localStorage.getItem(DQ_KEY) || 'null'); }catch(e){}
+      const okv = v => v && v >= ds[0] && v <= ds[ds.length-1];
+      if (saved && okv(saved.from) && okv(saved.to)){ f.value = saved.from; t2.value = saved.to; }
+      else { f.value = ds[ds.length-1]; t2.value = ds[ds.length-1]; }
+    }
+  }
+  const span = dqSpan();
+  if (!ds.length || !span){
+    box.innerHTML = '<div class="qr-alert">' + dqt('nodata') + '</div>';
+    return;
+  }
+  const scEl = document.getElementById('dqScope');
+  const sc = scEl ? scEl.value : 'all';
+  const md = d => String(d).slice(5);                 /* 표 머리글용 짧은 날짜 */
+  const rlabel = (span.n === 1) ? dqt('one', { a:span.from })
+                                : dqt('range', { a:span.from, b:span.to }) + ' · ' + dqt('days', { n:span.n });
+  const rshort = (span.n === 1) ? md(span.from) : (md(span.from) + '~' + md(span.to));
+  const a = qrAggBetween(span.from, span.to, sc, rlabel);
+  /* 비교 기간 — 바로 앞의 같은 길이 */
+  const pTo = qrDateAdd(span.from, -1), pFrom = qrDateAdd(pTo, -(span.n - 1));
+  const plabel = (span.n === 1) ? pTo : (pFrom + ' ~ ' + pTo);
+  const pshort = (span.n === 1) ? md(pTo) : (md(pFrom) + '~' + md(pTo));
+  const prevRaw = qrAggBetween(pFrom, pTo, sc, plabel);
+  const prevA = prevRaw.rows ? prevRaw : null;
+
+  if (!a.rows){
+    box.innerHTML = '<div class="qr-alert">' + dqt('nodata') +
+      '<br>· ' + dqt('range', { a:ds[0], b:ds[ds.length-1] }) + '</div>';
+    return;
+  }
+  const S = dqSeries(span, sc);                       /* 표에 쓸 = 선택 구간만 */
+  /* 차트는 앞뒤 맥락이 보이도록 최소 14일치를 그리고, 선택 구간만 진하게 둔다 */
+  const ctxN = Math.max(span.n, 14);
+  const C = dqSeries({ from: qrDateAdd(span.to, -(ctxN - 1)), to: span.to }, sc);
+  const hiSet = {}; S.forEach(x=>{ hiSet[x.week] = 1; });
+  const sel = S.length ? S[S.length-1].week : null;
+  const cmp = (S.length > 1) ? S[0].week
+            : (C.length > 1 ? C[C.length-2].week : null);
+
+  /* 일자별 요약 표 */
+  const sumRow = ['prod','ws','ng','tot'].map(k=>S.reduce((s,x)=>s+x[k],0));
+  const dayTbl = '<div class="dq-daywrap"><table class="r2t dq-day"><thead><tr>' +
+    ['dDate','dProd','dWs','dNg','dTot','dRej','dQ'].map((k,i)=>
+      '<th style="min-width:' + [86,86,76,76,84,72,76][i] + 'px">' + dqt(k) + '</th>').join('') +
+    '</tr></thead><tbody>' +
+    S.map(x=>{
+      const hi = (x.week === sel);
+      return '<tr' + (hi?' class="hi"':'') + '><td class="h">' + x.week +
+        '</td><td class="v">' + x.prod.toLocaleString() +
+        '</td><td class="v">' + x.ws.toLocaleString() +
+        '</td><td class="v">' + x.ng.toLocaleString() +
+        '</td><td class="v">' + x.tot.toLocaleString() +
+        '</td><td class="v ' + (x.rej > (100-QR_TARGET_Q) ? 'neg':'pos') + '">' + x.rej.toFixed(2) + '%' +
+        '</td><td class="v ' + (x.q != null && x.q >= QR_TARGET_Q ? 'pos':'neg') + '">' +
+          (x.q == null ? '–' : x.q.toFixed(2) + '%') + '</td></tr>';
+    }).join('') +
+    '<tr class="tot"><td class="h">' + dqt('dSum') + '</td>' +
+    sumRow.map(v=>'<td class="v">' + v.toLocaleString() + '</td>').join('') +
+    '<td class="v">' + (sumRow[0] ? (sumRow[3]/sumRow[0]*100).toFixed(2) : '–') + '%</td>' +
+    '<td class="v">' + (sumRow[0] ? (100 - sumRow[3]/sumRow[0]*100).toFixed(2) : '–') + '%</td>' +
+    '</tr></tbody></table></div>';
+
+  const split = !!a.hasSplit;
+  const pList = prevA ? prevA.list : null;
+  const tbl = (title, key, totVal, isWS, extra) =>
+    '<div class="qr-box' + (extra||'') + '"><div class="bt">' + title + '</div>' +
+    '<table><thead>' +
+      qrHeadHtml(isWS ? t('qr.h.ws') : (key === 'ng' ? t('qr.h.ret') : t('qr.h.ng')),
+                 prevA ? pshort : null, rshort, isWS && split, true,
+                 { cur: dqt('wCur'), prev: dqt('wPrev') }) +
+    '</thead><tbody>' +
+      qrRowsHtml(a.list, key, a.prod, totVal,
+                 { prevList:pList, split:isWS, hasSplit:split }) +
+    '</tbody></table></div>';
+
+  box.innerHTML =
+    '<div class="qr-sheet" id="dqSheetInner">' +
+      '<div class="qr-head"><h2>' + dqt('head') +
+        ' <span class="pd">' + rlabel + '</span></h2>' +
+        '<div class="rt">' + t('qr.define') + '</div></div>' +
+      '<div class="dq-basis">' + dqt('basis', { r:rlabel, n:a.rows.toLocaleString(),
+          s: t(sc === 'regular' ? 'qr.scope.reg' : 'qr.scope.all') }) + '</div>' +
+      '<div class="qr-chartbox"><div class="cap">' + dqt('cap') + '</div>' +
+        '<div class="tgt">Targeting ' + QR_TARGET_Q.toFixed(1) + '% - OEE QUALITY</div>' +
+        '<canvas id="chart-dq-trend"></canvas>' +
+        '<div class="wdelta" id="dqTrendDelta"></div></div>' +
+      '<div class="qr-kpis">' + qrKpiHtml(a, prevA) + '</div>' +
+      '<div class="dq-sub">' + dqt('daily') + '</div>' + dayTbl +
+      '<div class="qr-grid">' +
+        tbl(dqt('tblWS'), 'ws', a.ws, true, ' wide') +
+        tbl(dqt('tblNG'), 'ng', a.ng, false, '') +
+        tbl(dqt('tblTOT'), 'totalNg', a.totalNg, false, '') +
+      '</div>' +
+      '<div class="qr-worst">' + qrWorstHtml(a, prevA, { b:rlabel, a: prevA ? plabel : '–' }) + '</div>' +
+      '<div class="qr-comment">' + qrCommentHtml(a, prevA) + '</div>' +
+      '<div class="qr-foot"><span>' + dqt('who') + ' ' +
+        ((document.getElementById('dqWho')||{}).value || '-') + ' · ' +
+        new Date().toISOString().slice(0,10) + '</span>' +
+        '<span class="cf">Confidential</span></div>' +
+    '</div>';
+
+  /* 추이 차트 — 주간 보고와 같은 그림, 칸이 많으면 값 라벨만 성기게 */
+  drawQWeeklyChart('chart-dq-trend', C, sel, cmp, { hiSet: hiSet, sparseLabels: C.length > 10 });
+  const de = document.getElementById('dqTrendDelta');
+  if (de){
+    /* KPI 카드와 같은 기준 — 직전 같은 길이 기간과 견준다 */
+    if (prevA) de.innerHTML = dqDeltaHtml(prevA, a, plabel, rlabel);
+    else de.innerHTML = '<span class="fl">' + dqt('noprev') + '</span>';
+  }
+}
+/* 등락 설명 — 주간 보고의 문구를 기간용으로 쓴다 */
+function dqDeltaHtml(A, B, la, lb){
+  if (!A || !B || !A.prod || !B.prod)
+    return '<span class="fl">' + dqt('noprev') + '</span>';
+  const rate = (agg, k) => (k === 'q' ? 100 - agg.totalNg/agg.prod*100 : agg[k]/agg.prod*100);
+  const item = (label, k, upIsGood) => {
+    const x = rate(A,k), y = rate(B,k), d = y - x;
+    const flat = Math.abs(d) < 0.005;
+    const good = flat ? null : ((d > 0) === upIsGood);
+    const cls  = flat ? 'fl' : (good ? 'gd' : 'bd');
+    const mark = flat ? '' : (d > 0 ? '▲' : '▼');
+    const word = flat ? t('qr.wd.same') : (good ? t('qr.wd.imp') : t('qr.wd.wor'));
+    return '<span class="it"><i>' + label + '</i>' + x.toFixed(2) + '% → ' + y.toFixed(2) + '% ' +
+           '<span class="' + cls + '">' + mark + Math.abs(d).toFixed(2) + '%p</span> ' +
+           '<span class="' + cls + '">(' + word + ')</span></span>';
+  };
+  return '<b>' + t('qr.wd.head', { a:la, b:lb }) + '</b>' +
+    item(t('eqm.rate'),     'totalNg', false) +
+    item(t('qr.lg.ws'),     'ws',      false) +
+    item(t('qr.wd.pureng'), 'ng',      false) +
+    item(t('qr.lg.q'),      'q',       true);
+}
+(function dqBind(){
+  const bind = () => {
+    const f = document.getElementById('dqFrom'); if (!f) return false;
+    const on = () => {
+      const sp = dqSpan();
+      if (sp){ try{ localStorage.setItem(DQ_KEY, JSON.stringify({ from:sp.from, to:sp.to })); }catch(e){} }
+      renderDaily();
+    };
+    f.addEventListener('change', on);
+    const t2 = document.getElementById('dqTo'); if (t2) t2.addEventListener('change', on);
+    const sc = document.getElementById('dqScope'); if (sc) sc.addEventListener('change', renderDaily);
+    const w  = document.getElementById('dqWho');
+    if (w){ try{ w.value = localStorage.getItem('stc_dq_who') || ''; }catch(e){}
+            w.addEventListener('input', ()=>{ try{ localStorage.setItem('stc_dq_who', w.value); }catch(e){} }); }
+    const lb = { dqLbFrom:'from', dqLbTo:'to', dqLbScope:'scope', dqLbWho:'who',
+                 dqLbQuick:'quick', dqPrintBtn:'print', dqHint:'hint',
+                 dqQ1:'q1', dqQ3:'q3', dqQ7:'q7', dqQW:'qw', dqQM:'qm' };
+    for (const id in lb){ const el = document.getElementById(id); if (el) el.textContent = dqt(lb[id]); }
+    return true;
+  };
+  if (!bind()) document.addEventListener('DOMContentLoaded', bind);
+})();
+function dqRelabel(){
+  const lb = { dqLbFrom:'from', dqLbTo:'to', dqLbScope:'scope', dqLbWho:'who',
+               dqLbQuick:'quick', dqPrintBtn:'print', dqHint:'hint',
+               dqQ1:'q1', dqQ3:'q3', dqQ7:'q7', dqQW:'qw', dqQM:'qm' };
+  for (const id in lb){ const el = document.getElementById(id); if (el) el.textContent = dqt(lb[id]); }
+}
 
 
 /* 기존 상단 탭 API를 좌측 메뉴로 연결 (다른 코드에서 호출되어도 동작하도록) */
