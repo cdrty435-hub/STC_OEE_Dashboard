@@ -268,6 +268,33 @@
   table.mxt td.mx0{color:#c3cad2;}
   table.mxt td.top{color:#c62828;font-weight:800;}
   .mxnote{font-size:10.5px;color:#8a949e;margin:5px 0 0;}
+
+  /* ⑥ 관점별 해석 — 금형 / 설비 / 품질 */
+  .mv3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+  @media screen and (max-width:1250px){ .mv3{grid-template-columns:1fr;} }
+  .mvcard{border:1px solid #e6eaef;border-radius:3px;padding:9px 10px;min-width:0;
+    display:flex;flex-direction:column;}
+  .mvh{font-size:11.5px;font-weight:800;color:#12233f;margin-bottom:6px;}
+  .mvh em{display:block;font-style:normal;font-weight:500;color:#8a949e;font-size:10px;margin-top:2px;
+    line-height:1.5;}
+  .mvchart{width:100%;height:230px;display:block;}
+  .mvnote{font-size:11px;line-height:1.75;color:#3c4752;margin-top:8px;
+    border-top:1px dashed #e6eaef;padding-top:7px;}
+  .mvnote b{color:#12233f;} .mvnote .hi{color:#c62828;font-weight:800;}
+  .mvnote .ok{color:#0ca30c;font-weight:800;}
+  .mvlegend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10px;color:#4a545e;margin-bottom:5px;}
+  .mvlegend span{display:flex;align-items:center;gap:4px;}
+  .mvlegend i{width:9px;height:9px;border-radius:2px;}
+  .mvwrap{overflow-x:auto;}
+  table.mvtbl{width:100%;}
+  .mvbar{display:flex;height:13px;border-radius:2px;overflow:hidden;background:#f1f4f7;min-width:76px;}
+  table.mvtbl th,table.mvtbl td{padding:2px 3px;}
+  table.mvtbl td.v{padding-right:4px;}
+  .mvbar i{display:block;height:100%;}
+  .mvact{margin-top:10px;border-left:4px solid #1e3c72;background:#f9fbfd;border-radius:3px;
+    padding:9px 12px;font-size:11.5px;line-height:1.85;color:#2c3742;}
+  .mvact b{color:#12233f;} .mvact .hi{color:#c62828;font-weight:700;}
+  @media print{ .mv3{grid-template-columns:repeat(3,1fr);} .mvchart{height:190px;} }
   @media print{ .mxwrap{overflow:visible;} table.mxt th.pn{height:120px;} }
 
   /* 막대 구성 범례 */
@@ -3791,7 +3818,10 @@ function qcChip(ctx, text, cx, bottomY, color, strong, placed, altY){
   const padX = 3.5, boxH = 13, boxW = tw + padX*2;
   /* 이미 놓인 칩·점과 겹치면 자리를 옮긴다.
      같은 높이에서 좌우로 먼저 비켜보고(점에서 멀어지지 않게), 그래도 막히면 위/아래로 한 칸씩. */
-  let x = cx - boxW/2, y = bottomY - boxH;
+  /* 캔버스 밖으로 밀려나 글자가 잘리지 않게, 후보 위치마다 먼저 가둔다 */
+  const CW = (ctx.canvas && ctx.canvas.width) || 0;
+  const clampX = xx => CW ? Math.max(2, Math.min(xx, CW - 2 - boxW)) : xx;
+  let x = clampX(cx - boxW/2), y = bottomY - boxH;
   if (placed){
     const dxs = [0, -(boxW*0.62), boxW*0.62];
     const ys = [bottomY - boxH];
@@ -3805,12 +3835,13 @@ function qcChip(ctx, text, cx, bottomY, color, strong, placed, altY){
     let done = false;
     for (let i = 0; i < ys.length && !done; i++){
       for (let j = 0; j < dxs.length && !done; j++){
-        const xx = cx - boxW/2 + dxs[j];
+        const xx = clampX(cx - boxW/2 + dxs[j]);
         if (!hit(xx, ys[i])){ x = xx; y = ys[i]; done = true; }
       }
     }
     placed.push({ x:x-1, y:y-1, w:boxW+2, h:boxH+2 });
   }
+
   /* 바탕은 늘 불투명하게 — 격자·꺾은선이 비쳐 글자가 뭉개지지 않도록.
      흐리게 처리하는 것은 테두리와 글자뿐이다. */
   ctx.globalAlpha = 1;
@@ -4206,7 +4237,7 @@ function qrRenderTables(){
   const wEl = document.getElementById('qrWorst');
   if (wEl) wEl.innerHTML = qrWorstHtml(b, pa);
   const mEl = document.getElementById('qrMeasure');
-  if (mEl) mEl.innerHTML = qrMeasureHtml(QR_CMP.b);
+  if (mEl){ mEl.innerHTML = qrMeasureHtml(QR_CMP.b); mvDraw(); }
 }
 
 /* 컨트롤 이벤트 — 표만 다시 그리므로 보고서 전체를 재계산하지 않는다 */
@@ -4646,6 +4677,261 @@ function msPairTableHtml(pairs, hasSplit){
     '<td>' + (sum('totalNg')/tp*100).toFixed(2) + '%</td></tr></tbody></table></div>';
 }
 
+
+/* =========================================================================
+   Measure ⑥ — 웜샷 · 불량을 금형 / 설비 / 품질 세 관점으로 나눠 본다.
+   왜 이렇게 나누는가:
+     · 웜샷은 '초도 손실(startup loss)'이다. 로트를 시작할 때마다 고정으로 나가고,
+       로트 길이와 반비례한다 → 생산계획으로 줄이는 몫(품질 관점)
+     · 같은 표준으로 돌려도 금형마다 필요한 승온량이 다르다 → 금형 사양의 몫(금형 관점)
+     · 불량유형은 금형 기인 / 설비 기인 / 공정조건 기인으로 갈린다 → 설비 관점
+   업계 자료에서도 초도 손실은 일일 총 불량의 20~40% 를 차지하는 것으로 본다.
+   우리 공장은 금형온조기(MTC)가 없어 승온을 초도 샷에 의존하므로 이 비중이 더 크다.
+   ========================================================================= */
+
+/* 불량유형 귀책 분류 — 사내 용어 26종을 세 갈래로 나눈 초기안.
+   (금형=형상·게이트·이젝션 / 설비=샷 안정성·기계 검출 / 공정=조건·취급)
+   현장 판단과 다르면 이 표만 고치면 화면 전체가 따라 바뀐다. */
+const MV_OWNER = {
+  die:     ['미성형','박리','소착','버','제품끼임','밀핀짧음','밀핀긺','게이트파임','게이트파손','홀틀어짐','변형'],
+  machine: ['자동불량','핀파손','언밸런스','중량미달','비스켓두께미달','품질확인'],
+  proc:    ['기포','수축','부풀음','찍힘','스크래치','표면오염','깨짐','스펙미달','기타']
+};
+const MV_COL = { die:'#4a6fa5', machine:'#d95926', proc:'#8a949e', warm:'#f5a623' };
+function mvOwnerOf(c){
+  for (const k in MV_OWNER) if (MV_OWNER[k].indexOf(c) >= 0) return k;
+  return 'proc';
+}
+function mvSplit(dmap){
+  const o = { die:0, machine:0, proc:0 };
+  for (const c in (dmap||{})) o[mvOwnerOf(c)] += dmap[c] || 0;
+  return o;
+}
+const mvMedian = arr => {
+  if (!arr.length) return 0;
+  const a = arr.slice().sort((x,y)=>x-y), m = a.length >> 1;
+  return a.length % 2 ? a[m] : (a[m-1] + a[m]) / 2;
+};
+
+/* ---------- 산점도 (4분면 / 곡선 오버레이 공용) ---------- */
+function mvScatter(canvasId, pts, opt){
+  const cv = document.getElementById(canvasId); if (!cv) return;
+  const { W, H, ctx } = sizeCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  const o = opt || {};
+  const padL = 52, padR = 14, padT = 16, padB = 38;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  if (plotW <= 40 || plotH <= 40 || !pts.length) return;
+  const xMax = Math.max(1e-9, o.xMax != null ? o.xMax : Math.max(...pts.map(p=>p.x)) * 1.12);
+  const yMax = Math.max(1e-9, o.yMax != null ? o.yMax : Math.max(...pts.map(p=>p.y)) * 1.15);
+  const X = v => padL + plotW * Math.min(1, v/xMax);
+  const Y = v => padT + plotH * (1 - Math.min(1, v/yMax));
+
+  ctx.font = '9px Arial'; ctx.textBaseline = 'middle';
+  for (let k = 0; k <= 4; k++){
+    const yy = padT + plotH*k/4;
+    ctx.strokeStyle = '#edf0f4'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(W-padR, yy); ctx.stroke();
+    ctx.fillStyle = '#8a949e'; ctx.textAlign = 'right';
+    ctx.fillText((yMax*(1-k/4)).toFixed(o.yDec != null ? o.yDec : 0) + (o.ySuffix||''), padL-5, yy);
+  }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let k = 0; k <= 4; k++){
+    const xx = padL + plotW*k/4;
+    ctx.fillStyle = '#8a949e';
+    ctx.fillText((xMax*k/4).toFixed(o.xDec != null ? o.xDec : 0) + (o.xSuffix||''), xx, H-padB+6);
+  }
+  /* 4분면 기준선 */
+  if (o.vx != null){
+    ctx.save(); ctx.setLineDash([4,3]); ctx.strokeStyle = '#b6c2cf'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(X(o.vx), padT); ctx.lineTo(X(o.vx), padT+plotH); ctx.stroke(); ctx.restore();
+  }
+  if (o.hy != null){
+    ctx.save(); ctx.setLineDash([4,3]); ctx.strokeStyle = '#b6c2cf'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, Y(o.hy)); ctx.lineTo(W-padR, Y(o.hy)); ctx.stroke(); ctx.restore();
+  }
+  /* 4분면 이름 */
+  if (o.quads){
+    ctx.font = 'bold 9px Arial';
+    const qx = [ (padL + X(o.vx))/2, (X(o.vx) + W-padR)/2 ];
+    const qy = [ padT + 12, padT + plotH - 10 ];
+    [[1,0,o.quads[0]],[0,0,o.quads[1]],[1,1,o.quads[2]],[0,1,o.quads[3]]].forEach(([ix,iy,txt])=>{
+      if (!txt) return;
+      ctx.fillStyle = '#c3ccd6'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(txt, qx[ix], qy[iy]);
+    });
+  }
+  /* 이론 곡선 (고정손실 모델) */
+  if (o.curve){
+    ctx.save(); ctx.strokeStyle = '#0f9d58'; ctx.lineWidth = 1.6; ctx.setLineDash([5,3]);
+    ctx.beginPath();
+    let started = false;
+    for (let px = 0; px <= plotW; px += 3){
+      const xv = xMax * px/plotW; if (xv <= 0) continue;
+      const yv = o.curve(xv); if (!isFinite(yv) || yv > yMax) { started = false; continue; }
+      const cx = padL + px, cy = Y(yv);
+      started ? ctx.lineTo(cx, cy) : (ctx.moveTo(cx, cy), started = true);
+    }
+    ctx.stroke(); ctx.restore();
+  }
+  /* 점 */
+  const placed = [];
+  pts.forEach(p=>{
+    const x = X(p.x), y = Y(p.y), r = Math.max(3.2, Math.min(13, p.r || 5));
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
+    ctx.fillStyle = p.color || 'rgba(74,111,165,0.55)'; ctx.fill();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.4; ctx.stroke();
+    placed.push({ x:x-r, y:y-r, w:r*2, h:r*2 });
+  });
+  /* 상위 몇 개만 이름표 */
+  pts.slice().sort((a,b)=>(b.rank||0)-(a.rank||0)).slice(0, o.labelTop || 5).forEach(p=>{
+    qcChip(ctx, p.label, X(p.x), Y(p.y) - (Math.max(3.2, Math.min(13, p.r||5)) + 3),
+           '#12233f', true, placed, Y(p.y) + (Math.max(3.2, Math.min(13, p.r||5)) + 3));
+  });
+  ctx.strokeStyle = '#d7dde3'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, padT+plotH); ctx.lineTo(W-padR, padT+plotH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT+plotH); ctx.stroke();
+  /* 축 이름 */
+  ctx.font = '9.5px Arial'; ctx.fillStyle = '#7a848e';
+  ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+  if (o.xName) ctx.fillText(o.xName, W-padR, H-3);
+  ctx.save(); ctx.translate(11, padT); ctx.rotate(-Math.PI/2);
+  ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+  if (o.yName) ctx.fillText(o.yName, 0, 0);
+  ctx.restore();
+}
+
+/* ---------- ⑥ 관점별 해석 ---------- */
+let MV_LAST = null;
+function mvHtml(a){
+  if (!a || !a.rows) return '';
+  const models = (a.models||[]).filter(x=>x.prod > 0);
+  const eqs    = (a.eqs||[]).filter(x=>x.prod > 0);
+  if (!models.length || !eqs.length) return '';
+
+  /* ---- 금형 관점 : 승온 원단위 × 초과 비중 ---- */
+  const md = models.filter(x=>x.events > 0 && x.perEvent != null && x.warm > 0);
+  const medPE = mvMedian(md.map(x=>x.perEvent));
+  const ptsA = md.map(x=>({
+    x: x.perEvent, y: (x.excShare == null ? 0 : x.excShare), r: Math.sqrt(x.warm) * 0.55,
+    label: x.md, rank: x.warm,
+    color: (x.perEvent >= medPE && (x.excShare||0) >= 50) ? 'rgba(208,59,59,0.55)'
+         : (x.perEvent >= medPE ? 'rgba(236,131,90,0.55)'
+         : ((x.excShare||0) >= 50 ? 'rgba(250,178,25,0.55)' : 'rgba(74,111,165,0.45)'))
+  }));
+  const qA = md.filter(x=>x.perEvent >= medPE && (x.excShare||0) >= 50);
+  const qB = md.filter(x=>x.perEvent <  medPE && (x.excShare||0) >= 50);
+  const qC = md.filter(x=>x.perEvent >= medPE && (x.excShare||0) <  50);
+
+  /* ---- 설비 관점 : 불량 귀책 구성 ---- */
+  const eqRows = eqs.map(x=>{
+    const sp = mvSplit(x.dmap);
+    const ngTot = sp.die + sp.machine + sp.proc;
+    return { eq:x.eq, warm:x.warm, ng:ngTot, die:sp.die, machine:sp.machine, proc:sp.proc,
+             tot: ngTot + x.warm, prod:x.prod };
+  }).filter(x=>x.tot > 0).sort((p,q)=>q.tot - p.tot);
+  const sumAll = k => eqRows.reduce((s,x)=>s+x[k], 0);
+  const gTot = sumAll('tot') || 1;
+  const bar = x => {
+    const seg = (v,c,nm) => v > 0 ? '<i style="width:' + (v/x.tot*100) + '%;background:' + c +
+      '" title="' + nm + ' ' + v.toLocaleString() + ' (' + (v/x.tot*100).toFixed(0) + '%)"></i>' : '';
+    return '<div class="mvbar">' + seg(x.warm, MV_COL.warm, t('ms.wstd')) +
+      seg(x.die, MV_COL.die, r2t('mvDie')) + seg(x.machine, MV_COL.machine, r2t('mvMac')) +
+      seg(x.proc, MV_COL.proc, r2t('mvPrc')) + '</div>';
+  };
+  const eqTbl = '<div class="mvwrap"><table class="r2t mvtbl"><thead><tr>' +
+    '<th style="min-width:46px">' + t('ms.eq') + '</th>' +
+    '<th style="min-width:84px">' + r2t('mvMix') + '</th>' +
+    '<th style="min-width:46px">' + t('qr.lg.ws') + '</th>' +
+    '<th style="min-width:46px">' + r2t('mvDie') + '</th>' +
+    '<th style="min-width:46px">' + r2t('mvMac') + '</th>' +
+    '<th style="min-width:46px">' + r2t('mvPrc') + '</th>' +
+    '<th style="min-width:56px">' + r2t('mvLead') + '</th></tr></thead><tbody>' +
+    eqRows.map(x=>{
+      const lead = [['warm',x.warm,t('qr.lg.ws')],['die',x.die,r2t('mvDie')],
+                    ['machine',x.machine,r2t('mvMac')],['proc',x.proc,r2t('mvPrc')]]
+                    .sort((p,q)=>q[1]-p[1])[0];
+      return '<tr><td class="h" style="text-align:center">' + x.eq + '</td>' +
+        '<td>' + bar(x) + '</td>' +
+        ['warm','die','machine','proc'].map(k=>'<td class="v' + (x[k]?'':' mut') + '">' +
+          (x[k] ? x[k].toLocaleString() : '-') + '</td>').join('') +
+        '<td class="v" style="color:' + MV_COL[lead[0] === 'warm' ? 'warm' : lead[0]] + '">' +
+          lead[2] + '</td></tr>';
+    }).join('') +
+    '<tr class="tot"><td class="h" style="text-align:center">' + r2t('mvAll') + '</td><td></td>' +
+    ['warm','die','machine','proc'].map(k=>'<td class="v">' + sumAll(k).toLocaleString() + '</td>').join('') +
+    '<td class="v">' + (sumAll('warm')/gTot*100).toFixed(0) + '% ' + t('qr.lg.ws') + '</td></tr>' +
+    '</tbody></table></div>';
+
+  /* ---- 품질 관점 : 로트 길이 ↔ 웜샷 비중 ---- */
+  const lot = models.filter(x=>x.events > 0 && x.warm > 0)
+    .map(x=>({ md:x.md, run: x.prod/x.events, share: x.warm/x.prod*100, warm:x.warm, pe:x.perEvent }));
+  const peAvg = lot.length ? lot.reduce((s,x)=>s+x.pe, 0) / lot.length : 0;
+  const ptsC = lot.map(x=>({ x:x.run, y:x.share, r: Math.sqrt(x.warm)*0.55,
+                             label:x.md, rank:x.warm, color:'rgba(15,157,88,0.45)' }));
+
+  /* ---- 숫자로 쓰는 해석 ---- */
+  const warmTot = sumAll('warm'), ngTot2 = sumAll('die') + sumAll('machine') + sumAll('proc');
+  const lossTot = warmTot + ngTot2 || 1;
+  const wShare = warmTot / lossTot * 100;
+  const ownShare = k => sumAll(k) / (ngTot2 || 1) * 100;
+  const runMed = mvMedian(lot.map(x=>x.run));
+  const saveIf2x = lot.length
+    ? lot.reduce((s,x)=>s + x.warm/2, 0) : 0;      /* 로트 2배 → 승온 횟수 절반 */
+
+  MV_LAST = { ptsA, medPE, ptsC, peAvg, runMed };
+
+  const noteA = r2t('mvNoteA', {
+    n: md.length, med: medPE.toFixed(1),
+    a: qA.length, b: qB.length, c: qC.length,
+    top: qA.length ? qA.slice().sort((p,q)=>q.warm-p.warm).slice(0,3).map(x=>x.md).join(' · ') : '-'
+  });
+  const noteB = r2t('mvNoteB', {
+    w: wShare.toFixed(0), d: ownShare('die').toFixed(0),
+    m: ownShare('machine').toFixed(0), p: ownShare('proc').toFixed(0),
+    lead: eqRows.length ? eqRows[0].eq : '-'
+  });
+  const noteC = r2t('mvNoteC', {
+    run: Math.round(runMed).toLocaleString(), pe: peAvg.toFixed(0),
+    save: Math.round(saveIf2x).toLocaleString(),
+    pct: (saveIf2x / (lossTot) * 100).toFixed(1)
+  });
+
+  return '<div class="msec"><div class="mcat">' + r2t('mvTitle') +
+      '<span>' + r2t('mvSub') + '</span></div>' +
+    '<div class="mv3">' +
+      '<div class="mvcard"><div class="mvh">' + r2t('mvH1') + '<em>' + r2t('mvH1s') + '</em></div>' +
+        '<canvas id="chart-mv-die" class="mvchart"></canvas>' +
+        '<div class="mvnote">' + noteA + '</div></div>' +
+      '<div class="mvcard"><div class="mvh">' + r2t('mvH2') + '<em>' + r2t('mvH2s') + '</em></div>' +
+        '<div class="mvlegend">' +
+          '<span><i style="background:' + MV_COL.warm + '"></i>' + t('qr.lg.ws') + '</span>' +
+          '<span><i style="background:' + MV_COL.die + '"></i>' + r2t('mvDie') + '</span>' +
+          '<span><i style="background:' + MV_COL.machine + '"></i>' + r2t('mvMac') + '</span>' +
+          '<span><i style="background:' + MV_COL.proc + '"></i>' + r2t('mvPrc') + '</span>' +
+        '</div>' + eqTbl +
+        '<div class="mvnote">' + noteB + '</div></div>' +
+      '<div class="mvcard"><div class="mvh">' + r2t('mvH3') + '<em>' + r2t('mvH3s') + '</em></div>' +
+        '<canvas id="chart-mv-lot" class="mvchart"></canvas>' +
+        '<div class="mvnote">' + noteC + '</div></div>' +
+    '</div>' +
+    '<div class="mvact">' + r2t('mvAct') + '</div>' +
+  '</div>';
+}
+function mvDraw(){
+  if (!MV_LAST) return;
+  mvScatter('chart-mv-die', MV_LAST.ptsA, {
+    vx: MV_LAST.medPE, hy: 50, yMax: 100, ySuffix:'%', xDec:0, yDec:0,
+    xName: r2t('mvAx1x'), yName: r2t('mvAx1y'), labelTop: 5,
+    quads: [ r2t('mvQ2'), r2t('mvQ1'), r2t('mvQ4'), r2t('mvQ3') ]
+  });
+  const pe = MV_LAST.peAvg;
+  mvScatter('chart-mv-lot', MV_LAST.ptsC, {
+    xName: r2t('mvAx2x'), yName: r2t('mvAx2y'), ySuffix:'%', yDec:1, labelTop: 5,
+    curve: pe > 0 ? (x => pe / x * 100) : null
+  });
+}
+
 /* ---------- 표 : 설비별 생산 모델 · 수량 (사내 PPT 가로형) ----------
    설비와 PART NAME 을 가로로 깔고, PROD EA / OK EA / NG EA / W/S 를 행으로 둔다.
    PART NAME 은 세로쓰기로 눕혀 열 폭을 좁게 유지한다 (PPT 와 같은 방식). */
@@ -4729,7 +5015,8 @@ function qrMeasureHtmlOf(a, basisLabel){
         msPairTableHtml(a.pairs, a.hasSplit) + '</div>' +
       '<div><div class="mcat">' + t('ms.s4') + '<span>' + t('ms.s4sub') + '</span></div>' +
         msModelTableHtml(a.models, a.hasSplit) + '</div>' +
-    '</div></div>';
+    '</div></div>' +
+    mvHtml(a);
 }
 
 /* ---------- KPI ---------- */
@@ -6098,6 +6385,30 @@ const R2_TXT = {
     week:'보고 주차', year:'기준 연도', who:'작성',
     hint:'값은 이 브라우저에 저장됩니다 (주차·연도별로 따로)',
     chartEmpty:'월별 값을 입력하면 그래프가 그려집니다',
+    mvTitle:'⑥ 관점별 해석 — 금형 · 설비 · 품질',
+    mvSub:'같은 로스를 세 갈래로 나눠 본다 — 금형이 원래 먹는 양 / 설비가 만들어내는 불량 / 생산계획으로 줄일 수 있는 양',
+    mvH1:'금형 관점 — 승온 원단위 × 초과 비중',
+    mvH1s:'가로: 승온 1회당 웜샷(금형 고유 열용량) · 세로: Excess 비중(조건 관리 상태) · 원 크기: 웜샷 총량',
+    mvH2:'설비 관점 — 로스 귀책 구성',
+    mvH2s:'설비마다 웜샷 / 금형기인 / 설비기인 / 공정기인 이 어떤 비율인지',
+    mvH3:'품질 관점 — 로트 길이 ↔ 웜샷 비중',
+    mvH3s:'가로: 승온 1회당 생산수량(로트 길이) · 세로: 웜샷 비중 · 초록 점선은 고정손실 이론선',
+    mvDie:'금형기인', mvMac:'설비기인', mvPrc:'공정기인', mvMix:'구성', mvLead:'최대 요인', mvAll:'전체',
+    mvAx1x:'승온 1회당 웜샷 (EA)', mvAx1y:'Excess 비중',
+    mvAx2x:'승온 1회당 생산수량 (EA)', mvAx2y:'웜샷 비중',
+    mvQ1:'조건 표준화로 해결', mvQ2:'금형 예열 최우선', mvQ3:'양호', mvQ4:'금형 사양 개선',
+    mvNoteA:'승온 기록이 있는 금형 <b>{n}종</b> · 원단위 중앙값 <b>{med} EA/회</b>.<br>' +
+      '오른쪽 위 <span class="hi">{a}종</span>은 원단위도 크고 Excess 도 절반을 넘습니다 — 금형 예열(외부 예열·온조기)이 가장 먼저입니다 ({top}).<br>' +
+      '왼쪽 위 {b}종은 표준만 지켜도 줄어드는 몫이고, 오른쪽 아래 {c}종은 금형 사양 자체가 무거운 쪽입니다.',
+    mvNoteB:'전체 로스 중 웜샷이 <b>{w}%</b>. 순수 불량만 놓고 보면 금형기인 <b>{d}%</b> · 설비기인 <b>{m}%</b> · 공정기인 <b>{p}%</b> 입니다.<br>' +
+      '로스가 가장 큰 설비는 <b>{lead}</b> 이고, 설비마다 최대 요인이 다르므로 같은 대책을 전 호기에 돌리면 안 됩니다.',
+    mvNoteC:'승온 1회당 생산수량 중앙값 <b>{run} EA</b>, 1회당 웜샷 평균 <b>{pe} EA</b>.<br>' +
+      '초록 점선보다 위에 있는 금형은 이론보다 더 버리고 있다는 뜻입니다.<br>' +
+      '로트를 <b>2배</b>로 묶으면 승온 횟수가 절반이 되어 웜샷 약 <span class="ok">{save} EA</span>(전체 로스의 {pct}%)가 줄어듭니다.',
+    mvAct:'<b>읽는 순서</b> — ① 품질 관점에서 「생산계획으로 줄일 몫」을 먼저 떼어냅니다(로트 통합·금형교체 순서 조정). ' +
+      '② 남는 몫을 금형 관점에서 나눠, 오른쪽 위(원단위·Excess 둘 다 높음)는 예열 설비 검토 대상, 왼쪽 위는 승온 표준 재교육 대상입니다. ' +
+      '③ 설비 관점은 순수 불량에만 씁니다 — 설비기인 비중이 높은 호기는 샷 조건·플런저·형체력 점검, 금형기인이 높은 호기는 그 호기에 걸린 금형 정비가 답입니다. ' +
+      '<span class="hi">업계에서는 초도 손실이 일일 불량의 20~40% 수준</span>인데, 금형온조기가 없는 우리 조건에서는 그보다 크게 나오는 것이 정상입니다 — 그래서 ①이 먼저입니다.',
     s3d:'불량유형별 주차 추이', s3dsub:'불량유형을 가로로 깔고 주차마다 선을 하나씩 — 어느 유형이 어느 주에 튀었는지 본다',
     dtWeeks:'표시 주차', dtTypes:'표시 유형', dtN:'{n}주', dtT:'상위 {n}종', dtUnit:'수량(EA)',
     s4do:'납품 계획 (DO) — 주간 출하 일정', doCust:'고객사 전체', doWkSum:'주간 계',
@@ -6145,6 +6456,30 @@ const R2_TXT = {
     week:'Report week', year:'Base year', who:'Prepared by',
     hint:'Entries are saved in this browser (per week / per year)',
     chartEmpty:'Enter monthly values to draw the chart',
+    mvTitle:'6. Three views — die, machine, quality',
+    mvSub:'the same loss split three ways: what the die inherently costs, what the machine produces, and what production planning can remove',
+    mvH1:'Die view — warm shot per heat-up x excess share',
+    mvH1s:'x: warm shot per heat-up (die thermal mass) · y: excess share (how well the standard is held) · bubble: total warm shot',
+    mvH2:'Machine view — loss ownership mix',
+    mvH2s:'for each machine: warm shot / die-caused / machine-caused / process-caused',
+    mvH3:'Quality view — lot length vs warm shot share',
+    mvH3s:'x: production per heat-up (lot length) · y: warm shot share · green dashed line is the fixed-loss model',
+    mvDie:'die', mvMac:'machine', mvPrc:'process', mvMix:'mix', mvLead:'top driver', mvAll:'all',
+    mvAx1x:'warm shot per heat-up (EA)', mvAx1y:'excess share',
+    mvAx2x:'production per heat-up (EA)', mvAx2y:'warm shot share',
+    mvQ1:'fix by standardising', mvQ2:'pre-heat first', mvQ3:'good', mvQ4:'die spec work',
+    mvNoteA:'<b>{n}</b> dies with heat-up records · median <b>{med} EA per heat-up</b>.<br>' +
+      'Top-right <span class="hi">{a}</span> are high on both — pre-heating (external or a die temperature controller) comes first ({top}).<br>' +
+      'Top-left {b} come back with the standard alone; bottom-right {c} are heavy dies by design.',
+    mvNoteB:'Warm shot is <b>{w}%</b> of all loss. Of pure defects: die <b>{d}%</b> · machine <b>{m}%</b> · process <b>{p}%</b>.<br>' +
+      '<b>{lead}</b> carries the largest loss, and the top driver differs by machine — one countermeasure for every machine will not work.',
+    mvNoteC:'Median production per heat-up <b>{run} EA</b>, average warm shot per heat-up <b>{pe} EA</b>.<br>' +
+      'Dies above the green line waste more than the model predicts.<br>' +
+      'Doubling the lot halves the number of heat-ups and removes about <span class="ok">{save} EA</span> ({pct}% of all loss).',
+    mvAct:'<b>How to read it</b> — 1. Take out the planning share first (merge lots, order die changes). ' +
+      '2. Split what remains by die: top-right needs pre-heating equipment, top-left needs the heat-up standard retrained. ' +
+      '3. Use the machine view on pure defects only — machine-heavy units need shot conditions, plunger and clamping checked; die-heavy units need the die on them serviced. ' +
+      '<span class="hi">Industry puts startup loss at 20-40% of daily defects</span>; without a die temperature controller a higher figure is expected here — which is why step 1 comes first.',
     s3d:'Defect types by week', s3dsub:'Defect types across the axis, one line per week — see which type spiked when',
     dtWeeks:'Weeks shown', dtTypes:'Types shown', dtN:'{n} weeks', dtT:'top {n}', dtUnit:'Qty (EA)',
     s4do:'Delivery plan (DO) — shipping schedule', doCust:'All customers', doWkSum:'Week total',
@@ -6196,6 +6531,28 @@ const R2_TXT = {
     week:'สัปดาห์รายงาน', year:'ปีฐาน', who:'ผู้จัดทำ',
     hint:'ข้อมูลถูกบันทึกในเบราว์เซอร์นี้ (แยกตามสัปดาห์/ปี)',
     chartEmpty:'กรอกค่ารายเดือนเพื่อแสดงกราฟ',
+    mvTitle:'6. สามมุมมอง — แม่พิมพ์ · เครื่องจักร · คุณภาพ',
+    mvSub:'แบ่งความสูญเสียเดียวกันเป็นสามส่วน',
+    mvH1:'มุมมองแม่พิมพ์ — วอร์มช็อตต่อครั้ง x สัดส่วน Excess',
+    mvH1s:'แกนนอน: วอร์มช็อตต่อการอุ่น 1 ครั้ง · แกนตั้ง: สัดส่วน Excess · ขนาดวงกลม: วอร์มช็อตรวม',
+    mvH2:'มุมมองเครื่องจักร — สัดส่วนต้นเหตุ',
+    mvH2s:'แต่ละเครื่อง: วอร์มช็อต / แม่พิมพ์ / เครื่องจักร / กระบวนการ',
+    mvH3:'มุมมองคุณภาพ — ขนาดล็อต กับ สัดส่วนวอร์มช็อต',
+    mvH3s:'แกนนอน: ผลิตต่อการอุ่น 1 ครั้ง · แกนตั้ง: สัดส่วนวอร์มช็อต · เส้นประเขียวคือแบบจำลองความสูญเสียคงที่',
+    mvDie:'แม่พิมพ์', mvMac:'เครื่องจักร', mvPrc:'กระบวนการ', mvMix:'สัดส่วน', mvLead:'ปัจจัยหลัก', mvAll:'รวม',
+    mvAx1x:'วอร์มช็อตต่อครั้ง (EA)', mvAx1y:'สัดส่วน Excess',
+    mvAx2x:'ผลิตต่อการอุ่น 1 ครั้ง (EA)', mvAx2y:'สัดส่วนวอร์มช็อต',
+    mvQ1:'แก้ด้วยมาตรฐาน', mvQ2:'อุ่นแม่พิมพ์ก่อน', mvQ3:'ดี', mvQ4:'ปรับสเปกแม่พิมพ์',
+    mvNoteA:'แม่พิมพ์ <b>{n}</b> แบบ · ค่ากลาง <b>{med} EA/ครั้ง</b>.<br>' +
+      'มุมขวาบน <span class="hi">{a}</span> แบบ ควรอุ่นแม่พิมพ์ก่อน ({top}).<br>' +
+      'มุมซ้ายบน {b} แบบแก้ได้ด้วยมาตรฐาน · มุมขวาล่าง {c} แบบเป็นลักษณะของแม่พิมพ์เอง',
+    mvNoteB:'วอร์มช็อตคิดเป็น <b>{w}%</b> ของความสูญเสียทั้งหมด · ของเสียแท้: แม่พิมพ์ <b>{d}%</b> · เครื่องจักร <b>{m}%</b> · กระบวนการ <b>{p}%</b>.<br>' +
+      'เครื่องที่สูญเสียมากที่สุดคือ <b>{lead}</b> และปัจจัยหลักต่างกันในแต่ละเครื่อง',
+    mvNoteC:'ค่ากลางผลิตต่อการอุ่น <b>{run} EA</b> · วอร์มช็อตเฉลี่ยต่อครั้ง <b>{pe} EA</b>.<br>' +
+      'จุดที่อยู่เหนือเส้นเขียวคือเสียมากกว่าที่แบบจำลองคาด<br>' +
+      'ถ้ารวมล็อตเป็น <b>2 เท่า</b> จะลดวอร์มช็อตราว <span class="ok">{save} EA</span> ({pct}% ของความสูญเสีย)',
+    mvAct:'<b>ลำดับการอ่าน</b> — 1. ตัดส่วนที่ลดได้ด้วยแผนการผลิตก่อน 2. ที่เหลือแบ่งด้วยมุมมองแม่พิมพ์ 3. ใช้มุมมองเครื่องจักรกับของเสียแท้เท่านั้น ' +
+      '<span class="hi">ในอุตสาหกรรม ความสูญเสียช่วงเริ่มเดินเครื่องอยู่ที่ 20-40% ของของเสียรายวัน</span>',
     s3d:'ประเภทของเสียรายสัปดาห์', s3dsub:'วางประเภทของเสียตามแนวนอน หนึ่งเส้นต่อหนึ่งสัปดาห์',
     dtWeeks:'จำนวนสัปดาห์', dtTypes:'จำนวนประเภท', dtN:'{n} สัปดาห์', dtT:'สูงสุด {n}', dtUnit:'จำนวน (EA)',
     s4do:'แผนการส่งมอบ (DO) — ตารางส่งประจำสัปดาห์', doCust:'ลูกค้าทั้งหมด', doWkSum:'รวมสัปดาห์',
@@ -7259,6 +7616,7 @@ function renderDaily(){
         '<span class="cf">Confidential</span></div>' +
     '</div>';
 
+  mvDraw();
   /* 추이 차트 — 주간 보고와 같은 그림, 칸이 많으면 값 라벨만 성기게 */
   drawQWeeklyChart('chart-dq-trend', C, sel, cmp, { hiSet: hiSet, sparseLabels: C.length > 10 });
   const de = document.getElementById('dqTrendDelta');
