@@ -362,6 +362,28 @@
   @media screen and (max-width:1250px){ .r2grid,.r2grid.c31{grid-template-columns:1fr;} }
 
   .r2chart{width:100%;height:190px;display:block;}
+
+  /* 납품 계획(DO) — 출하검사에서 이번 주 나갈 물량을 바로 확인한다 */
+  .doBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:2px 0 7px;
+    font-size:11px;color:#4a545e;}
+  .doBar select,.doBar input{font-size:11px;padding:2px 5px;border:1px solid #c9d3de;border-radius:3px;}
+  .doBar .src{margin-left:auto;color:#8a949e;font-size:10.5px;}
+  .doBar button{font-size:11px;padding:3px 9px;border:1px solid #c9d3de;background:#f7f9fc;
+    border-radius:3px;cursor:pointer;color:#1e3c72;font-weight:700;}
+  .doBar button:hover{background:#eef2f7;}
+  table.r2t td.do0{color:#cfd6dd;}
+  table.r2t th.dow{font-weight:600;color:#7a848e;font-size:9px;}
+  table.r2t th.today{background:#fff2cc;}
+  table.r2t td.today{background:#fffdf3;}
+  table.r2t tr.sun td,table.r2t th.sun{color:#c62828;}
+  .doPaste{margin-top:8px;border:1px dashed #c9d3de;border-radius:3px;padding:8px 10px;background:#fbfcfe;}
+  .doPaste .h{font-size:11px;font-weight:800;color:#1e3c72;margin-bottom:4px;}
+  .doPaste textarea{width:100%;min-height:58px;font-size:11px;font-family:inherit;line-height:1.6;
+    border:1px solid #d7dde3;border-radius:3px;padding:6px;resize:vertical;}
+  .doPaste .msg{font-size:11px;margin-top:5px;}
+  .doPaste .msg.ok{color:#0ca30c;font-weight:700;}
+  .doPaste .msg.er{color:#c62828;font-weight:700;}
+  @media print{ .doPaste,.doBar button,.doBar select{display:none;} }
   .r2addrow{margin-top:6px;}
   .r2addrow button{font-size:11px;padding:3px 10px;border:1px solid #c9d3de;background:#f7f9fc;
     border-radius:3px;cursor:pointer;color:#1e3c72;font-weight:700;}
@@ -5864,6 +5886,14 @@ const R2_TXT = {
     week:'보고 주차', year:'기준 연도', who:'작성',
     hint:'값은 이 브라우저에 저장됩니다 (주차·연도별로 따로)',
     chartEmpty:'월별 값을 입력하면 그래프가 그려집니다',
+    s4do:'납품 계획 (DO) — 주간 출하 일정', doCust:'고객사 전체', doWkSum:'주간 계',
+    doOrder:'Order (계획 전체)', doNone:'이 주차에 예정된 납품이 없습니다.',
+    doSrc:'출처 {f} · {n}품목 · {a} ~ {b}', doUpd:'계획 갱신 (엑셀에서 복사해 붙여넣기)',
+    doHint:'엑셀에서 CUSTOMERS 머리글 줄부터 마지막 줄까지 선택해 복사한 뒤 여기에 붙여넣으세요',
+    doApply:'적용', doReset:'기본값으로', doPasted:'붙여넣은 계획', doOk:'{n}품목 · {a} ~ {b} 로 갱신했습니다',
+    doErr:'형식을 알아보지 못했습니다 — CUSTOMERS / PART NAME / PART CODE 머리글 줄이 포함되어야 합니다',
+    doDay:['일','월','화','수','목','금','토'], doPart:'PART NAME', doCode:'PART CODE',
+    doTot:'일 계', doOut:'계획 기간 밖 — 계획은 {a} ~ {b} 입니다',
     title:'주간 품질보고 2', sub:'사내 품질보고서 서식',
     s1:'고객관리 품질현황', s1sub:'납품 품질 종합 현황',
     s1a:'월별 품질통계 실적', s1b:'유형별 불량현황', s11:'고객사 접수내역',
@@ -5901,6 +5931,14 @@ const R2_TXT = {
     week:'Report week', year:'Base year', who:'Prepared by',
     hint:'Entries are saved in this browser (per week / per year)',
     chartEmpty:'Enter monthly values to draw the chart',
+    s4do:'Delivery plan (DO) — shipping schedule', doCust:'All customers', doWkSum:'Week total',
+    doOrder:'Order (whole plan)', doNone:'No delivery planned for this week.',
+    doSrc:'source {f} · {n} items · {a} ~ {b}', doUpd:'Update plan (paste from Excel)',
+    doHint:'In Excel select from the CUSTOMERS header row to the last row, copy, and paste here',
+    doApply:'Apply', doReset:'Reset', doPasted:'pasted plan', doOk:'Updated — {n} items · {a} ~ {b}',
+    doErr:'Could not read the format — the CUSTOMERS / PART NAME / PART CODE header row must be included',
+    doDay:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], doPart:'PART NAME', doCode:'PART CODE',
+    doTot:'Day total', doOut:'Outside the plan — the plan covers {a} ~ {b}',
     title:'Weekly Quality Report 2', sub:'Corporate quality report format',
     s1:'Customer quality status', s1sub:'Delivery quality summary',
     s1a:'Monthly quality statistics', s1b:'Defects by type', s11:'Customer claims received',
@@ -5942,6 +5980,14 @@ const R2_TXT = {
     week:'สัปดาห์รายงาน', year:'ปีฐาน', who:'ผู้จัดทำ',
     hint:'ข้อมูลถูกบันทึกในเบราว์เซอร์นี้ (แยกตามสัปดาห์/ปี)',
     chartEmpty:'กรอกค่ารายเดือนเพื่อแสดงกราฟ',
+    s4do:'แผนการส่งมอบ (DO) — ตารางส่งประจำสัปดาห์', doCust:'ลูกค้าทั้งหมด', doWkSum:'รวมสัปดาห์',
+    doOrder:'Order (ทั้งแผน)', doNone:'ไม่มีแผนส่งมอบในสัปดาห์นี้',
+    doSrc:'ที่มา {f} · {n} รายการ · {a} ~ {b}', doUpd:'อัปเดตแผน (วางจาก Excel)',
+    doHint:'ใน Excel เลือกตั้งแต่แถวหัวตาราง CUSTOMERS จนถึงแถวสุดท้าย คัดลอก แล้ววางที่นี่',
+    doApply:'ใช้งาน', doReset:'ค่าเริ่มต้น', doPasted:'แผนที่วาง', doOk:'อัปเดตแล้ว — {n} รายการ · {a} ~ {b}',
+    doErr:'อ่านรูปแบบไม่ได้ — ต้องมีแถวหัวตาราง CUSTOMERS / PART NAME / PART CODE',
+    doDay:['อา','จ','อ','พ','พฤ','ศ','ส'], doPart:'PART NAME', doCode:'PART CODE',
+    doTot:'รวมต่อวัน', doOut:'อยู่นอกช่วงแผน — แผนครอบคลุม {a} ~ {b}',
     title:'รายงานคุณภาพรายสัปดาห์ 2', sub:'แบบฟอร์มรายงานคุณภาพของบริษัท',
     s1:'คุณภาพงานลูกค้า', s1sub:'สรุปคุณภาพการส่งมอบ',
     s1a:'สถิติคุณภาพรายเดือน', s1b:'ของเสียแยกตามประเภท', s11:'รายการร้องเรียนจากลูกค้า',
@@ -6002,9 +6048,10 @@ function r2Rows(sc, tid, def){
   return (n > 0 && n < 200) ? n : def;
 }
 /* 입력 칸 · 체크박스 */
-function r2i(sc, k, cls, ph){
+function r2i(sc, k, cls, ph, list){
   return '<input class="r2i ' + (cls||'') + '" data-sc="' + r2esc(sc) + '" data-k="' + r2esc(k) + '"' +
-         ' value="' + r2esc(r2Get(sc,k)) + '"' + (ph ? ' placeholder="' + r2esc(ph) + '"' : '') + '>';
+         ' value="' + r2esc(r2Get(sc,k)) + '"' + (ph ? ' placeholder="' + r2esc(ph) + '"' : '') +
+         (list ? ' list="' + list + '" autocomplete="off"' : '') + '>';
 }
 function r2c(sc, k){
   return '<input type="checkbox" class="r2chk" data-sc="' + r2esc(sc) + '" data-k="' + r2esc(k) + '"' +
@@ -6039,7 +6086,7 @@ function r2listTbl(sc, tid, cols, nDef, opt){
   for (let i = 0; i < n; i++){
     h += '<tr>' + cols.map(c =>
       c.k === '#' ? '<td class="h" style="text-align:center">' + (i+1) + '</td>'
-                  : '<td>' + r2i(sc, tid + '.' + i + '.' + c.k, c.cls || 'l') + '</td>').join('') + '</tr>';
+                  : '<td>' + r2i(sc, tid + '.' + i + '.' + c.k, c.cls || 'l', null, c.list) + '</td>').join('') + '</tr>';
   }
   h += '</tbody></table></div>' + r2add(sc, tid, nDef);
   return h;
@@ -6239,6 +6286,167 @@ function r2ProcHtml(week, yscope){
 }
 let R2_CHART = null;
 
+
+/* =========================================================================
+   13-b. 납품 계획 (DO) — 출하검사에서 이번 주 나갈 물량을 확인한다
+        · 초기값은 사내 Delivery Plan 엑셀 스냅샷이다.
+        · 매주 바뀌는 자료이므로, 엑셀에서 복사해 붙여넣으면 이 브라우저에 저장된다.
+   ========================================================================= */
+const DO_SEED = {"src":"Delivery_Plan_19.08.26.xlsx","sheet":"19.08.26","dates":["2026-09-19","2026-09-20","2026-09-21","2026-09-22","2026-09-23","2026-09-24","2026-09-25","2026-09-26","2026-09-27","2026-09-28","2026-09-29","2026-09-30","2026-10-01","2026-10-02","2026-10-03"],"rows":[{"cu":"TSE","pn":"NUT SPIN AL","pc":"6021-001222","nt":"13","d":{"2026-09-19":2220,"2026-09-21":1411,"2026-09-22":1895,"2026-09-23":1470,"2026-09-24":92,"2026-09-26":148,"2026-09-28":1470,"2026-09-29":92,"2026-09-30":1411,"2026-10-01":1895,"2026-10-02":1470,"2026-10-03":92},"o":13666},{"cu":"TSE","pn":"NUT HEXAGON (M26)","pc":"6021-001573","nt":"13","d":{"2026-09-19":3752,"2026-09-21":4440,"2026-09-22":4279,"2026-09-23":1643,"2026-09-24":4190,"2026-09-25":4190,"2026-09-26":4180,"2026-09-28":1643,"2026-09-29":4190,"2026-09-30":4440,"2026-10-01":4279,"2026-10-02":1643,"2026-10-03":4190},"o":47059},{"cu":"TSE","pn":"NUT SPIN (M24)","pc":"DC60-50004A","nt":"13","d":{"2026-09-19":2544,"2026-09-21":2710,"2026-09-22":2225,"2026-09-23":1689,"2026-09-24":3988,"2026-09-25":3988,"2026-09-26":4051,"2026-09-28":1689,"2026-09-29":3988,"2026-09-30":2710,"2026-10-01":2225,"2026-10-02":1689,"2026-10-03":3988},"o":37484},{"cu":"TSE","pn":"PLATE GRIDDLE","pc":"DG61-01469A","nt":"","d":{"2026-09-21":1920,"2026-09-22":1120,"2026-09-23":1120,"2026-09-24":1120,"2026-09-25":1120,"2026-09-26":1120,"2026-09-28":1120,"2026-09-29":1120,"2026-09-30":1120},"o":10880},{"cu":"SUNG CHUL HITECH","pn":"ASSY BURNER","pc":"DG90-01079A","nt":"","d":{"2026-09-21":1000,"2026-09-22":1000,"2026-09-28":600,"2026-10-01":600,"2026-10-03":600},"o":3800},{"cu":"SUNG CHUL HITECH","pn":"ASSY BURNER","pc":"DG90-01153A","nt":"","d":{"2026-09-19":1000,"2026-09-21":1000,"2026-09-22":1000,"2026-09-24":1500,"2026-09-26":1500,"2026-09-28":2000,"2026-09-29":1000,"2026-09-30":1000,"2026-10-01":2000,"2026-10-02":1000,"2026-10-03":2000},"o":15000},{"cu":"SUNG CHUL HITECH","pn":"ASSY BURNER","pc":"DG90-01153B","nt":"","d":{"2026-09-29":600,"2026-09-30":600,"2026-10-02":600},"o":1800},{"cu":"SUNG CHUL HITECH","pn":"LEVER DOOR","pc":"DD66-00133A","nt":"","d":{"2026-09-23":600},"o":600},{"cu":"SUNG MOON DANG","pn":"LEVER DOOR","pc":"DD66-00133A","nt":"","d":{"2026-09-19":3000,"2026-09-22":10000,"2026-09-29":4000},"o":17000},{"cu":"SUNG MOON DANG","pn":"BRACKET-TOP","pc":"DD61-00759A","nt":"","d":{"2026-09-24":2000},"o":2000},{"cu":"DONG SEUNG","pn":"GUIDE-STAND NECK","pc":"BN61-19437A","nt":"","d":{"2026-09-19":3398,"2026-09-21":2000,"2026-09-22":3000,"2026-10-01":4500},"o":12898},{"cu":"DONG SEUNG","pn":"BRACKET-STAND SWIVEL","pc":"BN61-19639A","nt":"","d":{"2026-09-19":2910,"2026-09-21":2000,"2026-09-22":3000,"2026-10-01":4500},"o":12410},{"cu":"DONG SEUNG","pn":"BRACKET-STAND SWIVEL REAR","pc":"BN61-19640A","nt":"","d":{"2026-09-19":1489,"2026-09-21":2000,"2026-09-22":3000,"2026-10-01":4500},"o":10989},{"cu":"WASIN TECH","pn":"FLANGE SHAFT","pc":"DC60-00122A","nt":"subcontract","d":{"2026-09-19":2106,"2026-09-21":2106,"2026-09-22":2106,"2026-09-23":2106,"2026-09-24":2106,"2026-09-26":2106,"2026-09-28":2106,"2026-09-29":2106,"2026-09-30":2106,"2026-10-01":2106,"2026-10-02":2106,"2026-10-03":2106},"o":25272},{"cu":"WASIN TECH","pn":"F/S POSEIDON","pc":"DC60-00045A","nt":"subcontract","d":{"2026-09-19":1242,"2026-09-21":828,"2026-09-22":828,"2026-09-23":828,"2026-09-24":2484,"2026-09-25":2484,"2026-09-26":2484,"2026-09-28":1242,"2026-09-29":2484,"2026-09-30":1242,"2026-10-02":828,"2026-10-03":828},"o":17802},{"cu":"WASIN TECH","pn":"FLANGE SHAFT (14KG)","pc":"DC60-00023D","nt":"subcontract","d":{"2026-09-19":2484,"2026-09-21":2484,"2026-09-22":2484,"2026-09-23":2484,"2026-09-24":2484,"2026-09-25":2484,"2026-09-26":2484,"2026-09-28":2484,"2026-09-29":2484,"2026-09-30":2484,"2026-10-01":2484,"2026-10-02":2484,"2026-10-03":2484},"o":32292},{"cu":"TFL","pn":"FLANGE SHAFT","pc":"DC60-00067D","nt":"subcontract","d":{"2026-09-19":1188,"2026-09-21":1485,"2026-09-22":1485,"2026-09-23":1485,"2026-09-24":1485,"2026-09-25":891,"2026-09-26":1188,"2026-09-28":1188,"2026-09-29":1188,"2026-09-30":1188,"2026-10-01":1485,"2026-10-02":1485,"2026-10-03":1485},"o":17226},{"cu":"TFL","pn":"FLANGE SHAFT","pc":"DC60-00116B","nt":"subcontract","d":{"2026-09-21":384,"2026-09-24":384,"2026-09-26":384,"2026-09-28":384,"2026-09-29":384,"2026-09-30":384,"2026-10-01":384},"o":2688},{"cu":"THAIWON","pn":"FLANGE SHAFT","pc":"DC60-00101A","nt":"subcontract","d":{"2026-09-19":2997,"2026-09-21":3330,"2026-09-22":3330,"2026-09-23":3330,"2026-09-24":3330,"2026-09-25":3330,"2026-09-26":3330,"2026-09-28":3330,"2026-09-29":3330,"2026-09-30":3330,"2026-10-01":3330,"2026-10-02":3330,"2026-10-03":3330},"o":42957},{"cu":"HAE KWANG","pn":"BURNER HEAD FISH (G)","pc":"DG62-00073A","nt":"","d":{"2026-09-19":1100,"2026-09-21":440,"2026-09-22":440,"2026-09-28":880,"2026-09-29":440},"o":3300},{"cu":"HAE KWANG","pn":"BURNER HEAD FISH (B)","pc":"DG62-00086A","nt":"","d":{"2026-09-19":2640,"2026-09-21":2200,"2026-09-22":1760,"2026-09-23":1760,"2026-09-24":1760,"2026-09-28":1760,"2026-09-29":1760,"2026-09-30":880},"o":14520},{"cu":"SHIN YOUNG THAI","pn":"LEVER DOOR (CAM)","pc":"DC66-00908A","nt":"","d":{"2026-09-21":10000,"2026-09-22":10000,"2026-09-23":10000,"2026-09-24":10000,"2026-09-28":10000,"2026-09-29":10000,"2026-09-30":10000},"o":70000},{"cu":"HANSOL","pn":"HEATSINK, BI3 PE LH","pc":"6424991512BP","nt":"","d":{"2026-09-24":510},"o":510},{"cu":"HANSOL","pn":"HEATSINK, BI3 PE RH","pc":"6424991513BP","nt":"","d":{"2026-09-24":510},"o":510},{"cu":"HANSOL","pn":"HEATSINK, C1YB-2 DPT LH","pc":"6424991658BP","nt":"","d":{"2026-09-21":1320},"o":1320},{"cu":"HANSOL","pn":"HEATSINK, C1YB-2 DPT RH","pc":"6424991659BP","nt":"","d":{"2026-09-21":1320},"o":1320},{"cu":"HANSOL","pn":"HEATSINK, C1YB-2 AUX LH","pc":"6424991660BP","nt":"","d":{"2026-09-22":1530,"2026-09-28":1530},"o":3060},{"cu":"HANSOL","pn":"HEATSINK, C1YB-2 AUX RH","pc":"6424991661BP","nt":"","d":{"2026-09-22":1530,"2026-09-28":1530},"o":3060},{"cu":"HANON","pn":"JOINT FLANGE     ( S11TE70102 )","pc":"FC1M2L7EAF01","nt":"","d":{"2026-09-25":200,"2026-09-29":200,"2026-10-02":200},"o":600},{"cu":"HANON","pn":"CONNECTOR        ( S05TE70101 )","pc":"FC1U5L7EAA01","nt":"","d":{"2026-09-19":200,"2026-09-21":100,"2026-09-22":200,"2026-09-23":100,"2026-09-24":200,"2026-09-25":200,"2026-09-28":200,"2026-09-29":200,"2026-10-01":200,"2026-10-02":200},"o":1800},{"cu":"HANON","pn":"CONNECTOR        ( S05TEELA02 )","pc":"FC1U5L7EAB01","nt":"","d":{"2026-09-19":200,"2026-09-21":100,"2026-09-22":200,"2026-09-23":100,"2026-09-24":200,"2026-09-28":200,"2026-10-01":200},"o":1200},{"cu":"HANON","pn":"JOINT BLOCK      ( S05RXETA01 )","pc":"FC1U5RXEAF01","nt":"","d":{"2026-09-19":200,"2026-09-21":200,"2026-09-22":200,"2026-09-23":200,"2026-09-24":200,"2026-09-25":100,"2026-09-28":200,"2026-09-29":100,"2026-10-01":200,"2026-10-02":100},"o":1700},{"cu":"HANON","pn":"SSL 3/4''Male, ADC 12","pc":"FC1U5F2SAA01","nt":"","d":{"2026-09-19":3000,"2026-09-21":3000,"2026-09-22":3000,"2026-09-23":3000,"2026-09-24":3000,"2026-09-25":3000,"2026-09-26":3000,"2026-09-28":3000,"2026-09-29":3000,"2026-09-30":3000,"2026-10-01":3000,"2026-10-02":3000,"2026-10-03":3000},"o":39000},{"cu":"HANON","pn":"SSL 3/4''Male, ADC 12","pc":"FC1U5F2SAB01","nt":"","d":{"2026-09-19":3000,"2026-09-21":3000,"2026-09-22":3000,"2026-09-23":3000,"2026-09-24":3000,"2026-09-25":3000,"2026-09-26":3000,"2026-09-28":3000,"2026-09-29":3000,"2026-09-30":3000,"2026-10-01":3000,"2026-10-02":3000,"2026-10-03":3000},"o":39000},{"cu":"HANON","pn":"MSF 1/2 J/F Caulking","pc":"FC1L0F2S1A02","nt":"","d":{"2026-09-19":3000,"2026-09-21":3000,"2026-09-22":3000,"2026-09-23":3000,"2026-09-24":3000,"2026-09-25":3000,"2026-09-26":3000,"2026-09-28":3000,"2026-09-29":3000,"2026-09-30":3000,"2026-10-01":3000,"2026-10-02":3000,"2026-10-03":3000},"o":39000},{"cu":"HANON","pn":"DSL 5/8 J/F Caulking","pc":"FC1J0F2S2G01","nt":"","d":{"2026-09-19":4000,"2026-09-21":4000,"2026-09-22":4000,"2026-09-23":4000,"2026-09-24":4000,"2026-09-25":4000,"2026-09-26":4000,"2026-09-28":4000,"2026-09-29":4000,"2026-09-30":4000,"2026-10-01":4000,"2026-10-02":4000,"2026-10-03":4000},"o":52000},{"cu":"HANON","pn":"Single O-ring J/F Caulking","pc":"FC1J8-F2SLB01 00","nt":"","d":{"2026-09-19":4000,"2026-09-21":4000,"2026-09-22":4000,"2026-09-23":4000,"2026-09-24":4000,"2026-09-25":4000,"2026-09-26":4000,"2026-09-28":4000,"2026-09-29":4000,"2026-09-30":4000,"2026-10-01":4000,"2026-10-02":4000,"2026-10-03":4000},"o":52000},{"cu":"HANON","pn":"Female DSL 5/8 Caulking","pc":"HC839S1B1H01","nt":"","d":{"2026-09-19":4000,"2026-09-21":4000,"2026-09-22":4000,"2026-09-23":4000,"2026-09-24":4000,"2026-09-25":4000,"2026-09-26":4000,"2026-09-28":4000,"2026-09-29":4000,"2026-09-30":4000,"2026-10-01":4000,"2026-10-02":4000,"2026-10-03":4000},"o":52000},{"cu":"HANON","pn":"Female DSL 5/8 Caulking","pc":"HC839S1B1I01","nt":"","d":{"2026-09-19":2500,"2026-09-21":2500,"2026-09-22":2500,"2026-09-23":2500,"2026-09-24":2500,"2026-09-25":2500,"2026-09-26":2500,"2026-09-28":2500,"2026-09-29":2500,"2026-09-30":2500,"2026-10-01":2500,"2026-10-02":2500,"2026-10-03":2500},"o":32500},{"cu":"HANON","pn":"Male Joint Flange","pc":"FC1U5G5CAA01","nt":"","d":{"2026-09-19":2500,"2026-09-21":2500,"2026-09-22":2500,"2026-09-23":2500,"2026-09-24":2500,"2026-09-25":2500,"2026-09-26":2500,"2026-09-28":2500,"2026-09-29":2500,"2026-09-30":2500,"2026-10-01":2500,"2026-10-02":2500,"2026-10-03":2500},"o":32500},{"cu":"THONGCHAI","pn":"JOINT BLOCK","pc":"S05-TEGLA-03","nt":"","d":{"2026-09-29":400},"o":400},{"cu":"THONGCHAI","pn":"JOINT FLANGE","pc":"S11-TE701-02","nt":"","d":{"2026-09-29":2000},"o":2000},{"cu":"THONGCHAI","pn":"JOINT FLANGE","pc":"S11-TLA04-01","nt":"","d":{"2026-09-29":3000},"o":3000},{"cu":"THONGCHAI","pn":"JOINT FLANGE","pc":"S05-TLA01-01","nt":"","d":{"2026-09-29":500},"o":500},{"cu":"SHIN ANN KOREA","pn":"CYLINDER HS-15 F","pc":"F510-CD1AA-02","nt":"HS-15 F","d":{"2026-09-25":4800},"o":4800},{"cu":"SHIN ANN KOREA","pn":"CYLINDER HS-15 R","pc":"F510-CD1AB-02","nt":"HS-15 R","d":{"2026-09-25":4800},"o":4800},{"cu":"SHIN ANN KOREA","pn":"HEAD COMP REAR","pc":"Q519-MAXAA-04","nt":"SM F","d":{"2026-09-25":1260},"o":1260},{"cu":"SHIN ANN KOREA","pn":"HEAD COMP FRONT","pc":"Q520-MAXAA-04","nt":"SM R","d":{"2026-09-25":1260},"o":1260},{"cu":"SHIN ANN KOREA","pn":"MANIFOLD-COMP QA-QA","pc":"F543QVAQA03","nt":"QA-QA","d":{"2026-09-25":384},"o":384},{"cu":"SHIN ANN KOREA","pn":"MANIFOLD-COMP NA-NE","pc":"F543QAVNE01","nt":"NA-NE","d":{"2026-09-25":768},"o":768},{"cu":"SHIN ANN KOREA","pn":"MANIFOLD-COMP EG-NF","pc":"F543QAVNF01","nt":"EG-NF","d":{"2026-09-25":384},"o":384},{"cu":"SHIN ANN KOREA","pn":"CT HOUSING REAR WASHER TYPE S/W","pc":"CF620CTEAA-001","nt":"CT","d":{"2026-09-25":2304},"o":2304},{"cu":"SHIN ANN KOREA","pn":"CT INVERTER SUPPORT","pc":"CF623L3LAA-03","nt":"CT","d":{"2026-09-25":8800},"o":8800},{"cu":"SHIN ANN KOREA","pn":"CT INVERTER COVER","pc":"CF624L3LAA-01","nt":"CT","d":{"2026-09-25":8960},"o":8960},{"cu":"SHIN ANN KOREA","pn":"CN8 INVERTER COVER / MATRL","pc":"CR624L9SAA-02","nt":"CN8","d":{"2026-09-25":8208},"o":8208},{"cu":"SHIN ANN KOREA","pn":"CN8 INVERTER SUPPORT / MATRL","pc":"CR623L9SAA-02","nt":"CN8","d":{"2026-09-25":8208},"o":8208},{"cu":"SADC","pn":"HOUSING-CYLINDER / MATRL","pc":"CR510SVKAA-03","nt":"GEM","d":{"2026-09-24":2520,"2026-10-02":2520},"o":5040},{"cu":"SADC","pn":"HOUSING-CYLINDER / MATRL","pc":"CR510SVKAB-01","nt":"GEM","d":{"2026-09-24":3780,"2026-10-02":3780},"o":7560},{"cu":"SADC","pn":"HOUSING-FRONT/ MATRL","pc":"CR520SVKAA-02","nt":"GEM","d":{"2026-09-24":2700,"2026-10-02":2700},"o":5400},{"cu":"SADC","pn":"HOUSING-REAR/ MATRL","pc":"CR519SVKAA-02","nt":"GEM","d":{"2026-09-24":2700,"2026-10-02":2700},"o":5400},{"cu":"SADC","pn":"BA CYLINDER FRONT","pc":"CR510SUABAA08","nt":"BA F","d":{"2026-09-24":3360,"2026-10-02":2520},"o":5880},{"cu":"SADC","pn":"BA CYLINDER REAR","pc":"CR510QQDWB04","nt":"BA R","d":{"2026-09-24":5670,"2026-10-02":3780},"o":9450},{"cu":"SADC","pn":"STEERING COLUMN UPPER (SW)","pc":"GL 723-SW0-00","nt":"COLUMN","d":{"2026-10-02":3150},"o":3150},{"cu":"SADC","pn":"STEERING COLUMN UPPER (SP3i N-KEY)","pc":"GL 723-BM3-00","nt":"COLUMN","d":{"2026-10-02":2352},"o":2352},{"cu":"SADC","pn":"STEERING COLUMN UPPER (SP3i KEY)","pc":"GL 723-BM2-00","nt":"COLUMN","d":{"2026-09-24":5880,"2026-10-02":2352},"o":8232},{"cu":"SEDAM HA (MEXICO)","pn":"NUT HEXAGON","pc":"6021-001573","nt":"","d":{"2026-09-25":14400},"o":14400}]};
+const DO_KEY = 'stc_do_plan_v1';
+let DO_PLAN = null, DO_CUST = '';
+function doPlan(){
+  if (DO_PLAN) return DO_PLAN;
+  try{
+    const raw = localStorage.getItem(DO_KEY);
+    if (raw){ const o = JSON.parse(raw); if (o && o.rows && o.rows.length){ DO_PLAN = o; return DO_PLAN; } }
+  }catch(e){}
+  DO_PLAN = DO_SEED;
+  return DO_PLAN;
+}
+function doSavePlan(o){
+  DO_PLAN = o;
+  try{ localStorage.setItem(DO_KEY, JSON.stringify(o)); }catch(e){}
+}
+function doResetPlan(){
+  DO_PLAN = null;
+  try{ localStorage.removeItem(DO_KEY); }catch(e){}
+  renderQReport2();
+}
+/* 엑셀에서 복사한 탭 구분 텍스트를 읽는다 (머리글 2줄 + 데이터) */
+function doParse(text, baseYear){
+  const lines = String(text||'').replace(/\r/g,'').split('\n').filter(l=>l.trim() !== '');
+  if (!lines.length) return null;
+  const cells = lines.map(l=>l.split('\t'));
+  const up = v => String(v==null?'':v).trim().toUpperCase();
+  let hi = -1;
+  for (let i = 0; i < Math.min(cells.length, 12); i++){
+    const row = cells[i].map(up);
+    if (row.indexOf('PART CODE') >= 0 || (row.indexOf('CUSTOMERS') >= 0 && row.indexOf('PART NAME') >= 0)){ hi = i; break; }
+  }
+  if (hi < 0) return null;
+  const head = cells[hi], mon = cells[hi+1] || [];
+  const MON = { JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12 };
+  const iCu = head.map(up).indexOf('CUSTOMERS');
+  const iPn = head.map(up).indexOf('PART NAME');
+  const iPc = head.map(up).indexOf('PART CODE');
+  const iOr = head.map(up).indexOf('ORDER');
+  if (iPn < 0 || iPc < 0) return null;
+  const dcol = {};
+  let y = parseInt(baseYear, 10) || new Date().getFullYear(), lastM = 0;
+  for (let c = 0; c < head.length; c++){
+    const dnum = parseInt(String(head[c]).trim(), 10);
+    const mk = MON[up(mon[c]).slice(0,3)];
+    if (!mk || !(dnum >= 1 && dnum <= 31)) continue;
+    if (lastM && mk < lastM) y++;                      // 12월 → 1월 넘어감
+    lastM = mk;
+    dcol[c] = y + '-' + String(mk).padStart(2,'0') + '-' + String(dnum).padStart(2,'0');
+  }
+  if (!Object.keys(dcol).length) return null;
+  const rows = []; let cu = '';
+  for (let i = hi + 2; i < cells.length; i++){
+    const r = cells[i];
+    const a = (iCu >= 0 ? String(r[iCu]||'').trim() : '');
+    if (a && !/^FM-/.test(a)) cu = a;
+    const pn = String(r[iPn]||'').trim(), pc = String(r[iPc]||'').trim();
+    if (!pn && !pc) continue;
+    const d = {};
+    for (const c in dcol){
+      const v = parseFloat(String(r[c]||'').replace(/[,\s]/g,''));
+      if (isFinite(v) && v) d[dcol[c]] = (d[dcol[c]]||0) + Math.round(v);
+    }
+    const ov = iOr >= 0 ? parseFloat(String(r[iOr]||'').replace(/[,\s]/g,'')) : NaN;
+    if (!Object.keys(d).length && !(isFinite(ov) && ov)) continue;
+    rows.push({ cu:cu, pn:pn, pc:pc, nt:'', d:d, o: isFinite(ov) ? Math.round(ov) : 0 });
+  }
+  if (!rows.length) return null;
+  const dates = [...new Set(rows.reduce((a,r)=>a.concat(Object.keys(r.d)), []))].sort();
+  return { src:'paste', sheet:'', dates:dates, rows:rows };
+}
+function doApplyPaste(){
+  const ta = document.getElementById('doPasteBox'), msg = document.getElementById('doPasteMsg');
+  if (!ta) return;
+  const yEl = document.getElementById('qr2Year');
+  const o = doParse(ta.value, yEl ? yEl.value : null);
+  if (!o){ if (msg){ msg.className = 'msg er'; msg.textContent = r2t('doErr'); } return; }
+  doSavePlan(o);
+  try{ sessionStorage.setItem('stc_do_msg',
+    r2t('doOk', { n:o.rows.length, a:o.dates[0], b:o.dates[o.dates.length-1] })); }catch(e){}
+  renderQReport2();
+}
+function doSetCust(v){ DO_CUST = v || ''; renderQReport2(); }
+
+/* 주차(수~화 7일) 납품 계획표 */
+function doWeekHtml(week){
+  const plan = doPlan();
+  const rg = qrWeekRange(week);
+  const src = '<span class="src">' + r2t('doSrc', {
+      f: (plan.src === 'paste' ? r2t('doPasted') : (plan.src || '-')),
+      n: plan.rows.length, a: plan.dates[0] || '-', b: plan.dates[plan.dates.length-1] || '-' }) + '</span>';
+  const custs = [...new Set(plan.rows.map(r=>r.cu).filter(Boolean))].sort();
+  const bar = '<div class="doBar">' +
+    '<select onchange="doSetCust(this.value)"><option value="">' + r2t('doCust') + '</option>' +
+    custs.map(c=>'<option value="' + r2esc(c) + '"' + (c===DO_CUST?' selected':'') + '>' + r2esc(c) + '</option>').join('') +
+    '</select>' + src + '</div>';
+  const paste = '<div class="doPaste qr-noprint"><div class="h">' + r2t('doUpd') + '</div>' +
+    '<textarea id="doPasteBox" placeholder="' + r2esc(r2t('doHint')) + '"></textarea>' +
+    '<div style="margin-top:5px;display:flex;gap:6px;align-items:center">' +
+    '<button type="button" onclick="doApplyPaste()">' + r2t('doApply') + '</button>' +
+    '<button type="button" onclick="doResetPlan()">' + r2t('doReset') + '</button>' +
+    '<span id="doPasteMsg" class="msg"></span></div></div>';
+  if (!rg) return bar + '<div class="r2empty">' + r2t('doNone') + '</div>' + paste;
+
+  const days = [];
+  for (let i = 0; i < 7; i++) days.push(qrDateAdd(rg.start, i));
+  const inWeek = days.filter(d => plan.dates.indexOf(d) >= 0);
+  const rows = plan.rows
+    .filter(r => !DO_CUST || r.cu === DO_CUST)
+    .map(r => ({ r, wk: days.reduce((s,d)=>s+(r.d[d]||0), 0) }))
+    .filter(x => x.wk > 0)
+    .sort((a,b)=>b.wk-a.wk);
+  if (!rows.length){
+    const out = (plan.dates.length && (days[6] < plan.dates[0] || days[0] > plan.dates[plan.dates.length-1]))
+      ? r2t('doOut', { a:plan.dates[0], b:plan.dates[plan.dates.length-1] }) : r2t('doNone');
+    return bar + '<div class="r2empty">' + out + '</div>' + paste;
+  }
+  const DW = r2t('doDay');
+  const today = new Date(); const ts = today.getFullYear() + '-' +
+    String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  const dowOf = d => new Date(d + 'T00:00:00').getDay();
+  const head = '<tr><th style="min-width:100px">' + r2t('cust') + '</th>' +
+    '<th style="min-width:170px">' + r2t('doPart') + '</th>' +
+    '<th style="min-width:110px">' + r2t('doCode') + '</th>' +
+    days.map(d=>{
+      const w = dowOf(d);
+      return '<th style="min-width:66px" class="' + (d===ts?'today ':'') + (w===0?'sun':'') + '">' +
+        d.slice(5).replace('-','/') + '<div class="dow">' + DW[w] + '</div></th>'; }).join('') +
+    '<th style="min-width:76px">' + r2t('doWkSum') + '</th>' +
+    '<th style="min-width:84px">' + r2t('doOrder') + '</th></tr>';
+  const body = rows.map(x=>{
+    const r = x.r;
+    return '<tr><td class="h">' + r2esc(r.cu) + '</td>' +
+      '<td class="h" style="font-weight:600">' + r2esc(r.pn) + '</td>' +
+      '<td class="v" style="text-align:left;padding-left:6px">' + r2esc(r.pc) + '</td>' +
+      days.map(d=>{ const v = r.d[d]||0;
+        return '<td class="v ' + (v?'':'do0 ') + (d===ts?'today':'') + '">' + (v?v.toLocaleString():'·') + '</td>'; }).join('') +
+      '<td class="v" style="font-weight:800">' + x.wk.toLocaleString() + '</td>' +
+      '<td class="v mut">' + (r.o?r.o.toLocaleString():'–') + '</td></tr>';
+  }).join('');
+  const dayTot = days.map(d => rows.reduce((s,x)=>s+(x.r.d[d]||0), 0));
+  const foot = '<tr class="tot"><td class="h" colspan="3">' + r2t('doTot') + '</td>' +
+    dayTot.map((v,i)=>'<td class="v ' + (days[i]===ts?'today':'') + '">' + (v?v.toLocaleString():'·') + '</td>').join('') +
+    '<td class="v">' + dayTot.reduce((a,b)=>a+b,0).toLocaleString() + '</td>' +
+    '<td class="v mut">' + rows.reduce((s,x)=>s+(x.r.o||0),0).toLocaleString() + '</td></tr>';
+  const dl = '<datalist id="doParts">' +
+    [...new Set(plan.rows.map(r=>r.pc).filter(Boolean))].map(v=>'<option value="' + r2esc(v) + '">').join('') +
+    '</datalist><datalist id="doNames">' +
+    [...new Set(plan.rows.map(r=>r.pn).filter(Boolean))].map(v=>'<option value="' + r2esc(v) + '">').join('') +
+    '</datalist><datalist id="doCusts">' +
+    custs.map(v=>'<option value="' + r2esc(v) + '">').join('') + '</datalist>';
+  return bar + '<div class="r2wrap"><table class="r2t"><thead>' + head + '</thead><tbody>' +
+    body + foot + '</tbody></table></div>' + dl + paste;
+}
+
 /* ---------- 본체 ---------- */
 function renderQReport2(){
   const wSel = document.getElementById('qr2Week');
@@ -6346,8 +6554,11 @@ function renderQReport2(){
   const shRows = [ {k:'gp', label:r2t('ppm') + ' ' + r2t('sh_goal')},
                    {k:'ap', label:r2t('ppm') + ' ' + r2t('sh_act'), hi:true},
                    {k:'sq', label:r2t('sh_qty')}, {k:'sb', label:r2t('sh_bad'), hi:true} ];
-  const s4bcols = [ {k:'d', label:r2t('shipd'), w:70, cls:''}, {k:'cs', label:r2t('cust'), w:110},
-    {k:'pn', label:r2t('pno'), w:110}, {k:'nm', label:r2t('pnm'), w:150},
+  /* 출하검사 표의 고객사·품번·품명은 납품 계획(DO) 목록에서 자동완성된다 */
+  const s4bcols = [ {k:'d', label:r2t('shipd'), w:70, cls:''},
+    {k:'cs', label:r2t('cust'), w:110, list:'doCusts'},
+    {k:'pn', label:r2t('pno'), w:110, list:'doParts'},
+    {k:'nm', label:r2t('pnm'), w:150, list:'doNames'},
     {k:'sq', label:r2t('shipq'), w:84, cls:'num'}, {k:'iq', label:r2t('insq2'), w:84, cls:'num'},
     {k:'dq', label:r2t('badq2'), w:84, cls:'num'}, {k:'dr', label:r2t('badr'), w:70, cls:'num'},
     {k:'dc', label:r2t('dcont'), w:150}, {k:'ac', label:r2t('action'), w:150},
@@ -6356,7 +6567,9 @@ function renderQReport2(){
       r2sub(r2t('s4a'), r2t('form')) + r2monTbl(ys, 'c4', shRows, shHead) +
       '<div style="height:10px"></div>' +
       '<canvas id="chart-r2-ship" class="r2chart"></canvas>' +
-      '<div style="height:12px"></div>' +
+      '<div style="height:14px"></div>' +
+      r2sub(r2t('s4do'), 'DO', qrWkLabel(week)) + doWeekHtml(week) +
+      '<div style="height:14px"></div>' +
       r2sub(r2t('s4b')) + r2listTbl(ws, 'c4b', s4bcols, 8));
 
   /* ===== 5. 품질문제 현황 및 개선 현황 ===== */
@@ -6399,6 +6612,12 @@ function renderQReport2(){
           { barName:r2t('cShip'), lineName:r2t('ppm'), emptyMsg:r2t('chartEmpty') });
   if (R2_CHART) r2Combo('chart-r2-proc', R2_CHART.labels, R2_CHART.bars, R2_CHART.line,
           { barName:r2t('cQty'), lineName:r2t('cPpm'), selIdx:R2_CHART.selIdx });
+  try{
+    const m = sessionStorage.getItem('stc_do_msg');
+    if (m){ const el = document.getElementById('doPasteMsg');
+      if (el){ el.className = 'msg ok'; el.textContent = m; }
+      sessionStorage.removeItem('stc_do_msg'); }
+  }catch(e){}
 }
 
 /* 입력 저장 — 시트 전체에 위임 */
