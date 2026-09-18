@@ -243,6 +243,31 @@
     line-height:12px;text-align:center;background:#d03b3b;color:#fff;border-radius:2px;
     font-size:8px;margin-right:3px;vertical-align:1px;}
 
+  /* 설비별 생산 모델·수량 — 사내 PPT 의 가로형 행렬 표 서식
+     (설비/PART NAME 를 가로로 깔고 PROD·OK·NG·W/S 를 행으로 둔다) */
+  .mxwrap{overflow-x:auto;}
+  table.mxt{border-collapse:collapse;font-size:10.5px;font-variant-numeric:tabular-nums;}
+  table.mxt th,table.mxt td{border:1px solid #c2ccd6;padding:2px 5px;text-align:right;
+    white-space:nowrap;}
+  table.mxt th.eq{background:#1e3c72;color:#fff;font-size:10.5px;font-weight:800;text-align:center;
+    letter-spacing:.02em;}
+  table.mxt th.hd,table.mxt td.hd{background:#dfe6ef;color:#12233f;font-weight:800;text-align:center;
+    position:sticky;left:0;z-index:2;}
+  table.mxt th.hd{background:#1e3c72;color:#fff;}
+  table.mxt th.pn{background:#f4f7fa;color:#243a5e;font-weight:700;font-size:9.5px;
+    writing-mode:vertical-rl;transform:rotate(180deg);
+    height:150px;max-height:150px;overflow:hidden;text-align:left;padding:4px 2px;
+    min-width:20px;letter-spacing:.01em;}
+  table.mxt th.tt{background:#12233f;color:#fff;font-weight:800;text-align:center;
+    position:sticky;right:0;z-index:2;}
+  table.mxt td.tt{background:#eef1f5;font-weight:800;color:#12233f;position:sticky;right:0;z-index:1;}
+  table.mxt tr.ws td{background:#fffaf2;}
+  table.mxt tr.ng td{background:#fff6f4;}
+  table.mxt td.mx0{color:#c3cad2;}
+  table.mxt td.top{color:#c62828;font-weight:800;}
+  .mxnote{font-size:10.5px;color:#8a949e;margin:5px 0 0;}
+  @media print{ .mxwrap{overflow:visible;} table.mxt th.pn{height:120px;} }
+
   /* 막대 구성 범례 */
   .vlegend{display:flex;gap:14px;flex-wrap:wrap;justify-content:flex-end;
     font-size:10px;color:#4a545e;margin:-2px 0 2px;}
@@ -3205,9 +3230,12 @@ Object.assign(I18N.ko, {
   'ms.title':'Measure — 설비 · 모델별 웜샷 / 불량 구성',
   'ms.basis':'{b} 기준 · Model상세 {n}행',
   'ms.s1':'① 설비별 TOTAL NG%', 'ms.s1sub':'= (순수NG + 웜샷) ÷ 투입수량 · 막대 안은 웜샷(STD·Excess)/순수NG 구성 · 아래 회색은 누적비중',
-  'ms.s2':'② 워스트 3 설비 로스 구성', 'ms.s2sub':'웜샷(STD/Excess)과 불량유형을 100%로 나눠 본 것',
-  'ms.s3':'③ 설비 × PART 별 실적', 'ms.s3sub':'PPT Measure 표와 동일 구성',
-  'ms.s4':'④ 모델별 웜샷 원단위', 'ms.s4sub':'승온 1회당 웜샷 — 로트 길이에 영향받지 않는 금형 고유 지표',
+  'ms.sx':'② 설비별 생산 모델 · 수량', 'ms.sxsub':'사내 PPT Measure 표와 같은 가로형 — 설비·PART 를 가로로 깔고 투입·양품·불량·웜샷을 행으로 본다',
+  'ms.mxNote':'PROD EA 투입수량 · OK EA 양품 · NG EA 순수 불량 · W/S 웜샷(STD+Excess) · 각 행의 최대값은 빨강',
+  'ms.mxEq':'Die Casting', 'ms.mxPn':'PART NAME', 'ms.mxTot':'TOTAL',
+  'ms.s2':'③ 워스트 3 설비 로스 구성', 'ms.s2sub':'웜샷(STD/Excess)과 불량유형을 100%로 나눠 본 것',
+  'ms.s3':'④ 설비 × PART 별 실적', 'ms.s3sub':'PPT Measure 표와 동일 구성',
+  'ms.s4':'⑤ 모델별 웜샷 원단위', 'ms.s4sub':'승온 1회당 웜샷 — 로트 길이에 영향받지 않는 금형 고유 지표',
   'ms.eq':'설비', 'ms.part':'PART NAME', 'ms.model':'Model',
   'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
   'ms.events':'승온 건수', 'ms.warmsum':'웜샷 계', 'ms.perevent':'1회당 웜샷', 'ms.excshare':'Excess 비중',
@@ -3282,9 +3310,12 @@ Object.assign(I18N.th, {
   'ms.title':'Measure — สัดส่วนวอร์มช็อต / ของเสีย ตามเครื่องจักรและรุ่น',
   'ms.basis':'เกณฑ์ {b} · {n} แถวจาก Model detail',
   'ms.s1':'1. TOTAL NG% ตามเครื่องจักร', 'ms.s1sub':'= (NG + วอร์มช็อต) / ที่ป้อนเข้า · แต่ละแท่งแยกเป็นวอร์มช็อต(STD/Excess) และ NG แท้ · ตัวเลขสีเทาคือสัดส่วนสะสม',
-  'ms.s2':'2. สัดส่วนความสูญเสีย 3 เครื่องที่แย่ที่สุด', 'ms.s2sub':'วอร์มช็อต (STD/Excess) และประเภทของเสีย รวมเป็น 100%',
-  'ms.s3':'3. เครื่องจักร x PART', 'ms.s3sub':'รูปแบบเดียวกับตาราง Measure ใน PPT',
-  'ms.s4':'4. วอร์มช็อตต่อการอุ่นแม่พิมพ์ 1 ครั้ง ตามรุ่น', 'ms.s4sub':'ไม่ขึ้นกับขนาดล็อต — เป็นค่าเฉพาะของแม่พิมพ์',
+  'ms.sx':'2. รุ่นและจำนวนที่ผลิตตามเครื่องจักร', 'ms.sxsub':'รูปแบบแนวนอนเดียวกับตาราง Measure ใน PPT',
+  'ms.mxNote':'PROD EA ที่ป้อนเข้า · OK EA ของดี · NG EA ของเสียแท้ · W/S วอร์มช็อต (STD+Excess) · ค่าสูงสุดของแต่ละแถวเป็นสีแดง',
+  'ms.mxEq':'Die Casting', 'ms.mxPn':'PART NAME', 'ms.mxTot':'TOTAL',
+  'ms.s2':'3. สัดส่วนความสูญเสีย 3 เครื่องที่แย่ที่สุด', 'ms.s2sub':'วอร์มช็อต (STD/Excess) และประเภทของเสีย รวมเป็น 100%',
+  'ms.s3':'4. เครื่องจักร x PART', 'ms.s3sub':'รูปแบบเดียวกับตาราง Measure ใน PPT',
+  'ms.s4':'5. วอร์มช็อตต่อการอุ่นแม่พิมพ์ 1 ครั้ง ตามรุ่น', 'ms.s4sub':'ไม่ขึ้นกับขนาดล็อต — เป็นค่าเฉพาะของแม่พิมพ์',
   'ms.eq':'เครื่องจักร', 'ms.part':'PART NAME', 'ms.model':'รุ่น',
   'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
   'ms.events':'จำนวนครั้งอุ่น', 'ms.warmsum':'วอร์มช็อตรวม', 'ms.perevent':'ต่อการอุ่น 1 ครั้ง', 'ms.excshare':'สัดส่วน Excess',
@@ -3358,9 +3389,12 @@ Object.assign(I18N.en, {
   'ms.title':'Measure — warm shot / defect mix by machine and model',
   'ms.basis':'{b} basis · {n} rows from Model detail',
   'ms.s1':'1. TOTAL NG% by machine', 'ms.s1sub':'= (pure NG + warm shots) / input · each bar is split into warm(STD/Excess) and pure NG · grey figure is the cumulative share',
-  'ms.s2':'2. Loss mix of the worst 3 machines', 'ms.s2sub':'warm shots (STD/Excess) and defect types as 100%',
-  'ms.s3':'3. Machine x PART', 'ms.s3sub':'same layout as the PPT Measure table',
-  'ms.s4':'4. Warm shots per heat-up, by model', 'ms.s4sub':'independent of lot length — the die-specific figure',
+  'ms.sx':'2. Models and volume by machine', 'ms.sxsub':'the PPT Measure layout — machines and parts across, input / good / NG / warm shot down',
+  'ms.mxNote':'PROD EA input · OK EA good · NG EA pure defects · W/S warm shots (STD+Excess) · the highest figure in each row is red',
+  'ms.mxEq':'Die Casting', 'ms.mxPn':'PART NAME', 'ms.mxTot':'TOTAL',
+  'ms.s2':'3. Loss mix of the worst 3 machines', 'ms.s2sub':'warm shots (STD/Excess) and defect types as 100%',
+  'ms.s3':'4. Machine x PART', 'ms.s3sub':'same layout as the PPT Measure table',
+  'ms.s4':'5. Warm shots per heat-up, by model', 'ms.s4sub':'independent of lot length — the die-specific figure',
   'ms.eq':'Machine', 'ms.part':'PART NAME', 'ms.model':'Model',
   'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
   'ms.events':'Heat-ups', 'ms.warmsum':'Warm total', 'ms.perevent':'Per heat-up', 'ms.excshare':'Excess share',
@@ -4600,6 +4634,47 @@ function msPairTableHtml(pairs, hasSplit){
     '<td>' + (sum('totalNg')/tp*100).toFixed(2) + '%</td></tr></tbody></table></div>';
 }
 
+/* ---------- 표 : 설비별 생산 모델 · 수량 (사내 PPT 가로형) ----------
+   설비와 PART NAME 을 가로로 깔고, PROD EA / OK EA / NG EA / W/S 를 행으로 둔다.
+   PART NAME 은 세로쓰기로 눕혀 열 폭을 좁게 유지한다 (PPT 와 같은 방식). */
+function msMatrixHtml(pairs){
+  const list = (pairs||[]).filter(x=>x.prod > 0)
+    .sort((a,b)=> (qrEqNum(a.eq) - qrEqNum(b.eq)) || (b.prod - a.prod));
+  if (!list.length) return '<div class="mnone">' + t('ms.nodata') + '</div>';
+  /* 설비별로 묶어 머리글 칸을 합친다 */
+  const groups = [];
+  list.forEach(x=>{
+    const g = groups[groups.length-1];
+    if (g && g.eq === x.eq) g.items.push(x);
+    else groups.push({ eq:x.eq, items:[x] });
+  });
+  const val = (x,k) => k === 'ws' ? (x.std + x.exc) : x[k];
+  const rows = [
+    { k:'prod', lb:'PROD EA', cls:'' },
+    { k:'good', lb:'OK EA',   cls:'' },
+    { k:'ng',   lb:'NG EA',   cls:'ng' },
+    { k:'ws',   lb:'W/S',     cls:'ws' }
+  ];
+  const head1 = '<tr><th class="hd">' + t('ms.mxEq') + '</th>' +
+    groups.map(g=>'<th class="eq" colspan="' + g.items.length + '">' + g.eq + '</th>').join('') +
+    '<th class="tt" rowspan="2">' + t('ms.mxTot') + '</th></tr>';
+  const head2 = '<tr><th class="hd">' + t('ms.mxPn') + '</th>' +
+    list.map(x=>'<th class="pn" title="' + x.eq + ' · ' + x.md + '">' + x.md + '</th>').join('') +
+    '</tr>';
+  const body = rows.map(r=>{
+    const vals = list.map(x=>val(x, r.k));
+    const mx = Math.max(...vals);
+    const tot = vals.reduce((a,b)=>a+b, 0);
+    return '<tr class="' + r.cls + '"><td class="hd">' + r.lb + '</td>' +
+      vals.map(v=>'<td class="' + (v <= 0 ? 'mx0' : (v === mx && mx > 0 ? 'top' : '')) + '">' +
+        (v ? v.toLocaleString() : '0') + '</td>').join('') +
+      '<td class="tt">' + tot.toLocaleString() + '</td></tr>';
+  }).join('');
+  return '<div class="mxwrap"><table class="mxt"><thead>' + head1 + head2 +
+    '</thead><tbody>' + body + '</tbody></table></div>' +
+    '<div class="mxnote">' + t('ms.mxNote') + '</div>';
+}
+
 /* ---------- 표 : 모델별 웜샷 원단위 ---------- */
 function msModelTableHtml(models, hasSplit){
   if (!hasSplit) return '<div class="mnone">' + t('ms.needsplit') + '</div>';
@@ -4633,6 +4708,8 @@ function qrMeasureHtml(week){
       t('ms.basis', { b:qrWkLabel(week), n:a.rows.toLocaleString() }) + '</span></div>' +
     '<div class="msec"><div class="mcat">' + t('ms.s1') + '<span>' + t('ms.s1sub') + '</span></div>' +
       msParetoHtml(a.eqs) + '</div>' +
+    '<div class="msec"><div class="mcat">' + t('ms.sx') + '<span>' + t('ms.sxsub') + '</span></div>' +
+      msMatrixHtml(a.pairs) + '</div>' +
     '<div class="msec"><div class="mcat">' + t('ms.s2') + '<span>' + t('ms.s2sub') + '</span></div>' +
       msCompHtml(a.eqs, a.hasSplit) + '</div>' +
     '<div class="msec"><div class="mgrid2">' +
