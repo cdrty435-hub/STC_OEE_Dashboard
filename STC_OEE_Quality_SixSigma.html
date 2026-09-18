@@ -62,7 +62,7 @@
   .sigma-marker { position:absolute; top:-22px; font-size:11px; font-weight:800; color:#333; white-space:nowrap; transform:translateX(-50%); }
   .sigma-marker-line { position:absolute; top:0; width:2px; height:28px; background:#222; }
 
-  .eq-tags { font-size:10.5px; color:#666; }
+  .eq-tags { font-size:11.2px; color:#666; }
 
   /* ---- 설비 불량유형 상세 모달 ---- */
   #eqModal{position:fixed;inset:0;background:rgba(15,20,28,.55);display:none;z-index:9999;
@@ -79,23 +79,23 @@
   #eqModal .hd button:hover{background:rgba(255,255,255,.32);}
   #eqModal .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:#e6eaef;}
   #eqModal .kpis div{background:#f7f9fb;padding:10px 8px;text-align:center;}
-  #eqModal .kpis .k{font-size:10.5px;color:#7a848e;}
+  #eqModal .kpis .k{font-size:11.2px;color:#5c6671;}
   #eqModal .kpis .v{font-size:15px;font-weight:700;color:#1e3c72;margin-top:3px;}
   #eqModal .bd{padding:16px 20px 20px;max-height:60vh;overflow:auto;}
   #eqModal table{width:100%;border-collapse:collapse;font-size:12.5px;}
   #eqModal th,#eqModal td{padding:6px 8px;border-bottom:1px solid #eef1f4;text-align:right;}
-  #eqModal th{font-size:10.5px;color:#7a848e;text-transform:uppercase;letter-spacing:.05em;
+  #eqModal th{font-size:11.2px;color:#5c6671;text-transform:uppercase;letter-spacing:.05em;
     border-bottom:1.5px solid #d7dde3;white-space:nowrap;}
   #eqModal td.l,#eqModal th.l{text-align:left;}
   #eqModal .barcell{position:relative;min-width:120px;}
   #eqModal .barcell i{display:block;height:9px;border-radius:2px;background:#e53935;}
   #eqModal tr.unclass td{background:#fff8e1;}
-  #eqModal .note{font-size:11px;color:#8a949e;margin-top:10px;line-height:1.7;}
+  #eqModal .note{font-size:11px;color:#68737f;margin-top:10px;line-height:1.7;}
   #eqModal .mdl{margin-top:14px;font-size:12px;color:#4a545e;}
   #eqModal .mdl b{color:#1e3c72;}
   tr.eq-clickable{cursor:pointer;}
   tr.eq-clickable:hover{background:#eef4ff !important;}
-  tr.eq-clickable td:first-child::after{content:' 🔍';font-size:10px;opacity:.45;}
+  tr.eq-clickable td:first-child::after{content:' 🔍';font-size:10.8px;opacity:.45;}
   #chart-eqrank{cursor:pointer;}
 
   /* ===================== 주간 품질보고 (Weekly Quality Report) ===================== */
@@ -113,15 +113,15 @@
     border-bottom:2.5px solid #1e3c72;padding-bottom:7px;margin-bottom:14px;}
   .qr-head h2{margin:0;font-size:18px;font-weight:800;color:#12233f;letter-spacing:-.01em;}
   .qr-head .rt{font-size:17px;font-weight:700;color:#243a5e;white-space:nowrap;}
-  .qr-head .pd{font-size:11.5px;color:#8a949e;font-weight:500;margin-left:10px;}
+  .qr-head .pd{font-size:11.5px;color:#68737f;font-weight:500;margin-left:10px;}
   .qr-toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px;
     padding:10px 12px;background:#f6f8fa;border:1px solid #e4e9ee;border-radius:8px;font-size:12.5px;}
-  .qr-toolbar label{font-size:11px;color:#7a848e;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+  .qr-toolbar label{font-size:11px;color:#5c6671;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
   .qr-toolbar select,.qr-toolbar input[type=text]{padding:5px 8px;border:1px solid #cfd6de;border-radius:6px;font-size:12.5px;}
   .qr-toolbar button{padding:6px 14px;border:1px solid #1e3c72;background:#1e3c72;color:#fff;
     border-radius:6px;font-size:12.5px;font-weight:700;cursor:pointer;}
   .qr-toolbar button.ghost{background:#fff;color:#1e3c72;}
-  .qr-toolbar .hint{font-size:11px;color:#8a949e;}
+  .qr-toolbar .hint{font-size:11px;color:#68737f;}
 
   .qr-chartbox{position:relative;border:1px solid #c9d0d8;border-radius:4px;padding:10px 10px 4px;margin-bottom:16px;}
   .qr-chartbox .cap{position:absolute;left:50%;top:-13px;transform:translateX(-50%);
@@ -134,16 +134,16 @@
     font-size:11px;color:#4a545e;display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;}
   .qr-chartbox .wdelta b{font-size:11.5px;color:#12233f;letter-spacing:.02em;}
   .qr-chartbox .wdelta .it{white-space:nowrap;}
-  .qr-chartbox .wdelta .it i{font-style:normal;color:#8a949e;margin-right:3px;}
+  .qr-chartbox .wdelta .it i{font-style:normal;color:#68737f;margin-right:3px;}
   .qr-chartbox .wdelta .gd{color:#0ca30c;font-weight:800;}   /* 개선 */
   .qr-chartbox .wdelta .bd{color:#d03b3b;font-weight:800;}   /* 악화 */
-  .qr-chartbox .wdelta .fl{color:#8a949e;font-weight:700;}   /* 보합 */
+  .qr-chartbox .wdelta .fl{color:#68737f;font-weight:700;}   /* 보합 */
 
   .qr-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px;}
   .qr-kpi{border:1px solid #dde3e9;border-top:3px solid #1e3c72;border-radius:6px;padding:8px 10px;background:#fff;}
-  .qr-kpi .l{font-size:10.5px;color:#7a848e;font-weight:700;letter-spacing:.03em;}
+  .qr-kpi .l{font-size:11.2px;color:#5c6671;font-weight:700;letter-spacing:.03em;}
   .qr-kpi .v{font-size:19px;font-weight:800;color:#12233f;margin-top:2px;}
-  .qr-kpi .s{font-size:10.5px;color:#8a949e;margin-top:1px;}
+  .qr-kpi .s{font-size:11.2px;color:#68737f;margin-top:1px;}
   .qr-kpi.ok{border-top-color:#43a047;} .qr-kpi.bad{border-top-color:#e53935;} .qr-kpi.warn{border-top-color:#fb8c00;}
 
   /* 3개 표는 항상 같은 폭이다. 다만 WARM SHOT 은 열이 하나 더 많아, 화면이 좁으면
@@ -155,7 +155,7 @@
   .qr-cmpbar .lb{font-size:11.5px;font-weight:700;color:#3d4a5a;}
   .qr-cmpbar select{padding:3px 7px;border:1px solid #c3cddb;border-radius:3px;
     font-family:inherit;font-size:12px;font-weight:700;color:#1e3c72;background:#fff;cursor:pointer;}
-  .qr-cmpbar .ar{color:#8a949e;font-weight:700;}
+  .qr-cmpbar .ar{color:#68737f;font-weight:700;}
   .qr-cmpbar button{padding:3px 9px;border:1px solid #c3cddb;border-radius:3px;background:#fff;
     font-family:inherit;font-size:11.5px;color:#4a545e;cursor:pointer;}
   .qr-cmpbar button:hover{border-color:#1e3c72;color:#1e3c72;}
@@ -165,15 +165,15 @@
   .qr-box td .sl{color:#aeb6bf;margin:0 3px;}
   .qr-box .bt{text-align:center;font-size:13px;font-weight:800;color:#12233f;padding:5px;
     background:#eef1f5;border-bottom:1.5px solid #8c98a6;letter-spacing:.03em;}
-  .qr-box table{width:100%;border-collapse:collapse;font-size:10px;}
-  .qr-box th{background:#1e3c72;color:#fff;font-size:9.5px;font-weight:700;padding:5px 3px;
+  .qr-box table{width:100%;border-collapse:collapse;font-size:10.8px;}
+  .qr-box th{background:#1e3c72;color:#fff;font-size:10.5px;font-weight:700;padding:5px 3px;
     text-align:center;letter-spacing:.02em;white-space:nowrap;}
   .qr-box td{padding:3px 3px;text-align:right;border-bottom:1px solid #eef1f4;white-space:nowrap;}
   .qr-box th{padding-left:3px;padding-right:3px;}
   .qr-box td.sub{color:#5b6773;}                         /* Warm(STD)/Warm(Excess) 분할 셀 */
   .qr-box td.dn{color:#0ca30c;font-weight:700;}          /* 등락: 개선(불량률 하락) */
   .qr-box td.up{color:#d03b3b;font-weight:700;}          /* 등락: 악화(불량률 상승) */
-  .qr-box td.fl{color:#9aa3ad;}                          /* 등락: 변화 없음/전주 없음 */
+  .qr-box td.fl{color:#68737f;}                          /* 등락: 변화 없음/전주 없음 */
   .qr-box tr.tot td.dn,.qr-box tr.tot td.up{font-weight:800;}
   .qr-box td.l{text-align:left;font-weight:700;color:#243a5e;padding-left:5px;}
   .qr-box tbody tr:nth-child(even){background:#fafbfc;}
@@ -184,7 +184,7 @@
   .qr-box tr.wst td{background:#fff4f1 !important;font-weight:700;color:#7f2a20;}
   .qr-box tr.wst td.l{color:#c62828;border-left:3px solid #d03b3b;}
   .qr-box tr.wst td.l::before{display:inline-block;width:13px;color:#fff;background:#d03b3b;
-    border-radius:2px;text-align:center;font-size:9px;line-height:13px;margin-right:4px;}
+    border-radius:2px;text-align:center;font-size:10px;line-height:13px;margin-right:4px;}
   .qr-box tr.w1 td.l::before{content:'1';}
   .qr-box tr.w2 td.l::before{content:'2';}
   .qr-box tr.w3 td.l::before{content:'3';background:#e07a5f;}
@@ -192,97 +192,97 @@
   .qr-worst{border:1.5px solid #d7dde3;border-radius:3px;margin-bottom:16px;overflow:hidden;}
   .qr-worst .wh{background:#1e3c72;color:#fff;font-size:12px;font-weight:800;padding:6px 12px;
     letter-spacing:.03em;display:flex;justify-content:space-between;align-items:center;}
-  .qr-worst .wh .sub{font-size:10.5px;font-weight:500;opacity:.85;}
+  .qr-worst .wh .sub{font-size:11.2px;font-weight:500;opacity:.85;}
   .qr-worst .wsec{border-top:1px solid #e6eaef;padding:12px 14px;}
   .qr-worst .wsec:first-of-type{border-top:none;}
-  .qr-worst .wcat{font-size:11.5px;font-weight:800;color:#1e3c72;margin-bottom:8px;letter-spacing:.03em;}
+  .qr-worst .wcat{font-size:12.5px;font-weight:800;color:#1e3c72;margin-bottom:8px;letter-spacing:.03em;}
   /* 워스트 3 항목은 한 건씩 눈으로 따라 읽는 자리라 행간·여백을 넉넉히 둔다 */
   .qr-worst .witem{display:grid;grid-template-columns:140px 1fr;gap:12px;padding:9px 0;
     border-top:1px dashed #edf0f4;font-size:12px;line-height:1.95;}
   .qr-worst .witem:first-of-type{border-top:none;}
   .qr-worst .wmc{font-weight:800;color:#c62828;white-space:nowrap;}
   .qr-worst .wmc .rk{display:inline-block;width:15px;height:15px;line-height:15px;text-align:center;
-    background:#d03b3b;color:#fff;border-radius:2px;font-size:9px;margin-right:5px;vertical-align:1px;}
+    background:#d03b3b;color:#fff;border-radius:2px;font-size:10px;margin-right:5px;vertical-align:1px;}
   .qr-worst .wmc .rt{display:block;font-weight:600;color:#5b6773;font-size:11px;margin-top:3px;}
   .qr-worst .wcause{color:#333;}
   .qr-worst .wcause b{color:#c62828;}
   .qr-worst .wfix{color:#1b5e20;}
-  .qr-worst .wfix::before{content:'개선 ';font-weight:800;color:#2e7d32;font-size:10px;}
-  .qr-worst .wnone{font-size:11.5px;color:#8a949e;padding:4px 0;}
+  .qr-worst .wfix::before{content:'개선 ';font-weight:800;color:#2e7d32;font-size:10.8px;}
+  .qr-worst .wnone{font-size:11.5px;color:#68737f;padding:4px 0;}
 
   /* ===== Measure — 설비·모델별 웜샷/불량 구성 ===== */
   .qr-measure{border:1.5px solid #d7dde3;border-radius:3px;margin-bottom:16px;overflow:hidden;}
   .qr-measure .mh{background:#12233f;color:#fff;font-size:12px;font-weight:800;padding:6px 12px;
     letter-spacing:.03em;display:flex;justify-content:space-between;align-items:center;}
-  .qr-measure .mh .sub{font-size:10.5px;font-weight:500;opacity:.85;}
+  .qr-measure .mh .sub{font-size:11.2px;font-weight:500;opacity:.85;}
   .qr-measure .msec{border-top:1px solid #e6eaef;padding:10px 12px;}
-  .qr-measure .mcat{font-size:11px;font-weight:800;color:#12233f;margin-bottom:8px;letter-spacing:.03em;}
-  .qr-measure .mcat span{font-weight:500;color:#8a949e;margin-left:6px;letter-spacing:0;}
-  .qr-measure .mnone{font-size:11.5px;color:#8a949e;padding:6px 0;}
+  .qr-measure .mcat{font-size:12.5px;font-weight:800;color:#12233f;margin-bottom:8px;letter-spacing:.03em;}
+  .qr-measure .mcat span{font-weight:500;color:#68737f;margin-left:6px;letter-spacing:0;}
+  .qr-measure .mnone{font-size:11.5px;color:#68737f;padding:6px 0;}
 
   /* 파레토 — 세로 막대 (사내 PPT 'Top 3 Major NG KPI' 서식) */
   /* 막대 17~20개의 최소폭이 좁은 창에서 컨테이너를 넘길 수 있다 →
      글자를 줄이고, 그래도 모자라면 차트 영역만 가로 스크롤한다(값을 숨기지 않는다). */
   .vbars{display:flex;align-items:flex-end;gap:3px;padding:4px 0 0;overflow-x:auto;}
   .vb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;min-width:0;}
-  .vb .vv{font-size:9.5px;font-weight:800;color:#243a5e;margin-bottom:3px;white-space:nowrap;
+  .vb .vv{font-size:10.5px;font-weight:800;color:#243a5e;margin-bottom:3px;white-space:nowrap;
     font-variant-numeric:tabular-nums;}
-  .vb .vt{width:100%;height:132px;display:flex;align-items:flex-end;justify-content:center;
+  .vb .vt{width:100%;height:142px;display:flex;align-items:flex-end;justify-content:center;
     border-bottom:1px solid #c9d3de;}
   /* 막대 하나가 웜샷(STD·Excess) + 불량 으로 쌓인다 — 아래에서 위로 누적 */
   .vb .vf{width:66%;min-height:2px;display:flex;flex-direction:column-reverse;
     border-radius:2px 2px 0 0;overflow:hidden;}
   .vb .vs{width:100%;min-height:0;display:flex;align-items:center;justify-content:center;
-    font-size:8.5px;font-weight:700;line-height:1;overflow:hidden;letter-spacing:-.01em;}
+    font-size:9.5px;font-weight:700;line-height:1;overflow:hidden;letter-spacing:-.01em;}
   .vb.top .vf{outline:1.5px solid #c62828;outline-offset:1px;border-radius:2px;}
-  .vb .vl{font-size:9.5px;font-weight:700;color:#4a545e;margin-top:5px;white-space:nowrap;}
-  .vb .vc{font-size:8.5px;color:#a8b0b9;margin-top:1px;font-variant-numeric:tabular-nums;}
+  .vb .vl{font-size:10.5px;font-weight:700;color:#4a545e;margin-top:5px;white-space:nowrap;}
+  .vb .vc{font-size:9.5px;color:#6f7a85;margin-top:1px;font-variant-numeric:tabular-nums;}
   .vb.top .vv{color:#c62828;}
   .vb.top .vl{color:#c62828;}
   .vb.top .vl::before{content:attr(data-rk);display:inline-block;width:12px;height:12px;
     line-height:12px;text-align:center;background:#d03b3b;color:#fff;border-radius:2px;
-    font-size:8px;margin-right:3px;vertical-align:1px;}
+    font-size:9px;margin-right:3px;vertical-align:1px;}
 
   /* 설비별 생산 모델·수량 — 사내 PPT 의 가로형 행렬 표 서식
      (설비/PART NAME 를 가로로 깔고 PROD·OK·NG·W/S 를 행으로 둔다) */
   .mxwrap{overflow-x:auto;}
   /* 위쪽 ① 막대그래프와 좌우 폭을 맞춘다 — 열이 적어도 표가 끝까지 늘어나고,
      열이 많으면 자연폭을 지키면서 가로 스크롤로 넘어간다. */
-  table.mxt{border-collapse:collapse;width:100%;font-size:10.5px;font-variant-numeric:tabular-nums;}
+  table.mxt{border-collapse:collapse;width:100%;font-size:11.2px;font-variant-numeric:tabular-nums;}
   table.mxt th,table.mxt td{border:1px solid #c2ccd6;padding:2px 5px;text-align:right;
     white-space:nowrap;}
-  table.mxt th.eq{background:#1e3c72;color:#fff;font-size:10.5px;font-weight:800;text-align:center;
+  table.mxt th.eq{background:#1e3c72;color:#fff;font-size:11.2px;font-weight:800;text-align:center;
     letter-spacing:.02em;}
   table.mxt th.hd,table.mxt td.hd{background:#dfe6ef;color:#12233f;font-weight:800;text-align:center;
     position:sticky;left:0;z-index:2;}
   table.mxt th.hd{background:#1e3c72;color:#fff;}
-  table.mxt th.pn{background:#f4f7fa;color:#243a5e;font-weight:700;font-size:9.5px;
+  table.mxt th.pn{background:#f4f7fa;color:#243a5e;font-weight:700;font-size:10.5px;
     writing-mode:vertical-rl;transform:rotate(180deg);
-    height:150px;max-height:150px;overflow:hidden;text-align:left;padding:4px 2px;
+    height:168px;max-height:168px;overflow:hidden;text-align:left;padding:4px 2px;
     min-width:20px;letter-spacing:.01em;}
   table.mxt th.tt{background:#12233f;color:#fff;font-weight:800;text-align:center;
     position:sticky;right:0;z-index:2;}
   table.mxt td.tt{background:#eef1f5;font-weight:800;color:#12233f;position:sticky;right:0;z-index:1;}
   table.mxt tr.ws td{background:#fffaf2;}
   table.mxt tr.ng td{background:#fff6f4;}
-  table.mxt td.mx0{color:#c3cad2;}
+  table.mxt td.mx0{color:#9aa4ae;}
   table.mxt td.top{color:#c62828;font-weight:800;}
-  .mxnote{font-size:10.5px;color:#8a949e;margin:5px 0 0;}
+  .mxnote{font-size:11.2px;color:#68737f;margin:5px 0 0;}
 
   /* ⑥ 관점별 해석 — 금형 / 설비 / 품질 */
   .mv3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
   @media screen and (max-width:1250px){ .mv3{grid-template-columns:1fr;} }
   .mvcard{border:1px solid #e6eaef;border-radius:3px;padding:9px 10px;min-width:0;
     display:flex;flex-direction:column;}
-  .mvh{font-size:11.5px;font-weight:800;color:#12233f;margin-bottom:6px;}
-  .mvh em{display:block;font-style:normal;font-weight:500;color:#8a949e;font-size:10px;margin-top:2px;
+  .mvh{font-size:12.5px;font-weight:800;color:#12233f;margin-bottom:6px;}
+  .mvh em{display:block;font-style:normal;font-weight:500;color:#68737f;font-size:10.8px;margin-top:2px;
     line-height:1.5;}
-  .mvchart{width:100%;height:230px;display:block;}
+  .mvchart{width:100%;height:250px;display:block;}
   .mvnote{font-size:11px;line-height:1.75;color:#3c4752;margin-top:8px;
     border-top:1px dashed #e6eaef;padding-top:7px;}
   .mvnote b{color:#12233f;} .mvnote .hi{color:#c62828;font-weight:800;}
   .mvnote .ok{color:#0ca30c;font-weight:800;}
-  .mvlegend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10px;color:#4a545e;margin-bottom:5px;}
+  .mvlegend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10.8px;color:#4a545e;margin-bottom:5px;}
   .mvlegend span{display:flex;align-items:center;gap:4px;}
   .mvlegend i{width:9px;height:9px;border-radius:2px;}
   .mvwrap{overflow-x:auto;}
@@ -299,7 +299,7 @@
 
   /* 막대 구성 범례 */
   .vlegend{display:flex;gap:14px;flex-wrap:wrap;justify-content:flex-end;
-    font-size:10px;color:#4a545e;margin:-2px 0 2px;}
+    font-size:10.8px;color:#4a545e;margin:-2px 0 2px;}
   .vlegend span{display:flex;align-items:center;gap:4px;}
   .vlegend i{width:9px;height:9px;border-radius:2px;}
 
@@ -308,16 +308,16 @@
   .donuts>.comp{min-width:0;}
   @media screen and (max-width:1100px){ .donuts{grid-template-columns:1fr;} }
   @media screen and (max-width:1250px){
-    .vb .vv{font-size:8.5px;} .vb .vl{font-size:8.5px;} .vb .vc{display:none;}
+    .vb .vv{font-size:9.5px;} .vb .vl{font-size:9.5px;} .vb .vc{display:none;}
   }
   .comp{border:1px solid #e6eaef;border-radius:3px;padding:8px 10px;}
   .comp .ct{font-size:11.5px;font-weight:800;color:#243a5e;margin-bottom:2px;text-align:center;}
-  .comp .ct em{display:block;font-style:normal;font-weight:600;color:#8a949e;font-size:10px;margin-top:1px;}
+  .comp .ct em{display:block;font-style:normal;font-weight:600;color:#68737f;font-size:10.8px;margin-top:1px;}
   .comp .cbody{display:flex;align-items:center;gap:8px;}
   .comp svg{flex:0 0 auto;}
   .comp .dcen{font-weight:800;fill:#243a5e;}
-  .comp .dsub{fill:#8a949e;}
-  .comp .cleg{display:flex;flex-direction:column;gap:2px;font-size:9.5px;color:#4a545e;min-width:0;}
+  .comp .dsub{fill:#68737f;}
+  .comp .cleg{display:flex;flex-direction:column;gap:2px;font-size:10.5px;color:#4a545e;min-width:0;}
   .comp .cleg span{display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .comp .cleg i{width:8px;height:8px;border-radius:2px;flex:0 0 auto;}
@@ -325,7 +325,7 @@
 
   table.mtbl{width:100%;border-collapse:collapse;font-size:11px;}
   table.mtbl th,table.mtbl td{padding:3px 5px;border-bottom:1px solid #eef1f4;text-align:right;white-space:nowrap;}
-  table.mtbl th{background:#eef1f5;color:#243a5e;font-size:10px;font-weight:800;
+  table.mtbl th{background:#eef1f5;color:#243a5e;font-size:10.8px;font-weight:800;
     border-bottom:1.5px solid #8c98a6;position:sticky;top:0;}
   table.mtbl td.l,table.mtbl th.l{text-align:left;}
   table.mtbl td.l{font-weight:700;color:#243a5e;}
@@ -368,8 +368,8 @@
   .dq-quick button{font-size:11px;padding:3px 9px;border:1px solid #c9d3de;background:#f7f9fc;
     border-radius:3px;cursor:pointer;color:#1e3c72;font-weight:700;font-family:inherit;}
   .dq-quick button:hover{background:#eef2f7;}
-  .dq-basis{font-size:11px;color:#8a949e;margin:-6px 0 12px;}
-  .dq-sub{font-size:12px;font-weight:800;color:#1e3c72;margin:16px 0 6px;letter-spacing:.02em;}
+  .dq-basis{font-size:11px;color:#68737f;margin:-6px 0 12px;}
+  .dq-sub{font-size:13px;font-weight:800;color:#1e3c72;margin:16px 0 6px;letter-spacing:.02em;}
   .dq-daywrap{overflow-x:auto;margin-bottom:16px;}
   table.dq-day{width:100%;}
   table.dq-day td.h{text-align:center;font-variant-numeric:tabular-nums;}
@@ -381,7 +381,7 @@
   .r2head{display:flex;justify-content:space-between;align-items:flex-end;
     border-bottom:3px solid #1e3c72;padding-bottom:8px;margin-bottom:16px;}
   .r2head .tt{font-size:19px;font-weight:800;color:#12233f;letter-spacing:-.01em;}
-  .r2head .tt span{font-size:12px;font-weight:500;color:#7a848e;margin-left:10px;letter-spacing:0;}
+  .r2head .tt span{font-size:12px;font-weight:500;color:#5c6671;margin-left:10px;letter-spacing:0;}
   .r2head .rt{font-size:13px;font-weight:800;color:#1e3c72;}
 
   .r2sec{border:1.5px solid #d7dde3;border-radius:3px;margin-bottom:18px;break-inside:avoid;}
@@ -389,13 +389,13 @@
     display:flex;align-items:center;gap:9px;letter-spacing:.02em;}
   .r2sec>.sh .no{background:#fff;color:#1e3c72;font-size:11px;font-weight:800;
     border-radius:2px;padding:1px 7px;letter-spacing:0;}
-  .r2sec>.sh .sub{margin-left:auto;font-size:10.5px;font-weight:500;opacity:.85;}
+  .r2sec>.sh .sub{margin-left:auto;font-size:11.2px;font-weight:500;opacity:.85;}
   .r2sec>.sb{padding:11px 12px;}
-  .r2sub{font-size:11.5px;font-weight:800;color:#1e3c72;margin:2px 0 7px;letter-spacing:.02em;
+  .r2sub{font-size:12.5px;font-weight:800;color:#1e3c72;margin:2px 0 7px;letter-spacing:.02em;
     display:flex;align-items:center;gap:8px;}
   .r2sub .tag{background:#eef2f7;color:#1e3c72;border:1px solid #cfd9e5;border-radius:2px;
-    font-size:10px;padding:1px 6px;}
-  .r2sub .note{margin-left:auto;font-weight:500;color:#8a949e;font-size:10.5px;}
+    font-size:10.8px;padding:1px 6px;}
+  .r2sub .note{margin-left:auto;font-weight:500;color:#68737f;font-size:11.2px;}
   .r2sec+.r2sec{margin-top:-4px;}
 
   .r2wrap{overflow-x:auto;}
@@ -403,12 +403,12 @@
     font-variant-numeric:tabular-nums;}
   table.r2t th,table.r2t td{border:1px solid #c2ccd6;padding:0;text-align:center;
     white-space:nowrap;height:24px;}
-  table.r2t th{background:#eef1f5;color:#243a5e;font-size:10px;font-weight:800;padding:3px 5px;}
+  table.r2t th{background:#eef1f5;color:#243a5e;font-size:10.8px;font-weight:800;padding:3px 5px;}
   table.r2t th.grp{background:#dfe6ef;}
   table.r2t td.l{text-align:left;padding-left:6px;}
   table.r2t td.h{background:#f4f7fa;font-weight:700;color:#243a5e;padding:3px 6px;text-align:left;}
   table.r2t td.v{padding:3px 5px;text-align:right;font-weight:700;color:#12233f;}
-  table.r2t td.v.mut{color:#9aa3ad;font-weight:500;}
+  table.r2t td.v.mut{color:#68737f;font-weight:500;}
   table.r2t tr.tot td{background:#f4f7fa;font-weight:800;}
   table.r2t tr.tot td.v{color:#c62828;}
   table.r2t tr.hi td{background:#fff6f4;}
@@ -420,7 +420,7 @@
     text-align:center;color:#12233f;padding:0 3px;outline:none;}
   .r2i:focus{background:#fffbe6;box-shadow:inset 0 0 0 1.5px #2e75b6;}
   .r2i.l{text-align:left;}
-  .r2i::placeholder{color:#c3cad2;}
+  .r2i::placeholder{color:#9aa4ae;}
   .r2i.num{text-align:right;}
   .r2chk{width:14px;height:14px;accent-color:#1e3c72;}
 
@@ -431,23 +431,23 @@
 
   .r2chart{width:100%;height:190px;display:block;}
   /* 불량유형별 주차 추이 — 유형을 가로로 깔고 주차마다 선을 하나씩 얹는다 */
-  #chart-r2-dtrend{width:100%;height:270px;display:block;}
+  #chart-r2-dtrend{width:100%;height:290px;display:block;}
   .dt-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:2px 0 4px;
     font-size:11px;color:#4a545e;}
   .dt-bar select{font-size:11px;padding:2px 5px;border:1px solid #c9d3de;border-radius:3px;}
-  .dt-bar .note{margin-left:auto;color:#8a949e;font-size:10.5px;}
+  .dt-bar .note{margin-left:auto;color:#68737f;font-size:11.2px;}
   @media print{ .dt-bar select{display:none;} }
 
   /* 납품 계획(DO) — 출하검사에서 이번 주 나갈 물량을 바로 확인한다 */
   .doBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:2px 0 7px;
     font-size:11px;color:#4a545e;}
   .doBar select,.doBar input{font-size:11px;padding:2px 5px;border:1px solid #c9d3de;border-radius:3px;}
-  .doBar .src{margin-left:auto;color:#8a949e;font-size:10.5px;}
+  .doBar .src{margin-left:auto;color:#68737f;font-size:11.2px;}
   .doBar button{font-size:11px;padding:3px 9px;border:1px solid #c9d3de;background:#f7f9fc;
     border-radius:3px;cursor:pointer;color:#1e3c72;font-weight:700;}
   .doBar button:hover{background:#eef2f7;}
-  table.r2t td.do0{color:#cfd6dd;}
-  table.r2t th.dow{font-weight:600;color:#7a848e;font-size:9px;}
+  table.r2t td.do0{color:#a6b0ba;}
+  table.r2t th.dow{font-weight:600;color:#5c6671;font-size:10px;}
   table.r2t th.today{background:#fff2cc;}
   table.r2t td.today{background:#fffdf3;}
   table.r2t tr.sun td,table.r2t th.sun{color:#c62828;}
@@ -463,10 +463,10 @@
   .r2addrow button{font-size:11px;padding:3px 10px;border:1px solid #c9d3de;background:#f7f9fc;
     border-radius:3px;cursor:pointer;color:#1e3c72;font-weight:700;}
   .r2addrow button:hover{background:#eef2f7;}
-  .r2empty{font-size:11.5px;color:#8a949e;padding:8px 2px;}
+  .r2empty{font-size:11.5px;color:#68737f;padding:8px 2px;}
   .r2stamp{display:inline-block;border:1.5px solid #c62828;color:#c62828;font-size:11px;
     font-weight:800;border-radius:3px;padding:3px 10px;transform:rotate(-3deg);margin-left:8px;}
-  .r2foot{display:flex;justify-content:space-between;font-size:10.5px;color:#98a2ac;margin-top:8px;}
+  .r2foot{display:flex;justify-content:space-between;font-size:11.2px;color:#68737f;margin-top:8px;}
   .r2foot .cf{color:#c62828;font-weight:800;}
 
   @media print{
@@ -479,7 +479,7 @@
   }
 
   .qr-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;
-    font-size:10.5px;color:#98a2ac;}
+    font-size:11.2px;color:#68737f;}
   .qr-foot .cf{color:#c62828;font-weight:800;font-size:11px;}
   .qr-alert{background:#fff8e1;border:1px solid #ffe082;border-radius:5px;padding:8px 12px;
     font-size:11.5px;color:#795548;line-height:1.7;margin-bottom:12px;}
@@ -496,27 +496,27 @@
        8열짜리 WARM SHOT 까지 같은 폭으로 넣으면 글자를 5pt 이하로 줄여야 해서
        인쇄에서만 WARM SHOT 에 15% 를 더 준다(종이에서는 거의 구분되지 않는다). */
     .qr-grid{gap:3px;grid-template-columns:1.27fr 1fr 1fr;}
-    .qr-box table{font-size:7px;table-layout:auto;}
+    .qr-box table{font-size:8.5px;table-layout:auto;}
     .qr-box td .sl{margin:0 1px;}
-    .qr-box th{font-size:6.5px;padding:3px 1px;letter-spacing:0;}
+    .qr-box th{font-size:8px;padding:3px 1px;letter-spacing:0;}
     .qr-box td{padding:2px 1px;}
     .qr-box td.l{padding-left:3px;}
     /* 3개 표를 인쇄에서도 같은 폭으로 두되, 8열짜리 WARM SHOT 이 잘리지 않게 여백만 조인다 */
     .qr-worst{break-inside:avoid;}
-    .qr-worst .witem{grid-template-columns:110px 1fr;font-size:10px;}
+    .qr-worst .witem{grid-template-columns:110px 1fr;font-size:10.8px;}
     .qr-worst .wsec{padding:6px 10px;}
     /* Measure — 인쇄에서는 표 스크롤을 풀고 전체를 찍는다 */
     .qr-measure{break-inside:auto;}
     .qr-measure .msec{break-inside:avoid;padding:7px 10px;}
     .mwrap{max-height:none;overflow:visible;}
-    table.mtbl{font-size:8.2px;}
-    table.mtbl th{font-size:7.6px;padding:2px 3px;}
+    table.mtbl{font-size:9px;}
+    table.mtbl th{font-size:8.5px;padding:2px 3px;}
     table.mtbl td{padding:2px 3px;}
-    .vb .vt{height:104px;} .vb .vv{font-size:8px;} .vb .vl{font-size:8px;} .vb .vc{font-size:7px;}
-    .vlegend{font-size:8px;gap:10px;}
+    .vb .vt{height:104px;} .vb .vv{font-size:9px;} .vb .vl{font-size:9px;} .vb .vc{font-size:8.5px;}
+    .vlegend{font-size:9px;gap:10px;}
     .donuts{grid-template-columns:repeat(3,1fr);gap:8px;}
-    .comp .ct{font-size:9.5px;} .comp .ct em{font-size:8.5px;}
-    .comp .cleg{font-size:8px;gap:1px;} .comp .cbody{gap:6px;}
+    .comp .ct{font-size:10.5px;} .comp .ct em{font-size:9.5px;}
+    .comp .cleg{font-size:9px;gap:1px;} .comp .cbody{gap:6px;}
     .mgrid2{gap:10px;}
     .qr-box .bt{font-size:11px;padding:3px;}
     #chart-qr-trend{height:190px;}
@@ -528,10 +528,10 @@
 
   /* ===================== 공정품질 경영관리 (Process Quality Mgmt) ===================== */
   .pq-card .quad-title { border-bottom-color:#00897b; }
-  .pq-desc { font-size:11.5px; color:#8a949e; line-height:1.7; margin:-6px 0 12px; }
+  .pq-desc { font-size:11.5px; color:#68737f; line-height:1.7; margin:-6px 0 12px; }
   .pq-tools { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; padding:10px 12px;
     background:#f6f8fa; border:1px solid #e4e9ee; border-radius:8px; font-size:12.5px; margin-bottom:14px; }
-  .pq-tools label { font-size:11px; color:#7a848e; font-weight:700; letter-spacing:.03em; }
+  .pq-tools label { font-size:11px; color:#5c6671; font-weight:700; letter-spacing:.03em; }
   .pq-tools input[type=number], .pq-tools input[type=text], .pq-tools input[type=date], .pq-tools select {
     padding:5px 8px; border:1px solid #cfd6de; border-radius:6px; font-size:12.5px; background:#fff; color:#222; min-width:0; }
   .pq-tools input[type=number] { width:92px; text-align:right; }
@@ -565,9 +565,9 @@
   .pq-legend span i { display:inline-block; width:14px; height:3px; border-radius:2px; margin-right:5px; vertical-align:middle; }
   .pq-bar { background:#eef1f5; border-radius:6px; height:9px; overflow:hidden; min-width:70px; }
   .pq-bar i { display:block; height:100%; background:#43a047; }
-  .pq-st { display:inline-block; padding:2px 9px; border-radius:11px; font-size:10.5px; font-weight:700; color:#fff; }
+  .pq-st { display:inline-block; padding:2px 9px; border-radius:11px; font-size:11.2px; font-weight:700; color:#fff; }
   .pq-st.done { background:#2e7d32; } .pq-st.run { background:#1e88e5; }
-  .pq-st.late { background:#e53935; } .pq-st.hold { background:#8a949e; }
+  .pq-st.late { background:#e53935; } .pq-st.hold { background:#68737f; }
   .pq-two { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
   @media (max-width:1100px){ .pq-two { grid-template-columns:1fr; } }
 
@@ -576,7 +576,7 @@
   #sideNav { width:230px; flex:0 0 230px; position:sticky; top:14px; background:#fff;
     border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,.08); padding:10px 8px 14px;
     max-height:calc(100vh - 28px); overflow-y:auto; }
-  #sideNav .nav-cat { font-size:10px; font-weight:800; color:#9aa4ae; letter-spacing:.07em;
+  #sideNav .nav-cat { font-size:10.8px; font-weight:800; color:#9aa4ae; letter-spacing:.07em;
     padding:12px 10px 5px; text-transform:uppercase; }
   #sideNav button { display:flex; align-items:center; gap:9px; width:100%; text-align:left;
     border:0; background:transparent; padding:8px 10px; border-radius:7px; margin-bottom:1px;
@@ -981,12 +981,12 @@
   <div class="quad-card">
     <div class="quad-title" data-i18n="mq.title">📆 월별 품질(Q) 추이 (최근 12개월)</div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px;">
-      <label style="font-size:11px;color:#7a848e;font-weight:700;" data-i18n="qr.mtrend">월간 추이 기준</label>
+      <label style="font-size:11px;color:#5c6671;font-weight:700;" data-i18n="qr.mtrend">월간 추이 기준</label>
       <select id="qrMonthMode" onchange="renderMonthlyQPanel()" style="padding:5px 8px;border:1px solid #cfd6de;border-radius:6px;font-size:12.5px;">
         <option value="seed" data-i18n="qr.mtrend.seed">사내 확정치 우선</option>
         <option value="auto" data-i18n="qr.mtrend.auto">원자료 자동계산</option>
       </select>
-      <span id="mqNote" style="font-size:11px;color:#8a949e;"></span>
+      <span id="mqNote" style="font-size:11px;color:#68737f;"></span>
     </div>
     <div style="position:relative;border:1px solid #e4e9ee;border-radius:6px;padding:12px 10px 6px;">
       <div style="position:absolute;right:10px;top:8px;background:#2e75b6;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:3px;">Targeting 96.5% - OEE QUALITY</div>
@@ -1101,7 +1101,7 @@
         <input type="date" id="pqf_due"></div>
       <button type="button" class="pq-btn" onclick="pqAddFocus()" data-i18n="pq.f.add">＋ 추가</button>
       <button type="button" class="pq-btn ghost" onclick="pqAutoFocus()" data-i18n="pq.f.auto">⚡ Worst 자동추천</button>
-      <span style="font-size:11px;color:#8a949e;" data-i18n="pq.f.hint">현재 불량률은 최근 3개월 실적 기준으로 매 조회 시 재계산됩니다</span>
+      <span style="font-size:11px;color:#68737f;" data-i18n="pq.f.hint">현재 불량률은 최근 3개월 실적 기준으로 매 조회 시 재계산됩니다</span>
     </div>
     <div class="table-wrap scroll-x">
       <table class="dtable" id="table-pq-focus">
@@ -1855,7 +1855,7 @@ function drawSigmaGauge(canvasId, sigmaValue, targetSigma) {
   ctx.stroke();
   ctx.fillStyle = colorFromSigma(sigmaValue); ctx.font='bold 28px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText(v.toFixed(2)+'σ', cx, cy - r*0.35);
-  ctx.fillStyle='#999'; ctx.font='10px Arial';
+  ctx.fillStyle='#999'; ctx.font='10.8px Arial';
   ctx.fillText('0σ', cx-r-6, cy+4);
   ctx.fillText('6σ', cx+r+10, cy+4);
 }
@@ -1874,7 +1874,7 @@ function drawParetoChart(canvasId, items) {
   const barW = plotW / top.length * 0.62;
   const gap = plotW / top.length;
   let cum = 0;
-  ctx.font = '10px Arial';
+  ctx.font = '10.8px Arial';
   // gridlines / y-axis (count)
   ctx.strokeStyle = '#eee'; ctx.fillStyle = '#999'; ctx.textAlign='right'; ctx.textBaseline='middle';
   for (let i=0;i<=4;i++){
@@ -1889,13 +1889,13 @@ function drawParetoChart(canvasId, items) {
     const y = topM + plotH - h;
     ctx.fillStyle = (it.label === '미분류') ? '#bdbdbd' : (it.label === '웜샷' ? '#f5a623' : '#7c4dff');
     ctx.fillRect(x,y,barW,h);
-    ctx.fillStyle = '#333'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
+    ctx.fillStyle = '#333'; ctx.font='bold 10.8px Arial'; ctx.textAlign='center';
     ctx.fillText(it.value.toLocaleString(), x+barW/2, y-6);
     // rotated label
     ctx.save();
     ctx.translate(x+barW/2, topM+plotH+8);
     ctx.rotate(-Math.PI/5);
-    ctx.textAlign='right'; ctx.fillStyle='#555'; ctx.font='10px Arial';
+    ctx.textAlign='right'; ctx.fillStyle='#555'; ctx.font='10.8px Arial';
     ctx.fillText(it.label, 0, 0);
     ctx.restore();
   });
@@ -1916,12 +1916,12 @@ function drawParetoChart(canvasId, items) {
     const x = leftM + gap*i + gap/2;
     const y = topM + plotH - (plotH*pct/100);
     ctx.fillStyle = '#e53935'; ctx.beginPath(); ctx.arc(x,y,3,0,7); ctx.fill();
-    if (i===2 || i===top.length-1) { ctx.font='bold 10px Arial'; ctx.textAlign='center'; ctx.fillText(pct.toFixed(0)+'%', x, y-8); }
+    if (i===2 || i===top.length-1) { ctx.font='bold 10.8px Arial'; ctx.textAlign='center'; ctx.fillText(pct.toFixed(0)+'%', x, y-8); }
   });
   // 80% reference line
   const y80 = topM + plotH - (plotH*80/100);
   ctx.strokeStyle = '#999'; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(leftM,y80); ctx.lineTo(leftM+plotW,y80); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle='#999'; ctx.textAlign='left'; ctx.font='9px Arial'; ctx.fillText('80%', leftM+plotW+2, y80);
+  ctx.fillStyle='#999'; ctx.textAlign='left'; ctx.font='10px Arial'; ctx.fillText('80%', leftM+plotW+2, y80);
 }
 
 function drawEqRankChart(canvasId, items, targetPPM) {
@@ -1935,7 +1935,7 @@ function drawEqRankChart(canvasId, items, targetPPM) {
   const maxV = Math.max(items[0].ppm, targetPPM) * 1.08;
   const rowH = plotH / items.length;
   const barH = rowH * 0.62;
-  ctx.font = '10.5px Arial';
+  ctx.font = '11.2px Arial';
   EQRANK_HITS = [];
   items.forEach((it,i)=>{
     const y = topM + rowH*i + (rowH-barH)/2;
@@ -1952,7 +1952,7 @@ function drawEqRankChart(canvasId, items, targetPPM) {
   const tx = leftM + plotW * (targetPPM/maxV);
   ctx.strokeStyle = '#1e3c72'; ctx.setLineDash([5,4]); ctx.lineWidth=2;
   ctx.beginPath(); ctx.moveTo(tx, topM); ctx.lineTo(tx, topM+plotH); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle='#1e3c72'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
+  ctx.fillStyle='#1e3c72'; ctx.font='bold 10.8px Arial'; ctx.textAlign='center';
   ctx.fillText(t('canvas.target'), tx, topM-2>0?8:8);
 }
 
@@ -1970,7 +1970,7 @@ function drawControlChart(canvasId, dailyItems) {
   const xAt = i => leftM + stepX*i;
   const yAt = p => topM + plotH - (plotH*p/maxP);
   // y gridlines
-  ctx.strokeStyle='#eee'; ctx.fillStyle='#999'; ctx.font='9px Arial'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  ctx.strokeStyle='#eee'; ctx.fillStyle='#999'; ctx.font='10px Arial'; ctx.textAlign='right'; ctx.textBaseline='middle';
   for (let i=0;i<=4;i++){
     const val = maxP*i/4;
     const y = yAt(val);
@@ -2000,7 +2000,7 @@ function drawControlChart(canvasId, dailyItems) {
 
     // 값 라벨
     const txt = (d.p*100).toFixed(2) + '%';
-    ctx.font = 'bold 9.5px Arial';
+    ctx.font = 'bold 10.5px Arial';
     const tw = ctx.measureText(txt).width, bw = tw + 7, bh = 13;
     let pos = null;
     for (const dy of [-14, 15, -27, 28]) {
@@ -2023,7 +2023,7 @@ function drawControlChart(canvasId, dailyItems) {
     ctx.save();
     ctx.translate(x, topM+plotH+10);
     ctx.rotate(-Math.PI/4);
-    ctx.fillStyle='#555'; ctx.font='9.5px Arial'; ctx.textAlign='right'; ctx.textBaseline='alphabetic';
+    ctx.fillStyle='#555'; ctx.font='10.5px Arial'; ctx.textAlign='right'; ctx.textBaseline='alphabetic';
     ctx.fillText(d.date.slice(5), 0, 0);
     ctx.restore();
   });
@@ -2039,7 +2039,7 @@ function drawModelRankChart(canvasId, items, targetPPM) {
   const plotW = W - leftM - rightM, plotH = H - topM - botM;
   const maxV = Math.max(top[0].ppm, targetPPM) * 1.08;
   const rowH = plotH/top.length, barH = rowH*0.6;
-  ctx.font='10px Arial';
+  ctx.font='10.8px Arial';
   MODELRANK_HITS = [];
   top.forEach((it,i)=>{
     MODELRANK_HITS.push({ label: it.label, y0: topM + rowH*i, y1: topM + rowH*(i+1) });
@@ -2116,7 +2116,7 @@ function drawMultiLineChart(canvasId, weeks, series) {
   const stepX = n>1 ? plotW/(n-1) : 0;
   const xAt = i => leftM + stepX*i;
   const yAt = v => topM + plotH - (plotH*v/(maxV||1));
-  ctx.strokeStyle='#eee'; ctx.fillStyle='#999'; ctx.font='9px Arial'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  ctx.strokeStyle='#eee'; ctx.fillStyle='#999'; ctx.font='10px Arial'; ctx.textAlign='right'; ctx.textBaseline='middle';
   for (let i=0;i<=4;i++){
     const val = maxV*i/4; const y=yAt(val);
     ctx.beginPath(); ctx.moveTo(leftM,y); ctx.lineTo(leftM+plotW,y); ctx.stroke();
@@ -2137,7 +2137,7 @@ function drawMultiLineChart(canvasId, weeks, series) {
       ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(x,y,3.2,0,7); ctx.fill();
     });
   });
-  ctx.fillStyle='#555'; ctx.font='9.5px Arial'; ctx.textAlign='center';
+  ctx.fillStyle='#555'; ctx.font='10.5px Arial'; ctx.textAlign='center';
   weeks.forEach((w,i) => { ctx.fillText(w, xAt(i), topM+plotH+16); });
 }
 
@@ -2160,7 +2160,7 @@ function drawEqComboChart(canvasId, eqStats) {
   const groupW = gap * 0.72, barW = groupW/3;
 
   // 좌측 축(수량/분) 그리드
-  ctx.font='9px Arial'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  ctx.font='10px Arial'; ctx.textAlign='right'; ctx.textBaseline='middle';
   for (let i=0;i<=4;i++){
     const v = maxBar*i/4, y = topM+plotH-(plotH*i/4);
     ctx.strokeStyle='#eee'; ctx.beginPath(); ctx.moveTo(leftM,y); ctx.lineTo(leftM+plotW,y); ctx.stroke();
@@ -2187,7 +2187,7 @@ function drawEqComboChart(canvasId, eqStats) {
       ctx.translate(x+barW*0.43, y-4);
       ctx.rotate(-Math.PI/2);
       ctx.textAlign='left'; ctx.textBaseline='middle';
-      ctx.fillStyle='#444'; ctx.font='8px Arial';
+      ctx.fillStyle='#444'; ctx.font='9px Arial';
       ctx.fillText(v.toLocaleString(), 0, 0);
       ctx.restore();
     });
@@ -2195,7 +2195,7 @@ function drawEqComboChart(canvasId, eqStats) {
     ctx.save();
     ctx.translate(gx+groupW/2, topM+plotH+8);
     ctx.rotate(-Math.PI/5);
-    ctx.textAlign='right'; ctx.fillStyle='#555'; ctx.font='10px Arial';
+    ctx.textAlign='right'; ctx.fillStyle='#555'; ctx.font='10.8px Arial';
     ctx.fillText(e.eq, 0, 0);
     ctx.restore();
   });
@@ -2215,7 +2215,7 @@ function drawEqComboChart(canvasId, eqStats) {
     const y = topM+plotH-(plotH*rate/maxRate);
     ctx.fillStyle = COLORS.rate; ctx.beginPath(); ctx.arc(x,y,3,0,7); ctx.fill();
     // 불량율 % 값 라벨(점 위)
-    ctx.textAlign='center'; ctx.textBaseline='alphabetic'; ctx.font='bold 9px Arial'; ctx.fillStyle=COLORS.rate;
+    ctx.textAlign='center'; ctx.textBaseline='alphabetic'; ctx.font='bold 10px Arial'; ctx.fillStyle=COLORS.rate;
     ctx.fillText((rate*100).toFixed(1)+'%', x, y-6);
   });
 
@@ -2599,7 +2599,7 @@ function drawWSChart(canvasId, items){
   const plotW = W - leftM - rightM, plotH = H - topM - botM;
   const maxV = Math.max.apply(null, items.map(i=>i.perStart)) * 1.12 || 1;
   const rowH = plotH / items.length, barH = Math.min(rowH * 0.62, 26);
-  ctx.font = '10.5px Arial';
+  ctx.font = '11.2px Arial';
   items.forEach((it,i)=>{
     const y = topM + rowH*i + (rowH-barH)/2;
     const w = plotW * (it.perStart / maxV);
@@ -3718,12 +3718,12 @@ function drawQTrendChart(canvasId, months, wkPoint, futureLabels){
   const yOf   = v => padT + plotH * (1 - (v - yMin) / (yMax - yMin));
   const xOf   = i => padL + cw * i + cw/2;
 
-  ctx.font = '10px Arial'; ctx.textBaseline = 'middle';
+  ctx.font = '10.8px Arial'; ctx.textBaseline = 'middle';
   for (let v = 75; v <= 100; v += 5){
     const yy = yOf(v);
     ctx.strokeStyle = '#edf0f4'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(W - padR, yy); ctx.stroke();
-    ctx.fillStyle = '#8a949e'; ctx.textAlign = 'right';
+    ctx.fillStyle = '#68737f'; ctx.textAlign = 'right';
     ctx.fillText(v.toFixed(2) + '%', padL - 7, yy);
   }
   /* 목표선 */
@@ -3737,13 +3737,13 @@ function drawQTrendChart(canvasId, months, wkPoint, futureLabels){
   const pts = [];
   months.forEach((m,i)=>{
     const x = xOf(i);
-    ctx.fillStyle = '#8a949e'; ctx.font = '9.5px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillStyle = '#68737f'; ctx.font = '10.5px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText(m.label, x, H - padB + 7);
     if (m.val == null) return;
     const y0 = yOf(Math.max(yMin, m.val));
     ctx.fillStyle = '#1f3864';
     ctx.fillRect(x - bw/2, y0, bw, (H - padB) - y0);
-    ctx.fillStyle = '#12233f'; ctx.font = 'bold 9.5px Arial'; ctx.textBaseline = 'bottom';
+    ctx.fillStyle = '#12233f'; ctx.font = 'bold 10.5px Arial'; ctx.textBaseline = 'bottom';
     ctx.fillText(m.val.toFixed(2) + '%', x, y0 - 4);
     pts.push({ x, y: y0 });
   });
@@ -3761,12 +3761,12 @@ function drawQTrendChart(canvasId, months, wkPoint, futureLabels){
     ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2);
     ctx.fillStyle = '#f5c518'; ctx.fill();
     ctx.strokeStyle = '#b58900'; ctx.lineWidth = 1.2; ctx.stroke();
-    ctx.fillStyle = '#12233f'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillStyle = '#12233f'; ctx.font = 'bold 10.8px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     ctx.fillText(wkPoint.val.toFixed(2) + '%', x, y - 8);
-    ctx.fillStyle = '#b58900'; ctx.font = 'bold 9.5px Arial'; ctx.textBaseline = 'top';
+    ctx.fillStyle = '#b58900'; ctx.font = 'bold 10.5px Arial'; ctx.textBaseline = 'top';
     ctx.fillText(wkPoint.label, x, H - padB + 7);
   }
-  ctx.fillStyle = '#8a949e'; ctx.font = '9.5px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillStyle = '#68737f'; ctx.font = '10.5px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   futureLabels.forEach((lb,i)=> ctx.fillText(lb, xOf(wi + 1 + i), H - padB + 7));
 
   ctx.strokeStyle = '#d7dde3'; ctx.lineWidth = 1;
@@ -3813,9 +3813,9 @@ function qcSmoothPath(ctx, pts){
 
 function qcChip(ctx, text, cx, bottomY, color, strong, placed, altY){
   ctx.save();
-  ctx.font = (strong ? 'bold ' : '') + '9.5px Arial';
+  ctx.font = (strong ? 'bold ' : '') + '10.5px Arial';
   const tw = ctx.measureText(text).width;
-  const padX = 3.5, boxH = 13, boxW = tw + padX*2;
+  const padX = 4, boxH = 15, boxW = tw + padX*2;
   /* 이미 놓인 칩·점과 겹치면 자리를 옮긴다.
      같은 높이에서 좌우로 먼저 비켜보고(점에서 멀어지지 않게), 그래도 막히면 위/아래로 한 칸씩. */
   /* 캔버스 밖으로 밀려나 글자가 잘리지 않게, 후보 위치마다 먼저 가둔다 */
@@ -3867,7 +3867,7 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek, opt){
   ctx.clearRect(0,0,W,H);
   if (!items.length) return;
   /* 생산수량 배경 막대를 함께 그리므로 아래쪽에 한 줄을 더 비운다 */
-  const padL = 46, padR = 50, padT = 34, padB = 40;
+  const padL = 50, padR = 54, padT = 36, padB = 44;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   if (plotW <= 30 || plotH <= 30) return;
 
@@ -3888,7 +3888,7 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek, opt){
   const yR  = v => padT + plotH * (1 - (v - rMin)/(rMax - rMin));
 
   /* 격자 + 좌우 축 눈금 */
-  ctx.font = '9.5px Arial'; ctx.textBaseline = 'middle';
+  ctx.font = '10.5px Arial'; ctx.textBaseline = 'middle';
   for (let k = 0; k <= 4; k++){
     const yy = padT + plotH*k/4;
     ctx.strokeStyle = '#edf0f4'; ctx.lineWidth = 1;
@@ -3959,19 +3959,19 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek, opt){
       barTags.push({ week:it.week, x:x, y:base-hWs-hNg-5, txt:it.rej.toFixed(2)+'%', sel:hi });
     ctx.save();
     ctx.globalAlpha = hi ? 1 : 0.6;
-    ctx.fillStyle = isSel ? '#1e3c72' : (isCmp ? '#4a545e' : '#8a949e');
-    ctx.font = hi ? 'bold 9.5px Arial' : '9.5px Arial';
+    ctx.fillStyle = isSel ? '#1e3c72' : (isCmp ? '#4a545e' : '#68737f');
+    ctx.font = hi ? 'bold 10.5px Arial' : '10.5px Arial';
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText(it.label, x, H-padB+7);
+    ctx.fillText(it.label, x, H-padB+6);
     ctx.restore();
     /* 생산수량 실제 값 — 배경 막대 높이는 눈대중, 수치는 여기서 정확히 읽는다 */
     if (it.prod > 0){
       ctx.save();
       ctx.globalAlpha = hi ? 1 : 0.6;
-      ctx.fillStyle = hi ? '#4a6fa5' : '#a8b4c2';
-      ctx.font = hi ? 'bold 8.5px Arial' : '8.5px Arial';
+      ctx.fillStyle = hi ? '#4a6fa5' : '#71808f';
+      ctx.font = hi ? 'bold 9.5px Arial' : '9.5px Arial';
       ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      ctx.fillText(it.prod.toLocaleString(), x, H-padB+19);
+      ctx.fillText(it.prod.toLocaleString(), x, H-padB+21);
       ctx.restore();
     }
   });
@@ -4021,7 +4021,7 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek, opt){
     ctx.stroke();
     ctx.restore();
     const arrow = Math.abs(d) < 0.005 ? '—' : (d < 0 ? '▼' : '▲');
-    const col   = Math.abs(d) < 0.005 ? '#8a949e' : (d < 0 ? '#0ca30c' : '#d03b3b');
+    const col   = Math.abs(d) < 0.005 ? '#68737f' : (d < 0 ? '#0ca30c' : '#d03b3b');
     qcChip(ctx, arrow + Math.abs(d).toFixed(2) + '%p', (tA.x + tB.x)/2, yBr + 6, col, true, placed);
   }
 
@@ -4031,7 +4031,7 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek, opt){
               ['#e53935', t('qr.lg.ng'), 'bar'], ['#f5a623', t('qr.lg.ws'), 'bar'],
               [QL_LINE, t('qr.lg.q'), 'line', QD_FILL, QD_RING]];
   let lx = padL;
-  ctx.font = '10px Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.font = '10.8px Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   lg.forEach(([c,lb,kind,dot,ring])=>{
     const my = padT-17;
     if (kind === 'line'){
@@ -4382,9 +4382,9 @@ function qrWorstHtml(b, pa, labels){
                           .sort((p,q)=>rate(q,k)-rate(p,k)).slice(0,3);
   const deltaTxt = (x,k) => {
     const px = prevMap[x.eq];
-    if (!px || px.prod<=0) return `<span style="color:#9aa3ad">${t('qr.w.noprev')}</span>`;
+    if (!px || px.prod<=0) return `<span style="color:#68737f">${t('qr.w.noprev')}</span>`;
     const d = rate(x,k)-rate(px,k);
-    if (Math.abs(d)<0.005) return `<span style="color:#9aa3ad">0.00%p</span>`;
+    if (Math.abs(d)<0.005) return `<span style="color:#68737f">0.00%p</span>`;
     const up = d>0;
     return `<span style="color:${up?'#d03b3b':'#0ca30c'};font-weight:700">${up?'▲':'▼'} ${up?'+':''}${d.toFixed(2)}%p</span>`;
   };
@@ -4478,7 +4478,7 @@ const MS_COL = {
 };
 
 /* 막대 안 수치 표기 기준 — MS_BAR_H 는 CSS '.vb .vt' 의 height 와 같아야 한다 */
-const MS_BAR_H = 132, MS_LABEL_MIN = 13;
+const MS_BAR_H = 142, MS_LABEL_MIN = 15;
 
 /* Model상세를 기간(시작~종료)으로 자른다 — 주간·일일 보고가 같이 쓴다 */
 function qrModelRowsBetween(start, end, sc){
@@ -4697,7 +4697,7 @@ const MV_OWNER = {
   machine: ['자동불량','핀파손','언밸런스','중량미달','비스켓두께미달','품질확인'],
   proc:    ['기포','수축','부풀음','찍힘','스크래치','표면오염','깨짐','스펙미달','기타']
 };
-const MV_COL = { die:'#4a6fa5', machine:'#d95926', proc:'#8a949e', warm:'#f5a623' };
+const MV_COL = { die:'#4a6fa5', machine:'#d95926', proc:'#68737f', warm:'#f5a623' };
 function mvOwnerOf(c){
   for (const k in MV_OWNER) if (MV_OWNER[k].indexOf(c) >= 0) return k;
   return 'proc';
@@ -4719,7 +4719,7 @@ function mvScatter(canvasId, pts, opt){
   const { W, H, ctx } = sizeCanvas(cv);
   ctx.clearRect(0,0,W,H);
   const o = opt || {};
-  const padL = 52, padR = 14, padT = 16, padB = 38;
+  const padL = 56, padR = 16, padT = 18, padB = 42;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   if (plotW <= 40 || plotH <= 40 || !pts.length) return;
   const xMax = Math.max(1e-9, o.xMax != null ? o.xMax : Math.max(...pts.map(p=>p.x)) * 1.12);
@@ -4727,37 +4727,37 @@ function mvScatter(canvasId, pts, opt){
   const X = v => padL + plotW * Math.min(1, v/xMax);
   const Y = v => padT + plotH * (1 - Math.min(1, v/yMax));
 
-  ctx.font = '9px Arial'; ctx.textBaseline = 'middle';
+  ctx.font = '10px Arial'; ctx.textBaseline = 'middle';
   for (let k = 0; k <= 4; k++){
     const yy = padT + plotH*k/4;
     ctx.strokeStyle = '#edf0f4'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(W-padR, yy); ctx.stroke();
-    ctx.fillStyle = '#8a949e'; ctx.textAlign = 'right';
+    ctx.fillStyle = '#68737f'; ctx.textAlign = 'right';
     ctx.fillText((yMax*(1-k/4)).toFixed(o.yDec != null ? o.yDec : 0) + (o.ySuffix||''), padL-5, yy);
   }
   ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   for (let k = 0; k <= 4; k++){
     const xx = padL + plotW*k/4;
-    ctx.fillStyle = '#8a949e';
+    ctx.fillStyle = '#68737f';
     ctx.fillText((xMax*k/4).toFixed(o.xDec != null ? o.xDec : 0) + (o.xSuffix||''), xx, H-padB+6);
   }
   /* 4분면 기준선 */
   if (o.vx != null){
-    ctx.save(); ctx.setLineDash([4,3]); ctx.strokeStyle = '#b6c2cf'; ctx.lineWidth = 1;
+    ctx.save(); ctx.setLineDash([4,3]); ctx.strokeStyle = '#9fadbb'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(X(o.vx), padT); ctx.lineTo(X(o.vx), padT+plotH); ctx.stroke(); ctx.restore();
   }
   if (o.hy != null){
-    ctx.save(); ctx.setLineDash([4,3]); ctx.strokeStyle = '#b6c2cf'; ctx.lineWidth = 1;
+    ctx.save(); ctx.setLineDash([4,3]); ctx.strokeStyle = '#9fadbb'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(padL, Y(o.hy)); ctx.lineTo(W-padR, Y(o.hy)); ctx.stroke(); ctx.restore();
   }
   /* 4분면 이름 */
   if (o.quads){
-    ctx.font = 'bold 9px Arial';
+    ctx.font = 'bold 10px Arial';
     const qx = [ (padL + X(o.vx))/2, (X(o.vx) + W-padR)/2 ];
     const qy = [ padT + 12, padT + plotH - 10 ];
     [[1,0,o.quads[0]],[0,0,o.quads[1]],[1,1,o.quads[2]],[0,1,o.quads[3]]].forEach(([ix,iy,txt])=>{
       if (!txt) return;
-      ctx.fillStyle = '#c3ccd6'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#9aa4ae'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(txt, qx[ix], qy[iy]);
     });
   }
@@ -4792,7 +4792,7 @@ function mvScatter(canvasId, pts, opt){
   ctx.beginPath(); ctx.moveTo(padL, padT+plotH); ctx.lineTo(W-padR, padT+plotH); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT+plotH); ctx.stroke();
   /* 축 이름 */
-  ctx.font = '9.5px Arial'; ctx.fillStyle = '#7a848e';
+  ctx.font = '10.5px Arial'; ctx.fillStyle = '#5c6671';
   ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
   if (o.xName) ctx.fillText(o.xName, W-padR, H-3);
   ctx.save(); ctx.translate(11, padT); ctx.rotate(-Math.PI/2);
@@ -5329,7 +5329,7 @@ const PQ_K = { group:'stc_q_pq_group_v1', param:'stc_q_pq_param_v1', sales:'stc_
                target:'stc_q_pq_target_v1', focus:'stc_q_pq_focus_v1', view:'stc_q_pq_view_v1' };
 const PQ_GROUPS = [
   { id:'S', color:'#2e7d32' }, { id:'M', color:'#1e88e5' },
-  { id:'L', color:'#8e24aa' }, { id:'X', color:'#8a949e' }
+  { id:'L', color:'#8e24aa' }, { id:'X', color:'#68737f' }
 ];
 const PQ_LINE_COLORS = ['#2e7d32','#1e88e5','#8e24aa','#fb8c00','#00acc1','#6d4c41','#c2185b','#558b2f'];
 const PQ_D5_COLORS = ['#3f51b5','#e53935','#43a047','#8e24aa','#00acc1','#fb8c00'];
@@ -5352,7 +5352,7 @@ function pqInt(v){ return (v==null || isNaN(v)) ? '-' : Math.round(v).toLocaleSt
 function pqPct(v, dp){ return (v==null || isNaN(v)) ? '-' : v.toFixed(dp==null?2:dp) + '%'; }
 function pqRate(o){ return (o && o.prod > 0) ? o.def / o.prod * 100 : null; }
 function pqGroupName(gid){ return t('pq.g.' + gid); }
-function pqGroupColor(gid){ const g = PQ_GROUPS.find(x=>x.id===gid); return g ? g.color : '#8a949e'; }
+function pqGroupColor(gid){ const g = PQ_GROUPS.find(x=>x.id===gid); return g ? g.color : '#68737f'; }
 function pqAutoGroup(eq){
   const ton = (typeof EQUIP_TONNAGE !== 'undefined') ? EQUIP_TONNAGE[eq] : null;
   if (ton == null) return 'X';
@@ -5616,7 +5616,7 @@ function pqDrawComboBarLine(canvasId, labels, bar, lines, opts){
   const xAt = i => L + step*i + step/2;
   const yBar = v => T + ph - ph * (v / (maxBar||1));
   const yLine = v => T + ph - ph * (v / (maxLine||1));
-  ctx.strokeStyle = '#eef1f5'; ctx.fillStyle = '#98a2ac'; ctx.font = '9px Arial';
+  ctx.strokeStyle = '#eef1f5'; ctx.fillStyle = '#68737f'; ctx.font = '10px Arial';
   for (let i=0;i<=4;i++){
     const y = T + ph - ph*i/4;
     ctx.beginPath(); ctx.moveTo(L,y); ctx.lineTo(L+pw,y); ctx.stroke();
@@ -5649,12 +5649,12 @@ function pqDrawComboBarLine(canvasId, labels, bar, lines, opts){
       const x = xAt(i), y = yLine(v);
       ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(x,y,3.2,0,7); ctx.fill();
       if (showVal && s.showValue !== false){
-        ctx.fillStyle = s.color; ctx.font = 'bold 9px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillStyle = s.color; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
         ctx.fillText(v.toFixed(2)+'%', x, y-6);
       }
     });
   });
-  ctx.fillStyle = '#5a646e'; ctx.font = (n > 16 ? '8.5px Arial' : '9.5px Arial');
+  ctx.fillStyle = '#5a646e'; ctx.font = (n > 16 ? '9.5px Arial' : '10.5px Arial');
   ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   labels.forEach((lb,i) => { if (n <= 16 || i % 2 === 0) ctx.fillText(lb, xAt(i), T+ph+8); });
 }
@@ -5674,7 +5674,7 @@ function pqDrawLines(canvasId, labels, series, opts){
   const stepX = n > 1 ? pw/(n-1) : 0;
   const xAt = i => L + stepX*i + (n>1 ? 0 : pw/2);
   const yAt = v => T + ph - ph*(v/maxV);
-  ctx.strokeStyle = '#eef1f5'; ctx.fillStyle = '#98a2ac'; ctx.font = '9px Arial';
+  ctx.strokeStyle = '#eef1f5'; ctx.fillStyle = '#68737f'; ctx.font = '10px Arial';
   ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
   for (let i=0;i<=4;i++){
     const y = T + ph - ph*i/4;
@@ -5696,7 +5696,7 @@ function pqDrawLines(canvasId, labels, series, opts){
       ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(xAt(i), yAt(v), 3, 0, 7); ctx.fill();
     });
   });
-  ctx.fillStyle = '#5a646e'; ctx.font = (n > 16 ? '8.5px Arial' : '9.5px Arial');
+  ctx.fillStyle = '#5a646e'; ctx.font = (n > 16 ? '9.5px Arial' : '10.5px Arial');
   ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   labels.forEach((lb,i) => { if (n <= 16 || i % 2 === 0) ctx.fillText(lb, xAt(i), T+ph+8); });
 }
@@ -5714,7 +5714,7 @@ function pqDrawStairs(canvasId, stages){
   const n = stages.length, step = pw/n;
   /* y축 반전: 값이 작을수록(불량률 낮을수록) 위 */
   const yAt = v => T + ph * (v/maxV);
-  ctx.strokeStyle = '#eef1f5'; ctx.fillStyle = '#98a2ac'; ctx.font = '9px Arial';
+  ctx.strokeStyle = '#eef1f5'; ctx.fillStyle = '#68737f'; ctx.font = '10px Arial';
   ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
   for (let i=0;i<=4;i++){
     const val = maxV*i/4, y = yAt(val);
@@ -5743,23 +5743,23 @@ function pqDrawStairs(canvasId, stages){
     if (s.actual != null){
       const y = yAt(s.actual);
       ctx.fillStyle = '#e53935'; ctx.beginPath(); ctx.arc(x,y,4,0,7); ctx.fill();
-      ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.font = 'bold 10.8px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
       ctx.fillText(s.actual.toFixed(2)+'%', x, y-7);
     }
     if (s.target != null){
       const y = yAt(s.target);
-      ctx.fillStyle = '#1e50a2'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillStyle = '#1e50a2'; ctx.font = 'bold 10.8px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
       ctx.fillText(s.target.toFixed(2)+'%', x, y+6);
     }
-    ctx.fillStyle = '#5a646e'; ctx.font = '10px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillStyle = '#5a646e'; ctx.font = '10.8px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText(s.label, x, T+ph+10);
     if (s.kind){
-      ctx.fillStyle = s.kind === 'up' ? '#2e7d32' : '#8a949e';
-      ctx.font = 'bold 9.5px Arial';
+      ctx.fillStyle = s.kind === 'up' ? '#2e7d32' : '#68737f';
+      ctx.font = 'bold 10.5px Arial';
       ctx.fillText(s.kind === 'up' ? '▲ ' + t('pq.lv.up') : '= ' + t('pq.lv.hold'), x, T+ph+24);
     }
   });
-  ctx.fillStyle = '#7a848e'; ctx.font = '9.5px Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillStyle = '#5c6671'; ctx.font = '10.5px Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   ctx.fillText(t('pq.lv.axis'), L, 8);
 }
 
@@ -5806,7 +5806,7 @@ function renderPQMatrix(){
                       : '<td>-</td>');
   };
   const block = (name, sub, node, extraCls) => {
-    const nameCell = `${name}${sub ? `<div style="font-weight:400;font-size:10px;color:#8a949e;">${sub}</div>` : ''}`;
+    const nameCell = `${name}${sub ? `<div style="font-weight:400;font-size:10.8px;color:#68737f;">${sub}</div>` : ''}`;
     if (rowMode === 'rate'){
       return `<tr class="${extraCls||''} r-rate"><td class="gname" colspan="2">${nameCell}</td>` +
              cells(node, 'rate') + `</tr>`;
@@ -5821,7 +5821,7 @@ function renderPQMatrix(){
 
   let html = '';
   if (!keys.length){
-    html = `<tr><td colspan="${periods.length+4}" style="text-align:center;color:#8a949e;padding:16px;">` +
+    html = `<tr><td colspan="${periods.length+4}" style="text-align:center;color:#68737f;padding:16px;">` +
            (dim === 'model' ? t('pq.noModel') : t('pq.nodata')) + `</td></tr>`;
   } else {
     keys.forEach(k => { const lb = pqKeyLabel(k, A); html += block(lb.name, lb.sub, A.K[k], ''); });
@@ -6123,7 +6123,7 @@ function renderPQFocus(){
   const months = pqMonthList(3);
   const tbody = tbl.querySelector('tbody');
   if (!PQ_FOCUS.length){
-    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#8a949e;padding:14px;">${t('pq.f.empty')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#68737f;padding:14px;">${t('pq.f.empty')}</td></tr>`;
   } else {
     tbody.innerHTML = PQ_FOCUS.map(f => {
       const cur = pqRateFor(f.kind, f.target, months);
@@ -6142,7 +6142,7 @@ function renderPQFocus(){
         `<td><input class="pq-in" style="width:64px;" type="number" min="0" step="0.01" value="${f.goal}" ` +
         `onchange="pqEditFocus('${f.id}','goal',this)"></td>` +
         `<td><div class="pq-bar"><i style="width:${prog!=null?(prog*100).toFixed(0):0}%;background:${st==='done'?'#2e7d32':(st==='late'?'#e53935':'#1e88e5')}"></i></div>` +
-        `<span style="font-size:10.5px;color:#7a848e;">${prog!=null?(prog*100).toFixed(0)+'%':'-'}</span></td>` +
+        `<span style="font-size:11.2px;color:#5c6671;">${prog!=null?(prog*100).toFixed(0)+'%':'-'}</span></td>` +
         `<td><input class="pq-in" style="width:70px;text-align:left;" type="text" value="${f.owner||''}" onchange="pqEditFocus('${f.id}','owner',this)"></td>` +
         `<td><input class="pq-in" style="width:112px;" type="date" value="${f.due||''}" onchange="pqEditFocus('${f.id}','due',this)"></td>` +
         `<td><span class="pq-st ${st}">${stTxt}</span></td>` +
@@ -6702,12 +6702,12 @@ function r2Combo(canvasId, labels, bars, line, opt){
   const { W, H, ctx } = sizeCanvas(cv);
   ctx.clearRect(0,0,W,H);
   const o = opt || {};
-  const padL = 46, padR = 46, padT = 26, padB = 22;
+  const padL = 52, padR = 52, padT = 28, padB = 26;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   if (plotW <= 30 || plotH <= 30) return;
   const has = v => v != null && isFinite(v);
   if (!bars.some(has) && !line.some(has)){
-    ctx.fillStyle = '#b9c2cb'; ctx.font = '11.5px Arial';
+    ctx.fillStyle = '#8a949e'; ctx.font = '11.5px Arial';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText((o.emptyMsg || ''), W/2, H/2);
     return;
@@ -6716,7 +6716,7 @@ function r2Combo(canvasId, labels, bars, line, opt){
   const lMax = Math.max(1, ...line.filter(has));
   const cw = plotW / Math.max(1, labels.length);
   const xOf = i => padL + cw*i + cw/2;
-  ctx.font = '9px Arial'; ctx.textBaseline = 'middle';
+  ctx.font = '10px Arial'; ctx.textBaseline = 'middle';
   for (let k = 0; k <= 4; k++){
     const yy = padT + plotH*k/4;
     ctx.strokeStyle = '#edf0f4'; ctx.lineWidth = 1;
@@ -6746,17 +6746,17 @@ function r2Combo(canvasId, labels, bars, line, opt){
     ctx.fillStyle = '#ffd21f'; ctx.fill();
     ctx.strokeStyle = '#111111'; ctx.lineWidth = p.sel ? 2 : 1.3; ctx.stroke();
   });
-  ctx.font = '9px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.font = '10px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   labels.forEach((lb,i)=>{
-    ctx.fillStyle = (o.selIdx === i) ? '#12233f' : '#8a949e';
-    ctx.font = (o.selIdx === i) ? 'bold 9px Arial' : '9px Arial';
+    ctx.fillStyle = (o.selIdx === i) ? '#12233f' : '#68737f';
+    ctx.font = (o.selIdx === i) ? 'bold 10px Arial' : '10px Arial';
     ctx.fillText(lb, xOf(i), H-padB+5);
   });
   ctx.strokeStyle = '#d7dde3'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(padL, base); ctx.lineTo(W-padR, base); ctx.stroke();
   /* 범례 */
   let lx = padL;
-  ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = '9.5px Arial';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = '10.5px Arial';
   [['#5b83b5', o.barName || ''], ['#0f9d58', o.lineName || '']].forEach(([c,lb])=>{
     if (!lb) return;
     ctx.fillStyle = c; ctx.fillRect(lx, padT-17, 9, 9);
@@ -6880,7 +6880,7 @@ function msDefectTrendChart(canvasId, list, types, selWeek){
   const { W, H, ctx } = sizeCanvas(cv);
   ctx.clearRect(0,0,W,H);
   if (!list.length || !types.length) return;
-  const padL = 48, padR = 16, padT = 30, padB = 62;
+  const padL = 52, padR = 16, padT = 32, padB = 70;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   if (plotW <= 40 || plotH <= 40) return;
   const vmax = Math.max(1, ...list.map(w=>Math.max(...types.map(c=>w.defects[c]||0))));
@@ -6889,12 +6889,12 @@ function msDefectTrendChart(canvasId, list, types, selWeek){
   const yOf = v => padT + plotH * (1 - v/vmax);
 
   /* 격자 + y축 */
-  ctx.font = '9.5px Arial'; ctx.textBaseline = 'middle';
+  ctx.font = '10.5px Arial'; ctx.textBaseline = 'middle';
   for (let k = 0; k <= 4; k++){
     const yy = padT + plotH*k/4;
     ctx.strokeStyle = '#edf0f4'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(W-padR, yy); ctx.stroke();
-    ctx.fillStyle = '#8a949e'; ctx.textAlign = 'right';
+    ctx.fillStyle = '#68737f'; ctx.textAlign = 'right';
     ctx.fillText(Math.round(vmax*(1-k/4)).toLocaleString(), padL-6, yy);
   }
   /* 유형마다 세로 안내선 — 선들이 어느 유형 위인지 눈으로 따라가게 */
@@ -6939,7 +6939,7 @@ function msDefectTrendChart(canvasId, list, types, selWeek){
   }
   /* x축 유형 이름 — 비스듬히 눕혀 긴 이름도 들어가게 */
   ctx.save();
-  ctx.font = '9.5px Arial'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  ctx.font = '10.5px Arial'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
   types.forEach((c,i)=>{
     ctx.save();
     ctx.translate(xOf(i), padT + plotH + 8);
@@ -6956,7 +6956,7 @@ function msDefectTrendChart(canvasId, list, types, selWeek){
   ctx.beginPath(); ctx.moveTo(padL, padT+plotH); ctx.lineTo(W-padR, padT+plotH); ctx.stroke();
   /* 범례 — 주차 */
   let lx = padL;
-  ctx.font = '9.5px Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.font = '10.5px Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   const my = padT - 15;
   list.forEach((w,idx)=>{
     const isSel = (w.week === selWeek);
@@ -6972,12 +6972,12 @@ function msDefectTrendChart(canvasId, list, types, selWeek){
       ctx.fillStyle = '#ffd21f'; ctx.fill();
       ctx.strokeStyle = '#111'; ctx.lineWidth = 1.1; ctx.stroke();
     }
-    ctx.fillStyle = isSel ? '#12233f' : '#8a949e';
-    ctx.font = isSel ? 'bold 9.5px Arial' : '9.5px Arial';
+    ctx.fillStyle = isSel ? '#12233f' : '#68737f';
+    ctx.font = isSel ? 'bold 10.5px Arial' : '10.5px Arial';
     ctx.fillText(lb, lx+15, my);
     lx += 22 + ctx.measureText(lb).width;
   });
-  ctx.font = '9.5px Arial'; ctx.fillStyle = '#8a949e'; ctx.textAlign = 'left';
+  ctx.font = '10.5px Arial'; ctx.fillStyle = '#68737f'; ctx.textAlign = 'left';
   ctx.fillText(r2t('dtUnit'), padL - 40, padT - 15);
 }
 let R2_DTREND = null, R2_DT_W = 6, R2_DT_T = 10;
@@ -7802,7 +7802,7 @@ function openModelDetail(model){
         <th>${t('mdm.thRate')}</th><th>${t('mdm.thPpm')}</th></tr></thead><tbody>${body}</tbody></table>`;
     if (eqRows.length > 1){
       const gap = eqRows[0].rate - eqRows[eqRows.length-1].rate;
-      html += `<div class="note" style="color:${gap>=5?'#c62828':'#8a949e'};">${t('mdm.gap', { v: gap.toFixed(2) })}</div>`;
+      html += `<div class="note" style="color:${gap>=5?'#c62828':'#68737f'};">${t('mdm.gap', { v: gap.toFixed(2) })}</div>`;
     }
   }
   if (!m.defects) html += `<div class="note">${t('mdm.snapshot')}</div>`;
