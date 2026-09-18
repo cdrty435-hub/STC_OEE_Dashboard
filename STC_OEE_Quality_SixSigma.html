@@ -210,30 +210,43 @@
   .qr-measure .mcat span{font-weight:500;color:#8a949e;margin-left:6px;letter-spacing:0;}
   .qr-measure .mnone{font-size:11.5px;color:#8a949e;padding:6px 0;}
 
-  /* 파레토 — 가로 막대 */
-  .pareto{display:grid;grid-template-columns:52px 1fr 54px 46px;gap:6px;align-items:center;
-    font-size:11px;padding:2px 0;font-variant-numeric:tabular-nums;}
-  .pareto .pl{font-weight:700;color:#243a5e;}
-  .pareto .ptrack{height:11px;background:#eef2f7;border-radius:2px;overflow:hidden;}
-  .pareto .pfill{height:100%;border-radius:0 3px 3px 0;}
-  .pareto .pv{text-align:right;font-weight:700;}
-  .pareto .pc{text-align:right;color:#8a949e;font-size:10px;}
-  .pareto.top .pl{color:#c62828;}
-  .pareto.top .pl::before{content:attr(data-rk);display:inline-block;width:13px;height:13px;
-    line-height:13px;text-align:center;background:#d03b3b;color:#fff;border-radius:2px;
-    font-size:9px;margin-right:4px;vertical-align:1px;}
+  /* 파레토 — 세로 막대 (사내 PPT 'Top 3 Major NG KPI' 서식) */
+  /* 막대 17~20개의 최소폭이 좁은 창에서 컨테이너를 넘길 수 있다 →
+     글자를 줄이고, 그래도 모자라면 차트 영역만 가로 스크롤한다(값을 숨기지 않는다). */
+  .vbars{display:flex;align-items:flex-end;gap:3px;padding:4px 0 0;overflow-x:auto;}
+  .vb{flex:1 1 0;display:flex;flex-direction:column;align-items:center;min-width:0;}
+  .vb .vv{font-size:9.5px;font-weight:800;color:#243a5e;margin-bottom:3px;white-space:nowrap;
+    font-variant-numeric:tabular-nums;}
+  .vb .vt{width:100%;height:132px;display:flex;align-items:flex-end;justify-content:center;
+    border-bottom:1px solid #c9d3de;}
+  .vb .vf{width:66%;min-height:2px;border-radius:2px 2px 0 0;}
+  .vb .vl{font-size:9.5px;font-weight:700;color:#4a545e;margin-top:5px;white-space:nowrap;}
+  .vb .vc{font-size:8.5px;color:#a8b0b9;margin-top:1px;font-variant-numeric:tabular-nums;}
+  .vb.top .vv{color:#c62828;}
+  .vb.top .vl{color:#c62828;}
+  .vb.top .vl::before{content:attr(data-rk);display:inline-block;width:12px;height:12px;
+    line-height:12px;text-align:center;background:#d03b3b;color:#fff;border-radius:2px;
+    font-size:8px;margin-right:3px;vertical-align:1px;}
 
-  /* 구성 — 100% 가로 누적막대 */
-  .comp{margin-bottom:12px;}
-  .comp:last-child{margin-bottom:0;}
-  .comp .ct{font-size:11.5px;font-weight:800;color:#243a5e;margin-bottom:4px;}
-  .comp .ct em{font-style:normal;font-weight:600;color:#8a949e;font-size:10.5px;margin-left:6px;}
-  .comp .cbar{display:flex;height:20px;border-radius:2px;overflow:hidden;background:#eef2f7;}
-  .comp .cseg{position:relative;font-size:9.5px;color:#fff;font-weight:700;line-height:20px;
-    text-align:center;overflow:hidden;white-space:nowrap;}
-  .comp .cleg{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:5px;font-size:10.5px;color:#4a545e;}
-  .comp .cleg span{display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;}
-  .comp .cleg i{width:9px;height:9px;border-radius:2px;flex:0 0 auto;}
+  /* 구성 — 도넛 3개 (사내 PPT 파이 서식) */
+  .donuts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .donuts>.comp{min-width:0;}
+  @media screen and (max-width:1100px){ .donuts{grid-template-columns:1fr;} }
+  @media screen and (max-width:1250px){
+    .vb .vv{font-size:8.5px;} .vb .vl{font-size:8.5px;} .vb .vc{display:none;}
+  }
+  .comp{border:1px solid #e6eaef;border-radius:3px;padding:8px 10px;}
+  .comp .ct{font-size:11.5px;font-weight:800;color:#243a5e;margin-bottom:2px;text-align:center;}
+  .comp .ct em{display:block;font-style:normal;font-weight:600;color:#8a949e;font-size:10px;margin-top:1px;}
+  .comp .cbody{display:flex;align-items:center;gap:8px;}
+  .comp svg{flex:0 0 auto;}
+  .comp .dcen{font-weight:800;fill:#243a5e;}
+  .comp .dsub{fill:#8a949e;}
+  .comp .cleg{display:flex;flex-direction:column;gap:2px;font-size:9.5px;color:#4a545e;min-width:0;}
+  .comp .cleg span{display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .comp .cleg i{width:8px;height:8px;border-radius:2px;flex:0 0 auto;}
+  .comp .cleg b{font-weight:700;color:#243a5e;}
 
   table.mtbl{width:100%;border-collapse:collapse;font-size:11px;}
   table.mtbl th,table.mtbl td{padding:3px 5px;border-bottom:1px solid #eef1f4;text-align:right;white-space:nowrap;}
@@ -247,8 +260,11 @@
   table.mtbl tr.eqfirst td{border-top:1px solid #c9d3de;}
   table.mtbl tr.tot td{font-weight:800;border-top:2px solid #12233f;background:#fff;}
   .mwrap{overflow-x:auto;max-height:340px;overflow-y:auto;}
+  /* 그리드 자식은 기본 min-width:auto 라 내용보다 작아지지 못한다 → 0 으로 풀어야
+     안쪽 표(.mwrap)가 스스로 스크롤하고 바깥이 넘치지 않는다. */
   .mgrid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-  @media screen and (max-width:1100px){ .mgrid2{grid-template-columns:1fr;} }
+  .mgrid2>div{min-width:0;}
+  @media screen and (max-width:1400px){ .mgrid2{grid-template-columns:1fr;} }
 
   .qr-comment{border:1px solid #dde3e9;border-left:4px solid #1e3c72;border-radius:4px;
     background:#f9fbfd;padding:11px 14px;font-size:12.5px;line-height:1.85;color:#2c3742;margin-bottom:14px;}
@@ -293,9 +309,10 @@
     table.mtbl{font-size:8.2px;}
     table.mtbl th{font-size:7.6px;padding:2px 3px;}
     table.mtbl td{padding:2px 3px;}
-    .pareto{font-size:9px;grid-template-columns:46px 1fr 46px 38px;}
-    .comp .cbar{height:16px;} .comp .cseg{line-height:16px;font-size:8px;}
-    .comp .cleg{font-size:8.5px;gap:3px 9px;} .comp .ct{font-size:10px;}
+    .vb .vt{height:104px;} .vb .vv{font-size:8px;} .vb .vl{font-size:8px;} .vb .vc{font-size:7px;}
+    .donuts{grid-template-columns:repeat(3,1fr);gap:8px;}
+    .comp .ct{font-size:9.5px;} .comp .ct em{font-size:8.5px;}
+    .comp .cleg{font-size:8px;gap:1px;} .comp .cbody{gap:6px;}
     .mgrid2{gap:10px;}
     .qr-box .bt{font-size:11px;padding:3px;}
     #chart-qr-trend{height:190px;}
@@ -2989,7 +3006,7 @@ Object.assign(I18N.ko, {
   'ms.eq':'설비', 'ms.part':'PART NAME', 'ms.model':'Model',
   'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
   'ms.events':'승온 건수', 'ms.warmsum':'웜샷 계', 'ms.perevent':'1회당 웜샷', 'ms.excshare':'Excess 비중',
-  'ms.etc':'기타', 'ms.unknown':'(미지정)',
+  'ms.etc':'기타', 'ms.unknown':'(미지정)', 'ms.cum':'누적', 'ms.lossword':'로스',
   'ms.lossOf':'로스 {n}건 · 투입 대비 {p}%',
   'ms.nodata':'해당 주차에 집계할 데이터가 없습니다.',
   'ms.nomodel':'Q_Model상세 데이터를 불러오지 못했습니다 — 해당 탭이 웹에 게시되어 있는지 확인해주세요.',
@@ -3063,7 +3080,7 @@ Object.assign(I18N.th, {
   'ms.eq':'เครื่องจักร', 'ms.part':'PART NAME', 'ms.model':'รุ่น',
   'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
   'ms.events':'จำนวนครั้งอุ่น', 'ms.warmsum':'วอร์มช็อตรวม', 'ms.perevent':'ต่อการอุ่น 1 ครั้ง', 'ms.excshare':'สัดส่วน Excess',
-  'ms.etc':'อื่นๆ', 'ms.unknown':'(ไม่ระบุ)',
+  'ms.etc':'อื่นๆ', 'ms.unknown':'(ไม่ระบุ)', 'ms.cum':'สะสม', 'ms.lossword':'สูญเสีย',
   'ms.lossOf':'สูญเสีย {n} · {p}% ของที่ป้อนเข้า',
   'ms.nodata':'ไม่มีข้อมูลสำหรับสัปดาห์นี้',
   'ms.nomodel':'โหลดแท็บ Q_Model detail ไม่ได้ — กรุณาตรวจสอบว่าเผยแพร่บนเว็บแล้ว',
@@ -3136,7 +3153,7 @@ Object.assign(I18N.en, {
   'ms.eq':'Machine', 'ms.part':'PART NAME', 'ms.model':'Model',
   'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
   'ms.events':'Heat-ups', 'ms.warmsum':'Warm total', 'ms.perevent':'Per heat-up', 'ms.excshare':'Excess share',
-  'ms.etc':'Other', 'ms.unknown':'(unspecified)',
+  'ms.etc':'Other', 'ms.unknown':'(unspecified)', 'ms.cum':'cum.', 'ms.lossword':'loss',
   'ms.lossOf':'{n} loss · {p}% of input',
   'ms.nodata':'No data to aggregate for this week.',
   'ms.nomodel':'Could not load the Q_Model detail tab — check that it is published to the web.',
@@ -4007,30 +4024,54 @@ function qrMeasureAgg(week){
            pairs:Object.values(pairs) };
 }
 
-/* ---------- 파레토 : 설비별 TOTAL NG% ---------- */
+/* ---------- 파레토 : 설비별 TOTAL NG% (세로 막대) ---------- */
 function msParetoHtml(eqs){
   const list = eqs.slice().sort((a,b)=>b.rate-a.rate).filter(x=>x.prod>0);
   if (!list.length) return '<div class="mnone">' + t('ms.nodata') + '</div>';
   const maxR = list[0].rate || 1;
   const sumNg = list.reduce((s,x)=>s+x.totalNg,0) || 1;
   let cum = 0;
-  return list.map((x,i)=>{
+  return '<div class="vbars">' + list.map((x,i)=>{
     cum += x.totalNg;
     const top = i < 3;
-    return '<div class="pareto' + (top?' top':'') + '">' +
-      '<div class="pl"' + (top?(' data-rk="'+(i+1)+'"'):'') + '>' + x.eq + '</div>' +
-      '<div class="ptrack"><div class="pfill" style="width:' + Math.max(1, x.rate/maxR*100) +
-        '%;background:' + (top?'#e07a5f':'#4a6fa5') + '"></div></div>' +
-      '<div class="pv" style="color:' + (top?'#c62828':'#243a5e') + '">' + x.rate.toFixed(2) + '%</div>' +
-      '<div class="pc">' + (cum/sumNg*100).toFixed(0) + '%</div></div>';
-  }).join('');
+    const h = Math.max(2, x.rate/maxR*100);
+    return '<div class="vb' + (top?' top':'') + '" title="' + x.eq + ' · ' + x.rate.toFixed(2) +
+        '% · ' + t('ms.cum') + ' ' + (cum/sumNg*100).toFixed(0) + '%">' +
+      '<div class="vv">' + x.rate.toFixed(2) + '%</div>' +
+      '<div class="vt"><div class="vf" style="height:' + h + '%;background:' +
+        (top?'#e07a5f':'#4a6fa5') + '"></div></div>' +
+      '<div class="vl"' + (top?(' data-rk="'+(i+1)+'"'):'') + '>' + x.eq + '</div>' +
+      '<div class="vc">' + (cum/sumNg*100).toFixed(0) + '%</div></div>';
+  }).join('') + '</div>';
 }
 
-/* ---------- 구성 : 워스트 3 설비의 로스 구성(100% 누적) ---------- */
+/* ---------- 구성 : 워스트 3 설비의 로스 구성 (도넛) ----------
+   SVG 로 그려 리사이즈·언어전환·인쇄에서 다시 그릴 필요가 없게 한다. */
+function msDonutSvg(segs, tot){
+  const R = 46, SW = 20, CX = 60, CY = 60, C = 2*Math.PI*R;
+  let off = 0;
+  const arcs = segs.map(g=>{
+    const len = Math.max(0, g.v/tot*C);
+    const el = '<circle cx="' + CX + '" cy="' + CY + '" r="' + R + '" fill="none" stroke="' + g.c +
+      '" stroke-width="' + SW + '" stroke-dasharray="' + len.toFixed(2) + ' ' + (C-len).toFixed(2) +
+      '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 ' + CX + ' ' + CY + ')">' +
+      '<title>' + g.k + ' ' + g.v.toLocaleString() + ' (' + (g.v/tot*100).toFixed(1) + '%)</title></circle>';
+    off += len;
+    return el;
+  }).join('');
+  return '<svg width="120" height="120" viewBox="0 0 120 120" role="img">' +
+    '<circle cx="' + CX + '" cy="' + CY + '" r="' + R + '" fill="none" stroke="#eef2f7" stroke-width="' + SW + '"/>' +
+    arcs +
+    '<text class="dcen" x="' + CX + '" y="' + (CY-1) + '" text-anchor="middle" font-size="15">' +
+      tot.toLocaleString() + '</text>' +
+    '<text class="dsub" x="' + CX + '" y="' + (CY+13) + '" text-anchor="middle" font-size="9">' +
+      t('ms.lossword') + '</text></svg>';
+}
+
 function msCompHtml(eqs, hasSplit){
   const list = eqs.slice().sort((a,b)=>b.rate-a.rate).filter(x=>x.totalNg>0).slice(0,3);
   if (!list.length) return '<div class="mnone">' + t('ms.nodata') + '</div>';
-  return list.map(x=>{
+  return '<div class="donuts">' + list.map(x=>{
     const segs = [];
     if (x.std) segs.push({ k:t('ms.wstd'), v:x.std, c:MS_COL.std });
     if (x.exc) segs.push({ k:t('ms.wexc'), v:x.exc, c:MS_COL.exc });
@@ -4045,16 +4086,12 @@ function msCompHtml(eqs, hasSplit){
     const tot = segs.reduce((s,g)=>s+g.v,0) || 1;
     return '<div class="comp"><div class="ct">' + x.eq + '<em>' +
       t('ms.lossOf', { n:tot.toLocaleString(), p:x.rate.toFixed(2) }) + '</em></div>' +
-      '<div class="cbar">' + segs.map(g=>{
-        const w = g.v/tot*100;
-        return '<div class="cseg" style="width:' + w + '%;background:' + g.c + '" title="' +
-          g.k + ' ' + g.v.toLocaleString() + ' (' + w.toFixed(1) + '%)">' +
-          (w>=9 ? w.toFixed(0)+'%' : '') + '</div>';
-      }).join('') + '</div>' +
+      '<div class="cbody">' + msDonutSvg(segs, tot) +
       '<div class="cleg">' + segs.map(g=>
-        '<span><i style="background:' + g.c + '"></i>' + g.k + ' ' + g.v.toLocaleString() +
-        ' (' + (g.v/tot*100).toFixed(0) + '%)</span>').join('') + '</div></div>';
-  }).join('');
+        '<span title="' + g.k + ' ' + g.v.toLocaleString() + '"><i style="background:' + g.c + '"></i>' +
+        g.k + ' <b>' + g.v.toLocaleString() + '</b> (' + (g.v/tot*100).toFixed(0) + '%)</span>').join('') +
+      '</div></div></div>';
+  }).join('') + '</div>';
 }
 
 /* ---------- 표 : 설비 × PART(Model) ---------- */
