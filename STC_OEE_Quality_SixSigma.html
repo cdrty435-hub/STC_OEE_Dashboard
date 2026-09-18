@@ -3561,6 +3561,12 @@ function drawQWeeklyChart(canvasId, items, selWeek){
   const plotW = W - padL - padR, plotH = H - padT - padB;
   if (plotW <= 30 || plotH <= 30) return;
 
+  /* 꺾은선 색 — 막대(빨강·주황)·목표선(파랑)과 겹치지 않게 노랑 계열로 뺀다.
+     노랑은 흰 바탕에서 약하므로 어두운 테두리선(케이싱)을 깔고 그 위에 얹는다.
+     점은 선과 다른 색(남색), 테두리는 또 다른 색(흰색 링)으로 세 겹이 서로 구분된다. */
+  const QL_CASE = 'rgba(122,92,0,0.55)', QL_LINE = '#ffd21f';
+  const QD_FILL = '#1e3c72', QD_SEL = '#12233f', QD_RING = '#ffffff';
+
   const maxRej = Math.max(1, ...items.map(i=>i.rej));
   const lMax = Math.ceil(maxRej * 1.35);
   const qs = items.map(i=>i.q).filter(v=>v!=null);
@@ -3621,15 +3627,18 @@ function drawQWeeklyChart(canvasId, items, selWeek){
   const pts = items.map((it,i)=> it.q==null ? null : { x:xOf(i), y:yR(it.q), q:it.q, sel: it.week===selWeek })
                    .filter(Boolean);
   if (pts.length){
-    ctx.strokeStyle = '#1e3c72'; ctx.lineWidth = 2;
-    ctx.beginPath(); pts.forEach((p,i)=> i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y)); ctx.stroke();
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.beginPath(); pts.forEach((p,i)=> i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y));
+    ctx.strokeStyle = QL_CASE; ctx.lineWidth = 4.2; ctx.stroke();   /* 케이싱 */
+    ctx.strokeStyle = QL_LINE; ctx.lineWidth = 2.4; ctx.stroke();   /* 노란 본선 */
     /* 점을 먼저 찍고 그 자리를 예약해 둔다 — 칩이 점을 가리지 않도록 */
     pts.forEach(p=>{
       ctx.save();
       ctx.globalAlpha = p.sel ? 1 : 0.55;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.sel ? 5 : 3.2, 0, Math.PI*2);
-      ctx.fillStyle = p.sel ? '#f5c518' : '#1e3c72'; ctx.fill();
-      if (p.sel){ ctx.strokeStyle = '#1e3c72'; ctx.lineWidth = 1.4; ctx.stroke(); }
+      const r = p.sel ? 5.2 : 3.4;
+      ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI*2);
+      ctx.fillStyle = p.sel ? QD_SEL : QD_FILL; ctx.fill();
+      ctx.strokeStyle = QD_RING; ctx.lineWidth = p.sel ? 2.2 : 1.6; ctx.stroke();
       ctx.restore();
       placed.push({ x:p.x-7, y:p.y-7, w:14, h:14 });
     });
@@ -3640,13 +3649,28 @@ function drawQWeeklyChart(canvasId, items, selWeek){
   }
 
   /* 범례 */
-  const lg = [['#e53935', t('qr.lg.ng')], ['#f5a623', t('qr.lg.ws')], ['#1e3c72', t('qr.lg.q')]];
+  /* 막대는 네모, 꺾은선은 선+점 — 표식 모양만 봐도 어느 축인지 구분된다 */
+  const lg = [['#e53935', t('qr.lg.ng'), 'bar'], ['#f5a623', t('qr.lg.ws'), 'bar'],
+              [QL_LINE, t('qr.lg.q'), 'line']];
   let lx = padL;
   ctx.font = '10px Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  lg.forEach(([c,lb])=>{
-    ctx.fillStyle = c; ctx.fillRect(lx, padT-22, 10, 10);
-    ctx.fillStyle = '#4a545e'; ctx.fillText(lb, lx+14, padT-17);
-    lx += 22 + ctx.measureText(lb).width;
+  lg.forEach(([c,lb,kind])=>{
+    const my = padT-17;
+    if (kind === 'line'){
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(lx, my); ctx.lineTo(lx+12, my);
+      ctx.strokeStyle = QL_CASE; ctx.lineWidth = 4.2; ctx.stroke();
+      ctx.strokeStyle = c; ctx.lineWidth = 2.4; ctx.stroke();
+      ctx.beginPath(); ctx.arc(lx+6, my, 3, 0, Math.PI*2);
+      ctx.fillStyle = QD_FILL; ctx.fill();
+      ctx.strokeStyle = QD_RING; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#4a545e'; ctx.fillText(lb, lx+16, my);
+      lx += 24 + ctx.measureText(lb).width;
+    } else {
+      ctx.fillStyle = c; ctx.fillRect(lx, padT-22, 10, 10);
+      ctx.fillStyle = '#4a545e'; ctx.fillText(lb, lx+14, my);
+      lx += 22 + ctx.measureText(lb).width;
+    }
   });
 
   ctx.strokeStyle = '#d7dde3'; ctx.lineWidth = 1;
