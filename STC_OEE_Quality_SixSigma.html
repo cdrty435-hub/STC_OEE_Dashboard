@@ -3512,6 +3512,46 @@ function qrWeeklySeries(week, n){
 }
 
 /* 적층 막대(웜샷+불량 = 불량율 %) + 품질(Q) 꺾은선, 이중 축 */
+/* 값 라벨 칩 — 막대·격자·꺾은선 위에 글자가 겹쳐도 읽히도록 흰 바탕을 깔고 얹는다.
+   strong=false 면(선택 주차가 아니면) 칩과 글자를 함께 흐리게 해 선택 주차가 도드라진다. */
+function qcChip(ctx, text, cx, bottomY, color, strong, placed, altY){
+  ctx.save();
+  ctx.font = (strong ? 'bold ' : '') + '9.5px Arial';
+  const tw = ctx.measureText(text).width;
+  const padX = 3.5, boxH = 13, boxW = tw + padX*2;
+  const x = cx - boxW/2;
+  /* 이미 놓인 칩과 겹치면 자리를 옮긴다 — 위 우선, 반대쪽(altY)도 후보 */
+  let y = bottomY - boxH;
+  if (placed){
+    const cand = [bottomY];
+    if (altY != null) cand.push(altY + boxH);
+    for (let k = 1; k <= 4; k++){
+      cand.push(bottomY - k*(boxH+2));
+      if (altY != null) cand.push(altY + boxH + k*(boxH+2));
+    }
+    const hit = yy => placed.some(r => !(x+boxW < r.x || x > r.x+r.w || yy+boxH < r.y || yy > r.y+r.h));
+    y = cand.map(b => b - boxH).find(yy => !hit(yy));
+    if (y == null) y = bottomY - boxH;
+    placed.push({ x:x-1, y:y-1, w:boxW+2, h:boxH+2 });
+  }
+  /* 바탕은 늘 불투명하게 — 격자·꺾은선이 비쳐 글자가 뭉개지지 않도록.
+     흐리게 처리하는 것은 테두리와 글자뿐이다. */
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = strong ? color : 'rgba(0,0,0,0.14)';
+  ctx.lineWidth = strong ? 1.1 : 0.7;
+  if (typeof ctx.roundRect === 'function'){
+    ctx.beginPath(); ctx.roundRect(x, y, boxW, boxH, 2.5); ctx.fill(); ctx.stroke();
+  } else {
+    ctx.fillRect(x, y, boxW, boxH); ctx.strokeRect(x, y, boxW, boxH);
+  }
+  ctx.globalAlpha = strong ? 1 : 0.62;
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, cx, y + boxH/2 + 0.5);
+  ctx.restore();
+}
+
 function drawQWeeklyChart(canvasId, items, selWeek){
   const canvas = document.getElementById(canvasId); if (!canvas) return;
   const { W, H, ctx } = sizeCanvas(canvas);
@@ -3550,22 +3590,31 @@ function drawQWeeklyChart(canvasId, items, selWeek){
 
   /* 적층 막대 */
   const bw = Math.min(cw*0.5, 38);
+  /* 선택 주차만 진하게, 나머지는 흐리게 — 보고 주차가 한눈에 들어오게 한다 */
+  const DIM = 0.34;
+  const placed = [];          // 놓인 값 칩 — 서로 겹치지 않게 관리
+  const barTags = [];         // 막대 값 칩은 꺾은선을 그린 뒤에 얹는다
   items.forEach((it,i)=>{
     const x = xOf(i), base = padT + plotH;
+    const sel = (it.week === selWeek);
     const hWs = plotH * (it.wsr/lMax), hNg = plotH * (it.ngr/lMax);
+    ctx.save();
+    ctx.globalAlpha = sel ? 1 : DIM;
     ctx.fillStyle = '#f5a623'; ctx.fillRect(x-bw/2, base-hWs, bw, hWs);
     ctx.fillStyle = '#e53935'; ctx.fillRect(x-bw/2, base-hWs-hNg, bw, hNg);
-    if (it.week === selWeek){
+    ctx.restore();
+    if (sel){
       ctx.strokeStyle = '#1e3c72'; ctx.lineWidth = 2;
       ctx.strokeRect(x-bw/2-1.5, base-hWs-hNg-1.5, bw+3, hWs+hNg+3);
     }
-    ctx.fillStyle = '#c0392b'; ctx.font = 'bold 9.5px Arial';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText(it.rej.toFixed(2)+'%', x, base-hWs-hNg-6);
-    ctx.fillStyle = (it.week === selWeek) ? '#1e3c72' : '#8a949e';
-    ctx.font = (it.week === selWeek) ? 'bold 9.5px Arial' : '9.5px Arial';
-    ctx.textBaseline = 'top';
+    barTags.push({ x:x, y:base-hWs-hNg-5, txt:it.rej.toFixed(2)+'%', sel:sel });
+    ctx.save();
+    ctx.globalAlpha = sel ? 1 : 0.6;
+    ctx.fillStyle = sel ? '#1e3c72' : '#8a949e';
+    ctx.font = sel ? 'bold 9.5px Arial' : '9.5px Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText(it.label, x, H-padB+7);
+    ctx.restore();
   });
 
   /* 품질(Q) 꺾은선 */
@@ -3574,14 +3623,20 @@ function drawQWeeklyChart(canvasId, items, selWeek){
   if (pts.length){
     ctx.strokeStyle = '#1e3c72'; ctx.lineWidth = 2;
     ctx.beginPath(); pts.forEach((p,i)=> i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y)); ctx.stroke();
+    /* 점을 먼저 찍고 그 자리를 예약해 둔다 — 칩이 점을 가리지 않도록 */
     pts.forEach(p=>{
+      ctx.save();
+      ctx.globalAlpha = p.sel ? 1 : 0.55;
       ctx.beginPath(); ctx.arc(p.x, p.y, p.sel ? 5 : 3.2, 0, Math.PI*2);
       ctx.fillStyle = p.sel ? '#f5c518' : '#1e3c72'; ctx.fill();
       if (p.sel){ ctx.strokeStyle = '#1e3c72'; ctx.lineWidth = 1.4; ctx.stroke(); }
-      ctx.fillStyle = '#1e3c72'; ctx.font = (p.sel?'bold ':'') + '9.5px Arial';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-      ctx.fillText(p.q.toFixed(2)+'%', p.x, p.y - 8);
+      ctx.restore();
+      placed.push({ x:p.x-7, y:p.y-7, w:14, h:14 });
     });
+    barTags.forEach(b=> qcChip(ctx, b.txt, b.x, b.y, '#c0392b', b.sel, placed));
+    pts.forEach(p=> qcChip(ctx, p.q.toFixed(2)+'%', p.x, p.y - 9, '#1e3c72', p.sel, placed, p.y + 9));
+  } else {
+    barTags.forEach(b=> qcChip(ctx, b.txt, b.x, b.y, '#c0392b', b.sel, placed));
   }
 
   /* 범례 */
