@@ -219,7 +219,11 @@
     font-variant-numeric:tabular-nums;}
   .vb .vt{width:100%;height:132px;display:flex;align-items:flex-end;justify-content:center;
     border-bottom:1px solid #c9d3de;}
-  .vb .vf{width:66%;min-height:2px;border-radius:2px 2px 0 0;}
+  /* 막대 하나가 웜샷(STD·Excess) + 불량 으로 쌓인다 — 아래에서 위로 누적 */
+  .vb .vf{width:66%;min-height:2px;display:flex;flex-direction:column-reverse;
+    border-radius:2px 2px 0 0;overflow:hidden;}
+  .vb .vs{width:100%;min-height:0;}
+  .vb.top .vf{outline:1.5px solid #c62828;outline-offset:1px;border-radius:2px;}
   .vb .vl{font-size:9.5px;font-weight:700;color:#4a545e;margin-top:5px;white-space:nowrap;}
   .vb .vc{font-size:8.5px;color:#a8b0b9;margin-top:1px;font-variant-numeric:tabular-nums;}
   .vb.top .vv{color:#c62828;}
@@ -227,6 +231,12 @@
   .vb.top .vl::before{content:attr(data-rk);display:inline-block;width:12px;height:12px;
     line-height:12px;text-align:center;background:#d03b3b;color:#fff;border-radius:2px;
     font-size:8px;margin-right:3px;vertical-align:1px;}
+
+  /* 막대 구성 범례 */
+  .vlegend{display:flex;gap:14px;flex-wrap:wrap;justify-content:flex-end;
+    font-size:10px;color:#4a545e;margin:-2px 0 2px;}
+  .vlegend span{display:flex;align-items:center;gap:4px;}
+  .vlegend i{width:9px;height:9px;border-radius:2px;}
 
   /* 구성 — 도넛 3개 (사내 PPT 파이 서식) */
   .donuts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
@@ -310,6 +320,7 @@
     table.mtbl th{font-size:7.6px;padding:2px 3px;}
     table.mtbl td{padding:2px 3px;}
     .vb .vt{height:104px;} .vb .vv{font-size:8px;} .vb .vl{font-size:8px;} .vb .vc{font-size:7px;}
+    .vlegend{font-size:8px;gap:10px;}
     .donuts{grid-template-columns:repeat(3,1fr);gap:8px;}
     .comp .ct{font-size:9.5px;} .comp .ct em{font-size:8.5px;}
     .comp .cleg{font-size:8px;gap:1px;} .comp .cbody{gap:6px;}
@@ -2999,14 +3010,14 @@ Object.assign(I18N.ko, {
   'qr.h.prev':'전주', 'qr.h.cur':'금주', 'qr.h.delta':'등락 %p',
   'ms.title':'Measure — 설비 · 모델별 웜샷 / 불량 구성',
   'ms.basis':'{b} 기준 · Model상세 {n}행',
-  'ms.s1':'① 설비별 TOTAL NG%', 'ms.s1sub':'= (순수NG + 웜샷) ÷ 투입수량 · 높은 순 · 오른쪽은 누적비중',
+  'ms.s1':'① 설비별 TOTAL NG%', 'ms.s1sub':'= (순수NG + 웜샷) ÷ 투입수량 · 막대 안은 웜샷(STD·Excess)/순수NG 구성 · 아래 회색은 누적비중',
   'ms.s2':'② 워스트 3 설비 로스 구성', 'ms.s2sub':'웜샷(STD/Excess)과 불량유형을 100%로 나눠 본 것',
   'ms.s3':'③ 설비 × PART 별 실적', 'ms.s3sub':'PPT Measure 표와 동일 구성',
   'ms.s4':'④ 모델별 웜샷 원단위', 'ms.s4sub':'승온 1회당 웜샷 — 로트 길이에 영향받지 않는 금형 고유 지표',
   'ms.eq':'설비', 'ms.part':'PART NAME', 'ms.model':'Model',
   'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
   'ms.events':'승온 건수', 'ms.warmsum':'웜샷 계', 'ms.perevent':'1회당 웜샷', 'ms.excshare':'Excess 비중',
-  'ms.etc':'기타', 'ms.unknown':'(미지정)', 'ms.cum':'누적', 'ms.lossword':'로스',
+  'ms.etc':'기타', 'ms.unknown':'(미지정)', 'ms.cum':'누적', 'ms.lossword':'로스', 'ms.pureng':'순수 NG',
   'ms.lossOf':'로스 {n}건 · 투입 대비 {p}%',
   'ms.nodata':'해당 주차에 집계할 데이터가 없습니다.',
   'ms.nomodel':'Q_Model상세 데이터를 불러오지 못했습니다 — 해당 탭이 웹에 게시되어 있는지 확인해주세요.',
@@ -3073,14 +3084,14 @@ Object.assign(I18N.th, {
   'qr.h.prev':'สัปดาห์ก่อน', 'qr.h.cur':'สัปดาห์นี้', 'qr.h.delta':'เปลี่ยนแปลง %p',
   'ms.title':'Measure — สัดส่วนวอร์มช็อต / ของเสีย ตามเครื่องจักรและรุ่น',
   'ms.basis':'เกณฑ์ {b} · {n} แถวจาก Model detail',
-  'ms.s1':'1. TOTAL NG% ตามเครื่องจักร', 'ms.s1sub':'= (NG + วอร์มช็อต) / ที่ป้อนเข้า · แย่ก่อน · คอลัมน์ขวาคือสัดส่วนสะสม',
+  'ms.s1':'1. TOTAL NG% ตามเครื่องจักร', 'ms.s1sub':'= (NG + วอร์มช็อต) / ที่ป้อนเข้า · แต่ละแท่งแยกเป็นวอร์มช็อต(STD/Excess) และ NG แท้ · ตัวเลขสีเทาคือสัดส่วนสะสม',
   'ms.s2':'2. สัดส่วนความสูญเสีย 3 เครื่องที่แย่ที่สุด', 'ms.s2sub':'วอร์มช็อต (STD/Excess) และประเภทของเสีย รวมเป็น 100%',
   'ms.s3':'3. เครื่องจักร x PART', 'ms.s3sub':'รูปแบบเดียวกับตาราง Measure ใน PPT',
   'ms.s4':'4. วอร์มช็อตต่อการอุ่นแม่พิมพ์ 1 ครั้ง ตามรุ่น', 'ms.s4sub':'ไม่ขึ้นกับขนาดล็อต — เป็นค่าเฉพาะของแม่พิมพ์',
   'ms.eq':'เครื่องจักร', 'ms.part':'PART NAME', 'ms.model':'รุ่น',
   'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
   'ms.events':'จำนวนครั้งอุ่น', 'ms.warmsum':'วอร์มช็อตรวม', 'ms.perevent':'ต่อการอุ่น 1 ครั้ง', 'ms.excshare':'สัดส่วน Excess',
-  'ms.etc':'อื่นๆ', 'ms.unknown':'(ไม่ระบุ)', 'ms.cum':'สะสม', 'ms.lossword':'สูญเสีย',
+  'ms.etc':'อื่นๆ', 'ms.unknown':'(ไม่ระบุ)', 'ms.cum':'สะสม', 'ms.lossword':'สูญเสีย', 'ms.pureng':'NG แท้',
   'ms.lossOf':'สูญเสีย {n} · {p}% ของที่ป้อนเข้า',
   'ms.nodata':'ไม่มีข้อมูลสำหรับสัปดาห์นี้',
   'ms.nomodel':'โหลดแท็บ Q_Model detail ไม่ได้ — กรุณาตรวจสอบว่าเผยแพร่บนเว็บแล้ว',
@@ -3146,14 +3157,14 @@ Object.assign(I18N.en, {
   'qr.h.prev':'Prev wk', 'qr.h.cur':'This wk', 'qr.h.delta':'Change %p',
   'ms.title':'Measure — warm shot / defect mix by machine and model',
   'ms.basis':'{b} basis · {n} rows from Model detail',
-  'ms.s1':'1. TOTAL NG% by machine', 'ms.s1sub':'= (pure NG + warm shots) / input · worst first · right column is cumulative share',
+  'ms.s1':'1. TOTAL NG% by machine', 'ms.s1sub':'= (pure NG + warm shots) / input · each bar is split into warm(STD/Excess) and pure NG · grey figure is the cumulative share',
   'ms.s2':'2. Loss mix of the worst 3 machines', 'ms.s2sub':'warm shots (STD/Excess) and defect types as 100%',
   'ms.s3':'3. Machine x PART', 'ms.s3sub':'same layout as the PPT Measure table',
   'ms.s4':'4. Warm shots per heat-up, by model', 'ms.s4sub':'independent of lot length — the die-specific figure',
   'ms.eq':'Machine', 'ms.part':'PART NAME', 'ms.model':'Model',
   'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
   'ms.events':'Heat-ups', 'ms.warmsum':'Warm total', 'ms.perevent':'Per heat-up', 'ms.excshare':'Excess share',
-  'ms.etc':'Other', 'ms.unknown':'(unspecified)', 'ms.cum':'cum.', 'ms.lossword':'loss',
+  'ms.etc':'Other', 'ms.unknown':'(unspecified)', 'ms.cum':'cum.', 'ms.lossword':'loss', 'ms.pureng':'Pure NG',
   'ms.lossOf':'{n} loss · {p}% of input',
   'ms.nodata':'No data to aggregate for this week.',
   'ms.nomodel':'Could not load the Q_Model detail tab — check that it is published to the web.',
@@ -3963,6 +3974,7 @@ const MS_COL = {
   std:'#f5a623',            // Warm Shot Standard — 기존 화면의 웜샷 색과 통일
   exc:'#d95926',            // Warm Shot Excess  — 초과분은 더 뜨겁게
   ng:['#2a78d6','#5598e7','#86b6ef','#b7d3f6','#cde2fb'],   // 불량유형 (파랑 단계)
+  ngbar:'#4a6fa5',          // 막대에서 '순수 NG' 한 덩어리
   etc:'#bdbdbd'
 };
 
@@ -4024,25 +4036,43 @@ function qrMeasureAgg(week){
            pairs:Object.values(pairs) };
 }
 
-/* ---------- 파레토 : 설비별 TOTAL NG% (세로 막대) ---------- */
+/* ---------- 파레토 : 설비별 TOTAL NG% (웜샷/불량 누적 세로막대) ----------
+   막대 높이는 TOTAL NG%(= 순수NG + 웜샷 ÷ 투입수량)이고, 그 안을
+   Warm(STD) → Warm(Excess) → 순수NG 순으로 아래에서부터 쌓는다.
+   웜샷을 바닥(공통 기준선)에 두어야 설비끼리 웜샷 비중을 눈으로 비교할 수 있다. */
 function msParetoHtml(eqs){
   const list = eqs.slice().sort((a,b)=>b.rate-a.rate).filter(x=>x.prod>0);
   if (!list.length) return '<div class="mnone">' + t('ms.nodata') + '</div>';
   const maxR = list[0].rate || 1;
   const sumNg = list.reduce((s,x)=>s+x.totalNg,0) || 1;
+  const legend = '<div class="vlegend">' +
+    '<span><i style="background:' + MS_COL.std + '"></i>' + t('ms.wstd') + '</span>' +
+    '<span><i style="background:' + MS_COL.exc + '"></i>' + t('ms.wexc') + '</span>' +
+    '<span><i style="background:' + MS_COL.ngbar + '"></i>' + t('ms.pureng') + '</span></div>';
   let cum = 0;
-  return '<div class="vbars">' + list.map((x,i)=>{
+  const bars = list.map((x,i)=>{
     cum += x.totalNg;
     const top = i < 3;
     const h = Math.max(2, x.rate/maxR*100);
-    return '<div class="vb' + (top?' top':'') + '" title="' + x.eq + ' · ' + x.rate.toFixed(2) +
-        '% · ' + t('ms.cum') + ' ' + (cum/sumNg*100).toFixed(0) + '%">' +
+    const tn = x.totalNg || 1;
+    /* 막대 안의 세 조각은 TOTAL NG 대비 비율이다 */
+    const seg = (v, c) => v > 0 ? '<div class="vs" style="height:' + (v/tn*100) + '%;background:' + c + '"></div>' : '';
+    const pctOf = v => (v/tn*100).toFixed(0);
+    const tip = x.eq + ' · TOTAL NG ' + x.rate.toFixed(2) + '%'
+      + '\n' + t('ms.wstd') + ' ' + x.std.toLocaleString() + ' (' + pctOf(x.std) + '%)'
+      + '\n' + t('ms.wexc') + ' ' + x.exc.toLocaleString() + ' (' + pctOf(x.exc) + '%)'
+      + '\n' + t('ms.pureng') + ' ' + x.ng.toLocaleString() + ' (' + pctOf(x.ng) + '%)'
+      + '\n' + t('ms.cum') + ' ' + (cum/sumNg*100).toFixed(0) + '%';
+    return '<div class="vb' + (top?' top':'') + '" title="' + tip + '">' +
       '<div class="vv">' + x.rate.toFixed(2) + '%</div>' +
-      '<div class="vt"><div class="vf" style="height:' + h + '%;background:' +
-        (top?'#e07a5f':'#4a6fa5') + '"></div></div>' +
+      '<div class="vt"><div class="vf" style="height:' + h + '%">' +
+        /* column-reverse 라 먼저 쓴 것이 아래로 간다 */
+        seg(x.std, MS_COL.std) + seg(x.exc, MS_COL.exc) + seg(x.ng, MS_COL.ngbar) +
+      '</div></div>' +
       '<div class="vl"' + (top?(' data-rk="'+(i+1)+'"'):'') + '>' + x.eq + '</div>' +
       '<div class="vc">' + (cum/sumNg*100).toFixed(0) + '%</div></div>';
-  }).join('') + '</div>';
+  }).join('');
+  return legend + '<div class="vbars">' + bars + '</div>';
 }
 
 /* ---------- 구성 : 워스트 3 설비의 로스 구성 (도넛) ----------
