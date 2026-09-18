@@ -200,6 +200,56 @@
   .qr-worst .wfix::before{content:'개선 ';font-weight:800;color:#2e7d32;font-size:10px;}
   .qr-worst .wnone{font-size:11.5px;color:#8a949e;padding:4px 0;}
 
+  /* ===== Measure — 설비·모델별 웜샷/불량 구성 ===== */
+  .qr-measure{border:1.5px solid #d7dde3;border-radius:3px;margin-bottom:16px;overflow:hidden;}
+  .qr-measure .mh{background:#12233f;color:#fff;font-size:12px;font-weight:800;padding:6px 12px;
+    letter-spacing:.03em;display:flex;justify-content:space-between;align-items:center;}
+  .qr-measure .mh .sub{font-size:10.5px;font-weight:500;opacity:.85;}
+  .qr-measure .msec{border-top:1px solid #e6eaef;padding:10px 12px;}
+  .qr-measure .mcat{font-size:11px;font-weight:800;color:#12233f;margin-bottom:8px;letter-spacing:.03em;}
+  .qr-measure .mcat span{font-weight:500;color:#8a949e;margin-left:6px;letter-spacing:0;}
+  .qr-measure .mnone{font-size:11.5px;color:#8a949e;padding:6px 0;}
+
+  /* 파레토 — 가로 막대 */
+  .pareto{display:grid;grid-template-columns:52px 1fr 54px 46px;gap:6px;align-items:center;
+    font-size:11px;padding:2px 0;font-variant-numeric:tabular-nums;}
+  .pareto .pl{font-weight:700;color:#243a5e;}
+  .pareto .ptrack{height:11px;background:#eef2f7;border-radius:2px;overflow:hidden;}
+  .pareto .pfill{height:100%;border-radius:0 3px 3px 0;}
+  .pareto .pv{text-align:right;font-weight:700;}
+  .pareto .pc{text-align:right;color:#8a949e;font-size:10px;}
+  .pareto.top .pl{color:#c62828;}
+  .pareto.top .pl::before{content:attr(data-rk);display:inline-block;width:13px;height:13px;
+    line-height:13px;text-align:center;background:#d03b3b;color:#fff;border-radius:2px;
+    font-size:9px;margin-right:4px;vertical-align:1px;}
+
+  /* 구성 — 100% 가로 누적막대 */
+  .comp{margin-bottom:12px;}
+  .comp:last-child{margin-bottom:0;}
+  .comp .ct{font-size:11.5px;font-weight:800;color:#243a5e;margin-bottom:4px;}
+  .comp .ct em{font-style:normal;font-weight:600;color:#8a949e;font-size:10.5px;margin-left:6px;}
+  .comp .cbar{display:flex;height:20px;border-radius:2px;overflow:hidden;background:#eef2f7;}
+  .comp .cseg{position:relative;font-size:9.5px;color:#fff;font-weight:700;line-height:20px;
+    text-align:center;overflow:hidden;white-space:nowrap;}
+  .comp .cleg{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:5px;font-size:10.5px;color:#4a545e;}
+  .comp .cleg span{display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;}
+  .comp .cleg i{width:9px;height:9px;border-radius:2px;flex:0 0 auto;}
+
+  table.mtbl{width:100%;border-collapse:collapse;font-size:11px;}
+  table.mtbl th,table.mtbl td{padding:3px 5px;border-bottom:1px solid #eef1f4;text-align:right;white-space:nowrap;}
+  table.mtbl th{background:#eef1f5;color:#243a5e;font-size:10px;font-weight:800;
+    border-bottom:1.5px solid #8c98a6;position:sticky;top:0;}
+  table.mtbl td.l,table.mtbl th.l{text-align:left;}
+  table.mtbl td.l{font-weight:700;color:#243a5e;}
+  table.mtbl td.m{font-weight:500;color:#4a545e;text-align:left;}
+  table.mtbl td{font-variant-numeric:tabular-nums;}
+  table.mtbl tbody tr:hover{background:#f7f9fc;}
+  table.mtbl tr.eqfirst td{border-top:1px solid #c9d3de;}
+  table.mtbl tr.tot td{font-weight:800;border-top:2px solid #12233f;background:#fff;}
+  .mwrap{overflow-x:auto;max-height:340px;overflow-y:auto;}
+  .mgrid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media screen and (max-width:1100px){ .mgrid2{grid-template-columns:1fr;} }
+
   .qr-comment{border:1px solid #dde3e9;border-left:4px solid #1e3c72;border-radius:4px;
     background:#f9fbfd;padding:11px 14px;font-size:12.5px;line-height:1.85;color:#2c3742;margin-bottom:14px;}
   .qr-comment b{color:#12233f;}
@@ -236,6 +286,17 @@
     .qr-worst{break-inside:avoid;}
     .qr-worst .witem{grid-template-columns:110px 1fr;font-size:10px;}
     .qr-worst .wsec{padding:6px 10px;}
+    /* Measure — 인쇄에서는 표 스크롤을 풀고 전체를 찍는다 */
+    .qr-measure{break-inside:auto;}
+    .qr-measure .msec{break-inside:avoid;padding:7px 10px;}
+    .mwrap{max-height:none;overflow:visible;}
+    table.mtbl{font-size:8.2px;}
+    table.mtbl th{font-size:7.6px;padding:2px 3px;}
+    table.mtbl td{padding:2px 3px;}
+    .pareto{font-size:9px;grid-template-columns:46px 1fr 46px 38px;}
+    .comp .cbar{height:16px;} .comp .cseg{line-height:16px;font-size:8px;}
+    .comp .cleg{font-size:8.5px;gap:3px 9px;} .comp .ct{font-size:10px;}
+    .mgrid2{gap:10px;}
     .qr-box .bt{font-size:11px;padding:3px;}
     #chart-qr-trend{height:190px;}
   }
@@ -434,6 +495,8 @@
       </div>
 
       <div class="qr-worst" id="qrWorst"></div>
+
+      <div class="qr-measure" id="qrMeasure"></div>
 
       <div class="qr-comment" id="qrComment"></div>
 
@@ -2917,6 +2980,20 @@ Object.assign(I18N.ko, {
   'qr.h.wsplit':'STD / Excess',
   'qr.h.ret':'RET QTY', 'qr.h.ng':'NG QTY',
   'qr.h.prev':'전주', 'qr.h.cur':'금주', 'qr.h.delta':'등락 %p',
+  'ms.title':'Measure — 설비 · 모델별 웜샷 / 불량 구성',
+  'ms.basis':'{b} 기준 · Model상세 {n}행',
+  'ms.s1':'① 설비별 TOTAL NG%', 'ms.s1sub':'= (순수NG + 웜샷) ÷ 투입수량 · 높은 순 · 오른쪽은 누적비중',
+  'ms.s2':'② 워스트 3 설비 로스 구성', 'ms.s2sub':'웜샷(STD/Excess)과 불량유형을 100%로 나눠 본 것',
+  'ms.s3':'③ 설비 × PART 별 실적', 'ms.s3sub':'PPT Measure 표와 동일 구성',
+  'ms.s4':'④ 모델별 웜샷 원단위', 'ms.s4sub':'승온 1회당 웜샷 — 로트 길이에 영향받지 않는 금형 고유 지표',
+  'ms.eq':'설비', 'ms.part':'PART NAME', 'ms.model':'Model',
+  'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
+  'ms.events':'승온 건수', 'ms.warmsum':'웜샷 계', 'ms.perevent':'1회당 웜샷', 'ms.excshare':'Excess 비중',
+  'ms.etc':'기타', 'ms.unknown':'(미지정)',
+  'ms.lossOf':'로스 {n}건 · 투입 대비 {p}%',
+  'ms.nodata':'해당 주차에 집계할 데이터가 없습니다.',
+  'ms.nomodel':'Q_Model상세 데이터를 불러오지 못했습니다 — 해당 탭이 웹에 게시되어 있는지 확인해주세요.',
+  'ms.needsplit':'Warm(STD) / Warm(Excess) 가 입력된 주차부터 표시됩니다.',
   'qr.cmp.lb':'표 비교 주차', 'qr.cmp.reset':'보고 주차로 되돌리기',
   'qr.w.title':'워스트 선정 · 원인 및 개선 검토', 'qr.w.basis':'{b} 기준 · 전주 {a} 대비',
   'qr.w.worst3':'워스트 3', 'qr.w.none':'해당 항목에 워스트 설비가 없습니다.',
@@ -2977,6 +3054,20 @@ Object.assign(I18N.th, {
   'qr.h.wsplit':'STD / Excess',
   'qr.h.ret':'RET QTY', 'qr.h.ng':'NG QTY',
   'qr.h.prev':'สัปดาห์ก่อน', 'qr.h.cur':'สัปดาห์นี้', 'qr.h.delta':'เปลี่ยนแปลง %p',
+  'ms.title':'Measure — สัดส่วนวอร์มช็อต / ของเสีย ตามเครื่องจักรและรุ่น',
+  'ms.basis':'เกณฑ์ {b} · {n} แถวจาก Model detail',
+  'ms.s1':'1. TOTAL NG% ตามเครื่องจักร', 'ms.s1sub':'= (NG + วอร์มช็อต) / ที่ป้อนเข้า · แย่ก่อน · คอลัมน์ขวาคือสัดส่วนสะสม',
+  'ms.s2':'2. สัดส่วนความสูญเสีย 3 เครื่องที่แย่ที่สุด', 'ms.s2sub':'วอร์มช็อต (STD/Excess) และประเภทของเสีย รวมเป็น 100%',
+  'ms.s3':'3. เครื่องจักร x PART', 'ms.s3sub':'รูปแบบเดียวกับตาราง Measure ใน PPT',
+  'ms.s4':'4. วอร์มช็อตต่อการอุ่นแม่พิมพ์ 1 ครั้ง ตามรุ่น', 'ms.s4sub':'ไม่ขึ้นกับขนาดล็อต — เป็นค่าเฉพาะของแม่พิมพ์',
+  'ms.eq':'เครื่องจักร', 'ms.part':'PART NAME', 'ms.model':'รุ่น',
+  'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
+  'ms.events':'จำนวนครั้งอุ่น', 'ms.warmsum':'วอร์มช็อตรวม', 'ms.perevent':'ต่อการอุ่น 1 ครั้ง', 'ms.excshare':'สัดส่วน Excess',
+  'ms.etc':'อื่นๆ', 'ms.unknown':'(ไม่ระบุ)',
+  'ms.lossOf':'สูญเสีย {n} · {p}% ของที่ป้อนเข้า',
+  'ms.nodata':'ไม่มีข้อมูลสำหรับสัปดาห์นี้',
+  'ms.nomodel':'โหลดแท็บ Q_Model detail ไม่ได้ — กรุณาตรวจสอบว่าเผยแพร่บนเว็บแล้ว',
+  'ms.needsplit':'จะแสดงตั้งแต่สัปดาห์ที่กรอก Warm(STD) / Warm(Excess) แล้ว',
   'qr.cmp.lb':'สัปดาห์ที่เปรียบเทียบ', 'qr.cmp.reset':'กลับเป็นสัปดาห์ที่รายงาน',
   'qr.w.title':'เครื่องที่แย่ที่สุด · สาเหตุและแนวทางแก้ไข', 'qr.w.basis':'เกณฑ์ {b} · เทียบ {a}',
   'qr.w.worst3':'3 อันดับแย่ที่สุด', 'qr.w.none':'ไม่มีเครื่องที่เข้าเกณฑ์',
@@ -3036,6 +3127,20 @@ Object.assign(I18N.en, {
   'qr.h.wsplit':'STD / Excess',
   'qr.h.ret':'RET QTY', 'qr.h.ng':'NG QTY',
   'qr.h.prev':'Prev wk', 'qr.h.cur':'This wk', 'qr.h.delta':'Change %p',
+  'ms.title':'Measure — warm shot / defect mix by machine and model',
+  'ms.basis':'{b} basis · {n} rows from Model detail',
+  'ms.s1':'1. TOTAL NG% by machine', 'ms.s1sub':'= (pure NG + warm shots) / input · worst first · right column is cumulative share',
+  'ms.s2':'2. Loss mix of the worst 3 machines', 'ms.s2sub':'warm shots (STD/Excess) and defect types as 100%',
+  'ms.s3':'3. Machine x PART', 'ms.s3sub':'same layout as the PPT Measure table',
+  'ms.s4':'4. Warm shots per heat-up, by model', 'ms.s4sub':'independent of lot length — the die-specific figure',
+  'ms.eq':'Machine', 'ms.part':'PART NAME', 'ms.model':'Model',
+  'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
+  'ms.events':'Heat-ups', 'ms.warmsum':'Warm total', 'ms.perevent':'Per heat-up', 'ms.excshare':'Excess share',
+  'ms.etc':'Other', 'ms.unknown':'(unspecified)',
+  'ms.lossOf':'{n} loss · {p}% of input',
+  'ms.nodata':'No data to aggregate for this week.',
+  'ms.nomodel':'Could not load the Q_Model detail tab — check that it is published to the web.',
+  'ms.needsplit':'Shown from the weeks where Warm(STD) / Warm(Excess) are entered.',
   'qr.cmp.lb':'Compare weeks', 'qr.cmp.reset':'Back to report week',
   'qr.w.title':'Worst machines · cause and countermeasure', 'qr.w.basis':'{b} basis · vs {a}',
   'qr.w.worst3':'worst 3', 'qr.w.none':'No machine flagged for this item.',
@@ -3607,6 +3712,8 @@ function qrRenderTables(){
       { prevList:pList });
   const wEl = document.getElementById('qrWorst');
   if (wEl) wEl.innerHTML = qrWorstHtml(b, pa);
+  const mEl = document.getElementById('qrMeasure');
+  if (mEl) mEl.innerHTML = qrMeasureHtml(QR_CMP.b);
 }
 
 /* 컨트롤 이벤트 — 표만 다시 그리므로 보고서 전체를 재계산하지 않는다 */
@@ -3819,6 +3926,209 @@ function qrWorstHtml(b, pa){
     sec('WARM SHOT ' + t('qr.w.worst3'), wsItems) +
     sec('NG QTY ' + t('qr.w.worst3'), ngItems) +
     sec('TOTAL NG ' + t('qr.w.worst3'), totItems);
+}
+
+
+/* =========================================================================
+   10-c. Measure — 설비 · 모델별 웜샷(STD/Excess) / 불량 구성
+        사내 PPT 'Measure' 페이지(설비별 NG% 파레토 + 설비×PART 표 + 워스트 구성)를
+        대시보드로 옮기고, 웜샷을 Standard / Excess 로 나눠 보이게 한 것.
+        원천은 Q_Model상세(RAW_MODEL) — 모델명과 Warm 분할이 같이 있는 유일한 탭이다.
+
+        지표 정의
+          · TOTAL NG%   = (순수NG + 웜샷) ÷ 투입수량   ← PPT 의 'Castings NG%' 와 동일
+          · 승온 건수    = 웜샷이 1개 이상 발생한 행 수 (= 금형 승온 이벤트 근사)
+          · 1회당 웜샷   = 웜샷 합계 ÷ 승온 건수
+            (웜샷은 생산량이 아니라 '재가동 횟수'에 비례하므로, 로트 길이에 휘둘리지
+             않으려면 웜샷률이 아니라 이 원단위로 비교해야 한다)
+   ========================================================================= */
+const MS_COL = {
+  std:'#f5a623',            // Warm Shot Standard — 기존 화면의 웜샷 색과 통일
+  exc:'#d95926',            // Warm Shot Excess  — 초과분은 더 뜨겁게
+  ng:['#2a78d6','#5598e7','#86b6ef','#b7d3f6','#cde2fb'],   // 불량유형 (파랑 단계)
+  etc:'#bdbdbd'
+};
+
+function qrModelRows(week){
+  const sc = qrScope();
+  const rg = qrWeekRange(week);
+  const ok = r => !(sc === 'regular' && r['구분'] !== '정규')
+              && !QR_EXCLUDE_EQ.includes(String(r['설비명']||'').trim());
+  const src = RAW_MODEL || [];
+  let rows = [];
+  if (rg) rows = src.filter(r=>{
+    const d = String(r['일자']||'').trim();
+    return d >= rg.start && d <= rg.end && ok(r);
+  });
+  if (!rows.length) rows = src.filter(r => r['주차'] === week && !isOutsideWeekFix(r) && ok(r));
+  return rows;
+}
+
+function qrMeasureAgg(week){
+  const rows = qrModelRows(week);
+  const mk = () => ({ prod:0, good:0, ng:0, std:0, exc:0, events:0, dmap:{} });
+  const byEq = {}, byModel = {}, pairs = {};
+  let hasSplit = false;
+  rows.forEach(r=>{
+    const eq = String(r['설비명']||'').trim();
+    const md = String(r['Model']||'').trim() || t('ms.unknown');
+    const tot = num(r['Qty_Total']); if (!eq || tot <= 0) return;
+    const good = num(r['Qty_Good']);
+    const cs = cellNumOf(r, WS_STD_KEYS), ce = cellNumOf(r, WS_EXC_KEYS);
+    if (cs.has || ce.has) hasSplit = true;
+    const warm = cs.val + ce.val;
+    /* 불량수량 열이 '순수 NG' 로 바뀐 뒤 기준. 값이 비면 세부 불량합계로 보완한다. */
+    let ng = num(r['불량수량']);
+    const ds = defectSumOf(r);
+    if (!ng && ds) ng = ds;
+
+    const key = eq + ' >> ' + md;
+    byEq[eq] = byEq[eq] || mk();
+    byModel[md] = byModel[md] || mk();
+    pairs[key] = pairs[key] || mk();
+    [byEq[eq], byModel[md], pairs[key]].forEach(o=>{
+      o.prod += tot; o.good += good; o.ng += ng; o.std += cs.val; o.exc += ce.val;
+      if (warm > 0) o.events++;
+      DEFECT_COLS.forEach(c=>{ const v = num(r[c]); if (v) o.dmap[c] = (o.dmap[c]||0) + v; });
+    });
+    pairs[key].eq = eq; pairs[key].md = md;
+  });
+  const fin = o => Object.assign(o, {
+    warm: o.std + o.exc,
+    totalNg: o.ng + o.std + o.exc,
+    rate: o.prod > 0 ? (o.ng + o.std + o.exc)/o.prod*100 : 0,
+    perEvent: o.events > 0 ? (o.std + o.exc)/o.events : null,
+    excShare: (o.std + o.exc) > 0 ? o.exc/(o.std + o.exc)*100 : null
+  });
+  Object.values(byEq).forEach(fin); Object.values(byModel).forEach(fin); Object.values(pairs).forEach(fin);
+  return { rows:rows.length, hasSplit,
+           eqs:Object.keys(byEq).map(k=>Object.assign({eq:k}, byEq[k])),
+           models:Object.keys(byModel).map(k=>Object.assign({md:k}, byModel[k])),
+           pairs:Object.values(pairs) };
+}
+
+/* ---------- 파레토 : 설비별 TOTAL NG% ---------- */
+function msParetoHtml(eqs){
+  const list = eqs.slice().sort((a,b)=>b.rate-a.rate).filter(x=>x.prod>0);
+  if (!list.length) return '<div class="mnone">' + t('ms.nodata') + '</div>';
+  const maxR = list[0].rate || 1;
+  const sumNg = list.reduce((s,x)=>s+x.totalNg,0) || 1;
+  let cum = 0;
+  return list.map((x,i)=>{
+    cum += x.totalNg;
+    const top = i < 3;
+    return '<div class="pareto' + (top?' top':'') + '">' +
+      '<div class="pl"' + (top?(' data-rk="'+(i+1)+'"'):'') + '>' + x.eq + '</div>' +
+      '<div class="ptrack"><div class="pfill" style="width:' + Math.max(1, x.rate/maxR*100) +
+        '%;background:' + (top?'#e07a5f':'#4a6fa5') + '"></div></div>' +
+      '<div class="pv" style="color:' + (top?'#c62828':'#243a5e') + '">' + x.rate.toFixed(2) + '%</div>' +
+      '<div class="pc">' + (cum/sumNg*100).toFixed(0) + '%</div></div>';
+  }).join('');
+}
+
+/* ---------- 구성 : 워스트 3 설비의 로스 구성(100% 누적) ---------- */
+function msCompHtml(eqs, hasSplit){
+  const list = eqs.slice().sort((a,b)=>b.rate-a.rate).filter(x=>x.totalNg>0).slice(0,3);
+  if (!list.length) return '<div class="mnone">' + t('ms.nodata') + '</div>';
+  return list.map(x=>{
+    const segs = [];
+    if (x.std) segs.push({ k:t('ms.wstd'), v:x.std, c:MS_COL.std });
+    if (x.exc) segs.push({ k:t('ms.wexc'), v:x.exc, c:MS_COL.exc });
+    const ds = Object.keys(x.dmap).filter(k=>x.dmap[k]>0).map(k=>({k:k, v:x.dmap[k]}))
+                .sort((a,b)=>b.v-a.v);
+    ds.slice(0,5).forEach((d,i)=> segs.push({ k:d.k, v:d.v, c:MS_COL.ng[i] }));
+    const rest = ds.slice(5).reduce((s,d)=>s+d.v,0);
+    /* 세부 불량유형 합이 순수NG 에 못 미치면 나머지를 '기타'로 묶어 합을 맞춘다 */
+    const named = ds.reduce((s,d)=>s+d.v,0);
+    const etc = rest + Math.max(0, x.ng - named);
+    if (etc > 0) segs.push({ k:t('ms.etc'), v:etc, c:MS_COL.etc });
+    const tot = segs.reduce((s,g)=>s+g.v,0) || 1;
+    return '<div class="comp"><div class="ct">' + x.eq + '<em>' +
+      t('ms.lossOf', { n:tot.toLocaleString(), p:x.rate.toFixed(2) }) + '</em></div>' +
+      '<div class="cbar">' + segs.map(g=>{
+        const w = g.v/tot*100;
+        return '<div class="cseg" style="width:' + w + '%;background:' + g.c + '" title="' +
+          g.k + ' ' + g.v.toLocaleString() + ' (' + w.toFixed(1) + '%)">' +
+          (w>=9 ? w.toFixed(0)+'%' : '') + '</div>';
+      }).join('') + '</div>' +
+      '<div class="cleg">' + segs.map(g=>
+        '<span><i style="background:' + g.c + '"></i>' + g.k + ' ' + g.v.toLocaleString() +
+        ' (' + (g.v/tot*100).toFixed(0) + '%)</span>').join('') + '</div></div>';
+  }).join('');
+}
+
+/* ---------- 표 : 설비 × PART(Model) ---------- */
+function msPairTableHtml(pairs, hasSplit){
+  const list = pairs.filter(x=>x.prod>0)
+    .sort((a,b)=> a.eq===b.eq ? b.rate-a.rate : qrEqNum(a.eq)-qrEqNum(b.eq));
+  if (!list.length) return '<div class="mnone">' + t('ms.nodata') + '</div>';
+  const sum = k => list.reduce((s,x)=>s+x[k],0);
+  let prevEq = null;
+  const body = list.map(x=>{
+    const first = x.eq !== prevEq; prevEq = x.eq;
+    const col = x.rate>=10 ? '#c62828' : (x.rate>=5 ? '#b26a00' : '#243a5e');
+    return '<tr' + (first?' class="eqfirst"':'') + '>' +
+      '<td class="l">' + (first?x.eq:'') + '</td><td class="m">' + x.md + '</td>' +
+      '<td>' + x.prod.toLocaleString() + '</td><td>' + x.good.toLocaleString() + '</td>' +
+      '<td>' + x.ng.toLocaleString() + '</td>' +
+      '<td>' + (hasSplit?x.std.toLocaleString():'–') + '</td>' +
+      '<td>' + (hasSplit?x.exc.toLocaleString():'–') + '</td>' +
+      '<td style="font-weight:700;color:' + col + '">' + x.rate.toFixed(2) + '%</td></tr>';
+  }).join('');
+  const tp = sum('prod') || 1;
+  return '<div class="mwrap"><table class="mtbl"><thead><tr>' +
+    '<th class="l">' + t('ms.eq') + '</th><th class="l">' + t('ms.part') + '</th>' +
+    '<th>PROD EA</th><th>OK EA</th><th>NG EA</th>' +
+    '<th>' + t('ms.wstd') + '</th><th>' + t('ms.wexc') + '</th><th>TOTAL NG%</th>' +
+    '</tr></thead><tbody>' + body +
+    '<tr class="tot"><td class="l">TOTAL</td><td></td>' +
+    '<td>' + sum('prod').toLocaleString() + '</td><td>' + sum('good').toLocaleString() + '</td>' +
+    '<td>' + sum('ng').toLocaleString() + '</td>' +
+    '<td>' + (hasSplit?sum('std').toLocaleString():'–') + '</td>' +
+    '<td>' + (hasSplit?sum('exc').toLocaleString():'–') + '</td>' +
+    '<td>' + (sum('totalNg')/tp*100).toFixed(2) + '%</td></tr></tbody></table></div>';
+}
+
+/* ---------- 표 : 모델별 웜샷 원단위 ---------- */
+function msModelTableHtml(models, hasSplit){
+  if (!hasSplit) return '<div class="mnone">' + t('ms.needsplit') + '</div>';
+  const list = models.filter(x=>x.warm>0 || x.events>0)
+                     .sort((a,b)=>(b.perEvent||0)-(a.perEvent||0));
+  if (!list.length) return '<div class="mnone">' + t('ms.nodata') + '</div>';
+  const body = list.map((x,i)=>{
+    const sh = x.excShare;
+    const col = (sh||0)>=50 ? '#c62828' : ((sh||0)>=25 ? '#b26a00' : '#0ca30c');
+    return '<tr><td class="l">' + (i<3?'<span style="color:#c62828">▲</span> ':'') + x.md + '</td>' +
+      '<td>' + x.prod.toLocaleString() + '</td>' +
+      '<td>' + x.events.toLocaleString() + '</td>' +
+      '<td>' + x.warm.toLocaleString() + '</td>' +
+      '<td style="font-weight:700">' + (x.perEvent==null?'–':x.perEvent.toFixed(1)) + '</td>' +
+      '<td>' + x.std.toLocaleString() + '</td><td>' + x.exc.toLocaleString() + '</td>' +
+      '<td style="font-weight:700;color:' + col + '">' + (sh==null?'–':sh.toFixed(0)+'%') + '</td></tr>';
+  }).join('');
+  return '<div class="mwrap"><table class="mtbl"><thead><tr>' +
+    '<th class="l">' + t('ms.model') + '</th><th>PROD EA</th>' +
+    '<th>' + t('ms.events') + '</th><th>' + t('ms.warmsum') + '</th><th>' + t('ms.perevent') + '</th>' +
+    '<th>' + t('ms.wstd') + '</th><th>' + t('ms.wexc') + '</th><th>' + t('ms.excshare') + '</th>' +
+    '</tr></thead><tbody>' + body + '</tbody></table></div>';
+}
+
+function qrMeasureHtml(week){
+  const a = qrMeasureAgg(week);
+  if (!a.rows) return '<div class="mh"><span>' + t('ms.title') + '</span></div>' +
+    '<div class="msec"><div class="mnone">' + t('ms.nomodel') + '</div></div>';
+  return '<div class="mh"><span>' + t('ms.title') + '</span><span class="sub">' +
+      t('ms.basis', { b:qrWkLabel(week), n:a.rows.toLocaleString() }) + '</span></div>' +
+    '<div class="msec"><div class="mcat">' + t('ms.s1') + '<span>' + t('ms.s1sub') + '</span></div>' +
+      msParetoHtml(a.eqs) + '</div>' +
+    '<div class="msec"><div class="mcat">' + t('ms.s2') + '<span>' + t('ms.s2sub') + '</span></div>' +
+      msCompHtml(a.eqs, a.hasSplit) + '</div>' +
+    '<div class="msec"><div class="mgrid2">' +
+      '<div><div class="mcat">' + t('ms.s3') + '<span>' + t('ms.s3sub') + '</span></div>' +
+        msPairTableHtml(a.pairs, a.hasSplit) + '</div>' +
+      '<div><div class="mcat">' + t('ms.s4') + '<span>' + t('ms.s4sub') + '</span></div>' +
+        msModelTableHtml(a.models, a.hasSplit) + '</div>' +
+    '</div></div>';
 }
 
 /* ---------- KPI ---------- */
