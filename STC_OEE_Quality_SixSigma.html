@@ -106,6 +106,9 @@
   #viewNav button.active{background:#1e3c72;border-color:#1e3c72;color:#fff;}
   #qrWrap{display:none;}
   .qr-sheet{background:#fff;border:1px solid #d7dde3;border-radius:6px;padding:16px 20px 20px;}
+  /* 주간 품질보고는 표 3개를 나란히 놓는 넓은 화면이라 본문 폭을 더 준다
+     (qrSetView('report') 가 body 에 qr-view 를 붙인다) */
+  body.qr-view .container{max-width:1780px;}
   .qr-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
     border-bottom:2.5px solid #1e3c72;padding-bottom:7px;margin-bottom:14px;}
   .qr-head h2{margin:0;font-size:18px;font-weight:800;color:#12233f;letter-spacing:-.01em;}
@@ -134,7 +137,10 @@
   .qr-kpi .s{font-size:10.5px;color:#8a949e;margin-top:1px;}
   .qr-kpi.ok{border-top-color:#43a047;} .qr-kpi.bad{border-top-color:#e53935;} .qr-kpi.warn{border-top-color:#fb8c00;}
 
-  .qr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+  /* 3개 표는 항상 같은 폭이다. 다만 WARM SHOT 은 열이 하나 더 많아, 화면이 좁으면
+     같은 폭 안에 다 들어가지 않는다 → 1500px 미만에서는 세로로 쌓아 full-width 로 준다
+     (이때도 셋의 폭은 동일하고, 어느 쪽이든 열이 잘리지 않는다). */
+  .qr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
   .qr-cmpbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 8px;
     padding:7px 10px;background:#f4f7fa;border:1px solid #dbe3ec;border-radius:4px;}
   .qr-cmpbar .lb{font-size:11.5px;font-weight:700;color:#3d4a5a;}
@@ -145,20 +151,22 @@
     font-family:inherit;font-size:11.5px;color:#4a545e;cursor:pointer;}
   .qr-cmpbar button:hover{border-color:#1e3c72;color:#1e3c72;}
   .qr-cmpbar .hint{font-size:11px;color:#b26a00;font-weight:600;}
-  .qr-box{border:1.5px solid #8c98a6;border-radius:2px;overflow:hidden;}
+  /* overflow:hidden 이면 폭이 모자랄 때 맨 끝 열(등락)이 말없이 잘린다 → 스크롤로 바꿔 데이터 손실을 막는다 */
+  .qr-box{border:1.5px solid #8c98a6;border-radius:2px;overflow-x:auto;}
+  .qr-box td .sl{color:#aeb6bf;margin:0 3px;}
   .qr-box .bt{text-align:center;font-size:13px;font-weight:800;color:#12233f;padding:5px;
     background:#eef1f5;border-bottom:1.5px solid #8c98a6;letter-spacing:.03em;}
-  .qr-box table{width:100%;border-collapse:collapse;font-size:11px;}
-  .qr-box th{background:#1e3c72;color:#fff;font-size:10px;font-weight:700;padding:5px 4px;
+  .qr-box table{width:100%;border-collapse:collapse;font-size:10px;}
+  .qr-box th{background:#1e3c72;color:#fff;font-size:9.5px;font-weight:700;padding:5px 3px;
     text-align:center;letter-spacing:.02em;white-space:nowrap;}
-  .qr-box td{padding:3px 5px;text-align:right;border-bottom:1px solid #eef1f4;white-space:nowrap;}
+  .qr-box td{padding:3px 3px;text-align:right;border-bottom:1px solid #eef1f4;white-space:nowrap;}
   .qr-box th{padding-left:3px;padding-right:3px;}
   .qr-box td.sub{color:#5b6773;}                         /* Warm(STD)/Warm(Excess) 분할 셀 */
   .qr-box td.dn{color:#0ca30c;font-weight:700;}          /* 등락: 개선(불량률 하락) */
   .qr-box td.up{color:#d03b3b;font-weight:700;}          /* 등락: 악화(불량률 상승) */
   .qr-box td.fl{color:#9aa3ad;}                          /* 등락: 변화 없음/전주 없음 */
   .qr-box tr.tot td.dn,.qr-box tr.tot td.up{font-weight:800;}
-  .qr-box td.l{text-align:left;font-weight:700;color:#243a5e;}
+  .qr-box td.l{text-align:left;font-weight:700;color:#243a5e;padding-left:5px;}
   .qr-box tbody tr:nth-child(even){background:#fafbfc;}
   .qr-box tr.zero td{color:#2e56a8;}
   .qr-box tr.tot td{background:#fff !important;font-weight:800;border-top:2px solid #1e3c72;
@@ -218,9 +226,10 @@
     /* 화면에서는 3개 표를 같은 폭으로 둔다. 다만 A4 가로 인쇄폭(≈1054px)에는
        8열짜리 WARM SHOT 까지 같은 폭으로 넣으면 글자를 5pt 이하로 줄여야 해서
        인쇄에서만 WARM SHOT 에 15% 를 더 준다(종이에서는 거의 구분되지 않는다). */
-    .qr-grid{gap:4px;grid-template-columns:1.2fr 1fr 1fr;}
-    .qr-box table{font-size:7.7px;table-layout:auto;}
-    .qr-box th{font-size:7px;padding:3px 1px;letter-spacing:0;}
+    .qr-grid{gap:3px;grid-template-columns:1.27fr 1fr 1fr;}
+    .qr-box table{font-size:7px;table-layout:auto;}
+    .qr-box td .sl{margin:0 1px;}
+    .qr-box th{font-size:6.5px;padding:3px 1px;letter-spacing:0;}
     .qr-box td{padding:2px 1px;}
     .qr-box td.l{padding-left:3px;}
     /* 3개 표를 인쇄에서도 같은 폭으로 두되, 8열짜리 WARM SHOT 이 잘리지 않게 여백만 조인다 */
@@ -230,7 +239,7 @@
     .qr-box .bt{font-size:11px;padding:3px;}
     #chart-qr-trend{height:190px;}
   }
-  @media(max-width:900px){
+  @media screen and (max-width:1700px){
     .qr-grid{grid-template-columns:1fr;}
     .qr-kpis{grid-template-columns:repeat(3,1fr);}
   }
@@ -2905,6 +2914,7 @@ Object.assign(I18N.ko, {
   'qr.note.ph':'이번 주 특이사항과 조치 내용을 입력하세요. 주차별로 저장됩니다.',
   'qr.saved':'저장됨', 'qr.total':'TOTAL',
   'qr.h.wstd':'Warm(STD)', 'qr.h.wexc':'Warm(Excess)', 'qr.h.ws':'W/S QTY',
+  'qr.h.wsplit':'STD / Excess',
   'qr.h.ret':'RET QTY', 'qr.h.ng':'NG QTY',
   'qr.h.prev':'전주', 'qr.h.cur':'금주', 'qr.h.delta':'등락 %p',
   'qr.cmp.lb':'표 비교 주차', 'qr.cmp.reset':'보고 주차로 되돌리기',
@@ -2964,6 +2974,7 @@ Object.assign(I18N.th, {
   'qr.note.ph':'กรอกหมายเหตุและการแก้ไขของสัปดาห์นี้ ระบบบันทึกแยกตามสัปดาห์',
   'qr.saved':'บันทึกแล้ว', 'qr.total':'รวม',
   'qr.h.wstd':'Warm(STD)', 'qr.h.wexc':'Warm(Excess)', 'qr.h.ws':'W/S QTY',
+  'qr.h.wsplit':'STD / Excess',
   'qr.h.ret':'RET QTY', 'qr.h.ng':'NG QTY',
   'qr.h.prev':'สัปดาห์ก่อน', 'qr.h.cur':'สัปดาห์นี้', 'qr.h.delta':'เปลี่ยนแปลง %p',
   'qr.cmp.lb':'สัปดาห์ที่เปรียบเทียบ', 'qr.cmp.reset':'กลับเป็นสัปดาห์ที่รายงาน',
@@ -3022,6 +3033,7 @@ Object.assign(I18N.en, {
   'qr.note.ph':'Enter this week\u2019s remarks and actions. Saved per week.',
   'qr.saved':'Saved', 'qr.total':'TOTAL',
   'qr.h.wstd':'Warm(STD)', 'qr.h.wexc':'Warm(Excess)', 'qr.h.ws':'W/S QTY',
+  'qr.h.wsplit':'STD / Excess',
   'qr.h.ret':'RET QTY', 'qr.h.ng':'NG QTY',
   'qr.h.prev':'Prev wk', 'qr.h.cur':'This wk', 'qr.h.delta':'Change %p',
   'qr.cmp.lb':'Compare weeks', 'qr.cmp.reset':'Back to report week',
@@ -3482,10 +3494,12 @@ function qrHeadHtml(qtyLabel, prevWk, curWk, split){
   const wk = w => w ? qrWkLabel(w) : '–';
   return '<tr>' +
     `<th>M/C No.</th><th>PROD QTY</th>` +
-    (split ? `<th>${t('qr.h.wstd')}</th><th>${t('qr.h.wexc')}</th>` : '') +
+    /* Warm(STD)/Warm(Excess) 는 한 칸에 'STD / Excess' 로 묶는다.
+       8열로 두면 6열짜리 표와 같은 폭에서 맨 끝 등락 열이 잘린다. */
+    (split ? `<th>${t('qr.h.wsplit')}</th>` : '') +
     `<th>${qtyLabel}</th>` +
-    `<th>${wk(prevWk)} <span style="font-weight:500;opacity:.85">${t('qr.h.prev')}</span></th>` +
     `<th>${wk(curWk)} <span style="font-weight:500;opacity:.85">${t('qr.h.cur')}</span></th>` +
+    `<th>${wk(prevWk)} <span style="font-weight:500;opacity:.85">${t('qr.h.prev')}</span></th>` +
     `<th>${t('qr.h.delta')}</th></tr>`;
 }
 
@@ -3496,7 +3510,7 @@ function qrDeltaCell(cur, prev, tot){
   if (Math.abs(d) < 0.005) return `<td class="fl">0.00</td>`;
   const cls = d < 0 ? 'dn' : 'up';
   const arrow = d < 0 ? '▼' : '▲';
-  return `<td class="${cls}">${arrow} ${(d>0?'+':'')}${d.toFixed(2)}</td>`;
+  return `<td class="${cls}">${arrow}${(d>0?'+':'')}${d.toFixed(2)}</td>`;
 }
 
 /* list      : 금주 설비별 집계 · key: 'ws' | 'ng' | 'totalNg'
@@ -3517,11 +3531,11 @@ function qrRowsHtml(list, key, totProd, totVal, opt){
     const cls = (r <= 0) ? ' class="zero"' : (i < 3 ? ` class="wst w${i+1}"` : '');
     return `<tr${cls}><td class="l">${x.eq}</td><td>${x.prod.toLocaleString()}</td>` +
       (split ? (hasSplit
-          ? `<td class="sub">${(x.wsStd||0).toLocaleString()}</td><td class="sub">${(x.wsExc||0).toLocaleString()}</td>`
-          : `<td class="sub">–</td><td class="sub">–</td>`) : '') +
+          ? `<td class="sub">${(x.wsStd||0).toLocaleString()}<span class="sl">/</span>${(x.wsExc||0).toLocaleString()}</td>`
+          : `<td class="sub">–</td>`) : '') +
       `<td>${x[key].toLocaleString()}</td>` +
-      `<td>${pr==null?'–':pr.toFixed(2)+'%'}</td>` +
       `<td>${r.toFixed(2)}%</td>` +
+      `<td>${pr==null?'–':pr.toFixed(2)+'%'}</td>` +
       qrDeltaCell(r, pr) + `</tr>`;
   };
   const body = nz.map(line).concat(zr.map(x=>line(x,99))).join('');
@@ -3537,11 +3551,11 @@ function qrRowsHtml(list, key, totProd, totVal, opt){
   const sumExc = list.reduce((s,x)=>s+(x.wsExc||0),0);
   return body +
     `<tr class="tot"><td class="l">${t('qr.total')}</td><td>${totProd.toLocaleString()}</td>` +
-    (split ? (hasSplit ? `<td>${sumStd.toLocaleString()}</td><td>${sumExc.toLocaleString()}</td>`
-                       : `<td>–</td><td>–</td>`) : '') +
+    (split ? (hasSplit ? `<td>${sumStd.toLocaleString()}<span class="sl">/</span>${sumExc.toLocaleString()}</td>`
+                       : `<td>–</td>`) : '') +
     `<td>${totVal.toLocaleString()}</td>` +
-    `<td>${prevPct==null?'–':prevPct.toFixed(2)+'%'}</td>` +
     `<td class="hl">${pctNum.toFixed(2)}%</td>` +
+    `<td>${prevPct==null?'–':prevPct.toFixed(2)+'%'}</td>` +
     qrDeltaCell(pctNum, prevPct, true) + `</tr>`;
 }
 
@@ -5117,6 +5131,8 @@ function navGo(id, skipRender){
   try { Store.set(NAV_KEY, id); } catch(e){}
   const isReport = (id === 'report');
   QR_VIEW = isReport ? 'report' : 'dash';
+  /* 주간 품질보고는 표 3개를 나란히 놓아야 해서 본문 폭을 넓게 준다 */
+  try{ document.body.classList.toggle('qr-view', isReport); }catch(e){}
 
   document.querySelectorAll('#mainArea > [data-nav]').forEach(el => {
     const sec = el.getAttribute('data-nav');
