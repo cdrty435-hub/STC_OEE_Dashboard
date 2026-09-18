@@ -4449,6 +4449,16 @@ const MS_COL = {
 /* 막대 안 수치 표기 기준 — MS_BAR_H 는 CSS '.vb .vt' 의 height 와 같아야 한다 */
 const MS_BAR_H = 132, MS_LABEL_MIN = 13;
 
+/* Model상세를 기간(시작~종료)으로 자른다 — 주간·일일 보고가 같이 쓴다 */
+function qrModelRowsBetween(start, end, sc){
+  const scope = sc || qrScope();
+  const ok = r => !(scope === 'regular' && r['구분'] !== '정규')
+              && !QR_EXCLUDE_EQ.includes(String(r['설비명']||'').trim());
+  return (RAW_MODEL || []).filter(r=>{
+    const d = String(r['일자']||'').trim();
+    return d && d >= start && d <= end && ok(r);
+  });
+}
 function qrModelRows(week){
   const sc = qrScope();
   const rg = qrWeekRange(week);
@@ -4456,16 +4466,16 @@ function qrModelRows(week){
               && !QR_EXCLUDE_EQ.includes(String(r['설비명']||'').trim());
   const src = RAW_MODEL || [];
   let rows = [];
-  if (rg) rows = src.filter(r=>{
-    const d = String(r['일자']||'').trim();
-    return d >= rg.start && d <= rg.end && ok(r);
-  });
+  if (rg) rows = qrModelRowsBetween(rg.start, rg.end, sc);
   if (!rows.length) rows = src.filter(r => r['주차'] === week && !isOutsideWeekFix(r) && ok(r));
   return rows;
 }
 
-function qrMeasureAgg(week){
-  const rows = qrModelRows(week);
+function qrMeasureAgg(week){ return qrMeasureAggOf(qrModelRows(week)); }
+function qrMeasureAggBetween(start, end, sc){
+  return qrMeasureAggOf(qrModelRowsBetween(start, end, sc));
+}
+function qrMeasureAggOf(rows){
   const mk = () => ({ prod:0, good:0, ng:0, std:0, exc:0, events:0, dmap:{} });
   const byEq = {}, byModel = {}, pairs = {};
   let hasSplit = false;
@@ -4702,12 +4712,12 @@ function msModelTableHtml(models, hasSplit){
     '</tr></thead><tbody>' + body + '</tbody></table></div>';
 }
 
-function qrMeasureHtml(week){
-  const a = qrMeasureAgg(week);
+function qrMeasureHtml(week){ return qrMeasureHtmlOf(qrMeasureAgg(week), qrWkLabel(week)); }
+function qrMeasureHtmlOf(a, basisLabel){
   if (!a.rows) return '<div class="mh"><span>' + t('ms.title') + '</span></div>' +
     '<div class="msec"><div class="mnone">' + t('ms.nomodel') + '</div></div>';
   return '<div class="mh"><span>' + t('ms.title') + '</span><span class="sub">' +
-      t('ms.basis', { b:qrWkLabel(week), n:a.rows.toLocaleString() }) + '</span></div>' +
+      t('ms.basis', { b:basisLabel, n:a.rows.toLocaleString() }) + '</span></div>' +
     '<div class="msec"><div class="mcat">' + t('ms.s1') + '<span>' + t('ms.s1sub') + '</span></div>' +
       msParetoHtml(a.eqs) + '</div>' +
     '<div class="msec"><div class="mcat">' + t('ms.sx') + '<span>' + t('ms.sxsub') + '</span></div>' +
@@ -7239,6 +7249,8 @@ function renderDaily(){
         tbl(dqt('tblNG'), 'ng', a.ng, false, '') +
         tbl(dqt('tblTOT'), 'totalNg', a.totalNg, false, '') +
       '</div>' +
+      '<div class="qr-measure">' +
+        qrMeasureHtmlOf(qrMeasureAggBetween(span.from, span.to, sc), rlabel) + '</div>' +
       '<div class="qr-worst">' + qrWorstHtml(a, prevA, { b:rlabel, a: prevA ? plabel : '–' }) + '</div>' +
       '<div class="qr-comment">' + qrCommentHtml(a, prevA) + '</div>' +
       '<div class="qr-foot"><span>' + dqt('who') + ' ' +
