@@ -667,6 +667,9 @@
 
       <div class="qr-kpis" id="qrKpis"></div>
 
+      <div class="dq-sub" id="qrSumTitle" data-i18n="qr.sum">주차별 요약</div>
+      <div id="qrSummary"></div>
+
       <div class="qr-cmpbar qr-noprint">
         <span class="lb" data-i18n="qr.cmp.lb">표 비교 주차</span>
         <select id="qrCmpA"></select>
@@ -3248,7 +3251,8 @@ Object.assign(I18N.ko, {
   'qr.alert.noData':'※ 선택한 주차에 품질(Q) 데이터가 없습니다.',
   'qr.foot':'집계기준: {scope} · 제외설비: {ex} · 데이터: 품질(Q) 시트 {n}행 · 작성 {who} · 출력일 {d}',
   'qr.wcap':'주차별 품질 추이 (불량율 · 품질Q)',
-  'qr.lg.ws':'웜샷', 'qr.lg.ng':'불량', 'qr.lg.q':'품질(Q)',
+  'qr.lg.ws':'웜샷', 'qr.lg.ng':'불량', 'qr.lg.q':'품질(Q)', 'qr.lg.prod':'생산수량',
+  'qr.sum':'주차별 요약',
   'qr.wd.head':'{a} → {b} 등락', 'qr.wd.imp':'개선', 'qr.wd.wor':'악화', 'qr.wd.same':'보합',
   'qr.wd.none':'비교할 전주 데이터가 없습니다.', 'qr.wd.pureng':'순수 NG',
   'mq.title':'📆 월별 품질(Q) 추이 (최근 12개월)',
@@ -3324,7 +3328,8 @@ Object.assign(I18N.th, {
   'qr.alert.noData':'※ ไม่มีข้อมูลคุณภาพ (Q) ในสัปดาห์ที่เลือก',
   'qr.foot':'เกณฑ์: {scope} · ไม่รวมเครื่อง: {ex} · ข้อมูล: ชีต Q {n} แถว · ผู้จัดทำ {who} · วันที่พิมพ์ {d}',
   'qr.wcap':'แนวโน้มคุณภาพรายสัปดาห์ (ของเสีย · คุณภาพ Q)',
-  'qr.lg.ws':'warm shot', 'qr.lg.ng':'ของเสีย', 'qr.lg.q':'คุณภาพ (Q)',
+  'qr.lg.ws':'warm shot', 'qr.lg.ng':'ของเสีย', 'qr.lg.q':'คุณภาพ (Q)', 'qr.lg.prod':'จำนวนผลิต',
+  'qr.sum':'สรุปรายสัปดาห์',
   'qr.wd.head':'การเปลี่ยนแปลง {a} → {b}', 'qr.wd.imp':'ดีขึ้น', 'qr.wd.wor':'แย่ลง', 'qr.wd.same':'คงที่',
   'qr.wd.none':'ไม่มีข้อมูลสัปดาห์ก่อนหน้าเพื่อเปรียบเทียบ', 'qr.wd.pureng':'NG สุทธิ',
   'mq.title':'📆 แนวโน้มคุณภาพ (Q) รายเดือน (12 เดือนล่าสุด)',
@@ -3399,7 +3404,8 @@ Object.assign(I18N.en, {
   'qr.alert.noData':'※ No quality (Q) data for the selected week.',
   'qr.foot':'Basis: {scope} · Excluded: {ex} · Source: Q sheet, {n} rows · By {who} · Printed {d}',
   'qr.wcap':'Weekly quality trend (reject rate · quality Q)',
-  'qr.lg.ws':'Warm shot', 'qr.lg.ng':'Defects', 'qr.lg.q':'Quality (Q)',
+  'qr.lg.ws':'Warm shot', 'qr.lg.ng':'Defects', 'qr.lg.q':'Quality (Q)', 'qr.lg.prod':'Production',
+  'qr.sum':'Week by week',
   'qr.wd.head':'{a} → {b} change', 'qr.wd.imp':'improved', 'qr.wd.wor':'worsened', 'qr.wd.same':'flat',
   'qr.wd.none':'No previous week available for comparison.', 'qr.wd.pureng':'Pure NG',
   'mq.title':'📆 Monthly quality (Q) trend — last 12 months',
@@ -3793,7 +3799,8 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek, opt){
   const { W, H, ctx } = sizeCanvas(canvas);
   ctx.clearRect(0,0,W,H);
   if (!items.length) return;
-  const padL = 46, padR = 50, padT = 34, padB = 26;
+  /* 생산수량 배경 막대를 함께 그리므로 아래쪽에 한 줄을 더 비운다 */
+  const padL = 46, padR = 50, padT = 34, padB = 40;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   if (plotW <= 30 || plotH <= 30) return;
 
@@ -3832,6 +3839,10 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek, opt){
 
   /* 적층 막대 */
   const bw = Math.min(cw*0.5, 38);
+  /* 생산수량 — 불량률(좌축)·품질Q(우축)와 단위가 달라 축을 하나 더 두지 않고,
+     연한 회색 배경 막대(자체 최대값 기준)로 깔고 실제 수치는 주차 라벨 아래에 적는다. */
+  const pMax = Math.max(1, ...items.map(x=>x.prod||0));
+  const pbw = Math.min(cw*0.78, 58);
   /* 값 라벨을 전부 찍을지 — 일일 보고처럼 칸이 많으면 최고/최저와 비교 대상만 찍는다 */
   const HI_SET = (opt && opt.hiSet) || null;     /* 선택 구간 전체를 진하게 */
   const SPARSE = !!(opt && opt.sparseLabels);
@@ -3856,6 +3867,15 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek, opt){
     const hi = isSel || isCmp || !!(HI_SET && HI_SET[it.week]);
     const hWs = plotH * (it.wsr/lMax), hNg = plotH * (it.ngr/lMax);
     tops[it.week] = { x:x, y:base-hWs-hNg };
+    /* 생산수량 배경 막대 — 데이터 막대보다 먼저(뒤에) 깔린다 */
+    if (it.prod > 0){
+      const hp = plotH * (it.prod/pMax);
+      ctx.save();
+      ctx.globalAlpha = hi ? 0.55 : 0.28;
+      ctx.fillStyle = '#c9d6e4';
+      ctx.fillRect(x-pbw/2, base-hp, pbw, hp);
+      ctx.restore();
+    }
     ctx.save();
     ctx.globalAlpha = hi ? 1 : DIM;
     ctx.fillStyle = '#f5a623'; ctx.fillRect(x-bw/2, base-hWs, bw, hWs);
@@ -3877,6 +3897,16 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek, opt){
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText(it.label, x, H-padB+7);
     ctx.restore();
+    /* 생산수량 실제 값 — 배경 막대 높이는 눈대중, 수치는 여기서 정확히 읽는다 */
+    if (it.prod > 0){
+      ctx.save();
+      ctx.globalAlpha = hi ? 1 : 0.6;
+      ctx.fillStyle = hi ? '#4a6fa5' : '#a8b4c2';
+      ctx.font = hi ? 'bold 8.5px Arial' : '8.5px Arial';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(it.prod.toLocaleString(), x, H-padB+19);
+      ctx.restore();
+    }
   });
 
   /* 품질(Q) 꺾은선 */
@@ -3930,7 +3960,8 @@ function drawQWeeklyChart(canvasId, items, selWeek, cmpWeek, opt){
 
   /* 범례 */
   /* 막대는 네모, 꺾은선은 선+점 — 표식 모양만 봐도 어느 축인지 구분된다 */
-  const lg = [['#e53935', t('qr.lg.ng'), 'bar'], ['#f5a623', t('qr.lg.ws'), 'bar'],
+  const lg = [['#c9d6e4', t('qr.lg.prod'), 'bar'],
+              ['#e53935', t('qr.lg.ng'), 'bar'], ['#f5a623', t('qr.lg.ws'), 'bar'],
               [QL_LINE, t('qr.lg.q'), 'line', QD_FILL, QD_RING]];
   let lx = padL;
   ctx.font = '10px Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
@@ -4729,6 +4760,13 @@ function renderQReportInner(){
   document.getElementById('qrComment').innerHTML = qrCommentHtml(a, prevA);
 
   qrRedrawTrend();
+  const sumEl = document.getElementById('qrSummary');
+  if (sumEl){
+    const series = qrWeeklySeries(week, QR_TREND_WEEKS).map(x=>({
+      key:x.week, label:qrWkLabel(x.week), prod:x.prod, ws:x.ws, ng:x.ng,
+      tot:x.tot, rej:x.rej, q:x.q }));
+    sumEl.innerHTML = qrSummaryTbl(series, t('qr.week'), week);
+  }
 
   qrFillNote();
   renderQFoot();
@@ -6600,6 +6638,31 @@ function doApplyPaste(){
   renderQReport2();
 }
 function doSetCust(v){ DO_CUST = v || ''; renderQReport2(); }
+
+/* 기간 요약 표 — 일일 보고의 '일자별 요약'과 같은 서식. 첫 열 제목만 다르다. */
+function qrSummaryTbl(rows, firstLabel, hiKey){
+  if (!rows.length) return '';
+  const sum = ['prod','ws','ng','tot'].map(k=>rows.reduce((s,x)=>s+x[k],0));
+  return '<div class="dq-daywrap"><table class="r2t dq-day"><thead><tr>' +
+    '<th style="min-width:86px">' + firstLabel + '</th>' +
+    ['dProd','dWs','dNg','dTot','dRej','dQ'].map((k,i)=>
+      '<th style="min-width:' + [86,76,76,84,72,76][i] + 'px">' + dqt(k) + '</th>').join('') +
+    '</tr></thead><tbody>' +
+    rows.map(x=>'<tr' + (x.key === hiKey ? ' class="hi"' : '') + '>' +
+      '<td class="h">' + x.label + '</td>' +
+      '<td class="v">' + x.prod.toLocaleString() + '</td>' +
+      '<td class="v">' + x.ws.toLocaleString() + '</td>' +
+      '<td class="v">' + x.ng.toLocaleString() + '</td>' +
+      '<td class="v">' + x.tot.toLocaleString() + '</td>' +
+      '<td class="v ' + (x.rej > (100-QR_TARGET_Q) ? 'neg':'pos') + '">' + x.rej.toFixed(2) + '%</td>' +
+      '<td class="v ' + (x.q != null && x.q >= QR_TARGET_Q ? 'pos':'neg') + '">' +
+        (x.q == null ? '–' : x.q.toFixed(2) + '%') + '</td></tr>').join('') +
+    '<tr class="tot"><td class="h">' + dqt('dSum') + '</td>' +
+    sum.map(v=>'<td class="v">' + v.toLocaleString() + '</td>').join('') +
+    '<td class="v">' + (sum[0] ? (sum[3]/sum[0]*100).toFixed(2) : '–') + '%</td>' +
+    '<td class="v">' + (sum[0] ? (100 - sum[3]/sum[0]*100).toFixed(2) : '–') + '%</td>' +
+    '</tr></tbody></table></div>';
+}
 
 /* 주차(수~화 7일) 납품 계획표 */
 function doWeekHtml(week){
