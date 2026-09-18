@@ -134,7 +134,17 @@
   .qr-kpi .s{font-size:10.5px;color:#8a949e;margin-top:1px;}
   .qr-kpi.ok{border-top-color:#43a047;} .qr-kpi.bad{border-top-color:#e53935;} .qr-kpi.warn{border-top-color:#fb8c00;}
 
-  .qr-grid{display:grid;grid-template-columns:1.45fr 1fr 1fr;gap:12px;margin-bottom:16px;}
+  .qr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+  .qr-cmpbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 8px;
+    padding:7px 10px;background:#f4f7fa;border:1px solid #dbe3ec;border-radius:4px;}
+  .qr-cmpbar .lb{font-size:11.5px;font-weight:700;color:#3d4a5a;}
+  .qr-cmpbar select{padding:3px 7px;border:1px solid #c3cddb;border-radius:3px;
+    font-family:inherit;font-size:12px;font-weight:700;color:#1e3c72;background:#fff;cursor:pointer;}
+  .qr-cmpbar .ar{color:#8a949e;font-weight:700;}
+  .qr-cmpbar button{padding:3px 9px;border:1px solid #c3cddb;border-radius:3px;background:#fff;
+    font-family:inherit;font-size:11.5px;color:#4a545e;cursor:pointer;}
+  .qr-cmpbar button:hover{border-color:#1e3c72;color:#1e3c72;}
+  .qr-cmpbar .hint{font-size:11px;color:#b26a00;font-weight:600;}
   .qr-box{border:1.5px solid #8c98a6;border-radius:2px;overflow:hidden;}
   .qr-box .bt{text-align:center;font-size:13px;font-weight:800;color:#12233f;padding:5px;
     background:#eef1f5;border-bottom:1.5px solid #8c98a6;letter-spacing:.03em;}
@@ -154,7 +164,33 @@
   .qr-box tr.tot td{background:#fff !important;font-weight:800;border-top:2px solid #1e3c72;
     border-bottom:none;font-size:11.5px;padding:5px 7px;}
   .qr-box tr.tot td.hl{background:#ffff00 !important;color:#c00;}
-  .qr-box tr.wst td.l::before{content:'▲ ';color:#e53935;font-size:9px;}
+  .qr-box tr.wst td{background:#fff4f1 !important;font-weight:700;color:#7f2a20;}
+  .qr-box tr.wst td.l{color:#c62828;border-left:3px solid #d03b3b;}
+  .qr-box tr.wst td.l::before{display:inline-block;width:13px;color:#fff;background:#d03b3b;
+    border-radius:2px;text-align:center;font-size:9px;line-height:13px;margin-right:4px;}
+  .qr-box tr.w1 td.l::before{content:'1';}
+  .qr-box tr.w2 td.l::before{content:'2';}
+  .qr-box tr.w3 td.l::before{content:'3';background:#e07a5f;}
+  /* 워스트 정리 블록 */
+  .qr-worst{border:1.5px solid #d7dde3;border-radius:3px;margin-bottom:16px;overflow:hidden;}
+  .qr-worst .wh{background:#1e3c72;color:#fff;font-size:12px;font-weight:800;padding:6px 12px;
+    letter-spacing:.03em;display:flex;justify-content:space-between;align-items:center;}
+  .qr-worst .wh .sub{font-size:10.5px;font-weight:500;opacity:.85;}
+  .qr-worst .wsec{border-top:1px solid #e6eaef;padding:9px 12px;}
+  .qr-worst .wsec:first-of-type{border-top:none;}
+  .qr-worst .wcat{font-size:11px;font-weight:800;color:#1e3c72;margin-bottom:6px;letter-spacing:.03em;}
+  .qr-worst .witem{display:grid;grid-template-columns:132px 1fr;gap:10px;padding:5px 0;
+    border-top:1px dashed #edf0f4;font-size:11.5px;line-height:1.75;}
+  .qr-worst .witem:first-of-type{border-top:none;}
+  .qr-worst .wmc{font-weight:800;color:#c62828;white-space:nowrap;}
+  .qr-worst .wmc .rk{display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;
+    background:#d03b3b;color:#fff;border-radius:2px;font-size:9px;margin-right:5px;vertical-align:1px;}
+  .qr-worst .wmc .rt{display:block;font-weight:600;color:#5b6773;font-size:10.5px;margin-top:1px;}
+  .qr-worst .wcause{color:#333;}
+  .qr-worst .wcause b{color:#c62828;}
+  .qr-worst .wfix{color:#1b5e20;}
+  .qr-worst .wfix::before{content:'개선 ';font-weight:800;color:#2e7d32;font-size:10px;}
+  .qr-worst .wnone{font-size:11.5px;color:#8a949e;padding:4px 0;}
 
   .qr-comment{border:1px solid #dde3e9;border-left:4px solid #1e3c72;border-radius:4px;
     background:#f9fbfd;padding:11px 14px;font-size:12.5px;line-height:1.85;color:#2c3742;margin-bottom:14px;}
@@ -179,12 +215,18 @@
     .container{max-width:none;padding:0;}
     .qr-sheet{border:none;padding:0;}
     .qr-box{break-inside:avoid;}
-    /* 열이 8개(WARM SHOT)로 늘어 A4 가로 인쇄폭(≈1062px)을 넘겼다 — 인쇄에서만 더 조인다. */
-    .qr-grid{gap:4px;grid-template-columns:1.35fr 1fr 1fr;}
-    .qr-box table{font-size:8.6px;table-layout:auto;}
-    .qr-box th{font-size:7.6px;padding:3px 1px;letter-spacing:0;}
-    .qr-box td{padding:2px 2px;}
-    .qr-box td.l{padding-left:4px;}
+    /* 화면에서는 3개 표를 같은 폭으로 둔다. 다만 A4 가로 인쇄폭(≈1054px)에는
+       8열짜리 WARM SHOT 까지 같은 폭으로 넣으면 글자를 5pt 이하로 줄여야 해서
+       인쇄에서만 WARM SHOT 에 15% 를 더 준다(종이에서는 거의 구분되지 않는다). */
+    .qr-grid{gap:4px;grid-template-columns:1.2fr 1fr 1fr;}
+    .qr-box table{font-size:7.7px;table-layout:auto;}
+    .qr-box th{font-size:7px;padding:3px 1px;letter-spacing:0;}
+    .qr-box td{padding:2px 1px;}
+    .qr-box td.l{padding-left:3px;}
+    /* 3개 표를 인쇄에서도 같은 폭으로 두되, 8열짜리 WARM SHOT 이 잘리지 않게 여백만 조인다 */
+    .qr-worst{break-inside:avoid;}
+    .qr-worst .witem{grid-template-columns:110px 1fr;font-size:10px;}
+    .qr-worst .wsec{padding:6px 10px;}
     .qr-box .bt{font-size:11px;padding:3px;}
     #chart-qr-trend{height:190px;}
   }
@@ -361,6 +403,15 @@
 
       <div class="qr-kpis" id="qrKpis"></div>
 
+      <div class="qr-cmpbar qr-noprint">
+        <span class="lb" data-i18n="qr.cmp.lb">표 비교 주차</span>
+        <select id="qrCmpA"></select>
+        <span class="ar">→</span>
+        <select id="qrCmpB"></select>
+        <button type="button" id="qrCmpReset" data-i18n="qr.cmp.reset">보고 주차로 되돌리기</button>
+        <span class="hint" id="qrCmpHint"></span>
+      </div>
+
       <div class="qr-grid">
         <div class="qr-box wide"><div class="bt">WARM SHOT</div>
           <table><thead id="qrHeadWS"></thead>
@@ -372,6 +423,8 @@
           <table><thead id="qrHeadTOT"></thead>
           <tbody id="qrTblTOT"></tbody></table></div>
       </div>
+
+      <div class="qr-worst" id="qrWorst"></div>
 
       <div class="qr-comment" id="qrComment"></div>
 
@@ -2854,6 +2907,25 @@ Object.assign(I18N.ko, {
   'qr.h.wstd':'Warm(STD)', 'qr.h.wexc':'Warm(Excess)', 'qr.h.ws':'W/S QTY',
   'qr.h.ret':'RET QTY', 'qr.h.ng':'NG QTY',
   'qr.h.prev':'전주', 'qr.h.cur':'금주', 'qr.h.delta':'등락 %p',
+  'qr.cmp.lb':'표 비교 주차', 'qr.cmp.reset':'보고 주차로 되돌리기',
+  'qr.w.title':'워스트 선정 · 원인 및 개선 검토', 'qr.w.basis':'{b} 기준 · 전주 {a} 대비',
+  'qr.w.worst3':'워스트 3', 'qr.w.none':'해당 항목에 워스트 설비가 없습니다.',
+  'qr.w.noprev':'전주 없음', 'qr.w.cases':'건',
+  'qr.w.ws.exc':'웜샷 표준 {std} · <b>초과 {exc}</b> — 초과분이 {p}% 로 절반 이상',
+  'qr.w.ws.std':'웜샷 표준 {std} · 초과 {exc} — <b>표준 승온분이 {p}% 를 제외한 대부분</b>',
+  'qr.w.ws.nosplit':'웜샷 {n}건 (표준/초과 구분값 없음)',
+  'qr.w.ws.fix.exc':'초기 샷 조건 편차 확인 — 금형 예열 상태·초도 샷 표준수·작업자별 편차 점검',
+  'qr.w.ws.fix.std':'구조적 승온 로스 — 금형온조기 미보유 조건상 연속생산 로트 확대·금형교체 순서 조정·예열 방법(외부 예열) 검토',
+  'qr.w.ws.fix.nosplit':'Warm(STD)/Warm(Excess) 입력 후 재확인 — 구분값이 있어야 원인 분리 가능',
+  'qr.w.ng.cause':'주요 불량: {list} — {why}',
+  'qr.w.ng.nodetail':'불량 {n}건 (세부 불량유형 미입력)',
+  'qr.w.ng.fix.nodetail':'Q시트 불량유형 열 입력 후 원인 분리 필요',
+  'qr.w.tot.cause':'전체 로스 {n}건 — {side}',
+  'qr.w.tot.ws':'<b>웜샷이 {p}%</b> 로 로스의 주원인',
+  'qr.w.tot.ng':'<b>불량이 {p}%</b> 로 로스의 주원인',
+  'qr.w.tot.main':'최다 불량유형 {k} {v}건',
+  'qr.w.fix.wsside':'웜샷 저감이 우선 — 금형 예열·초도 샷 표준화로 접근 (불량 개선보다 효과 큼)',
+  'qr.cmp.warn':'※ 아래 3개 표만 선택한 주차({b}) 기준입니다 — 위 차트·KPI·코멘트는 보고 주차({r}) 기준.',
   'qr.k.prod':'총 생산수량', 'qr.k.ws':'WARM SHOT', 'qr.k.ng':'NG QTY',
   'qr.k.tot':'TOTAL NG', 'qr.k.q':'품질(Q)', 'qr.k.gap':'목표 대비',
   'qr.k.vsPrev':'전주 대비 {v}', 'qr.k.noPrev':'전주 데이터 없음',
@@ -2894,6 +2966,25 @@ Object.assign(I18N.th, {
   'qr.h.wstd':'Warm(STD)', 'qr.h.wexc':'Warm(Excess)', 'qr.h.ws':'W/S QTY',
   'qr.h.ret':'RET QTY', 'qr.h.ng':'NG QTY',
   'qr.h.prev':'สัปดาห์ก่อน', 'qr.h.cur':'สัปดาห์นี้', 'qr.h.delta':'เปลี่ยนแปลง %p',
+  'qr.cmp.lb':'สัปดาห์ที่เปรียบเทียบ', 'qr.cmp.reset':'กลับเป็นสัปดาห์ที่รายงาน',
+  'qr.w.title':'เครื่องที่แย่ที่สุด · สาเหตุและแนวทางแก้ไข', 'qr.w.basis':'เกณฑ์ {b} · เทียบ {a}',
+  'qr.w.worst3':'3 อันดับแย่ที่สุด', 'qr.w.none':'ไม่มีเครื่องที่เข้าเกณฑ์',
+  'qr.w.noprev':'ไม่มีสัปดาห์ก่อน', 'qr.w.cases':' ครั้ง',
+  'qr.w.ws.exc':'วอร์มช็อต STD {std} · <b>Excess {exc}</b> — ส่วนเกิน {p}% เกินครึ่ง',
+  'qr.w.ws.std':'วอร์มช็อต STD {std} · Excess {exc} — <b>ส่วนมาตรฐานเป็นส่วนใหญ่</b> (ส่วนเกิน {p}%)',
+  'qr.w.ws.nosplit':'วอร์มช็อต {n} ครั้ง (ยังไม่แยก STD/Excess)',
+  'qr.w.ws.fix.exc':'Check die preheat state, standard number of first shots, operator-to-operator variation',
+  'qr.w.ws.fix.std':'Structural heat-up loss — no mold temperature controller: consider longer production runs, die-change sequence, external preheating',
+  'qr.w.ws.fix.nosplit':'Enter Warm(STD)/Warm(Excess) first — the split is needed to separate causes',
+  'qr.w.ng.cause':'ของเสียหลัก: {list} — {why}',
+  'qr.w.ng.nodetail':'ของเสีย {n} ครั้ง (ยังไม่ระบุประเภท)',
+  'qr.w.ng.fix.nodetail':'Fill in the defect-type columns in the Q sheet to separate causes',
+  'qr.w.tot.cause':'ความสูญเสียรวม {n} ครั้ง — {side}',
+  'qr.w.tot.ws':'<b>วอร์มช็อต {p}%</b> เป็นสาเหตุหลัก',
+  'qr.w.tot.ng':'<b>ของเสีย {p}%</b> เป็นสาเหตุหลัก',
+  'qr.w.tot.main':'ประเภทที่มากที่สุด {k} {v}',
+  'qr.w.fix.wsside':'Reducing warm shots comes first — die preheating and first-shot standardisation',
+  'qr.cmp.warn':'※ เฉพาะ 3 ตารางด้านล่างใช้สัปดาห์ที่เลือก ({b}) — กราฟ·KPI·คอมเมนต์ด้านบนใช้สัปดาห์ที่รายงาน ({r})',
   'qr.k.prod':'ยอดผลิตรวม', 'qr.k.ws':'WARM SHOT', 'qr.k.ng':'ของเสีย NG',
   'qr.k.tot':'ของเสียรวม', 'qr.k.q':'คุณภาพ (Q)', 'qr.k.gap':'เทียบเป้าหมาย',
   'qr.k.vsPrev':'เทียบสัปดาห์ก่อน {v}', 'qr.k.noPrev':'ไม่มีข้อมูลสัปดาห์ก่อน',
@@ -2933,6 +3024,25 @@ Object.assign(I18N.en, {
   'qr.h.wstd':'Warm(STD)', 'qr.h.wexc':'Warm(Excess)', 'qr.h.ws':'W/S QTY',
   'qr.h.ret':'RET QTY', 'qr.h.ng':'NG QTY',
   'qr.h.prev':'Prev wk', 'qr.h.cur':'This wk', 'qr.h.delta':'Change %p',
+  'qr.cmp.lb':'Compare weeks', 'qr.cmp.reset':'Back to report week',
+  'qr.w.title':'Worst machines · cause and countermeasure', 'qr.w.basis':'{b} basis · vs {a}',
+  'qr.w.worst3':'worst 3', 'qr.w.none':'No machine flagged for this item.',
+  'qr.w.noprev':'no prev week', 'qr.w.cases':'',
+  'qr.w.ws.exc':'Warm STD {std} · <b>Excess {exc}</b> — excess is {p}%, over half',
+  'qr.w.ws.std':'Warm STD {std} · Excess {exc} — <b>mostly standard heat-up</b> (excess {p}%)',
+  'qr.w.ws.nosplit':'{n} warm shots (STD/Excess not split)',
+  'qr.w.ws.fix.exc':'Check die preheat state, standard first-shot count, operator-to-operator variation',
+  'qr.w.ws.fix.std':'Structural heat-up loss — no mold temperature controller: consider longer runs, die-change sequence, external preheating',
+  'qr.w.ws.fix.nosplit':'Enter Warm(STD)/Warm(Excess) first — the split is needed to separate causes',
+  'qr.w.ng.cause':'Main defects: {list} — {why}',
+  'qr.w.ng.nodetail':'{n} defects (defect types not entered)',
+  'qr.w.ng.fix.nodetail':'Fill in the defect-type columns in the Q sheet to separate causes',
+  'qr.w.tot.cause':'{n} total loss — {side}',
+  'qr.w.tot.ws':'<b>warm shots {p}%</b> — the main driver',
+  'qr.w.tot.ng':'<b>defects {p}%</b> — the main driver',
+  'qr.w.tot.main':'top defect {k} {v}',
+  'qr.w.fix.wsside':'Cutting warm shots comes first — die preheating and first-shot standardisation',
+  'qr.cmp.warn':'※ Only the three tables below use the selected week ({b}) — the chart, KPIs and comment above use the report week ({r}).',
   'qr.k.prod':'Production qty', 'qr.k.ws':'Warm shot', 'qr.k.ng':'NG qty',
   'qr.k.tot':'Total NG', 'qr.k.q':'Quality (Q)', 'qr.k.gap':'vs target',
   'qr.k.vsPrev':'vs prev week {v}', 'qr.k.noPrev':'No previous week data',
@@ -3106,20 +3216,23 @@ function qrAgg(week){
     const tt = num(r['Qty_Total']), gg = num(r['Qty_Good']);
     const lost = Math.max(0, tt - gg);
     const wsq  = Math.min(lost, warmShotOf(r));      // WARM SHOT
-    if (!byEq[eq]) byEq[eq] = { eq, prod:0, good:0, ws:0, wsStd:0, wsExc:0 };
+    if (!byEq[eq]) byEq[eq] = { eq, prod:0, good:0, ws:0, wsStd:0, wsExc:0, dmap:{} };
     byEq[eq].prod += tt; byEq[eq].good += gg; byEq[eq].ws += wsq;
     /* 웜샷 2분할 — 열이 있는 주차만 채워진다 */
     const cStd = cellNumOf(r, WS_STD_KEYS), cExc = cellNumOf(r, WS_EXC_KEYS);
     if (cStd.has || cExc.has) hasSplit = true;
     byEq[eq].wsStd += cStd.val; byEq[eq].wsExc += cExc.val;
     const d = String(r['일자']||'').trim(); if (d) dates.push(d);
-    DEFECT_COLS.forEach(c => { const v = num(r[c]); if (v) defects[c] += v; });
+    DEFECT_COLS.forEach(c => {
+      const v = num(r[c]);
+      if (v){ defects[c] += v; byEq[eq].dmap[c] = (byEq[eq].dmap[c]||0) + v; }
+    });
   });
   const list = Object.values(byEq).map(e=>{
     const totalNg = Math.max(0, e.prod - e.good);
     const ws = Math.min(e.ws, totalNg);
     return { eq:e.eq, prod:e.prod, good:e.good, ws, ng: Math.max(0, totalNg - ws), totalNg,
-             wsStd:e.wsStd, wsExc:e.wsExc };
+             wsStd:e.wsStd, wsExc:e.wsExc, dmap:e.dmap };
   });
   const sum = k => list.reduce((s,x)=>s+x[k], 0);
   dates.sort();
@@ -3371,8 +3484,8 @@ function qrHeadHtml(qtyLabel, prevWk, curWk, split){
     `<th>M/C No.</th><th>PROD QTY</th>` +
     (split ? `<th>${t('qr.h.wstd')}</th><th>${t('qr.h.wexc')}</th>` : '') +
     `<th>${qtyLabel}</th>` +
-    `<th>${wk(prevWk)}<br><span style="font-weight:500;opacity:.85">${t('qr.h.prev')}</span></th>` +
-    `<th>${wk(curWk)}<br><span style="font-weight:500;opacity:.85">${t('qr.h.cur')}</span></th>` +
+    `<th>${wk(prevWk)} <span style="font-weight:500;opacity:.85">${t('qr.h.prev')}</span></th>` +
+    `<th>${wk(curWk)} <span style="font-weight:500;opacity:.85">${t('qr.h.cur')}</span></th>` +
     `<th>${t('qr.h.delta')}</th></tr>`;
 }
 
@@ -3401,7 +3514,7 @@ function qrRowsHtml(list, key, totProd, totVal, opt){
   const zr = list.filter(x => rate(x) <= 0).sort((a,b)=> qrEqNum(a.eq) - qrEqNum(b.eq));
   const line = (x, i) => {
     const r = rate(x), pr = prevRate(x.eq);
-    const cls = (r <= 0) ? ' class="zero"' : (i < 3 ? ' class="wst"' : '');
+    const cls = (r <= 0) ? ' class="zero"' : (i < 3 ? ` class="wst w${i+1}"` : '');
     return `<tr${cls}><td class="l">${x.eq}</td><td>${x.prod.toLocaleString()}</td>` +
       (split ? (hasSplit
           ? `<td class="sub">${(x.wsStd||0).toLocaleString()}</td><td class="sub">${(x.wsExc||0).toLocaleString()}</td>`
@@ -3430,6 +3543,268 @@ function qrRowsHtml(list, key, totProd, totVal, opt){
     `<td>${prevPct==null?'–':prevPct.toFixed(2)+'%'}</td>` +
     `<td class="hl">${pctNum.toFixed(2)}%</td>` +
     qrDeltaCell(pctNum, prevPct, true) + `</tr>`;
+}
+
+/* =========================================================================
+   표 비교 주차 — 3개 표(WARM SHOT / NG QTY / TOTAL NG)만 따로 주차를 고른다.
+   기본값은 (전주 → 보고 주차)이고, 사용자가 바꾸면 그 선택을 유지한다.
+   보고 주차와 다른 주차를 고르면 위쪽 차트·KPI와 기준이 달라지므로 안내문을 띄운다.
+   ========================================================================= */
+let QR_CMP = { a:null, b:null, pinned:false };
+
+function qrCmpSetup(week){
+  const weeks = qrWeekList();
+  const idx = weeks.indexOf(week);
+  const defA = idx > 0 ? weeks[idx-1] : null;
+  /* 보고 주차가 바뀌면(또는 고른 주차가 사라졌으면) 기본값으로 되돌린다 */
+  if (!QR_CMP.pinned || weeks.indexOf(QR_CMP.b) < 0 || (QR_CMP.a && weeks.indexOf(QR_CMP.a) < 0)){
+    QR_CMP = { a:defA, b:week, pinned:false };
+  }
+  const fill = (id, val) => {
+    const sel = document.getElementById(id); if (!sel) return;
+    sel.innerHTML = weeks.map(w=>`<option value="${w}">${qrWkLabel(w)}</option>`).join('');
+    if (weeks.indexOf(val) >= 0) sel.value = val; else sel.selectedIndex = 0;
+  };
+  fill('qrCmpA', QR_CMP.a); fill('qrCmpB', QR_CMP.b);
+  const btn = document.getElementById('qrCmpReset');
+  if (btn) btn.style.display = QR_CMP.pinned ? '' : 'none';
+  const hint = document.getElementById('qrCmpHint');
+  if (hint){
+    const rep = (document.getElementById('qrWeek')||{}).value;
+    hint.innerHTML = (QR_CMP.b && rep && QR_CMP.b !== rep)
+      ? t('qr.cmp.warn', { b: qrWkLabel(QR_CMP.b), r: qrWkLabel(rep) }) : '';
+  }
+}
+
+/* 3개 표만 다시 그린다 (차트·KPI·코멘트는 보고 주차 기준 그대로) */
+function qrRenderTables(){
+  if (!QR_CMP.b) return;
+  const b = qrAgg(QR_CMP.b);
+  const pa = QR_CMP.a ? qrAgg(QR_CMP.a) : null;
+  const pList = pa ? pa.list : null;
+  document.getElementById('qrHeadWS').innerHTML  = qrHeadHtml(t('qr.h.ws'),  QR_CMP.a, QR_CMP.b, true);
+  document.getElementById('qrHeadNG').innerHTML  = qrHeadHtml(t('qr.h.ret'), QR_CMP.a, QR_CMP.b, false);
+  document.getElementById('qrHeadTOT').innerHTML = qrHeadHtml(t('qr.h.ng'),  QR_CMP.a, QR_CMP.b, false);
+  document.getElementById('qrTblWS').innerHTML  = qrRowsHtml(b.list, 'ws',      b.prod, b.ws,
+      { prevList:pList, split:true, hasSplit:b.hasSplit });
+  document.getElementById('qrTblNG').innerHTML  = qrRowsHtml(b.list, 'ng',      b.prod, b.ng,
+      { prevList:pList });
+  document.getElementById('qrTblTOT').innerHTML = qrRowsHtml(b.list, 'totalNg', b.prod, b.totalNg,
+      { prevList:pList });
+  const wEl = document.getElementById('qrWorst');
+  if (wEl) wEl.innerHTML = qrWorstHtml(b, pa);
+}
+
+/* 컨트롤 이벤트 — 표만 다시 그리므로 보고서 전체를 재계산하지 않는다 */
+(function qrCmpBind(){
+  const bind = () => {
+    const A=document.getElementById('qrCmpA'), B=document.getElementById('qrCmpB'),
+          R=document.getElementById('qrCmpReset');
+    if (!A || !B) return false;
+    const onChange = () => {
+      QR_CMP.a = A.value || null; QR_CMP.b = B.value || null; QR_CMP.pinned = true;
+      qrCmpSetup((document.getElementById('qrWeek')||{}).value);
+      qrRenderTables();
+    };
+    A.addEventListener('change', onChange);
+    B.addEventListener('change', onChange);
+    if (R) R.addEventListener('click', ()=>{
+      QR_CMP.pinned = false;
+      qrCmpSetup((document.getElementById('qrWeek')||{}).value);
+      qrRenderTables();
+    });
+    return true;
+  };
+  if (!bind()) document.addEventListener('DOMContentLoaded', bind);
+})();
+
+
+/* =========================================================================
+   10-b. 워스트 선정 정리 (Worst summary)
+        표에서 ▲1·2·3 으로 뽑힌 설비를 바로 아래에 모아, 무엇이 문제였는지
+        (설비별 불량유형 실적 / 웜샷 표준·초과 구성)와 점검 방향을 붙인다.
+        · 불량 원인은 Q시트의 26개 불량유형 열에서 설비별 상위 2종을 뽑는다.
+        · 웜샷은 사내 조건(금형온조기 미보유 · 금형에 온도제어 사양 없음)을 전제로
+          "초과분이 큰가 / 표준분 자체가 큰가"로 나눠 방향을 달리 제시한다.
+        · 아래 문구는 '확정 원인'이 아니라 현장에서 확인할 점검 항목이다.
+   ========================================================================= */
+const QR_FIX = {
+  '미성형':{why:{ko:'용탕온도·주입량 부족, 사출속도/압력 부족, 금형온도 낮음',
+                en:'Low melt temp / short pour, low shot speed or pressure, cold die'},
+           fix:{ko:'용탕온도·비스켓 두께·저속→고속 전환점·가스빼기 점검',
+                en:'Check melt temp, biscuit thickness, slow→fast switch point, venting'}},
+  '기포':{why:{ko:'가스 혼입 — 진공도 저하, 이형제 과다, 고속구간 과속',
+               en:'Gas entrapment — poor vacuum, excess die lube, too-fast fill'},
+          fix:{ko:'진공유닛 진공도·슬리브 충진율·이형제 분사량 점검',
+               en:'Check vacuum unit, sleeve fill ratio, die-lube spray volume'}},
+  '소착':{why:{ko:'금형면 과열·이형제 부족, 용탕 Fe 성분 저하',
+               en:'Die face overheating, insufficient lube, low Fe in melt'},
+          fix:{ko:'냉각수 유량·이형제 농도/분사시간·용탕 Fe 관리',
+               en:'Check coolant flow, lube concentration/spray time, melt Fe content'}},
+  '수축':{why:{ko:'증압 부족·두께 편차·냉각 불균일',
+               en:'Low intensification pressure, wall-thickness variation, uneven cooling'},
+          fix:{ko:'증압 타이밍/압력·냉각회로 밸런스 점검',
+               en:'Check intensification timing/pressure and cooling-circuit balance'}},
+  '버':{why:{ko:'형체력 부족·파팅면 마모·사출압 과다',
+             en:'Low clamping force, worn parting line, excessive injection pressure'},
+        fix:{ko:'형체력·파팅면 마모·사출압 프로파일 점검',
+             en:'Check clamp force, parting-line wear, injection pressure profile'}},
+  '변형':{why:{ko:'취출 온도 높음·밀핀 밸런스 불량',
+               en:'Ejected too hot, unbalanced ejector pins'},
+          fix:{ko:'냉각시간 연장·밀핀 밸런스/취출 타이밍 조정',
+               en:'Extend cooling time, rebalance ejector pins / ejection timing'}},
+  '깨짐':{why:{ko:'이형 저항·취출 타이밍·언더컷',
+               en:'Release resistance, ejection timing, undercut'},
+          fix:{ko:'이형제 도포·슬라이드 작동·취출 시점 점검',
+               en:'Check lube coverage, slide operation, ejection timing'}},
+  '표면오염':{why:{ko:'이형제 과다·오일 누유·스프레이 편차',
+                  en:'Excess die lube, oil leakage, uneven spray'},
+             fix:{ko:'스프레이 노즐 상태·분사량·설비 누유 점검',
+                  en:'Check spray nozzles, spray volume, machine oil leaks'}},
+  '박리':{why:{ko:'금형면 소착/코팅 손상·이형제 불균일',
+               en:'Soldering or coating damage on die face, uneven lube'},
+          fix:{ko:'금형면 상태 확인·폴리싱·이형제 균일 도포',
+               en:'Inspect and polish die face, ensure even lube coverage'}},
+  '부풀음':{why:{ko:'내부 가스 팽창 — 취출 온도 높음·진공 불량',
+                 en:'Internal gas expansion — ejected too hot, poor vacuum'},
+            fix:{ko:'냉각시간·진공도·이형제 분사량 점검',
+                 en:'Check cooling time, vacuum level, lube spray volume'}},
+  '스크래치':{why:{ko:'금형면 손상·슬라이드 마찰·이송 접촉',
+                   en:'Die-face damage, slide friction, contact during transfer'},
+              fix:{ko:'금형면 폴리싱·슬라이드 윤활·취출 경로 점검',
+                   en:'Polish die face, lubricate slides, check ejection path'}},
+  '핀파손':{why:{ko:'밀핀 마모/정렬 불량·이형 저항 과대',
+                 en:'Worn or misaligned ejector pins, high release resistance'},
+            fix:{ko:'밀핀 교체주기·정렬·이형제 도포 점검',
+                 en:'Check pin replacement interval, alignment, lube coverage'}},
+  '제품끼임':{why:{ko:'취출 불량·언더컷·밀핀 작동 불량',
+                   en:'Part sticking — undercut or ejector malfunction'},
+              fix:{ko:'밀핀 작동·슬라이드·취출기 그립 점검',
+                   en:'Check ejector action, slides, extractor grip'}},
+  '언밸런스':{why:{ko:'캐비티간 충진/냉각 편차',
+                   en:'Fill or cooling imbalance between cavities'},
+              fix:{ko:'게이트 밸런스·냉각회로 유량 점검',
+                   en:'Check gate balance and cooling-circuit flow'}},
+  '중량미달':{why:{ko:'충진 부족 — 주입량/비스켓 두께 부족',
+                   en:'Underfill — short pour or thin biscuit'},
+              fix:{ko:'래들 계량·비스켓 두께·사출 스트로크 점검',
+                   en:'Check ladle dosing, biscuit thickness, shot stroke'}},
+  '비스켓두께미달':{why:{ko:'주입량 부족', en:'Short pour'},
+                   fix:{ko:'래들 계량·용탕 레벨 점검', en:'Check ladle dosing and melt level'}},
+  '홀틀어짐':{why:{ko:'코어핀 변형/정렬 불량', en:'Bent or misaligned core pin'},
+              fix:{ko:'코어핀 직진도·고정 상태 점검', en:'Check core-pin straightness and clamping'}},
+  '게이트파임':{why:{ko:'게이트 절단 불량·트리밍 조건', en:'Poor gate cut, trimming condition'},
+                fix:{ko:'트리밍 금형 날·게이트 형상 점검', en:'Check trim-die edge and gate geometry'}},
+  '게이트파손':{why:{ko:'게이트 형상·절단 타이밍', en:'Gate geometry or cut timing'},
+                fix:{ko:'게이트 두께·트리밍 조건 점검', en:'Check gate thickness and trimming setup'}},
+  '찍힘':{why:{ko:'취출/이송 중 접촉·금형면 이물', en:'Contact during ejection/transfer, debris on die face'},
+          fix:{ko:'컨베이어 완충·취출 경로·금형면 이물 제거', en:'Add conveyor cushioning, check path, clean die face'}},
+  '품질확인':{why:{ko:'판정 보류 — 검사 기준 불명확', en:'Held for judgement — unclear inspection criteria'},
+              fix:{ko:'판정 기준 명확화·재검 결과 반영', en:'Clarify criteria and feed re-inspection results back'}},
+  '밀핀짧음':{why:{ko:'밀핀 치수 관리 미흡', en:'Ejector-pin length control'},
+              fix:{ko:'밀핀 길이 실측·교체 이력 확인', en:'Measure pin length, review replacement history'}},
+  '밀핀긺':{why:{ko:'밀핀 치수 관리 미흡', en:'Ejector-pin length control'},
+            fix:{ko:'밀핀 길이 실측·교체 이력 확인', en:'Measure pin length, review replacement history'}},
+  '자동불량':{why:{ko:'자동검사 판정', en:'Automatic inspection reject'},
+              fix:{ko:'검사 센서·판정 기준 점검', en:'Check inspection sensors and thresholds'}},
+  '스펙미달':{why:{ko:'치수 이탈 — 금형 마모·수축률', en:'Out of spec — die wear or shrinkage allowance'},
+              fix:{ko:'금형 마모량·수축률 보정 확인', en:'Check die wear and shrinkage compensation'}},
+  '_':{why:{ko:'원인 확인 필요', en:'Cause to be confirmed'},
+       fix:{ko:'해당 설비 조건·금형 상태 확인', en:'Review machine conditions and die status'}}
+};
+/* 태국어는 기술 용어 표기가 확정되지 않아 영문으로 보여준다(한국어 폴백보다 현장에서 읽기 쉬움). */
+function qrFixTxt(name, which){
+  const e = QR_FIX[name] || QR_FIX['_'];
+  const o = (e && e[which]) || QR_FIX['_'][which];
+  return (LANG === 'ko') ? (o.ko || o.en) : (o.en || o.ko);
+}
+
+function qrTopDefects(x, n){
+  const d = x.dmap || {};
+  const arr = Object.keys(d).filter(k=>d[k]>0).map(k=>({ k, v:d[k] }));
+  arr.sort((a,b)=>b.v-a.v);
+  return arr.slice(0, n||2);
+}
+
+function qrWorstHtml(b, pa){
+  if (!b || !b.list || !b.list.length) return '';
+  const prevMap = {};
+  if (pa) pa.list.forEach(x=>{ prevMap[x.eq] = x; });
+  const rate = (x,k) => x && x.prod>0 ? x[k]/x.prod*100 : 0;
+  const top3 = k => b.list.filter(x=>rate(x,k)>0)
+                          .sort((p,q)=>rate(q,k)-rate(p,k)).slice(0,3);
+  const deltaTxt = (x,k) => {
+    const px = prevMap[x.eq];
+    if (!px || px.prod<=0) return `<span style="color:#9aa3ad">${t('qr.w.noprev')}</span>`;
+    const d = rate(x,k)-rate(px,k);
+    if (Math.abs(d)<0.005) return `<span style="color:#9aa3ad">0.00%p</span>`;
+    const up = d>0;
+    return `<span style="color:${up?'#d03b3b':'#0ca30c'};font-weight:700">${up?'▲':'▼'} ${up?'+':''}${d.toFixed(2)}%p</span>`;
+  };
+  const item = (x, i, k, causeHtml, fixHtml) => `
+    <div class="witem">
+      <div class="wmc"><span class="rk">${i+1}</span>${x.eq}
+        <span class="rt">${rate(x,k).toFixed(2)}% · ${deltaTxt(x,k)}</span></div>
+      <div><div class="wcause">${causeHtml}</div><div class="wfix">${fixHtml}</div></div>
+    </div>`;
+
+  /* ── WARM SHOT : 표준분 / 초과분 구성으로 방향을 나눈다 ── */
+  const wsItems = top3('ws').map((x,i)=>{
+    const std = x.wsStd||0, exc = x.wsExc||0, sum = std+exc;
+    const hasSplit = b.hasSplit && sum>0;
+    const excPct = sum>0 ? exc/sum*100 : null;
+    let cause, fix;
+    if (!hasSplit){
+      cause = t('qr.w.ws.nosplit', { n: x.ws.toLocaleString() });
+      fix   = t('qr.w.ws.fix.nosplit');
+    } else if (excPct >= 50){
+      cause = t('qr.w.ws.exc', { std:std.toLocaleString(), exc:exc.toLocaleString(), p:excPct.toFixed(0) });
+      fix   = t('qr.w.ws.fix.exc');
+    } else {
+      cause = t('qr.w.ws.std', { std:std.toLocaleString(), exc:exc.toLocaleString(), p:excPct.toFixed(0) });
+      fix   = t('qr.w.ws.fix.std');
+    }
+    return item(x, i, 'ws', cause, fix);
+  }).join('');
+
+  /* ── NG QTY : 설비별 상위 불량유형에서 원인·점검 도출 ── */
+  const ngItems = top3('ng').map((x,i)=>{
+    const tops = qrTopDefects(x, 2);
+    let cause, fix;
+    if (!tops.length){
+      cause = t('qr.w.ng.nodetail', { n: x.ng.toLocaleString() });
+      fix   = t('qr.w.ng.fix.nodetail');
+    } else {
+      const sum = Object.values(x.dmap||{}).reduce((s,v)=>s+v,0) || 1;
+      const lst = tops.map(d=>`<b>${d.k}</b> ${d.v.toLocaleString()}${t('qr.w.cases')} (${(d.v/sum*100).toFixed(0)}%)`).join(' · ');
+      cause = t('qr.w.ng.cause', { list: lst, why: qrFixTxt(tops[0].k, 'why') });
+      fix   = qrFixTxt(tops[0].k, 'fix');
+    }
+    return item(x, i, 'ng', cause, fix);
+  }).join('');
+
+  /* ── TOTAL NG : 웜샷/불량 중 어느 쪽이 더 큰지로 정리 ── */
+  const totItems = top3('totalNg').map((x,i)=>{
+    const wsP = x.totalNg>0 ? x.ws/x.totalNg*100 : 0;
+    const side = wsP >= 50 ? t('qr.w.tot.ws', { p: wsP.toFixed(0) })
+                           : t('qr.w.tot.ng', { p: (100-wsP).toFixed(0) });
+    const tops = qrTopDefects(x, 1);
+    const extra = (wsP < 50 && tops.length)
+        ? ' · ' + t('qr.w.tot.main', { k: tops[0].k, v: tops[0].v.toLocaleString() }) : '';
+    const fix = wsP >= 50 ? t('qr.w.fix.wsside')
+              : (tops.length ? qrFixTxt(tops[0].k, 'fix') : t('qr.w.ng.fix.nodetail'));
+    return item(x, i, 'totalNg',
+      t('qr.w.tot.cause', { n:x.totalNg.toLocaleString(), side:side }) + extra, fix);
+  }).join('');
+
+  const sec = (title, items) => `<div class="wsec"><div class="wcat">${title}</div>` +
+      (items || `<div class="wnone">${t('qr.w.none')}</div>`) + `</div>`;
+
+  return `<div class="wh"><span>${t('qr.w.title')}</span>` +
+    `<span class="sub">${t('qr.w.basis', { b: qrWkLabel(QR_CMP.b), a: QR_CMP.a ? qrWkLabel(QR_CMP.a) : '–' })}</span></div>` +
+    sec('WARM SHOT ' + t('qr.w.worst3'), wsItems) +
+    sec('NG QTY ' + t('qr.w.worst3'), ngItems) +
+    sec('TOTAL NG ' + t('qr.w.worst3'), totItems);
 }
 
 /* ---------- KPI ---------- */
@@ -3544,17 +3919,8 @@ function renderQReportInner(){
   alertBox.innerHTML = alerts;
 
   document.getElementById('qrKpis').innerHTML = qrKpiHtml(a, prevA);
-  const prevWk = (idx > 0) ? weeks[idx-1] : null;
-  const pList  = prevA ? prevA.list : null;
-  document.getElementById('qrHeadWS').innerHTML  = qrHeadHtml(t('qr.h.ws'),  prevWk, week, true);
-  document.getElementById('qrHeadNG').innerHTML  = qrHeadHtml(t('qr.h.ret'), prevWk, week, false);
-  document.getElementById('qrHeadTOT').innerHTML = qrHeadHtml(t('qr.h.ng'),  prevWk, week, false);
-  document.getElementById('qrTblWS').innerHTML  = qrRowsHtml(a.list, 'ws',      a.prod, a.ws,
-      { prevList:pList, split:true, hasSplit:a.hasSplit });
-  document.getElementById('qrTblNG').innerHTML  = qrRowsHtml(a.list, 'ng',      a.prod, a.ng,
-      { prevList:pList });
-  document.getElementById('qrTblTOT').innerHTML = qrRowsHtml(a.list, 'totalNg', a.prod, a.totalNg,
-      { prevList:pList });
+  qrCmpSetup(week);
+  qrRenderTables();
   document.getElementById('qrComment').innerHTML = qrCommentHtml(a, prevA);
 
   drawQWeeklyChart('chart-qr-trend', qrWeeklySeries(week, QR_TREND_WEEKS), week);
