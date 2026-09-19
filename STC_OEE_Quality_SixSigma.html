@@ -318,6 +318,28 @@
   .comp .dcen{font-weight:800;fill:#243a5e;}
   .comp .dsub{fill:#68737f;}
   .comp .cleg{display:flex;flex-direction:column;gap:2px;font-size:10.5px;color:#4a545e;min-width:0;}
+  /* 품질유발 부서 — 도넛 아래 한 줄 */
+  .comp .cdept{margin-top:8px;border-top:1px dashed #e0e5eb;padding-top:7px;}
+  .comp .cdept .dh{font-size:11px;font-weight:800;color:#12233f;margin-bottom:4px;display:flex;
+    align-items:center;gap:6px;}
+  .comp .cdept .dh span{font-weight:600;color:#5c6671;font-size:10.5px;}
+  .comp .cdept .dbar{display:flex;height:12px;border-radius:2px;overflow:hidden;background:#eef2f7;}
+  .comp .cdept .dbar i{display:block;height:100%;}
+  .comp .cdept .dls{display:flex;flex-wrap:wrap;gap:3px 6px;margin-top:5px;font-size:10.5px;color:#3c4752;}
+  .comp .cdept .dls span{display:inline-flex;align-items:center;gap:4px;padding:1px 6px;border-radius:3px;
+    background:#f4f7fa;white-space:nowrap;}
+  .comp .cdept .dls span i{width:8px;height:8px;border-radius:2px;display:inline-block;}
+  .comp .cdept .dls span b{color:#12233f;}
+  .comp .cdept .dls span.top{background:#fff1ee;color:#7f2a20;font-weight:800;box-shadow:inset 0 0 0 1px #f3c4b8;}
+  .comp .cdept .dls span.top b{color:#c62828;}
+  details.lcode{margin-top:10px;border:1px solid #e0e5eb;border-radius:3px;background:#fbfcfe;}
+  details.lcode summary{cursor:pointer;font-size:11.5px;font-weight:800;color:#1e3c72;padding:6px 10px;}
+  details.lcode table{border-collapse:collapse;width:100%;font-size:11px;}
+  details.lcode th,details.lcode td{border-top:1px solid #e6eaef;padding:5px 10px;text-align:left;vertical-align:top;}
+  details.lcode th{background:#eef1f5;color:#243a5e;font-weight:800;}
+  details.lcode td.c{font-weight:800;white-space:nowrap;}
+  details.lcode td.c i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:0;}
+  @media print{ details.lcode{display:none;} }
   .comp .cleg span{display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .comp .cleg i{width:8px;height:8px;border-radius:2px;flex:0 0 auto;}
@@ -1609,6 +1631,12 @@ function setLang(lang){
   if (LANGS.indexOf(lang) < 0 || lang === LANG) { applyStaticI18n(); return; }
   LANG = lang;
   try { localStorage.setItem(LANG_KEY, LANG); } catch(e){}
+  /* 통합 대시보드 안에서 이 페이지의 언어 버튼을 눌렀으면, 바깥 대시보드도 같은 언어로 맞춘다.
+     바깥이 다시 이 페이지를 부를 때는 lang === LANG 이라 위에서 바로 끝나므로 되돌이 호출이 없다. */
+  try {
+    if (window.parent && window.parent !== window && typeof window.parent.setLang === 'function')
+      window.parent.setLang(lang);
+  } catch(e){}
   applyStaticI18n();
   try{
     const lb = { r2LbWeek:'week', r2LbYear:'year', r2LbWho:'who', r2Hint:'hint', r2PrintBtn:'print' };
@@ -3282,6 +3310,10 @@ Object.assign(I18N.ko, {
   'ms.events':'승온 건수', 'ms.warmsum':'웜샷 계', 'ms.perevent':'1회당 웜샷', 'ms.excshare':'Excess 비중',
   'ms.etc':'기타', 'ms.unknown':'(미지정)', 'ms.cum':'누적', 'ms.lossword':'LOSS', 'ms.pureng':'순수 NG',
   'ms.lossOf':'LOSS {n}EA · 투입 대비 {p}%',
+  'ms.dept':'품질유발 부서', 'ms.deptSub':'사내 LOSS CODE 기준 — 금형 / 설비·전기 / 설비·라인 / 관리',
+  'ms.d.die':'금형', 'ms.d.elec':'설비·전기', 'ms.d.line':'설비·라인', 'ms.d.mgmt':'관리', 'ms.d.na':'미분류',
+  'ms.lc.title':'분류 기준 (사내 LOSS CODE)', 'ms.lc.cat':'분류', 'ms.lc.items':'품질 로스 항목',
+  'ms.lc.warm':'웜샷(STD·Excess) — 금형교체·휴식·교대 뒤 재가동 손실',
   'ms.nodata':'해당 주차에 집계할 데이터가 없습니다.',
   'ms.nomodel':'Q_Model상세 데이터를 불러오지 못했습니다 — 해당 탭이 웹에 게시되어 있는지 확인해주세요.',
   'ms.needsplit':'Warm(STD) / Warm(Excess) 가 입력된 주차부터 표시됩니다.',
@@ -3362,6 +3394,10 @@ Object.assign(I18N.th, {
   'ms.events':'จำนวนครั้งอุ่น', 'ms.warmsum':'วอร์มช็อตรวม', 'ms.perevent':'ต่อการอุ่น 1 ครั้ง', 'ms.excshare':'สัดส่วน Excess',
   'ms.etc':'อื่นๆ', 'ms.unknown':'(ไม่ระบุ)', 'ms.cum':'สะสม', 'ms.lossword':'สูญเสีย', 'ms.pureng':'NG แท้',
   'ms.lossOf':'LOSS {n}EA · {p}% ของที่ป้อนเข้า',
+  'ms.dept':'ฝ่ายที่ก่อให้เกิดของเสีย', 'ms.deptSub':'ตาม LOSS CODE ของบริษัท — แม่พิมพ์ / เครื่องจักร·ไฟฟ้า / เครื่องจักร·ไลน์ / การจัดการ',
+  'ms.d.die':'แม่พิมพ์', 'ms.d.elec':'เครื่องจักร·ไฟฟ้า', 'ms.d.line':'เครื่องจักร·ไลน์', 'ms.d.mgmt':'การจัดการ', 'ms.d.na':'ไม่ระบุ',
+  'ms.lc.title':'เกณฑ์การจัดกลุ่ม (LOSS CODE ของบริษัท)', 'ms.lc.cat':'กลุ่ม', 'ms.lc.items':'รายการความสูญเสียด้านคุณภาพ',
+  'ms.lc.warm':'วอร์มช็อต (STD·Excess) — ความสูญเสียเมื่อเริ่มเดินใหม่หลังเปลี่ยนแม่พิมพ์/พัก/เปลี่ยนกะ',
   'ms.nodata':'ไม่มีข้อมูลสำหรับสัปดาห์นี้',
   'ms.nomodel':'โหลดแท็บ Q_Model detail ไม่ได้ — กรุณาตรวจสอบว่าเผยแพร่บนเว็บแล้ว',
   'ms.needsplit':'จะแสดงตั้งแต่สัปดาห์ที่กรอก Warm(STD) / Warm(Excess) แล้ว',
@@ -3441,6 +3477,10 @@ Object.assign(I18N.en, {
   'ms.events':'Heat-ups', 'ms.warmsum':'Warm total', 'ms.perevent':'Per heat-up', 'ms.excshare':'Excess share',
   'ms.etc':'Other', 'ms.unknown':'(unspecified)', 'ms.cum':'cum.', 'ms.lossword':'LOSS', 'ms.pureng':'Pure NG',
   'ms.lossOf':'LOSS {n}EA · {p}% of input',
+  'ms.dept':'Responsible area', 'ms.deptSub':'company LOSS CODE — die / machine·electrical / machine·line / management',
+  'ms.d.die':'Die', 'ms.d.elec':'Machine·Electrical', 'ms.d.line':'Machine·Line', 'ms.d.mgmt':'Management', 'ms.d.na':'Unassigned',
+  'ms.lc.title':'Classification (company LOSS CODE)', 'ms.lc.cat':'Category', 'ms.lc.items':'Quality loss items',
+  'ms.lc.warm':'Warm shot (STD·Excess) — restart loss after die change / break / shift change',
   'ms.nodata':'No data to aggregate for this week.',
   'ms.nomodel':'Could not load the Q_Model detail tab — check that it is published to the web.',
   'ms.needsplit':'Shown from the weeks where Warm(STD) / Warm(Excess) are entered.',
@@ -4635,6 +4675,67 @@ function msDonutSvg(segs, tot){
       '<tspan font-size="' + (tot >= 10000 ? 9 : 10) + '" font-weight="700" dx="1">EA</tspan></text></svg>';
 }
 
+/* ===== 품질 로스 분류 — 사내 LOSS CODE 기준 (금형 / 설비·전기 / 설비·라인 / 관리) =====
+   가동 로스 코드표(J~AN 열)의 분류를 그대로 품질 로스에 옮긴 것.
+   · 금형      : 금형수리·금형파손·핀파손·슬라이드코어·제품소착 과 같은 계열 → 형상·게이트·이젝션·소착
+   · 설비·전기 : 설비수리·취출기·진공설비·히터 등 기계 고장 계열 → 기계 검출 불량
+   · 설비·라인 : 팁교체·노즐·플런저·조건변경·탈산·스프레이조정 등 샷/용탕 조건 계열
+   · 관리      : 금형교체·휴식/교대·미팅/정전·기타 → 재가동 손실(웜샷)·취급·판정
+   이 표 하나를 ③ 품질유발 부서와 ⑥ 관점별 해석이 같이 쓴다. */
+const QLOSS_CAT = {
+  die:   ['미성형','박리','소착','버','제품끼임','밀핀짧음','밀핀긺','게이트파임','게이트파손',
+          '홀틀어짐','변형','핀파손'],
+  elec:  ['자동불량'],
+  line:  ['기포','수축','부풀음','표면오염','중량미달','비스켓두께미달','스펙미달','언밸런스'],
+  mgmt:  ['찍힘','스크래치','깨짐','품질확인','기타']
+};
+/* 웜샷(표준·초과)은 금형교체·휴식·교대 뒤 재가동에서 나오므로 '관리' 로 본다 */
+const QLOSS_WARM_CAT = 'mgmt';
+function qlossCatOf(c){
+  for (const k in QLOSS_CAT) if (QLOSS_CAT[k].indexOf(c) >= 0) return k;
+  return 'na';
+}
+
+/* 품질유발 부서 매핑 — 로스 항목을 책임 부서로 나눈 초기안.
+   · 웜샷(표준·초과)  → 생산팀 : 승온 표준·로트 계획·조건 관리
+   · 금형기인 불량     → 금형팀 : 형상·게이트·이젝션
+   · 설비기인 불량     → 공무팀 : 샷 안정성·기계 검출
+   · 품질확인          → 품질팀
+   · 공정기인 불량     → 생산팀 : 조건·취급
+   현장 판단과 다르면 이 표만 고치면 화면 전체가 따라 바뀐다. */
+/* 사내 LOSS CODE 표의 색을 따른다 : 금형 = 하늘, 설비·전기 = 초록, 설비·라인 = 살구, 관리 = 보라 */
+const MS_DEPT_COL = { die:'#1f9bb5', elec:'#2e9e44', line:'#e0874a', mgmt:'#7b5ea7', na:'#b3bcc6' };
+function msDeptOf(c){ return qlossCatOf(c); }
+function msDeptHtml(x){
+  const o = { die:0, elec:0, line:0, mgmt:0, na:0 };
+  o[QLOSS_WARM_CAT] += (x.std||0) + (x.exc||0);
+  let named = 0;
+  for (const c in (x.dmap||{})){ const v = x.dmap[c]||0; o[msDeptOf(c)] += v; named += v; }
+  o.na += Math.max(0, (x.ng||0) - named);        // 세부 유형이 비어 있는 불량
+  const tot = Object.values(o).reduce((a,b)=>a+b,0);
+  if (!tot) return '';
+  const order = Object.keys(o).filter(k=>o[k] > 0 && k !== 'na').sort((a,b)=>o[b]-o[a]);
+  if (o.na > 0) order.push('na');
+  const top = order[0];
+  return '<div class="cdept"><div class="dh">' + t('ms.dept') + '<span>' + t('ms.deptSub') + '</span></div>' +
+    '<div class="dbar">' + order.map(k=>'<i style="width:' + (o[k]/tot*100) + '%;background:' + MS_DEPT_COL[k] +
+      '" title="' + t('ms.d.' + k) + ' ' + o[k].toLocaleString() + 'EA"></i>').join('') + '</div>' +
+    '<div class="dls">' + order.map(k=>'<span' + (k === top ? ' class="top"' : '') + '>' +
+      '<i style="background:' + MS_DEPT_COL[k] + '"></i>' + t('ms.d.' + k) +
+      ' <b>' + (o[k]/tot*100).toFixed(0) + '%</b> (' + o[k].toLocaleString() + ')</span>').join('') +
+    '</div></div>';
+}
+
+function msLossCodeHtml(){
+  const row = k => '<tr><td class="c"><i style="background:' + MS_DEPT_COL[k] + '"></i>' + t('ms.d.' + k) + '</td>' +
+    '<td>' + QLOSS_CAT[k].map(trTerm).join(' · ') +
+    (k === QLOSS_WARM_CAT ? ' · <b>' + t('ms.lc.warm') + '</b>' : '') + '</td></tr>';
+  return '<details class="lcode"><summary>' + t('ms.lc.title') + '</summary>' +
+    '<table><thead><tr><th style="width:130px">' + t('ms.lc.cat') + '</th><th>' + t('ms.lc.items') +
+    '</th></tr></thead><tbody>' + ['die','elec','line','mgmt'].map(row).join('') +
+    '</tbody></table></details>';
+}
+
 function msCompHtml(eqs, hasSplit){
   const list = eqs.slice().sort((a,b)=>b.rate-a.rate).filter(x=>x.totalNg>0).slice(0,3);
   if (!list.length) return '<div class="mnone">' + t('ms.nodata') + '</div>';
@@ -4661,8 +4762,8 @@ function msCompHtml(eqs, hasSplit){
         '<span' + (g.top ? ' class="wk"' : '') + ' title="' + g.k + ' ' + g.v.toLocaleString() + '">' +
         '<em class="rk">' + (g.top || '') + '</em><i style="background:' + g.c + '"></i>' +
         g.k + ' <b>' + g.v.toLocaleString() + '</b> (' + (g.v/tot*100).toFixed(0) + '%)</span>').join('') +
-      '</div></div></div>';
-  }).join('') + '</div>';
+      '</div></div>' + msDeptHtml(x) + '</div>';
+  }).join('') + '</div>' + msLossCodeHtml();
 }
 
 /* ---------- 표 : 설비 × PART(Model) ---------- */
@@ -4714,10 +4815,11 @@ function msPairTableHtml(pairs, hasSplit){
 /* 불량유형 귀책 분류 — 사내 용어 26종을 세 갈래로 나눈 초기안.
    (금형=형상·게이트·이젝션 / 설비=샷 안정성·기계 검출 / 공정=조건·취급)
    현장 판단과 다르면 이 표만 고치면 화면 전체가 따라 바뀐다. */
+/* ③ 과 같은 사내 LOSS CODE 분류를 쓴다 — 설비 = 설비·전기 + 설비·라인, proc = 관리 */
 const MV_OWNER = {
-  die:     ['미성형','박리','소착','버','제품끼임','밀핀짧음','밀핀긺','게이트파임','게이트파손','홀틀어짐','변형'],
-  machine: ['자동불량','핀파손','언밸런스','중량미달','비스켓두께미달','품질확인'],
-  proc:    ['기포','수축','부풀음','찍힘','스크래치','표면오염','깨짐','스펙미달','기타']
+  die:     QLOSS_CAT.die.slice(),
+  machine: QLOSS_CAT.elec.concat(QLOSS_CAT.line),
+  proc:    QLOSS_CAT.mgmt.slice()
 };
 const MV_COL = { die:'#4a6fa5', machine:'#d95926', proc:'#68737f', warm:'#f5a623' };
 function mvOwnerOf(c){
@@ -6428,14 +6530,14 @@ const R2_TXT = {
     mvH2s:'설비마다 웜샷 / 금형기인 / 설비기인 / 공정기인 이 어떤 비율인지',
     mvH3:'품질 관점 — 로트 길이 ↔ 웜샷 비중',
     mvH3s:'가로: 승온 1회당 생산수량(로트 길이) · 세로: 웜샷 비중 · 초록 점선은 고정손실 이론선',
-    mvDie:'금형기인', mvMac:'설비기인', mvPrc:'공정기인', mvMix:'구성', mvLead:'최대 요인', mvAll:'전체',
+    mvDie:'금형기인', mvMac:'설비기인', mvPrc:'관리기인', mvMix:'구성', mvLead:'최대 요인', mvAll:'전체',
     mvAx1x:'승온 1회당 웜샷 (EA)', mvAx1y:'Excess 비중',
     mvAx2x:'승온 1회당 생산수량 (EA)', mvAx2y:'웜샷 비중',
     mvQ1:'조건 표준화로 해결', mvQ2:'금형 예열 최우선', mvQ3:'양호', mvQ4:'금형 사양 개선',
     mvNoteA:'승온 기록이 있는 금형 <b>{n}종</b> · 원단위 중앙값 <b>{med} EA/회</b>.<br>' +
       '오른쪽 위 <span class="hi">{a}종</span>은 원단위도 크고 Excess 도 절반을 넘습니다 — 금형 예열(외부 예열·온조기)이 가장 먼저입니다 ({top}).<br>' +
       '왼쪽 위 {b}종은 표준만 지켜도 줄어드는 몫이고, 오른쪽 아래 {c}종은 금형 사양 자체가 무거운 쪽입니다.',
-    mvNoteB:'전체 로스 중 웜샷이 <b>{w}%</b>. 순수 불량만 놓고 보면 금형기인 <b>{d}%</b> · 설비기인 <b>{m}%</b> · 공정기인 <b>{p}%</b> 입니다.<br>' +
+    mvNoteB:'전체 로스 중 웜샷이 <b>{w}%</b>. 순수 불량만 놓고 보면 금형기인 <b>{d}%</b> · 설비기인 <b>{m}%</b> · 관리기인 <b>{p}%</b> 입니다.<br>' +
       '로스가 가장 큰 설비는 <b>{lead}</b> 이고, 설비마다 최대 요인이 다르므로 같은 대책을 전 호기에 돌리면 안 됩니다.',
     mvNoteC:'승온 1회당 생산수량 중앙값 <b>{run} EA</b>, 1회당 웜샷 평균 <b>{pe} EA</b>.<br>' +
       '초록 점선보다 위에 있는 금형은 이론보다 더 버리고 있다는 뜻입니다.<br>' +
@@ -6499,14 +6601,14 @@ const R2_TXT = {
     mvH2s:'for each machine: warm shot / die-caused / machine-caused / process-caused',
     mvH3:'Quality view — lot length vs warm shot share',
     mvH3s:'x: production per heat-up (lot length) · y: warm shot share · green dashed line is the fixed-loss model',
-    mvDie:'die', mvMac:'machine', mvPrc:'process', mvMix:'mix', mvLead:'top driver', mvAll:'all',
+    mvDie:'die', mvMac:'machine', mvPrc:'management', mvMix:'mix', mvLead:'top driver', mvAll:'all',
     mvAx1x:'warm shot per heat-up (EA)', mvAx1y:'excess share',
     mvAx2x:'production per heat-up (EA)', mvAx2y:'warm shot share',
     mvQ1:'fix by standardising', mvQ2:'pre-heat first', mvQ3:'good', mvQ4:'die spec work',
     mvNoteA:'<b>{n}</b> dies with heat-up records · median <b>{med} EA per heat-up</b>.<br>' +
       'Top-right <span class="hi">{a}</span> are high on both — pre-heating (external or a die temperature controller) comes first ({top}).<br>' +
       'Top-left {b} come back with the standard alone; bottom-right {c} are heavy dies by design.',
-    mvNoteB:'Warm shot is <b>{w}%</b> of all loss. Of pure defects: die <b>{d}%</b> · machine <b>{m}%</b> · process <b>{p}%</b>.<br>' +
+    mvNoteB:'Warm shot is <b>{w}%</b> of all loss. Of pure defects: die <b>{d}%</b> · machine <b>{m}%</b> · management <b>{p}%</b>.<br>' +
       '<b>{lead}</b> carries the largest loss, and the top driver differs by machine — one countermeasure for every machine will not work.',
     mvNoteC:'Median production per heat-up <b>{run} EA</b>, average warm shot per heat-up <b>{pe} EA</b>.<br>' +
       'Dies above the green line waste more than the model predicts.<br>' +
@@ -6574,14 +6676,14 @@ const R2_TXT = {
     mvH2s:'แต่ละเครื่อง: วอร์มช็อต / แม่พิมพ์ / เครื่องจักร / กระบวนการ',
     mvH3:'มุมมองคุณภาพ — ขนาดล็อต กับ สัดส่วนวอร์มช็อต',
     mvH3s:'แกนนอน: ผลิตต่อการอุ่น 1 ครั้ง · แกนตั้ง: สัดส่วนวอร์มช็อต · เส้นประเขียวคือแบบจำลองความสูญเสียคงที่',
-    mvDie:'แม่พิมพ์', mvMac:'เครื่องจักร', mvPrc:'กระบวนการ', mvMix:'สัดส่วน', mvLead:'ปัจจัยหลัก', mvAll:'รวม',
+    mvDie:'แม่พิมพ์', mvMac:'เครื่องจักร', mvPrc:'การจัดการ', mvMix:'สัดส่วน', mvLead:'ปัจจัยหลัก', mvAll:'รวม',
     mvAx1x:'วอร์มช็อตต่อครั้ง (EA)', mvAx1y:'สัดส่วน Excess',
     mvAx2x:'ผลิตต่อการอุ่น 1 ครั้ง (EA)', mvAx2y:'สัดส่วนวอร์มช็อต',
     mvQ1:'แก้ด้วยมาตรฐาน', mvQ2:'อุ่นแม่พิมพ์ก่อน', mvQ3:'ดี', mvQ4:'ปรับสเปกแม่พิมพ์',
     mvNoteA:'แม่พิมพ์ <b>{n}</b> แบบ · ค่ากลาง <b>{med} EA/ครั้ง</b>.<br>' +
       'มุมขวาบน <span class="hi">{a}</span> แบบ ควรอุ่นแม่พิมพ์ก่อน ({top}).<br>' +
       'มุมซ้ายบน {b} แบบแก้ได้ด้วยมาตรฐาน · มุมขวาล่าง {c} แบบเป็นลักษณะของแม่พิมพ์เอง',
-    mvNoteB:'วอร์มช็อตคิดเป็น <b>{w}%</b> ของความสูญเสียทั้งหมด · ของเสียแท้: แม่พิมพ์ <b>{d}%</b> · เครื่องจักร <b>{m}%</b> · กระบวนการ <b>{p}%</b>.<br>' +
+    mvNoteB:'วอร์มช็อตคิดเป็น <b>{w}%</b> ของความสูญเสียทั้งหมด · ของเสียแท้: แม่พิมพ์ <b>{d}%</b> · เครื่องจักร <b>{m}%</b> · การจัดการ <b>{p}%</b>.<br>' +
       'เครื่องที่สูญเสียมากที่สุดคือ <b>{lead}</b> และปัจจัยหลักต่างกันในแต่ละเครื่อง',
     mvNoteC:'ค่ากลางผลิตต่อการอุ่น <b>{run} EA</b> · วอร์มช็อตเฉลี่ยต่อครั้ง <b>{pe} EA</b>.<br>' +
       'จุดที่อยู่เหนือเส้นเขียวคือเสียมากกว่าที่แบบจำลองคาด<br>' +
