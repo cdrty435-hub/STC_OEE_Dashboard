@@ -4633,6 +4633,8 @@ function msCompHtml(eqs, hasSplit){
     /* 세부 불량유형 합이 순수NG 에 못 미치면 나머지를 '기타'로 묶어 합을 맞춘다 */
     const named = ds.reduce((s,d)=>s+d.v,0);
     const etc = rest + Math.max(0, x.ng - named);
+    /* 웜샷·불량유형을 섞어 큰 순서대로 — 파레토 관례대로 '기타'만 맨 끝에 둔다 */
+    segs.sort((a,b)=>b.v-a.v);
     if (etc > 0) segs.push({ k:t('ms.etc'), v:etc, c:MS_COL.etc });
     const tot = segs.reduce((s,g)=>s+g.v,0) || 1;
     return '<div class="comp"><div class="ct">' + x.eq + '<em>' +
