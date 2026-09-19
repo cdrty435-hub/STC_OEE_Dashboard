@@ -3280,8 +3280,8 @@ Object.assign(I18N.ko, {
   'ms.eq':'설비', 'ms.part':'PART NAME', 'ms.model':'Model',
   'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
   'ms.events':'승온 건수', 'ms.warmsum':'웜샷 계', 'ms.perevent':'1회당 웜샷', 'ms.excshare':'Excess 비중',
-  'ms.etc':'기타', 'ms.unknown':'(미지정)', 'ms.cum':'누적', 'ms.lossword':'로스', 'ms.pureng':'순수 NG',
-  'ms.lossOf':'로스 {n}건 · 투입 대비 {p}%',
+  'ms.etc':'기타', 'ms.unknown':'(미지정)', 'ms.cum':'누적', 'ms.lossword':'LOSS', 'ms.pureng':'순수 NG',
+  'ms.lossOf':'LOSS {n}EA · 투입 대비 {p}%',
   'ms.nodata':'해당 주차에 집계할 데이터가 없습니다.',
   'ms.nomodel':'Q_Model상세 데이터를 불러오지 못했습니다 — 해당 탭이 웹에 게시되어 있는지 확인해주세요.',
   'ms.needsplit':'Warm(STD) / Warm(Excess) 가 입력된 주차부터 표시됩니다.',
@@ -3361,7 +3361,7 @@ Object.assign(I18N.th, {
   'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
   'ms.events':'จำนวนครั้งอุ่น', 'ms.warmsum':'วอร์มช็อตรวม', 'ms.perevent':'ต่อการอุ่น 1 ครั้ง', 'ms.excshare':'สัดส่วน Excess',
   'ms.etc':'อื่นๆ', 'ms.unknown':'(ไม่ระบุ)', 'ms.cum':'สะสม', 'ms.lossword':'สูญเสีย', 'ms.pureng':'NG แท้',
-  'ms.lossOf':'สูญเสีย {n} · {p}% ของที่ป้อนเข้า',
+  'ms.lossOf':'LOSS {n}EA · {p}% ของที่ป้อนเข้า',
   'ms.nodata':'ไม่มีข้อมูลสำหรับสัปดาห์นี้',
   'ms.nomodel':'โหลดแท็บ Q_Model detail ไม่ได้ — กรุณาตรวจสอบว่าเผยแพร่บนเว็บแล้ว',
   'ms.needsplit':'จะแสดงตั้งแต่สัปดาห์ที่กรอก Warm(STD) / Warm(Excess) แล้ว',
@@ -3439,8 +3439,8 @@ Object.assign(I18N.en, {
   'ms.eq':'Machine', 'ms.part':'PART NAME', 'ms.model':'Model',
   'ms.wstd':'Warm Shot Standard', 'ms.wexc':'Warm Shot Excess',
   'ms.events':'Heat-ups', 'ms.warmsum':'Warm total', 'ms.perevent':'Per heat-up', 'ms.excshare':'Excess share',
-  'ms.etc':'Other', 'ms.unknown':'(unspecified)', 'ms.cum':'cum.', 'ms.lossword':'loss', 'ms.pureng':'Pure NG',
-  'ms.lossOf':'{n} loss · {p}% of input',
+  'ms.etc':'Other', 'ms.unknown':'(unspecified)', 'ms.cum':'cum.', 'ms.lossword':'LOSS', 'ms.pureng':'Pure NG',
+  'ms.lossOf':'LOSS {n}EA · {p}% of input',
   'ms.nodata':'No data to aggregate for this week.',
   'ms.nomodel':'Could not load the Q_Model detail tab — check that it is published to the web.',
   'ms.needsplit':'Shown from the weeks where Warm(STD) / Warm(Excess) are entered.',
@@ -4627,10 +4627,12 @@ function msDonutSvg(segs, tot){
   return '<svg width="120" height="120" viewBox="0 0 120 120" role="img">' +
     '<circle cx="' + CX + '" cy="' + CY + '" r="' + R + '" fill="none" stroke="#eef2f7" stroke-width="' + SW + '"/>' +
     arcs +
-    '<text class="dcen" x="' + CX + '" y="' + (CY-1) + '" text-anchor="middle" font-size="15">' +
-      tot.toLocaleString() + '</text>' +
-    '<text class="dsub" x="' + CX + '" y="' + (CY+13) + '" text-anchor="middle" font-size="9">' +
-      t('ms.lossword') + '</text></svg>';
+    /* 가운데 : 위에 LOSS, 아래에 수량(EA) — 수량이 길어지면 글자를 줄인다 */
+    '<text class="dsub" x="' + CX + '" y="' + (CY-9) + '" text-anchor="middle" font-size="10.5" ' +
+      'font-weight="700" letter-spacing=".06em">' + t('ms.lossword') + '</text>' +
+    '<text class="dcen" x="' + CX + '" y="' + (CY+11) + '" text-anchor="middle" font-size="' +
+      (tot >= 10000 ? 13 : 15) + '">' + tot.toLocaleString() +
+      '<tspan font-size="' + (tot >= 10000 ? 9 : 10) + '" font-weight="700" dx="1">EA</tspan></text></svg>';
 }
 
 function msCompHtml(eqs, hasSplit){
