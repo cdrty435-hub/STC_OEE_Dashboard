@@ -319,9 +319,15 @@
   .comp .dsub{fill:#68737f;}
   .comp .cleg{display:flex;flex-direction:column;gap:2px;font-size:10.5px;color:#4a545e;min-width:0;}
   /* 품질유발 부서 — 도넛 아래 한 줄 */
-  .comp .cdept{margin-top:8px;border-top:1px dashed #e0e5eb;padding-top:7px;}
+  /* 세 카드의 '품질유발 부서' 줄을 같은 높이에 맞춘다 — 카드를 세로 flex 로 두고
+     부서 줄을 맨 아래로 민다(범례 줄 수가 달라도 바닥선이 같다) */
+  .donuts>.comp{display:flex;flex-direction:column;}
+  .comp .cdept{margin-top:auto;border-top:1px dashed #e0e5eb;padding-top:7px;}
+  .comp .cbody{margin-bottom:8px;}
+  .comp .cdept .dls{min-height:44px;align-content:flex-start;}   /* 1줄이든 2줄이든 같은 높이 */
   .comp .cdept .dh{font-size:11px;font-weight:800;color:#12233f;margin-bottom:4px;display:flex;
-    align-items:center;gap:6px;}
+    flex-wrap:wrap;align-items:baseline;gap:0 6px;white-space:nowrap;min-height:30px;}
+  .comp .cdept .dh span{white-space:normal;}
   .comp .cdept .dh span{font-weight:600;color:#5c6671;font-size:10.5px;}
   .comp .cdept .dbar{display:flex;height:12px;border-radius:2px;overflow:hidden;background:#eef2f7;}
   .comp .cdept .dbar i{display:block;height:100%;}
