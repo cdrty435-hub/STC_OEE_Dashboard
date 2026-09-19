@@ -322,6 +322,13 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .comp .cleg i{width:8px;height:8px;border-radius:2px;flex:0 0 auto;}
   .comp .cleg b{font-weight:700;color:#243a5e;}
+  /* 로스 유형 워스트 1·2·3 */
+  .comp .cleg span.wk{background:#fff1ee;border-radius:3px;padding:1px 5px 1px 2px;
+    color:#7f2a20;font-weight:700;}
+  .comp .cleg span.wk b{color:#c62828;font-weight:800;}
+  .comp .cleg .rk{display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;
+    background:#d03b3b;color:#fff;border-radius:2px;font-size:9px;font-weight:800;flex:0 0 auto;}
+  .comp .cleg span:not(.wk) .rk{visibility:hidden;}
 
   table.mtbl{width:100%;border-collapse:collapse;font-size:11px;}
   table.mtbl th,table.mtbl td{padding:3px 5px;border-bottom:1px solid #eef1f4;text-align:right;white-space:nowrap;}
@@ -4599,12 +4606,13 @@ function msParetoHtml(eqs){
 /* ---------- 구성 : 워스트 3 설비의 로스 구성 (도넛) ----------
    SVG 로 그려 리사이즈·언어전환·인쇄에서 다시 그릴 필요가 없게 한다. */
 function msDonutSvg(segs, tot){
-  const R = 46, SW = 20, CX = 60, CY = 60, C = 2*Math.PI*R;
+  const R = 45, SW = 19, CX = 60, CY = 60, C = 2*Math.PI*R;
   let off = 0;
   const arcs = segs.map(g=>{
     const len = Math.max(0, g.v/tot*C);
     const el = '<circle cx="' + CX + '" cy="' + CY + '" r="' + R + '" fill="none" stroke="' + g.c +
-      '" stroke-width="' + SW + '" stroke-dasharray="' + len.toFixed(2) + ' ' + (C-len).toFixed(2) +
+      '"' + (g.top ? '' : ' stroke-opacity="0.45"') +
+      ' stroke-width="' + (g.top ? SW + 4 : SW) + '" stroke-dasharray="' + len.toFixed(2) + ' ' + (C-len).toFixed(2) +
       '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 ' + CX + ' ' + CY + ')">' +
       '<title>' + g.k + ' ' + g.v.toLocaleString() + ' (' + (g.v/tot*100).toFixed(1) + '%)</title></circle>';
     off += len;
@@ -4635,13 +4643,15 @@ function msCompHtml(eqs, hasSplit){
     const etc = rest + Math.max(0, x.ng - named);
     /* 웜샷·불량유형을 섞어 큰 순서대로 — 파레토 관례대로 '기타'만 맨 끝에 둔다 */
     segs.sort((a,b)=>b.v-a.v);
+    segs.slice(0,3).forEach((g,i)=>{ g.top = i + 1; });   /* 로스 유형 워스트 1·2·3 */
     if (etc > 0) segs.push({ k:t('ms.etc'), v:etc, c:MS_COL.etc });
     const tot = segs.reduce((s,g)=>s+g.v,0) || 1;
     return '<div class="comp"><div class="ct">' + x.eq + '<em>' +
       t('ms.lossOf', { n:tot.toLocaleString(), p:x.rate.toFixed(2) }) + '</em></div>' +
       '<div class="cbody">' + msDonutSvg(segs, tot) +
       '<div class="cleg">' + segs.map(g=>
-        '<span title="' + g.k + ' ' + g.v.toLocaleString() + '"><i style="background:' + g.c + '"></i>' +
+        '<span' + (g.top ? ' class="wk"' : '') + ' title="' + g.k + ' ' + g.v.toLocaleString() + '">' +
+        '<em class="rk">' + (g.top || '') + '</em><i style="background:' + g.c + '"></i>' +
         g.k + ' <b>' + g.v.toLocaleString() + '</b> (' + (g.v/tot*100).toFixed(0) + '%)</span>').join('') +
       '</div></div></div>';
   }).join('') + '</div>';
