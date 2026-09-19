@@ -1542,6 +1542,7 @@ const TERM_TH = {
   '제품끼임':'ชิ้นงานติดค้าง','밀핀짧음':'พินดันสั้นเกินไป','밀핀긺':'พินดันยาวเกินไป','게이트파임':'รอยบุ๋มเกท',
   '홀틀어짐':'รูเยื้องศูนย์','게이트파손':'เกทแตก','중량미달':'น้ำหนักไม่ถึงเกณฑ์','스펙미달':'ไม่ตรงสเปค',
   '비스켓두께미달':'ความหนาบิสกิตไม่ถึงเกณฑ์','기타':'อื่นๆ',
+  'BURR':'ครีบ','조립불량':'ประกอบไม่ได้','흑줄':'เส้นดำ','외관(색상)':'ลักษณะภายนอก (สี)','크랙':'รอยร้าว',
   '금형수리':'ซ่อมแม่พิมพ์','금형파손':'แม่พิมพ์เสียหาย','설비수리':'ซ่อมเครื่องจักร','전기로수리':'ซ่อมเตาไฟฟ้า',
   '취출기수리':'ซ่อมเครื่องดึงชิ้นงาน','스프레이수리':'ซ่อมระบบพ่นสเปรย์','슬라이드코어수리':'ซ่อมสไลด์คอร์',
   '팁교체':'เปลี่ยนทิป','노즐막힘':'หัวฉีดอุดตัน','플런저오일막힘':'น้ำมันปลันเจอร์อุดตัน','래들수리':'ซ่อมกระบวยตักน้ำโลหะ',
@@ -1561,6 +1562,7 @@ const TERM_EN = {
   '제품끼임':'Part stuck','밀핀짧음':'Ejector pin too short','밀핀긺':'Ejector pin too long','게이트파임':'Gate gouge',
   '홀틀어짐':'Hole misalignment','게이트파손':'Gate breakage','중량미달':'Underweight','스펙미달':'Out of spec',
   '비스켓두께미달':'Biscuit thickness below spec','기타':'Other',
+  'BURR':'Burr','조립불량':'Assembly defect','흑줄':'Black streak','외관(색상)':'Appearance (color)','크랙':'Crack',
   '금형수리':'Mold repair','금형파손':'Mold damage','설비수리':'Machine repair','전기로수리':'Electric furnace repair',
   '취출기수리':'Extractor repair','스프레이수리':'Spray unit repair','슬라이드코어수리':'Slide core repair',
   '팁교체':'Tip replacement','노즐막힘':'Nozzle clogging','플런저오일막힘':'Plunger oil clogging','래들수리':'Ladle repair',
@@ -1572,7 +1574,10 @@ const TERM_EN = {
 };
 
 function t(key, vars){
-  let s = (I18N[LANG] && I18N[LANG][key]) || I18N.ko[key] || key;
+  /* 빈 문자열('')도 '번역 있음'으로 본다 — 없을 때만 한국어로 되돌린다 */
+  const tb = I18N[LANG] || {};
+  let s = Object.prototype.hasOwnProperty.call(tb, key) ? tb[key]
+        : (Object.prototype.hasOwnProperty.call(I18N.ko, key) ? I18N.ko[key] : key);
   if (vars) Object.keys(vars).forEach(k => { s = s.replace(new RegExp('\\{'+k+'\\}','g'), vars[k]); });
   return s;
 }
@@ -3442,7 +3447,7 @@ Object.assign(I18N.en, {
   'qr.cmp.lb':'Compare weeks', 'qr.cmp.reset':'Back to report week',
   'qr.w.title':'Worst machines · cause and countermeasure', 'qr.w.basis':'{b} basis · vs {a}',
   'qr.w.worst3':'worst 3', 'qr.w.none':'No machine flagged for this item.',
-  'qr.w.noprev':'no prev week', 'qr.w.cases':'',
+  'qr.w.noprev':'no prev week', 'qr.w.cases':' pcs',
   'qr.w.ws.exc':'Warm STD {std} · <b>Excess {exc}</b> — excess is {p}%, over half',
   'qr.w.ws.std':'Warm STD {std} · Excess {exc} — <b>mostly standard heat-up</b> (excess {p}%)',
   'qr.w.ws.nosplit':'{n} warm shots (STD/Excess not split)',
@@ -3837,7 +3842,8 @@ function qcChip(ctx, text, cx, bottomY, color, strong, placed, altY){
       ys.push(bottomY - boxH - k*(boxH+2));
       if (altY != null) ys.push(altY + k*(boxH+2));
     }
-    const hit = (xx,yy) => placed.some(r =>
+    const CH = (ctx.canvas && ctx.canvas.height) || 0;
+    const hit = (xx,yy) => (yy < 2) || (CH && yy + boxH > CH - 2) || placed.some(r =>
       !(xx+boxW < r.x || xx > r.x+r.w || yy+boxH < r.y || yy > r.y+r.h));
     let done = false;
     for (let i = 0; i < ys.length && !done; i++){
@@ -4430,7 +4436,7 @@ function qrWorstHtml(b, pa, labels){
       fix   = t('qr.w.ng.fix.nodetail');
     } else {
       const sum = Object.values(x.dmap||{}).reduce((s,v)=>s+v,0) || 1;
-      const lst = tops.map(d=>`<b>${d.k}</b> ${d.v.toLocaleString()}${t('qr.w.cases')} (${(d.v/sum*100).toFixed(0)}%)`).join(' · ');
+      const lst = tops.map(d=>`<b>${trTerm(d.k)}</b> ${d.v.toLocaleString()}${t('qr.w.cases')} (${(d.v/sum*100).toFixed(0)}%)`).join(' · ');
       cause = t('qr.w.ng.cause', { list: lst, why: qrFixTxt(tops[0].k, 'why') });
       fix   = qrFixTxt(tops[0].k, 'fix');
     }
@@ -4444,7 +4450,7 @@ function qrWorstHtml(b, pa, labels){
                            : t('qr.w.tot.ng', { p: (100-wsP).toFixed(0) });
     const tops = qrTopDefects(x, 1);
     const extra = (wsP < 50 && tops.length)
-        ? ' · ' + t('qr.w.tot.main', { k: tops[0].k, v: tops[0].v.toLocaleString() }) : '';
+        ? ' · ' + t('qr.w.tot.main', { k: trTerm(tops[0].k), v: tops[0].v.toLocaleString() }) : '';
     const fix = wsP >= 50 ? t('qr.w.fix.wsside')
               : (tops.length ? qrFixTxt(tops[0].k, 'fix') : t('qr.w.ng.fix.nodetail'));
     return item(x, i, 'totalNg',
@@ -4636,7 +4642,7 @@ function msCompHtml(eqs, hasSplit){
     if (x.exc) segs.push({ k:t('ms.wexc'), v:x.exc, c:MS_COL.exc });
     const ds = Object.keys(x.dmap).filter(k=>x.dmap[k]>0).map(k=>({k:k, v:x.dmap[k]}))
                 .sort((a,b)=>b.v-a.v);
-    ds.slice(0,5).forEach((d,i)=> segs.push({ k:d.k, v:d.v, c:MS_COL.ng[i] }));
+    ds.slice(0,5).forEach((d,i)=> segs.push({ k:trTerm(d.k), v:d.v, c:MS_COL.ng[i] }));
     const rest = ds.slice(5).reduce((s,d)=>s+d.v,0);
     /* 세부 불량유형 합이 순수NG 에 못 미치면 나머지를 '기타'로 묶어 합을 맞춘다 */
     const named = ds.reduce((s,d)=>s+d.v,0);
@@ -4659,16 +4665,18 @@ function msCompHtml(eqs, hasSplit){
 
 /* ---------- 표 : 설비 × PART(Model) ---------- */
 function msPairTableHtml(pairs, hasSplit){
+  /* TOTAL NG% 높은 순 — 설비 묶음을 풀고 행마다 설비명을 적는다 */
   const list = pairs.filter(x=>x.prod>0)
-    .sort((a,b)=> a.eq===b.eq ? b.rate-a.rate : qrEqNum(a.eq)-qrEqNum(b.eq));
+    .sort((a,b)=> (b.rate - a.rate) || (b.totalNg - a.totalNg));
   if (!list.length) return '<div class="mnone">' + t('ms.nodata') + '</div>';
   const sum = k => list.reduce((s,x)=>s+x[k],0);
   let prevEq = null;
-  const body = list.map(x=>{
-    const first = x.eq !== prevEq; prevEq = x.eq;
+  const body = list.map((x,ri)=>{
+    const first = true; prevEq = x.eq;
     const col = x.rate>=10 ? '#c62828' : (x.rate>=5 ? '#b26a00' : '#243a5e');
-    return '<tr' + (first?' class="eqfirst"':'') + '>' +
-      '<td class="l">' + (first?x.eq:'') + '</td><td class="m">' + x.md + '</td>' +
+    return '<tr' + (ri < 3 ? ' class="top3"' : '') + '>' +
+      '<td class="l">' + (ri < 3 ? '<span style="color:#c62828">▲</span> ' : '') + x.eq +
+      '</td><td class="m">' + x.md + '</td>' +
       '<td>' + x.prod.toLocaleString() + '</td><td>' + x.good.toLocaleString() + '</td>' +
       '<td>' + x.ng.toLocaleString() + '</td>' +
       '<td>' + (hasSplit?x.std.toLocaleString():'–') + '</td>' +
@@ -4731,7 +4739,7 @@ function mvScatter(canvasId, pts, opt){
   const { W, H, ctx } = sizeCanvas(cv);
   ctx.clearRect(0,0,W,H);
   const o = opt || {};
-  const padL = 56, padR = 16, padT = 18, padB = 42;
+  const padL = 56, padR = 16, padT = 30, padB = 42;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   if (plotW <= 40 || plotH <= 40 || !pts.length) return;
   const xMax = Math.max(1e-9, o.xMax != null ? o.xMax : Math.max(...pts.map(p=>p.x)) * 1.12);
@@ -4766,7 +4774,7 @@ function mvScatter(canvasId, pts, opt){
   if (o.quads){
     ctx.font = 'bold 10px Arial';
     const qx = [ (padL + X(o.vx))/2, (X(o.vx) + W-padR)/2 ];
-    const qy = [ padT + 12, padT + plotH - 10 ];
+    const qy = [ (o.hy != null ? Y(o.hy) - 10 : padT + 12), padT + plotH - 10 ];
     [[1,0,o.quads[0]],[0,0,o.quads[1]],[1,1,o.quads[2]],[0,1,o.quads[3]]].forEach(([ix,iy,txt])=>{
       if (!txt) return;
       ctx.fillStyle = '#9aa4ae'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -4797,8 +4805,21 @@ function mvScatter(canvasId, pts, opt){
   });
   /* 상위 몇 개만 이름표 */
   pts.slice().sort((a,b)=>(b.rank||0)-(a.rank||0)).slice(0, o.labelTop || 5).forEach(p=>{
-    qcChip(ctx, p.label, X(p.x), Y(p.y) - (Math.max(3.2, Math.min(13, p.r||5)) + 3),
-           '#12233f', true, placed, Y(p.y) + (Math.max(3.2, Math.min(13, p.r||5)) + 3));
+    const px = X(p.x), py = Y(p.y), pr = Math.max(3.2, Math.min(13, p.r||5));
+    const rc = qcChip(ctx, p.label, px, py - (pr + 3), '#12233f', true, placed, py + (pr + 3));
+    if (!rc) return;
+    /* 칩에서 가장 가까운 점을 찾아, 점에서 충분히 떨어져 있으면 선을 긋는다 */
+    const nx = Math.max(rc.x, Math.min(px, rc.x + rc.w));
+    const ny = Math.max(rc.y, Math.min(py, rc.y + rc.h));
+    const d = Math.hypot(nx - px, ny - py);
+    if (d > pr + 6){
+      ctx.save();
+      ctx.strokeStyle = '#5c6671'; ctx.lineWidth = 0.9;
+      ctx.beginPath();
+      ctx.moveTo(px + (nx-px)*pr/d, py + (ny-py)*pr/d);
+      ctx.lineTo(nx, ny); ctx.stroke();
+      ctx.restore();
+    }
   });
   ctx.strokeStyle = '#d7dde3'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(padL, padT+plotH); ctx.lineTo(W-padR, padT+plotH); ctx.stroke();
@@ -6836,7 +6857,7 @@ function r2ProcHtml(week, yscope){
       '<th style="min-width:104px">' + r2t('dtype') + '</th>' +
       L.map(x=>'<th style="min-width:54px"' + (x.week===week?' class="grp"':'') + '>' + x.label + '</th>').join('') +
       '<th style="min-width:66px">' + r2t('total') + '</th></tr></thead><tbody>' +
-      ordered.map(c=>'<tr><td class="h">' + c + '</td>' +
+      ordered.map(c=>'<tr><td class="h">' + trTerm(c) + '</td>' +
         L.map(x=>{ const v = x.defects[c]||0; return '<td class="v' + (v?'':' mut') + '">' + (v?v.toLocaleString():'-') + '</td>'; }).join('') +
         '<td class="v">' + tSum(c).toLocaleString() + '</td></tr>').join('') +
       '<tr class="tot"><td class="h">' + r2t('sum') + '</td>' +
@@ -6854,7 +6875,7 @@ function r2ProcHtml(week, yscope){
     tblC = '<div class="r2wrap"><table class="r2t"><thead><tr>' +
       '<th style="min-width:96px">' + r2t('dtype') + '</th><th style="min-width:76px">' + r2t('dqty') + '</th>' +
       '<th style="min-width:62px">' + r2t('share') + '</th></tr></thead><tbody>' +
-      share.map((x,i)=>'<tr' + (i<3?' class="hi"':'') + '><td class="h">' + x.c + '</td>' +
+      share.map((x,i)=>'<tr' + (i<3?' class="hi"':'') + '><td class="h">' + trTerm(x.c) + '</td>' +
         '<td class="v">' + x.v.toLocaleString() + '</td>' +
         '<td class="v">' + (x.v/shTot*100).toFixed(1) + '</td></tr>').join('') +
       '<tr class="tot"><td class="h">' + r2t('sum') + '</td><td class="v">' + shTot.toLocaleString() +
@@ -6957,9 +6978,9 @@ function msDefectTrendChart(canvasId, list, types, selWeek){
     ctx.translate(xOf(i), padT + plotH + 8);
     ctx.rotate(-Math.PI/4);
     ctx.fillStyle = '#4a545e';
-    let nm = c;
+    const full = trTerm(c); let nm = full;
     while (nm.length > 2 && ctx.measureText(nm).width > padB - 10) nm = nm.slice(0, -1);
-    if (nm !== c) nm = nm.slice(0, -1) + '…';
+    if (nm !== full) nm = nm.slice(0, -1) + '…';
     ctx.fillText(nm, 0, 0);
     ctx.restore();
   });
@@ -7226,7 +7247,7 @@ function renderQReport2(){
                    {k:'bq', label:r2t('badea')}, {k:'bc', label:r2t('badcnt')},
                    {k:'pp', label:r2t('ppm'), hi:true} ];
   const cTypes = ['미성형','BURR','조립불량','흑줄','외관(색상)','크랙'];
-  const cRows = cTypes.map((c,i)=>'<tr><td class="h">' + c + '</td>' +
+  const cRows = cTypes.map((c,i)=>'<tr><td class="h">' + trTerm(c) + '</td>' +
       '<td>' + r2i(ws, 'cq.' + i, 'num') + '</td>' +
       '<td>' + r2i(ws, 'cs.' + i, 'num') + '</td>' +
       '<td>' + r2i(ws, 'cr.' + i, 'l') + '</td></tr>').join('');
