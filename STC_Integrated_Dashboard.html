@@ -192,6 +192,7 @@ table.eq td.name{font-weight:700;}
                              출처가 유지된다. 커스텀 도메인으로 옮기면 이 경로만 고치면 된다.
       noWeek:true → 그 페이지엔 주차 선택이 없으므로 주차 동기화를 시도하지 않는다.
    ========================================================================= */
+const PORTAL_BUILD = Date.now().toString(36);   /* 열 때마다 바뀌는 캐시 무효화 표식 */
 const TABS = [
   { id:'overview', src:null },
   { id:'weekly',   src:'STC_OEE_Dashboard_Weekly.html' },
@@ -318,7 +319,11 @@ let LANG = 'ko';
 try{ const sv=localStorage.getItem(LANG_KEY); if(LANGS.indexOf(sv)>=0) LANG=sv; }catch(e){}
 
 function T(key, vars){
-  let s = (I18N[LANG] && I18N[LANG][key]) || I18N.ko[key] || key;
+  /* 빈 문자열도 정상적인 번역이다(예: 영어에서 '건'에 해당하는 단위는 없음).
+     truthy 검사로 폴백하면 한국어가 새어 나오므로 키 존재 여부로 판단한다. */
+  const tbl = I18N[LANG] || {};
+  let s = Object.prototype.hasOwnProperty.call(tbl,key) ? tbl[key]
+        : (Object.prototype.hasOwnProperty.call(I18N.ko,key) ? I18N.ko[key] : key);
   if(vars) for(const k in vars) s = s.split('{'+k+'}').join(vars[k]);
   return s;
 }
@@ -647,7 +652,10 @@ function ensureFrame(t){
   const panel=document.getElementById('panel-'+t.id);
   if(panel.querySelector('iframe')) return;
   const f=document.createElement('iframe');
-  f.title=T('tab.'+t.id); f.loading='lazy'; f.src=t.src;
+  /* 캐시 무효화 — iframe 안 페이지는 Ctrl+F5 로도 새로 받지 않는 경우가 많다.
+     통합 대시보드를 열 때마다 주소 끝에 버전 표식을 붙여 항상 최신 파일을 받게 한다. */
+  f.title=T('tab.'+t.id); f.loading='lazy';
+  f.src = t.src + (t.src.indexOf('?') >= 0 ? '&' : '?') + 'v=' + PORTAL_BUILD;
   if(t.noWeek) f.dataset.noweek='1';
   f.onload=()=>{ const m=panel.querySelector('.frame-msg'); if(m) m.remove();
                  syncWeekToFrame(f); syncLangToFrame(f); };
@@ -735,7 +743,9 @@ function setStatus(html){ document.getElementById('hdStatus').innerHTML=html; }
 function refreshStatus(){
   if(!LAST) { setStatus(T('st.loading')); return; }
   if(LAST.error){ setStatus('<b>'+T('st.failed')+'</b>'); return; }
-  setStatus(`<b>${T('st.weeks',{n:LAST.weeks})}</b> · ${T('st.rows',{a:fmt(LAST.a),p:fmt(LAST.p),q:fmt(LAST.q)})}<br>${T('st.asof',{t:LAST.time})}`);
+  /* 시각도 선택 언어의 로캘로 '그때그때' 포맷한다(문자열을 캐시하면 언어 전환 시 굳는다). */
+  const tm = LAST.at.toLocaleTimeString(LOCALE[LANG],{hour:'2-digit',minute:'2-digit'});
+  setStatus(`<b>${T('st.weeks',{n:LAST.weeks})}</b> · ${T('st.rows',{a:fmt(LAST.a),p:fmt(LAST.p),q:fmt(LAST.q)})}<br>${T('st.asof',{t:tm})}`);
 }
 
 async function fetchCSV(gid){
@@ -764,8 +774,7 @@ async function loadAll(){
     RAW={a,p,q};
     const weeks=populateWeeks();
     renderOverview();
-    LAST={weeks:weeks.length,a:a.length,p:p.length,q:q.length,
-          time:new Date().toLocaleTimeString(LOCALE[LANG],{hour:'2-digit',minute:'2-digit'})};
+    LAST={weeks:weeks.length,a:a.length,p:p.length,q:q.length,at:new Date()};
     refreshStatus();
   }catch(e){
     console.error(e);
