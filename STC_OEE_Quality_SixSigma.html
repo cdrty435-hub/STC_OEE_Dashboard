@@ -513,6 +513,7 @@
   .iqc-tgt{font-size:11.2px;font-weight:700;color:#c62828;white-space:nowrap;}
   .iqc-tgt input{width:58px;font:inherit;font-weight:700;padding:1px 4px;border:1px solid #e0a9a9;border-radius:3px;color:#c62828;text-align:right;}
   table.r2t td.v.pos{color:#1e7b34;}
+  .r2sec>.sh .iqc-fac{margin-left:8px;font-weight:800;letter-spacing:.02em;}
   .iqc-tog{margin-left:auto;display:inline-flex;border:1px solid #c2ccd6;border-radius:3px;overflow:hidden;}
   .iqc-tog button{font:inherit;font-size:11px;font-weight:700;padding:3px 12px;border:0;background:#fff;color:#1e3c72;cursor:pointer;}
   .iqc-tog button+button{border-left:1px solid #c2ccd6;}
@@ -7801,7 +7802,7 @@ function iqcR2Sections(week, ys, ws, Y){
 
   const src = '<div class="iqc-note">' + iqcSrcNote() + '<br>' +
     iqt('dq', { md:all.md, ob:all.obs, doc:all.doc }) + '</div>';
-  const sec2 = r2sec('2', r2t('s2'), iqt('auto'),
+  const sec2 = r2sec('2', r2t('s2') + ' <span class="iqc-fac">[ FAC1 → FAC2 ]</span>', iqt('auto'),
     r2sub(iqt('status'), iqt('auto'), String(Y)) + iqcMonTbl(Y, ys) +
     '<div style="height:12px"></div>' +
     r2sub(qrWkLabel(week) + (rg ? ' (' + rg.start.slice(5) + ' ~ ' + rg.end.slice(5) + ')' : ''), 'KPI') +
