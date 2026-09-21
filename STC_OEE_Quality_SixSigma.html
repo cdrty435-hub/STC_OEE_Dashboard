@@ -111,9 +111,24 @@
   body.qr-view .container{max-width:1780px;}
   .qr-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
     border-bottom:2.5px solid #1e3c72;padding-bottom:7px;margin-bottom:14px;}
-  .qr-head h2{margin:0;font-size:18px;font-weight:800;color:#12233f;letter-spacing:-.01em;}
-  .qr-head .rt{font-size:17px;font-weight:700;color:#243a5e;white-space:nowrap;}
-  .qr-head .pd{font-size:11.5px;color:#68737f;font-weight:500;margin-left:10px;}
+  /* 보고서 표지 제목 — 일일 / 주간 보고의 맨 앞 */
+  .rpt-cover{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;
+    background:linear-gradient(135deg,#12233f 0%,#1e3c72 60%,#2a5298 100%);color:#fff;
+    border-radius:6px;padding:20px 26px 18px;margin-bottom:20px;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .rpt-cover .kicker{font-size:13px;font-weight:700;letter-spacing:.16em;opacity:.8;text-transform:uppercase;}
+  .rpt-cover h1{margin:4px 0 6px;font-size:34px;font-weight:900;letter-spacing:-.01em;line-height:1.15;}
+  .rpt-cover h1 small{display:block;font-size:15px;font-weight:600;opacity:.8;letter-spacing:.02em;margin-top:3px;}
+  .rpt-cover .per{display:inline-block;font-size:16px;font-weight:800;background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:4px 12px;}
+  .rpt-cover .per span{font-weight:500;opacity:.85;margin-left:8px;font-size:14px;}
+  .rpt-cover .side{text-align:right;font-size:13px;line-height:1.75;opacity:.95;white-space:nowrap;}
+  .rpt-cover .side b{font-size:16px;font-weight:900;letter-spacing:.02em;}
+  @media screen and (max-width:900px){ .rpt-cover{flex-direction:column;align-items:flex-start;}
+    .rpt-cover .side{text-align:left;} .rpt-cover h1{font-size:26px;} }
+  .qr-head h2{margin:0;font-size:22px;font-weight:800;color:#12233f;letter-spacing:-.01em;}
+  .qr-head .rt{font-size:19px;font-weight:700;color:#243a5e;white-space:nowrap;}
+  .qr-head .pd{font-size:13px;color:#68737f;font-weight:500;margin-left:10px;}
   .qr-toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px;
     padding:10px 12px;background:#f6f8fa;border:1px solid #e4e9ee;border-radius:8px;font-size:12.5px;}
   .qr-toolbar label{font-size:11px;color:#5c6671;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
@@ -124,10 +139,10 @@
   .qr-toolbar .hint{font-size:11px;color:#68737f;}
 
   .qr-chartbox{position:relative;border:1px solid #c9d0d8;border-radius:4px;padding:10px 10px 4px;margin-bottom:16px;}
-  .qr-chartbox .cap{position:absolute;left:50%;top:-13px;transform:translateX(-50%);
-    background:#1e3c72;color:#fff;font-size:13px;font-weight:800;padding:4px 22px;border-radius:4px;letter-spacing:.02em;}
+  .qr-chartbox .cap{position:absolute;left:50%;top:-15px;transform:translateX(-50%);
+    background:#1e3c72;color:#fff;font-size:15px;font-weight:800;padding:4px 22px;border-radius:4px;letter-spacing:.02em;}
   .qr-chartbox .tgt{position:absolute;right:10px;top:8px;background:#2e75b6;color:#fff;
-    font-size:11px;font-weight:700;padding:4px 10px;border-radius:3px;}
+    font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:3px;}
   #chart-qr-trend{width:100%;height:230px;display:block;}
   /* 차트 아래 등락 설명 — 하이라이트한 두 주차(전주 → 금주)의 변화를 문장으로 붙인다 */
   .qr-chartbox .wdelta{margin-top:4px;border-top:1px dashed #dde3e9;padding:6px 2px 2px;
@@ -141,8 +156,8 @@
 
   .qr-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px;}
   .qr-kpi{border:1px solid #dde3e9;border-top:3px solid #1e3c72;border-radius:6px;padding:8px 10px;background:#fff;}
-  .qr-kpi .l{font-size:11.2px;color:#5c6671;font-weight:700;letter-spacing:.03em;}
-  .qr-kpi .v{font-size:19px;font-weight:800;color:#12233f;margin-top:2px;}
+  .qr-kpi .l{font-size:13px;color:#5c6671;font-weight:700;letter-spacing:.03em;}
+  .qr-kpi .v{font-size:22px;font-weight:800;color:#12233f;margin-top:2px;}
   .qr-kpi .s{font-size:11.2px;color:#68737f;margin-top:1px;}
   .qr-kpi.ok{border-top-color:#43a047;} .qr-kpi.bad{border-top-color:#e53935;} .qr-kpi.warn{border-top-color:#fb8c00;}
 
@@ -163,7 +178,7 @@
   /* overflow:hidden 이면 폭이 모자랄 때 맨 끝 열(등락)이 말없이 잘린다 → 스크롤로 바꿔 데이터 손실을 막는다 */
   .qr-box{border:1.5px solid #8c98a6;border-radius:2px;overflow-x:auto;}
   .qr-box td .sl{color:#aeb6bf;margin:0 3px;}
-  .qr-box .bt{text-align:center;font-size:13px;font-weight:800;color:#12233f;padding:5px;
+  .qr-box .bt{text-align:center;font-size:15px;font-weight:800;color:#12233f;padding:5px;
     background:#eef1f5;border-bottom:1.5px solid #8c98a6;letter-spacing:.03em;}
   .qr-box table{width:100%;border-collapse:collapse;font-size:10.8px;}
   .qr-box th{background:#1e3c72;color:#fff;font-size:10.5px;font-weight:700;padding:5px 3px;
@@ -190,12 +205,12 @@
   .qr-box tr.w3 td.l::before{content:'3';background:#e07a5f;}
   /* 워스트 정리 블록 */
   .qr-worst{border:1.5px solid #d7dde3;border-radius:3px;margin-bottom:16px;overflow:hidden;}
-  .qr-worst .wh{background:#1e3c72;color:#fff;font-size:12px;font-weight:800;padding:6px 12px;
+  .qr-worst .wh{background:#1e3c72;color:#fff;font-size:14.5px;font-weight:800;padding:6px 12px;
     letter-spacing:.03em;display:flex;justify-content:space-between;align-items:center;}
   .qr-worst .wh .sub{font-size:11.2px;font-weight:500;opacity:.85;}
   .qr-worst .wsec{border-top:1px solid #e6eaef;padding:12px 14px;}
   .qr-worst .wsec:first-of-type{border-top:none;}
-  .qr-worst .wcat{font-size:12.5px;font-weight:800;color:#1e3c72;margin-bottom:8px;letter-spacing:.03em;}
+  .qr-worst .wcat{font-size:14px;font-weight:800;color:#1e3c72;margin-bottom:8px;letter-spacing:.03em;}
   /* 워스트 3 항목은 한 건씩 눈으로 따라 읽는 자리라 행간·여백을 넉넉히 둔다 */
   .qr-worst .witem{display:grid;grid-template-columns:140px 1fr;gap:12px;padding:9px 0;
     border-top:1px dashed #edf0f4;font-size:12px;line-height:1.95;}
@@ -212,11 +227,11 @@
 
   /* ===== Measure — 설비·모델별 웜샷/불량 구성 ===== */
   .qr-measure{border:1.5px solid #d7dde3;border-radius:3px;margin-bottom:16px;overflow:hidden;}
-  .qr-measure .mh{background:#12233f;color:#fff;font-size:12px;font-weight:800;padding:6px 12px;
+  .qr-measure .mh{background:#12233f;color:#fff;font-size:14.5px;font-weight:800;padding:6px 12px;
     letter-spacing:.03em;display:flex;justify-content:space-between;align-items:center;}
   .qr-measure .mh .sub{font-size:11.2px;font-weight:500;opacity:.85;}
   .qr-measure .msec{border-top:1px solid #e6eaef;padding:10px 12px;}
-  .qr-measure .mcat{font-size:12.5px;font-weight:800;color:#12233f;margin-bottom:8px;letter-spacing:.03em;}
+  .qr-measure .mcat{font-size:14.5px;font-weight:800;color:#12233f;margin-bottom:8px;letter-spacing:.03em;}
   .qr-measure .mcat span{font-weight:500;color:#68737f;margin-left:6px;letter-spacing:0;}
   .qr-measure .mnone{font-size:11.5px;color:#68737f;padding:6px 0;}
 
@@ -274,7 +289,7 @@
   @media screen and (max-width:1250px){ .mv3{grid-template-columns:1fr;} }
   .mvcard{border:1px solid #e6eaef;border-radius:3px;padding:9px 10px;min-width:0;
     display:flex;flex-direction:column;}
-  .mvh{font-size:12.5px;font-weight:800;color:#12233f;margin-bottom:6px;}
+  .mvh{font-size:14px;font-weight:800;color:#12233f;margin-bottom:6px;}
   .mvh em{display:block;font-style:normal;font-weight:500;color:#68737f;font-size:10.8px;margin-top:2px;
     line-height:1.5;}
   .mvchart{width:100%;height:250px;display:block;}
@@ -311,7 +326,7 @@
     .vb .vv{font-size:9.5px;} .vb .vl{font-size:9.5px;} .vb .vc{display:none;}
   }
   .comp{border:1px solid #e6eaef;border-radius:3px;padding:8px 10px;}
-  .comp .ct{font-size:11.5px;font-weight:800;color:#243a5e;margin-bottom:2px;text-align:center;}
+  .comp .ct{font-size:14px;font-weight:800;color:#243a5e;margin-bottom:2px;text-align:center;}
   .comp .ct em{display:block;font-style:normal;font-weight:600;color:#68737f;font-size:10.8px;margin-top:1px;}
   .comp .cbody{display:flex;align-items:center;gap:8px;}
   .comp svg{flex:0 0 auto;}
@@ -325,7 +340,7 @@
   .comp .cdept{margin-top:auto;border-top:1px dashed #e0e5eb;padding-top:7px;}
   .comp .cbody{margin-bottom:8px;}
   .comp .cdept .dls{min-height:44px;align-content:flex-start;}   /* 1줄이든 2줄이든 같은 높이 */
-  .comp .cdept .dh{font-size:11px;font-weight:800;color:#12233f;margin-bottom:4px;display:flex;
+  .comp .cdept .dh{font-size:12.5px;font-weight:800;color:#12233f;margin-bottom:4px;display:flex;
     flex-wrap:wrap;align-items:baseline;gap:0 6px;white-space:nowrap;min-height:30px;}
   .comp .cdept .dh span{white-space:normal;}
   .comp .cdept .dh span{font-weight:600;color:#5c6671;font-size:10.5px;}
@@ -388,7 +403,7 @@
   .qr-comment .warn{color:#c62828;font-weight:700;}
   .qr-comment .up{color:#c62828;} .qr-comment .down{color:#2e7d32;}
   .qr-note{border:1px solid #dde3e9;border-radius:6px;padding:10px 12px;}
-  .qr-note .h{font-size:12px;font-weight:800;color:#12233f;margin-bottom:6px;}
+  .qr-note .h{font-size:14px;font-weight:800;color:#12233f;margin-bottom:6px;}
   .qr-note textarea{width:100%;min-height:64px;border:1px solid #d7dde3;border-radius:5px;
     padding:8px;font-size:12.5px;font-family:inherit;line-height:1.7;resize:vertical;}
 
@@ -404,7 +419,7 @@
     border-radius:3px;cursor:pointer;color:#1e3c72;font-weight:700;font-family:inherit;}
   .dq-quick button:hover{background:#eef2f7;}
   .dq-basis{font-size:11px;color:#68737f;margin:-6px 0 12px;}
-  .dq-sub{font-size:13px;font-weight:800;color:#1e3c72;margin:16px 0 6px;letter-spacing:.02em;}
+  .dq-sub{font-size:15px;font-weight:800;color:#1e3c72;margin:16px 0 6px;letter-spacing:.02em;}
   .dq-daywrap{overflow-x:auto;margin-bottom:16px;}
   table.dq-day{width:100%;}
   table.dq-day td.h{text-align:center;font-variant-numeric:tabular-nums;}
@@ -415,18 +430,18 @@
   .r2sheet{background:#fff;border:1px solid #c9d0d8;border-radius:4px;padding:16px 18px;}
   .r2head{display:flex;justify-content:space-between;align-items:flex-end;
     border-bottom:3px solid #1e3c72;padding-bottom:8px;margin-bottom:16px;}
-  .r2head .tt{font-size:19px;font-weight:800;color:#12233f;letter-spacing:-.01em;}
+  .r2head .tt{font-size:22px;font-weight:800;color:#12233f;letter-spacing:-.01em;}
   .r2head .tt span{font-size:12px;font-weight:500;color:#5c6671;margin-left:10px;letter-spacing:0;}
   .r2head .rt{font-size:13px;font-weight:800;color:#1e3c72;}
 
   .r2sec{border:1.5px solid #d7dde3;border-radius:3px;margin-bottom:18px;break-inside:avoid;}
-  .r2sec>.sh{background:#1e3c72;color:#fff;font-size:12.5px;font-weight:800;padding:7px 12px;
+  .r2sec>.sh{background:#1e3c72;color:#fff;font-size:14.5px;font-weight:800;padding:7px 12px;
     display:flex;align-items:center;gap:9px;letter-spacing:.02em;}
   .r2sec>.sh .no{background:#fff;color:#1e3c72;font-size:11px;font-weight:800;
     border-radius:2px;padding:1px 7px;letter-spacing:0;}
   .r2sec>.sh .sub{margin-left:auto;font-size:11.2px;font-weight:500;opacity:.85;}
   .r2sec>.sb{padding:11px 12px;}
-  .r2sub{font-size:12.5px;font-weight:800;color:#1e3c72;margin:2px 0 7px;letter-spacing:.02em;
+  .r2sub{font-size:14px;font-weight:800;color:#1e3c72;margin:2px 0 7px;letter-spacing:.02em;
     display:flex;align-items:center;gap:8px;}
   .r2sub .tag{background:#eef2f7;color:#1e3c72;border:1px solid #cfd9e5;border-radius:2px;
     font-size:10.8px;padding:1px 6px;}
@@ -465,6 +480,28 @@
   @media screen and (max-width:1250px){ .r2grid,.r2grid.c31{grid-template-columns:1fr;} }
 
   .r2chart{width:100%;height:190px;display:block;}
+  /* 수입검사 (FAC1 → FAC2) */
+  .iqc-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:8px;}
+  .iqc-kpi{border:1px solid #d7dde3;border-radius:3px;padding:7px 10px;background:#fbfcfe;}
+  .iqc-kpi .k{font-size:11.2px;color:#3f4a56;font-weight:700;}
+  .iqc-kpi .v{font-size:20px;font-weight:800;color:#12233f;line-height:1.25;}
+  .iqc-kpi .v small{font-size:11.5px;font-weight:700;color:#3f4a56;}
+  .iqc-kpi .d{font-size:11px;color:#3f4a56;}
+  .iqc-kpi.bad .v{color:#c62828;}
+  .iqc-types{font-size:11.5px;color:#243a5e;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;}
+  .iqc-types b{font-weight:800;}
+  .iqc-types span.r{color:#c62828;font-weight:700;}
+  .iqc-types em{font-style:normal;font-size:10.8px;}
+  .iqc-j{display:inline-block;padding:1px 6px;border-radius:2px;font-size:10.6px;font-weight:800;white-space:nowrap;}
+  .iqc-j.ok{background:#e6f4ea;color:#1e7b34;} .iqc-j.dev{background:#eef2f7;color:#1e3c72;}
+  .iqc-j.hold{background:#fff4dc;color:#8a5a00;} .iqc-j.rw{background:#fdeee6;color:#b04a12;}
+  .iqc-j.ng{background:#fde8e8;color:#c62828;}
+  table.r2t td.tx{padding:3px 6px;text-align:left;color:#12233f;}
+  table.r2t td.v.neg{color:#c62828;}
+  .iqc-flag{display:block;color:#5b6672;font-size:10.2px;font-weight:500;}
+  .iqc-note{font-size:11.2px;color:#3f4a56;margin-top:8px;line-height:1.55;}
+  .dq-iqc{margin-top:14px;}
+  @media screen and (max-width:700px){ .iqc-kpis{grid-template-columns:repeat(2,minmax(0,1fr));} }
   /* 불량유형별 주차 추이 — 유형을 가로로 깔고 주차마다 선을 하나씩 얹는다 */
   #chart-r2-dtrend{width:100%;height:290px;display:block;}
   .dt-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:2px 0 4px;
@@ -621,7 +658,7 @@
   #sideNav button .ic { font-size:14px; flex:0 0 18px; text-align:center; }
   #sideNav button .tx { flex:1; min-width:0; }
   #mainArea { flex:1; min-width:0; }
-  #navTitle { display:flex; align-items:center; gap:9px; font-size:16px; font-weight:800;
+  #navTitle { display:flex; align-items:center; gap:9px; font-size:19px; font-weight:800;
     color:#1e3c72; margin:0 0 14px; padding-bottom:9px; border-bottom:2px solid #e4e9ee; }
   #mainArea > .quad-card:last-child, #mainArea > .quad-grid:last-child { margin-bottom:0; }
   @media (max-width:900px) {
@@ -739,6 +776,7 @@
     </div>
 
     <div class="qr-sheet" id="qrSheet">
+      <div id="qrCover"></div>
       <div class="qr-head">
         <h2><span data-i18n="qr.title">품질 보고서 – Quality Report</span> <span id="qrWkLabel">-</span>
           <span class="pd" id="qrPeriod"></span></h2>
@@ -1569,7 +1607,7 @@ const TERM_TH = {
   '소착':'ติดแม่พิมพ์','언밸런스':'ไม่สมดุล','품질확인':'รอตรวจสอบคุณภาพ','버':'ครีบ','변형':'บิดเบี้ยว',
   '제품끼임':'ชิ้นงานติดค้าง','밀핀짧음':'พินดันสั้นเกินไป','밀핀긺':'พินดันยาวเกินไป','게이트파임':'รอยบุ๋มเกท',
   '홀틀어짐':'รูเยื้องศูนย์','게이트파손':'เกทแตก','중량미달':'น้ำหนักไม่ถึงเกณฑ์','스펙미달':'ไม่ตรงสเปค',
-  '비스켓두께미달':'ความหนาบิสกิตไม่ถึงเกณฑ์','기타':'อื่นๆ',
+  '비스켓두께미달':'ความหนาบิสกิตไม่ถึงเกณฑ์','기타':'อื่นๆ','긁힘':'รอยลาก (Drag mark)',
   'BURR':'ครีบ','조립불량':'ประกอบไม่ได้','흑줄':'เส้นดำ','외관(색상)':'ลักษณะภายนอก (สี)','크랙':'รอยร้าว',
   '금형수리':'ซ่อมแม่พิมพ์','금형파손':'แม่พิมพ์เสียหาย','설비수리':'ซ่อมเครื่องจักร','전기로수리':'ซ่อมเตาไฟฟ้า',
   '취출기수리':'ซ่อมเครื่องดึงชิ้นงาน','스프레이수리':'ซ่อมระบบพ่นสเปรย์','슬라이드코어수리':'ซ่อมสไลด์คอร์',
@@ -1589,7 +1627,7 @@ const TERM_EN = {
   '소착':'Die soldering','언밸런스':'Unbalance','품질확인':'Pending quality check','버':'Burr','변형':'Deformation',
   '제품끼임':'Part stuck','밀핀짧음':'Ejector pin too short','밀핀긺':'Ejector pin too long','게이트파임':'Gate gouge',
   '홀틀어짐':'Hole misalignment','게이트파손':'Gate breakage','중량미달':'Underweight','스펙미달':'Out of spec',
-  '비스켓두께미달':'Biscuit thickness below spec','기타':'Other',
+  '비스켓두께미달':'Biscuit thickness below spec','기타':'Other','긁힘':'Drag mark',
   'BURR':'Burr','조립불량':'Assembly defect','흑줄':'Black streak','외관(색상)':'Appearance (color)','크랙':'Crack',
   '금형수리':'Mold repair','금형파손':'Mold damage','설비수리':'Machine repair','전기로수리':'Electric furnace repair',
   '취출기수리':'Extractor repair','스프레이수리':'Spray unit repair','슬라이드코어수리':'Slide core repair',
@@ -3225,6 +3263,7 @@ async function onRefreshClick(){
     RAW_PDCA = await fetchPDCALive();
     RAW_A = await fetchTabLive(A_GID, '계획시간_분');
     RAW_P = await fetchTabLive(P_GID, 'CT_STD');
+    await iqcLoad();          /* 수입검사 — IQC_GID 미설정이면 내장 스냅샷 유지 */
     renderAll();
     renderPDCATable();
     const dates = [...new Set(rows.map(r=>r['일자']))].filter(Boolean).sort();
@@ -3607,6 +3646,10 @@ function qrSaveWriter(){
     QR_STORE.writer = document.getElementById('qrWriter').value;
     await Store.set(QR_NOTE_KEY, QR_STORE);
     renderQFoot();
+    /* 표지의 작성자도 바로 바꾼다 */
+    const a = window.__QR_LAST, cov = document.getElementById('qrCover');
+    if (a && cov && a.week) cov.innerHTML = rptCoverHtml('weekly', qrWkLabel(a.week),
+      a.range ? (a.range.start + ' ~ ' + a.range.end + ' · ' + t('qr.wed2tue')) : '', QR_STORE.writer);
   }, 500);
 }
 
@@ -5261,6 +5304,10 @@ function renderQReportInner(){
   window.__QR_LAST = a;
 
   document.getElementById('qrWkLabel').textContent = qrWkLabel(week);
+  const cov = document.getElementById('qrCover');
+  if (cov) cov.innerHTML = rptCoverHtml('weekly', qrWkLabel(week),
+    a.range ? (a.range.start + ' ~ ' + a.range.end + ' · ' + t('qr.wed2tue')) : '',
+    (document.getElementById('qrWriter')||{}).value);
   const rg = a.range;
   document.getElementById('qrPeriod').textContent = rg ? `(${rg.start} ~ ${rg.end}, ${t('qr.wed2tue')})`
         : ((a.start && a.end) ? `(${a.start} ~ ${a.end})` : '');
@@ -6867,7 +6914,7 @@ function r2Combo(canvasId, labels, bars, line, opt){
     ctx.fillStyle = '#5b83b5'; ctx.textAlign = 'right';
     ctx.fillText(Math.round(bMax*(1-k/4)).toLocaleString(), padL-5, yy);
     ctx.fillStyle = '#c0392b'; ctx.textAlign = 'left';
-    ctx.fillText(Math.round(lMax*(1-k/4)).toLocaleString(), W-padR+5, yy);
+    ctx.fillText(o.lineDec ? (lMax*(1-k/4)).toFixed(o.lineDec) : Math.round(lMax*(1-k/4)).toLocaleString(), W-padR+5, yy);
   }
   const bw = Math.min(cw*0.46, 26), base = padT + plotH;
   bars.forEach((v,i)=>{
@@ -6888,6 +6935,17 @@ function r2Combo(canvasId, labels, bars, line, opt){
     ctx.beginPath(); ctx.arc(p.x, p.y, p.sel ? 5 : 3.4, 0, Math.PI*2);
     ctx.fillStyle = '#ffd21f'; ctx.fill();
     ctx.strokeStyle = '#111111'; ctx.lineWidth = p.sel ? 2 : 1.3; ctx.stroke();
+  });
+  if (o.lineLabels) pts.forEach(p=>{
+    ctx.font = p.sel ? 'bold 10.5px Arial' : '10px Arial';
+    ctx.fillStyle = p.sel ? '#12233f' : '#44505c';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    const up = p.y - 7 > padT + 6;          /* 위쪽 범례와 겹치면 점 아래에 적는다 */
+    ctx.textBaseline = up ? 'bottom' : 'top';
+    const tx = p.x + (up ? 0 : 14), ty = up ? p.y - 7 : p.y + 7, lb = p.v.toFixed(o.lineDec || 0) + '%';
+    ctx.lineWidth = 3; ctx.strokeStyle = '#ffffff'; ctx.lineJoin = 'round';
+    ctx.strokeText(lb, tx, ty);                /* 막대 위에서도 읽히도록 흰 테두리 */
+    ctx.fillText(lb, tx, ty);
   });
   ctx.font = '10px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   labels.forEach((lb,i)=>{
@@ -7228,6 +7286,29 @@ function doApplyPaste(){
 }
 function doSetCust(v){ DO_CUST = v || ''; renderQReport2(); }
 
+/* ---------- 보고서 표지 제목 (일일 / 주간 공용) ---------- */
+const RPT_COVER_TXT = {
+  ko:{ weekly:'주간 품질 보고서', daily:'일일 품질 보고서', kicker:'Quality Report',
+       wSub:'Weekly Quality Report', dSub:'Daily Quality Report',
+       co:'STC Co., Ltd.', line:'다이캐스팅 DC1~DC23', who:'작성', issued:'발행' },
+  en:{ weekly:'Weekly Quality Report', daily:'Daily Quality Report', kicker:'Quality Report',
+       wSub:'', dSub:'', co:'STC Co., Ltd.', line:'Die casting DC1–DC23', who:'Prepared by', issued:'Issued' },
+  th:{ weekly:'รายงานคุณภาพประจำสัปดาห์', daily:'รายงานคุณภาพประจำวัน', kicker:'Quality Report',
+       wSub:'Weekly Quality Report', dSub:'Daily Quality Report',
+       co:'STC Co., Ltd.', line:'ไดคาสติ้ง DC1–DC23', who:'ผู้จัดทำ', issued:'วันที่ออก' }
+};
+function rptCoverHtml(kind, period, periodNote, who){
+  const T = RPT_COVER_TXT[LANG] || RPT_COVER_TXT.ko;
+  const sub = kind === 'weekly' ? T.wSub : T.dSub;
+  const today = new Date().toISOString().slice(0,10);
+  return '<div class="rpt-cover"><div>' +
+      '<div class="kicker">' + T.kicker + '</div>' +
+      '<h1>' + T[kind] + (sub ? '<small>' + sub + '</small>' : '') + '</h1>' +
+      '<div class="per">' + period + (periodNote ? '<span>' + periodNote + '</span>' : '') + '</div>' +
+    '</div><div class="side"><b>' + T.co + '</b><br>' + T.line + '<br>' +
+      (who ? T.who + ' ' + who + ' · ' : '') + T.issued + ' ' + today + '</div></div>';
+}
+
 /* 기간 요약 표 — 일일 보고의 '일자별 요약'과 같은 서식. 첫 열 제목만 다르다. */
 function qrSummaryTbl(rows, firstLabel, hiKey){
   if (!rows.length) return '';
@@ -7325,6 +7406,333 @@ function doWeekHtml(week){
 }
 
 /* ---------- 본체 ---------- */
+/* =========================================================================
+   15. 수입검사 (FAC1 → FAC2) — OEE_RawData_APQ 의 'IQC_수입검사' 탭
+       원본 Incoming 시트(Task Tracker)를 Apps Script(IQC_Sync.gs)가 정리해 넣는다.
+       1) OEE 시트 > 파일 > 공유 > 웹에 게시 > IQC_수입검사 탭 > CSV
+       2) 그 탭의 gid 를 아래 IQC_GID 에 넣는다.
+       비워 두면 내장 스냅샷(IQC_SNAPSHOT)으로 보여준다.
+   ========================================================================= */
+const IQC_GID = '';   // 예: '123456789'
+const IQC_SNAPSHOT = {"asof":"2026-09-18","header":["No","입고일자","주차","공장","Part_Code","부품명","Part_No","다캐일자_원문","다캐_시작","다캐_종료","경과일","수량","상태","판정","합격","불량유형_원문","불량유형","조치","비고","점검"],"rows":[["1","2026-09-01","W36","FAC1→FAC2","B/C B","BURNER CUP FISH B","DG90-01153A","31/8/2026","2026-08-31","2026-08-31","1","2460","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["2","2026-09-01","W36","FAC1→FAC2","","FEMALE DSL 5/8 CAULKING (HC839-S1B1I)","HC839-S1B1I","9/1/2026","2026-09-01","2026-09-01","0","1758","OK – Proceed / 후공정 진행","OK","Y","","","","","다캐일자 M/D보정"],["3","2026-09-01","W36","FAC1→FAC2","","COLUMN SIERRA","GL723X4000","30,31/8/2026","2026-08-30","2026-08-31","1","1176","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["4","2026-09-01","W36","FAC1→FAC2","HS-15F","HOUSING-CYLINDER /MATAL ( HS-15F )","CR510CD1AA02 (HS-15F)","8/1/2026","2026-08-01","2026-08-01","31","1911","OK – Proceed / 후공정 진행","OK","Y","","","","","다캐일자 M/D보정"],["5","2026-09-01","W36","FAC1→FAC2","HS-15R","HOUSING-CYLINDER / MATAL ( HS-15R )","CR510CD1AB02 (HS-15R)","23/7/2026,2/8/2026","2026-07-23","2026-08-02","30","1942","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["6","2026-09-01","W36","FAC1→FAC2","","COLUMN SW JS-2433","GL 723-SW000","18,21/8/2026","2026-08-18","2026-08-21","11","5116","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["7","2026-09-01","W36","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","9/1/2026","2026-09-01","2026-09-01","0","1270","OK – Proceed / 후공정 진행","OK","Y","","","","","다캐일자 M/D보정"],["8","2026-09-01","W36","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","31/8/2026","2026-08-31","2026-08-31","1","354","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["9","2026-09-01","W36","FAC1→FAC2","","COLUMN SIERRA","GL723X4000","9/1/2026","2026-09-01","2026-09-01","0","571","NG – Return to Fac 1 / 1공장 반송","NG반송","N","Crack","깨짐","NG","","다캐일자 M/D보정"],["10","2026-09-02","W37","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","9/1/2026","2026-09-01","2026-09-01","1","221","OK – Proceed / 후공정 진행","OK","Y","","","","","다캐일자 M/D보정"],["11","2026-09-02","W37","FAC1→FAC2","","HSG-INVERTER SUPPORT #1","CF623L3LAA-03","30,31/8/2026","2026-08-30","2026-08-31","2","1592","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["12","2026-09-02","W37","FAC1→FAC2","","HSG-INVERTER SUPPORT #2","CF623L3LAA-03","30,31/8/2026","2026-08-30","2026-08-31","2","1593","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["13","2026-09-02","W37","FAC1→FAC2","B/C B","BURNER CUP FISH B","DG90-01153A","9/1/2026","2026-09-01","2026-09-01","1","2912","OK – Proceed / 후공정 진행","OK","Y","","","","","다캐일자 M/D보정"],["14","2026-09-02","W37","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","9/1/2026","2026-09-01","2026-09-01","1","1084","OK – Proceed / 후공정 진행","OK","Y","Porosity","기포","","","다캐일자 M/D보정, 합격+불량기록"],["15","2026-09-02","W37","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","27/8/2026","2026-08-27","2026-08-27","6","113","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["16","2026-09-03","W37","FAC1→FAC2","Gem C/F","HOUSING CYLINDER FRONT/ MATRL ( Gem C/F )","CR510SVKAA03 (GEM)","27/8/2026","2026-08-27","2026-08-27","7","462","OK – Proceed / 후공정 진행","OK","Y","Drag mark","긁힘","","","합격+불량기록"],["17","2026-09-03","W37","FAC1→FAC2","BI3 PE LH","HEATSINK BI3 PE LH","6424991512BP","9/2/2026","2026-09-02","2026-09-02","1","335","OK – Proceed / 후공정 진행","OK","Y","","","","","다캐일자 M/D보정"],["18","2026-09-03","W37","FAC1→FAC2","BI3 PE RH","HEATSINK BI3 PE RH","6424991513BP","9/2/2026","2026-09-02","2026-09-02","1","335","OK – Proceed / 후공정 진행","OK","Y","","","","","다캐일자 M/D보정"],["19","2026-09-03","W37","FAC1→FAC2","","BRKT STAND SWIVEL REAR","","9/2/2026","2026-09-02","2026-09-02","1","967","OK – Proceed / 후공정 진행","OK","Y","Hight E-pin","밀핀긺","","","다캐일자 M/D보정, 합격+불량기록"],["20","2026-09-03","W37","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","9/1/2026","2026-09-01","2026-09-01","2","1040","OK – Proceed / 후공정 진행","OK","Y","Porosity","기포","","","다캐일자 M/D보정, 합격+불량기록"],["21","2026-09-03","W37","FAC1→FAC2","","BRKT STAND SWIVEL REAR","","9/2/2026","2026-09-02","2026-09-02","1","342","OK – Proceed / 후공정 진행","OK","Y","Short-Shot","미성형","","","다캐일자 M/D보정, 합격+불량기록"],["22","2026-09-03","W37","FAC1→FAC2","","MSF 1/2 J/F CAULKING ( FC1L0-F2S1A-02)","FC1L0-F2S1A-02","4,6/7/2026","2026-07-04","2026-07-06","59","10360","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["23","2026-09-03","W37","FAC1→FAC2","Gem C/F","HOUSING CYLINDER FRONT/ MATRL ( Gem C/F )","CR510SVKAA03 (GEM)","1,2/9/2026","2026-09-01","2026-09-02","1","973","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["24","2026-09-04","W37","FAC1→FAC2","Gem C/F","HOUSING CYLINDER FRONT/ MATRL ( Gem C/F )","CR510SVKAA03 (GEM)","3,4/9/2026","2026-09-03","2026-09-04","0","520","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["25","2026-09-04","W37","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","9/4/2026","2026-09-04","2026-09-04","0","384","OK – Proceed / 후공정 진행","OK","Y","Porosity","기포","","","다캐일자 M/D보정, 합격+불량기록"],["26","2026-09-04","W37","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","3,4/9/2026","2026-09-03","2026-09-04","0","200","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["27","2026-09-04","W37","FAC1→FAC2","Gem C/R","HOUSING CYLINDER REAR/ MATRL ( Gem C/R )","CR510SVKAB01 (GEM)","2,3/9/2026","2026-09-02","2026-09-03","1","1584","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["28","2026-09-04","W37","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","3/9/2026","2026-09-03","2026-09-03","1","1155","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["29","2026-09-04","W37","FAC1→FAC2","B/C B","BURNER CUP FISH B","DG90-01153A","2,3/9/2026","2026-09-02","2026-09-03","1","4551","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["30","2026-09-04","W37","FAC1→FAC2","M26 ZN","NUT SPIN M 26 ZN","6021-001573","31/8/2026","2026-08-31","2026-08-31","4","12440","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["31","2026-09-04","W37","FAC1→FAC2","M24 ZN","NUT SPIN M 24 ZN","DC60-50004A","23,24,25/8/2026","2026-08-23","2026-08-25","10","13556","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["32","2026-09-04","W37","FAC1→FAC2","CAM","LEVER DOOR (CAM)","DC66-00908A","4/9/2026","2026-09-04","2026-09-04","0","750","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["33","2026-09-04","W37","FAC1→FAC2","","BRKT STAND SWIVEL REAR","","3/9/2026","2026-09-03","2026-09-03","1","1924","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["34","2026-09-05","W37","FAC1→FAC2","","MSF 1/2 J/F CAULKING ( FC1L0-F2S1A-02)","FC1L0-F2S1A-02","30,31/7/2026","2026-07-30","2026-07-31","36","6592","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["35","2026-09-05","W37","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","3/9/2026","2026-09-03","2026-09-03","2","1028","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["36","2026-09-05","W37","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","4/9/2026","2026-09-04","2026-09-04","1","88","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["37","2026-09-05","W37","FAC1→FAC2","B/C B","BURNER CUP FISH B","DG90-01153A","3,4/9/2026","2026-09-03","2026-09-04","1","5300","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["38","2026-09-05","W37","FAC1→FAC2","","HSG-INVERTER COVER #1","CF624L3LAA-02","2,3/9/2026","2026-09-02","2026-09-03","2","900","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["39","2026-09-05","W37","FAC1→FAC2","","HSG-INVERTER COVER #2","CF624L3LAA-02","2,3/9/2026","2026-09-02","2026-09-03","2","900","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["40","2026-09-05","W37","FAC1→FAC2","","HSG-INVERTER SUPPORT #1","CF623L3LAA-03","9/2/2026","2026-09-02","2026-09-02","3","86","OK – Proceed / 후공정 진행","OK","Y","","","","","다캐일자 M/D보정"],["41","2026-09-05","W37","FAC1→FAC2","","HSG-INVERTER SUPPORT #2","CF623L3LAA-03","9/2/2026","2026-09-02","2026-09-02","3","125","OK – Proceed / 후공정 진행","OK","Y","","","","","다캐일자 M/D보정"],["42","2026-09-05","W37","FAC1→FAC2","","BRKT STAND SWIVEL REAR","","9/4/2026","2026-09-04","2026-09-04","1","2238","OK – Proceed / 후공정 진행","OK","Y","","","","","다캐일자 M/D보정"],["43","2026-09-07","W37","FAC1→FAC2","CAM","LEVER DOOR (CAM)","DC66-00908A","5/9/2026","2026-09-05","2026-09-05","2","14000","OK – Proceed / 후공정 진행","OK","Y","Drag mark","긁힘","","","합격+불량기록"],["44","2026-09-07","W37","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","5,6/9/2026","2026-09-05","2026-09-06","1","986","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["45","2026-09-07","W37","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","5,6/9/2026","2026-09-05","2026-09-06","1","359","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["46","2026-09-07","W37","FAC1→FAC2","CAM","LEVER DOOR (CAM)","DC66-00908A","7/9/2026","2026-09-07","2026-09-07","0","6000","OK – Proceed / 후공정 진행","OK","Y","Drag mark","긁힘","","","합격+불량기록"],["47","2026-09-07","W37","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","5/9/2026","2026-09-05","2026-09-05","2","1701","Rework Required / 재작업 필요","재작업","N","Crack","깨짐","Filing Required / 사상 필요","N/A DOC","문서누락"],["48","2026-09-07","W37","FAC1→FAC2","","BRKT STAND SWIVEL REAR","","5,6/9/2026","2026-09-05","2026-09-06","1","6198","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["49","2026-09-07","W37","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","7/9/2026","2026-09-07","2026-09-07","0","164","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["50","2026-09-07","W37","FAC1→FAC2","CAM","LEVER DOOR (CAM)","DC66-00908A","7/9/2026","2026-09-07","2026-09-07","0","4000","OK – Proceed / 후공정 진행","OK","Y","Drag mark","긁힘","","","합격+불량기록"],["51","2026-09-07","W37","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","7/9/2026","2026-09-07","2026-09-07","0","212","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["52","2026-09-07","W37","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","7/9/2026","2026-09-07","2026-09-07","0","576","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["53","2026-09-08","W37","FAC1→FAC2","CAM","LEVER DOOR (CAM)","DC66-00908A","7/9/2026","2026-09-07","2026-09-07","1","17376","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["54","2026-09-08","W37","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","7,8/9/2026","2026-09-07","2026-09-08","0","1071","OK – Proceed / 후공정 진행","OK","Y","Porosity","기포","","","합격+불량기록"],["55","2026-09-08","W37","FAC1→FAC2","","HOUSING REAR WASHER AA","CF620-CTEAA-01","7/9/2026","2026-09-07","2026-09-07","1","736","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["56","2026-09-08","W37","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","7/9/2026","2026-09-07","2026-09-07","1","4318","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["57","2026-09-08","W37","FAC1→FAC2","CAM","LEVER DOOR (CAM)","DC66-00908A","8/9/2026","2026-09-08","2026-09-08","0","10224","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["58","2026-09-08","W37","FAC1→FAC2","","HOUSING REAR WASHER AA","CF620-CTEAA-01","7,8/9/2026","2026-09-07","2026-09-08","0","714","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["59","2026-09-09","W38","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","8/9/2026","2026-09-08","2026-09-08","1","1172","Rework Required / 재작업 필요","재작업","N","Crack","깨짐","Filing Required / 사상 필요","N/A DOC","문서누락"],["60","2026-09-09","W38","FAC1→FAC2","M26 ZN","NUT SPIN M 26 ZN","6021-001573","26,28,29/8/2026","2026-08-26","2026-08-29","11","24056","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["61","2026-09-09","W38","FAC1→FAC2","M24 ZN","NUT SPIN M 24 ZN","DC60-50004A","26,28,29/8/2026","2026-08-26","2026-08-29","11","29526","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["62","2026-09-09","W38","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","8,9/9/2026","2026-09-08","2026-09-09","0","540","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["63","2026-09-09","W38","FAC1→FAC2","","HOUSING REAR WASHER AA","CF620-CTEAA-01","8/9/2026","2026-09-08","2026-09-08","1","706","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["64","2026-09-09","W38","FAC1→FAC2","","COLUMN SP3i NON KEY","GL723-BM3-00","8/9/2026","2026-09-08","2026-09-08","1","660","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["65","2026-09-09","W38","FAC1→FAC2","Gem C/F","HOUSING CYLINDER FRONT/ MATRL ( Gem C/F )","CR510SVKAA03 (GEM)","8/9/2026","2026-09-08","2026-09-08","1","961","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["66","2026-09-09","W38","FAC1→FAC2","CAM","LEVER DOOR (CAM)","DC66-00908A","8/9/2026","2026-09-08","2026-09-08","1","6848","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["67","2026-09-09","W38","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","9/9/2026","2026-09-09","2026-09-09","0","440","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["68","2026-09-09","W38","FAC1→FAC2","Gem C/R","HOUSING CYLINDER REAR/ MATRL ( Gem C/R )","CR510SVKAB01 (GEM)","9/9/2026","2026-09-09","2026-09-09","0","428","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["69","2026-09-10","W38","FAC1→FAC2","","FEMALE DSL 5/8 CAULKING (HC839-S1B1H)","HC839-S1B1H","9/9/2026","2026-09-09","2026-09-09","1","7350","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["70","2026-09-10","W38","FAC1→FAC2","","FEMALE DSL 5/8 CAULKING (HC839-S1B1H)","HC839-S1B1H","9/9/2026","2026-09-09","2026-09-09","1","1050","NG – Return to Fac 1 / 1공장 반송","NG반송","N","Drag mark #2","긁힘","NG","",""],["71","2026-09-10","W38","FAC1→FAC2","CAM","LEVER DOOR (CAM)","DC66-00908A","9/9/2026","2026-09-09","2026-09-09","1","29056","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["72","2026-09-10","W38","FAC1→FAC2","","HOUSING REAR WASHER AA","CF620-CTEAA-01","8,9/9/2026","2026-09-08","2026-09-09","1","1106","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["73","2026-09-10","W38","FAC1→FAC2","","HSG-INVERTER SUPPORT #1","CF623L3LAA-03","9/9/2026","2026-09-09","2026-09-09","1","550","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["74","2026-09-10","W38","FAC1→FAC2","","HSG-INVERTER SUPPORT #2","CF623L3LAA-03","9/9/2026","2026-09-09","2026-09-09","1","550","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["75","2026-09-10","W38","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","9/9/2026","2026-09-09","2026-09-09","1","596","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["76","2026-09-10","W38","FAC1→FAC2","","COLUMN SP3i NON KEY","GL723-BM3-00","8,9/9/2026","2026-09-08","2026-09-09","1","628","OK – Proceed / 후공정 진행","OK","Y","Slot tilted","변형","","","합격+불량기록"],["77","2026-09-10","W38","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","9/9/2026","2026-09-09","2026-09-09","1","1172","Rework Required / 재작업 필요","재작업","N","Crack","깨짐","Filing Required / 사상 필요","N/A DOC","문서누락"],["78","2026-09-10","W38","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","9,10/9/2026","2026-09-09","2026-09-10","0","485","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["79","2026-09-10","W38","FAC1→FAC2","Gem H/R","HOUSING HEAD REAR/MATRL ( Gem H/R )","CR519SVKAA02 (GEM)","22,29,31/8/2026","2026-08-22","2026-08-31","10","3265","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["80","2026-09-10","W38","FAC1→FAC2","Gem C/R","HOUSING CYLINDER REAR/ MATRL ( Gem C/R )","CR510SVKAB01 (GEM)","22,29,31/8/2026","2026-08-22","2026-08-31","10","6669","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["81","2026-09-11","W38","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","10/9/2026","2026-09-10","2026-09-10","1","686","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["82","2026-09-11","W38","FAC1→FAC2","Gem C/F","HOUSING CYLINDER FRONT/ MATRL ( Gem C/F )","CR510SVKAA03 (GEM)","17,18/8/2026","2026-08-17","2026-08-18","24","1344","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["83","2026-09-11","W38","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","10/9/2026","2026-09-10","2026-09-10","1","886","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["84","2026-09-11","W38","FAC1→FAC2","","COLUMN SP3i NON KEY","GL723-BM3-00","9,10/9/2026","2026-09-09","2026-09-10","1","703","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["85","2026-09-11","W38","FAC1→FAC2","","HSG-INVERTER SUPPORT #1","CF623L3LAA-03","9,10/9/2026","2026-09-09","2026-09-10","1","550","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["86","2026-09-11","W38","FAC1→FAC2","","HSG-INVERTER SUPPORT #2","CF623L3LAA-03","9,10/9/2026","2026-09-09","2026-09-10","1","550","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["87","2026-09-11","W38","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","10/9/2026","2026-09-10","2026-09-10","1","1174","Rework Required / 재작업 필요","재작업","N","Crack","깨짐","Filing Required / 사상 필요","N/A DOC","문서누락"],["88","2026-09-11","W38","FAC1→FAC2","Gem C/F","HOUSING CYLINDER FRONT/ MATRL ( Gem C/F )","CR510SVKAA03 (GEM)","9/9/2026","2026-09-09","2026-09-09","2","126","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["89","2026-09-11","W38","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","10,11/9/2026","2026-09-10","2026-09-11","0","220","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["90","2026-09-11","W38","FAC1→FAC2","HS-15R","HOUSING-CYLINDER / MATAL ( HS-15R )","CR510CD1AB02 (HS-15R)","5,6/8/2026","2026-08-05","2026-08-06","36","1594","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["91","2026-09-11","W38","FAC1→FAC2","","HSG-INVERTER COVER #1","CF624L3LAA-02","3,4,5/9/2026","2026-09-03","2026-09-05","6","875","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["92","2026-09-11","W38","FAC1→FAC2","","HSG-INVERTER COVER #2","CF624L3LAA-02","3,4,5/9/2026","2026-09-03","2026-09-05","6","875","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["93","2026-09-11","W38","FAC1→FAC2","","COLUMN SP3i NON KEY","GL723-BM3-00","10/9/2026","2026-09-10","2026-09-10","1","684","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["94","2026-09-11","W38","FAC1→FAC2","","HSG-INVERTER SUPPORT #1","CF623L3LAA-03","10,11/9/2026","2026-09-10","2026-09-11","0","550","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["95","2026-09-11","W38","FAC1→FAC2","","HSG-INVERTER SUPPORT #2","CF623L3LAA-03","10,11/9/2026","2026-09-10","2026-09-11","0","550","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["96","2026-09-11","W38","FAC1→FAC2","CAM","LEVER DOOR (CAM)","DC66-00908A","10,11/9/2026","2026-09-10","2026-09-11","0","40920","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["97","2026-09-11","W38","FAC1→FAC2","Gem C/F","HOUSING CYLINDER FRONT/ MATRL ( Gem C/F )","CR510SVKAA03 (GEM)","5,6/9/2026","2026-09-05","2026-09-06","5","411","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["98","2026-09-11","W38","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","10/9/2026","2026-09-10","2026-09-10","1","560","Rework Required / 재작업 필요","재작업","N","Crack","깨짐","Filing Required / 사상 필요","N/A DOC","문서누락"],["99","2026-09-11","W38","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","11/9/2026","2026-09-11","2026-09-11","0","220","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["100","2026-09-11","W38","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","11/9/2026","2026-09-11","2026-09-11","0","178","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["101","2026-09-12","W38","FAC1→FAC2","","BRKT STAND SWIVEL REAR","","14,17/8/2026","2026-08-14","2026-08-17","26","350","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["102","2026-09-12","W38","FAC1→FAC2","B/H G","BURNER HEAD FISH G","DG62-00073A","11/9/2026","2026-09-11","2026-09-11","1","980","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["103","2026-09-12","W38","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","11/9/2026","2026-09-11","2026-09-11","1","1119","Rework Required / 재작업 필요","재작업","N","Crack","깨짐","Filing Required / 사상 필요","N/A DOC","문서누락"],["104","2026-09-12","W38","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","11/9/2026","2026-09-11","2026-09-11","1","699","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["105","2026-09-12","W38","FAC1→FAC2","Gem C/F","HOUSING CYLINDER FRONT/ MATRL ( Gem C/F )","CR510SVKAA03 (GEM)","6/9/2026","2026-09-06","2026-09-06","6","528","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["106","2026-09-12","W38","FAC1→FAC2","Gem C/F","HOUSING CYLINDER FRONT/ MATRL ( Gem C/F )","CR510SVKAA03 (GEM)","9/9/2026","2026-09-09","2026-09-09","3","921","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["107","2026-09-12","W38","FAC1→FAC2","M26 ZN","NUT SPIN M 26 ZN","6021-001573","4,5/9/2026","2026-09-04","2026-09-05","7","13627","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["108","2026-09-12","W38","FAC1→FAC2","M24 ZN","NUT SPIN M 24 ZN","DC60-50004A","26,27,29/8/2026","2026-08-26","2026-08-29","14","13685","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["109","2026-09-12","W38","FAC1→FAC2","","GUIDE STAND NECK","","11,12/9/2026","2026-09-11","2026-09-12","0","1700","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["110","2026-09-12","W38","FAC1→FAC2","Gem H/R","HOUSING HEAD REAR/MATRL ( Gem H/R )","CR519SVKAA02 (GEM)","2,3,4/9/2026","2026-09-02","2026-09-04","8","2062","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["111","2026-09-12","W38","FAC1→FAC2","Gem C/R","HOUSING CYLINDER REAR/ MATRL ( Gem C/R )","CR510SVKAB01 (GEM)","31/8/2026,1,2/9/2026","2026-08-31","2026-09-02","10","2192","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["112","2026-09-14","W38","FAC1→FAC2","","BRKT STAND SWIVEL","","12,13/9/2026","2026-09-12","2026-09-13","1","3758","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["113","2026-09-14","W38","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","12/9/2026","2026-09-12","2026-09-12","2","1048","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["114","2026-09-14","W38","FAC1→FAC2","Gem C/F","HOUSING CYLINDER FRONT/ MATRL ( Gem C/F )","CR510SVKAA03 (GEM)","10,12,13/9/2026","2026-09-10","2026-09-13","1","717","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["115","2026-09-14","W38","FAC1→FAC2","M24 AL","NUT SPIN M 24 AL","6021-001222","27,28/8/2026","2026-08-27","2026-08-28","17","13053","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["116","2026-09-14","W38","FAC1→FAC2","","MSF 1/2 J/F CAULKING ( FC1L0-F2S1A-02)","FC1L0-F2S1A-02","6/7/2026","2026-07-06","2026-07-06","70","3040","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["117","2026-09-14","W38","FAC1→FAC2","","FEMALE DSL 5/8 CAULKING (HC839-S1B1H)","HC839-S1B1H","9/9/2026","2026-09-09","2026-09-09","5","8544","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["118","2026-09-14","W38","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","13/9/2026","2026-09-13","2026-09-13","1","862","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["119","2026-09-14","W38","FAC1→FAC2","B/C B","BURNER CUP FISH B","DG90-01153A","4,5/9/2026","2026-09-04","2026-09-05","9","3296","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["120","2026-09-14","W38","FAC1→FAC2","B/C G","BURNER CUP FISH G","DG90-01079A","24,25/7/2026","2026-07-24","2026-07-25","51","832","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["121","2026-09-14","W38","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","12,13/9/2026","2026-09-12","2026-09-13","1","601","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["122","2026-09-14","W38","FAC1→FAC2","HS-15F","HOUSING-CYLINDER /MATAL ( HS-15F )","CR510CD1AA02 (HS-15F)","31/7/2026,1/8/2026","2026-07-31","2026-08-01","44","943","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["123","2026-09-14","W38","FAC1→FAC2","HS-15R","HOUSING-CYLINDER / MATAL ( HS-15R )","CR510CD1AB02 (HS-15R)","5/8/2026","2026-08-05","2026-08-05","40","718","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["124","2026-09-14","W38","FAC1→FAC2","","HSG-INVERTER SUPPORT #1","CF623L3LAA-03","11,12/9/2026","2026-09-11","2026-09-12","2","1100","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["125","2026-09-14","W38","FAC1→FAC2","","HSG-INVERTER SUPPORT #2","CF623L3LAA-03","11,12/9/2026","2026-09-11","2026-09-12","2","1100","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["126","2026-09-14","W38","FAC1→FAC2","B/H G","BURNER HEAD FISH G","DG62-00073A","14/9/2026","2026-09-14","2026-09-14","0","659","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["127","2026-09-14","W38","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","14/9/2026","2026-09-14","2026-09-14","0","1100","Rework Required / 재작업 필요","재작업","N","Crack","깨짐","Filing Required / 사상 필요","",""],["128","2026-09-15","W38","FAC1→FAC2","","BRKT STAND SWIVEL","","14/9/2026","2026-09-14","2026-09-14","1","628","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["129","2026-09-15","W38","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","14/9/2026","2026-09-14","2026-09-14","1","441","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["130","2026-09-15","W38","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","13/9/2026","2026-09-13","2026-09-13","2","1107","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["131","2026-09-15","W38","FAC1→FAC2","CAM","LEVER DOOR (CAM)","DC66-00908A","11,12/9/2026","2026-09-11","2026-09-12","3","49152","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["132","2026-09-15","W38","FAC1→FAC2","Gem C/F","HOUSING CYLINDER FRONT/ MATRL ( Gem C/F )","CR510SVKAA03 (GEM)","18/8/2026","2026-08-18","2026-08-18","28","1105","OK – Proceed / 후공정 진행","OK","Y","","","","Datum Flatness OK / N/A DOC","Issue칸 확인문구, 문서누락"],["133","2026-09-15","W38","FAC1→FAC2","B/H G","BURNER HEAD FISH G","DG62-00073A","14/9/2026","2026-09-14","2026-09-14","1","870","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["134","2026-09-15","W38","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","14/9/2026","2026-09-14","2026-09-14","1","1493","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["135","2026-09-15","W38","FAC1→FAC2","","COLUMN SP3i NON KEY","GL723-BM3-00","11/9/2026","2026-09-11","2026-09-11","4","297","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["136","2026-09-15","W38","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","14/9/2026","2026-09-14","2026-09-14","1","679","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["137","2026-09-15","W38","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","13,14/9/2026","2026-09-13","2026-09-14","1","999","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["138","2026-09-16","W39","FAC1→FAC2","","LEVER DOOR","DC66-00133A","15/9/2026","2026-09-15","2026-09-15","1","9880","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["139","2026-09-16","W39","FAC1→FAC2","Gem C/R","HOUSING CYLINDER REAR/ MATRL ( Gem C/R )","CR510SVKAB01 (GEM)","15/9/2026","2026-09-15","2026-09-15","1","440","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["140","2026-09-16","W39","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","14/9/2026","2026-09-14","2026-09-14","2","664","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["141","2026-09-16","W39","FAC1→FAC2","Gem H/F","HOUSING HEAD FRONT/MATRL ( Gem H/F )","CR520SVKAA02 (GEM)","15/9/2026","2026-09-15","2026-09-15","1","1439","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["142","2026-09-16","W39","FAC1→FAC2","","GUIDE STAND NECK","","16/9/2026","2026-09-16","2026-09-16","0","596","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["143","2026-09-16","W39","FAC1→FAC2","B/C B","BURNER CUP FISH B","DG90-01153A","15/9/2026","2026-09-15","2026-09-15","1","2915","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["144","2026-09-16","W39","FAC1→FAC2","AUX LH","HEATSINK LH C1YB-2 AUX","6424991660BP","15/9/2026","2026-09-15","2026-09-15","1","1562","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["145","2026-09-16","W39","FAC1→FAC2","AUX RH","HEATSINK RH C1YB-2 AUX","6424991661BP","15/9/2026","2026-09-15","2026-09-15","1","1562","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["146","2026-09-16","W39","FAC1→FAC2","BA C/R","BA CYLINDER REAR","CR510QQDWB04","15/9/2026","2026-09-15","2026-09-15","1","1690","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["147","2026-09-16","W39","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","15/9/2026","2026-09-15","2026-09-15","1","1152","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["148","2026-09-16","W39","FAC1→FAC2","","LEVER DOOR","DC66-00133A","16/9/2026","2026-09-16","2026-09-16","0","5896","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["149","2026-09-16","W39","FAC1→FAC2","Gem H/F","HOUSING HEAD FRONT/MATRL ( Gem H/F )","CR520SVKAA02 (GEM)","15/9/2026","2026-09-15","2026-09-15","1","1530","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["150","2026-09-17","W39","FAC1→FAC2","BI3 PE LH","HEATSINK BI3 PE LH","6424991512BP","17/9/2026","2026-09-17","2026-09-17","0","664","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["151","2026-09-17","W39","FAC1→FAC2","BI3 PE RH","HEATSINK BI3 PE RH","6424991513BP","17/9/2026","2026-09-17","2026-09-17","0","365","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["152","2026-09-17","W39","FAC1→FAC2","BI3 OPT RH","HEATSINK BI3 OPT RH","6424991315BP","17/9/2026","2026-09-17","2026-09-17","0","118","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["153","2026-09-17","W39","FAC1→FAC2","BI3 OPT LH","HEATSINK BI3 OPT LH","6424991314BP","17/9/2026","2026-09-17","2026-09-17","0","100","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["154","2026-09-17","W39","FAC1→FAC2","Gem H/F","HOUSING HEAD FRONT/MATRL ( Gem H/F )","CR520SVKAA02 (GEM)","16/9/2026","2026-09-16","2026-09-16","1","980","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["155","2026-09-17","W39","FAC1→FAC2","BI3 PE LH","HEATSINK BI3 PE LH","6424991512BP","16/9/2026","2026-09-16","2026-09-16","1","169","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["156","2026-09-17","W39","FAC1→FAC2","BI3 PE RH","HEATSINK BI3 PE RH","6424991513BP","16/9/2026","2026-09-16","2026-09-16","1","66","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["157","2026-09-17","W39","FAC1→FAC2","Gem H/F","HOUSING HEAD FRONT/MATRL ( Gem H/F )","CR520SVKAA02 (GEM)","16/9/2026","2026-09-16","2026-09-16","1","1460","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["158","2026-09-17","W39","FAC1→FAC2","","GUIDE STAND NECK","","16/9/2026","2026-09-16","2026-09-16","1","848","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["159","2026-09-17","W39","FAC1→FAC2","","BRKT STAND SWIVEL REAR","","16/9/2026","2026-09-16","2026-09-16","1","454","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["160","2026-09-17","W39","FAC1→FAC2","","LEVER DOOR","DC66-00133A","16/9/2026","2026-09-16","2026-09-16","1","12540","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["161","2026-09-17","W39","FAC1→FAC2","","BRKT STAND SWIVEL","","16/9/2026","2026-09-16","2026-09-16","1","874","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["162","2026-09-17","W39","FAC1→FAC2","AUX LH","HEATSINK LH C1YB-2 AUX","6424991660BP","16/9/2026","2026-09-16","2026-09-16","1","1597","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["163","2026-09-17","W39","FAC1→FAC2","AUX RH","HEATSINK RH C1YB-2 AUX","6424991661BP","16/9/2026","2026-09-16","2026-09-16","1","1597","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["164","2026-09-17","W39","FAC1→FAC2","BI3 PE LH","HEATSINK BI3 PE LH","6424991512BP","16,17/9/2026","2026-09-16","2026-09-17","0","182","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["165","2026-09-17","W39","FAC1→FAC2","BI3 PE RH","HEATSINK BI3 PE RH","6424991513BP","16,17/9/2026","2026-09-16","2026-09-17","0","182","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["166","2026-09-17","W39","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","16/9/2026","2026-09-16","2026-09-16","1","1521","Hold – Inspection Required / 보류 – 검사 필요","HOLD","N","#Mold 2 Spec NG","스펙미달","","",""],["167","2026-09-18","W39","FAC1→FAC2","","BRKT STAND SWIVEL","","17/9/2026","2026-09-17","2026-09-17","1","142","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["168","2026-09-18","W39","FAC1→FAC2","B/H B","BURNER HEAD FISH B","DG62-00086A","17,18/9/2026","2026-09-17","2026-09-18","0","1692","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["169","2026-09-18","W39","FAC1→FAC2","","CN8 COVER#1","CR624L9SAA02","17,18/9/2026","2026-09-17","2026-09-18","0","1232","Rework Required / 재작업 필요","재작업","N","Crack","깨짐","Filing Required / 사상 필요","N/A DOC","문서누락"],["170","2026-09-18","W39","FAC1→FAC2","","CN8 COVER#2","CR624L9SAA02","17/9/2026","2026-09-17","2026-09-17","1","1232","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["171","2026-09-18","W39","FAC1→FAC2","","LEVER DOOR","DC66-00133A","17/9/2026","2026-09-17","2026-09-17","1","12900","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["172","2026-09-18","W39","FAC1→FAC2","","GUIDE STAND NECK","","27,28/8/2026","2026-08-27","2026-08-28","21","1488","OK – Proceed / 후공정 진행","OK","Y","Short-shot","미성형","","","합격+불량기록"],["173","2026-09-18","W39","FAC1→FAC2","Gem H/F","HOUSING HEAD FRONT/MATRL ( Gem H/F )","CR520SVKAA02 (GEM)","17/9/2026","2026-09-17","2026-09-17","1","3842","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["174","2026-09-18","W39","FAC1→FAC2","BI3 PE LH","HEATSINK BI3 PE LH","6424991512BP","17/9/2026","2026-09-17","2026-09-17","1","348","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["175","2026-09-18","W39","FAC1→FAC2","BI3 PE RH","HEATSINK BI3 PE RH","6424991513BP","17/9/2026","2026-09-17","2026-09-17","1","349","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["176","2026-09-18","W39","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","17/9/2026","2026-09-17","2026-09-17","1","907","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["177","2026-09-18","W39","FAC1→FAC2","","GUIDE STAND NECK","","17,18/9/2026","2026-09-17","2026-09-18","0","2748","OK – Proceed / 후공정 진행","OK","Y","Short-shot","미성형","","","합격+불량기록"],["178","2026-09-18","W39","FAC1→FAC2","","COLUMN SP3i KEY","GL723-BM2-00","18/9/2026","2026-09-18","2026-09-18","0","548","OK – Proceed / 후공정 진행","OK","Y","","","","",""],["179","2026-09-18","W39","FAC1→FAC2","Gem C/F","HOUSING CYLINDER FRONT/ MATRL ( Gem C/F )","CR510SVKAA03 (GEM)","26,27/8/2026","2026-08-26","2026-08-27","22","1442","OK – Proceed / 후공정 진행","OK","Y","","","","Datum Flatness OK / N/A Sign","Issue칸 확인문구, 문서누락"],["180","2026-09-18","W39","FAC1→FAC2","B/C G","BURNER CUP FISH G","DG90-01079A","28/7/2026","2026-07-28","2026-07-28","52","1172","OK – Proceed / 후공정 진행","OK","Y","","","","",""]]};
+let RAW_IQC = iqcFromSnap();
+let IQC_LIVE = false;
+function iqcFromSnap(){
+  const s = (typeof IQC_SNAPSHOT !== 'undefined') ? IQC_SNAPSHOT : null;
+  if (!s) return [];
+  return s.rows.map(r => { const o = {}; s.header.forEach((h,i) => { o[h] = r[i]; }); return o; });
+}
+async function iqcLoad(){
+  const rows = await fetchTabLive(IQC_GID, '입고일자');
+  if (rows && rows.length){ RAW_IQC = rows; IQC_LIVE = true; }
+  return IQC_LIVE;
+}
+
+const IQC_TXT = {
+  ko:{ title:'수입검사 (FAC1 → FAC2)', status:'수입검사 현황', analysis:'수입검사 품질 분석',
+       hist:'수입검사 불량이력', extra:'기타 업체 수입검사 (직접 입력)',
+       lot:'입고 Lot(건)', rej:'불합격 Lot(건)', rt:'Lot 불합격율(%)', qty:'입고 수량(EA)',
+       rq:'불합격 수량(EA)', qr:'수량 불합격율(%)', obs:'합격 중 불량기록(건)',
+       goal:'목  표', sum:'합  계',
+       kLot:'입고 Lot', kQty:'입고 수량', kRej:'불합격 Lot', kRate:'Lot 불합격율', kObs:'합격 중 불량기록',
+       kAge:'평균 경과일', kAgeU:'일 (다캐 → 입고)', prevW:'전주 {v}', prevP:'직전 기간 {v}', rejN:'불합격 {n}', cases:'{n}건', ea:'{n} EA',
+       chart:'주차별 입고 Lot · 불합격율', cLot:'입고 Lot(건)', cRate:'불합격율(%)',
+       byType:'현상별', none:'이 기간에 불합격 · 불량기록이 없습니다.',
+       pno:'품번', pnm:'품명', pLot:'입고 Lot', pQty:'입고 수량', pRej:'불합격 Lot', pRq:'불합격 수량',
+       pDef:'현상', pJ:'판정',
+       hSeq:'순번', hIn:'입고일', hDc:'다캐일', hAge:'경과일', hQty:'수량(EA)', hJ:'판정',
+       hDef:'현상', hAct:'조치', hRm:'비고 · 점검',
+       j_OK:'합격', 'j_특채':'특채', j_HOLD:'보류', 'j_선별':'선별', 'j_재작업':'재작업', 'j_NG반송':'NG 반송',
+       src:'출처: OEE 시트 IQC_수입검사 · {n}건 · {a} ~ {b}',
+       srcSnap:'출처: 내장 스냅샷 · {n}건 · {a} ~ {b} (IQC_GID 연결 전)',
+       dq:'데이터 점검 — 다캐일자 M/D 보정 {md}건 · 합격인데 불량 기록 {ob}건 · 문서 누락 {doc}건',
+       auto:'수입검사 원자료 자동집계', dayTitle:'수입검사 (FAC1 → FAC2)',
+       dayNone:'선택한 기간에 입고 기록이 없습니다.', ageTip:'다캐일(마지막) → 입고일',
+       fMD:'다캐일 M/D 보정', fDoc:'문서 누락', fIss:'Issue칸 확인문구', fPart:'품번 미등록', fSt:'상태 미분류' },
+  en:{ title:'Incoming inspection (FAC1 → FAC2)', status:'Incoming inspection status',
+       analysis:'Incoming quality analysis', hist:'Incoming defect history',
+       extra:'Other suppliers (manual entry)',
+       lot:'Received lots', rej:'Rejected lots', rt:'Lot rejection (%)', qty:'Received qty (EA)',
+       rq:'Rejected qty (EA)', qr:'Qty rejection (%)', obs:'Passed with defect noted',
+       goal:'Target', sum:'Total',
+       kLot:'Received lots', kQty:'Received qty', kRej:'Rejected lots', kRate:'Lot rejection',
+       kObs:'Passed, defect noted', kAge:'Avg. age', kAgeU:'days (cast → received)',
+       prevW:'prev. week {v}', prevP:'prev. period {v}', rejN:'rejected {n}', cases:'{n}', ea:'{n} EA',
+       chart:'Lots received and rejection rate by week', cLot:'Lots received', cRate:'Rejection (%)',
+       byType:'By defect', none:'No rejected lot or defect note in this period.',
+       pno:'Part no.', pnm:'Part name', pLot:'Lots', pQty:'Qty', pRej:'Rejected lots', pRq:'Rejected qty',
+       pDef:'Defect', pJ:'Result',
+       hSeq:'No.', hIn:'Received', hDc:'Cast', hAge:'Age', hQty:'Qty (EA)', hJ:'Result',
+       hDef:'Defect', hAct:'Action', hRm:'Remark · check',
+       j_OK:'Pass', 'j_특채':'Deviation', j_HOLD:'Hold', 'j_선별':'Sorting', 'j_재작업':'Rework',
+       'j_NG반송':'NG return',
+       src:'Source: OEE sheet IQC_수입검사 · {n} lots · {a} ~ {b}',
+       srcSnap:'Source: built-in snapshot · {n} lots · {a} ~ {b} (IQC_GID not linked yet)',
+       dq:'Data check — cast date read as M/D: {md} · passed but defect noted: {ob} · missing document: {doc}',
+       auto:'auto-calculated from incoming data', dayTitle:'Incoming inspection (FAC1 → FAC2)',
+       dayNone:'No lots received in the selected period.', ageTip:'last cast date → received date',
+       fMD:'cast date read as M/D', fDoc:'document missing', fIss:'check note in Issue', fPart:'part not in master', fSt:'status not mapped' },
+  th:{ title:'ตรวจรับเข้า (FAC1 → FAC2)', status:'สถานะการตรวจรับเข้า', analysis:'วิเคราะห์คุณภาพการรับเข้า',
+       hist:'ประวัติของเสียจากการรับเข้า', extra:'ผู้ขายอื่น (กรอกเอง)',
+       lot:'ล็อตรับเข้า', rej:'ล็อตไม่ผ่าน', rt:'อัตราล็อตไม่ผ่าน (%)', qty:'จำนวนรับเข้า (EA)',
+       rq:'จำนวนไม่ผ่าน (EA)', qr:'อัตราจำนวนไม่ผ่าน (%)', obs:'ผ่านแต่มีบันทึกของเสีย',
+       goal:'เป้าหมาย', sum:'รวม',
+       kLot:'ล็อตรับเข้า', kQty:'จำนวนรับเข้า', kRej:'ล็อตไม่ผ่าน', kRate:'อัตราล็อตไม่ผ่าน',
+       kObs:'ผ่าน แต่มีของเสีย', kAge:'อายุเฉลี่ย', kAgeU:'วัน (หล่อ → รับเข้า)',
+       prevW:'สัปดาห์ก่อน {v}', prevP:'ช่วงก่อนหน้า {v}', rejN:'ไม่ผ่าน {n}', cases:'{n}', ea:'{n} EA',
+       chart:'ล็อตรับเข้าและอัตราไม่ผ่านรายสัปดาห์', cLot:'ล็อตรับเข้า', cRate:'ไม่ผ่าน (%)',
+       byType:'ตามอาการ', none:'ไม่มีล็อตไม่ผ่านหรือบันทึกของเสียในช่วงนี้',
+       pno:'รหัสชิ้นงาน', pnm:'ชื่อชิ้นงาน', pLot:'ล็อต', pQty:'จำนวน', pRej:'ล็อตไม่ผ่าน', pRq:'จำนวนไม่ผ่าน',
+       pDef:'อาการ', pJ:'ผล',
+       hSeq:'ลำดับ', hIn:'วันรับ', hDc:'วันหล่อ', hAge:'อายุ', hQty:'จำนวน (EA)', hJ:'ผล',
+       hDef:'อาการ', hAct:'การแก้ไข', hRm:'หมายเหตุ · ตรวจ',
+       j_OK:'ผ่าน', 'j_특채':'อนุมัติพิเศษ', j_HOLD:'พักไว้', 'j_선별':'คัดแยก', 'j_재작업':'แก้ไขงาน',
+       'j_NG반송':'ส่งคืน FAC1',
+       src:'ที่มา: ชีต OEE IQC_수입검사 · {n} ล็อต · {a} ~ {b}',
+       srcSnap:'ที่มา: ข้อมูลในไฟล์ · {n} ล็อต · {a} ~ {b} (ยังไม่เชื่อม IQC_GID)',
+       dq:'ตรวจข้อมูล — วันหล่ออ่านเป็น M/D {md} · ผ่านแต่มีของเสีย {ob} · ไม่มีเอกสาร {doc}',
+       auto:'คำนวณอัตโนมัติจากข้อมูลรับเข้า', dayTitle:'ตรวจรับเข้า (FAC1 → FAC2)',
+       dayNone:'ไม่มีการรับเข้าในช่วงที่เลือก', ageTip:'วันหล่อสุดท้าย → วันรับเข้า',
+       fMD:'วันหล่ออ่านเป็น M/D', fDoc:'ไม่มีเอกสาร', fIss:'หมายเหตุในช่อง Issue', fPart:'ไม่มีในรายการชิ้นงาน', fSt:'สถานะไม่ตรง' }
+};
+function iqt(k, vars){
+  const tb = IQC_TXT[LANG] || {};
+  let s = Object.prototype.hasOwnProperty.call(tb,k) ? tb[k]
+        : (Object.prototype.hasOwnProperty.call(IQC_TXT.ko,k) ? IQC_TXT.ko[k] : k);
+  if (vars) for (const x in vars) s = s.split('{'+x+'}').join(vars[x]);
+  return s;
+}
+const IQC_JCLS = { 'OK':'ok', '특채':'dev', 'HOLD':'hold', '선별':'hold', '재작업':'rw', 'NG반송':'ng' };
+function iqcEsc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+/* 원본 문구가 'Filing Required / 사상 필요' 처럼 영/한 병기면 언어에 맞는 쪽만 쓴다 */
+function iqcBi(s){
+  s = String(s == null ? '' : s).trim();
+  const m = s.match(/^(.*?)\s+\/\s+(.*[가-힣].*)$/);
+  if (!m) return s;
+  return LANG === 'ko' ? m[2].trim() : m[1].trim();
+}
+const IQC_FLAG = { 'M/D':'fMD', '문서누락':'fDoc', 'Issue칸':'fIss', '품번 미등록':'fPart', '상태 미분류':'fSt' };
+function iqcFlag(f){
+  for (const k in IQC_FLAG) if (f.indexOf(k) >= 0) return iqt(IQC_FLAG[k]);
+  return f;
+}
+function iqcJBadge(j){
+  return '<span class="iqc-j ' + (IQC_JCLS[j] || 'hold') + '">' + iqcEsc(iqt('j_' + j)) + '</span>';
+}
+
+/* ---------- 집계 ---------- */
+function iqcRowsBetween(a, b){
+  return (RAW_IQC||[]).filter(r => { const d = String(r['입고일자']||'').trim(); return d && d >= a && d <= b; });
+}
+function iqcAgg(rows){
+  const o = { lots:0, qty:0, rej:0, rejQty:0, obs:0, obsQty:0, byJ:{}, byD:{}, byP:{},
+              ageSum:0, ageN:0, md:0, doc:0 };
+  rows.forEach(r => {
+    const q = num(String(r['수량']||'').replace(/,/g,''));
+    const pass = String(r['합격']).trim() === 'Y';
+    const j = r['판정'] || '-', d = String(r['불량유형']||'').trim(), nm = r['부품명'] || '-';
+    const ck = String(r['점검']||'');
+    o.lots++; o.qty += q; o.byJ[j] = (o.byJ[j]||0) + 1;
+    if (!pass){ o.rej++; o.rejQty += q; }
+    else if (d){ o.obs++; o.obsQty += q; }
+    if (d){
+      const x = o.byD[d] || (o.byD[d] = { lots:0, qty:0, rej:0 });
+      x.lots++; x.qty += q; if (!pass) x.rej++;
+    }
+    const p = o.byP[nm] || (o.byP[nm] = { name:nm, no:r['Part_No']||'', code:r['Part_Code']||'',
+                                          lots:0, qty:0, rej:0, rejQty:0, obs:0, defects:{}, js:{} });
+    p.lots++; p.qty += q; p.js[j] = (p.js[j]||0) + 1;
+    if (!pass){ p.rej++; p.rejQty += q; } else if (d) p.obs++;
+    if (d) p.defects[d] = (p.defects[d]||0) + 1;
+    const ag = String(r['경과일'] == null ? '' : r['경과일']).trim();
+    if (ag !== '' && isFinite(+ag)){ o.ageSum += +ag; o.ageN++; }
+    if (ck.indexOf('M/D') >= 0) o.md++;
+    if (ck.indexOf('문서누락') >= 0) o.doc++;
+  });
+  o.rate  = o.lots ? o.rej / o.lots * 100 : 0;
+  o.qrate = o.qty ? o.rejQty / o.qty * 100 : 0;
+  o.age   = o.ageN ? o.ageSum / o.ageN : null;
+  return o;
+}
+function iqcSpan(){
+  const ds = (RAW_IQC||[]).map(r => String(r['입고일자']||'').trim()).filter(Boolean).sort();
+  return ds.length ? { a:ds[0], b:ds[ds.length-1] } : null;
+}
+function iqcWeeks(){
+  return [...new Set((RAW_IQC||[]).map(r => r['주차']).filter(Boolean))]
+    .sort((a,b)=>(qrWeekNum(a)||0)-(qrWeekNum(b)||0));
+}
+function iqcSrcNote(){
+  const sp = iqcSpan(); if (!sp) return '';
+  return iqt(IQC_LIVE ? 'src' : 'srcSnap', { n:(RAW_IQC||[]).length.toLocaleString(), a:sp.a, b:sp.b });
+}
+
+/* ---------- 조각 ---------- */
+function iqcKpiHtml(a, p, prevKey){
+  const pv = (v) => p ? '<div class="d">' + iqt(prevKey || 'prevW', { v:v }) + '</div>' : '';
+  const card = (k, v, d, bad) => '<div class="iqc-kpi' + (bad ? ' bad' : '') + '"><div class="k">' + k +
+    '</div><div class="v">' + v + '</div>' + d + '</div>';
+  return '<div class="iqc-kpis">' +
+    card(iqt('kLot'), a.lots.toLocaleString(), pv(p ? p.lots.toLocaleString() : '')) +
+    card(iqt('kQty'), a.qty.toLocaleString(), pv(p ? p.qty.toLocaleString() : '')) +
+    card(iqt('kRej'), a.rej.toLocaleString() +
+      '<small> · ' + a.rejQty.toLocaleString() + ' EA</small>',
+      pv(p ? p.rej + ' · ' + p.rejQty.toLocaleString() + ' EA' : ''), a.rej > 0) +
+    card(iqt('kRate'), a.rate.toFixed(2) + '%', pv(p ? p.rate.toFixed(2) + '%' : ''), a.rate > 0) +
+    card(iqt('kObs'), a.obs.toLocaleString(), pv(p ? p.obs.toLocaleString() : '')) +
+    card(iqt('kAge'), a.age == null ? '–' : a.age.toFixed(1),
+      '<div class="d">' + iqt('kAgeU') + '</div>') +
+  '</div>';
+}
+function iqcTypeHtml(a){
+  const ks = Object.keys(a.byD).sort((x,y)=>a.byD[y].lots - a.byD[x].lots);
+  if (!ks.length) return '';
+  return '<div class="iqc-types"><b>' + iqt('byType') + '</b>' + ks.map(k => {
+    const x = a.byD[k];
+    return '<span class="' + (x.rej ? 'r' : '') + '">' + iqcEsc(trTerm(k)) + ' ' + x.lots +
+      (x.rej ? ' <em>' + iqt('rejN', { n:x.rej }) + '</em>' : '') + '</span>';
+  }).join('') + '</div>';
+}
+function iqcPartTbl(a){
+  const ps = Object.values(a.byP).filter(p => p.rej || p.obs)
+    .sort((x,y)=> (y.rejQty - x.rejQty) || (y.rej - x.rej) || (y.obs - x.obs));
+  if (!ps.length) return '<div class="r2empty">' + iqt('none') + '</div>';
+  return '<div class="r2wrap"><table class="r2t iqc-t"><thead><tr>' +
+    ['pno','pnm','pLot','pQty','pRej','pRq','pDef','pJ'].map((k,i)=>
+      '<th style="min-width:' + [96,190,56,74,64,78,150,130][i] + 'px">' + iqt(k) + '</th>').join('') +
+    '</tr></thead><tbody>' +
+    ps.map(p => '<tr' + (p.rej ? ' class="hi"' : '') + '>' +
+      '<td class="tx">' + iqcEsc(p.no || p.code || '–') + '</td>' +
+      '<td class="tx">' + iqcEsc(p.name) + '</td>' +
+      '<td class="v">' + p.lots + '</td><td class="v">' + p.qty.toLocaleString() + '</td>' +
+      '<td class="v' + (p.rej ? ' neg' : ' mut') + '">' + p.rej + '</td>' +
+      '<td class="v' + (p.rej ? ' neg' : ' mut') + '">' + p.rejQty.toLocaleString() + '</td>' +
+      '<td class="tx">' + Object.keys(p.defects).map(d => iqcEsc(trTerm(d)) + ' ' + p.defects[d]).join(', ') + '</td>' +
+      '<td class="tx">' + Object.keys(p.js).filter(j => j !== 'OK').map(j => iqcJBadge(j) + ' ' + p.js[j]).join(' ') +
+        (p.js.OK ? ' ' + iqcJBadge('OK') + ' ' + p.js.OK : '') + '</td></tr>').join('') +
+    '</tbody></table></div>';
+}
+/* 불량이력 — 불합격 Lot 과 합격이지만 불량이 기록된 Lot */
+function iqcHistTbl(rows){
+  const list = rows.filter(r => String(r['합격']).trim() !== 'Y' || String(r['불량유형']||'').trim())
+    .sort((x,y)=> String(x['입고일자']).localeCompare(String(y['입고일자'])) || (+x['No']) - (+y['No']));
+  if (!list.length) return '<div class="r2empty">' + iqt('none') + '</div>';
+  return '<div class="r2wrap"><table class="r2t iqc-t"><thead><tr>' +
+    ['hSeq','hIn','hDc','hAge','pno','pnm','hQty','hJ','hDef','hAct','hRm'].map((k,i)=>
+      '<th style="min-width:' + [36,74,86,44,92,180,62,74,120,120,130][i] + 'px">' + iqt(k) + '</th>').join('') +
+    '</tr></thead><tbody>' +
+    list.map((r,i) => {
+      const pass = String(r['합격']).trim() === 'Y';
+      const flags = String(r['점검']||'').split(',').map(s=>s.trim())
+        .filter(s => s && s !== '합격+불량기록' && s !== '불합격+현상없음');
+      const raw = String(r['불량유형_원문']||'').trim(), d = String(r['불량유형']||'').trim();
+      return '<tr' + (pass ? '' : ' class="hi"') + '>' +
+        '<td class="h" style="text-align:center">' + (i+1) + '</td>' +
+        '<td class="tx">' + iqcEsc(r['입고일자']) + '</td>' +
+        '<td class="tx">' + iqcEsc(r['다캐_시작'] === r['다캐_종료'] ? r['다캐_시작'] :
+                                    (r['다캐_시작'] + ' ~ ' + String(r['다캐_종료']).slice(5))) + '</td>' +
+        '<td class="v" title="' + iqt('ageTip') + '">' + iqcEsc(r['경과일']) + '</td>' +
+        '<td class="tx">' + iqcEsc(r['Part_No'] || r['Part_Code'] || '–') + '</td>' +
+        '<td class="tx">' + iqcEsc(r['부품명']) + '</td>' +
+        '<td class="v">' + num(r['수량']).toLocaleString() + '</td>' +
+        '<td class="tx">' + iqcJBadge(r['판정']) + '</td>' +
+        '<td class="tx">' + (d ? '<b>' + iqcEsc(trTerm(d)) + '</b>' : '–') +
+          (raw && raw.toLowerCase() !== String(trTerm(d)).toLowerCase() ? ' <span class="iqc-flag">' + iqcEsc(raw) + '</span>' : '') + '</td>' +
+        '<td class="tx">' + iqcEsc(iqcBi(r['조치'] || '')) + '</td>' +
+        '<td class="tx">' + iqcEsc(iqcBi(r['비고'] || '')) +
+          (flags.length ? '<span class="iqc-flag">' + iqcEsc(flags.map(iqcFlag).join(' · ')) + '</span>' : '') + '</td>' +
+      '</tr>';
+    }).join('') + '</tbody></table></div>';
+}
+/* 연간 월별 표 — 값은 자동, 목표만 입력 */
+function iqcMonTbl(Y, ys){
+  const mL = (LANG === 'ko') ? (m => m + '월') : (LANG === 'th' ? (m => 'ด.' + m) : (m => m));
+  const MA = []; for (let m = 1; m <= 12; m++){
+    const a = Y + '-' + String(m).padStart(2,'0') + '-01', b = Y + '-' + String(m).padStart(2,'0') + '-31';
+    MA.push(iqcAgg(iqcRowsBetween(a, b)));
+  }
+  const YA = iqcAgg(iqcRowsBetween(Y + '-01-01', Y + '-12-31'));
+  const R = [
+    { k:'lot', f:x => x.lots ? x.lots.toLocaleString() : '' },
+    { k:'rej', f:x => x.lots ? x.rej.toLocaleString() : '', hi:true },
+    { k:'rt',  f:x => x.lots ? x.rate.toFixed(2) : '', hi:true, goal:true },
+    { k:'qty', f:x => x.lots ? x.qty.toLocaleString() : '' },
+    { k:'rq',  f:x => x.lots ? x.rejQty.toLocaleString() : '' },
+    { k:'qr',  f:x => x.lots ? x.qrate.toFixed(2) : '', goal:true },
+    { k:'obs', f:x => x.lots ? x.obs.toLocaleString() : '' } ];
+  return '<div class="r2wrap"><table class="r2t"><thead><tr>' +
+    '<th style="min-width:130px">' + r2t('div') + '</th><th style="min-width:66px">' + iqt('goal') + '</th>' +
+    MA.map((x,i) => '<th style="min-width:54px">' + mL(i+1) + '</th>').join('') +
+    '<th style="min-width:70px">' + iqt('sum') + '</th></tr></thead><tbody>' +
+    R.map(r => '<tr' + (r.hi ? ' class="hi"' : '') + '><td class="h">' + iqt(r.k) + '</td>' +
+      '<td>' + (r.goal ? r2i(ys, 'c2.' + r.k + '.gl', 'num') : '') + '</td>' +
+      MA.map(x => '<td class="v">' + r.f(x) + '</td>').join('') +
+      '<td class="v">' + r.f(YA) + '</td></tr>').join('') +
+    '</tbody></table></div>';
+}
+
+/* ---------- 주간 품질보고 2 : 2장 / 2-1장 ---------- */
+let IQC_CHART = null;
+function iqcR2Sections(week, ys, ws, Y){
+  const rg = qrWeekRange(week);
+  const rows = rg ? iqcRowsBetween(rg.start, rg.end) : [];
+  const a = iqcAgg(rows);
+  const prg = rg ? { start:qrDateAdd(rg.start,-7), end:qrDateAdd(rg.start,-1) } : null;
+  const p = prg ? iqcAgg(iqcRowsBetween(prg.start, prg.end)) : null;
+  const all = iqcAgg(RAW_IQC||[]);
+
+  /* 주차별 추이 — 수입검사 자료가 있는 주차 + 선택 주차 */
+  const wks = iqcWeeks(); if (wks.indexOf(week) < 0 && rg) wks.push(week);
+  wks.sort((x,y)=>(qrWeekNum(x)||0)-(qrWeekNum(y)||0));
+  const WA = wks.map(w => { const r = qrWeekRange(w); return r ? iqcAgg(iqcRowsBetween(r.start, r.end)) : iqcAgg([]); });
+  IQC_CHART = { labels: wks.map(qrWkLabel), bars: WA.map(x=>x.lots || null),
+                line: WA.map(x=>x.lots ? +x.rate.toFixed(2) : null), selIdx: wks.indexOf(week) };
+
+  const src = '<div class="iqc-note">' + iqcSrcNote() + '<br>' +
+    iqt('dq', { md:all.md, ob:all.obs, doc:all.doc }) + '</div>';
+  const sec2 = r2sec('2', r2t('s2'), iqt('auto'),
+    r2sub(iqt('status'), iqt('auto'), String(Y)) + iqcMonTbl(Y, ys) +
+    '<div style="height:12px"></div>' +
+    '<div class="r2grid">' +
+      '<div>' + r2sub(qrWkLabel(week) + (rg ? ' (' + rg.start.slice(5) + ' ~ ' + rg.end.slice(5) + ')' : ''), 'KPI') +
+        iqcKpiHtml(a, p && p.lots ? p : null) + iqcTypeHtml(a) + '</div>' +
+      '<div>' + r2sub(iqt('chart')) + '<canvas id="chart-r2-iqc" class="r2chart"></canvas></div>' +
+    '</div>' +
+    '<div style="height:12px"></div>' +
+    r2sub(iqt('analysis'), qrWkLabel(week)) + iqcPartTbl(a) + src);
+
+  const s21cols = [ {k:'#', label:r2t('seq'), w:40}, {k:'d', label:r2t('date'), w:70, cls:''},
+    {k:'v', label:r2t('vendor'), w:110}, {k:'cd', label:r2t('codeno'), w:100},
+    {k:'nm', label:r2t('pnm'), w:150}, {k:'iq', label:r2t('insq'), w:80, cls:'num'},
+    {k:'dq', label:r2t('dnum'), w:64, cls:'num'}, {k:'pl', label:r2t('place'), w:80},
+    {k:'sy', label:r2t('symptom'), w:150}, {k:'ac', label:r2t('act'), w:150},
+    {k:'rm', label:r2t('remark'), w:90} ];
+  const sec21 = r2sec('2-1', r2t('s21'), iqt('auto'),
+    r2sub(iqt('hist'), qrWkLabel(week)) + iqcHistTbl(rows) +
+    '<div style="height:12px"></div>' +
+    r2sub(iqt('extra'), r2t('form')) + r2listTbl(ws, 'c21', s21cols, 3));
+  return { sec2:sec2, sec21:sec21 };
+}
+function iqcR2Draw(){
+  if (!IQC_CHART) return;
+  r2Combo('chart-r2-iqc', IQC_CHART.labels, IQC_CHART.bars, IQC_CHART.line,
+          { barName:iqt('cLot'), lineName:iqt('cRate'), selIdx:IQC_CHART.selIdx, lineDec:1, lineLabels:true });
+}
+
+/* ---------- 일일 품질보고 ---------- */
+function iqcDailyHtml(from, to){
+  const rows = iqcRowsBetween(from, to);
+  const n = dqDiff(from, to) + 1;
+  const pTo = qrDateAdd(from, -1), pFrom = qrDateAdd(pTo, -(n - 1));
+  const p = iqcAgg(iqcRowsBetween(pFrom, pTo));
+  const body = rows.length
+    ? iqcKpiHtml(iqcAgg(rows), p.lots ? p : null, 'prevP') +
+      iqcTypeHtml(iqcAgg(rows)) + iqcHistTbl(rows)
+    : '<div class="r2empty">' + iqt('dayNone') + '</div>';
+  return '<div class="dq-sub">' + iqt('dayTitle') + '</div>' + body +
+    '<div class="iqc-note">' + iqcSrcNote() + '</div>';
+}
+
 function renderQReport2(){
   const wSel = document.getElementById('qr2Week');
   if (!wSel) return;
@@ -7387,29 +7795,9 @@ function renderQReport2(){
     {k:'v3', label:'M+3', w:56, cls:''} ];
   const sec11 = r2sec('1-1', r2t('s11'), r2t('form'), r2listTbl(ws, 'c11', s11cols, 10));
 
-  /* ===== 2. 수입검사 ===== */
-  const iiHead = { pre:[ {k:'gl', label:r2t('ii_goal'), w:70} ], post:[ {k:'tt', label:r2t('sum'), w:70} ] };
-  const iiRows = [ {k:'lot', label:r2t('ii_lot')}, {k:'chk', label:r2t('ii_chk')},
-                   {k:'ng',  label:r2t('ii_ng'), hi:true}, {k:'rt', label:r2t('ii_rate'), hi:true},
-                   {k:'it',  label:r2t('ii_item')}, {k:'mi', label:r2t('ii_mitem')},
-                   {k:'mr',  label:r2t('ii_mrate')} ];
-  const s2bcols = [ {k:'#', label:r2t('div'), w:40}, {k:'v', label:r2t('vendor'), w:120},
-    {k:'pn', label:r2t('pno'), w:110}, {k:'nm', label:r2t('pnm'), w:150},
-    {k:'dc', label:r2t('dcont'), w:150}, {k:'q', label:r2t('dnum'), w:64, cls:'num'},
-    {k:'rm', label:r2t('remark'), w:110} ];
-  const sec2 = r2sec('2', r2t('s2'), r2t('form'),
-      r2sub(r2t('s2a'), r2t('ii_g1') + ' / ' + r2t('ii_g2')) + r2monTbl(ys, 'c2', iiRows, iiHead) +
-      '<div style="height:12px"></div>' +
-      r2sub(r2t('s2b')) + r2listTbl(ws, 'c2b', s2bcols, 7));
-
-  /* ===== 2-1. 수입검사 불량이력 ===== */
-  const s21cols = [ {k:'#', label:r2t('seq'), w:40}, {k:'d', label:r2t('date'), w:70, cls:''},
-    {k:'v', label:r2t('vendor'), w:110}, {k:'cd', label:r2t('codeno'), w:100},
-    {k:'nm', label:r2t('pnm'), w:150}, {k:'iq', label:r2t('insq'), w:80, cls:'num'},
-    {k:'dq', label:r2t('dnum'), w:64, cls:'num'}, {k:'pl', label:r2t('place'), w:80},
-    {k:'sy', label:r2t('symptom'), w:150}, {k:'ac', label:r2t('act'), w:150},
-    {k:'rm', label:r2t('remark'), w:90} ];
-  const sec21 = r2sec('2-1', r2t('s21'), r2t('form'), r2listTbl(ws, 'c21', s21cols, 8));
+  /* ===== 2. 수입검사 / 2-1. 수입검사 불량이력 — FAC1 → FAC2 원자료 자동집계 ===== */
+  const _iqc = iqcR2Sections(week, ys, ws, Y);
+  const sec2 = _iqc.sec2, sec21 = _iqc.sec21;
 
   /* ===== 3. 공정관리 현황 (실데이터) ===== */
   const a = qrAgg(week);
@@ -7490,6 +7878,7 @@ function renderQReport2(){
   if (R2_CHART) r2Combo('chart-r2-proc', R2_CHART.labels, R2_CHART.bars, R2_CHART.line,
           { barName:r2t('cQty'), lineName:r2t('cPpm'), selIdx:R2_CHART.selIdx });
   r2DrawDTrend();
+  iqcR2Draw();
   try{
     const m = sessionStorage.getItem('stc_do_msg');
     if (m){ const el = document.getElementById('doPasteMsg');
@@ -7733,6 +8122,8 @@ function renderDaily(){
 
   box.innerHTML =
     '<div class="qr-sheet" id="dqSheetInner">' +
+      rptCoverHtml('daily', (span.n === 1 ? span.from : (span.from + ' ~ ' + span.to)),
+        (span.n === 1 ? '' : dqt('days', { n:span.n })), (document.getElementById('dqWho')||{}).value) +
       '<div class="qr-head"><h2>' + dqt('head') +
         ' <span class="pd">' + rlabel + '</span></h2>' +
         '<div class="rt">' + t('qr.define') + '</div></div>' +
@@ -7753,6 +8144,7 @@ function renderDaily(){
         qrMeasureHtmlOf(qrMeasureAggBetween(span.from, span.to, sc), rlabel) + '</div>' +
       '<div class="qr-worst">' + qrWorstHtml(a, prevA, { b:rlabel, a: prevA ? plabel : '–' }) + '</div>' +
       '<div class="qr-comment">' + qrCommentHtml(a, prevA) + '</div>' +
+      '<div class="dq-iqc">' + iqcDailyHtml(span.from, span.to) + '</div>' +
       '<div class="qr-foot"><span>' + dqt('who') + ' ' +
         ((document.getElementById('dqWho')||{}).value || '-') + ' · ' +
         new Date().toISOString().slice(0,10) + '</span>' +
@@ -7804,7 +8196,8 @@ function dqDeltaHtml(A, B, la, lb){
     const sc = document.getElementById('dqScope'); if (sc) sc.addEventListener('change', renderDaily);
     const w  = document.getElementById('dqWho');
     if (w){ try{ w.value = localStorage.getItem('stc_dq_who') || ''; }catch(e){}
-            w.addEventListener('input', ()=>{ try{ localStorage.setItem('stc_dq_who', w.value); }catch(e){} }); }
+            w.addEventListener('input', ()=>{ try{ localStorage.setItem('stc_dq_who', w.value); }catch(e){}
+              clearTimeout(w._t); w._t = setTimeout(renderDaily, 500); }); }
     const lb = { dqLbFrom:'from', dqLbTo:'to', dqLbScope:'scope', dqLbWho:'who',
                  dqLbQuick:'quick', dqPrintBtn:'print', dqHint:'hint',
                  dqQ1:'q1', dqQ3:'q3', dqQ7:'q7', dqQW:'qw', dqQM:'qm' };
