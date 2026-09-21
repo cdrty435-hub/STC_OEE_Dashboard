@@ -515,6 +515,8 @@
   table.r2t td.v.pos{color:#1e7b34;}
   .r2sec>.sh .no:empty{display:none;}
   .dq-iqc-top{margin:14px 0 18px;}
+  .iqc-per{background:#eef3fa;border:1px solid #cfd9e5;border-left:4px solid #1e3c72;border-radius:3px;
+    padding:6px 10px;margin-bottom:10px;font-size:12px;color:#243a5e;}
   .iqc-moved{font-size:12px;color:#243a5e;font-weight:600;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
   .iqc-moved button{font:inherit;font-size:11.5px;font-weight:700;padding:3px 10px;border:1px solid #1e3c72;border-radius:3px;background:#1e3c72;color:#fff;cursor:pointer;}
   .r2sec>.sh .iqc-fac{margin-left:8px;font-weight:800;letter-spacing:.02em;}
@@ -7495,7 +7497,7 @@ const IQC_TXT = {
        srcSnap:'출처: 내장 스냅샷 · {n}건 · {a} ~ {b} (IQC_GID 연결 전)',
        dq:'데이터 점검 — 다캐일자 M/D 보정 {md}건 · 합격인데 불량 기록 {ob}건 · 문서 누락 {doc}건',
        auto:'수입검사 원자료 자동집계', dayTitle:'수입검사 (FAC1 → FAC2)',
-       dayNone:'선택한 기간에 입고 기록이 없습니다.', ageTip:'다캐일(마지막) → 입고일', daily:'일자별 집계 현황', tgt:'목표', moved:'수입검사 [ FAC1 → FAC2 ] 상세는 일일 품질보고 맨 위로 옮겼습니다. {w} : 입고 {a} Lot · 불합격 {r} Lot · 불합격율 {t}%', goDaily:'일일 품질보고에서 보기 →', mDay:'일일', mWeek:'주간', chartD:'일자별 입고 Lot · 불합격율', rFrom:'시작', rTo:'종료', rWeek:'보고 주차', rMonth:'최근 월', rAll:'전체', rDays:'{n}일', rCustom:'기간 지정', dDate:'일자',
+       dayNone:'선택한 기간에 입고 기록이 없습니다.', ageTip:'다캐일(마지막) → 입고일', daily:'일자별 집계 현황', tgt:'목표', perTop:'기간: {r} (상단에서 선택)', perNote:'📅 이 섹션의 모든 값은 맨 위에서 선택한 기간 <b>{r}</b> 기준입니다 — 주간 그래프만 주차별 추이를 보여줍니다.', moved:'수입검사 [ FAC1 → FAC2 ] 상세는 일일 품질보고 맨 위로 옮겼습니다. {w} : 입고 {a} Lot · 불합격 {r} Lot · 불합격율 {t}%', goDaily:'일일 품질보고에서 보기 →', mDay:'일일', mWeek:'주간', chartD:'일자별 입고 Lot · 불합격율', rFrom:'시작', rTo:'종료', rWeek:'보고 주차', rMonth:'최근 월', rAll:'전체', rDays:'{n}일', rCustom:'기간 지정', dDate:'일자',
        fMD:'다캐일 M/D 보정', fDoc:'문서 누락', fIss:'Issue칸 확인문구', fPart:'품번 미등록', fSt:'상태 미분류' },
   en:{ title:'Incoming inspection (FAC1 → FAC2)', status:'Incoming inspection status',
        analysis:'Incoming quality analysis', hist:'Incoming defect history',
@@ -7518,7 +7520,7 @@ const IQC_TXT = {
        srcSnap:'Source: built-in snapshot · {n} lots · {a} ~ {b} (IQC_GID not linked yet)',
        dq:'Data check — cast date read as M/D: {md} · passed but defect noted: {ob} · missing document: {doc}',
        auto:'auto-calculated from incoming data', dayTitle:'Incoming inspection (FAC1 → FAC2)',
-       dayNone:'No lots received in the selected period.', ageTip:'last cast date → received date', daily:'Daily summary', tgt:'Target', moved:'Incoming inspection [ FAC1 → FAC2 ] detail now sits at the top of the daily report. {w}: {a} lots received · {r} rejected · {t}%', goDaily:'Open in daily report →', mDay:'Daily', mWeek:'Weekly', chartD:'Lots received and rejection rate by day', rFrom:'From', rTo:'To', rWeek:'Report week', rMonth:'Latest month', rAll:'All', rDays:'{n} days', rCustom:'custom period', dDate:'Date',
+       dayNone:'No lots received in the selected period.', ageTip:'last cast date → received date', daily:'Daily summary', tgt:'Target', perTop:'Period: {r} (set at the top)', perNote:'📅 Every figure here uses the period chosen at the top: <b>{r}</b> — only the weekly chart shows the week-by-week trend.', moved:'Incoming inspection [ FAC1 → FAC2 ] detail now sits at the top of the daily report. {w}: {a} lots received · {r} rejected · {t}%', goDaily:'Open in daily report →', mDay:'Daily', mWeek:'Weekly', chartD:'Lots received and rejection rate by day', rFrom:'From', rTo:'To', rWeek:'Report week', rMonth:'Latest month', rAll:'All', rDays:'{n} days', rCustom:'custom period', dDate:'Date',
        fMD:'cast date read as M/D', fDoc:'document missing', fIss:'check note in Issue', fPart:'part not in master', fSt:'status not mapped' },
   th:{ title:'ตรวจรับเข้า (FAC1 → FAC2)', status:'สถานะการตรวจรับเข้า', analysis:'วิเคราะห์คุณภาพการรับเข้า',
        hist:'ประวัติของเสียจากการรับเข้า', extra:'ผู้ขายอื่น (กรอกเอง)',
@@ -7540,7 +7542,7 @@ const IQC_TXT = {
        srcSnap:'ที่มา: ข้อมูลในไฟล์ · {n} ล็อต · {a} ~ {b} (ยังไม่เชื่อม IQC_GID)',
        dq:'ตรวจข้อมูล — วันหล่ออ่านเป็น M/D {md} · ผ่านแต่มีของเสีย {ob} · ไม่มีเอกสาร {doc}',
        auto:'คำนวณอัตโนมัติจากข้อมูลรับเข้า', dayTitle:'ตรวจรับเข้า (FAC1 → FAC2)',
-       dayNone:'ไม่มีการรับเข้าในช่วงที่เลือก', ageTip:'วันหล่อสุดท้าย → วันรับเข้า', daily:'สรุปรายวัน', tgt:'เป้า', moved:'รายละเอียดการตรวจรับเข้า [ FAC1 → FAC2 ] ย้ายไปไว้บนสุดของรายงานรายวัน {w}: รับเข้า {a} ล็อต · ไม่ผ่าน {r} · {t}%', goDaily:'ดูในรายงานรายวัน →', mDay:'รายวัน', mWeek:'รายสัปดาห์', chartD:'ล็อตรับเข้าและอัตราไม่ผ่านรายวัน', rFrom:'จาก', rTo:'ถึง', rWeek:'สัปดาห์รายงาน', rMonth:'เดือนล่าสุด', rAll:'ทั้งหมด', rDays:'{n} วัน', rCustom:'กำหนดช่วง', dDate:'วันที่',
+       dayNone:'ไม่มีการรับเข้าในช่วงที่เลือก', ageTip:'วันหล่อสุดท้าย → วันรับเข้า', daily:'สรุปรายวัน', tgt:'เป้า', perTop:'ช่วง: {r} (เลือกด้านบน)', perNote:'📅 ทุกค่าในส่วนนี้ใช้ช่วงที่เลือกด้านบน <b>{r}</b> — ยกเว้นกราฟรายสัปดาห์ที่แสดงแนวโน้มรายสัปดาห์', moved:'รายละเอียดการตรวจรับเข้า [ FAC1 → FAC2 ] ย้ายไปไว้บนสุดของรายงานรายวัน {w}: รับเข้า {a} ล็อต · ไม่ผ่าน {r} · {t}%', goDaily:'ดูในรายงานรายวัน →', mDay:'รายวัน', mWeek:'รายสัปดาห์', chartD:'ล็อตรับเข้าและอัตราไม่ผ่านรายวัน', rFrom:'จาก', rTo:'ถึง', rWeek:'สัปดาห์รายงาน', rMonth:'เดือนล่าสุด', rAll:'ทั้งหมด', rDays:'{n} วัน', rCustom:'กำหนดช่วง', dDate:'วันที่',
        fMD:'วันหล่ออ่านเป็น M/D', fDoc:'ไม่มีเอกสาร', fIss:'หมายเหตุในช่อง Issue', fPart:'ไม่มีในรายการชิ้นงาน', fSt:'สถานะไม่ตรง' }
 };
 function iqt(k, vars){
@@ -7799,8 +7801,8 @@ function iqcDailySection(from, to){
   const wks = iqcWeeks(); if (wks.indexOf(selW) < 0) wks.push(selW);
   wks.sort((x,y)=>(qrWeekNum(x)||0)-(qrWeekNum(y)||0));
   const WA = wks.map(w => { const r = qrWeekRange(w); return r ? iqcAgg(iqcRowsBetween(r.start, r.end)) : iqcAgg([]); });
-  /* 일일 그래프 — 기간이 짧으면 앞뒤 맥락이 보이도록 14일치 */
-  const cFrom = n >= 14 ? from : qrDateAdd(to, -13);
+  /* 일일 그래프 — 상단에서 고른 기간 그대로 */
+  const cFrom = from;
   const days = []; for (let d = cFrom; d <= to; d = qrDateAdd(d, 1)) days.push(d);
   const DA = days.map(d => iqcAgg(iqcRowsBetween(d, d)));
   IQC_CHART = {
@@ -7811,9 +7813,9 @@ function iqcDailySection(from, to){
 
   const src = '<div class="iqc-note">' + iqcSrcNote() + '<br>' +
     iqt('dq', { md:all.md, ob:all.obs, doc:all.doc }) + '</div>';
-  return r2sec('', r2t('s2') + ' <span class="iqc-fac">[ FAC1 → FAC2 ]</span>', iqt('auto'),
-    r2sub(iqt('status'), iqt('auto'), String(Y)) + iqcMonTbl(Y, null, true) +
-    '<div style="height:12px"></div>' +
+  return r2sec('', r2t('s2') + ' <span class="iqc-fac">[ FAC1 → FAC2 ]</span>',
+    iqt('perTop', { r:rlab }),
+    '<div class="iqc-per">' + iqt('perNote', { r:rlab }) + '</div>' +
     r2sub(rlab, 'KPI') +
     iqcKpiHtml(a, p.lots ? p : null, 'prevP', iqcTgt('week')).replace('class="iqc-kpis"', 'class="iqc-kpis row6"') +
     iqcTypeHtml(a) +
