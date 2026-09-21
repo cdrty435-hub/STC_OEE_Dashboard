@@ -513,6 +513,10 @@
   .iqc-tgt{font-size:11.2px;font-weight:700;color:#c62828;white-space:nowrap;}
   .iqc-tgt input{width:58px;font:inherit;font-weight:700;padding:1px 4px;border:1px solid #e0a9a9;border-radius:3px;color:#c62828;text-align:right;}
   table.r2t td.v.pos{color:#1e7b34;}
+  .r2sec>.sh .no:empty{display:none;}
+  .dq-iqc-top{margin:14px 0 18px;}
+  .iqc-moved{font-size:12px;color:#243a5e;font-weight:600;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .iqc-moved button{font:inherit;font-size:11.5px;font-weight:700;padding:3px 10px;border:1px solid #1e3c72;border-radius:3px;background:#1e3c72;color:#fff;cursor:pointer;}
   .r2sec>.sh .iqc-fac{margin-left:8px;font-weight:800;letter-spacing:.02em;}
   .iqc-tog{margin-left:auto;display:inline-flex;border:1px solid #c2ccd6;border-radius:3px;overflow:hidden;}
   .iqc-tog button{font:inherit;font-size:11px;font-weight:700;padding:3px 12px;border:0;background:#fff;color:#1e3c72;cursor:pointer;}
@@ -7491,7 +7495,7 @@ const IQC_TXT = {
        srcSnap:'출처: 내장 스냅샷 · {n}건 · {a} ~ {b} (IQC_GID 연결 전)',
        dq:'데이터 점검 — 다캐일자 M/D 보정 {md}건 · 합격인데 불량 기록 {ob}건 · 문서 누락 {doc}건',
        auto:'수입검사 원자료 자동집계', dayTitle:'수입검사 (FAC1 → FAC2)',
-       dayNone:'선택한 기간에 입고 기록이 없습니다.', ageTip:'다캐일(마지막) → 입고일', daily:'일자별 집계 현황', tgt:'목표', mDay:'일일', mWeek:'주간', chartD:'일자별 입고 Lot · 불합격율', rFrom:'시작', rTo:'종료', rWeek:'보고 주차', rMonth:'최근 월', rAll:'전체', rDays:'{n}일', rCustom:'기간 지정', dDate:'일자',
+       dayNone:'선택한 기간에 입고 기록이 없습니다.', ageTip:'다캐일(마지막) → 입고일', daily:'일자별 집계 현황', tgt:'목표', moved:'수입검사 [ FAC1 → FAC2 ] 상세는 일일 품질보고 맨 위로 옮겼습니다. {w} : 입고 {a} Lot · 불합격 {r} Lot · 불합격율 {t}%', goDaily:'일일 품질보고에서 보기 →', mDay:'일일', mWeek:'주간', chartD:'일자별 입고 Lot · 불합격율', rFrom:'시작', rTo:'종료', rWeek:'보고 주차', rMonth:'최근 월', rAll:'전체', rDays:'{n}일', rCustom:'기간 지정', dDate:'일자',
        fMD:'다캐일 M/D 보정', fDoc:'문서 누락', fIss:'Issue칸 확인문구', fPart:'품번 미등록', fSt:'상태 미분류' },
   en:{ title:'Incoming inspection (FAC1 → FAC2)', status:'Incoming inspection status',
        analysis:'Incoming quality analysis', hist:'Incoming defect history',
@@ -7514,7 +7518,7 @@ const IQC_TXT = {
        srcSnap:'Source: built-in snapshot · {n} lots · {a} ~ {b} (IQC_GID not linked yet)',
        dq:'Data check — cast date read as M/D: {md} · passed but defect noted: {ob} · missing document: {doc}',
        auto:'auto-calculated from incoming data', dayTitle:'Incoming inspection (FAC1 → FAC2)',
-       dayNone:'No lots received in the selected period.', ageTip:'last cast date → received date', daily:'Daily summary', tgt:'Target', mDay:'Daily', mWeek:'Weekly', chartD:'Lots received and rejection rate by day', rFrom:'From', rTo:'To', rWeek:'Report week', rMonth:'Latest month', rAll:'All', rDays:'{n} days', rCustom:'custom period', dDate:'Date',
+       dayNone:'No lots received in the selected period.', ageTip:'last cast date → received date', daily:'Daily summary', tgt:'Target', moved:'Incoming inspection [ FAC1 → FAC2 ] detail now sits at the top of the daily report. {w}: {a} lots received · {r} rejected · {t}%', goDaily:'Open in daily report →', mDay:'Daily', mWeek:'Weekly', chartD:'Lots received and rejection rate by day', rFrom:'From', rTo:'To', rWeek:'Report week', rMonth:'Latest month', rAll:'All', rDays:'{n} days', rCustom:'custom period', dDate:'Date',
        fMD:'cast date read as M/D', fDoc:'document missing', fIss:'check note in Issue', fPart:'part not in master', fSt:'status not mapped' },
   th:{ title:'ตรวจรับเข้า (FAC1 → FAC2)', status:'สถานะการตรวจรับเข้า', analysis:'วิเคราะห์คุณภาพการรับเข้า',
        hist:'ประวัติของเสียจากการรับเข้า', extra:'ผู้ขายอื่น (กรอกเอง)',
@@ -7536,7 +7540,7 @@ const IQC_TXT = {
        srcSnap:'ที่มา: ข้อมูลในไฟล์ · {n} ล็อต · {a} ~ {b} (ยังไม่เชื่อม IQC_GID)',
        dq:'ตรวจข้อมูล — วันหล่ออ่านเป็น M/D {md} · ผ่านแต่มีของเสีย {ob} · ไม่มีเอกสาร {doc}',
        auto:'คำนวณอัตโนมัติจากข้อมูลรับเข้า', dayTitle:'ตรวจรับเข้า (FAC1 → FAC2)',
-       dayNone:'ไม่มีการรับเข้าในช่วงที่เลือก', ageTip:'วันหล่อสุดท้าย → วันรับเข้า', daily:'สรุปรายวัน', tgt:'เป้า', mDay:'รายวัน', mWeek:'รายสัปดาห์', chartD:'ล็อตรับเข้าและอัตราไม่ผ่านรายวัน', rFrom:'จาก', rTo:'ถึง', rWeek:'สัปดาห์รายงาน', rMonth:'เดือนล่าสุด', rAll:'ทั้งหมด', rDays:'{n} วัน', rCustom:'กำหนดช่วง', dDate:'วันที่',
+       dayNone:'ไม่มีการรับเข้าในช่วงที่เลือก', ageTip:'วันหล่อสุดท้าย → วันรับเข้า', daily:'สรุปรายวัน', tgt:'เป้า', moved:'รายละเอียดการตรวจรับเข้า [ FAC1 → FAC2 ] ย้ายไปไว้บนสุดของรายงานรายวัน {w}: รับเข้า {a} ล็อต · ไม่ผ่าน {r} · {t}%', goDaily:'ดูในรายงานรายวัน →', mDay:'รายวัน', mWeek:'รายสัปดาห์', chartD:'ล็อตรับเข้าและอัตราไม่ผ่านรายวัน', rFrom:'จาก', rTo:'ถึง', rWeek:'สัปดาห์รายงาน', rMonth:'เดือนล่าสุด', rAll:'ทั้งหมด', rDays:'{n} วัน', rCustom:'กำหนดช่วง', dDate:'วันที่',
        fMD:'วันหล่ออ่านเป็น M/D', fDoc:'ไม่มีเอกสาร', fIss:'หมายเหตุในช่อง Issue', fPart:'ไม่มีในรายการชิ้นงาน', fSt:'สถานะไม่ตรง' }
 };
 function iqt(k, vars){
@@ -7749,7 +7753,7 @@ function iqcHistTbl(rows){
     }).join('') + '</tbody></table></div>';
 }
 /* 연간 월별 표 — 값은 자동, 목표만 입력 */
-function iqcMonTbl(Y, ys){
+function iqcMonTbl(Y, ys, roGoal){
   const mL = (LANG === 'ko') ? (m => m + '월') : (LANG === 'th' ? (m => 'ด.' + m) : (m => m));
   const MA = []; for (let m = 1; m <= 12; m++){
     const a = Y + '-' + String(m).padStart(2,'0') + '-01', b = Y + '-' + String(m).padStart(2,'0') + '-31';
@@ -7769,7 +7773,8 @@ function iqcMonTbl(Y, ys){
     MA.map((x,i) => '<th style="min-width:54px">' + mL(i+1) + '</th>').join('') +
     '<th style="min-width:70px">' + iqt('sum') + '</th></tr></thead><tbody>' +
     R.map(r => '<tr' + (r.hi ? ' class="hi"' : '') + '><td class="h">' + iqt(r.k) + '</td>' +
-      '<td>' + (r.goal ? r2i(ys, 'c2.' + r.k + '.gl', 'num') : '') + '</td>' +
+      (roGoal ? '<td class="v">' + (r.k === 'rt' && iqcTgt('week') ? iqcTgt('week').toFixed(1) : '') + '</td>'
+              : '<td>' + (r.goal ? r2i(ys, 'c2.' + r.k + '.gl', 'num') : '') + '</td>') +
       MA.map(x => '<td class="v">' + r.f(x) + '</td>').join('') +
       '<td class="v">' + r.f(YA) + '</td></tr>').join('') +
     '</tbody></table></div>';
@@ -7777,6 +7782,66 @@ function iqcMonTbl(Y, ys){
 
 /* ---------- 주간 품질보고 2 : 2장 / 2-1장 ---------- */
 let IQC_CHART = null;
+/* ---------- 일일 품질보고 맨 위 : 수입검사 [ FAC1 → FAC2 ] ----------
+   기간 = 일일 보고에서 고른 기간. 비교 = 바로 앞의 같은 길이 기간. */
+function iqcWeekOf(iso){ return 'W' + (QR_WEEK_ANCHOR.n + Math.floor(dqDiff(QR_WEEK_ANCHOR.start, iso) / 7)); }
+function iqcDailySection(from, to){
+  const n = dqDiff(from, to) + 1;
+  const pTo = qrDateAdd(from, -1), pFrom = qrDateAdd(pTo, -(n - 1));
+  const rows = iqcRowsBetween(from, to);
+  const a = iqcAgg(rows), p = iqcAgg(iqcRowsBetween(pFrom, pTo));
+  const all = iqcAgg(RAW_IQC||[]);
+  const Y = parseInt(to.slice(0,4), 10);
+  const rlab = (n === 1) ? from : (from + ' ~ ' + to + ' · ' + dqt('days', { n:n }));
+
+  /* 주간 그래프 — 수입검사 자료가 있는 주차 + 기간 끝이 들어 있는 주차 */
+  const selW = iqcWeekOf(to);
+  const wks = iqcWeeks(); if (wks.indexOf(selW) < 0) wks.push(selW);
+  wks.sort((x,y)=>(qrWeekNum(x)||0)-(qrWeekNum(y)||0));
+  const WA = wks.map(w => { const r = qrWeekRange(w); return r ? iqcAgg(iqcRowsBetween(r.start, r.end)) : iqcAgg([]); });
+  /* 일일 그래프 — 기간이 짧으면 앞뒤 맥락이 보이도록 14일치 */
+  const cFrom = n >= 14 ? from : qrDateAdd(to, -13);
+  const days = []; for (let d = cFrom; d <= to; d = qrDateAdd(d, 1)) days.push(d);
+  const DA = days.map(d => iqcAgg(iqcRowsBetween(d, d)));
+  IQC_CHART = {
+    week: { labels: wks.map(qrWkLabel), bars: WA.map(x=>x.lots || null),
+            line: WA.map(x=>x.lots ? +x.rate.toFixed(2) : null), selIdx: wks.indexOf(selW) },
+    day:  { labels: days.map(d => d.slice(5).replace('-','/')), bars: DA.map(x=>x.lots || null),
+            line: DA.map(x=>x.lots ? +x.rate.toFixed(2) : null), selIdx: n === 1 ? days.length - 1 : -1 } };
+
+  const src = '<div class="iqc-note">' + iqcSrcNote() + '<br>' +
+    iqt('dq', { md:all.md, ob:all.obs, doc:all.doc }) + '</div>';
+  return r2sec('', r2t('s2') + ' <span class="iqc-fac">[ FAC1 → FAC2 ]</span>', iqt('auto'),
+    r2sub(iqt('status'), iqt('auto'), String(Y)) + iqcMonTbl(Y, null, true) +
+    '<div style="height:12px"></div>' +
+    r2sub(rlab, 'KPI') +
+    iqcKpiHtml(a, p.lots ? p : null, 'prevP', iqcTgt('week')).replace('class="iqc-kpis"', 'class="iqc-kpis row6"') +
+    iqcTypeHtml(a) +
+    '<div style="height:10px"></div>' +
+    '<div class="r2grid">' +
+      '<div><div class="r2sub">' + iqt('chartD') + ' <span class="iqc-sub">' + cFrom.slice(5) + ' ~ ' + to.slice(5) + '</span>' +
+        '<span class="note qr-noprint">' + iqcTgtInput('day') + '</span></div>' +
+        '<canvas id="chart-r2-iqc-d" class="r2chart"></canvas></div>' +
+      '<div><div class="r2sub">' + iqt('chart') +
+        '<span class="note qr-noprint">' + iqcTgtInput('week') + '</span></div>' +
+        '<canvas id="chart-r2-iqc-w" class="r2chart"></canvas></div>' +
+    '</div>' +
+    '<div style="height:12px"></div>' +
+    r2sub(iqt('daily'), '', rlab) + iqcDayTbl(from, to) +
+    '<div style="height:12px"></div>' +
+    r2sub(iqt('analysis'), '', rlab) + iqcPartTbl(a) +
+    '<div style="height:12px"></div>' +
+    r2sub(iqt('hist'), '', rlab) + iqcHistTbl(rows) + src);
+}
+function iqcGoDaily(a, b){
+  navGo('daily');
+  if (a && b && typeof dqSetSpan === 'function') dqSetSpan(a, b);
+}
+function iqcRerender(){
+  if (typeof NAV_CUR !== 'undefined' && NAV_CUR === 'daily' && typeof renderDaily === 'function') renderDaily();
+  else renderQReport2();
+}
+
 function iqcR2Sections(week, ys, ws, Y){
   const rg = qrWeekRange(week);
   const rows = rg ? iqcRowsBetween(rg.start, rg.end) : [];
@@ -7802,30 +7867,11 @@ function iqcR2Sections(week, ys, ws, Y){
 
   const src = '<div class="iqc-note">' + iqcSrcNote() + '<br>' +
     iqt('dq', { md:all.md, ob:all.obs, doc:all.doc }) + '</div>';
-  const sec2 = r2sec('2', r2t('s2') + ' <span class="iqc-fac">[ FAC1 → FAC2 ]</span>', iqt('auto'),
-    r2sub(iqt('status'), iqt('auto'), String(Y)) + iqcMonTbl(Y, ys) +
-    '<div style="height:12px"></div>' +
-    r2sub(qrWkLabel(week) + (rg ? ' (' + rg.start.slice(5) + ' ~ ' + rg.end.slice(5) + ')' : ''), 'KPI') +
-    iqcKpiHtml(a, p && p.lots ? p : null, null, iqcTgt('week')).replace('class="iqc-kpis"', 'class="iqc-kpis row6"') +
-    iqcTypeHtml(a) +
-    '<div style="height:10px"></div>' +
-    '<div class="r2grid">' +
-      '<div><div class="r2sub">' + iqt('chartD') + (DR ? ' <span class="iqc-sub">' + DR.from.slice(5) + ' ~ ' + DR.to.slice(5) + '</span>' : '') +
-        '<span class="note qr-noprint">' + iqcTgtInput('day') + '</span></div>' +
-        '<canvas id="chart-r2-iqc-d" class="r2chart"></canvas></div>' +
-      '<div><div class="r2sub">' + iqt('chart') +
-        '<span class="note qr-noprint">' + iqcTgtInput('week') + '</span></div>' +
-        '<canvas id="chart-r2-iqc-w" class="r2chart"></canvas></div>' +
-    '</div>' +
-
-    '<div style="height:12px"></div>' +
-    (function(){
-      const R = IQC_RNG || (rg ? { from:rg.start, to:rg.end } : null);
-      if (!R) return '';
-      return r2sub(iqt('daily'), IQC_RNG ? iqt('rCustom') : qrWkLabel(week)) +
-        iqcRangeCtl(R.from, R.to, !IQC_RNG) + iqcDayTbl(R.from, R.to) + '<div style="height:12px"></div>';
-    })() +
-    r2sub(iqt('analysis'), qrWkLabel(week)) + iqcPartTbl(a) + src);
+  /* 2장 본문은 일일 품질보고 맨 위로 옮겼다 — 여기는 번호와 바로가기만 남긴다 */
+  const sec2 = r2sec('2', r2t('s2') + ' <span class="iqc-fac">[ FAC1 → FAC2 ]</span>', '',
+    '<div class="iqc-moved">' + iqt('moved', { w:qrWkLabel(week), a:a.lots, r:a.rej, t:a.rate.toFixed(2) }) +
+    ' <button type="button" class="qr-noprint" onclick="iqcGoDaily(\'' + (rg ? rg.start : '') + '\',\'' + (rg ? rg.end : '') + '\')">' +
+    iqt('goDaily') + '</button></div>');
 
   const s21cols = [ {k:'#', label:r2t('seq'), w:40}, {k:'d', label:r2t('date'), w:70, cls:''},
     {k:'v', label:r2t('vendor'), w:110}, {k:'cd', label:r2t('codeno'), w:100},
@@ -7843,9 +7889,11 @@ let IQC_TGT = { day:'', week:'' };
 try{ IQC_TGT = Object.assign(IQC_TGT, JSON.parse(localStorage.getItem('stc_iqc_target') || '{}')); }catch(e){}
 function iqcTgt(k){ const v = parseFloat(IQC_TGT[k]); return isFinite(v) && v > 0 ? v : null; }
 function iqcSetTarget(k, v){
-  IQC_TGT[k] = String(v || '').trim();
+  const nv = String(v || '').trim();
+  if (nv === String(IQC_TGT[k] || '')) return;              /* blur 로 같은 값이 한 번 더 오는 경우 */
+  IQC_TGT[k] = nv;
   try{ localStorage.setItem('stc_iqc_target', JSON.stringify(IQC_TGT)); }catch(e){}
-  renderQReport2();
+  setTimeout(iqcRerender, 0);                              /* 입력칸 이벤트가 끝난 뒤에 다시 그린다 */
 }
 function iqcTgtInput(k){
   return '<span class="iqc-tgt">' + iqt('tgt') + ' <input type="number" min="0" step="0.1" value="' +
@@ -8284,6 +8332,7 @@ function renderDaily(){
     '<div class="qr-sheet" id="dqSheetInner">' +
       rptCoverHtml('daily', (span.n === 1 ? span.from : (span.from + ' ~ ' + span.to)),
         (span.n === 1 ? '' : dqt('days', { n:span.n })), (document.getElementById('dqWho')||{}).value) +
+      '<div class="dq-iqc-top">' + iqcDailySection(span.from, span.to) + '</div>' +
       '<div class="qr-head"><h2>' + dqt('head') +
         ' <span class="pd">' + rlabel + '</span></h2>' +
         '<div class="rt">' + t('qr.define') + '</div></div>' +
@@ -8304,7 +8353,6 @@ function renderDaily(){
         qrMeasureHtmlOf(qrMeasureAggBetween(span.from, span.to, sc), rlabel) + '</div>' +
       '<div class="qr-worst">' + qrWorstHtml(a, prevA, { b:rlabel, a: prevA ? plabel : '–' }) + '</div>' +
       '<div class="qr-comment">' + qrCommentHtml(a, prevA) + '</div>' +
-      '<div class="dq-iqc">' + iqcDailyHtml(span.from, span.to) + '</div>' +
       '<div class="qr-foot"><span>' + dqt('who') + ' ' +
         ((document.getElementById('dqWho')||{}).value || '-') + ' · ' +
         new Date().toISOString().slice(0,10) + '</span>' +
@@ -8312,6 +8360,7 @@ function renderDaily(){
     '</div>';
 
   mvDraw();
+  iqcR2Draw();      /* 수입검사 일일 · 주간 그래프 */
   /* 추이 차트 — 주간 보고와 같은 그림, 칸이 많으면 값 라벨만 성기게 */
   drawQWeeklyChart('chart-dq-trend', C, sel, cmp, { hiSet: hiSet, sparseLabels: C.length > 10 });
   const de = document.getElementById('dqTrendDelta');
