@@ -7497,7 +7497,7 @@ const IQC_TXT = {
        srcSnap:'출처: 내장 스냅샷 · {n}건 · {a} ~ {b} (IQC_GID 연결 전)',
        dq:'데이터 점검 — 다캐일자 M/D 보정 {md}건 · 합격인데 불량 기록 {ob}건 · 문서 누락 {doc}건',
        auto:'수입검사 원자료 자동집계', dayTitle:'수입검사 (FAC1 → FAC2)',
-       dayNone:'선택한 기간에 입고 기록이 없습니다.', ageTip:'다캐일(마지막) → 입고일', daily:'일자별 집계 현황', tgt:'목표', perTop:'기간: {r} (상단에서 선택)', perNote:'📅 이 섹션의 모든 값은 맨 위에서 선택한 기간 <b>{r}</b> 기준입니다 — 주간 그래프만 주차별 추이를 보여줍니다.', moved:'수입검사 [ FAC1 → FAC2 ] 상세는 일일 품질보고 맨 위로 옮겼습니다. {w} : 입고 {a} Lot · 불합격 {r} Lot · 불합격율 {t}%', goDaily:'일일 품질보고에서 보기 →', mDay:'일일', mWeek:'주간', chartD:'일자별 입고 Lot · 불합격율', rFrom:'시작', rTo:'종료', rWeek:'보고 주차', rMonth:'최근 월', rAll:'전체', rDays:'{n}일', rCustom:'기간 지정', dDate:'일자',
+       dayNone:'선택한 기간에 입고 기록이 없습니다.', ageTip:'다캐일(마지막) → 입고일', daily:'일자별 집계 현황', tgt:'목표', perTop:'기간: {r} (상단에서 선택)', perNote:'📅 이 섹션의 모든 값은 맨 위에서 선택한 기간 <b>{r}</b> 기준입니다 — 주간 그래프도 기간 안의 날짜만 주차로 묶습니다.', moved:'수입검사 [ FAC1 → FAC2 ] 상세는 일일 품질보고 맨 위로 옮겼습니다. {w} : 입고 {a} Lot · 불합격 {r} Lot · 불합격율 {t}%', goDaily:'일일 품질보고에서 보기 →', mDay:'일일', mWeek:'주간', chartD:'일자별 입고 Lot · 불합격율', rFrom:'시작', rTo:'종료', rWeek:'보고 주차', rMonth:'최근 월', rAll:'전체', rDays:'{n}일', rCustom:'기간 지정', dDate:'일자',
        fMD:'다캐일 M/D 보정', fDoc:'문서 누락', fIss:'Issue칸 확인문구', fPart:'품번 미등록', fSt:'상태 미분류' },
   en:{ title:'Incoming inspection (FAC1 → FAC2)', status:'Incoming inspection status',
        analysis:'Incoming quality analysis', hist:'Incoming defect history',
@@ -7520,7 +7520,7 @@ const IQC_TXT = {
        srcSnap:'Source: built-in snapshot · {n} lots · {a} ~ {b} (IQC_GID not linked yet)',
        dq:'Data check — cast date read as M/D: {md} · passed but defect noted: {ob} · missing document: {doc}',
        auto:'auto-calculated from incoming data', dayTitle:'Incoming inspection (FAC1 → FAC2)',
-       dayNone:'No lots received in the selected period.', ageTip:'last cast date → received date', daily:'Daily summary', tgt:'Target', perTop:'Period: {r} (set at the top)', perNote:'📅 Every figure here uses the period chosen at the top: <b>{r}</b> — only the weekly chart shows the week-by-week trend.', moved:'Incoming inspection [ FAC1 → FAC2 ] detail now sits at the top of the daily report. {w}: {a} lots received · {r} rejected · {t}%', goDaily:'Open in daily report →', mDay:'Daily', mWeek:'Weekly', chartD:'Lots received and rejection rate by day', rFrom:'From', rTo:'To', rWeek:'Report week', rMonth:'Latest month', rAll:'All', rDays:'{n} days', rCustom:'custom period', dDate:'Date',
+       dayNone:'No lots received in the selected period.', ageTip:'last cast date → received date', daily:'Daily summary', tgt:'Target', perTop:'Period: {r} (set at the top)', perNote:'📅 Every figure here uses the period chosen at the top: <b>{r}</b> — the weekly chart groups only the days inside it.', moved:'Incoming inspection [ FAC1 → FAC2 ] detail now sits at the top of the daily report. {w}: {a} lots received · {r} rejected · {t}%', goDaily:'Open in daily report →', mDay:'Daily', mWeek:'Weekly', chartD:'Lots received and rejection rate by day', rFrom:'From', rTo:'To', rWeek:'Report week', rMonth:'Latest month', rAll:'All', rDays:'{n} days', rCustom:'custom period', dDate:'Date',
        fMD:'cast date read as M/D', fDoc:'document missing', fIss:'check note in Issue', fPart:'part not in master', fSt:'status not mapped' },
   th:{ title:'ตรวจรับเข้า (FAC1 → FAC2)', status:'สถานะการตรวจรับเข้า', analysis:'วิเคราะห์คุณภาพการรับเข้า',
        hist:'ประวัติของเสียจากการรับเข้า', extra:'ผู้ขายอื่น (กรอกเอง)',
@@ -7542,7 +7542,7 @@ const IQC_TXT = {
        srcSnap:'ที่มา: ข้อมูลในไฟล์ · {n} ล็อต · {a} ~ {b} (ยังไม่เชื่อม IQC_GID)',
        dq:'ตรวจข้อมูล — วันหล่ออ่านเป็น M/D {md} · ผ่านแต่มีของเสีย {ob} · ไม่มีเอกสาร {doc}',
        auto:'คำนวณอัตโนมัติจากข้อมูลรับเข้า', dayTitle:'ตรวจรับเข้า (FAC1 → FAC2)',
-       dayNone:'ไม่มีการรับเข้าในช่วงที่เลือก', ageTip:'วันหล่อสุดท้าย → วันรับเข้า', daily:'สรุปรายวัน', tgt:'เป้า', perTop:'ช่วง: {r} (เลือกด้านบน)', perNote:'📅 ทุกค่าในส่วนนี้ใช้ช่วงที่เลือกด้านบน <b>{r}</b> — ยกเว้นกราฟรายสัปดาห์ที่แสดงแนวโน้มรายสัปดาห์', moved:'รายละเอียดการตรวจรับเข้า [ FAC1 → FAC2 ] ย้ายไปไว้บนสุดของรายงานรายวัน {w}: รับเข้า {a} ล็อต · ไม่ผ่าน {r} · {t}%', goDaily:'ดูในรายงานรายวัน →', mDay:'รายวัน', mWeek:'รายสัปดาห์', chartD:'ล็อตรับเข้าและอัตราไม่ผ่านรายวัน', rFrom:'จาก', rTo:'ถึง', rWeek:'สัปดาห์รายงาน', rMonth:'เดือนล่าสุด', rAll:'ทั้งหมด', rDays:'{n} วัน', rCustom:'กำหนดช่วง', dDate:'วันที่',
+       dayNone:'ไม่มีการรับเข้าในช่วงที่เลือก', ageTip:'วันหล่อสุดท้าย → วันรับเข้า', daily:'สรุปรายวัน', tgt:'เป้า', perTop:'ช่วง: {r} (เลือกด้านบน)', perNote:'📅 ทุกค่าในส่วนนี้ใช้ช่วงที่เลือกด้านบน <b>{r}</b> — กราฟรายสัปดาห์ก็รวมเฉพาะวันในช่วงนี้', moved:'รายละเอียดการตรวจรับเข้า [ FAC1 → FAC2 ] ย้ายไปไว้บนสุดของรายงานรายวัน {w}: รับเข้า {a} ล็อต · ไม่ผ่าน {r} · {t}%', goDaily:'ดูในรายงานรายวัน →', mDay:'รายวัน', mWeek:'รายสัปดาห์', chartD:'ล็อตรับเข้าและอัตราไม่ผ่านรายวัน', rFrom:'จาก', rTo:'ถึง', rWeek:'สัปดาห์รายงาน', rMonth:'เดือนล่าสุด', rAll:'ทั้งหมด', rDays:'{n} วัน', rCustom:'กำหนดช่วง', dDate:'วันที่',
        fMD:'วันหล่ออ่านเป็น M/D', fDoc:'ไม่มีเอกสาร', fIss:'หมายเหตุในช่อง Issue', fPart:'ไม่มีในรายการชิ้นงาน', fSt:'สถานะไม่ตรง' }
 };
 function iqt(k, vars){
@@ -7796,17 +7796,21 @@ function iqcDailySection(from, to){
   const Y = parseInt(to.slice(0,4), 10);
   const rlab = (n === 1) ? from : (from + ' ~ ' + to + ' · ' + dqt('days', { n:n }));
 
-  /* 주간 그래프 — 수입검사 자료가 있는 주차 + 기간 끝이 들어 있는 주차 */
+  /* 주간 그래프 — 기간에 걸친 주차만, 각 주차도 기간 안의 날짜만 집계 */
   const selW = iqcWeekOf(to);
-  const wks = iqcWeeks(); if (wks.indexOf(selW) < 0) wks.push(selW);
-  wks.sort((x,y)=>(qrWeekNum(x)||0)-(qrWeekNum(y)||0));
-  const WA = wks.map(w => { const r = qrWeekRange(w); return r ? iqcAgg(iqcRowsBetween(r.start, r.end)) : iqcAgg([]); });
+  const wks = []; for (let d = from; d <= to; d = qrDateAdd(d, 7)) wks.push(iqcWeekOf(d));
+  if (wks.indexOf(selW) < 0) wks.push(selW);
+  const clip = w => { const r = qrWeekRange(w); return r ? { a: r.start < from ? from : r.start, b: r.end > to ? to : r.end } : null; };
+  const WA = wks.map(w => { const c = clip(w); return c ? iqcAgg(iqcRowsBetween(c.a, c.b)) : iqcAgg([]); });
+  const wLab = w => { const c = clip(w), r = qrWeekRange(w);
+    return qrWkLabel(w) + (c && r && (c.a !== r.start || c.b !== r.end)
+      ? ' (' + c.a.slice(5).replace('-','/') + (c.a === c.b ? '' : '~' + c.b.slice(5).replace('-','/')) + ')' : ''); };
   /* 일일 그래프 — 상단에서 고른 기간 그대로 */
   const cFrom = from;
   const days = []; for (let d = cFrom; d <= to; d = qrDateAdd(d, 1)) days.push(d);
   const DA = days.map(d => iqcAgg(iqcRowsBetween(d, d)));
   IQC_CHART = {
-    week: { labels: wks.map(qrWkLabel), bars: WA.map(x=>x.lots || null),
+    week: { labels: wks.map(wLab), bars: WA.map(x=>x.lots || null),
             line: WA.map(x=>x.lots ? +x.rate.toFixed(2) : null), selIdx: wks.indexOf(selW) },
     day:  { labels: days.map(d => d.slice(5).replace('-','/')), bars: DA.map(x=>x.lots || null),
             line: DA.map(x=>x.lots ? +x.rate.toFixed(2) : null), selIdx: n === 1 ? days.length - 1 : -1 } };
@@ -8286,9 +8290,8 @@ function renderDaily(){
     return;
   }
   const S = dqSeries(span, sc);                       /* 표에 쓸 = 선택 구간만 */
-  /* 차트는 앞뒤 맥락이 보이도록 최소 14일치를 그리고, 선택 구간만 진하게 둔다 */
-  const ctxN = Math.max(span.n, 14);
-  const C = dqSeries({ from: qrDateAdd(span.to, -(ctxN - 1)), to: span.to }, sc);
+  /* 차트도 상단에서 고른 기간만 그린다 (일일 보고 전체 = 기간 선택 기준) */
+  const C = S;
   const hiSet = {}; S.forEach(x=>{ hiSet[x.week] = 1; });
   const sel = S.length ? S[S.length-1].week : null;
   const cmp = (S.length > 1) ? S[0].week
