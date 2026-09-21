@@ -554,6 +554,53 @@
   table.r2t th.today{background:#fff2cc;}
   table.r2t td.today{background:#fffdf3;}
   table.r2t tr.sun td,table.r2t th.sun{color:#c62828;}
+  .doSeg{display:inline-flex;border:1px solid #c9d3de;border-radius:3px;overflow:hidden;}
+  .doBar .doSeg button{border:0;border-radius:0;margin:0;padding:3px 9px;background:#fff;color:#1e3c72;font-weight:700;}
+  .doBar .doSeg button+button{border-left:1px solid #c9d3de;}
+  .doBar .doSeg button.on{background:#1e3c72;color:#fff;}
+  .doRng{font-size:11px;color:#243a5e;font-weight:700;}
+  .doKpi{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:4px 0 6px;}
+  .doKpi>div{border:1px solid #d7dde3;border-radius:3px;padding:5px 9px;background:#fbfcfe;}
+  .doKpi b{display:block;font-size:17px;color:#12233f;line-height:1.2;}
+  .doKpi span{font-size:10.8px;color:#3f4a56;font-weight:700;} .doKpi em{font-style:normal;color:#c62828;font-weight:600;}
+  .doKpi .ok b{color:#1e7b34;} .doKpi .wn b{color:#b26a00;} .doKpi .ng b{color:#c62828;}
+  @media screen and (max-width:1100px){ .doKpi{grid-template-columns:repeat(3,minmax(0,1fr));} }
+  .doLeg{font-size:10.8px;color:#3f4a56;margin:0 0 5px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
+  .doLeg .lg{display:inline-block;padding:0 6px;border-radius:2px;border:1px solid #d7dde3;margin-right:2px;}
+  table.r2t td.doC{cursor:pointer;position:relative;white-space:nowrap;}
+  table.r2t td.doC:hover{outline:2px solid #1e3c72;outline-offset:-2px;}
+  table.r2t td.doC small{font-weight:500;color:#5b6672;}
+  .doC.done,.lg.done{background:#e6f4ea !important;color:#1e7b34 !important;}
+  .doC.part,.lg.part{background:#fff4dc !important;color:#8a5a00 !important;}
+  .doC.miss,.lg.miss{background:#fde8e8 !important;color:#c62828 !important;}
+  .doC.over,.lg.over{background:#fff0f0 !important;color:#c62828 !important;box-shadow:inset 0 0 0 1px #f3b9b9;}
+  .doC.plan,.lg.plan{color:#12233f;}
+  table.r2t th.past{background:#e9edf2;color:#5b6672;}
+  .doFlag{position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;background:#1e3c72;display:inline-block;}
+  .doLeg .doFlag{position:static;}
+  .doDR{font-size:9.8px;font-weight:800;} .doDR.pos{color:#1e7b34;} .doDR.neg{color:#c62828;}
+  .doShortH{font-size:13px;font-weight:800;color:#1e3c72;margin:10px 0 5px;} .doShortH span{font-size:11px;color:#c62828;margin-left:6px;}
+  tr.doDoneRow td{color:#8a949e !important;background:#f6f8fa !important;}
+  #doModal{display:none;position:fixed;inset:0;z-index:9999;}
+  .doMBg{position:absolute;inset:0;background:rgba(18,35,63,.35);}
+  .doMBox{position:relative;max-width:460px;margin:9vh auto 0;background:#fff;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:12px;color:#12233f;}
+  .doMH{background:#1e3c72;color:#fff;font-weight:800;padding:9px 12px;border-radius:6px 6px 0 0;display:flex;justify-content:space-between;}
+  .doMH button{background:none;border:0;color:#fff;font-size:14px;cursor:pointer;}
+  .doMInfo{padding:9px 12px;border-bottom:1px solid #e6eaef;line-height:1.6;}
+  .doMQ{padding:9px 12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .doMQ button,.doMF button{font:inherit;font-weight:700;padding:5px 10px;border:1px solid #c9d3de;border-radius:3px;background:#f7f9fc;cursor:pointer;}
+  .doMQ input{width:90px;font:inherit;padding:4px 6px;border:1px solid #c9d3de;border-radius:3px;}
+  .doMQ label{margin-left:auto;font-weight:700;color:#12233f;font-size:12px;}
+  table.r2t th.doTh{cursor:pointer;} table.r2t th.doTh:hover{background:#d6e9d9;}
+  .doOverBtn{margin-left:8px;font:inherit;font-size:10.8px;font-weight:700;padding:2px 8px;border:1px solid #e0b4b4;border-radius:3px;background:#fff;color:#c62828;cursor:pointer;}
+  .doMShort{padding:4px 12px 8px;background:#fff8f7;border-top:1px dashed #f0c4c4;}
+  .doMRow{display:flex;gap:8px;} .doMRow label{flex:1;}
+  .doMShort label{display:block;font-weight:700;font-size:11px;color:#8a2020;margin-top:6px;}
+  .doMShort select,.doMShort input:not([type=checkbox]){display:block;width:100%;box-sizing:border-box;font:inherit;padding:4px 6px;border:1px solid #e0b4b4;border-radius:3px;margin-top:2px;}
+  .doMShort label.chk{display:flex;gap:6px;align-items:center;color:#1e3c72;}
+  .doMF{padding:9px 12px;display:flex;justify-content:space-between;border-top:1px solid #e6eaef;}
+  .doMF .ok{background:#1e3c72;color:#fff;border-color:#1e3c72;} .doMF .del{color:#c62828;}
+  @media print{ #doModal{display:none !important;} }
   .doPaste{margin-top:8px;border:1px dashed #c9d3de;border-radius:3px;padding:8px 10px;background:#fbfcfe;}
   .doPaste .h{font-size:11px;font-weight:800;color:#1e3c72;margin-bottom:4px;}
   .doPaste textarea{width:100%;min-height:58px;font-size:11px;font-family:inherit;line-height:1.6;
@@ -6661,6 +6708,18 @@ const R2_TXT = {
     doOrder:'Order (계획 전체)', doNone:'이 주차에 예정된 납품이 없습니다.',
     doSrc:'출처 {f} · {n}품목 · {a} ~ {b}', doUpd:'계획 갱신 (엑셀에서 복사해 붙여넣기)',
     doHint:'엑셀에서 CUSTOMERS 머리글 줄부터 마지막 줄까지 선택해 복사한 뒤 여기에 붙여넣으세요',
+    doOverShow:'미입력 {n}건 보기', doOverHide:'미입력 {n}건 숨기기', doOverOnly:'입력된 미달은 없습니다 — 실적을 넣지 않은 지난 칸이 {n}건 있습니다.', doFuture:'아직 오지 않은 날짜입니다.', doMarkQ:'{d} 실적이 없는 {n}품목을 모두 "전량 납품"으로 입력할까요?', doMarkTip:'클릭: 이 날 실적 없는 칸을 모두 전량 납품으로', doMWeek:'보고 주차', doMRemain:'남은 기간', doMPast:'지난 기간', doMAll:'계획 전체',
+    doSAll:'전체', doSDone:'달성', doSShort:'미달', doSRemain:'남은 계획',
+    doKPlan:'기간 계획', doKDue:'납기 도래', doKAct:'납품 실적', doKRate:'달성률', doKShort:'미달 수량', doKOver:'미입력 {n}', doKRemain:'남은 계획',
+    doLegend:'칸을 눌러 실적 입력 · <span class="lg done">✓ 전량</span><span class="lg part">부분</span><span class="lg miss">✗ 미납</span><span class="lg over">지난 날 · 실적 없음</span><span class="lg plan">예정</span> · <i class="doFlag"></i> 조치 등록 · 지난 날짜 머리글을 누르면 그날 전체 전량 납품',
+    doHPlan:'계획', doHAct:'실적', doHRate:'달성률', doHShort:'미달',
+    doShortT:'미달 현황 · 조치', doShortN:'{n}건 · 조치 미완료 {o}건', doShortNone:'이 기간에 미달이 없습니다.',
+    doSDate:'납품일', doRs:'미달 사유', doAc:'조치', doCd:'이월 납품일', doOw:'담당', doMemo:'메모', doDone:'완료',
+    doNoRec:'미입력', doNeed:'사유 입력 필요',
+    doRs_stock:'재고 부족', doRs_quality:'품질 불합격', doRs_machine:'설비 고장', doRs_mold:'금형 문제',
+    doRs_material:'소재·부품 부족', doRs_customer:'고객 요청 변경', doRs_logistics:'운송·물류', doRs_etc:'기타',
+    doAc_carry:'이월 납품', doAc_cancel:'계획 취소', doAc_extra:'특근·추가 생산', doAc_negotiate:'고객 협의',
+    doEdT:'납품 실적 입력', doFull:'전량 납품', doNone0:'미납 (0)', doDoneL:'조치 완료', doDel:'실적 지우기', doSave:'저장',
     doApply:'적용', doReset:'기본값으로', doPasted:'붙여넣은 계획', doLive:'구글시트 DO_RawData (계획 기준일 {p})', doOk:'{n}품목 · {a} ~ {b} 로 갱신했습니다',
     doErr:'형식을 알아보지 못했습니다 — CUSTOMERS / PART NAME / PART CODE 머리글 줄이 포함되어야 합니다',
     doDay:['일','월','화','수','목','금','토'], doPart:'PART NAME', doCode:'PART CODE',
@@ -6732,6 +6791,18 @@ const R2_TXT = {
     doOrder:'Order (whole plan)', doNone:'No delivery planned for this week.',
     doSrc:'source {f} · {n} items · {a} ~ {b}', doUpd:'Update plan (paste from Excel)',
     doHint:'In Excel select from the CUSTOMERS header row to the last row, copy, and paste here',
+    doOverShow:'show {n} not entered', doOverHide:'hide {n} not entered', doOverOnly:'No recorded shortfall — {n} past cells have no delivery entered yet.', doFuture:'That date has not come yet.', doMarkQ:'Mark all {n} items without a record on {d} as delivered in full?', doMarkTip:'Click: mark every empty cell of this day as delivered in full', doMWeek:'Report week', doMRemain:'Remaining', doMPast:'Past', doMAll:'Whole plan',
+    doSAll:'All', doSDone:'Achieved', doSShort:'Short', doSRemain:'Remaining',
+    doKPlan:'Planned', doKDue:'Due so far', doKAct:'Delivered', doKRate:'Achievement', doKShort:'Shortfall', doKOver:'not entered {n}', doKRemain:'Still to deliver',
+    doLegend:'Click a cell to enter delivery · <span class="lg done">✓ full</span><span class="lg part">partial</span><span class="lg miss">✗ none</span><span class="lg over">past · no record</span><span class="lg plan">planned</span> · <i class="doFlag"></i> action set · click a past date header to mark that whole day delivered',
+    doHPlan:'Plan', doHAct:'Actual', doHRate:'Rate', doHShort:'Short',
+    doShortT:'Shortfalls & actions', doShortN:'{n} · {o} open', doShortNone:'No shortfall in this period.',
+    doSDate:'Due date', doRs:'Reason', doAc:'Action', doCd:'New date', doOw:'Owner', doMemo:'Note', doDone:'Closed',
+    doNoRec:'not entered', doNeed:'reason needed',
+    doRs_stock:'No stock', doRs_quality:'Quality reject', doRs_machine:'Machine down', doRs_mold:'Mold problem',
+    doRs_material:'Material shortage', doRs_customer:'Customer change', doRs_logistics:'Transport', doRs_etc:'Other',
+    doAc_carry:'Carry over', doAc_cancel:'Cancel', doAc_extra:'Overtime / extra run', doAc_negotiate:'Agree with customer',
+    doEdT:'Enter delivery', doFull:'Delivered in full', doNone0:'Not delivered (0)', doDoneL:'Action closed', doDel:'Clear record', doSave:'Save',
     doApply:'Apply', doReset:'Reset', doPasted:'pasted plan', doLive:'Google Sheet DO_RawData (plan date {p})', doOk:'Updated — {n} items · {a} ~ {b}',
     doErr:'Could not read the format — the CUSTOMERS / PART NAME / PART CODE header row must be included',
     doDay:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], doPart:'PART NAME', doCode:'PART CODE',
@@ -6805,6 +6876,18 @@ const R2_TXT = {
     doOrder:'Order (ทั้งแผน)', doNone:'ไม่มีแผนส่งมอบในสัปดาห์นี้',
     doSrc:'ที่มา {f} · {n} รายการ · {a} ~ {b}', doUpd:'อัปเดตแผน (วางจาก Excel)',
     doHint:'ใน Excel เลือกตั้งแต่แถวหัวตาราง CUSTOMERS จนถึงแถวสุดท้าย คัดลอก แล้ววางที่นี่',
+    doOverShow:'แสดงที่ยังไม่บันทึก {n}', doOverHide:'ซ่อนที่ยังไม่บันทึก {n}', doOverOnly:'ไม่มีรายการขาดส่งที่บันทึก — มีช่องที่เลยกำหนดแต่ยังไม่บันทึก {n} ช่อง', doFuture:'ยังไม่ถึงวันนั้น', doMarkQ:'บันทึก {n} รายการของวันที่ {d} ว่าส่งครบทั้งหมด?', doMarkTip:'คลิก: บันทึกว่าส่งครบทุกช่องที่ว่างของวันนี้', doMWeek:'สัปดาห์รายงาน', doMRemain:'ช่วงที่เหลือ', doMPast:'ช่วงที่ผ่านมา', doMAll:'ทั้งแผน',
+    doSAll:'ทั้งหมด', doSDone:'ส่งครบ', doSShort:'ส่งไม่ครบ', doSRemain:'ยังเหลือ',
+    doKPlan:'แผนในช่วง', doKDue:'ถึงกำหนดแล้ว', doKAct:'ส่งจริง', doKRate:'อัตราสำเร็จ', doKShort:'ขาดส่ง', doKOver:'ยังไม่บันทึก {n}', doKRemain:'แผนที่เหลือ',
+    doLegend:'คลิกช่องเพื่อบันทึกการส่ง · <span class="lg done">✓ ครบ</span><span class="lg part">บางส่วน</span><span class="lg miss">✗ ไม่ส่ง</span><span class="lg over">เลยกำหนด · ไม่มีบันทึก</span><span class="lg plan">ตามแผน</span> · <i class="doFlag"></i> มีมาตรการ · คลิกหัววันที่ที่ผ่านมาเพื่อบันทึกส่งครบทั้งวัน',
+    doHPlan:'แผน', doHAct:'จริง', doHRate:'อัตรา', doHShort:'ขาด',
+    doShortT:'รายการส่งไม่ครบ · มาตรการ', doShortN:'{n} รายการ · ค้าง {o}', doShortNone:'ไม่มีรายการส่งไม่ครบในช่วงนี้',
+    doSDate:'วันส่ง', doRs:'สาเหตุ', doAc:'มาตรการ', doCd:'วันส่งใหม่', doOw:'ผู้รับผิดชอบ', doMemo:'หมายเหตุ', doDone:'ปิด',
+    doNoRec:'ยังไม่บันทึก', doNeed:'ต้องระบุสาเหตุ',
+    doRs_stock:'สต็อกไม่พอ', doRs_quality:'คุณภาพไม่ผ่าน', doRs_machine:'เครื่องเสีย', doRs_mold:'แม่พิมพ์มีปัญหา',
+    doRs_material:'วัตถุดิบไม่พอ', doRs_customer:'ลูกค้าเปลี่ยน', doRs_logistics:'ขนส่ง', doRs_etc:'อื่นๆ',
+    doAc_carry:'ส่งภายหลัง', doAc_cancel:'ยกเลิก', doAc_extra:'ทำ OT / ผลิตเพิ่ม', doAc_negotiate:'ตกลงกับลูกค้า',
+    doEdT:'บันทึกการส่ง', doFull:'ส่งครบ', doNone0:'ไม่ส่ง (0)', doDoneL:'ปิดมาตรการ', doDel:'ลบบันทึก', doSave:'บันทึก',
     doApply:'ใช้งาน', doReset:'ค่าเริ่มต้น', doPasted:'แผนที่วาง', doLive:'Google Sheet DO_RawData (วันที่แผน {p})', doOk:'อัปเดตแล้ว — {n} รายการ · {a} ~ {b}',
     doErr:'อ่านรูปแบบไม่ได้ — ต้องมีแถวหัวตาราง CUSTOMERS / PART NAME / PART CODE',
     doDay:['อา','จ','อ','พ','พฤ','ศ','ส'], doPart:'PART NAME', doCode:'PART CODE',
@@ -7393,7 +7476,6 @@ function doApplyPaste(){
     r2t('doOk', { n:o.rows.length, a:o.dates[0], b:o.dates[o.dates.length-1] })); }catch(e){}
   renderQReport2();
 }
-function doSetCust(v){ DO_CUST = v || ''; renderQReport2(); }
 
 /* ---------- 보고서 표지 제목 (일일 / 주간 공용) ---------- */
 const RPT_COVER_TXT = {
@@ -7443,75 +7525,281 @@ function qrSummaryTbl(rows, firstLabel, hiKey){
     '</tr></tbody></table></div>';
 }
 
-/* 주차(수~화 7일) 납품 계획표 */
-function doWeekHtml(week){
-  const plan = doPlan();
-  const rg = qrWeekRange(week);
-  const src = '<span class="src">' + r2t('doSrc', {
-      f: (plan.src === 'paste' ? r2t('doPasted') : plan.src === 'live' ? r2t('doLive', { p: plan.plan || '-' }) : (plan.src || '-')),
-      n: plan.rows.length, a: plan.dates[0] || '-', b: plan.dates[plan.dates.length-1] || '-' }) + '</span>';
+/* ---------- 납품 계획 대비 실적 (달성 · 미달 · 남은 계획) ----------
+   칸을 누르면 그 날 그 품번의 실적을 입력한다 (전량 / 부분 / 미납).
+   미달분은 사유 · 조치(이월일 · 담당)를 적어 두고, 아래 '미달 현황 · 조치' 표에서 끝까지 관리한다.
+   실적은 이 브라우저에 저장된다 (stc_do_actual_v1). */
+const DO_ACT_KEY = 'stc_do_actual_v1', DO_VIEW_KEY = 'stc_do_view_v1';
+let DO_ACT = null, DO_WEEK = null, DO_VIEW = null;
+function doAct(){
+  if (!DO_ACT){ try{ DO_ACT = JSON.parse(localStorage.getItem(DO_ACT_KEY) || '{}') || {}; }catch(e){ DO_ACT = {}; } }
+  return DO_ACT;
+}
+function doActSave(){ try{ localStorage.setItem(DO_ACT_KEY, JSON.stringify(DO_ACT || {})); }catch(e){} }
+function doView(){
+  if (!DO_VIEW){ try{ DO_VIEW = JSON.parse(localStorage.getItem(DO_VIEW_KEY) || 'null'); }catch(e){} }
+  if (!DO_VIEW) DO_VIEW = { mode:'week', from:'', to:'', st:'all' };
+  return DO_VIEW;
+}
+function doViewSave(){ try{ localStorage.setItem(DO_VIEW_KEY, JSON.stringify(DO_VIEW)); }catch(e){} }
+function doToday(){ const t = new Date(); return t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0'); }
+function doCellKey(r, d){ return [r.cu, r.pc, d].join('|'); }
+
+/* 기간: 보고 주차 · 남은 기간(오늘~계획 끝) · 지난 기간(계획 시작~어제) · 계획 전체 · 직접 지정 */
+function doRange(plan){
+  const v = doView(), td = doToday();
+  const a = plan.dates[0] || td, b = plan.dates[plan.dates.length-1] || td;
+  if (v.mode === 'remain') return { from: td > a ? td : a, to: b };
+  if (v.mode === 'past')   return { from: a, to: qrDateAdd(td, -1) < a ? a : qrDateAdd(td, -1) };
+  if (v.mode === 'all')    return { from: a, to: b };
+  if (v.mode === 'custom' && v.from && v.to) return { from: v.from <= v.to ? v.from : v.to, to: v.from <= v.to ? v.to : v.from };
+  const rg = DO_WEEK ? qrWeekRange(DO_WEEK) : null;
+  return rg ? { from: rg.start, to: rg.end } : { from: a, to: b };
+}
+function doSetMode(m){ const v = doView(); v.mode = m; doViewSave(); doRedraw(); }
+function doToggleOver(){ const v = doView(); v.showOver = !v.showOver; doViewSave(); doRedraw(); }
+/* 날짜 머리글 클릭 — 그날 실적이 없는 칸을 전부 '전량 납품'으로 (지금 보이는 행만) */
+function doMarkDay(d){
+  const plan = doPlan(), td = doToday();
+  if (d > td){ alert(r2t('doFuture')); return; }
+  const rows = plan.rows.filter(r => (!DO_CUST || r.cu === DO_CUST) && r.d[d] && !doAct()[doCellKey(r, d)]);
+  if (!rows.length) return;
+  if (!confirm(r2t('doMarkQ', { d:d, n:rows.length }))) return;
+  const t = new Date().toISOString().slice(0,16);
+  rows.forEach(r => { doAct()[doCellKey(r, d)] = { q:r.d[d], t:t, bulk:1 }; });
+  doActSave(); doRedraw();
+}
+function doSetSt(s){ const v = doView(); v.st = s; doViewSave(); doRedraw(); }
+function doSetCustom(){
+  const f = (document.getElementById('doFrom')||{}).value, t2 = (document.getElementById('doTo')||{}).value;
+  const v = doView(); v.mode = 'custom'; v.from = f || t2; v.to = t2 || f; doViewSave(); doRedraw();
+}
+function doSetCust(v){ DO_CUST = v || ''; doRedraw(); }
+function doRedraw(){
+  const el = document.getElementById('doBlock');
+  if (el && DO_WEEK) el.innerHTML = doSchedInner(DO_WEEK); else if (typeof renderQReport2 === 'function') renderQReport2();
+}
+
+/* 한 칸의 상태: done(전량) · part(부분) · miss(미납 입력) · over(지난 날인데 실적 없음) · plan(예정) */
+function doCellState(r, d, td){
+  const p = r.d[d] || 0; if (!p) return null;
+  const a = doAct()[doCellKey(r, d)];
+  if (a){
+    const q = +a.q || 0;
+    return { p:p, q:q, st: q >= p ? 'done' : (q > 0 ? 'part' : 'miss'), a:a };
+  }
+  return { p:p, q:0, st: d < td ? 'over' : 'plan', a:null };
+}
+
+function doSchedInner(week){
+  const plan = doPlan(), v = doView(), td = doToday();
+  const R = doRange(plan);
   const custs = [...new Set(plan.rows.map(r=>r.cu).filter(Boolean))].sort();
+  /* 계획이 있는 날짜만 열로 쓴다 (빈 날·일요일 칸이 줄줄이 생기지 않게) */
+  const days = plan.dates.filter(d => d >= R.from && d <= R.to);
+  const src = r2t('doSrc', {
+      f: (plan.src === 'paste' ? r2t('doPasted') : plan.src === 'live' ? r2t('doLive', { p: plan.plan || '-' }) : (plan.src || '-')),
+      n: plan.rows.length, a: plan.dates[0] || '-', b: plan.dates[plan.dates.length-1] || '-' });
+  const mb = (m, lab) => '<button type="button" class="' + (v.mode === m ? 'on' : '') + '" onclick="doSetMode(\'' + m + '\')">' + lab + '</button>';
+  const sb = (s, lab) => '<button type="button" class="' + (v.st === s ? 'on' : '') + '" onclick="doSetSt(\'' + s + '\')">' + lab + '</button>';
   const bar = '<div class="doBar">' +
     '<select onchange="doSetCust(this.value)"><option value="">' + r2t('doCust') + '</option>' +
-    custs.map(c=>'<option value="' + r2esc(c) + '"' + (c===DO_CUST?' selected':'') + '>' + r2esc(c) + '</option>').join('') +
-    '</select>' + src + '</div>';
+      custs.map(c=>'<option value="' + r2esc(c) + '"' + (c===DO_CUST?' selected':'') + '>' + r2esc(c) + '</option>').join('') +
+    '</select>' +
+    '<span class="doSeg qr-noprint">' + mb('week', r2t('doMWeek')) + mb('remain', r2t('doMRemain')) +
+      mb('past', r2t('doMPast')) + mb('all', r2t('doMAll')) + '</span>' +
+    '<span class="doRng"><input type="date" id="doFrom" value="' + R.from + '" onchange="doSetCustom()"> ~ ' +
+      '<input type="date" id="doTo" value="' + R.to + '" onchange="doSetCustom()"></span>' +
+    '<span class="doSeg qr-noprint">' + sb('all', r2t('doSAll')) + sb('done', r2t('doSDone')) +
+      sb('short', r2t('doSShort')) + sb('remain', r2t('doSRemain')) + '</span>' +
+    '<span class="src">' + src + '</span></div>';
+
+  /* 행 집계 */
+  const base = plan.rows.filter(r => !DO_CUST || r.cu === DO_CUST);
+  let list = base.map(r => {
+    const cells = days.map(d => doCellState(r, d, td));
+    const t = { plan:0, due:0, act:0, short:0, remain:0, over:0 };
+    cells.forEach(c => { if (!c) return;
+      t.plan += c.p;
+      if (c.st === 'plan'){ t.remain += c.p; return; }
+      t.due += c.p; t.act += Math.min(c.q, c.p) + Math.max(0, c.q - c.p);
+      if (c.st === 'over') t.over += c.p;
+      t.short += Math.max(0, c.p - c.q);
+    });
+    return { r:r, cells:cells, t:t };
+  }).filter(x => x.t.plan > 0);
+  if (v.st === 'done')   list = list.filter(x => x.t.due > 0 && x.t.short === 0);
+  if (v.st === 'short')  list = list.filter(x => x.t.short > 0);
+  if (v.st === 'remain') list = list.filter(x => x.t.remain > 0);
+  list.sort((a,b) => (b.t.short - a.t.short) || (b.t.plan - a.t.plan));
+
+  const T = list.reduce((s,x) => { for (const k in x.t) s[k] = (s[k]||0) + x.t[k]; return s; }, {});
+  const rate = T.due ? Math.min(999, T.act / T.due * 100) : null;
+  const kpi = '<div class="doKpi">' +
+    '<div><b>' + (T.plan||0).toLocaleString() + '</b><span>' + r2t('doKPlan') + '</span></div>' +
+    '<div><b>' + (T.due||0).toLocaleString() + '</b><span>' + r2t('doKDue') + '</span></div>' +
+    '<div class="ok"><b>' + (T.act||0).toLocaleString() + '</b><span>' + r2t('doKAct') + '</span></div>' +
+    '<div class="' + (rate == null ? '' : rate >= 100 ? 'ok' : rate >= 95 ? 'wn' : 'ng') + '"><b>' + (rate == null ? '–' : rate.toFixed(1) + '%') + '</b><span>' + r2t('doKRate') + '</span></div>' +
+    '<div class="' + (T.short ? 'ng' : '') + '"><b>' + (T.short||0).toLocaleString() + '</b><span>' + r2t('doKShort') +
+      (T.over ? ' <em>(' + r2t('doKOver', { n:(T.over).toLocaleString() }) + ')</em>' : '') + '</span></div>' +
+    '<div><b>' + (T.remain||0).toLocaleString() + '</b><span>' + r2t('doKRemain') + '</span></div>' +
+    '</div>';
+  const legend = '<div class="doLeg qr-noprint">' + r2t('doLegend') + '</div>';
+
+  if (!days.length || !list.length){
+    const out = (!days.length && plan.dates.length) ? r2t('doOut', { a:plan.dates[0], b:plan.dates[plan.dates.length-1] }) : r2t('doNone');
+    return bar + kpi + '<div class="r2empty">' + out + '</div>';
+  }
+
+  const DW = r2t('doDay');
+  const dowOf = d => new Date(d + 'T00:00:00').getDay();
+  const head = '<tr><th style="min-width:96px">' + r2t('cust') + '</th>' +
+    '<th style="min-width:160px">' + r2t('doPart') + '</th><th style="min-width:104px">' + r2t('doCode') + '</th>' +
+    days.map(d => '<th style="min-width:64px" class="' + (d === td ? 'today ' : '') + (d <= td ? 'past doTh' : '') + '"' +
+      (d <= td ? ' title="' + r2esc(r2t('doMarkTip')) + '" onclick="doMarkDay(\'' + d + '\')"' : '') + '>' +
+      d.slice(5).replace('-','/') + '<div class="dow">' + DW[dowOf(d)] + '</div></th>').join('') +
+    '<th style="min-width:70px">' + r2t('doHPlan') + '</th><th style="min-width:70px">' + r2t('doHAct') + '</th>' +
+    '<th style="min-width:58px">' + r2t('doHRate') + '</th><th style="min-width:64px">' + r2t('doHShort') + '</th></tr>';
+  const body = list.map((x, ri) => {
+    const r = x.r;
+    const rr = x.t.due ? x.t.act / x.t.due * 100 : null;
+    return '<tr><td class="h">' + r2esc(r.cu) + '</td><td class="h" style="font-weight:600">' + r2esc(r.pn) + '</td>' +
+      '<td class="v" style="text-align:left;padding-left:6px">' + r2esc(r.pc) + '</td>' +
+      x.cells.map((c, i) => {
+        const d = days[i];
+        if (!c) return '<td class="v do0' + (d === td ? ' today' : '') + '">·</td>';
+        const k = r2esc(doCellKey(r, d)).replace(/'/g, '&#39;');
+        const txt = c.st === 'done' ? '✓ ' + c.q.toLocaleString()
+                  : c.st === 'part' ? c.q.toLocaleString() + '<small>/' + c.p.toLocaleString() + '</small>'
+                  : c.st === 'miss' ? '✗ 0<small>/' + c.p.toLocaleString() + '</small>'
+                  : c.p.toLocaleString();
+        const act = c.a && c.a.ac ? ' title="' + r2esc(r2t('doAc_' + c.a.ac) + (c.a.cd ? ' → ' + c.a.cd : '')) + '"' : '';
+        return '<td class="v doC ' + c.st + (d === td ? ' today' : '') + '"' + act +
+          ' onclick="doEdit(' + plan.rows.indexOf(r) + ',\'' + d + '\')">' + txt +
+          (c.a && c.a.ac ? '<i class="doFlag"></i>' : '') + '</td>';
+      }).join('') +
+      '<td class="v">' + x.t.plan.toLocaleString() + '</td>' +
+      '<td class="v" style="font-weight:800">' + (x.t.due ? x.t.act.toLocaleString() : '–') + '</td>' +
+      '<td class="v ' + (rr == null ? 'mut' : rr >= 100 ? 'pos' : 'neg') + '">' + (rr == null ? '–' : rr.toFixed(0) + '%') + '</td>' +
+      '<td class="v ' + (x.t.short ? 'neg' : 'mut') + '">' + (x.t.short ? x.t.short.toLocaleString() : '–') + '</td></tr>';
+  }).join('');
+  const dayT = days.map((d, i) => list.reduce((s, x) => { const c = x.cells[i]; if (!c) return s;
+      s.p += c.p; if (c.st !== 'plan'){ s.due += c.p; s.q += c.q; } return s; }, { p:0, due:0, q:0 }));
+  const foot = '<tr class="tot"><td class="h" colspan="3">' + r2t('doTot') + '</td>' +
+    dayT.map((s, i) => '<td class="v' + (days[i] === td ? ' today' : '') + '">' + s.p.toLocaleString() +
+      (s.due ? '<div class="doDR ' + (s.q >= s.due ? 'pos' : 'neg') + '">' + (s.q / s.due * 100).toFixed(0) + '%</div>' : '') + '</td>').join('') +
+    '<td class="v">' + T.plan.toLocaleString() + '</td><td class="v">' + (T.due ? T.act.toLocaleString() : '–') + '</td>' +
+    '<td class="v">' + (rate == null ? '–' : rate.toFixed(1) + '%') + '</td>' +
+    '<td class="v">' + (T.short ? T.short.toLocaleString() : '–') + '</td></tr>';
+
+  return bar + kpi + legend + '<div class="r2wrap"><table class="r2t doT"><thead>' + head + '</thead><tbody>' +
+    body + foot + '</tbody></table></div>' + doShortHtml(plan, R, td);
+}
+
+/* 미달 현황 · 조치 — 기간 안에서 계획보다 덜 나간 칸 (지난 날짜 미입력 포함) */
+function doShortHtml(plan, R, td){
+  const items = [];
+  plan.rows.filter(r => !DO_CUST || r.cu === DO_CUST).forEach((r, _) => {
+    Object.keys(r.d).filter(d => d >= R.from && d <= R.to).forEach(d => {
+      const c = doCellState(r, d, td); if (!c || c.st === 'plan' || c.st === 'done') return;
+      items.push({ r:r, ri:plan.rows.indexOf(r), d:d, c:c });
+    });
+  });
+  const nOver = items.filter(x => x.c.st === 'over').length, vw = doView();
+  const tog = nOver ? '<button type="button" class="doOverBtn qr-noprint" onclick="doToggleOver()">' +
+      r2t(vw.showOver ? 'doOverHide' : 'doOverShow', { n:nOver }) + '</button>' : '';
+  const shown = vw.showOver ? items : items.filter(x => x.c.st !== 'over');
+  if (!shown.length) return '<div class="doShortH">' + r2t('doShortT') + tog + '</div><div class="r2empty">' +
+      (nOver ? r2t('doOverOnly', { n:nOver }) : r2t('doShortNone')) + '</div>';
+  items.length = 0; shown.forEach(x => items.push(x));
+  items.sort((a,b) => a.d.localeCompare(b.d));
+  const open = items.filter(x => !(x.c.a && x.c.a.done)).length;
+  return '<div class="doShortH">' + r2t('doShortT') + ' <span>' + r2t('doShortN', { n:items.length, o:open }) + '</span>' + tog + '</div>' +
+    '<div class="r2wrap"><table class="r2t"><thead><tr>' +
+    ['doSDate','cust','doCode','doHPlan','doHAct','doHShort','doRs','doAc','doCd','doOw','doMemo','doDone'].map((k,i)=>
+      '<th style="min-width:' + [70,96,104,62,62,62,96,96,78,66,150,50][i] + 'px">' + r2t(k) + '</th>').join('') +
+    '</tr></thead><tbody>' +
+    items.map(x => {
+      const a = x.c.a || {};
+      return '<tr class="' + (a.done ? 'doDoneRow' : (x.c.st === 'over' ? 'hi' : '')) + '" onclick="doEdit(' + x.ri + ',\'' + x.d + '\')" style="cursor:pointer">' +
+        '<td class="h">' + x.d.slice(5) + '</td><td class="h">' + r2esc(x.r.cu) + '</td>' +
+        '<td class="v" style="text-align:left;padding-left:6px">' + r2esc(x.r.pc) + '</td>' +
+        '<td class="v">' + x.c.p.toLocaleString() + '</td>' +
+        '<td class="v">' + (x.c.st === 'over' ? '<span class="neg">' + r2t('doNoRec') + '</span>' : x.c.q.toLocaleString()) + '</td>' +
+        '<td class="v neg">' + Math.max(0, x.c.p - x.c.q).toLocaleString() + '</td>' +
+        '<td class="tx">' + (a.rs ? r2esc(r2t('doRs_' + a.rs)) : '<span class="mut">' + r2t('doNeed') + '</span>') + '</td>' +
+        '<td class="tx">' + (a.ac ? r2esc(r2t('doAc_' + a.ac)) : '–') + '</td>' +
+        '<td class="tx">' + r2esc(a.cd || '') + '</td><td class="tx">' + r2esc(a.ow || '') + '</td>' +
+        '<td class="tx">' + r2esc(a.memo || '') + '</td>' +
+        '<td class="v" style="text-align:center">' + (a.done ? '✔' : '') + '</td></tr>';
+    }).join('') + '</tbody></table></div>';
+}
+
+/* 실적 입력 창 */
+const DO_RS = ['stock','quality','machine','mold','material','customer','logistics','etc'];
+const DO_AC = ['carry','cancel','extra','negotiate'];
+function doEdit(ri, d){
+  const plan = doPlan(), r = plan.rows[ri]; if (!r) return;
+  const p = r.d[d] || 0, key = doCellKey(r, d), a = doAct()[key] || {};
+  let m = document.getElementById('doModal');
+  if (!m){ m = document.createElement('div'); m.id = 'doModal'; document.body.appendChild(m); }
+  const opt = (arr, pre, cur) => '<option value=""></option>' + arr.map(x => '<option value="' + x + '"' + (x === cur ? ' selected' : '') + '>' + r2t(pre + x) + '</option>').join('');
+  m.innerHTML = '<div class="doMBg" onclick="doEditClose()"></div><div class="doMBox">' +
+    '<div class="doMH">' + r2t('doEdT') + '<button type="button" onclick="doEditClose()">✕</button></div>' +
+    '<div class="doMInfo"><b>' + r2esc(r.cu) + '</b> · ' + r2esc(r.pn) + ' · ' + r2esc(r.pc) + '<br>' +
+      r2t('doSDate') + ' <b>' + d + '</b> · ' + r2t('doHPlan') + ' <b>' + p.toLocaleString() + ' EA</b></div>' +
+    '<div class="doMQ"><button type="button" onclick="doQuick(' + p + ')">' + r2t('doFull') + '</button>' +
+      '<button type="button" onclick="doQuick(0)">' + r2t('doNone0') + '</button>' +
+      '<label>' + r2t('doHAct') + ' <input type="number" id="doMq" min="0" value="' + (a.q != null ? a.q : p) + '" oninput="doMShow(' + p + ')"> EA</label></div>' +
+    '<div id="doMShort" class="doMShort">' +
+      '<div class="doMRow"><label>' + r2t('doRs') + '<select id="doMrs">' + opt(DO_RS, 'doRs_', a.rs) + '</select></label>' +
+        '<label>' + r2t('doAc') + '<select id="doMac">' + opt(DO_AC, 'doAc_', a.ac) + '</select></label></div>' +
+      '<div class="doMRow"><label>' + r2t('doCd') + '<input type="date" id="doMcd" value="' + r2esc(a.cd || '') + '"></label>' +
+        '<label>' + r2t('doOw') + '<input id="doMow" value="' + r2esc(a.ow || '') + '"></label></div>' +
+      '<label class="w">' + r2t('doMemo') + '<input id="doMmemo" value="' + r2esc(a.memo || '') + '"></label>' +
+      '<label class="chk"><input type="checkbox" id="doMdone"' + (a.done ? ' checked' : '') + '> ' + r2t('doDoneL') + '</label>' +
+    '</div>' +
+    '<div class="doMF"><button type="button" class="del" onclick="doEditDel(\'' + r2esc(key).replace(/'/g,'&#39;') + '\')">' + r2t('doDel') + '</button>' +
+      '<button type="button" class="ok" onclick="doEditSave(\'' + r2esc(key).replace(/'/g,'&#39;') + '\',' + p + ')">' + r2t('doSave') + '</button></div>' +
+    '</div>';
+  m.style.display = 'block';
+  doMShow(p);
+  const q = document.getElementById('doMq'); if (q){ q.focus(); q.select(); }
+}
+function doQuick(v){ const q = document.getElementById('doMq'); if (q){ q.value = v; q.dispatchEvent(new Event('input')); } }
+function doMShow(p){
+  const q = +((document.getElementById('doMq')||{}).value || 0), s = document.getElementById('doMShort');
+  if (s) s.style.display = q < p ? 'block' : 'none';
+}
+function doEditClose(){ const m = document.getElementById('doModal'); if (m) m.style.display = 'none'; }
+function doEditSave(key, p){
+  const g = id => (document.getElementById(id)||{}).value || '';
+  const q = Math.max(0, Math.round(+g('doMq') || 0));
+  const o = { q:q, t:new Date().toISOString().slice(0,16) };
+  if (q < p){ o.rs = g('doMrs'); o.ac = g('doMac'); o.cd = g('doMcd'); o.ow = g('doMow'); o.memo = g('doMmemo');
+              o.done = !!(document.getElementById('doMdone')||{}).checked; }
+  doAct()[key] = o; doActSave(); doEditClose(); doRedraw();
+}
+function doEditDel(key){ delete doAct()[key]; doActSave(); doEditClose(); doRedraw(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') doEditClose(); });
+
+/* 주간 품질보고 2 에서 부르는 입구 */
+function doWeekHtml(week){
+  DO_WEEK = week;
+  const plan = doPlan();
+  const custs = [...new Set(plan.rows.map(r=>r.cu).filter(Boolean))].sort();
   const paste = '<div class="doPaste qr-noprint"><div class="h">' + r2t('doUpd') + '</div>' +
     '<textarea id="doPasteBox" placeholder="' + r2esc(r2t('doHint')) + '"></textarea>' +
     '<div style="margin-top:5px;display:flex;gap:6px;align-items:center">' +
     '<button type="button" onclick="doApplyPaste()">' + r2t('doApply') + '</button>' +
     '<button type="button" onclick="doResetPlan()">' + r2t('doReset') + '</button>' +
     '<span id="doPasteMsg" class="msg"></span></div></div>';
-  if (!rg) return bar + '<div class="r2empty">' + r2t('doNone') + '</div>' + paste;
-
-  const days = [];
-  for (let i = 0; i < 7; i++) days.push(qrDateAdd(rg.start, i));
-  const inWeek = days.filter(d => plan.dates.indexOf(d) >= 0);
-  const rows = plan.rows
-    .filter(r => !DO_CUST || r.cu === DO_CUST)
-    .map(r => ({ r, wk: days.reduce((s,d)=>s+(r.d[d]||0), 0) }))
-    .filter(x => x.wk > 0)
-    .sort((a,b)=>b.wk-a.wk);
-  if (!rows.length){
-    const out = (plan.dates.length && (days[6] < plan.dates[0] || days[0] > plan.dates[plan.dates.length-1]))
-      ? r2t('doOut', { a:plan.dates[0], b:plan.dates[plan.dates.length-1] }) : r2t('doNone');
-    return bar + '<div class="r2empty">' + out + '</div>' + paste;
-  }
-  const DW = r2t('doDay');
-  const today = new Date(); const ts = today.getFullYear() + '-' +
-    String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
-  const dowOf = d => new Date(d + 'T00:00:00').getDay();
-  const head = '<tr><th style="min-width:100px">' + r2t('cust') + '</th>' +
-    '<th style="min-width:170px">' + r2t('doPart') + '</th>' +
-    '<th style="min-width:110px">' + r2t('doCode') + '</th>' +
-    days.map(d=>{
-      const w = dowOf(d);
-      return '<th style="min-width:66px" class="' + (d===ts?'today ':'') + (w===0?'sun':'') + '">' +
-        d.slice(5).replace('-','/') + '<div class="dow">' + DW[w] + '</div></th>'; }).join('') +
-    '<th style="min-width:76px">' + r2t('doWkSum') + '</th>' +
-    '<th style="min-width:84px">' + r2t('doOrder') + '</th></tr>';
-  const body = rows.map(x=>{
-    const r = x.r;
-    return '<tr><td class="h">' + r2esc(r.cu) + '</td>' +
-      '<td class="h" style="font-weight:600">' + r2esc(r.pn) + '</td>' +
-      '<td class="v" style="text-align:left;padding-left:6px">' + r2esc(r.pc) + '</td>' +
-      days.map(d=>{ const v = r.d[d]||0;
-        return '<td class="v ' + (v?'':'do0 ') + (d===ts?'today':'') + '">' + (v?v.toLocaleString():'·') + '</td>'; }).join('') +
-      '<td class="v" style="font-weight:800">' + x.wk.toLocaleString() + '</td>' +
-      '<td class="v mut">' + (r.o?r.o.toLocaleString():'–') + '</td></tr>';
-  }).join('');
-  const dayTot = days.map(d => rows.reduce((s,x)=>s+(x.r.d[d]||0), 0));
-  const foot = '<tr class="tot"><td class="h" colspan="3">' + r2t('doTot') + '</td>' +
-    dayTot.map((v,i)=>'<td class="v ' + (days[i]===ts?'today':'') + '">' + (v?v.toLocaleString():'·') + '</td>').join('') +
-    '<td class="v">' + dayTot.reduce((a,b)=>a+b,0).toLocaleString() + '</td>' +
-    '<td class="v mut">' + rows.reduce((s,x)=>s+(x.r.o||0),0).toLocaleString() + '</td></tr>';
   const dl = '<datalist id="doParts">' +
     [...new Set(plan.rows.map(r=>r.pc).filter(Boolean))].map(v=>'<option value="' + r2esc(v) + '">').join('') +
     '</datalist><datalist id="doNames">' +
     [...new Set(plan.rows.map(r=>r.pn).filter(Boolean))].map(v=>'<option value="' + r2esc(v) + '">').join('') +
-    '</datalist><datalist id="doCusts">' +
-    custs.map(v=>'<option value="' + r2esc(v) + '">').join('') + '</datalist>';
-  return bar + '<div class="r2wrap"><table class="r2t"><thead>' + head + '</thead><tbody>' +
-    body + foot + '</tbody></table></div>' + dl + paste;
+    '</datalist><datalist id="doCusts">' + custs.map(v=>'<option value="' + r2esc(v) + '">').join('') + '</datalist>';
+  return '<div id="doBlock">' + doSchedInner(week) + '</div>' + dl + paste;
 }
 
 /* ---------- 본체 ---------- */
