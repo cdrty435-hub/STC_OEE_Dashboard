@@ -7563,7 +7563,7 @@ loadData();
 .kw thead th{background:#b8cce4;font-weight:800;text-align:center;}
 .kw thead th.w{background:#fce4e4;}
 .kw thead th.dt{background:#ffff00;}
-.kw table.kw-s tbody td{height:50px;box-sizing:border-box;}
+.kw table.kw-s tbody td{height:58px;box-sizing:border-box;}
 .kw table.kw-s td.dt{line-height:1.4;}
 .kw table.kw-d tbody td{height:76px;box-sizing:border-box;}
 .kw table.kw-d textarea{min-height:62px;}
@@ -7574,6 +7574,7 @@ loadData();
 .kw td.w{background:#fff7f7;text-align:center;font-weight:800;white-space:nowrap;}
 .kw td.w1{color:#c00000;} .kw td.w2{color:#e26b0a;} .kw td.w3{color:#000;}
 .kw td.dt{font-size:11px;line-height:1.45;}
+.kw .kw-li{padding-left:1.25em;text-indent:-1.25em;} .kw .kw-li b{display:inline-block;width:1.25em;text-indent:0;} .kw .kw-tail{color:#64748b;}
 .kw .up{color:#c00000;font-weight:800;} .kw .dn{color:#15803d;font-weight:800;} .kw .eq{color:#6b7280;font-weight:700;}
 .kw table.kw-d td{vertical-align:top;font-size:11px;line-height:1.45;}
 .kw table.kw-d td.kd{text-align:center;vertical-align:middle;font-weight:800;}
@@ -7606,17 +7607,15 @@ loadData();
       return [...ks].map(k=>({k, d:(S.codeH[k]||0)-(Q.codeH[k]||0)})).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d))[0]; })();
     const tl = W.loss.reduce((s,x)=>s+x.lossH,0);
     const D = {
-      mttr: `목표 ${f1(C.tMttr,2)} 대비 ${sgn(S.mttr-C.tMttr,2)} ${S.mttr<=C.tMttr?'달성':'미달'}. `
-            + W.mttr.map(x=>`${DC(x.m)} ${topTxt(x)}`).join(' · '),
-      mtbf: `목표 ${f1(C.tMtbf,2)} ${S.mtbf>=C.tMtbf?'달성':'미달'} (${sgn(S.mtbf-C.tMtbf,2)}). 실가동 ${f1(S.runH)}h · 고장 ${S.n}건`
-            + (Q ? ` (${sgn(S.n-Q.n,0)}건)` : '') + '. '
-            + W.mtbf.map(x=>`${DC(x.m)} ${x.n}건${x.topN[0]?`(${x.topN[0].c} ${x.topN[0].n}건)`:''}`).join(' · '),
-      avail: W.avail.map(x=>`${DC(x.m)} ${f1(x.avail)}% (고장 ${f1(x.lossH)}h${x.top[0]?' · '+x.top[0].c:''}${x.lossH<1?' → 계획정지 영향 확인':''})`).join(' · ')
-            + (inact.length ? `. 가동 기록 없음(순위 제외): ${inact.join('·')}` : ''),
-      loss: `상위 3대 ${f1(tl)}h = 전체의 ${S.lossH?f1(tl/S.lossH*100,0):0}%.`
-            + (codeDelta && Math.abs(codeDelta.d)>=0.05 ? ` 최대 변동: ${codeDelta.k} ${sgn(codeDelta.d,1)}h (${esc(pl)} 대비)` : ''),
-      cnt: W.cnt.map(x=>{ const p=qm(x.m); return `${DC(x.m)} ${x.n}건${p?` (${sgn(x.n-p.n,0)})`:''}${x.topN[0]?' '+x.topN[0].c+' '+x.topN[0].n+'건':''}`; }).join(' · '),
-      cost: W.cost.map(x=>{ const p=qm(x.m); return `${DC(x.m)} ${f0(x.cost)} THB = ${S.cost?f1(x.cost/S.cost*100):0}%${p?` (비교 ${f0(p.cost)})`:''}`; }).join(' · ')
+      mttr: { head:`목표 ${f1(C.tMttr,2)} 대비 ${sgn(S.mttr-C.tMttr,2)} ${S.mttr<=C.tMttr?'달성':'미달'}`, items: W.mttr.map(x=>`${DC(x.m)} ${topTxt(x)}`) },
+      mtbf: { head:`목표 ${f1(C.tMtbf,2)} ${S.mtbf>=C.tMtbf?'달성':'미달'} (${sgn(S.mtbf-C.tMtbf,2)}) · 실가동 ${f1(S.runH)}h · 고장 ${S.n}건` + (Q ? ` (${sgn(S.n-Q.n,0)}건)` : ''),
+              items: W.mtbf.map(x=>`${DC(x.m)} ${x.n}건${x.topN[0]?` (${x.topN[0].c} ${x.topN[0].n}건)`:''}`) },
+      avail: { items: W.avail.map(x=>`${DC(x.m)} ${f1(x.avail)}% (고장 ${f1(x.lossH)}h${x.top[0]?' · '+x.top[0].c:''}${x.lossH<1?' → 계획정지 영향 확인':''})`),
+               tail: inact.length ? `가동 기록 없음(순위 제외): ${inact.join('·')}` : '' },
+      loss: { items: W.loss.map(x=>`${DC(x.m)} ${f1(x.lossH)}h${x.top[0]?' · '+x.top[0].c+' '+f1(x.top[0].h)+'h':''}`),
+              tail: `상위 3대 ${f1(tl)}h = 전체의 ${S.lossH?f1(tl/S.lossH*100,0):0}%` + (codeDelta && Math.abs(codeDelta.d)>=0.05 ? ` · 최대 변동: ${codeDelta.k} ${sgn(codeDelta.d,1)}h (${pl} 대비)` : '') },
+      cnt: { items: W.cnt.map(x=>{ const p=qm(x.m); return `${DC(x.m)} ${x.n}건${p?` (${sgn(x.n-p.n,0)})`:''}${x.topN[0]?' · '+x.topN[0].c+' '+x.topN[0].n+'건':''}`; }) },
+      cost: { items: W.cost.map(x=>{ const p=qm(x.m); return `${DC(x.m)} ${f0(x.cost)} THB = ${S.cost?f1(x.cost/S.cost*100):0}%${p?` (비교 ${f0(p.cost)})`:''}`; }) }
     };
 
     /* --- 1. 지표 요약 --- */
@@ -7641,7 +7640,10 @@ loadData();
       const ws = W[wk];
       h += `<tr><td class="c">${i+1}</td><td class="kp">${name}</td><td class="pv">${pv===null?'–':fmtv(pv)}</td><td class="cu">${fmtv(cv)}</td><td class="n">${dl(cv,pv,goodUp,dp)}</td>`;
       for (let j=0;j<3;j++){ const x = ws[j]; h += `<td class="w w${j+1}">${x?DC(x.m)+'&nbsp;&nbsp;'+wv(x):'–'}</td>`; }
-      h += `<td class="dt">${esc(D[wk])}</td></tr>`;
+      const dd = D[wk];
+      h += `<td class="dt">` + (dd.head ? `<div class="kw-tail" style="color:#334155">${esc(dd.head)}</div>` : '')
+         + (dd.items.length ? dd.items.map((x,i)=>`<div class="kw-li"><b>${i+1}.</b> ${esc(x)}</div>`).join('') : '<div>해당 없음</div>')
+         + (dd.tail ? `<div class="kw-tail">${esc(dd.tail)}</div>` : '') + `</td></tr>`;
     });
     h += `</tbody></table>`;
     h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · Worst = 대시보드 ② 설비별 차트 기준(건수 제한 없음, 가동 0h 설비 제외) · 가동률 = 가동 ÷ (가동 + 전체 로스)</div>`;
@@ -7716,7 +7718,7 @@ loadData();
   /* 일일·월간 보고용 날짜 목록 */
   async function dates(){ const d = await load(); return [...new Set(d.run.map(r=>r.d))].sort(); }
 
-  window.STCKW = { mount, ensureHost, setProvider, dates, _stats:stats, _periods:periods, _load:load };
+  window.STCKW = { mount, ensureHost, setProvider, dates, css, _stats:stats, _periods:periods, _load:load };
 })();
 
 (function(){

@@ -8606,7 +8606,7 @@ try{ document.addEventListener('DOMContentLoaded', ()=>{
    ========================================================================= */
 const DQ_TXT = {
   ko:{ from:'시작일', to:'종료일', scope:'집계 대상', who:'작성', print:'🖨 인쇄 / PDF 저장',
-       title:'일일 품질보고', head:'품질 보고서 – Daily Quality Report',
+       title:'일일 품질보고', head:'FAC1 공정품질 보고서 – Daily Quality Report',
        quick:'빠른 선택', q1:'최신 1일', q3:'최근 3일', q7:'최근 7일', qw:'이번 주(수~화)', qm:'이번 달',
        cap:'일자별 품질 추이 (불량률 · 품질Q)', cmp:'비교 기간', days:'{n}일',
        nodata:'선택한 기간에 품질(Q) 데이터가 없습니다.',
@@ -8619,7 +8619,7 @@ const DQ_TXT = {
        dTot:'TOTAL NG', dRej:'불량률', dQ:'품질(Q)', dSum:'합  계',
        wCur:'당기', wPrev:'전기' },
   en:{ from:'From', to:'To', scope:'Scope', who:'Prepared by', print:'🖨 Print / Save PDF',
-       title:'Daily quality report', head:'Quality Report – Daily',
+       title:'Daily quality report', head:'FAC1 Process Quality Report – Daily',
        quick:'Quick pick', q1:'Latest day', q3:'Last 3 days', q7:'Last 7 days',
        qw:'This week (Wed–Tue)', qm:'This month',
        cap:'Daily quality trend (defect rate · quality Q)', cmp:'Compared with', days:'{n} days',
@@ -8633,7 +8633,7 @@ const DQ_TXT = {
        dTot:'TOTAL NG', dRej:'Defect rate', dQ:'Quality (Q)', dSum:'Total',
        wCur:'this', wPrev:'prev' },
   th:{ from:'วันเริ่ม', to:'วันสิ้นสุด', scope:'ขอบเขต', who:'ผู้จัดทำ', print:'🖨 พิมพ์ / PDF',
-       title:'รายงานคุณภาพรายวัน', head:'รายงานคุณภาพ – รายวัน',
+       title:'รายงานคุณภาพรายวัน', head:'FAC1 คุณภาพกระบวนการ รายงานคุณภาพ – รายวัน',
        quick:'เลือกด่วน', q1:'วันล่าสุด', q3:'3 วันล่าสุด', q7:'7 วันล่าสุด',
        qw:'สัปดาห์นี้ (พ.-อ.)', qm:'เดือนนี้',
        cap:'แนวโน้มคุณภาพรายวัน (อัตราของเสีย · คุณภาพ Q)', cmp:'เทียบกับ', days:'{n} วัน',
@@ -8883,21 +8883,21 @@ function dqDeltaHtml(A, B, la, lb){
 const MQ_TXT = {
   ko:{ month:'보고 월', scope:'집계 대상', who:'작성', print:'🖨 인쇄 / PDF 저장',
        hint:'월을 바꾸면 표·차트·코멘트가 전부 다시 계산됩니다',
-       head:'품질 보고서 – Monthly Quality Report', ym:'{y}년 {m}월', days:'{a} ~ {b} · {n}일',
+       head:'FAC1 공정품질 보고서 – Monthly Quality Report', ym:'{y}년 {m}월', days:'{a} ~ {b} · {n}일',
        capM:'월별 품질 추이 (불량률 · 품질Q) — 최근 {n}개월', capD:'일자별 품질 추이 — {ym}',
        wk:'주차별 요약 (사내 주차 수~화, 이 달에 든 날짜만)', mon:'월별 요약', mLbl:'월',
        nodata:'선택한 월에 품질(Q) 데이터가 없습니다.', noprev:'전월 데이터가 없습니다.',
        cur:'당월', prev:'전월', basis:'기준 {r} · 품질(Q) {n}행 · 집계 {s}', iqc:'수입검사 [ FAC1 → FAC2 ] — 월간' },
   en:{ month:'Report month', scope:'Scope', who:'Prepared by', print:'🖨 Print / Save PDF',
        hint:'Changing the month recalculates every table, chart and comment',
-       head:'Quality Report – Monthly', ym:'{mn} {y}', days:'{a} ~ {b} · {n} days',
+       head:'FAC1 Process Quality Report – Monthly', ym:'{mn} {y}', days:'{a} ~ {b} · {n} days',
        capM:'Monthly quality trend (defect rate · quality Q) — last {n} months', capD:'Daily quality trend — {ym}',
        wk:'Week by week (company week Wed–Tue, days inside this month only)', mon:'Month by month', mLbl:'Month',
        nodata:'No Quality(Q) data in the selected month.', noprev:'No data for the previous month.',
        cur:'this', prev:'prev', basis:'{r} · Quality(Q) {n} rows · scope {s}', iqc:'FAC2 IQC [ FAC1 → FAC2 ] — monthly' },
   th:{ month:'เดือนรายงาน', scope:'ขอบเขต', who:'ผู้จัดทำ', print:'🖨 พิมพ์ / PDF',
        hint:'เมื่อเปลี่ยนเดือน ตาราง กราฟ และความเห็นจะคำนวณใหม่ทั้งหมด',
-       head:'รายงานคุณภาพ – รายเดือน', ym:'{mn} {y}', days:'{a} ~ {b} · {n} วัน',
+       head:'FAC1 คุณภาพกระบวนการ รายงานคุณภาพ – รายเดือน', ym:'{mn} {y}', days:'{a} ~ {b} · {n} วัน',
        capM:'แนวโน้มคุณภาพรายเดือน (อัตราของเสีย · คุณภาพ Q) — {n} เดือนล่าสุด', capD:'แนวโน้มคุณภาพรายวัน — {ym}',
        wk:'สรุปรายสัปดาห์ (สัปดาห์บริษัท พ.–อ. เฉพาะวันในเดือนนี้)', mon:'สรุปรายเดือน', mLbl:'เดือน',
        nodata:'ไม่มีข้อมูล Quality(Q) ในเดือนที่เลือก', noprev:'ไม่มีข้อมูลเดือนก่อน',
@@ -9437,7 +9437,7 @@ document.addEventListener('DOMContentLoaded', () => {
 .kw thead th{background:#b8cce4;font-weight:800;text-align:center;}
 .kw thead th.w{background:#fce4e4;}
 .kw thead th.dt{background:#ffff00;}
-.kw table.kw-s tbody td{height:50px;box-sizing:border-box;}
+.kw table.kw-s tbody td{height:58px;box-sizing:border-box;}
 .kw table.kw-s td.dt{line-height:1.4;}
 .kw table.kw-d tbody td{height:76px;box-sizing:border-box;}
 .kw table.kw-d textarea{min-height:62px;}
@@ -9448,6 +9448,7 @@ document.addEventListener('DOMContentLoaded', () => {
 .kw td.w{background:#fff7f7;text-align:center;font-weight:800;white-space:nowrap;}
 .kw td.w1{color:#c00000;} .kw td.w2{color:#e26b0a;} .kw td.w3{color:#000;}
 .kw td.dt{font-size:11px;line-height:1.45;}
+.kw .kw-li{padding-left:1.25em;text-indent:-1.25em;} .kw .kw-li b{display:inline-block;width:1.25em;text-indent:0;} .kw .kw-tail{color:#64748b;}
 .kw .up{color:#c00000;font-weight:800;} .kw .dn{color:#15803d;font-weight:800;} .kw .eq{color:#6b7280;font-weight:700;}
 .kw table.kw-d td{vertical-align:top;font-size:11px;line-height:1.45;}
 .kw table.kw-d td.kd{text-align:center;vertical-align:middle;font-weight:800;}
@@ -9480,17 +9481,15 @@ document.addEventListener('DOMContentLoaded', () => {
       return [...ks].map(k=>({k, d:(S.codeH[k]||0)-(Q.codeH[k]||0)})).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d))[0]; })();
     const tl = W.loss.reduce((s,x)=>s+x.lossH,0);
     const D = {
-      mttr: `목표 ${f1(C.tMttr,2)} 대비 ${sgn(S.mttr-C.tMttr,2)} ${S.mttr<=C.tMttr?'달성':'미달'}. `
-            + W.mttr.map(x=>`${DC(x.m)} ${topTxt(x)}`).join(' · '),
-      mtbf: `목표 ${f1(C.tMtbf,2)} ${S.mtbf>=C.tMtbf?'달성':'미달'} (${sgn(S.mtbf-C.tMtbf,2)}). 실가동 ${f1(S.runH)}h · 고장 ${S.n}건`
-            + (Q ? ` (${sgn(S.n-Q.n,0)}건)` : '') + '. '
-            + W.mtbf.map(x=>`${DC(x.m)} ${x.n}건${x.topN[0]?`(${x.topN[0].c} ${x.topN[0].n}건)`:''}`).join(' · '),
-      avail: W.avail.map(x=>`${DC(x.m)} ${f1(x.avail)}% (고장 ${f1(x.lossH)}h${x.top[0]?' · '+x.top[0].c:''}${x.lossH<1?' → 계획정지 영향 확인':''})`).join(' · ')
-            + (inact.length ? `. 가동 기록 없음(순위 제외): ${inact.join('·')}` : ''),
-      loss: `상위 3대 ${f1(tl)}h = 전체의 ${S.lossH?f1(tl/S.lossH*100,0):0}%.`
-            + (codeDelta && Math.abs(codeDelta.d)>=0.05 ? ` 최대 변동: ${codeDelta.k} ${sgn(codeDelta.d,1)}h (${esc(pl)} 대비)` : ''),
-      cnt: W.cnt.map(x=>{ const p=qm(x.m); return `${DC(x.m)} ${x.n}건${p?` (${sgn(x.n-p.n,0)})`:''}${x.topN[0]?' '+x.topN[0].c+' '+x.topN[0].n+'건':''}`; }).join(' · '),
-      cost: W.cost.map(x=>{ const p=qm(x.m); return `${DC(x.m)} ${f0(x.cost)} THB = ${S.cost?f1(x.cost/S.cost*100):0}%${p?` (비교 ${f0(p.cost)})`:''}`; }).join(' · ')
+      mttr: { head:`목표 ${f1(C.tMttr,2)} 대비 ${sgn(S.mttr-C.tMttr,2)} ${S.mttr<=C.tMttr?'달성':'미달'}`, items: W.mttr.map(x=>`${DC(x.m)} ${topTxt(x)}`) },
+      mtbf: { head:`목표 ${f1(C.tMtbf,2)} ${S.mtbf>=C.tMtbf?'달성':'미달'} (${sgn(S.mtbf-C.tMtbf,2)}) · 실가동 ${f1(S.runH)}h · 고장 ${S.n}건` + (Q ? ` (${sgn(S.n-Q.n,0)}건)` : ''),
+              items: W.mtbf.map(x=>`${DC(x.m)} ${x.n}건${x.topN[0]?` (${x.topN[0].c} ${x.topN[0].n}건)`:''}`) },
+      avail: { items: W.avail.map(x=>`${DC(x.m)} ${f1(x.avail)}% (고장 ${f1(x.lossH)}h${x.top[0]?' · '+x.top[0].c:''}${x.lossH<1?' → 계획정지 영향 확인':''})`),
+               tail: inact.length ? `가동 기록 없음(순위 제외): ${inact.join('·')}` : '' },
+      loss: { items: W.loss.map(x=>`${DC(x.m)} ${f1(x.lossH)}h${x.top[0]?' · '+x.top[0].c+' '+f1(x.top[0].h)+'h':''}`),
+              tail: `상위 3대 ${f1(tl)}h = 전체의 ${S.lossH?f1(tl/S.lossH*100,0):0}%` + (codeDelta && Math.abs(codeDelta.d)>=0.05 ? ` · 최대 변동: ${codeDelta.k} ${sgn(codeDelta.d,1)}h (${pl} 대비)` : '') },
+      cnt: { items: W.cnt.map(x=>{ const p=qm(x.m); return `${DC(x.m)} ${x.n}건${p?` (${sgn(x.n-p.n,0)})`:''}${x.topN[0]?' · '+x.topN[0].c+' '+x.topN[0].n+'건':''}`; }) },
+      cost: { items: W.cost.map(x=>{ const p=qm(x.m); return `${DC(x.m)} ${f0(x.cost)} THB = ${S.cost?f1(x.cost/S.cost*100):0}%${p?` (비교 ${f0(p.cost)})`:''}`; }) }
     };
 
     /* --- 1. 지표 요약 --- */
@@ -9515,7 +9514,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const ws = W[wk];
       h += `<tr><td class="c">${i+1}</td><td class="kp">${name}</td><td class="pv">${pv===null?'–':fmtv(pv)}</td><td class="cu">${fmtv(cv)}</td><td class="n">${dl(cv,pv,goodUp,dp)}</td>`;
       for (let j=0;j<3;j++){ const x = ws[j]; h += `<td class="w w${j+1}">${x?DC(x.m)+'&nbsp;&nbsp;'+wv(x):'–'}</td>`; }
-      h += `<td class="dt">${esc(D[wk])}</td></tr>`;
+      const dd = D[wk];
+      h += `<td class="dt">` + (dd.head ? `<div class="kw-tail" style="color:#334155">${esc(dd.head)}</div>` : '')
+         + (dd.items.length ? dd.items.map((x,i)=>`<div class="kw-li"><b>${i+1}.</b> ${esc(x)}</div>`).join('') : '<div>해당 없음</div>')
+         + (dd.tail ? `<div class="kw-tail">${esc(dd.tail)}</div>` : '') + `</td></tr>`;
     });
     h += `</tbody></table>`;
     h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · Worst = 대시보드 ② 설비별 차트 기준(건수 제한 없음, 가동 0h 설비 제외) · 가동률 = 가동 ÷ (가동 + 전체 로스)</div>`;
@@ -9614,6 +9616,64 @@ document.addEventListener('DOMContentLoaded', () => {
    ===================================================================== */
 (function(){
   const MIN_PROD = 500;
+
+  /* ---------- 다국어 (대시보드 LANG : ko / en / th) ---------- */
+  const QT = {
+    ko:{ g_def:'FAC1 공정품질<br>불량율', g_ws:'FAC1 공정품질<br>웜샷', g_iqc:'FAC2 IQC',
+         k_t:'총 불량률', k_ng:'순수 NG율', k_ws:'웜샷율 (합계)', k_std:'기본 웜샷 (STD)', k_exc:'초과 웜샷 (EXCESS)', k_il:'Lot 불합격율', k_iq:'불합격 수량',
+         none:'비교 없음', na:'해당 없음', nosplit:'이 기간 원본에 Warm(STD)/Warm(Excess) 분할 기록이 없습니다',
+         stdAll:' · 전체 기본 {a}EA = 웜샷의 {p}%', noExc:'초과 웜샷 없음', excAll:' · 전체 초과 {a}EA = 웜샷의 {p}% → 기준 초과분은 줄여야 할 손실',
+         ilSum:' · 입고 {a}Lot 중 {r}Lot 불합격', ilNone:'입고 {a}Lot · 불합격 없음', noDef:'현상 미기재', noRej:'불합격 없음',
+         h1:'1. 품질 지표 요약 (FAC1 공정품질 · FAC2 IQC)', h1s:'금기간 {c} · 비교 {p} · 생산 {n}EA · FAC2 IQC 입고 {l}Lot · 설비 불량률 순위는 생산 {m}EA 이상 설비',
+         th_grp:'구분', th_kpi:'지표', th_d:'증감', th_dt:'세부사항 (Worst 원인)',
+         note1:"※ 증감: 빨강 = 악화, 초록 = 개선 · 총 불량률 = (생산−양품)÷생산 · 순수 NG = 총 불량 − 웜샷 · FAC2 IQC Worst = 불합격 수량 순 · 집계 대상은 보고서 상단의 '집계 대상(정규/특근)' 선택을 따름",
+         h2:'2. 품질 워스트 세부사항', h2s:'FAC1 공정품질 불량률 · 초과 웜샷 Worst 3 설비 · FAC2 IQC 불합격 Worst 3 품번 — 원인·조치/상태 칸은 입력하면 이 기간에 저장됩니다',
+         th2:['구분','순위','대상','지표값 (비교 대비)','수량','주요 불량 (유형 · 수량 · 비중)','원인 · 조치','상태 / 후속 조치'],
+         d_def:'FAC1 공정품질<br>불량률', d_exc:'FAC1 공정품질<br>초과 웜샷', noCmp:' (비교 없음)',
+         pureNg:'순수 NG', ws:'웜샷', prod:'생산', defect:'불량', std:'기본', exc:'초과', total:'합계',
+         excNote:'초과분 = 기준 웜샷 수를 넘겨 버린 샷<br>초과 비중 {p}% (웜샷 중)',
+         phC:'원인 · 조치 내용 입력', phS:'상태 / 담당 / 완료일', phW:'원인 (금형 온도·재가동 횟수 등) · 조치',
+         noProd:'해당 기간 생산 기록 없음', noExcRow:'이 기간 초과 웜샷 없음', rej:'불합격', cmpLot:'비교 기간 {r} / {l} Lot', cmpNone:'비교 기간 입고 없음',
+         in:'입고', noRejRow:'해당 기간 불합격 Lot 없음', save:'※ 저장 위치: 이 브라우저 (기간 {p})', err:'⚠ 품질 지표 요약을 만들지 못했습니다: ', part:'품질 지표 요약 · 워스트' },
+    en:{ g_def:'FAC1 Process Quality<br>Defect rate', g_ws:'FAC1 Process Quality<br>Warm shot', g_iqc:'FAC2 IQC',
+         k_t:'Total defect rate', k_ng:'Pure NG rate', k_ws:'Warm shot rate (total)', k_std:'Standard warm shot (STD)', k_exc:'Excess warm shot (EXCESS)', k_il:'Lot reject rate', k_iq:'Rejected qty',
+         none:'no comparison', na:'none', nosplit:'No Warm(STD)/Warm(Excess) split in the source for this period',
+         stdAll:' · total STD {a}EA = {p}% of warm shots', noExc:'no excess warm shots', excAll:' · total excess {a}EA = {p}% of warm shots → loss to reduce',
+         ilSum:' · {r} of {a} lots rejected', ilNone:'{a} lots received · no rejects', noDef:'defect not recorded', noRej:'no rejects',
+         h1:'1. Quality KPI summary (FAC1 Process Quality · FAC2 IQC)', h1s:'Period {c} · vs {p} · production {n}EA · FAC2 IQC {l} lots · machine ranking only for machines with ≥{m}EA produced',
+         th_grp:'Area', th_kpi:'KPI', th_d:'Change', th_dt:'Details (worst causes)',
+         note1:'※ Red = worse, green = better · total defect rate = (production − good) ÷ production · pure NG = total defects − warm shots · FAC2 IQC worst = by rejected qty · scope follows the regular/overtime setting at the top of the report',
+         h2:'2. Quality worst details', h2s:'FAC1 defect-rate and excess-warm-shot worst 3 machines · FAC2 IQC worst 3 parts — cause/action and status are saved for this period',
+         th2:['Area','Rank','Target','Value (vs comparison)','Quantity','Main defects (type · qty · share)','Cause · action','Status / follow-up'],
+         d_def:'FAC1 Process Quality<br>Defect rate', d_exc:'FAC1 Process Quality<br>Excess warm shot', noCmp:' (no comparison)',
+         pureNg:'Pure NG', ws:'Warm shot', prod:'Prod.', defect:'Defects', std:'STD', exc:'Excess', total:'Total',
+         excNote:'Excess = shots scrapped beyond the standard warm-up count<br>excess share {p}% of warm shots',
+         phC:'Enter cause · action', phS:'Status / owner / due date', phW:'Cause (die temperature, restarts …) · action',
+         noProd:'No production in this period', noExcRow:'No excess warm shots in this period', rej:'rejected', cmpLot:'comparison {r} / {l} lots', cmpNone:'no lots in comparison period',
+         in:'Received', noRejRow:'No rejected lots in this period', save:'※ Saved in this browser (period {p})', err:'⚠ Could not build the quality KPI summary: ', part:'Quality KPI summary · Worst' },
+    th:{ g_def:'FAC1 คุณภาพกระบวนการ<br>อัตราของเสีย', g_ws:'FAC1 คุณภาพกระบวนการ<br>Warm shot', g_iqc:'FAC2 IQC',
+         k_t:'อัตราของเสียรวม', k_ng:'อัตรา NG สุทธิ', k_ws:'อัตรา Warm shot (รวม)', k_std:'Warm shot มาตรฐาน (STD)', k_exc:'Warm shot เกิน (EXCESS)', k_il:'อัตราล็อตไม่ผ่าน', k_iq:'จำนวนไม่ผ่าน',
+         none:'ไม่มีข้อมูลเทียบ', na:'ไม่มี', nosplit:'ช่วงนี้ไม่มีข้อมูลแยก Warm(STD)/Warm(Excess) ในต้นฉบับ',
+         stdAll:' · STD รวม {a}EA = {p}% ของ warm shot', noExc:'ไม่มี warm shot เกิน', excAll:' · เกินรวม {a}EA = {p}% ของ warm shot → ความสูญเสียที่ต้องลด',
+         ilSum:' · ไม่ผ่าน {r} จาก {a} ล็อต', ilNone:'รับเข้า {a} ล็อต · ไม่มีไม่ผ่าน', noDef:'ไม่ได้ระบุอาการ', noRej:'ไม่มีไม่ผ่าน',
+         h1:'1. สรุปตัวชี้วัดคุณภาพ (FAC1 คุณภาพกระบวนการ · FAC2 IQC)', h1s:'ช่วง {c} · เทียบ {p} · ผลิต {n}EA · FAC2 IQC {l} ล็อต · จัดอันดับเฉพาะเครื่องที่ผลิต ≥{m}EA',
+         th_grp:'กลุ่ม', th_kpi:'ตัวชี้วัด', th_d:'เปลี่ยนแปลง', th_dt:'รายละเอียด (สาเหตุ Worst)',
+         note1:'※ แดง = แย่ลง เขียว = ดีขึ้น · อัตราของเสียรวม = (ผลิต − ของดี) ÷ ผลิต · NG สุทธิ = ของเสียรวม − warm shot · FAC2 IQC Worst = เรียงตามจำนวนไม่ผ่าน · ขอบเขตตามตัวเลือก ปกติ/OT ด้านบนรายงาน',
+         h2:'2. รายละเอียด Worst ด้านคุณภาพ', h2s:'เครื่อง Worst 3 ด้านอัตราของเสียและ warm shot เกินของ FAC1 · ชิ้นงาน Worst 3 ของ FAC2 IQC — ช่องสาเหตุ/การแก้ไขและสถานะบันทึกตามช่วงนี้',
+         th2:['กลุ่ม','อันดับ','เป้าหมาย','ค่า (เทียบช่วงก่อน)','จำนวน','ของเสียหลัก (ประเภท · จำนวน · สัดส่วน)','สาเหตุ · การแก้ไข','สถานะ / ติดตาม'],
+         d_def:'FAC1 คุณภาพกระบวนการ<br>อัตราของเสีย', d_exc:'FAC1 คุณภาพกระบวนการ<br>Warm shot เกิน', noCmp:' (ไม่มีข้อมูลเทียบ)',
+         pureNg:'NG สุทธิ', ws:'Warm shot', prod:'ผลิต', defect:'ของเสีย', std:'STD', exc:'เกิน', total:'รวม',
+         excNote:'เกิน = ช็อตที่ทิ้งเกินจำนวนมาตรฐาน<br>สัดส่วนเกิน {p}% ของ warm shot',
+         phC:'กรอกสาเหตุ · การแก้ไข', phS:'สถานะ / ผู้รับผิดชอบ / วันที่เสร็จ', phW:'สาเหตุ (อุณหภูมิแม่พิมพ์ การเริ่มใหม่ ฯลฯ) · การแก้ไข',
+         noProd:'ไม่มีการผลิตในช่วงนี้', noExcRow:'ไม่มี warm shot เกินในช่วงนี้', rej:'ไม่ผ่าน', cmpLot:'ช่วงเทียบ {r} / {l} ล็อต', cmpNone:'ไม่มีรับเข้าในช่วงเทียบ',
+         in:'รับเข้า', noRejRow:'ไม่มีล็อตไม่ผ่านในช่วงนี้', save:'※ บันทึกในเบราว์เซอร์นี้ (ช่วง {p})', err:'⚠ สร้างสรุปตัวชี้วัดคุณภาพไม่ได้: ', part:'สรุปตัวชี้วัดคุณภาพ · Worst' }
+  };
+  function T(k, vars){
+    const L = (typeof LANG !== 'undefined' && QT[LANG]) ? LANG : 'ko';
+    let v = (QT[L][k] !== undefined) ? QT[L][k] : QT.ko[k];
+    if (vars && typeof v === 'string') for (const x in vars) v = v.split('{'+x+'}').join(vars[x]);
+    return v;
+  }
   const $ = id => document.getElementById(id);
   const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const f1 = (v,dp=1) => (isFinite(v)?v:0).toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp});
@@ -9681,7 +9741,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const P = periods(opt);
     const S = qStats(P.cur, sc), Q = P.prev ? qStats(P.prev, sc) : null;
     const I = iStats(P.cur), J = P.prev ? iStats(P.prev) : null;
-    const pl = P.prev ? P.prev.label : '비교 없음';
+    const pl = P.prev ? P.prev.label : T('none');
     const big = S.list.filter(e => e.prod >= MIN_PROD);
     const qEq = (A, eq) => A ? A.list.find(x => x.eq === eq) : null;
     const topDef = (e, n) => Object.keys(e.dmap||{}).map(k => ({k, v:e.dmap[k]})).sort((a,b)=>b.v-a.v).slice(0,n||2);
@@ -9700,92 +9760,95 @@ document.addEventListener('DOMContentLoaded', () => {
     /* 세부사항 문구 */
     const eqTxt = (e, k) => `${e.eq} ${f1(e[k],2)}%` + (topModel(e.eq) ? ` (${topModel(e.eq)})` : '')
                           + (k !== 'wsRate' && topDef(e,1)[0] ? ` ${tr(topDef(e,1)[0].k)} ${f0(topDef(e,1)[0].v)}` : '');
+    const wsTot = S.wsStd + S.wsExc;
+    /* 세부사항 : Worst 순서대로 1. 2. 3. 한 줄씩 · 마지막 줄은 합계 설명 */
+    const L3 = (arr, empty, tail) => ({ items: arr.length ? arr : [], empty, tail: tail || '' });
     const D = {
-      t:  W.t.map(e => eqTxt(e,'tRate')).join(' · ') || '해당 없음',
-      ng: W.ng.map(e => eqTxt(e,'ngRate')).join(' · ') || '해당 없음',
-      ws: W.ws.map(e => `${e.eq} ${f1(e.wsRate,2)}% (${f0(e.ws)}EA${topModel(e.eq)?' · '+topModel(e.eq):''})`).join(' · ') || '해당 없음',
-      std: !S.hasSplit ? '이 기간 원본에 Warm(STD)/Warm(Excess) 분할 기록이 없습니다' : (W.std.map(e => `${e.eq} ${f1(e.stdRate,2)}% (${f0(e.wsStd)}EA${topModel(e.eq)?' · '+topModel(e.eq):''})`).join(' · ') || '해당 없음')
-            + (S.hasSplit ? ` · 전체 기본 ${f0(S.wsStd)}EA = 웜샷의 ${f1(pct(S.wsStd, S.wsStd+S.wsExc),0)}%` : ''),
-      exc: !S.hasSplit ? '이 기간 원본에 Warm(STD)/Warm(Excess) 분할 기록이 없습니다' : (W.exc.map(e => `${e.eq} ${f1(e.excRate,2)}% (${f0(e.wsExc)}EA${topModel(e.eq)?' · '+topModel(e.eq):''})`).join(' · ') || '초과 웜샷 없음')
-            + (S.hasSplit ? ` · 전체 초과 ${f0(S.wsExc)}EA = 웜샷의 ${f1(pct(S.wsExc, S.wsStd+S.wsExc),0)}% → 기준 초과분은 줄여야 할 손실` : ''),
-      il: WP.length ? WP.map(p => `${p.name} ${p.rej}Lot`).join(' · ') + ` · 입고 ${I.lots}Lot 중 ${I.rej}Lot 불합격` : `입고 ${I.lots}Lot · 불합격 없음`,
-      iq: WP.map(p => `${p.name} ${f0(p.rejQty)}EA (${p.ngs.map(n=>md(n.d)+' '+(tr(n.def)||n.raw||'현상 미기재')).join(', ')})`).join(' · ') || '불합격 없음',
-      lqc:'LQC(공정 순회검사) 원본 시트가 아직 없습니다 — OEE_RawData_APQ 에 LQC 탭(일자·설비·모델·검사 Lot·불합격 Lot·불량유형·조치)을 만들면 자동 연결'
+      t:  L3(W.t.map(e => eqTxt(e,'tRate')), T('na')),
+      ng: L3(W.ng.map(e => eqTxt(e,'ngRate')), T('na')),
+      ws: L3(W.ws.map(e => `${e.eq} ${f1(e.wsRate,2)}% (${f0(e.ws)}EA${topModel(e.eq)?' · '+topModel(e.eq):''})`), T('na')),
+      std: !S.hasSplit ? L3([], T('nosplit')) : L3(W.std.map(e => `${e.eq} ${f1(e.stdRate,2)}% (${f0(e.wsStd)}EA${topModel(e.eq)?' · '+topModel(e.eq):''})`), T('na'),
+            T('stdAll', { a:f0(S.wsStd), p:f1(pct(S.wsStd, wsTot),0) }).replace(/^ · /,'')),
+      exc: !S.hasSplit ? L3([], T('nosplit')) : L3(W.exc.map(e => `${e.eq} ${f1(e.excRate,2)}% (${f0(e.wsExc)}EA${topModel(e.eq)?' · '+topModel(e.eq):''})`), T('noExc'),
+            T('excAll', { a:f0(S.wsExc), p:f1(pct(S.wsExc, wsTot),0) }).replace(/^ · /,'')),
+      il: WP.length ? L3(WP.map(p => `${p.name} ${p.rej}Lot`), '', T('ilSum', { a:I.lots, r:I.rej }).replace(/^ · /,'')) : L3([], T('ilNone', { a:I.lots })),
+      iq: L3(WP.map(p => `${p.name} ${f0(p.rejQty)}EA (${p.ngs.map(n=>md(n.d)+' '+(tr(n.def)||n.raw||T('noDef'))).join(', ')})`), T('noRej'))
     };
+    const dtHtml = d => (d.items.length ? d.items.map((x,i) => `<div class="kw-li"><b>${i+1}.</b> ${esc(x)}</div>`).join('') : `<div>${esc(d.empty)}</div>`)
+                      + (d.tail ? `<div class="kw-li kw-tail">${esc(d.tail)}</div>` : '');
     const dl = (c, p, goodUp, dp, unit) => {
       if (p == null || c == null) return '<span class="eq">–</span>';
       const d = c - p; if (Math.abs(d) < Math.pow(10,-dp)/2) return '<span class="eq">±0</span>';
       return `<span class="${(goodUp ? d>0 : d<0) ? 'dn' : 'up'}">${sgn(d,dp)}${unit||''}</span>`;
     };
     const wEq = (arr, k) => [0,1,2].map(j => arr[j] ? `${arr[j].eq}&nbsp;&nbsp;${f1(arr[j][k],2)}%` : '–');
+    const wPn = (fn) => [0,1,2].map(j => WP[j] ? `<div style="white-space:normal;font-size:11px;line-height:1.3">${esc(WP[j].no||WP[j].name)}<br>${fn(WP[j])}</div>` : '–');
+    const GBG = { def:'#fdecec', ws:'#fff4e0', iqc:'#e8f0fb' };
     const rows = [
-      ['FAC1 공정품질<br>불량율', '총 불량률', Q?Q.tRate:null, S.tRate, v=>f1(v,2)+' %', 2, '%p', wEq(W.t,'tRate'), D.t],
-      ['FAC1 공정품질<br>불량율', '순수 NG율', Q?Q.ngRate:null, S.ngRate, v=>f1(v,2)+' %', 2, '%p', wEq(W.ng,'ngRate'), D.ng],
-      ['FAC1 공정품질<br>웜샷', '웜샷율 (합계)', Q?Q.wsRate:null, S.wsRate, v=>f1(v,2)+' %', 2, '%p', wEq(W.ws,'wsRate'), D.ws],
-      ['FAC1 공정품질<br>웜샷', '기본 웜샷 (STD)', Q&&Q.hasSplit?Q.stdRate:null, S.hasSplit?S.stdRate:null, v=>f1(v,2)+' %', 2, '%p', wEq(W.std,'stdRate'), D.std],
-      ['FAC1 공정품질<br>웜샷', '초과 웜샷 (EXCESS)', Q&&Q.hasSplit?Q.excRate:null, S.hasSplit?S.excRate:null, v=>f1(v,2)+' %', 2, '%p', wEq(W.exc,'excRate'), D.exc],
-      ['FAC2 IQC', 'Lot 불합격율', J?J.rate:null, I.rate, v=>f1(v,2)+' %', 2, '%p', [0,1,2].map(j=>WP[j]?`<div style="white-space:normal;font-size:11px;line-height:1.3">${esc(WP[j].no||WP[j].name)}<br>${WP[j].rej} Lot</div>`:'–'), D.il],
-      ['FAC2 IQC', '불합격 수량', J?J.rejQty:null, I.rejQty, v=>f0(v)+' EA', 0, '', [0,1,2].map(j=>WP[j]?`<div style="white-space:normal;font-size:11px;line-height:1.3">${esc(WP[j].no||WP[j].name)}<br>${f0(WP[j].rejQty)} EA</div>`:'–'), D.iq],
+      ['def', T('k_t'),   Q?Q.tRate:null,  S.tRate,  v=>f1(v,2)+' %', 2, '%p', wEq(W.t,'tRate'),   D.t],
+      ['def', T('k_ng'),  Q?Q.ngRate:null, S.ngRate, v=>f1(v,2)+' %', 2, '%p', wEq(W.ng,'ngRate'), D.ng],
+      ['ws',  T('k_ws'),  Q?Q.wsRate:null, S.wsRate, v=>f1(v,2)+' %', 2, '%p', wEq(W.ws,'wsRate'), D.ws],
+      ['ws',  T('k_std'), Q&&Q.hasSplit?Q.stdRate:null, S.hasSplit?S.stdRate:null, v=>f1(v,2)+' %', 2, '%p', wEq(W.std,'stdRate'), D.std],
+      ['ws',  T('k_exc'), Q&&Q.hasSplit?Q.excRate:null, S.hasSplit?S.excRate:null, v=>f1(v,2)+' %', 2, '%p', wEq(W.exc,'excRate'), D.exc],
+      ['iqc', T('k_il'),  J?J.rate:null,   I.rate,   v=>f1(v,2)+' %', 2, '%p', wPn(p=>p.rej+' Lot'), D.il],
+      ['iqc', T('k_iq'),  J?J.rejQty:null, I.rejQty, v=>f0(v)+' EA', 0, '', wPn(p=>f0(p.rejQty)+' EA'), D.iq]
     ];
     const grpN = {}; rows.forEach(r => grpN[r[0]] = (grpN[r[0]]||0)+1);
     let h = `<div class="kw">`;
-    h += `<h4 class="kw-h">1. 품질 지표 요약 (FAC1 공정품질 · FAC2 IQC) <small>금기간 ${esc(P.cur.label)} · 비교 ${esc(pl)} · 생산 ${f0(S.prod)}EA · FAC2 IQC 입고 ${I.lots}Lot · 설비 불량률 순위는 생산 ${MIN_PROD}EA 이상 설비</small></h4>`;
-    h += `<table class="kw-s"><colgroup><col style="width:7%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:7%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:29%"></colgroup>`;
-    h += `<thead><tr><th>구분</th><th>지표</th><th>${esc(pl)}</th><th>${esc(P.cur.label)}</th><th>증감</th><th class="w">Worst 1</th><th class="w">Worst 2</th><th class="w">Worst 3</th><th class="dt">세부사항 (Worst 원인)</th></tr></thead><tbody>`;
+    h += `<h4 class="kw-h">${T('h1')} <small>${esc(T('h1s', { c:P.cur.label, p:pl, n:f0(S.prod), l:I.lots, m:MIN_PROD }))}</small></h4>`;
+    h += `<table class="kw-s"><colgroup><col style="width:8%"><col style="width:10%"><col style="width:9%"><col style="width:9%"><col style="width:7%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:27%"></colgroup>`;
+    h += `<thead><tr><th>${T('th_grp')}</th><th>${T('th_kpi')}</th><th>${esc(pl)}</th><th>${esc(P.cur.label)}</th><th>${T('th_d')}</th><th class="w">Worst 1</th><th class="w">Worst 2</th><th class="w">Worst 3</th><th class="dt">${T('th_dt')}</th></tr></thead><tbody>`;
     const seen = {};
     rows.forEach(r => {
       const [g, name, pv, cv, fmt, dp, unit, ws, dt] = r;
-      const na = false;
-      h += '<tr>' + (seen[g] ? '' : `<td class="kp" rowspan="${grpN[g]}" style="background:${g.indexOf('불량율')>=0?'#fdecec':g.indexOf('웜샷')>=0?'#fff4e0':'#e8f0fb'}">${g}</td>`);
+      h += '<tr>' + (seen[g] ? '' : `<td class="kp" rowspan="${grpN[g]}" style="background:${GBG[g]}">${T('g_'+g)}</td>`);
       seen[g] = 1;
-      h += `<td class="kp">${name}</td><td class="pv">${pv==null?'–':fmt(pv)}</td><td class="cu"${na?' style="color:#94a3b8;font-weight:600"':''}>${cv==null&&!na?'–':fmt(cv)}</td><td class="n">${na?'<span class="eq">–</span>':dl(cv,pv,false,dp,unit)}</td>`;
+      h += `<td class="kp">${name}</td><td class="pv">${pv==null?'–':fmt(pv)}</td><td class="cu">${cv==null?'–':fmt(cv)}</td><td class="n">${dl(cv,pv,false,dp,unit)}</td>`;
       ws.forEach((x,j) => h += `<td class="w w${j+1}">${x}</td>`);
-      h += `<td class="dt"${na?' style="color:#64748b"':''}>${esc(dt)}</td></tr>`;
+      h += `<td class="dt">${dtHtml(dt)}</td></tr>`;
     });
-    h += `</tbody></table>`;
-    h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · 총 불량률 = (생산−양품)÷생산 · 순수 NG = 총 불량 − 웜샷 · FAC2 IQC Worst = 불합격 수량 순 · 집계 대상은 보고서 상단의 '집계 대상(정규/특근)' 선택을 따름</div>`;
+    h += `</tbody></table><div class="kw-note">${esc(T('note1'))}</div>`;
 
     /* --- 2. 워스트 세부사항 --- */
     let notes = {}; try{ notes = JSON.parse(localStorage.getItem('stc_qkw_notes_'+P.cur.key)||'{}'); }catch(e){}
-    h += `<h4 class="kw-h">2. 품질 워스트 세부사항 <small>FAC1 공정품질 불량률 · 초과 웜샷 Worst 3 설비 · FAC2 IQC 불합격 Worst 3 품번 — 원인·조치/상태 칸은 입력하면 이 기간에 저장됩니다</small></h4>`;
-    h += `<table class="kw-d"><colgroup><col style="width:7%"><col style="width:6%"><col style="width:11%"><col style="width:12%"><col style="width:13%"><col style="width:17%"><col style="width:20%"><col style="width:14%"></colgroup>`;
-    h += `<thead><tr><th>구분</th><th>순위</th><th>대상</th><th>지표값 (비교 대비)</th><th>수량</th><th>주요 불량 (유형 · 수량 · 비중)</th><th class="dt">원인 · 조치</th><th class="dt">상태 / 후속 조치</th></tr></thead><tbody>`;
-    const ta = (k,f,ph) => `<textarea data-qk="${esc(k)}" data-f="${f}" placeholder="${ph}">${esc((notes[k]||{})[f]||'')}</textarea>`;
+    h += `<h4 class="kw-h">${T('h2')} <small>${esc(T('h2s'))}</small></h4>`;
+    h += `<table class="kw-d"><colgroup><col style="width:8%"><col style="width:6%"><col style="width:11%"><col style="width:12%"><col style="width:13%"><col style="width:17%"><col style="width:19%"><col style="width:14%"></colgroup>`;
+    h += '<thead><tr>' + T('th2').map((x,i) => `<th${i>=6?' class="dt"':''}>${x}</th>`).join('') + '</tr></thead><tbody>';
+    const ta = (k,f,ph) => `<textarea data-qk="${esc(k)}" data-f="${f}" placeholder="${esc(ph)}">${esc((notes[k]||{})[f]||'')}</textarea>`;
+    const sub = list => `<div style="font-size:10.5px;color:#475569;font-weight:600;margin-top:3px">${list.map(esc).join('<br>')}</div>`;
+    const cmp = (v, pv) => pv!=null ? ` (${v>pv?'▲':'▼'}${f1(Math.abs(v-pv),2)}%p)` : T('noCmp');
     W.t.forEach((e,j) => {
       const p = qEq(Q, e.eq), pv = p && p.prod ? p.tRate : null;
       const ms = S.models[e.eq] || {}; const mlist = Object.keys(ms).sort((a,b)=>ms[b].ng-ms[a].ng).slice(0,2);
-      const td = topDef(e,3), dsum = Object.values(e.dmap||{}).reduce((s,v)=>s+v,0);
-      const defs = (e.ws ? [`웜샷 ${f0(e.ws)} (${f1(pct(e.ws,e.totalNg),0)}%)`] : [])
-        .concat(td.map(x => `${esc(tr(x.k))} ${f0(x.v)} (${f1(pct(x.v,e.totalNg),0)}%)`));
-      h += `<tr><td class="kd mttr">FAC1 공정품질<br>불량률</td><td class="rk">Worst ${j+1}</td><td class="mc">${esc(e.eq)}<div style="font-size:10.5px;color:#475569;font-weight:600;margin-top:3px">${mlist.map(esc).join('<br>')}</div></td>`
-         + `<td><b>${f1(e.tRate,2)}%</b>` + (pv!=null ? ` (${e.tRate>pv?'▲':'▼'}${f1(Math.abs(e.tRate-pv),2)}%p)` : ' (비교 없음)')
-         + `<br>순수 NG ${f1(e.ngRate,2)}% · 웜샷 ${f1(e.wsRate,2)}%</td>`
-         + `<td>생산 ${f0(e.prod)}<br>불량 ${f0(e.totalNg)} (NG ${f0(e.ng)} · 웜샷 ${f0(e.ws)})</td>`
+      const defs = (e.ws ? [`${T('ws')} ${f0(e.ws)} (${f1(pct(e.ws,e.totalNg),0)}%)`] : [])
+        .concat(topDef(e,3).map(x => `${esc(tr(x.k))} ${f0(x.v)} (${f1(pct(x.v,e.totalNg),0)}%)`));
+      h += `<tr><td class="kd mttr">${T('d_def')}</td><td class="rk">Worst ${j+1}</td><td class="mc">${esc(e.eq)}${sub(mlist)}</td>`
+         + `<td><b>${f1(e.tRate,2)}%</b>${cmp(e.tRate,pv)}<br>${T('pureNg')} ${f1(e.ngRate,2)}% · ${T('ws')} ${f1(e.wsRate,2)}%</td>`
+         + `<td>${T('prod')} ${f0(e.prod)}<br>${T('defect')} ${f0(e.totalNg)} (NG ${f0(e.ng)} · ${T('ws')} ${f0(e.ws)})</td>`
          + `<td>${defs.map((x,i)=>'①②③④'[i]+' '+x).join('<br>') || '–'}</td>`
-         + `<td>${ta('EQ:'+e.eq,'c','원인 · 조치 내용 입력')}</td><td>${ta('EQ:'+e.eq,'s','상태 / 담당 / 완료일')}</td></tr>`;
+         + `<td>${ta('EQ:'+e.eq,'c',T('phC'))}</td><td>${ta('EQ:'+e.eq,'s',T('phS'))}</td></tr>`;
     });
-    if (!W.t.length) h += `<tr><td class="kd mttr">FAC1 공정품질<br>불량률</td><td colspan="7">해당 기간 생산 기록 없음</td></tr>`;
+    if (!W.t.length) h += `<tr><td class="kd mttr">${T('d_def')}</td><td colspan="7">${T('noProd')}</td></tr>`;
     W.exc.forEach((e,j) => {
       const p = qEq(Q, e.eq), pv = p && p.prod && Q.hasSplit ? p.excRate : null;
       const ms = S.models[e.eq] || {}; const mlist = Object.keys(ms).sort((a,b)=>ms[b].prod-ms[a].prod).slice(0,2);
-      h += `<tr><td class="kd" style="background:#fff4e0">FAC1 공정품질<br>초과 웜샷</td><td class="rk">Worst ${j+1}</td><td class="mc">${esc(e.eq)}<div style="font-size:10.5px;color:#475569;font-weight:600;margin-top:3px">${mlist.map(esc).join('<br>')}</div></td>`
-         + `<td><b>${f1(e.excRate,2)}%</b>` + (pv!=null ? ` (${e.excRate>pv?'▲':'▼'}${f1(Math.abs(e.excRate-pv),2)}%p)` : ' (비교 없음)')
-         + `<br>기본 ${f1(e.stdRate,2)}% · 합계 ${f1(e.wsRate,2)}%</td>`
-         + `<td>생산 ${f0(e.prod)}<br>웜샷 ${f0(e.wsStd+e.wsExc)} (기본 ${f0(e.wsStd)} · 초과 ${f0(e.wsExc)})</td>`
-         + `<td>초과분 = 기준 웜샷 수를 넘겨 버린 샷<br>초과 비중 ${f1(pct(e.wsExc, e.wsStd+e.wsExc),0)}% (웜샷 중)</td>`
-         + `<td>${ta('WS:'+e.eq,'c','원인 (금형 온도·재가동 횟수 등) · 조치')}</td><td>${ta('WS:'+e.eq,'s','상태 / 담당 / 완료일')}</td></tr>`;
+      h += `<tr><td class="kd" style="background:#fff4e0">${T('d_exc')}</td><td class="rk">Worst ${j+1}</td><td class="mc">${esc(e.eq)}${sub(mlist)}</td>`
+         + `<td><b>${f1(e.excRate,2)}%</b>${cmp(e.excRate,pv)}<br>${T('std')} ${f1(e.stdRate,2)}% · ${T('total')} ${f1(e.wsRate,2)}%</td>`
+         + `<td>${T('prod')} ${f0(e.prod)}<br>${T('ws')} ${f0(e.wsStd+e.wsExc)} (${T('std')} ${f0(e.wsStd)} · ${T('exc')} ${f0(e.wsExc)})</td>`
+         + `<td>${T('excNote', { p:f1(pct(e.wsExc, e.wsStd+e.wsExc),0) })}</td>`
+         + `<td>${ta('WS:'+e.eq,'c',T('phW'))}</td><td>${ta('WS:'+e.eq,'s',T('phS'))}</td></tr>`;
     });
-    if (S.hasSplit && !W.exc.length) h += `<tr><td class="kd" style="background:#fff4e0">FAC1 공정품질<br>초과 웜샷</td><td colspan="7">이 기간 초과 웜샷 없음</td></tr>`;
+    if (S.hasSplit && !W.exc.length) h += `<tr><td class="kd" style="background:#fff4e0">${T('d_exc')}</td><td colspan="7">${T('noExcRow')}</td></tr>`;
     WP.forEach((p,j) => {
       const pp = J ? Object.values(J.byP).find(x => x.name === p.name) : null;
-      h += `<tr><td class="kd mtbf">FAC2 IQC</td><td class="rk">Worst ${j+1}</td><td class="mc" style="font-size:12px">${esc(p.no||p.code||'–')}<div style="font-size:10.5px;color:#475569;font-weight:600;margin-top:3px">${esc(p.name)}</div></td>`
-         + `<td><b>${p.rej} / ${p.lots} Lot</b> 불합격<br>` + (pp ? `비교 기간 ${pp.rej} / ${pp.lots} Lot` : '비교 기간 입고 없음') + `</td>`
-         + `<td>입고 ${f0(p.qty)}<br>불합격 ${f0(p.rejQty)} EA</td>`
-         + `<td>${p.ngs.sort((a,b)=>a.d<b.d?-1:1).map(n => `${md(n.d)} ${f0(n.q)}EA · <b>${esc(tr(n.def)||n.raw||'현상 미기재')}</b>${n.raw && n.raw!==n.def ? ' <span style="color:#64748b">'+esc(n.raw)+'</span>' : ''} · ${typeof iqcJBadge==='function'?iqcJBadge(n.j):esc(n.j)}`).join('<br>')}</td>`
-         + `<td>${ta('PN:'+p.name,'c','원인 · 조치 내용 입력')}</td><td>${ta('PN:'+p.name,'s','상태 / 담당 / 완료일')}</td></tr>`;
+      h += `<tr><td class="kd mtbf">FAC2 IQC</td><td class="rk">Worst ${j+1}</td><td class="mc" style="font-size:12px">${esc(p.no||p.code||'–')}${sub([p.name])}</td>`
+         + `<td><b>${p.rej} / ${p.lots} Lot</b> ${T('rej')}<br>` + (pp ? T('cmpLot', { r:pp.rej, l:pp.lots }) : T('cmpNone')) + `</td>`
+         + `<td>${T('in')} ${f0(p.qty)}<br>${T('rej')} ${f0(p.rejQty)} EA</td>`
+         + `<td>${p.ngs.sort((a,b)=>a.d<b.d?-1:1).map(n => `${md(n.d)} ${f0(n.q)}EA · <b>${esc(tr(n.def)||n.raw||T('noDef'))}</b>${n.raw && n.raw!==n.def ? ' <span style="color:#64748b">'+esc(n.raw)+'</span>' : ''} · ${typeof iqcJBadge==='function'?iqcJBadge(n.j):esc(n.j)}`).join('<br>')}</td>`
+         + `<td>${ta('PN:'+p.name,'c',T('phC'))}</td><td>${ta('PN:'+p.name,'s',T('phS'))}</td></tr>`;
     });
-    if (!WP.length) h += `<tr><td class="kd mtbf">FAC2 IQC</td><td colspan="7">해당 기간 불합격 Lot 없음</td></tr>`;
-    h += `</tbody></table><div class="kw-note">※ 저장 위치: 이 브라우저 (기간 ${esc(P.cur.label)})</div></div>`;
+    if (!WP.length) h += `<tr><td class="kd mtbf">FAC2 IQC</td><td colspan="7">${T('noRejRow')}</td></tr>`;
+    h += `</tbody></table><div class="kw-note">${esc(T('save', { p:P.cur.label }))}</div></div>`;
     return { html:h, key:P.cur.key };
   }
   function wire(host, key){
@@ -9804,36 +9867,48 @@ document.addEventListener('DOMContentLoaded', () => {
   function mount(host, opt){
     if (!host) return;
     try{ const r = build(opt); host.innerHTML = r.html; wire(host, r.key); }
-    catch(e){ console.error(e); host.innerHTML = '<div class="kw"><div class="kw-empty">⚠ 품질 지표 요약을 만들지 못했습니다: ' + esc(e && e.message || e) + '</div></div>'; }
+    catch(e){ console.error(e); host.innerHTML = '<div class="kw"><div class="kw-empty">' + T('err') + esc(e && e.message || e) + '</div></div>'; }
   }
   function part(host){
-    if (host && !(host.previousElementSibling && host.previousElementSibling.classList.contains('kw-part'))){
-      const t = document.createElement('div'); t.className = 'kw-part'; t.textContent = '품질 지표 요약 · 워스트';
-      host.parentNode.insertBefore(t, host);
+    if (!host) return;
+    let t = host.previousElementSibling;
+    if (!(t && t.classList.contains('kw-part'))){
+      t = document.createElement('div'); t.className = 'kw-part'; host.parentNode.insertBefore(t, host);
     }
+    t.textContent = T('part');
   }
   const st = document.createElement('style');
-  st.textContent = '.kw-part{margin:22px 0 0;padding:6px 10px;background:#1f3864;color:#fff;font-weight:800;font-size:13px;border-radius:6px;}'
-    + '@media print{.kw-part{page-break-before:always;-webkit-print-color-adjust:exact;print-color-adjust:exact;}}';
+  st.textContent = '.kw .kw-li{padding-left:1.25em;text-indent:-1.25em;} .kw .kw-li b{display:inline-block;width:1.25em;text-indent:0;} .kw .kw-tail{color:#64748b;padding-left:0;text-indent:0;}' + '.kw-part{margin:22px 0 0;padding:6px 10px;background:#1f3864;color:#fff;font-weight:800;font-size:13px;border-radius:6px;}'
+    + '@media print{.kw-part{-webkit-print-color-adjust:exact;print-color-adjust:exact;} .kw-host{page-break-after:always;}}';
   document.head.appendChild(st);
   function hook(name, after){
     const o = window[name]; if (typeof o !== 'function') return;
     window[name] = function(){ const r = o.apply(this, arguments); try{ after(); }catch(e){ console.error(e); } return r; };
   }
+  /* 보고서 맨 위(표지 바로 다음)에 붙인다 */
+  function topHost(sheetId, hostId){
+    const box = $(sheetId + 'Inner') || $(sheetId); if (!box) return null;
+    let h = $(hostId);
+    if (!h || !box.contains(h)){ h = document.createElement('div'); h.id = hostId; h.className = 'kw-host'; }
+    const cover = box.querySelector(':scope > .rpt-cover, :scope > #qrCover');
+    const anchor = cover ? cover.nextSibling : box.firstChild;
+    let bar = h.previousElementSibling && h.previousElementSibling.classList.contains('kw-part') ? h.previousElementSibling : null;
+    if (!bar){ bar = document.createElement('div'); bar.className = 'kw-part'; }
+    box.insertBefore(bar, anchor); box.insertBefore(h, bar.nextSibling);
+    bar.textContent = T('part');
+    return h;
+  }
   hook('renderQReport', () => {
     const wk = qrCurWeek(); if (!wk) return;
-    const h = STCKW.ensureHost('qrSheet', 'qkwQR'); part(h);
-    mount(h, { mode:'week', week:wk, scope:(($('qrScope')||{}).value)||'all' });
+    mount(topHost('qrSheet', 'qkwQR'), { mode:'week', week:wk, scope:(($('qrScope')||{}).value)||'all' });
   });
   hook('renderDaily', () => {
     const f = ($('dqFrom')||{}).value, t = ($('dqTo')||{}).value; if (!f || !t) return;
-    const h = STCKW.ensureHost('dqSheet', 'qkwDQ'); part(h);
-    mount(h, { mode:'range', from:f, to:t, scope:(($('dqScope')||{}).value)||'all' });
+    mount(topHost('dqSheet', 'qkwDQ'), { mode:'range', from:f, to:t, scope:(($('dqScope')||{}).value)||'all' });
   });
   hook('renderMonthly', () => {
     const ym = ($('mqMonth')||{}).value; if (!ym) return;
-    const h = STCKW.ensureHost('mqSheet', 'qkwMQ'); part(h);
-    mount(h, { mode:'month', ym, scope:(($('mqScope')||{}).value)||'all' });
+    mount(topHost('mqSheet', 'qkwMQ'), { mode:'month', ym, scope:(($('mqScope')||{}).value)||'all' });
   });
 })();
 
