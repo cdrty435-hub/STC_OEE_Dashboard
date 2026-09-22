@@ -224,6 +224,9 @@
     .tabbtn{width:auto;}
   }
   .tabpane{display:none;} .tabpane.show{display:block;}
+  .kw-quick{display:inline-flex;gap:4px;}
+  .kw-quick button{border:1px solid #d8dfe7;background:#fff;border-radius:7px;padding:4px 8px;font-size:12px;cursor:pointer;}
+  .kw-quick button:hover{background:#eef3f8;}
 
   /* ===== 주간보고(A4 가로 1장) ===== */
   .wk-bar{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:12px;
@@ -278,6 +281,8 @@
     .layout{display:block;}
     .tabpane{display:none !important;}
     #tab-weekly{display:block !important;}
+    body.kw-print-daily #tab-weekly, body.kw-print-monthly #tab-weekly{display:none !important;}
+    body.kw-print-daily #tab-daily, body.kw-print-monthly #tab-monthly{display:block !important;}
     .wk-sheet{border:0; padding:0; border-radius:0;}
     .wk-blk{page-break-inside:avoid;}
     table.wk-t input.act, .wk-memo{border:1px solid #e2e8ef;}
@@ -936,6 +941,8 @@
   <div class="layout">
   <nav class="tabbar" id="tabBar">
     <button class="tabbtn active" data-tab="tab-weekly"><span class="no">★</span><span class="tx">주간보고 (1장)</span></button>
+    <button class="tabbtn" data-tab="tab-daily"><span class="no">★</span><span class="tx">일일보고</span></button>
+    <button class="tabbtn" data-tab="tab-monthly"><span class="no">★</span><span class="tx">월간보고</span></button>
     <button class="tabbtn" data-tab="tab-hero"><span class="no">1</span><span class="tx">설비별 MTTR/MTBF</span></button>
     <button class="tabbtn" data-tab="tab-trend"><span class="no">2</span><span class="tx">주차별 추이</span></button>
     <button class="tabbtn" data-tab="tab-report"><span class="no">3</span><span class="tx">원인분석 리포트</span></button>
@@ -986,6 +993,7 @@
         <h3 id="wkTitle">MC MTTR / MTBF Weekly Report</h3>
         <div class="meta" id="wkMeta"></div>
       </div>
+      <div id="wkKW" class="kw-host"></div>
 
       <div class="wk-blk">
         <h4>① 주간 요약<span class="wk-catbar">집계 계통
@@ -1167,6 +1175,41 @@
   </section>
 
   <!-- ===== HERO: 전체 설비 주간별 MTTR/MTBF ===== -->
+  <!-- ===== 일일보고 : 1. 지표 요약 + 2. 워스트 세부사항 ===== -->
+  <section id="tab-daily" class="tabpane">
+    <div class="wk-bar">
+      <label>시작일</label><input type="date" id="kwdFrom">
+      <label>종료일</label><input type="date" id="kwdTo">
+      <span class="kw-quick">
+        <button type="button" data-q="d1">최신 1일</button>
+        <button type="button" data-q="d3">최근 3일</button>
+        <button type="button" data-q="d7">최근 7일</button>
+        <button type="button" data-q="wk">이번 주(수~화)</button>
+      </span>
+      <label>작성</label><input id="kwdWho" style="width:130px" placeholder="공무팀 / 작성자">
+      <button class="wk-print" id="kwdPrint">인쇄 / PDF 저장</button>
+      <span style="color:#5a6674;font-size:11.5px;margin-left:auto">비교 기간 = 바로 앞의 같은 일수 · 원인·조치 입력은 기간별로 저장됩니다</span>
+    </div>
+    <div class="wk-sheet">
+      <div class="wk-hd"><h3>MC MTTR / MTBF Daily Report</h3><div class="meta" id="kwdMeta"></div></div>
+      <div id="kwDaily" class="kw-host"></div>
+    </div>
+  </section>
+
+  <!-- ===== 월간보고 : 1. 지표 요약 + 2. 워스트 세부사항 ===== -->
+  <section id="tab-monthly" class="tabpane">
+    <div class="wk-bar">
+      <label>보고 월</label><select id="kwmMonth" style="width:120px"></select>
+      <label>작성</label><input id="kwmWho" style="width:130px" placeholder="공무팀 / 작성자">
+      <button class="wk-print" id="kwmPrint">인쇄 / PDF 저장</button>
+      <span style="color:#5a6674;font-size:11.5px;margin-left:auto">비교 기간 = 전월 · 원인·조치 입력은 월별로 저장됩니다</span>
+    </div>
+    <div class="wk-sheet">
+      <div class="wk-hd"><h3>MC MTTR / MTBF Monthly Report</h3><div class="meta" id="kwmMeta"></div></div>
+      <div id="kwMonthly" class="kw-host"></div>
+    </div>
+  </section>
+
   <section id="tab-hero" class="tabpane">
     <div class="hero">
       <div class="hero-head">
@@ -7310,6 +7353,458 @@ function wkFocusSet(on){
 })();
 
 loadData();
+</script>
+<script>
+/* ===== 공통 블록(1. 지표 요약 · 2. 워스트 세부사항) 연결 — MTTR/MTBF 대시보드 ===== */
+/* =====================================================================
+   STC 공통 블록 : 1. 지표 요약 (비교기간 대비 · Worst 3)  +  2. 워스트 세부사항
+   ---------------------------------------------------------------------
+   · 일일 / 주간 / 월간 보고서에 같은 모양으로 붙는다.
+       STCKW.mount(호스트요소, { mode:'week',  week:'W38' })
+       STCKW.mount(호스트요소, { mode:'range', from:'2026-09-09', to:'2026-09-15' })
+       STCKW.mount(호스트요소, { mode:'month', ym:'2026-09' })
+   · 비교 기간 : 주간 = 바로 앞 주차 · 일일 = 바로 앞의 같은 일수 · 월간 = 전월
+   · 계산 기준은 [MTTR / MTBF] 대시보드와 동일 (같은 브라우저 설정을 그대로 읽음)
+       - 고장(UDT) 코드 : localStorage 'stc_udt_codes' (없으면 초기값 12종)
+       - 최소정지 : 'stc_min_stop' (기본 10분) · M/C Rate : 'stc_mc_rate'
+       - 목표 : 'stc_target_mttr' (기본 1.50) · 'stc_target_mtbf' (기본 10.00)
+       - MTTR = UDT 로스시간 ÷ 고장건수 · MTBF = 실가동시간 ÷ 고장건수
+       - 가동률 = 가동시간 ÷ (가동시간 + 전체 로스시간)
+       - F-COST = UDT 로스분 × 설비별 M/C Rate
+   · 워스트 = 대시보드 ② 설비별 차트와 같은 순위 (건수 제한 없음 · 가동 0h 설비 제외)
+   · MTTR/MTBF 대시보드 안에서는 이미 읽어 둔 RUN / LOSS 를 그대로 쓰고,
+     다른 페이지(품질 6σ)에서는 OEE_RawData_APQ › A_가동률 CSV 를 직접 읽는다.
+   · 원인·조치 / 상태 입력은 기간별로 브라우저에 저장된다.
+   ===================================================================== */
+(function(){
+  if (window.STCKW) return;
+
+  const PUB_KEY = '2PACX-1vQ6U8gG0Mr3oJ-5XOOzr7Eh_oZGc-BGHFG0n1__eor4Zc8aJaMuf01NXCAHJECH6U8aUvtnQGLKD5-_';
+  const RAW_GID = '345197688';                       // A_가동률
+  const RAW_URLS = [
+    `https://docs.google.com/spreadsheets/d/e/${PUB_KEY}/pub?gid=${RAW_GID}&single=true&output=csv`,
+    `https://docs.google.com/spreadsheets/d/e/${PUB_KEY}/pub?output=csv`
+  ];
+  const CODES = ['금형수리','금형파손','핀파손','슬라이드코어수리','청소','금형냉각라인','제품소착','로트마크,사상',
+    '설비수리','취출기수리','스프레이수리','전기로회전','래들수리','펌프이상','전기로수리','컨베이어수리','진공설비','히터수리',
+    '조건변경','팁교체','스크랩용해','스프레이조정','노즐막힘','플런저오일막힘','탈산처리','바가지교체','설비냉각수',
+    '금형교체','휴식,설비교대','미팅/정전','기타'];
+  const UDT_DEFAULT = ['설비수리','취출기수리','스프레이수리','래들수리','컨베이어수리','히터수리','펌프이상','진공설비',
+    '노즐막힘','플런저오일막힘','설비냉각수','금형수리'];
+  const RATE_DEF = {1:8.91375,2:6.666667,3:14.159583,4:14.159583,5:14.159583,6:14.159583,7:14.159583,
+    8:11.086667,9:14.159583,10:14.159583,11:16.472083,12:16.472083,13:14.159583,14:16.7825,
+    15:16.7825,16:6.666667,17:6.666667,18:8.572083,19:8.8825,20:19.871042,21:16.7825,
+    22:14.159583,23:14.159583};
+  const MACHINES = Array.from({length:23},(_,i)=>i+1).filter(n=>n!==14);
+  const norm = s => String(s==null?'':s).replace(/\s+/g,'').trim();
+  const CODESET = new Set(CODES.map(norm));
+  const LS = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
+
+  /* ---------------- 설정 (대시보드와 같은 저장값) ---------------- */
+  function cfg(){
+    let udt = UDT_DEFAULT;
+    try{ const a = JSON.parse(LS('stc_udt_codes')||'null'); if (Array.isArray(a) && a.length) udt = a; }catch(e){}
+    const ms = LS('stc_min_stop'); const std = LS('stc_std_mode');
+    let rates = Object.assign({}, RATE_DEF);
+    try{ const j = JSON.parse(LS('stc_mc_rate')||'null'); if (j) rates = Object.assign(rates, j); }catch(e){}
+    const tm = parseFloat(LS('stc_target_mttr')), tb = parseFloat(LS('stc_target_mtbf'));
+    return { udt:new Set(udt.map(norm)), minStop: ms!==null ? (parseFloat(ms)||0) : 10,
+             std: std===null ? true : std==='1', rates,
+             tMttr: isFinite(tm) ? tm : 1.5, tMtbf: isFinite(tb) ? tb : 10 };
+  }
+
+  /* ---------------- 데이터 ---------------- */
+  let provider = null, cache = null, loading = null;
+  /* MTTR/MTBF 대시보드가 자기 데이터를 넘겨준다 */
+  function setProvider(fn){ provider = fn; }
+
+  function parseCSV(text){
+    const rows = []; let row = [], cur = '', q = false;
+    for (let i=0;i<text.length;i++){
+      const c = text[i];
+      if (q){
+        if (c === '"'){ if (text[i+1] === '"'){ cur += '"'; i++; } else q = false; }
+        else cur += c;
+      } else if (c === '"') q = true;
+      else if (c === ','){ row.push(cur); cur=''; }
+      else if (c === '\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+      else if (c !== '\r') cur += c;
+    }
+    if (cur !== '' || row.length){ row.push(cur); rows.push(row); }
+    return rows;
+  }
+  const num = v => { const n = parseFloat(String(v==null?'':v).replace(/,/g,'')); return isNaN(n) ? 0 : n; };
+  function normDate(raw){
+    const s = String(raw||'').trim(); let m;
+    if ((m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/))) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+    if ((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))) return `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+    return null;
+  }
+  function unpivot(rows){
+    if (!rows.length) return null;
+    const H = rows[0].map(h=>String(h).trim()); const ix = n => H.indexOf(n);
+    const iD = ix('일자'), iW = ix('주차'), iM = ix('설비명');
+    const iP = ix('계획시간_분'), iR = ix('가동시간_분'), iL = ix('Losstime_분');
+    if (iD<0 || iM<0 || iR<0) return null;
+    const cc = H.map((h,i)=>[i,norm(h)]).filter(([i,h])=>CODESET.has(h));
+    if (cc.length < 10) return null;
+    const run = [], loss = [];
+    for (let k=1;k<rows.length;k++){
+      const r = rows[k]; const d = normDate(r[iD]); const m = parseInt(String(r[iM]||'').replace(/[^0-9]/g,''),10);
+      if (!d || !m) continue;
+      const p = iP>=0?num(r[iP]):0, rn = num(r[iR]), ls = iL>=0?num(r[iL]):0;
+      if (p===0 && rn===0 && ls===0) continue;
+      const w = String(r[iW]||'').trim();
+      run.push({d, m, r:rn, p, w});
+      cc.forEach(([i,h])=>{ const v = num(r[i]); if (v>0) loss.push({d, m, i:h, l:v, w}); });
+    }
+    return {run, loss};
+  }
+  async function load(){
+    if (provider){ const p = provider(); if (p && p.run && p.run.length) return p; }
+    if (cache) return cache;
+    if (!loading) loading = (async ()=>{
+      let lastErr = null;
+      for (const u of RAW_URLS){
+        try{
+          const res = await fetch(u, {cache:'no-store'});
+          if (!res.ok) throw new Error('HTTP '+res.status);
+          const up = unpivot(parseCSV(await res.text()));
+          if (up && up.run.length){ cache = up; return up; }
+        }catch(e){ lastErr = e; }
+      }
+      loading = null;
+      throw lastErr || new Error('A_가동률 데이터를 읽지 못했습니다');
+    })();
+    return loading;
+  }
+
+  /* ---------------- 기간 ---------------- */
+  const wkNo = w => { const m = String(w||'').match(/(\d+)/); return m ? +m[1] : 0; };
+  const addDays = (s,n) => { const d = new Date(s+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
+  const dayDiff = (a,b) => Math.round((new Date(b+'T00:00:00Z') - new Date(a+'T00:00:00Z'))/86400000);
+  function prevYm(ym){ let [y,m] = ym.split('-').map(Number); m--; if (!m){ m=12; y--; } return `${y}-${String(m).padStart(2,'0')}`; }
+  function periods(opt, data){
+    if (opt.mode === 'week'){
+      const weeks = [...new Set(data.run.map(r=>r.w))].filter(Boolean).sort((a,b)=>wkNo(a)-wkNo(b));
+      const i = weeks.indexOf(opt.week); const pw = i>0 ? weeks[i-1] : null;
+      return { cur:{ key:'W:'+opt.week, label:opt.week, f:r=>r.w===opt.week },
+               prev: pw ? { key:'W:'+pw, label:pw, f:r=>r.w===pw } : null, unit:'주' };
+    }
+    if (opt.mode === 'month'){
+      const p = prevYm(opt.ym);
+      return { cur:{ key:'M:'+opt.ym, label:opt.ym, f:r=>r.d.slice(0,7)===opt.ym },
+               prev:{ key:'M:'+p, label:p, f:r=>r.d.slice(0,7)===p }, unit:'월' };
+    }
+    const from = opt.from <= opt.to ? opt.from : opt.to, to = opt.from <= opt.to ? opt.to : opt.from;
+    const n = dayDiff(from,to)+1, pt = addDays(from,-1), pf = addDays(from,-n);
+    const lab = (a,b) => a===b ? a : `${a} ~ ${b}`;
+    return { cur:{ key:'D:'+from+'_'+to, label:lab(from,to), f:r=>r.d>=from && r.d<=to },
+             prev:{ key:'D:'+pf+'_'+pt, label:lab(pf,pt), f:r=>r.d>=pf && r.d<=pt }, unit: n===1?'일':n+'일' };
+  }
+
+  /* ---------------- 집계 ---------------- */
+  function stats(data, f, C){
+    const fail = data.isFail ? data.isFail : (x => (!C.std || C.udt.has(norm(x.i))) && x.l >= C.minStop);
+    const R = data.run.filter(f), L = data.loss.filter(f);
+    const F = L.filter(fail);
+    const rate = data.rates || C.rates;
+    const sum = (a,k) => a.reduce((s,x)=>s+(x[k]||0),0);
+    const runH = sum(R,'r')/60, planH = sum(R,'p')/60, allH = sum(L,'l')/60, lossH = sum(F,'l')/60, n = F.length;
+    const tot = { runH, planH, lossH, allH, n, mttr: n?lossH/n:0, mtbf: n?runH/n:0,
+                  avail: (runH+allH)>0 ? runH/(runH+allH)*100 : 0,
+                  cost: F.reduce((s,x)=>s+x.l*(rate[x.m]||0),0), days:[...new Set(R.map(x=>x.d))].sort() };
+    const codeH = {};
+    F.forEach(x=>{ codeH[x.i]=(codeH[x.i]||0)+x.l/60; });
+    tot.codeH = codeH;
+    const mc = {};
+    MACHINES.forEach(m=>{
+      const rr = R.filter(x=>x.m===m), la = L.filter(x=>x.m===m), ff = F.filter(x=>x.m===m);
+      const r = sum(rr,'r')/60, p = sum(rr,'p')/60, a = sum(la,'l')/60, l = sum(ff,'l')/60, k = ff.length;
+      const by = {};
+      ff.forEach(x=>{ if(!by[x.i]) by[x.i]={h:0,n:0}; by[x.i].h+=x.l/60; by[x.i].n++; });
+      const top = Object.keys(by).map(c=>({c, h:by[c].h, n:by[c].n, p: l? by[c].h/l : 0})).sort((a,b)=>b.h-a.h);
+      const topN = top.slice().sort((a,b)=>b.n-a.n || b.h-a.h);
+      mc[m] = { m, runH:r, planH:p, allH:a, lossH:l, n:k, mttr:k?l/k:0, mtbf:k?r/k:0,
+                avail: (r+a)>0 ? r/(r+a)*100 : 0, cost: ff.reduce((s,x)=>s+x.l*(rate[m]||0),0),
+                top, topN, active: r>0, planned: p>0, lastRun: rr.filter(x=>x.r>0).map(x=>x.d).sort().pop()||'' };
+    });
+    tot.mc = mc;
+    return tot;
+  }
+  function worst(S){
+    const A = Object.values(S.mc).filter(x=>x.active);
+    return {
+      mttr: A.filter(x=>x.n>0).sort((a,b)=>b.mttr-a.mttr).slice(0,3),
+      mtbf: A.filter(x=>x.n>0).sort((a,b)=>a.mtbf-b.mtbf).slice(0,3),
+      avail: A.slice().sort((a,b)=>a.avail-b.avail).slice(0,3),
+      loss: A.filter(x=>x.lossH>0).sort((a,b)=>b.lossH-a.lossH).slice(0,3),
+      cnt: A.filter(x=>x.n>0).sort((a,b)=>b.n-a.n || b.lossH-a.lossH).slice(0,3),
+      cost: A.filter(x=>x.cost>0).sort((a,b)=>b.cost-a.cost).slice(0,3)
+    };
+  }
+
+  /* ---------------- 표시 ---------------- */
+  const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const f1 = (v,dp=1) => (isFinite(v)?v:0).toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp});
+  const f0 = v => Math.round(v||0).toLocaleString('en-US');
+  const sgn = (v,dp) => (v>0?'+':v<0?'−':'±') + f1(Math.abs(v),dp);
+  const DC = m => 'DC'+m;
+
+  function css(){
+    if (document.getElementById('stckw-css')) return;
+    const s = document.createElement('style'); s.id = 'stckw-css';
+    s.textContent = `
+.kw{font-family:'Malgun Gothic','Apple SD Gothic Neo',Arial,sans-serif;color:#1f2733;margin:14px 0 6px;}
+.kw h4.kw-h{margin:14px 0 6px;font-size:14.5px;color:#1f3864;border-left:4px solid #e8a33d;padding-left:8px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;}
+.kw h4.kw-h small{font-size:11px;color:#5a6674;font-weight:600;}
+.kw table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;}
+.kw th,.kw td{border:1px solid #1f2733;padding:5px 6px;vertical-align:middle;word-break:keep-all;overflow-wrap:anywhere;}
+.kw thead th{background:#b8cce4;font-weight:800;text-align:center;}
+.kw thead th.w{background:#fce4e4;}
+.kw thead th.dt{background:#ffff00;}
+.kw td.c{text-align:center;} .kw td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.kw td.kp{text-align:center;font-weight:800;}
+.kw td.pv{color:#1d4ed8;text-align:right;white-space:nowrap;}
+.kw td.cu{font-weight:800;text-align:right;white-space:nowrap;}
+.kw td.w{background:#fff7f7;text-align:center;font-weight:800;white-space:nowrap;}
+.kw td.w1{color:#c00000;} .kw td.w2{color:#e26b0a;} .kw td.w3{color:#000;}
+.kw td.dt{font-size:11px;line-height:1.45;}
+.kw .up{color:#c00000;font-weight:800;} .kw .dn{color:#15803d;font-weight:800;} .kw .eq{color:#6b7280;font-weight:700;}
+.kw table.kw-d td{vertical-align:top;font-size:11px;line-height:1.45;}
+.kw table.kw-d td.kd{text-align:center;vertical-align:middle;font-weight:800;}
+.kw table.kw-d td.kd.mttr{background:#fdecec;} .kw table.kw-d td.kd.mtbf{background:#e8f0fb;}
+.kw table.kw-d td.mc{text-align:center;vertical-align:middle;font-size:15px;font-weight:900;color:#b71c1c;}
+.kw table.kw-d td.rk{text-align:center;vertical-align:middle;font-weight:800;color:#c62828;}
+.kw textarea{width:100%;box-sizing:border-box;border:1px dashed #c9d2dc;border-radius:5px;padding:4px 5px;font:inherit;font-size:11px;min-height:54px;resize:vertical;background:#fffef5;}
+.kw .kw-note{font-size:10.5px;color:#6b7280;margin-top:4px;}
+.kw .kw-empty{padding:10px;border:1px dashed #cbd5e1;border-radius:8px;color:#6b7280;font-size:12px;}
+@media print{ .kw{page-break-inside:auto;} .kw table{page-break-inside:auto;} .kw tr{page-break-inside:avoid;}
+  .kw textarea{border:0;background:none;resize:none;min-height:0;overflow:hidden;} .kw textarea::placeholder{color:transparent;} .kw .kw-noprint{display:none;} }`;
+    document.head.appendChild(s);
+  }
+
+  function notesGet(key){ try{ return JSON.parse(LS('stc_kw_notes_'+key)||'{}'); }catch(e){ return {}; } }
+  function notesSet(key,o){ try{ localStorage.setItem('stc_kw_notes_'+key, JSON.stringify(o)); }catch(e){} }
+
+  function build(opt, data){
+    const C = cfg(), P = periods(opt, data);
+    const S = stats(data, P.cur.f, C), Q = P.prev ? stats(data, P.prev.f, C) : null;
+    if (!S.days.length) return `<div class="kw"><div class="kw-empty">선택한 기간(${esc(P.cur.label)})에 가동 기록이 없습니다.</div></div>`;
+    const W = worst(S), qm = m => Q ? Q.mc[m] : null;
+    const pl = P.prev ? P.prev.label : '비교 없음';
+
+    /* --- 세부사항 문구 (자동) --- */
+    const topTxt = x => x.top[0] ? `${x.top[0].c} ${f1(x.top[0].h)}h/${x.top[0].n}건` : '';
+    const inact = Object.values(S.mc).filter(x=>x.planned && !x.active).map(x=>DC(x.m));
+    const codeDelta = (()=>{ if (!Q) return null;
+      const ks = new Set(Object.keys(S.codeH).concat(Object.keys(Q.codeH)));
+      return [...ks].map(k=>({k, d:(S.codeH[k]||0)-(Q.codeH[k]||0)})).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d))[0]; })();
+    const tl = W.loss.reduce((s,x)=>s+x.lossH,0);
+    const D = {
+      mttr: `목표 ${f1(C.tMttr,2)} 대비 ${sgn(S.mttr-C.tMttr,2)} ${S.mttr<=C.tMttr?'달성':'미달'}. `
+            + W.mttr.map(x=>`${DC(x.m)} ${topTxt(x)}`).join(' · '),
+      mtbf: `목표 ${f1(C.tMtbf,2)} ${S.mtbf>=C.tMtbf?'달성':'미달'} (${sgn(S.mtbf-C.tMtbf,2)}). 실가동 ${f1(S.runH)}h · 고장 ${S.n}건`
+            + (Q ? ` (${sgn(S.n-Q.n,0)}건)` : '') + '. '
+            + W.mtbf.map(x=>`${DC(x.m)} ${x.n}건${x.topN[0]?`(${x.topN[0].c} ${x.topN[0].n}건)`:''}`).join(' · '),
+      avail: W.avail.map(x=>`${DC(x.m)} ${f1(x.avail)}% (고장 ${f1(x.lossH)}h${x.top[0]?' · '+x.top[0].c:''}${x.lossH<1?' → 계획정지 영향 확인':''})`).join(' · ')
+            + (inact.length ? `. 가동 기록 없음(순위 제외): ${inact.join('·')}` : ''),
+      loss: `상위 3대 ${f1(tl)}h = 전체의 ${S.lossH?f1(tl/S.lossH*100,0):0}%.`
+            + (codeDelta && Math.abs(codeDelta.d)>=0.05 ? ` 최대 변동: ${codeDelta.k} ${sgn(codeDelta.d,1)}h (${esc(pl)} 대비)` : ''),
+      cnt: W.cnt.map(x=>{ const p=qm(x.m); return `${DC(x.m)} ${x.n}건${p?` (${sgn(x.n-p.n,0)})`:''}${x.topN[0]?' '+x.topN[0].c+' '+x.topN[0].n+'건':''}`; }).join(' · '),
+      cost: W.cost.map(x=>{ const p=qm(x.m); return `${DC(x.m)} ${f0(x.cost)} THB = ${S.cost?f1(x.cost/S.cost*100):0}%${p?` (비교 ${f0(p.cost)})`:''}`; }).join(' · ')
+    };
+
+    /* --- 1. 지표 요약 --- */
+    const rows = [
+      ['MTTR','mttr', v=>f1(v,2)+' h/건', false, 2, 'mttr', x=>f1(x.mttr,2)+'h'],
+      ['MTBF','mtbf', v=>f1(v,2)+' h/건', true, 2, 'mtbf', x=>f1(x.mtbf,2)+'h'],
+      ['가동률','avail', v=>f1(v,1)+' %', true, 1, 'avail', x=>f1(x.avail,1)+'%'],
+      ['로스시간','lossH', v=>f1(v,1)+' h', false, 1, 'loss', x=>f1(x.lossH,1)+'h'],
+      ['고장건수','n', v=>f0(v)+' 건', false, 0, 'cnt', x=>x.n+'건'],
+      ['F-COST','cost', v=>f0(v)+' THB', false, 0, 'cost', x=>f0(x.cost)]
+    ];
+    const dl = (c,p,goodUp,dp) => { if (p===null) return '<span class="eq">–</span>';
+      const d = c-p; if (Math.abs(d) < Math.pow(10,-dp)/2) return '<span class="eq">±0</span>';
+      const good = goodUp ? d>0 : d<0; return `<span class="${good?'dn':'up'}">${sgn(d,dp)}${dp===1&&goodUp?'%p':''}</span>`; };
+    let h = `<div class="kw">`;
+    h += `<h4 class="kw-h">1. 지표 요약 <small>금기간 ${esc(P.cur.label)} · 비교 ${esc(pl)} · 계획외 고장(UDT) · 최소정지 ${C.minStop}분 · 목표 MTTR ≤ ${f1(C.tMttr,2)} / MTBF ≥ ${f1(C.tMtbf,2)} h/건</small></h4>`;
+    h += `<table class="kw-s"><colgroup><col style="width:4%"><col style="width:8%"><col style="width:10%"><col style="width:10%"><col style="width:8%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:33%"></colgroup>`;
+    h += `<thead><tr><th>NO</th><th>지표</th><th>${esc(pl)}</th><th>${esc(P.cur.label)}</th><th>증감</th><th class="w">Worst 1</th><th class="w">Worst 2</th><th class="w">Worst 3</th><th class="dt">세부사항 (Worst 원인)</th></tr></thead><tbody>`;
+    rows.forEach((r,i)=>{
+      const [name,k,fmtv,goodUp,dp,wk,wv] = r;
+      const cv = S[k], pv = Q ? Q[k] : null;
+      const ws = W[wk];
+      h += `<tr><td class="c">${i+1}</td><td class="kp">${name}</td><td class="pv">${pv===null?'–':fmtv(pv)}</td><td class="cu">${fmtv(cv)}</td><td class="n">${dl(cv,pv,goodUp,dp)}</td>`;
+      for (let j=0;j<3;j++){ const x = ws[j]; h += `<td class="w w${j+1}">${x?DC(x.m)+'&nbsp;&nbsp;'+wv(x):'–'}</td>`; }
+      h += `<td class="dt">${esc(D[wk])}</td></tr>`;
+    });
+    h += `</tbody></table>`;
+    h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · Worst = 대시보드 ② 설비별 차트 기준(건수 제한 없음, 가동 0h 설비 제외) · 가동률 = 가동 ÷ (가동 + 전체 로스)</div>`;
+
+    /* --- 2. 워스트 세부사항 --- */
+    const notes = notesGet(P.cur.key);
+    h += `<h4 class="kw-h">2. 워스트 세부사항 <small>MTTR / MTBF Worst 3 — 원인분석 및 조치 · 원인·조치/상태 칸은 입력하면 이 기간에 저장됩니다</small></h4>`;
+    h += `<table class="kw-d"><colgroup><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:12%"><col style="width:13%"><col style="width:19%"><col style="width:22%"><col style="width:16%"></colgroup>`;
+    h += `<thead><tr><th>구분</th><th>순위</th><th>설비</th><th>지표값 (비교 대비) / 목표 대비</th><th>로스 · 건수 · 가동</th><th>주요 로스 원인 (항목 시간/건수, 비중)</th><th class="dt">원인 · 조치</th><th class="dt">상태 / 후속 조치</th></tr></thead><tbody>`;
+    [['MTTR','mttr'],['MTBF','mtbf']].forEach(([kind,k])=>{
+      W[k].forEach((x,j)=>{
+        const p = qm(x.m), v = x[k], pvv = p && p.n ? p[k] : null;
+        const tgt = k==='mttr' ? C.tMttr : C.tMtbf;
+        const val = `<b>${f1(v,2)} h/건</b>` + (pvv!==null ? ` (${v>pvv?'▲':'▼'}${f1(Math.abs(v-pvv),2)})` : ' (비교 없음)')
+                  + `<br>목표 대비 ${sgn(v-tgt,2)}`;
+        const lo = `로스 ${f1(x.lossH)}h · ${x.n}건<br>가동 ${f1(x.runH)}h · 가동률 ${f1(x.avail)}%`;
+        const tp = x.top.slice(0,3).map((t,i)=>`${'①②③'[i]} ${esc(t.c)} ${f1(t.h)}h / ${t.n}건 (${f1(t.p*100,0)}%)`).join('<br>') || '–';
+        const nk = DC(x.m), n = notes[nk] || {};
+        h += `<tr><td class="kd ${k}">${kind}</td><td class="rk">Worst ${j+1}</td><td class="mc">${nk}</td><td>${val}</td><td>${lo}</td><td>${tp}</td>`
+           + `<td><textarea data-kw="${nk}" data-f="c" placeholder="원인 · 조치 내용 입력">${esc(n.c||'')}</textarea></td>`
+           + `<td><textarea data-kw="${nk}" data-f="s" placeholder="상태 / 담당 / 완료일">${esc(n.s||'')}</textarea></td></tr>`;
+      });
+      if (!W[k].length) h += `<tr><td class="kd ${k}">${kind}</td><td colspan="7">해당 기간 고장 기록 없음</td></tr>`;
+    });
+    h += `</tbody></table>`;
+    h += `<div class="kw-note">※ 같은 설비가 MTTR·MTBF 양쪽에 있으면 원인·조치 입력이 함께 맞춰집니다 · 저장 위치: 이 브라우저 (기간 ${esc(P.cur.label)})</div>`;
+    h += `</div>`;
+    return { html:h, key:P.cur.key };
+  }
+
+  function wire(host, key){
+    host.querySelectorAll('textarea[data-kw]').forEach(el=>{
+      const grow = ()=>{ el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; };
+      grow();
+      el.addEventListener('input', ()=>{
+        host.querySelectorAll(`textarea[data-kw="${el.dataset.kw}"][data-f="${el.dataset.f}"]`).forEach(o=>{ if(o!==el){ o.value=el.value; } });
+        const o = notesGet(key); o[el.dataset.kw] = o[el.dataset.kw] || {}; o[el.dataset.kw][el.dataset.f] = el.value; notesSet(key, o);
+        grow();
+      });
+      el.addEventListener('keydown', e=>{ if (e.key==='Enter') e.stopPropagation(); });
+    });
+  }
+
+  let seq = 0;
+  async function mount(host, opt){
+    if (typeof host === 'string') host = document.getElementById(host);
+    if (!host) return;
+    css();
+    const my = ++seq; host._kwSeq = my;
+    if (!host.innerHTML) host.innerHTML = '<div class="kw"><div class="kw-empty">지표 요약 · 워스트 세부사항 불러오는 중…</div></div>';
+    try{
+      const data = await load();
+      if (host._kwSeq !== my) return;          // 그사이 다른 기간으로 다시 그렸으면 버린다
+      const r = build(opt, data);
+      if (typeof r === 'string'){ host.innerHTML = r; return; }
+      host.innerHTML = r.html; wire(host, r.key);
+    }catch(e){
+      host.innerHTML = `<div class="kw"><div class="kw-empty">⚠ 지표 요약을 불러오지 못했습니다: ${esc(e && e.message || e)}<br>OEE_RawData_APQ › A_가동률 탭이 웹에 게시되어 있는지 확인하세요.</div></div>`;
+    }
+  }
+  /* 보고서 본문 끝(또는 지정 위치)에 호스트 div 를 만들어 붙인다 */
+  function ensureHost(parent, id, before){
+    if (typeof parent === 'string') parent = document.getElementById(parent);
+    if (!parent) return null;
+    let el = document.getElementById(id);
+    if (!el || !parent.contains(el)){
+      el = document.createElement('div'); el.id = id; el.className = 'kw-host';
+      if (before && parent.contains(before)) parent.insertBefore(el, before); else parent.appendChild(el);
+    }
+    return el;
+  }
+  /* 일일·월간 보고용 날짜 목록 */
+  async function dates(){ const d = await load(); return [...new Set(d.run.map(r=>r.d))].sort(); }
+
+  window.STCKW = { mount, ensureHost, setProvider, dates, _stats:stats, _periods:periods, _load:load };
+})();
+
+(function(){
+  /* 이 페이지가 이미 읽어 둔 데이터·설정(UDT 코드, 최소정지, M/C Rate)을 그대로 쓴다 */
+  STCKW.setProvider(function(){
+    if (typeof RUN === 'undefined' || !RUN.length) return null;
+    return { run: RUN, loss: LOSS, isFail: isFail, rates: getRates() };
+  });
+  const $ = id => document.getElementById(id);
+  const allDates = () => [...new Set(RUN.map(r=>r.d))].sort();
+  const addD = (s,n) => { const d = new Date(s+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
+
+  /* --- 주간보고 --- */
+  function kwWeekly(){
+    const wk = ($('wkWeek')||{}).value; if (!wk) return;
+    STCKW.mount('wkKW', { mode:'week', week:wk });
+  }
+  const _rw = renderWeekly;
+  renderWeekly = function(){ const r = _rw.apply(this, arguments); try{ kwWeekly(); }catch(e){ console.error(e); } return r; };
+
+  /* --- 일일보고 --- */
+  const DKEY = 'stc_kw_daily_range';
+  function kwDaily(){
+    if (typeof RUN === 'undefined' || !RUN.length) return;
+    const ds = allDates(), f = $('kwdFrom'), t = $('kwdTo');
+    f.min = t.min = ds[0]; f.max = t.max = ds[ds.length-1];
+    if (!f.value || !t.value){
+      let sv = null; try{ sv = JSON.parse(localStorage.getItem(DKEY)||'null'); }catch(e){}
+      const ok = v => v && v >= ds[0] && v <= ds[ds.length-1];
+      if (sv && ok(sv.from) && ok(sv.to)){ f.value = sv.from; t.value = sv.to; }
+      else { f.value = t.value = ds[ds.length-1]; }
+    }
+    if (f.value > t.value){ const x = f.value; f.value = t.value; t.value = x; }
+    try{ localStorage.setItem(DKEY, JSON.stringify({from:f.value, to:t.value})); }catch(e){}
+    const who = ($('kwdWho')||{}).value || '';
+    $('kwdMeta').innerHTML = `<b>${f.value === t.value ? f.value : f.value+' ~ '+t.value}</b><br>`
+      + (who ? who+' · ' : '') + `작성일 ${new Date().toISOString().slice(0,10)} · 기준 계획외 고장(UDT) / 최소정지 ${MIN_STOP}분`;
+    STCKW.mount('kwDaily', { mode:'range', from:f.value, to:t.value });
+  }
+  ['kwdFrom','kwdTo','kwdWho'].forEach(id=>{ const el = $(id); if (el) el.addEventListener('change', kwDaily); });
+  document.querySelectorAll('#tab-daily .kw-quick button').forEach(b=>b.addEventListener('click', ()=>{
+    const ds = allDates(); if (!ds.length) return;
+    const last = ds[ds.length-1], q = b.dataset.q; let from = last;
+    if (q === 'd3') from = addD(last,-2);
+    else if (q === 'd7') from = addD(last,-6);
+    else if (q === 'wk'){ const sp = stcWeekSpan(last); from = sp.from; }
+    $('kwdFrom').value = from; $('kwdTo').value = last; kwDaily();
+  }));
+
+  /* --- 월간보고 --- */
+  const MKEY = 'stc_kw_monthly_ym';
+  function kwMonthly(){
+    if (typeof RUN === 'undefined' || !RUN.length) return;
+    const sel = $('kwmMonth');
+    const ms = [...new Set(RUN.map(r=>r.d.slice(0,7)))].sort();
+    const cur = ms.join('|');
+    if (sel.getAttribute('data-ms') !== cur){
+      const keep = sel.value || localStorage.getItem(MKEY);
+      sel.setAttribute('data-ms', cur);
+      sel.innerHTML = ms.map(m=>`<option value="${m}">${m.slice(0,4)}년 ${+m.slice(5,7)}월</option>`).join('');
+      sel.value = ms.includes(keep) ? keep : ms[ms.length-1];
+    }
+    const ym = sel.value; if (!ym) return;
+    try{ localStorage.setItem(MKEY, ym); }catch(e){}
+    const days = RUN.filter(r=>r.d.slice(0,7)===ym).map(r=>r.d).sort();
+    const who = ($('kwmWho')||{}).value || '';
+    $('kwmMeta').innerHTML = `<b>${ym.slice(0,4)}년 ${+ym.slice(5,7)}월</b> (${days[0]||'-'} ~ ${days[days.length-1]||'-'})<br>`
+      + (who ? who+' · ' : '') + `작성일 ${new Date().toISOString().slice(0,10)} · 비교: 전월`;
+    STCKW.mount('kwMonthly', { mode:'month', ym });
+  }
+  ['kwmMonth','kwmWho'].forEach(id=>{ const el = $(id); if (el) el.addEventListener('change', kwMonthly); });
+
+  /* --- 데이터가 새로 들어올 때마다 같이 다시 그린다 --- */
+  const _render = render;
+  render = function(){ const r = _render.apply(this, arguments); try{ kwDaily(); kwMonthly(); }catch(e){ console.error(e); } return r; };
+  if (typeof RUN !== 'undefined' && RUN.length){ try{ kwWeekly(); kwDaily(); kwMonthly(); }catch(e){} }
+
+  /* --- 인쇄 : 지금 열린 보고서만 --- */
+  function printTab(id, cls){
+    showTab(id); document.body.classList.remove('kw-print-daily','kw-print-monthly');
+    if (cls) document.body.classList.add(cls);
+    setTimeout(()=>window.print(), 250);
+  }
+  $('kwdPrint').addEventListener('click', ()=>printTab('tab-daily','kw-print-daily'));
+  $('kwmPrint').addEventListener('click', ()=>printTab('tab-monthly','kw-print-monthly'));
+  window.addEventListener('beforeprint', ()=>{
+    const d = $('tab-daily'), m = $('tab-monthly');
+    document.body.classList.toggle('kw-print-daily', !!(d && d.classList.contains('show')));
+    document.body.classList.toggle('kw-print-monthly', !!(m && m.classList.contains('show')));
+  });
+  window.addEventListener('afterprint', ()=>document.body.classList.remove('kw-print-daily','kw-print-monthly'));
+})();
 </script>
 </body>
 </html>
