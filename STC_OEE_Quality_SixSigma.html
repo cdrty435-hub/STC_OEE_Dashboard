@@ -7836,7 +7836,7 @@ const IQC_TXT = {
        chart:'주차별 입고 Lot · 불합격율', cLot:'입고 Lot(건)', cRate:'불합격율(%)',
        byType:'현상별', none:'이 기간에 불합격 · 불량기록이 없습니다.',
        pno:'품번', pnm:'품명', pLot:'입고 Lot', pQty:'입고 수량', pRej:'불합격 Lot', pRq:'불합격 수량',
-       pDef:'현상', pJ:'판정',
+       pDef:'현상', pJ:'판정', pIn:'입고일', pNg:'불합격 발생일 (수량)',
        hSeq:'순번', hIn:'입고일', hDc:'다캐일', hAge:'경과일', hQty:'수량(EA)', hJ:'판정',
        hDef:'현상', hAct:'조치', hRm:'비고 · 점검',
        j_OK:'합격', 'j_특채':'특채', j_HOLD:'보류', 'j_선별':'선별', 'j_재작업':'재작업', 'j_NG반송':'NG 반송',
@@ -7858,7 +7858,7 @@ const IQC_TXT = {
        chart:'Lots received and rejection rate by week', cLot:'Lots received', cRate:'Rejection (%)',
        byType:'By defect', none:'No rejected lot or defect note in this period.',
        pno:'Part no.', pnm:'Part name', pLot:'Lots', pQty:'Qty', pRej:'Rejected lots', pRq:'Rejected qty',
-       pDef:'Defect', pJ:'Result',
+       pDef:'Defect', pJ:'Result', pIn:'Received', pNg:'Rejected on (qty)',
        hSeq:'No.', hIn:'Received', hDc:'Cast', hAge:'Age', hQty:'Qty (EA)', hJ:'Result',
        hDef:'Defect', hAct:'Action', hRm:'Remark · check',
        j_OK:'Pass', 'j_특채':'Deviation', j_HOLD:'Hold', 'j_선별':'Sorting', 'j_재작업':'Rework',
@@ -7880,7 +7880,7 @@ const IQC_TXT = {
        chart:'ล็อตรับเข้าและอัตราไม่ผ่านรายสัปดาห์', cLot:'ล็อตรับเข้า', cRate:'ไม่ผ่าน (%)',
        byType:'ตามอาการ', none:'ไม่มีล็อตไม่ผ่านหรือบันทึกของเสียในช่วงนี้',
        pno:'รหัสชิ้นงาน', pnm:'ชื่อชิ้นงาน', pLot:'ล็อต', pQty:'จำนวน', pRej:'ล็อตไม่ผ่าน', pRq:'จำนวนไม่ผ่าน',
-       pDef:'อาการ', pJ:'ผล',
+       pDef:'อาการ', pJ:'ผล', pIn:'วันที่รับเข้า', pNg:'วันที่ไม่ผ่าน (จำนวน)',
        hSeq:'ลำดับ', hIn:'วันรับ', hDc:'วันหล่อ', hAge:'อายุ', hQty:'จำนวน (EA)', hJ:'ผล',
        hDef:'อาการ', hAct:'การแก้ไข', hRm:'หมายเหตุ · ตรวจ',
        j_OK:'ผ่าน', 'j_특채':'อนุมัติพิเศษ', j_HOLD:'พักไว้', 'j_선별':'คัดแยก', 'j_재작업':'แก้ไขงาน',
@@ -7937,7 +7937,10 @@ function iqcAgg(rows){
       x.lots++; x.qty += q; if (!pass) x.rej++;
     }
     const p = o.byP[nm] || (o.byP[nm] = { name:nm, no:r['Part_No']||'', code:r['Part_Code']||'',
-                                          lots:0, qty:0, rej:0, rejQty:0, obs:0, defects:{}, js:{} });
+                                          lots:0, qty:0, rej:0, rejQty:0, obs:0, defects:{}, js:{}, days:[], ngs:[] });
+    const inD = String(r['입고일자']||'').trim();
+    if (inD) p.days.push(inD);
+    if (!pass) p.ngs.push({ d:inD, q:q });
     p.lots++; p.qty += q; p.js[j] = (p.js[j]||0) + 1;
     if (!pass){ p.rej++; p.rejQty += q; } else if (d) p.obs++;
     if (d) p.defects[d] = (p.defects[d]||0) + 1;
@@ -7992,20 +7995,30 @@ function iqcTypeHtml(a){
       (x.rej ? ' <em>' + iqt('rejN', { n:x.rej }) + '</em>' : '') + '</span>';
   }).join('') + '</div>';
 }
+/* 품번별 입고일 표시 : 09/17 · 09/17 ~ 09/21 · 여러 날이면 날짜 수도 함께 */
+function iqcMD(d){ const m = String(d||'').match(/^\d{4}-(\d{2})-(\d{2})/); return m ? (m[1] + '/' + m[2]) : (d || '–'); }
+function iqcDaySpan(days){
+  const u = [...new Set(days)].sort(); if (!u.length) return '–';
+  if (u.length === 1) return iqcMD(u[0]);
+  return iqcMD(u[0]) + ' ~ ' + iqcMD(u[u.length-1]) + ' <span style="color:#8a95a1">(' + (typeof LANG !== 'undefined' && LANG === 'en' ? u.length + ' days' : LANG === 'th' ? u.length + ' วัน' : '입고 ' + u.length + '일') + ')</span>';
+}
 function iqcPartTbl(a){
   const ps = Object.values(a.byP).filter(p => p.rej || p.obs)
     .sort((x,y)=> (y.rejQty - x.rejQty) || (y.rej - x.rej) || (y.obs - x.obs));
   if (!ps.length) return '<div class="r2empty">' + iqt('none') + '</div>';
   return '<div class="r2wrap"><table class="r2t iqc-t"><thead><tr>' +
-    ['pno','pnm','pLot','pQty','pRej','pRq','pDef','pJ'].map((k,i)=>
-      '<th style="min-width:' + [96,190,56,74,64,78,150,130][i] + 'px">' + iqt(k) + '</th>').join('') +
+    ['pno','pnm','pIn','pLot','pQty','pRej','pRq','pNg','pDef','pJ'].map((k,i)=>
+      '<th style="min-width:' + [96,190,92,56,74,64,78,120,150,130][i] + 'px">' + iqt(k) + '</th>').join('') +
     '</tr></thead><tbody>' +
     ps.map(p => '<tr' + (p.rej ? ' class="hi"' : '') + '>' +
       '<td class="tx">' + iqcEsc(p.no || p.code || '–') + '</td>' +
       '<td class="tx">' + iqcEsc(p.name) + '</td>' +
+      '<td class="tx" style="white-space:nowrap">' + iqcDaySpan(p.days) + '</td>' +
       '<td class="v">' + p.lots + '</td><td class="v">' + p.qty.toLocaleString() + '</td>' +
       '<td class="v' + (p.rej ? ' neg' : ' mut') + '">' + p.rej + '</td>' +
       '<td class="v' + (p.rej ? ' neg' : ' mut') + '">' + p.rejQty.toLocaleString() + '</td>' +
+      '<td class="tx' + (p.ngs.length ? ' neg' : ' mut') + '" style="white-space:nowrap">' +
+        (p.ngs.length ? p.ngs.slice().sort((x,y)=>x.d<y.d?-1:1).map(n => iqcMD(n.d) + ' (' + n.q.toLocaleString() + ')').join('<br>') : '–') + '</td>' +
       '<td class="tx">' + Object.keys(p.defects).map(d => iqcEsc(trTerm(d)) + ' ' + p.defects[d]).join(', ') + '</td>' +
       '<td class="tx">' + Object.keys(p.js).filter(j => j !== 'OK').map(j => iqcJBadge(j) + ' ' + p.js[j]).join(' ') +
         (p.js.OK ? ' ' + iqcJBadge('OK') + ' ' + p.js.OK : '') + '</td></tr>').join('') +
@@ -8039,6 +8052,96 @@ function iqcRangeCtl(from, to, isWeek){
 }
 
 /* 일자별 집계 — 기간의 하루하루 (입고 없는 날은 '–') */
+/* ---- 일자별 모델 Lot 상세 (펼치기) ----
+   모드 : all = 모든 날짜 펼침 · ng = 불합격/불량기록 있는 날만 · none = 모두 접기
+   날짜를 눌러 개별로 펼치고 접을 수 있다 (새로 그리기 전까지 유지). */
+let IQC_DD_MODE = 'all';
+try{ IQC_DD_MODE = localStorage.getItem('stc_iqc_dd') || 'all'; }catch(e){}
+const IQC_DD_FLIP = new Set();
+const IQC_DD_TXT = {
+  ko:{ lab:'날짜별 모델 Lot', all:'모두 펼치기', ng:'불합격 있는 날만', none:'모두 접기', tip:'날짜 앞 ▸ 를 누르면 그날 모델만 펼쳐집니다',
+       pno:'품번', pnm:'품명 (모델)', dc:'다캐일', qty:'수량(EA)', j:'판정', def:'불량 내용', act:'조치 · 비고' },
+  en:{ lab:'Lots by model per day', all:'Expand all', ng:'Days with rejects', none:'Collapse all', tip:'Click ▸ before a date to open that day',
+       pno:'Part No.', pnm:'Part (model)', dc:'Cast date', qty:'Qty (EA)', j:'Result', def:'Defect', act:'Action · Note' },
+  th:{ lab:'ล็อตตามโมเดลรายวัน', all:'ขยายทั้งหมด', ng:'เฉพาะวันที่มีไม่ผ่าน', none:'ย่อทั้งหมด', tip:'กด ▸ หน้าวันที่เพื่อดูโมเดลของวันนั้น',
+       pno:'Part No.', pnm:'ชิ้นงาน (โมเดล)', dc:'วันหล่อ', qty:'จำนวน (EA)', j:'ผล', def:'ของเสีย', act:'การแก้ไข · หมายเหตุ' } };
+function iqcDDt(k){ const t = IQC_DD_TXT[(typeof LANG !== 'undefined' && IQC_DD_TXT[LANG]) ? LANG : 'ko']; return t[k] || IQC_DD_TXT.ko[k]; }
+function iqcDDOpen(d, a){
+  const base = IQC_DD_MODE === 'all' ? true : IQC_DD_MODE === 'ng' ? !!(a.rej || a.obs) : false;
+  return IQC_DD_FLIP.has(d) ? !base : base;
+}
+function iqcDDBar(){
+  const b = (m) => '<button type="button" class="' + (IQC_DD_MODE === m ? 'on' : '') + '" onclick="iqcDDSet(\'' + m + '\')">' + iqcDDt(m) + '</button>';
+  return '<div class="iqc-dd-bar qr-noprint"><b>' + iqcDDt('lab') + '</b> ' + b('all') + b('ng') + b('none') +
+         '<span>' + iqcDDt('tip') + '</span></div>';
+}
+function iqcDDRerender(){
+  if (typeof NAV_CUR !== 'undefined'){
+    if (NAV_CUR === 'daily' && typeof renderDaily === 'function') return renderDaily();
+    if (NAV_CUR === 'report2' && typeof renderQReport2 === 'function') return renderQReport2();
+    if (NAV_CUR === 'monthly' && typeof renderMonthly === 'function') return renderMonthly();
+    if (NAV_CUR === 'report' && typeof renderQReport === 'function') return renderQReport();
+  }
+  if (typeof renderDaily === 'function') renderDaily();
+}
+function iqcDDSet(m){ IQC_DD_MODE = m; IQC_DD_FLIP.clear(); try{ localStorage.setItem('stc_iqc_dd', m); }catch(e){} iqcDDRerender(); }
+function iqcDDToggle(d){
+  if (IQC_DD_FLIP.has(d)) IQC_DD_FLIP.delete(d); else IQC_DD_FLIP.add(d);
+  /* 다시 그리지 않고 그 날짜 줄만 여닫는다 (스크롤 위치 유지) */
+  document.querySelectorAll('tr.iqc-dd[data-day="' + d + '"]').forEach(tr => {
+    const on = tr.style.display === 'none';
+    tr.style.display = on ? '' : 'none';
+    const tg = tr.previousElementSibling && tr.previousElementSibling.querySelector('.iqc-dd-tg');
+    if (tg) tg.textContent = on ? '▾' : '▸';
+  });
+}
+function iqcDDRow(d, rs, open){
+  const L = rs.slice().sort((x,y) => {
+    const px = String(x['합격']).trim() === 'Y', py = String(y['합격']).trim() === 'Y';
+    if (px !== py) return px ? 1 : -1;                                     /* 불합격 먼저 */
+    const dx = !!String(x['불량유형']||'').trim(), dy = !!String(y['불량유형']||'').trim();
+    if (dx !== dy) return dx ? -1 : 1;                                     /* 그다음 불량기록 */
+    return String(x['부품명']||'').localeCompare(String(y['부품명']||'')) || (+x['No']) - (+y['No']);
+  });
+  const dc = r => { const a = r['다캐_시작'], b = r['다캐_종료'];
+    if (a && b) return a === b ? a.slice(5).replace('-','/') : a.slice(5).replace('-','/') + '~' + b.slice(5).replace('-','/');
+    return iqcEsc(r['다캐일자_원문'] || '–'); };
+  const body = L.map(r => {
+    const pass = String(r['합격']).trim() === 'Y';
+    const dd = String(r['불량유형']||'').trim(), raw = String(r['불량유형_원문']||'').trim();
+    const act = [iqcBi(r['조치']||''), iqcBi(r['비고']||'')].filter(Boolean).join(' · ');
+    return '<tr class="' + (pass ? (dd ? 'ob' : '') : 'ng') + '">' +
+      '<td>' + iqcEsc(r['Part_No'] || r['Part_Code'] || '–') + '</td>' +
+      '<td>' + iqcEsc(r['부품명'] || '–') + '</td>' +
+      '<td class="c">' + dc(r) + '</td>' +
+      '<td class="n">' + num(r['수량']).toLocaleString() + '</td>' +
+      '<td class="c">' + iqcJBadge(r['판정']) + '</td>' +
+      '<td>' + (dd ? '<b>' + iqcEsc(trTerm(dd)) + '</b>' : '') +
+        (raw && raw.toLowerCase() !== String(trTerm(dd)).toLowerCase() ? ' <span class="iqc-flag">' + iqcEsc(raw) + '</span>' : '') + (dd || raw ? '' : '–') + '</td>' +
+      '<td>' + (act ? iqcEsc(act) : '–') + '</td></tr>';
+  }).join('');
+  return '<tr class="iqc-dd" data-day="' + d + '"' + (open ? '' : ' style="display:none"') + '><td colspan="8">' +
+    '<table class="iqc-dd-t"><thead><tr><th style="width:12%">' + iqcDDt('pno') + '</th><th style="width:25%">' + iqcDDt('pnm') +
+    '</th><th style="width:9%">' + iqcDDt('dc') + '</th><th style="width:8%">' + iqcDDt('qty') + '</th><th style="width:9%">' + iqcDDt('j') +
+    '</th><th style="width:17%">' + iqcDDt('def') + '</th><th>' + iqcDDt('act') + '</th></tr></thead><tbody>' + body + '</tbody></table></td></tr>';
+}
+(function(){
+  const st = document.createElement('style');
+  st.textContent =
+    '.iqc-dd-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 6px;font-size:11.5px;color:#475569;}' +
+    '.iqc-dd-bar button{border:1px solid #cbd5e1;background:#fff;border-radius:6px;padding:2px 9px;font-size:11.5px;cursor:pointer;}' +
+    '.iqc-dd-bar button.on{background:#1f3864;color:#fff;border-color:#1f3864;}' +
+    '.iqc-dd-bar span{color:#94a3b8;margin-left:6px;}' +
+    '.iqc-dd-tg{cursor:pointer;display:inline-block;width:12px;color:#1f3864;user-select:none;}' +
+    'table.iqc-day tr.iqc-dd > td{padding:4px 6px 8px 22px !important;background:#fbfcfe !important;}' +
+    'table.iqc-dd-t{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed;}' +
+    'table.iqc-dd-t th{background:#eef2f7;color:#334155;font-weight:700;padding:3px 5px;border:1px solid #dde3ea;text-align:center;}' +
+    'table.iqc-dd-t td{padding:3px 5px;border:1px solid #e5e9ef;background:#fff;text-align:left;overflow-wrap:anywhere;}' +
+    'table.iqc-dd-t td.c{text-align:center;} table.iqc-dd-t td.n{text-align:right;font-variant-numeric:tabular-nums;}' +
+    'table.iqc-dd-t tr.ng td{background:#fff1f1;} table.iqc-dd-t tr.ob td{background:#fffbea;}' +
+    '@media print{table.iqc-dd-t{font-size:9.5px;} .iqc-dd-tg{display:none;}}';
+  document.head.appendChild(st);
+})();
 function iqcDayTbl(from, to, hiDay){
   const DW = { ko:['일','월','화','수','목','금','토'], en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
                th:['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'] }[LANG] || ['일','월','화','수','목','금','토'];
@@ -8056,15 +8159,18 @@ function iqcDayTbl(from, to, hiDay){
         cell(a.obs.toLocaleString(), a.obs ? '' : 'mut') +
         '<td class="tx">' + (defs(a) || '–') + '</td>'
       : '<td class="v mut">–</td>'.repeat(6) + '<td class="tx"></td>') + '</tr>';
-  return '<div class="r2wrap"><table class="r2t iqc-t iqc-day"><thead><tr>' +
+  return iqcDDBar() + '<div class="r2wrap"><table class="r2t iqc-t iqc-day"><thead><tr>' +
     ['dDate','kLot','kQty','kRej','pRq','kRate','kObs','pDef'].map((k,i)=>
       '<th style="min-width:' + [96,62,86,70,86,78,86,200][i] + 'px">' + iqt(k) + '</th>').join('') +
     '</tr></thead><tbody>' +
     days.map(d => {
-      const a = iqcAgg(iqcRowsBetween(d, d));
+      const rs = iqcRowsBetween(d, d), a = iqcAgg(rs);
       const dw = new Date(d + 'T00:00:00').getDay();
-      return line(d.slice(5).replace('-','/') + ' (' + DW[dw] + ')', a,
-                  (d === hiDay ? 'sel' : '') + (a.rej ? ' hi' : '') + (dw === 0 ? ' sun' : ''));
+      const open = iqcDDOpen(d, a);
+      const lab = (a.lots ? '<span class="iqc-dd-tg" onclick="iqcDDToggle(\'' + d + '\')">' + (open ? '▾' : '▸') + '</span> ' : '') +
+                  d.slice(5).replace('-','/') + ' (' + DW[dw] + ')';
+      return line(lab, a, (d === hiDay ? 'sel' : '') + (a.rej ? ' hi' : '') + (dw === 0 ? ' sun' : '')) +
+             (a.lots ? iqcDDRow(d, rs, open) : '');
     }).join('') +
     line(iqt('sum'), T, 'tot') + '</tbody></table></div>';
 }
