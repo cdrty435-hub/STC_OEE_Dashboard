@@ -9760,7 +9760,7 @@ document.addEventListener('DOMContentLoaded', () => {
          oqcNg:'불합격 {n}EA / 검사 {t}EA',
          oqcTop:'출하 상위 3 품번',
          oqcH:'FAC1 OQC 출하 현황', oqcHs:'Incoming >>> Fac.2 시트 › OQC Data Fac 1 (Delivery = FAC1 → FAC2 출하 수량)',
-         oqcD:['일자','출하 수량(EA)','출하 품번','OK','NG','불합격율'], oqcP:['품번','품명','출하 수량(EA)','출하일','OK','NG'],
+         oqcD:['일자','출하 수량(EA)','출하 품번','OK','NG','불합격율'], oqcP:['품번','품명','출하 수량(EA)','출하일자 (횟수)','OK','NG'],
          oqcUrl:'OQC CSV 주소 (웹에 게시한 CSV)', oqcSave:'저장', oqcNone:'이 기간에 FAC1 OQC 출하 기록이 없습니다', oqcSum:'합계',
          g_def:'FAC1 공정품질<br>불량율', g_ws:'FAC1 공정품질<br>웜샷', g_iqc:'FAC2 IQC',
          k_t:'총 불량률', k_ng:'순수 NG율', k_ws:'웜샷율 (합계)', k_std:'기본 웜샷 (STD)', k_exc:'초과 웜샷 (EXCESS)', k_il:'Lot 불합격율', k_iq:'불합격 수량',
@@ -9787,7 +9787,7 @@ document.addEventListener('DOMContentLoaded', () => {
          oqcNg:'{n}EA rejected of {t}EA inspected',
          oqcTop:'top 3 shipped parts',
          oqcH:'FAC1 OQC shipments', oqcHs:'Incoming >>> Fac.2 sheet › OQC Data Fac 1 (Delivery = FAC1 → FAC2 shipped qty)',
-         oqcD:['Date','Shipped (EA)','Parts','OK','NG','Reject rate'], oqcP:['Part no.','Description','Shipped (EA)','Ship days','OK','NG'],
+         oqcD:['Date','Shipped (EA)','Parts','OK','NG','Reject rate'], oqcP:['Part no.','Description','Shipped (EA)','Ship dates (count)','OK','NG'],
          oqcUrl:'OQC CSV address (published CSV)', oqcSave:'Save', oqcNone:'No FAC1 OQC shipments in this period', oqcSum:'Total',
          g_def:'FAC1 Process Quality<br>Defect rate', g_ws:'FAC1 Process Quality<br>Warm shot', g_iqc:'FAC2 IQC',
          k_t:'Total defect rate', k_ng:'Pure NG rate', k_ws:'Warm shot rate (total)', k_std:'Standard warm shot (STD)', k_exc:'Excess warm shot (EXCESS)', k_il:'Lot reject rate', k_iq:'Rejected qty',
@@ -9814,7 +9814,7 @@ document.addEventListener('DOMContentLoaded', () => {
          oqcNg:'ไม่ผ่าน {n}EA จากตรวจ {t}EA',
          oqcTop:'3 ชิ้นงานที่ส่งมากสุด',
          oqcH:'การส่งมอบ FAC1 OQC', oqcHs:'ชีต Incoming >>> Fac.2 › OQC Data Fac 1 (Delivery = จำนวนที่ FAC1 ส่งให้ FAC2)',
-         oqcD:['วันที่','ส่งมอบ (EA)','ชิ้นงาน','OK','NG','อัตราไม่ผ่าน'], oqcP:['Part No.','ชื่อชิ้นงาน','ส่งมอบ (EA)','วันที่ส่ง','OK','NG'],
+         oqcD:['วันที่','ส่งมอบ (EA)','ชิ้นงาน','OK','NG','อัตราไม่ผ่าน'], oqcP:['Part No.','ชื่อชิ้นงาน','ส่งมอบ (EA)','วันที่ส่ง (ครั้ง)','OK','NG'],
          oqcUrl:'ที่อยู่ CSV ของ OQC (CSV ที่เผยแพร่)', oqcSave:'บันทึก', oqcNone:'ช่วงนี้ไม่มีการส่งมอบ FAC1 OQC', oqcSum:'รวม',
          g_def:'FAC1 คุณภาพกระบวนการ<br>อัตราของเสีย', g_ws:'FAC1 คุณภาพกระบวนการ<br>Warm shot', g_iqc:'FAC2 IQC',
          k_t:'อัตราของเสียรวม', k_ng:'อัตรา NG สุทธิ', k_ws:'อัตรา Warm shot (รวม)', k_std:'Warm shot มาตรฐาน (STD)', k_exc:'Warm shot เกิน (EXCESS)', k_il:'อัตราล็อตไม่ผ่าน', k_iq:'จำนวนไม่ผ่าน',
@@ -10045,10 +10045,11 @@ document.addEventListener('DOMContentLoaded', () => {
       h += `<tr class="tot"><td class="c"><b>${T('oqcSum')}</b></td><td class="n"><b>${f0(OQ.qty)}</b></td><td class="n"><b>${OQ.partList.length}</b></td>`
          + `<td class="n">${OQ.ok?f0(OQ.ok):'–'}</td><td class="n">${OQ.ng?f0(OQ.ng):'–'}</td><td class="n">${OQ.ngRate!=null?f1(OQ.ngRate,2)+'%':'–'}</td></tr>`;
       h += `</tbody></table>`;
-      h += `<table class="kw-s kw-oq" style="margin-top:8px"><thead><tr>` + T('oqcP').map((x,i)=>`<th${i===1?' style="width:26%"':''}>${x}</th>`).join('') + `</tr></thead><tbody>`;
+      h += `<table class="kw-s kw-oq" style="margin-top:8px"><thead><tr>` + T('oqcP').map((x,i)=>`<th${i===1?' style="width:22%"':i===3?' style="width:24%"':''}>${x}</th>`).join('') + `</tr></thead><tbody>`;
       OQ.partList.slice(0,10).forEach(p => {
         h += `<tr><td class="c">${esc(p.code||'–')}</td><td style="text-align:left">${esc(p.part)}</td><td class="n">${f0(p.qty)}</td>`
-           + `<td class="n">${p.days.length}</td><td class="n">${p.ok?f0(p.ok):'–'}</td><td class="n${p.ng?' up':''}">${p.ng?f0(p.ng):'–'}</td></tr>`; });
+           + `<td style="text-align:left;white-space:normal">${p.days.slice().sort().map(d=>d.slice(5).replace('-','/')).join(', ')} <span style="color:#94a3b8">(${p.days.length})</span></td>`
+           + `<td class="n">${p.ok?f0(p.ok):'–'}</td><td class="n${p.ng?' up':''}">${p.ng?f0(p.ng):'–'}</td></tr>`; });
       h += `</tbody></table>`;
       if (!OQ.hasInsp) h += `<div class="kw-note">${esc(T('oqcNo'))}</div>`;
     }
