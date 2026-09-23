@@ -551,15 +551,17 @@
   .doBar button:hover{background:#eef2f7;}
   table.r2t td.do0{color:#a6b0ba;}
   table.r2t th.dow{font-weight:600;color:#5c6671;font-size:10px;}
-  table.r2t th.today{background:#fff2cc;}
-  table.r2t td.today{background:#fffdf3;}
+  table.r2t th.today{background:#ffd98a !important;color:#6b3f00 !important;font-weight:800;box-shadow:inset 0 3px 0 #e08600;}
+  table.r2t td.today{background:#fffdf3;box-shadow:inset 1px 0 0 #f0b95e, inset -1px 0 0 #f0b95e;}
+  table.r2t th.today .tdy{font-size:9px;font-weight:800;color:#a35c00;letter-spacing:.3px;}
+  table.r2t tr.tot td.today{box-shadow:inset 1px 0 0 #e08600, inset -1px 0 0 #e08600, inset 0 -3px 0 #e08600;}
   table.r2t tr.sun td,table.r2t th.sun{color:#c62828;}
   .doSeg{display:inline-flex;border:1px solid #c9d3de;border-radius:3px;overflow:hidden;}
   .doBar .doSeg button{border:0;border-radius:0;margin:0;padding:3px 9px;background:#fff;color:#1e3c72;font-weight:700;}
   .doBar .doSeg button+button{border-left:1px solid #c9d3de;}
   .doBar .doSeg button.on{background:#1e3c72;color:#fff;}
   .doRng{font-size:11px;color:#243a5e;font-weight:700;}
-  .doKpi{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:4px 0 6px;}
+  .doKpi{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:4px 0 6px;}
   .doKpi>div{border:1px solid #d7dde3;border-radius:3px;padding:5px 9px;background:#fbfcfe;}
   .doKpi b{display:block;font-size:17px;color:#12233f;line-height:1.2;}
   .doKpi span{font-size:10.8px;color:#3f4a56;font-weight:700;} .doKpi em{font-style:normal;color:#c62828;font-weight:600;}
@@ -574,6 +576,21 @@
   .doC.part,.lg.part{background:#fff4dc !important;color:#8a5a00 !important;}
   .doC.miss,.lg.miss{background:#fde8e8 !important;color:#c62828 !important;}
   .doC.over,.lg.over{background:#fff0f0 !important;color:#c62828 !important;box-shadow:inset 0 0 0 1px #f3b9b9;}
+  .doC.over.today{box-shadow:inset 0 0 0 1px #f3b9b9, inset 2px 0 0 #f0b95e, inset -2px 0 0 #f0b95e;}
+  .doC.apart,.lg.apart{background:#eaf1fb !important;color:#1e3c72 !important;box-shadow:inset 0 0 0 1px #c3d5ef;}
+  .doC.atoday,.lg.atoday{background:#e8f0fb !important;color:#1e3c72 !important;}
+  .doC.apart.today{box-shadow:inset 0 0 0 1px #c3d5ef, inset 2px 0 0 #f0b95e, inset -2px 0 0 #f0b95e;}
+  table.r2t td.doC u.oq{text-decoration:none;font-size:8.6px;font-weight:800;color:#3763ab;display:block;line-height:1;margin-top:1px;}
+  .doSt{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10.2px;font-weight:800;white-space:nowrap;}
+  .doSt.done{background:#e6f4ea;color:#1e7b34;} .doSt.ing{background:#e8f0fb;color:#1e3c72;}
+  .doSt.chk{background:#fff4dc;color:#8a5a00;} .doSt.ng{background:#fde8e8;color:#c62828;}
+  .doSt.plan{background:#f1f4f7;color:#68737f;}
+  .doPg{height:4px;border-radius:2px;background:#e7ecf2;margin-top:3px;overflow:hidden;}
+  .doPg i{display:block;height:100%;background:#2f6fd0;} .doPg.full i{background:#1e7b34;} .doPg.low i{background:#d08a1e;}
+  .doAuto{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#1e3c72;font-weight:700;}
+  .doAuto button{font:inherit;font-size:10.6px;padding:2px 8px;border:1px solid #c3d5ef;border-radius:10px;background:#eaf1fb;color:#1e3c72;cursor:pointer;}
+  .doAuto button.off{background:#f1f4f7;border-color:#d7dde3;color:#7b8794;}
+  .doAuto .st{color:#4a545e;font-weight:600;}
   .doC.plan,.lg.plan{color:#12233f;}
   table.r2t th.past{background:#e9edf2;color:#5b6672;}
   .doFlag{position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;background:#1e3c72;display:inline-block;}
@@ -6704,18 +6721,24 @@ const R2_TXT = {
       '<span class="hi">업계에서는 초도 손실이 일일 불량의 20~40% 수준</span>인데, 금형온조기가 없는 우리 조건에서는 그보다 크게 나오는 것이 정상입니다 — 그래서 ①이 먼저입니다.',
     s3d:'불량유형별 주차 추이', s3dsub:'불량유형을 가로로 깔고 주차마다 선을 하나씩 — 어느 유형이 어느 주에 튀었는지 본다',
     dtWeeks:'표시 주차', dtTypes:'표시 유형', dtN:'{n}주', dtT:'상위 {n}종', dtUnit:'수량(EA)',
-    s4do:'납품 계획 (DO) — 주간 출하 일정', doCust:'고객사 전체', doWkSum:'주간 계',
+    s4do:'마케팅 DO (납품계획) — 주간 출하 일정 · FAC1 OQC 출하 진척', doCust:'고객사 전체', doWkSum:'주간 계',
     doOrder:'Order (계획 전체)', doNone:'이 주차에 예정된 납품이 없습니다.',
     doSrc:'출처 {f} · {n}품목 · {a} ~ {b}', doUpd:'계획 갱신 (엑셀에서 복사해 붙여넣기)',
     doHint:'엑셀에서 CUSTOMERS 머리글 줄부터 마지막 줄까지 선택해 복사한 뒤 여기에 붙여넣으세요',
     doOverShow:'미입력 {n}건 보기', doOverHide:'미입력 {n}건 숨기기', doOverOnly:'입력된 미달은 없습니다 — 실적을 넣지 않은 지난 칸이 {n}건 있습니다.', doFuture:'아직 오지 않은 날짜입니다.', doMarkQ:'{d} 실적이 없는 {n}품목을 모두 "전량 납품"으로 입력할까요?', doMarkTip:'클릭: 이 날 실적 없는 칸을 모두 전량 납품으로', doMWeek:'보고 주차', doMRemain:'남은 기간', doMPast:'지난 기간', doMAll:'계획 전체',
     doSAll:'전체', doSDone:'달성', doSShort:'미달', doSRemain:'남은 계획',
     doKPlan:'기간 계획', doKDue:'납기 도래', doKAct:'납품 실적', doKRate:'달성률', doKShort:'미달 수량', doKOver:'미입력 {n}', doKRemain:'남은 계획',
-    doLegend:'칸을 눌러 실적 입력 · <span class="lg done">✓ 전량</span><span class="lg part">부분</span><span class="lg miss">✗ 미납</span><span class="lg over">지난 날 · 실적 없음</span><span class="lg plan">예정</span> · <i class="doFlag"></i> 조치 등록 · 지난 날짜 머리글을 누르면 그날 전체 전량 납품',
+    doLegend:'칸을 눌러 실적 입력 · <span class="lg done">✓ 전량</span><span class="lg part">부분</span><span class="lg miss">✗ 미납</span><span class="lg apart">OQC 부족</span><span class="lg over">지난 날 · 실적 없음</span><span class="lg plan">예정</span> · <i class="doFlag"></i> 조치 등록 · 지난 날짜 머리글을 누르면 그날 전체 전량 납품',
     doHPlan:'계획', doHAct:'실적', doHRate:'달성률', doHShort:'미달',
     doShortT:'미달 현황 · 조치', doShortN:'{n}건 · 조치 미완료 {o}건', doShortNone:'이 기간에 미달이 없습니다.',
     doSDate:'납품일', doRs:'미달 사유', doAc:'조치', doCd:'이월 납품일', doOw:'담당', doMemo:'메모', doDone:'완료',
     doNoRec:'미입력', doNeed:'사유 입력 필요',
+    doHSt:'상태', doStDone:'완료', doStIng:'진행중', doStPlan:'예정', doStChk:'확인 필요', doStNg:'미달',
+    doToday:'오늘', doKChk:'확인 필요', doAutoT:'FAC1 OQC 출하 자동 반영',
+    doAutoOn:'자동 반영 켬', doAutoOff:'자동 반영 끔', doAutoHit:'{n}품목 · {q} EA 반영',
+    doAutoWait:'FAC1 OQC 출하 데이터를 불러오는 중…', doAutoNo:'FAC1 OQC 출하 데이터를 읽지 못했습니다 (CSV 주소 확인)',
+    doAutoNone:'이 기간에 맞는 FAC1 OQC 출하가 없습니다', doAutoOver:'계획 외·초과 {q} EA', doOqcQ:'FAC1 OQC 출하 {q} EA ({d})',
+    doChkT:'확인 필요 — 계획보다 적게 잡히는 칸 (실적 미입력 · OQC 부족분)',
     doRs_stock:'재고 부족', doRs_quality:'품질 불합격', doRs_machine:'설비 고장', doRs_mold:'금형 문제',
     doRs_material:'소재·부품 부족', doRs_customer:'고객 요청 변경', doRs_logistics:'운송·물류', doRs_etc:'기타',
     doAc_carry:'이월 납품', doAc_cancel:'계획 취소', doAc_extra:'특근·추가 생산', doAc_negotiate:'고객 협의',
@@ -6787,18 +6810,24 @@ const R2_TXT = {
       '<span class="hi">Industry puts startup loss at 20-40% of daily defects</span>; without a die temperature controller a higher figure is expected here — which is why step 1 comes first.',
     s3d:'Defect types by week', s3dsub:'Defect types across the axis, one line per week — see which type spiked when',
     dtWeeks:'Weeks shown', dtTypes:'Types shown', dtN:'{n} weeks', dtT:'top {n}', dtUnit:'Qty (EA)',
-    s4do:'Delivery plan (DO) — shipping schedule', doCust:'All customers', doWkSum:'Week total',
+    s4do:'Marketing DO (delivery plan) — shipping schedule · FAC1 OQC progress', doCust:'All customers', doWkSum:'Week total',
     doOrder:'Order (whole plan)', doNone:'No delivery planned for this week.',
     doSrc:'source {f} · {n} items · {a} ~ {b}', doUpd:'Update plan (paste from Excel)',
     doHint:'In Excel select from the CUSTOMERS header row to the last row, copy, and paste here',
     doOverShow:'show {n} not entered', doOverHide:'hide {n} not entered', doOverOnly:'No recorded shortfall — {n} past cells have no delivery entered yet.', doFuture:'That date has not come yet.', doMarkQ:'Mark all {n} items without a record on {d} as delivered in full?', doMarkTip:'Click: mark every empty cell of this day as delivered in full', doMWeek:'Report week', doMRemain:'Remaining', doMPast:'Past', doMAll:'Whole plan',
     doSAll:'All', doSDone:'Achieved', doSShort:'Short', doSRemain:'Remaining',
     doKPlan:'Planned', doKDue:'Due so far', doKAct:'Delivered', doKRate:'Achievement', doKShort:'Shortfall', doKOver:'not entered {n}', doKRemain:'Still to deliver',
-    doLegend:'Click a cell to enter delivery · <span class="lg done">✓ full</span><span class="lg part">partial</span><span class="lg miss">✗ none</span><span class="lg over">past · no record</span><span class="lg plan">planned</span> · <i class="doFlag"></i> action set · click a past date header to mark that whole day delivered',
+    doLegend:'Click a cell to enter delivery · <span class="lg done">✓ full</span><span class="lg part">partial</span><span class="lg miss">✗ none</span><span class="lg apart">OQC short</span><span class="lg over">past · no record</span><span class="lg plan">planned</span> · <i class="doFlag"></i> action set · click a past date header to mark that whole day delivered',
     doHPlan:'Plan', doHAct:'Actual', doHRate:'Rate', doHShort:'Short',
     doShortT:'Shortfalls & actions', doShortN:'{n} · {o} open', doShortNone:'No shortfall in this period.',
     doSDate:'Due date', doRs:'Reason', doAc:'Action', doCd:'New date', doOw:'Owner', doMemo:'Note', doDone:'Closed',
     doNoRec:'not entered', doNeed:'reason needed',
+    doHSt:'Status', doStDone:'Done', doStIng:'In progress', doStPlan:'Planned', doStChk:'Needs check', doStNg:'Short',
+    doToday:'today', doKChk:'Needs check', doAutoT:'FAC1 OQC shipment auto-fill',
+    doAutoOn:'auto on', doAutoOff:'auto off', doAutoHit:'{n} items · {q} EA applied',
+    doAutoWait:'Loading FAC1 OQC shipment data…', doAutoNo:'Could not read FAC1 OQC shipment data (check the CSV address)',
+    doAutoNone:'No FAC1 OQC shipment matches this period', doAutoOver:'unplanned/extra {q} EA', doOqcQ:'FAC1 OQC shipped {q} EA ({d})',
+    doChkT:'Needs check — cells below plan (no entry · OQC short)',
     doRs_stock:'No stock', doRs_quality:'Quality reject', doRs_machine:'Machine down', doRs_mold:'Mold problem',
     doRs_material:'Material shortage', doRs_customer:'Customer change', doRs_logistics:'Transport', doRs_etc:'Other',
     doAc_carry:'Carry over', doAc_cancel:'Cancel', doAc_extra:'Overtime / extra run', doAc_negotiate:'Agree with customer',
@@ -6872,18 +6901,24 @@ const R2_TXT = {
       '<span class="hi">ในอุตสาหกรรม ความสูญเสียช่วงเริ่มเดินเครื่องอยู่ที่ 20-40% ของของเสียรายวัน</span>',
     s3d:'ประเภทของเสียรายสัปดาห์', s3dsub:'วางประเภทของเสียตามแนวนอน หนึ่งเส้นต่อหนึ่งสัปดาห์',
     dtWeeks:'จำนวนสัปดาห์', dtTypes:'จำนวนประเภท', dtN:'{n} สัปดาห์', dtT:'สูงสุด {n}', dtUnit:'จำนวน (EA)',
-    s4do:'แผนการส่งมอบ (DO) — ตารางส่งประจำสัปดาห์', doCust:'ลูกค้าทั้งหมด', doWkSum:'รวมสัปดาห์',
+    s4do:'DO การตลาด (แผนส่งมอบ) — ตารางส่งประจำสัปดาห์ · ความคืบหน้า FAC1 OQC', doCust:'ลูกค้าทั้งหมด', doWkSum:'รวมสัปดาห์',
     doOrder:'Order (ทั้งแผน)', doNone:'ไม่มีแผนส่งมอบในสัปดาห์นี้',
     doSrc:'ที่มา {f} · {n} รายการ · {a} ~ {b}', doUpd:'อัปเดตแผน (วางจาก Excel)',
     doHint:'ใน Excel เลือกตั้งแต่แถวหัวตาราง CUSTOMERS จนถึงแถวสุดท้าย คัดลอก แล้ววางที่นี่',
     doOverShow:'แสดงที่ยังไม่บันทึก {n}', doOverHide:'ซ่อนที่ยังไม่บันทึก {n}', doOverOnly:'ไม่มีรายการขาดส่งที่บันทึก — มีช่องที่เลยกำหนดแต่ยังไม่บันทึก {n} ช่อง', doFuture:'ยังไม่ถึงวันนั้น', doMarkQ:'บันทึก {n} รายการของวันที่ {d} ว่าส่งครบทั้งหมด?', doMarkTip:'คลิก: บันทึกว่าส่งครบทุกช่องที่ว่างของวันนี้', doMWeek:'สัปดาห์รายงาน', doMRemain:'ช่วงที่เหลือ', doMPast:'ช่วงที่ผ่านมา', doMAll:'ทั้งแผน',
     doSAll:'ทั้งหมด', doSDone:'ส่งครบ', doSShort:'ส่งไม่ครบ', doSRemain:'ยังเหลือ',
     doKPlan:'แผนในช่วง', doKDue:'ถึงกำหนดแล้ว', doKAct:'ส่งจริง', doKRate:'อัตราสำเร็จ', doKShort:'ขาดส่ง', doKOver:'ยังไม่บันทึก {n}', doKRemain:'แผนที่เหลือ',
-    doLegend:'คลิกช่องเพื่อบันทึกการส่ง · <span class="lg done">✓ ครบ</span><span class="lg part">บางส่วน</span><span class="lg miss">✗ ไม่ส่ง</span><span class="lg over">เลยกำหนด · ไม่มีบันทึก</span><span class="lg plan">ตามแผน</span> · <i class="doFlag"></i> มีมาตรการ · คลิกหัววันที่ที่ผ่านมาเพื่อบันทึกส่งครบทั้งวัน',
+    doLegend:'คลิกช่องเพื่อบันทึกการส่ง · <span class="lg done">✓ ครบ</span><span class="lg part">บางส่วน</span><span class="lg miss">✗ ไม่ส่ง</span><span class="lg apart">OQC ไม่ครบ</span><span class="lg over">เลยกำหนด · ไม่มีบันทึก</span><span class="lg plan">ตามแผน</span> · <i class="doFlag"></i> มีมาตรการ · คลิกหัววันที่ที่ผ่านมาเพื่อบันทึกส่งครบทั้งวัน',
     doHPlan:'แผน', doHAct:'จริง', doHRate:'อัตรา', doHShort:'ขาด',
     doShortT:'รายการส่งไม่ครบ · มาตรการ', doShortN:'{n} รายการ · ค้าง {o}', doShortNone:'ไม่มีรายการส่งไม่ครบในช่วงนี้',
     doSDate:'วันส่ง', doRs:'สาเหตุ', doAc:'มาตรการ', doCd:'วันส่งใหม่', doOw:'ผู้รับผิดชอบ', doMemo:'หมายเหตุ', doDone:'ปิด',
     doNoRec:'ยังไม่บันทึก', doNeed:'ต้องระบุสาเหตุ',
+    doHSt:'สถานะ', doStDone:'เสร็จ', doStIng:'กำลังดำเนินการ', doStPlan:'ตามแผน', doStChk:'ต้องตรวจสอบ', doStNg:'ขาดส่ง',
+    doToday:'วันนี้', doKChk:'ต้องตรวจสอบ', doAutoT:'ดึงยอดส่ง FAC1 OQC อัตโนมัติ',
+    doAutoOn:'เปิดอัตโนมัติ', doAutoOff:'ปิดอัตโนมัติ', doAutoHit:'ใช้แล้ว {n} รายการ · {q} EA',
+    doAutoWait:'กำลังโหลดข้อมูลการส่ง FAC1 OQC…', doAutoNo:'อ่านข้อมูลการส่ง FAC1 OQC ไม่ได้ (ตรวจสอบที่อยู่ CSV)',
+    doAutoNone:'ไม่มียอดส่ง FAC1 OQC ที่ตรงกับช่วงนี้', doAutoOver:'นอกแผน/เกิน {q} EA', doOqcQ:'FAC1 OQC ส่ง {q} EA ({d})',
+    doChkT:'ต้องตรวจสอบ — ช่องที่ต่ำกว่าแผน (ยังไม่บันทึก · OQC ไม่ครบ)',
     doRs_stock:'สต็อกไม่พอ', doRs_quality:'คุณภาพไม่ผ่าน', doRs_machine:'เครื่องเสีย', doRs_mold:'แม่พิมพ์มีปัญหา',
     doRs_material:'วัตถุดิบไม่พอ', doRs_customer:'ลูกค้าเปลี่ยน', doRs_logistics:'ขนส่ง', doRs_etc:'อื่นๆ',
     doAc_carry:'ส่งภายหลัง', doAc_cancel:'ยกเลิก', doAc_extra:'ทำ OT / ผลิตเพิ่ม', doAc_negotiate:'ตกลงกับลูกค้า',
@@ -7545,6 +7580,66 @@ function doViewSave(){ try{ localStorage.setItem(DO_VIEW_KEY, JSON.stringify(DO_
 function doToday(){ const t = new Date(); return t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0'); }
 function doCellKey(r, d){ return [r.cu, r.pc, d].join('|'); }
 
+/* ===== FAC1 OQC 출하 → DO 실적 자동 반영 =====
+   직접 입력한 실적이 없는 칸은 FAC1 OQC 출하 수량으로 채운다.
+   · 품번(없으면 품명)으로 맞추고, 기간 안 출하 총량을 계획 날짜 순서대로 배분한다
+     (출하가 하루 이틀 밀리거나 앞당겨져도 진척이 그대로 보이게)
+   · 자동으로 채운 값은 저장하지 않는다 — 브라우저에 남는 것은 직접 입력한 실적뿐 */
+const DO_AUTO_KEY = 'stc_do_auto';
+let DO_AUTO = null, DO_AU = null;
+function doAuto(){
+  if (DO_AUTO === null){ let v = null; try{ v = localStorage.getItem(DO_AUTO_KEY); }catch(e){} DO_AUTO = (v !== '0'); }
+  return DO_AUTO;
+}
+function doToggleAuto(){
+  DO_AUTO = !doAuto(); try{ localStorage.setItem(DO_AUTO_KEY, DO_AUTO ? '1' : '0'); }catch(e){}
+  DO_AU = null; doRedraw();
+}
+const doPK = v => String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+function doAutoBuild(plan, R){
+  DO_AU = { cells:{}, extra:[], on:false, state:'off', parts:0, qty:0, over:0 };
+  if (!doAuto() || !window.STCOQC) return DO_AU;
+  DO_AU.state = STCOQC.state;
+  if (STCOQC.state === 'idle' || STCOQC.state === 'loading'){ try{ STCOQC.onReady(function(){ DO_AU = null; doRedraw(); }); }catch(e){} return DO_AU; }
+  if (STCOQC.state !== 'ok') return DO_AU;
+  let M = null; try{ M = STCOQC.dayPart(R.from, R.to); }catch(e){}
+  if (!M) return DO_AU;
+  DO_AU.on = true;
+  /* 계획 칸을 품번별로 모은다 — 이미 납기가 지난(오늘 포함) 칸만 채운다.
+     아직 오지 않은 계획은 '남은 계획'으로 두고, 남는 출하분은 초과분으로 따로 센다. */
+  const td = doToday(), bag = {};
+  plan.rows.forEach(r => {
+    if (DO_CUST && r.cu !== DO_CUST) return;
+    Object.keys(r.d).forEach(d => {
+      if (d < R.from || d > R.to || d > td || !r.d[d]) return;
+      const k = doPK(r.pc) || ('N' + doPK(r.pn));
+      (bag[k] = bag[k] || []).push({ key:doCellKey(r, d), d:d, p:r.d[d] });
+    });
+  });
+  Object.keys(M).forEach(k => {
+    const m = M[k]; let left = m.qty; if (left <= 0) return;
+    const cs = (bag[k] || []).slice().sort((a,b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+    if (!cs.length){ DO_AU.extra.push({ code:m.code, part:m.part, q:left, days:m.days }); DO_AU.over += left; return; }
+    DO_AU.parts++; DO_AU.qty += m.qty;
+    cs.forEach(c => {
+      if (left <= 0) return;
+      const q = Math.min(left, c.p); left -= q;
+      DO_AU.cells[c.key] = { q:q, days:m.days, code:m.code };
+    });
+    if (left > 0){ DO_AU.over += left; DO_AU.extra.push({ code:m.code, part:m.part, q:left, days:m.days, plan:1 }); }
+  });
+  return DO_AU;
+}
+function doAutoOf(key){ return (DO_AU && DO_AU.cells[key]) || null; }
+/* 행 상태 : 완료 · 진행중 · 확인 필요 · 미달 · 예정 */
+function doRowSt(t){
+  if (!t.due) return 'plan';
+  if (t.short > 0) return 'ng';
+  if (t.chk > 0) return 'chk';
+  if (t.act >= t.due) return t.remain > 0 ? 'ing' : 'done';
+  return 'ing';
+}
+
 /* 기간: 보고 주차 · 남은 기간(오늘~계획 끝) · 지난 기간(계획 시작~어제) · 계획 전체 · 직접 지정 */
 function doRange(plan){
   const v = doView(), td = doToday();
@@ -7555,6 +7650,16 @@ function doRange(plan){
   if (v.mode === 'custom' && v.from && v.to) return { from: v.from <= v.to ? v.from : v.to, to: v.from <= v.to ? v.to : v.from };
   const rg = DO_WEEK ? qrWeekRange(DO_WEEK) : null;
   return rg ? { from: rg.start, to: rg.end } : { from: a, to: b };
+}
+function doAutoMsg(){
+  if (!doAuto()) return '';
+  if (!window.STCOQC) return '';
+  const st = DO_AU ? DO_AU.state : STCOQC.state;
+  if (st === 'idle' || st === 'loading') return r2t('doAutoWait');
+  if (st !== 'ok') return r2t('doAutoNo');
+  if (!DO_AU || !DO_AU.parts) return r2t('doAutoNone');
+  return r2t('doAutoHit', { n:DO_AU.parts, q:DO_AU.qty.toLocaleString() }) +
+    (DO_AU.over ? ' · ' + r2t('doAutoOver', { q:DO_AU.over.toLocaleString() }) : '');
 }
 function doSetMode(m){ const v = doView(); v.mode = m; doViewSave(); doRedraw(); }
 function doToggleOver(){ const v = doView(); v.showOver = !v.showOver; doViewSave(); doRedraw(); }
@@ -7583,11 +7688,14 @@ function doRedraw(){
 /* 한 칸의 상태: done(전량) · part(부분) · miss(미납 입력) · over(지난 날인데 실적 없음) · plan(예정) */
 function doCellState(r, d, td){
   const p = r.d[d] || 0; if (!p) return null;
-  const a = doAct()[doCellKey(r, d)];
+  const key = doCellKey(r, d), a = doAct()[key];
   if (a){
     const q = +a.q || 0;
-    return { p:p, q:q, st: q >= p ? 'done' : (q > 0 ? 'part' : 'miss'), a:a };
+    return { p:p, q:q, st: q >= p ? 'done' : (q > 0 ? 'part' : 'miss'), a:a, src:'in' };
   }
+  const au = doAutoOf(key);
+  /* 오늘 칸은 아직 하루가 끝나지 않았으니 모자라도 '진행중'으로 본다 */
+  if (au && au.q > 0) return { p:p, q:au.q, st: au.q >= p ? 'done' : (d === td ? 'atoday' : 'apart'), a:null, au:au, src:'oqc' };
   return { p:p, q:0, st: d < td ? 'over' : 'plan', a:null };
 }
 
@@ -7597,6 +7705,7 @@ function doSchedInner(week){
   const custs = [...new Set(plan.rows.map(r=>r.cu).filter(Boolean))].sort();
   /* 계획이 있는 날짜만 열로 쓴다 (빈 날·일요일 칸이 줄줄이 생기지 않게) */
   const days = plan.dates.filter(d => d >= R.from && d <= R.to);
+  doAutoBuild(plan, R);
   const src = r2t('doSrc', {
       f: (plan.src === 'paste' ? r2t('doPasted') : plan.src === 'live' ? r2t('doLive', { p: plan.plan || '-' }) : (plan.src || '-')),
       n: plan.rows.length, a: plan.dates[0] || '-', b: plan.dates[plan.dates.length-1] || '-' });
@@ -7612,26 +7721,31 @@ function doSchedInner(week){
       '<input type="date" id="doTo" value="' + R.to + '" onchange="doSetCustom()"></span>' +
     '<span class="doSeg qr-noprint">' + sb('all', r2t('doSAll')) + sb('done', r2t('doSDone')) +
       sb('short', r2t('doSShort')) + sb('remain', r2t('doSRemain')) + '</span>' +
+    '<span class="doAuto qr-noprint"><button type="button" class="' + (doAuto() ? '' : 'off') + '" onclick="doToggleAuto()">' +
+      r2t('doAutoT') + ' · ' + r2t(doAuto() ? 'doAutoOn' : 'doAutoOff') + '</button><span class="st">' + doAutoMsg() + '</span></span>' +
     '<span class="src">' + src + '</span></div>';
 
   /* 행 집계 */
   const base = plan.rows.filter(r => !DO_CUST || r.cu === DO_CUST);
   let list = base.map(r => {
     const cells = days.map(d => doCellState(r, d, td));
-    const t = { plan:0, due:0, act:0, short:0, remain:0, over:0 };
+    const t = { plan:0, due:0, act:0, short:0, chk:0, remain:0, over:0 };
     cells.forEach(c => { if (!c) return;
       t.plan += c.p;
       if (c.st === 'plan'){ t.remain += c.p; return; }
-      t.due += c.p; t.act += Math.min(c.q, c.p) + Math.max(0, c.q - c.p);
-      if (c.st === 'over') t.over += c.p;
+      t.due += c.p; t.act += c.q;
+      /* 미달은 '직접 입력해 확인된 것'만 — 실적 미입력·OQC 부족분은 '확인 필요' */
+      if (c.st === 'over'){ t.over += c.p; t.chk += c.p; return; }
+      if (c.st === 'atoday') return;                                  /* 오늘 — 진행중 */
+      if (c.st === 'apart'){ t.chk += Math.max(0, c.p - c.q); return; }
       t.short += Math.max(0, c.p - c.q);
     });
     return { r:r, cells:cells, t:t };
   }).filter(x => x.t.plan > 0);
-  if (v.st === 'done')   list = list.filter(x => x.t.due > 0 && x.t.short === 0);
-  if (v.st === 'short')  list = list.filter(x => x.t.short > 0);
+  if (v.st === 'done')   list = list.filter(x => x.t.due > 0 && x.t.short === 0 && x.t.chk === 0);
+  if (v.st === 'short')  list = list.filter(x => x.t.short > 0 || x.t.chk > 0);
   if (v.st === 'remain') list = list.filter(x => x.t.remain > 0);
-  list.sort((a,b) => (b.t.short - a.t.short) || (b.t.plan - a.t.plan));
+  list.sort((a,b) => (b.t.short - a.t.short) || (b.t.chk - a.t.chk) || (b.t.plan - a.t.plan));
 
   const T = list.reduce((s,x) => { for (const k in x.t) s[k] = (s[k]||0) + x.t[k]; return s; }, {});
   const rate = T.due ? Math.min(999, T.act / T.due * 100) : null;
@@ -7640,7 +7754,8 @@ function doSchedInner(week){
     '<div><b>' + (T.due||0).toLocaleString() + '</b><span>' + r2t('doKDue') + '</span></div>' +
     '<div class="ok"><b>' + (T.act||0).toLocaleString() + '</b><span>' + r2t('doKAct') + '</span></div>' +
     '<div class="' + (rate == null ? '' : rate >= 100 ? 'ok' : rate >= 95 ? 'wn' : 'ng') + '"><b>' + (rate == null ? '–' : rate.toFixed(1) + '%') + '</b><span>' + r2t('doKRate') + '</span></div>' +
-    '<div class="' + (T.short ? 'ng' : '') + '"><b>' + (T.short||0).toLocaleString() + '</b><span>' + r2t('doKShort') +
+    '<div class="' + (T.short ? 'ng' : '') + '"><b>' + (T.short||0).toLocaleString() + '</b><span>' + r2t('doKShort') + '</span></div>' +
+    '<div class="' + (T.chk ? 'wn' : '') + '"><b>' + (T.chk||0).toLocaleString() + '</b><span>' + r2t('doKChk') +
       (T.over ? ' <em>(' + r2t('doKOver', { n:(T.over).toLocaleString() }) + ')</em>' : '') + '</span></div>' +
     '<div><b>' + (T.remain||0).toLocaleString() + '</b><span>' + r2t('doKRemain') + '</span></div>' +
     '</div>';
@@ -7657,9 +7772,11 @@ function doSchedInner(week){
     '<th style="min-width:160px">' + r2t('doPart') + '</th><th style="min-width:104px">' + r2t('doCode') + '</th>' +
     days.map(d => '<th style="min-width:64px" class="' + (d === td ? 'today ' : '') + (d <= td ? 'past doTh' : '') + '"' +
       (d <= td ? ' title="' + r2esc(r2t('doMarkTip')) + '" onclick="doMarkDay(\'' + d + '\')"' : '') + '>' +
-      d.slice(5).replace('-','/') + '<div class="dow">' + DW[dowOf(d)] + '</div></th>').join('') +
+      d.slice(5).replace('-','/') + '<div class="dow">' + DW[dowOf(d)] +
+      (d === td ? '</div><div class="tdy">' + r2t('doToday') : '') + '</div></th>').join('') +
     '<th style="min-width:70px">' + r2t('doHPlan') + '</th><th style="min-width:70px">' + r2t('doHAct') + '</th>' +
-    '<th style="min-width:58px">' + r2t('doHRate') + '</th><th style="min-width:64px">' + r2t('doHShort') + '</th></tr>';
+    '<th style="min-width:70px">' + r2t('doHRate') + '</th><th style="min-width:64px">' + r2t('doHShort') + '</th>' +
+    '<th style="min-width:74px">' + r2t('doHSt') + '</th></tr>';
   const body = list.map((x, ri) => {
     const r = x.r;
     const rr = x.t.due ? x.t.act / x.t.due * 100 : null;
@@ -7670,18 +7787,23 @@ function doSchedInner(week){
         if (!c) return '<td class="v do0' + (d === td ? ' today' : '') + '">·</td>';
         const k = r2esc(doCellKey(r, d)).replace(/'/g, '&#39;');
         const txt = c.st === 'done' ? '✓ ' + c.q.toLocaleString()
-                  : c.st === 'part' ? c.q.toLocaleString() + '<small>/' + c.p.toLocaleString() + '</small>'
+                  : (c.st === 'part' || c.st === 'apart' || c.st === 'atoday') ? c.q.toLocaleString() + '<small>/' + c.p.toLocaleString() + '</small>'
                   : c.st === 'miss' ? '✗ 0<small>/' + c.p.toLocaleString() + '</small>'
                   : c.p.toLocaleString();
-        const act = c.a && c.a.ac ? ' title="' + r2esc(r2t('doAc_' + c.a.ac) + (c.a.cd ? ' → ' + c.a.cd : '')) + '"' : '';
-        return '<td class="v doC ' + c.st + (d === td ? ' today' : '') + '"' + act +
+        const tip = c.src === 'oqc' ? ' title="' + r2esc(r2t('doOqcQ', { q:c.q.toLocaleString(), d:(c.au.days||[]).join(', ') })) + '"'
+                  : (c.a && c.a.ac ? ' title="' + r2esc(r2t('doAc_' + c.a.ac) + (c.a.cd ? ' → ' + c.a.cd : '')) + '"' : '');
+        return '<td class="v doC ' + c.st + (d === td ? ' today' : '') + '"' + tip +
           ' onclick="doEdit(' + plan.rows.indexOf(r) + ',\'' + d + '\')">' + txt +
+          (c.src === 'oqc' ? '<u class="oq">OQC</u>' : '') +
           (c.a && c.a.ac ? '<i class="doFlag"></i>' : '') + '</td>';
       }).join('') +
       '<td class="v">' + x.t.plan.toLocaleString() + '</td>' +
       '<td class="v" style="font-weight:800">' + (x.t.due ? x.t.act.toLocaleString() : '–') + '</td>' +
-      '<td class="v ' + (rr == null ? 'mut' : rr >= 100 ? 'pos' : 'neg') + '">' + (rr == null ? '–' : rr.toFixed(0) + '%') + '</td>' +
-      '<td class="v ' + (x.t.short ? 'neg' : 'mut') + '">' + (x.t.short ? x.t.short.toLocaleString() : '–') + '</td></tr>';
+      '<td class="v ' + (rr == null ? 'mut' : rr >= 100 ? 'pos' : 'neg') + '">' + (rr == null ? '–' : rr.toFixed(0) + '%') +
+        (rr == null ? '' : '<div class="doPg ' + (rr >= 100 ? 'full' : rr >= 60 ? '' : 'low') + '"><i style="width:' +
+          Math.max(2, Math.min(100, rr)).toFixed(0) + '%"></i></div>') + '</td>' +
+      '<td class="v ' + (x.t.short ? 'neg' : 'mut') + '">' + (x.t.short ? x.t.short.toLocaleString() : '–') + '</td>' +
+      '<td class="v"><span class="doSt ' + doRowSt(x.t) + '">' + r2t('doSt' + doRowSt(x.t).charAt(0).toUpperCase() + doRowSt(x.t).slice(1)) + '</span></td></tr>';
   }).join('');
   const dayT = days.map((d, i) => list.reduce((s, x) => { const c = x.cells[i]; if (!c) return s;
       s.p += c.p; if (c.st !== 'plan'){ s.due += c.p; s.q += c.q; } return s; }, { p:0, due:0, q:0 }));
@@ -7690,7 +7812,8 @@ function doSchedInner(week){
       (s.due ? '<div class="doDR ' + (s.q >= s.due ? 'pos' : 'neg') + '">' + (s.q / s.due * 100).toFixed(0) + '%</div>' : '') + '</td>').join('') +
     '<td class="v">' + T.plan.toLocaleString() + '</td><td class="v">' + (T.due ? T.act.toLocaleString() : '–') + '</td>' +
     '<td class="v">' + (rate == null ? '–' : rate.toFixed(1) + '%') + '</td>' +
-    '<td class="v">' + (T.short ? T.short.toLocaleString() : '–') + '</td></tr>';
+    '<td class="v">' + (T.short ? T.short.toLocaleString() : '–') + '</td>' +
+    '<td class="v"><span class="doSt ' + doRowSt(T) + '">' + r2t('doSt' + doRowSt(T).charAt(0).toUpperCase() + doRowSt(T).slice(1)) + '</span></td></tr>';
 
   return bar + kpi + legend + '<div class="r2wrap"><table class="r2t doT"><thead>' + head + '</thead><tbody>' +
     body + foot + '</tbody></table></div>' + doShortHtml(plan, R, td);
@@ -7701,7 +7824,8 @@ function doShortHtml(plan, R, td){
   const items = [];
   plan.rows.filter(r => !DO_CUST || r.cu === DO_CUST).forEach((r, _) => {
     Object.keys(r.d).filter(d => d >= R.from && d <= R.to).forEach(d => {
-      const c = doCellState(r, d, td); if (!c || c.st === 'plan' || c.st === 'done') return;
+      const c = doCellState(r, d, td); if (!c || c.st === 'plan' || c.st === 'done' || c.st === 'atoday') return;
+      if (c.st === 'apart' && !(c.p - c.q)) return;
       items.push({ r:r, ri:plan.rows.indexOf(r), d:d, c:c });
     });
   });
@@ -7714,20 +7838,23 @@ function doShortHtml(plan, R, td){
   items.length = 0; shown.forEach(x => items.push(x));
   items.sort((a,b) => a.d.localeCompare(b.d));
   const open = items.filter(x => !(x.c.a && x.c.a.done)).length;
-  return '<div class="doShortH">' + r2t('doShortT') + ' <span>' + r2t('doShortN', { n:items.length, o:open }) + '</span>' + tog + '</div>' +
+  return '<div class="doShortH">' + r2t('doShortT') + ' <span>' + r2t('doShortN', { n:items.length, o:open }) + '</span>' + tog +
+    '<div style="font-size:10.8px;font-weight:600;color:#68737f;margin-top:2px">' + r2t('doChkT') + '</div></div>' +
     '<div class="r2wrap"><table class="r2t"><thead><tr>' +
     ['doSDate','cust','doCode','doHPlan','doHAct','doHShort','doRs','doAc','doCd','doOw','doMemo','doDone'].map((k,i)=>
       '<th style="min-width:' + [70,96,104,62,62,62,96,96,78,66,150,50][i] + 'px">' + r2t(k) + '</th>').join('') +
     '</tr></thead><tbody>' +
     items.map(x => {
       const a = x.c.a || {};
-      return '<tr class="' + (a.done ? 'doDoneRow' : (x.c.st === 'over' ? 'hi' : '')) + '" onclick="doEdit(' + x.ri + ',\'' + x.d + '\')" style="cursor:pointer">' +
+      return '<tr class="' + (a.done ? 'doDoneRow' : ((x.c.st === 'over' || x.c.st === 'apart') ? 'hi' : '')) + '" onclick="doEdit(' + x.ri + ',\'' + x.d + '\')" style="cursor:pointer">' +
         '<td class="h">' + x.d.slice(5) + '</td><td class="h">' + r2esc(x.r.cu) + '</td>' +
         '<td class="v" style="text-align:left;padding-left:6px">' + r2esc(x.r.pc) + '</td>' +
         '<td class="v">' + x.c.p.toLocaleString() + '</td>' +
-        '<td class="v">' + (x.c.st === 'over' ? '<span class="neg">' + r2t('doNoRec') + '</span>' : x.c.q.toLocaleString()) + '</td>' +
+        '<td class="v">' + (x.c.st === 'over' ? '<span class="neg">' + r2t('doNoRec') + '</span>'
+            : x.c.q.toLocaleString() + (x.c.src === 'oqc' ? ' <u class="oq" style="display:inline">OQC</u>' : '')) + '</td>' +
         '<td class="v neg">' + Math.max(0, x.c.p - x.c.q).toLocaleString() + '</td>' +
-        '<td class="tx">' + (a.rs ? r2esc(r2t('doRs_' + a.rs)) : '<span class="mut">' + r2t('doNeed') + '</span>') + '</td>' +
+        '<td class="tx">' + (a.rs ? r2esc(r2t('doRs_' + a.rs))
+            : '<span class="mut">' + r2t(x.c.st === 'over' || x.c.st === 'apart' ? 'doStChk' : 'doNeed') + '</span>') + '</td>' +
         '<td class="tx">' + (a.ac ? r2esc(r2t('doAc_' + a.ac)) : '–') + '</td>' +
         '<td class="tx">' + r2esc(a.cd || '') + '</td><td class="tx">' + r2esc(a.ow || '') + '</td>' +
         '<td class="tx">' + r2esc(a.memo || '') + '</td>' +
@@ -7741,16 +7868,18 @@ const DO_AC = ['carry','cancel','extra','negotiate'];
 function doEdit(ri, d){
   const plan = doPlan(), r = plan.rows[ri]; if (!r) return;
   const p = r.d[d] || 0, key = doCellKey(r, d), a = doAct()[key] || {};
+  const au = doAutoOf(key);
   let m = document.getElementById('doModal');
   if (!m){ m = document.createElement('div'); m.id = 'doModal'; document.body.appendChild(m); }
   const opt = (arr, pre, cur) => '<option value=""></option>' + arr.map(x => '<option value="' + x + '"' + (x === cur ? ' selected' : '') + '>' + r2t(pre + x) + '</option>').join('');
   m.innerHTML = '<div class="doMBg" onclick="doEditClose()"></div><div class="doMBox">' +
     '<div class="doMH">' + r2t('doEdT') + '<button type="button" onclick="doEditClose()">✕</button></div>' +
     '<div class="doMInfo"><b>' + r2esc(r.cu) + '</b> · ' + r2esc(r.pn) + ' · ' + r2esc(r.pc) + '<br>' +
-      r2t('doSDate') + ' <b>' + d + '</b> · ' + r2t('doHPlan') + ' <b>' + p.toLocaleString() + ' EA</b></div>' +
+      r2t('doSDate') + ' <b>' + d + '</b> · ' + r2t('doHPlan') + ' <b>' + p.toLocaleString() + ' EA</b>' +
+      (au ? '<br><span style="color:#1e3c72;font-weight:700">' + r2t('doOqcQ', { q:au.q.toLocaleString(), d:(au.days||[]).join(', ') }) + '</span>' : '') + '</div>' +
     '<div class="doMQ"><button type="button" onclick="doQuick(' + p + ')">' + r2t('doFull') + '</button>' +
       '<button type="button" onclick="doQuick(0)">' + r2t('doNone0') + '</button>' +
-      '<label>' + r2t('doHAct') + ' <input type="number" id="doMq" min="0" value="' + (a.q != null ? a.q : p) + '" oninput="doMShow(' + p + ')"> EA</label></div>' +
+      '<label>' + r2t('doHAct') + ' <input type="number" id="doMq" min="0" value="' + (a.q != null ? a.q : (au ? au.q : p)) + '" oninput="doMShow(' + p + ')"> EA</label></div>' +
     '<div id="doMShort" class="doMShort">' +
       '<div class="doMRow"><label>' + r2t('doRs') + '<select id="doMrs">' + opt(DO_RS, 'doRs_', a.rs) + '</select></label>' +
         '<label>' + r2t('doAc') + '<select id="doMac">' + opt(DO_AC, 'doAc_', a.ac) + '</select></label></div>' +
@@ -9716,8 +9845,21 @@ document.addEventListener('DOMContentLoaded', () => {
     A.ngRate = (A.ok + A.ng) > 0 ? A.ng/(A.ok + A.ng)*100 : null;
     return A;
   }
+  /* 품번(없으면 품명) → 날짜별 출하 수량 */
+  const pkey = v => String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  function dayPart(from, to){
+    const A = agg(from, to); if (!A) return null;
+    const M = {};
+    (A.partList||[]).forEach(p => {
+      const k = pkey(p.code) || ('N' + pkey(p.part));
+      const m = M[k] = M[k] || { code:p.code, part:p.part, qty:0, days:[] };
+      m.qty += p.qty; p.days.forEach(d => { if (m.days.indexOf(d) < 0) m.days.push(d); });
+      m.days.sort();
+    });
+    return M;
+  }
   window.STCOQC = {
-    load, onReady, agg,
+    load, onReady, agg, dayPart, pkey,
     get state(){ return state; },
     get error(){ return err; },
     setUrl(u){ try{ localStorage.setItem('stc_oqc_csv', (u||'').trim()); }catch(e){} DATA=null; state='idle'; err=''; },
@@ -9768,6 +9910,8 @@ document.addEventListener('DOMContentLoaded', () => {
          oqcNo:'OQC 검사 결과(OK/NG/Reason)가 아직 입력되지 않았습니다 — 입력되면 불합격율이 자동 계산됩니다',
          oqcNg:'불합격 {n}EA / 검사 {t}EA',
          oqcTop:'출하 상위 3 품번',
+         oqcSg:'계획 {p} · 출하 {s} → 부족 {g}EA ({r}%)', oqcSb:'DO 계획 {n}품목 중 미달 {b}품목',
+         oqcNoShort:'DO 계획 대비 부족한 품번이 없습니다', oqcNoPlan:'DO 납품계획이 없어 출하 상위 3으로 표시합니다',
          oqcH:'FAC1 OQC 출하 현황', oqcHs:'Incoming >>> Fac.2 시트 › OQC Data Fac 1 (Delivery = FAC1 → FAC2 출하 수량)',
          oqcD:['일자','출하 수량(EA)','출하 품번','OK','NG','불합격율'], oqcP:['품번','품명','출하 수량(EA)','출하일자 (횟수)','OK','NG'],
          oqcUrl:'OQC CSV 주소 (웹에 게시한 CSV)', oqcSave:'저장', oqcNone:'이 기간에 FAC1 OQC 출하 기록이 없습니다', oqcSum:'합계',
@@ -9804,6 +9948,8 @@ document.addEventListener('DOMContentLoaded', () => {
          oqcNo:'OQC results (OK/NG/Reason) are not filled in yet — the reject rate appears automatically once they are',
          oqcNg:'{n}EA rejected of {t}EA inspected',
          oqcTop:'top 3 shipped parts',
+         oqcSg:'plan {p} · shipped {s} → short {g}EA ({r}%)', oqcSb:'{b} of {n} DO items short',
+         oqcNoShort:'No part is short of its DO plan', oqcNoPlan:'No DO plan — showing the top 3 shipped parts instead',
          oqcH:'FAC1 OQC shipments', oqcHs:'Incoming >>> Fac.2 sheet › OQC Data Fac 1 (Delivery = FAC1 → FAC2 shipped qty)',
          oqcD:['Date','Shipped (EA)','Parts','OK','NG','Reject rate'], oqcP:['Part no.','Description','Shipped (EA)','Ship dates (count)','OK','NG'],
          oqcUrl:'OQC CSV address (published CSV)', oqcSave:'Save', oqcNone:'No FAC1 OQC shipments in this period', oqcSum:'Total',
@@ -9840,6 +9986,8 @@ document.addEventListener('DOMContentLoaded', () => {
          oqcNo:'ยังไม่กรอกผลตรวจ OQC (OK/NG/Reason) — เมื่อกรอกแล้วระบบจะคำนวณอัตราไม่ผ่านให้อัตโนมัติ',
          oqcNg:'ไม่ผ่าน {n}EA จากตรวจ {t}EA',
          oqcTop:'3 ชิ้นงานที่ส่งมากสุด',
+         oqcSg:'แผน {p} · ส่ง {s} → ขาด {g}EA ({r}%)', oqcSb:'ขาดส่ง {b} จาก {n} รายการ DO',
+         oqcNoShort:'ไม่มีชิ้นงานที่ต่ำกว่าแผน DO', oqcNoPlan:'ไม่มีแผน DO — แสดง 3 ชิ้นงานที่ส่งมากสุดแทน',
          oqcH:'การส่งมอบ FAC1 OQC', oqcHs:'ชีต Incoming >>> Fac.2 › OQC Data Fac 1 (Delivery = จำนวนที่ FAC1 ส่งให้ FAC2)',
          oqcD:['วันที่','ส่งมอบ (EA)','ชิ้นงาน','OK','NG','อัตราไม่ผ่าน'], oqcP:['Part No.','ชื่อชิ้นงาน','ส่งมอบ (EA)','วันที่ส่ง (ครั้ง)','OK','NG'],
          oqcUrl:'ที่อยู่ CSV ของ OQC (CSV ที่เผยแพร่)', oqcSave:'บันทึก', oqcNone:'ช่วงนี้ไม่มีการส่งมอบ FAC1 OQC', oqcSum:'รวม',
@@ -9943,10 +10091,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const byCode = {}, byName = {}, used = {};
     (OQ ? OQ.partList : []).forEach(p => { byCode[pkey(p.code)] = p; byName[pkey(p.part)] = p; });
     let planQ = 0, shipQ = 0, matched = 0, done = 0, short = 0;
+    /* 한 품번이 여러 고객사 계획에 걸리면 출하량을 계획 날짜 순으로 나눠 준다 (같은 출하를 두 번 세지 않게) */
+    const grp = {};
     items.forEach(it => {
       const m = byCode[it.key] || byName[it.nkey] || null;
-      it.ship = m ? m.qty : 0; it.shipDays = m ? m.days.slice().sort() : []; it.matched = !!m;
-      if (m){ matched++; used[m.code || m.part] = 1; }
+      it.matched = !!m; it.ship = 0; it.shipDays = m ? m.days.slice().sort() : [];
+      if (m){ matched++; const id = m.code || m.part; used[id] = 1; (grp[id] = grp[id] || { m:m, list:[] }).list.push(it); }
+    });
+    Object.keys(grp).forEach(id => {
+      const g = grp[id]; let left = g.m.qty;
+      const L = g.list.slice().sort((a,b) => (a.days[0]||'') < (b.days[0]||'') ? -1 : (a.days[0]||'') > (b.days[0]||'') ? 1 : b.plan - a.plan);
+      L.forEach(it => { const q = Math.max(0, Math.min(left, it.plan)); it.ship = q; left -= q; });
+      if (left > 0) L[0].ship += left;            /* 계획보다 많이 나간 분은 첫 계획에 얹는다 */
+    });
+    items.forEach(it => {
       it.rate = it.plan > 0 ? it.ship/it.plan*100 : null;
       it.gap = it.ship - it.plan;
       planQ += it.plan; shipQ += it.ship;
@@ -10025,12 +10183,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (OQ){
       const tops = OQ.partList.slice(0,3), ngs = OQ.partList.filter(p=>p.ng>0).sort((a,b)=>b.ng-a.ng).slice(0,3);
       const wOq = arr => [0,1,2].map(j => arr[j] ? `<div style="white-space:normal;font-size:11px;line-height:1.3">${esc(arr[j].code||arr[j].part)}<br>${f0(arr[j].qty)} EA</div>` : '–');
-      const dQty = L3(tops.map(p => `${p.code||p.part} ${f0(p.qty)}EA (${p.part})`), T('na'),
-                      T('oqcQty', { q:f0(OQ.qty), d:Object.keys(OQ.days).length, n:OQ.partList.length, i:f0(I.qty), g:f0(OQ.qty - I.qty) }));
+      /* 출하 수량의 Worst = DO(마케팅 납품계획) 대비 부족 수량 상위 3 품번 */
+      const hasDO = !!(DO && !DO.err && DO.items && DO.items.length);
+      const sh = hasDO ? DO.items.filter(x => x.plan > x.ship).slice()
+                           .sort((a,b) => (b.plan-b.ship) - (a.plan-a.ship) || b.plan - a.plan).slice(0,3) : [];
+      const wSh = [0,1,2].map(j => sh[j]
+        ? `<div style="white-space:normal;font-size:11px;line-height:1.3">${esc(sh[j].pc||sh[j].pn)}<br>−${f0(sh[j].plan - sh[j].ship)} EA`
+          + `<span style="color:#64748b;font-weight:600"> (${sh[j].rate!=null?f1(sh[j].rate,0):'0'}%)</span></div>`
+        : '–');
+      const oqTail = T('oqcQty', { q:f0(OQ.qty), d:Object.keys(OQ.days).length, n:OQ.partList.length, i:f0(I.qty), g:f0(OQ.qty - I.qty) });
+      const dQty = !hasDO
+        ? L3(tops.map(p => `${p.code||p.part} ${f0(p.qty)}EA (${p.part})`), T('na'), T('oqcNoPlan') + ' · ' + oqTail)
+        : L3(sh.map(x => `${x.pc||x.pn} ` + T('oqcSg', { p:f0(x.plan), s:f0(x.ship), g:f0(x.plan-x.ship), r:x.rate!=null?f1(x.rate,0):'0' }) + ` · ${x.cu}`),
+             T('oqcNoShort'), T('oqcSb', { b:DO.short, n:DO.items.length }) + ' · ' + oqTail);
       const dNg = OQ.hasInsp
         ? L3(ngs.map(p => `${p.code||p.part} NG ${f0(p.ng)}EA / ${f0(p.ok+p.ng)}EA`), T('na'), T('oqcNg', { n:f0(OQ.ng), t:f0(OQ.ok+OQ.ng) }))
         : L3([], T('oqcNo'));
-      rows.push(['oqc', T('k_oq'),  OQp?OQp.qty:null, OQ.qty, v=>f0(v)+' EA', 0, '', wOq(tops), dQty]);
+      rows.push(['oqc', T('k_oq'),  OQp?OQp.qty:null, OQ.qty, v=>f0(v)+' EA', 0, '', hasDO ? wSh : wOq(tops), dQty]);
       rows.push(['oqc', T('k_onr'), (OQp&&OQp.ngRate!=null)?OQp.ngRate:null, OQ.ngRate, v=>f1(v,2)+' %', 2, '%p',
                  OQ.hasInsp ? wOq(ngs) : ['–','–','–'], dNg, T('noInsp')]);
     }
