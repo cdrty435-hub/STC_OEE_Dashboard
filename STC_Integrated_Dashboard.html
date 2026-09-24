@@ -104,9 +104,39 @@ main{flex:1 1 auto;position:relative;overflow:hidden;}
   border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
-#panel-overview,#panel-f2ov{overflow-y:auto;padding:18px 20px 30px;}
+#panel-overview{overflow-y:auto;padding:18px 20px 30px;}
+#panel-f2ov{overflow:hidden;}
+.f2-wrap{display:flex;height:100%;}
+.f2-side{flex:0 0 190px;background:var(--surface-1);border-right:1px solid var(--hairline);padding:14px 10px;overflow-y:auto;}
+.f2-side .f2-sec{font-size:11px;font-weight:700;color:var(--ink-muted);margin:14px 8px 6px;letter-spacing:.04em;}
+.f2-side .f2-sec:first-child{margin-top:2px;}
+.f2-side button{display:flex;align-items:center;gap:8px;width:100%;appearance:none;border:none;background:none;font-family:inherit;
+  font-size:13px;font-weight:700;color:var(--ink-1);padding:9px 10px;border-radius:8px;cursor:pointer;text-align:left;margin-bottom:3px;}
+.f2-side button:hover{background:#eef3fb;}
+.f2-side button.on{background:var(--brand-1);color:#fff;box-shadow:0 2px 6px rgba(30,60,114,.3);}
+.f2-side .ic{width:20px;text-align:center;}
+.f2-main{flex:1 1 auto;overflow-y:auto;padding:18px 20px 30px;}
+@media (max-width:760px){.f2-wrap{flex-direction:column;}.f2-side{flex:0 0 auto;display:flex;gap:4px;overflow-x:auto;padding:6px;border-right:none;border-bottom:1px solid var(--hairline);}
+  .f2-side .f2-sec{display:none;}.f2-side button{width:auto;white-space:nowrap;margin:0;}}
+.f2-rbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--surface-1);border:1px solid var(--hairline);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;font-weight:600;}
+.f2-rbar select{margin-left:6px;padding:5px 8px;border:1px solid #ccd;border-radius:5px;font-family:inherit;font-size:12.5px;}
+.f2-rbar .btn-f2{margin-left:auto;}
+.f2-cmp{color:var(--ink-2);font-weight:500;}
+.f2-rhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:3px solid var(--brand-1);padding-bottom:8px;margin-bottom:6px;}
+.f2-rhead h2{font-size:19px;color:var(--brand-1);}
+.f2-rhead div{text-align:right;font-size:12px;color:var(--ink-2);line-height:1.5;}
+table.f2-kpi td.wk{color:#b91c1c;font-weight:700;font-size:12px;}
+textarea.f2-note{width:100%;min-height:70px;border:1px dashed #c9d2dc;border-radius:6px;padding:8px;font-family:inherit;font-size:12.5px;background:#fffef5;resize:vertical;}
+@media print{
+  header,nav.groups,nav.tabs,.f2-side,.f2-noprint{display:none !important;}
+  html,body{height:auto;overflow:visible;background:#fff;}
+  main,.panel,.f2-wrap,.f2-main{position:static !important;overflow:visible !important;height:auto !important;display:block;}
+  .panel[data-active="false"]{display:none !important;}
+  .card{box-shadow:none;break-inside:avoid;}
+  textarea.f2-note{border:none;background:none;}
+}
 .f2-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px;}
-@media (max-width:980px){.f2-grid{grid-template-columns:1fr;}}
+@media (max-width:1500px){.f2-grid{grid-template-columns:1fr;}}
 .f2-bar{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:4px 0;}
 .f2-bl{flex:0 0 42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .f2-bt{flex:1 1 auto;width:auto !important;}
@@ -251,6 +281,11 @@ ko:{
  'ctl.refresh':'새로고침','ctl.sync':'각 탭에 주차 적용',
  'tab.overview':'종합','tab.weekly':'주간 OEE','tab.quality':'품질 6σ','tab.mttr':'MTTR / MTBF',
  'tab.mold':'금형 수리이력','tab.loss':'설비/Loss 분석','tab.period':'기간별 종합','tab.conv':'FAC1 변환기','tab.conv2':'FAC2 변환기',
+ 'f2.sec.dash':'현황','f2.sec.rep':'보고서','f2.v.dash':'FAC2 현황','f2.v.daily':'일일 품질보고','f2.v.week':'주간 품질보고','f2.v.month':'월간 품질보고',
+ 'f2.cmp':'비교','f2.byDay':'일자별','f2.byWeek':'주차별','f2.date':'일자',
+ 'f2.r.period':'보고 기간','f2.r.vs':'비교','f2.r.print':'인쇄 / PDF','f2.r.made':'작성일 {d} · 원천 F2_MCT_일별 · F2_불량상세',
+ 'f2.r.title.daily':'FAC2 MCT 일일 품질보고','f2.r.title.week':'FAC2 MCT 주간 품질보고','f2.r.title.month':'FAC2 MCT 월간 품질보고',
+ 'f2.r.s1':'지표 요약','f2.r.kpi':'지표','f2.r.prev':'비교기간','f2.r.cur':'금기간','f2.r.delta':'증감','f2.r.note':'특이사항 · 조치','f2.r.noteph':'원인 · 조치 · 담당 · 완료일 (이 브라우저에 기간별로 저장)',
  'grp.all':'종합 (FAC1·FAC2)','grp.fac1':'FAC1 다이캐스팅','grp.fac2':'FAC2 MCT',
  'tab.moldsig':'금형 6σ','tab.lossdash':'로스 대시보드','tab.monthly':'월별 가동률','tab.kpi':'설비 KPI','tab.f2ov':'FAC2 현황',
  'f2.loading':'FAC2 데이터를 불러오는 중…','f2.none':'구글시트에서 FAC2 탭(F2_MCT_일별)을 찾지 못했습니다.',
@@ -298,6 +333,11 @@ en:{
  'ctl.refresh':'Refresh','ctl.sync':'Apply week to tabs',
  'tab.overview':'Overview','tab.weekly':'Weekly OEE','tab.quality':'Quality 6σ','tab.mttr':'MTTR / MTBF',
  'tab.mold':'Mold repairs','tab.loss':'Equipment / Loss','tab.period':'Period summary','tab.conv':'FAC1 converter','tab.conv2':'FAC2 converter',
+ 'f2.sec.dash':'Status','f2.sec.rep':'Reports','f2.v.dash':'FAC2 status','f2.v.daily':'Daily quality report','f2.v.week':'Weekly quality report','f2.v.month':'Monthly quality report',
+ 'f2.cmp':'vs','f2.byDay':'By day','f2.byWeek':'By week','f2.date':'Date',
+ 'f2.r.period':'Period','f2.r.vs':'vs','f2.r.print':'Print / PDF','f2.r.made':'Made {d} · source F2_MCT_일별 · F2_불량상세',
+ 'f2.r.title.daily':'FAC2 MCT Daily Quality Report','f2.r.title.week':'FAC2 MCT Weekly Quality Report','f2.r.title.month':'FAC2 MCT Monthly Quality Report',
+ 'f2.r.s1':'KPI summary','f2.r.kpi':'KPI','f2.r.prev':'Previous','f2.r.cur':'Current','f2.r.delta':'Change','f2.r.note':'Remarks · actions','f2.r.noteph':'Cause · action · owner · due (saved in this browser per period)',
  'grp.all':'Overview (FAC1·FAC2)','grp.fac1':'FAC1 Die-casting','grp.fac2':'FAC2 MCT',
  'tab.moldsig':'Mold 6σ','tab.lossdash':'Loss dashboard','tab.monthly':'Monthly availability','tab.kpi':'Equipment KPI','tab.f2ov':'FAC2 status',
  'f2.loading':'Loading FAC2 data…','f2.none':'FAC2 tab (F2_MCT_일별) not found in the Google Sheet.',
@@ -345,6 +385,9 @@ th:{
  'ctl.refresh':'รีเฟรช','ctl.sync':'ใช้สัปดาห์กับทุกแท็บ',
  'tab.overview':'ภาพรวม','tab.weekly':'OEE รายสัปดาห์','tab.quality':'คุณภาพ 6σ','tab.mttr':'MTTR / MTBF',
  'tab.mold':'ประวัติซ่อมแม่พิมพ์','tab.loss':'เครื่องจักร / ความสูญเสีย','tab.period':'สรุปตามช่วงเวลา','tab.conv':'ตัวแปลงข้อมูล FAC1','tab.conv2':'ตัวแปลงข้อมูล FAC2',
+ 'f2.sec.dash':'สถานะ','f2.sec.rep':'รายงาน','f2.v.dash':'สถานะ FAC2','f2.v.daily':'รายงานคุณภาพรายวัน','f2.v.week':'รายงานคุณภาพรายสัปดาห์','f2.v.month':'รายงานคุณภาพรายเดือน',
+ 'f2.r.title.daily':'รายงานคุณภาพรายวัน FAC2 MCT','f2.r.title.week':'รายงานคุณภาพรายสัปดาห์ FAC2 MCT','f2.r.title.month':'รายงานคุณภาพรายเดือน FAC2 MCT',
+ 'f2.r.print':'พิมพ์ / PDF','f2.r.note':'หมายเหตุ · การแก้ไข',
  'grp.all':'ภาพรวม (FAC1·FAC2)','grp.fac1':'FAC1 ไดคาสติ้ง','grp.fac2':'FAC2 MCT',
  'tab.moldsig':'แม่พิมพ์ 6σ','tab.lossdash':'แดชบอร์ดความสูญเสีย','tab.monthly':'อัตราเดินเครื่องรายเดือน','tab.kpi':'KPI เครื่องจักร','tab.f2ov':'สถานะ FAC2',
  'f2.loading':'กำลังโหลดข้อมูล FAC2…','f2.none':'ไม่พบแท็บ FAC2 (F2_MCT_일별) ใน Google Sheet',
@@ -723,8 +766,9 @@ async function loadF2(){
 }
 const wkNum = w => parseInt(String(w||'').replace(/\D/g,''),10) || 0;
 function f2Weeks(){ return [...new Set(F2.day.map(r=>r['주차']).filter(Boolean))].sort((a,b)=>wkNum(a)-wkNum(b)); }
-function f2Agg(week){
-  const R = F2.day.filter(r=>r['주차']===week && f2n(r['생산수량'])>0);
+function f2Agg(week){ return f2AggBy(r=>r['주차']===week); }
+function f2AggBy(pred){
+  const R = F2.day.filter(r=>pred(r) && f2n(r['생산수량'])>0);
   const s = { rows:R.length, prod:0, good:0, ng:0, dc:0, mc:0, sup:0, cus:0, mat:0, fg:0, ysum:0, yn:0, days:new Set(), byMc:{} };
   R.forEach(r=>{
     const v = k => f2n(r[k]);
@@ -742,9 +786,9 @@ function f2Agg(week){
   s.dates = [...s.days].sort();
   return s;
 }
-function f2Top(week, n){
+function f2Top(pred, n){
   const m = {};
-  F2.det.filter(r=>r['주차']===week && r['구분']==='MCT').forEach(r=>{
+  F2.det.filter(r=>r['구분']==='MCT' && pred(r)).forEach(r=>{
     const k = r['불량유형']+'|'+r['계통']; m[k] = (m[k]||0) + f2n(r['수량']); });
   return Object.entries(m).map(([k,v])=>{ const [t,g]=k.split('|'); return {t,g,v}; }).sort((a,b)=>b.v-a.v).slice(0,n);
 }
@@ -791,66 +835,174 @@ function f2OverviewBlock(week){
   <div style="text-align:right;margin-top:6px"><a href="#" onclick="selectTab('f2ov');return false;" style="font-size:12px;color:var(--brand-2);font-weight:700">${T('f2.more')} →</a></div>`;
 }
 
-/* FAC2 현황 탭 */
+/* FAC2 현황 탭 — 왼쪽 메뉴: 현황 대시보드 / 일일·주간·월간 품질보고 */
+const F2_VIEWS = [
+  { id:'dash',  icon:'📊', sec:'f2.sec.dash' },
+  { id:'daily', icon:'📅', sec:'f2.sec.rep' },
+  { id:'week',  icon:'📄', sec:'f2.sec.rep' },
+  { id:'month', icon:'🗂️', sec:'f2.sec.rep' }
+];
+let F2_VIEW = (()=>{ try{ return localStorage.getItem('stc_f2_view') || 'dash'; }catch(e){ return 'dash'; } })();
+const F2_SEL = { daily:'', week:'', month:'' };
+function f2SetView(v){ F2_VIEW = v; try{ localStorage.setItem('stc_f2_view', v); }catch(e){} renderF2(); }
+function f2SetSel(k, v){ F2_SEL[k] = v; renderF2(); }
+
 function renderF2(){
   const host = document.getElementById('panel-f2ov'); if(!host) return;
   const week = document.getElementById('weekSel').value;
+  let secPrev = '';
+  const side = `<aside class="f2-side">` + F2_VIEWS.map(v=>{
+      const h = v.sec!==secPrev ? `<div class="f2-sec">${T(v.sec)}</div>` : ''; secPrev = v.sec;
+      return h + `<button class="${v.id===F2_VIEW?'on':''}" onclick="f2SetView('${v.id}')"><span class="ic">${v.icon}</span>${T('f2.v.'+v.id)}</button>`;
+    }).join('') + `</aside>`;
   const st = f2Status();
-  if(st){ host.innerHTML = `<div class="ov"><div class="sec-title">${T('grp.fac2')} · ${week||''}</div>${st}</div>`; return; }
-  const weeks = f2Weeks(); const i = weeks.indexOf(week); const pw = i>0 ? weeks[i-1] : (i<0 ? null : null);
+  let body;
+  if(st) body = `<div class="sec-title">${T('grp.fac2')} · ${week||''}</div>${st}`;
+  else if(F2_VIEW==='dash') body = f2Dash(week);
+  else body = f2Report(F2_VIEW, week);
+  host.innerHTML = `<div class="f2-wrap">${side}<div class="f2-main"><div class="ov">${body}</div></div></div>`;
+  host.querySelectorAll('textarea[data-f2note]').forEach(el=>{
+    const grow = ()=>{ el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; }; grow();
+    el.addEventListener('input', ()=>{ grow(); try{ localStorage.setItem('stc_f2_note_'+el.dataset.f2note, el.value); }catch(e){} });
+  });
+}
+
+/* ---- 공통 조각 ---- */
+const f2rc = r => r==null?null:(r<=3.5?'var(--good)':r<=6?'var(--warning)':'var(--critical)');
+const f2tile = (l,v,u,sub,c) => `<div class="card tile"><div class="tlbl">${l}</div><div class="tval"${c?` style="color:${c}"`:''}>${v}${u?`<span class="u">${u}</span>`:''}</div>${sub?`<div class="tsub">${sub}</div>`:''}</div>`;
+function f2Mcs(s){
+  return Object.values(s.byMc).map(o=>({...o, rate:o.prod?o.ng/o.prod*100:0, rMc:o.prod?o.mct/o.prod*100:0, rDc:o.prod?o.dc/o.prod*100:0, yld:o.yn?o.ysum/o.yn*100:null}))
+    .sort((a,b)=>b.rate-a.rate);
+}
+function f2McTable(s){
+  const mcs = f2Mcs(s), maxR = Math.max(1, ...mcs.map(o=>o.rate));
+  return `<div class="card"><div class="tblwrap"><table class="eq">
+    <thead><tr><th>${T('t.eq')}</th><th>Part no.</th><th>${T('f2.dayN')}</th><th>${T('f2.prod')}</th><th>${T('f2.rate')}</th><th>${T('f2.rMcS')}</th><th>${T('f2.rDcS')}</th><th>Mat'l</th><th>${T('f2.yldS')}</th></tr></thead>
+    <tbody>${mcs.map(o=>`<tr>
+      <td class="name">${esc2(o.mc)}</td><td style="text-align:left;font-size:11.5px">${esc2([...o.parts].join(', '))}</td><td>${o.days}</td><td>${fmt(o.prod)}</td>
+      <td><div class="barcell"><span style="color:${f2rc(o.rate)};font-weight:700">${o.rate.toFixed(2)}%</span><span class="bartrack"><span class="barfill" style="width:${o.rate/maxR*100}%;background:${f2rc(o.rate)}"></span></span></div></td>
+      <td>${o.rMc.toFixed(2)}%</td><td>${o.rDc.toFixed(2)}%</td><td>${fmt(o.mat)}</td><td>${o.yld==null?'–':o.yld.toFixed(1)+'%'}</td></tr>`).join('')}</tbody>
+  </table></div></div>`;
+}
+function f2TopCard(pred, ng){
+  const top = f2Top(pred, 8), topMax = Math.max(1, ...top.map(x=>x.v));
+  return `<div class="card">${top.length ? top.map(x=>`<div class="f2-bar">
+      <span class="f2-bl"><i class="pill" style="background:${F2_GCOLOR[x.g]||'#999'}"></i>${esc2(x.t)}</span>
+      <span class="bartrack f2-bt"><span class="barfill" style="width:${x.v/topMax*100}%;background:${F2_GCOLOR[x.g]||'#999'}"></span></span>
+      <span class="f2-bv">${fmt(x.v)} <small>(${(x.v/(ng||1)*100).toFixed(0)}%)</small></span></div>`).join('')
+    + `<div class="legend">${['가공불량','다캐불량','협력사','고객'].map(g=>`<span><i class="pill" style="background:${F2_GCOLOR[g]}"></i>${T('f2.g.'+g)}</span>`).join('')}</div>`
+    : `<div class="empty">${F2.det.length?T('st.noData'):T('f2.noDet')}</div>`}</div>`;
+}
+/* 기간별 표 (일자별·주차별) */
+function f2Breakdown(list, label, curKey){
+  const mx = Math.max(1, ...list.map(x=>x.s.rate||0));
+  return `<div class="card"><div class="tblwrap"><table class="eq">
+    <thead><tr><th>${label}</th><th>${T('f2.prod')}</th><th>${T('f2.good')}</th><th>${T('f2.rate')}</th><th>${T('f2.rMcS')}</th><th>${T('f2.rDcS')}</th><th>Mat'l NG</th><th>${T('f2.yldS')}</th></tr></thead>
+    <tbody>${list.map(x=>`<tr${x.k===curKey?' style="background:#eef4fd"':''}>
+      <td class="name">${esc2(x.k)}</td><td>${fmt(x.s.prod)}</td><td>${fmt(x.s.good)}</td>
+      <td><div class="barcell"><span style="color:${f2rc(x.s.rate)};font-weight:700">${x.s.rate==null?'–':x.s.rate.toFixed(2)+'%'}</span><span class="bartrack"><span class="barfill" style="width:${(x.s.rate||0)/mx*100}%;background:${f2rc(x.s.rate)}"></span></span></div></td>
+      <td>${x.s.rMc==null?'–':x.s.rMc.toFixed(2)+'%'}</td><td>${x.s.rDc==null?'–':x.s.rDc.toFixed(2)+'%'}</td><td>${fmt(x.s.mat)}</td><td>${x.s.yld==null?'–':x.s.yld.toFixed(1)+'%'}</td></tr>`).join('')}</tbody>
+  </table></div></div>`;
+}
+
+/* ---- 현황 대시보드 ---- */
+function f2Dash(week){
+  const weeks = f2Weeks(); const i = weeks.indexOf(week); const pw = i>0 ? weeks[i-1] : null;
   const s = f2Agg(week), p = pw ? f2Agg(pw) : null;
-  if(!s.rows){ host.innerHTML = `<div class="ov"><div class="sec-title">${T('grp.fac2')} · ${week}</div><div class="card empty">${T('f2.noWeek',{w:week})}<br>${T('f2.have',{a:weeks[0]||'-',b:weeks[weeks.length-1]||'-'})}</div></div>`; return; }
-  const tile = (l,v,u,sub,c) => `<div class="card tile"><div class="tlbl">${l}</div><div class="tval"${c?` style="color:${c}"`:''}>${v}${u?`<span class="u">${u}</span>`:''}</div>${sub?`<div class="tsub">${sub}</div>`:''}</div>`;
-  const rc = r => r==null?null:(r<=3.5?'var(--good)':r<=6?'var(--warning)':'var(--critical)');
-  const mcs = Object.values(s.byMc).map(o=>({...o, rate:o.prod?o.ng/o.prod*100:0, rMc:o.prod?o.mct/o.prod*100:0, rDc:o.prod?o.dc/o.prod*100:0, yld:o.yn?o.ysum/o.yn*100:null}))
-                .sort((a,b)=>b.rate-a.rate);
-  const maxR = Math.max(1, ...mcs.map(o=>o.rate));
-  const top = f2Top(week, 8), topMax = Math.max(1, ...top.map(x=>x.v)), topSum = top.reduce((a,x)=>a+x.v,0);
-  const trend = weeks.slice(Math.max(0, (i<0?weeks.length:i+1)-8), i<0?weeks.length:i+1).map(w=>({w, s:f2Agg(w)}));
-  const trMax = Math.max(1, ...trend.map(x=>x.s.rate||0));
-  host.innerHTML = `<div class="ov">
+  if(!s.rows) return `<div class="sec-title">${T('grp.fac2')} · ${week}</div><div class="card empty">${T('f2.noWeek',{w:week})}<br>${T('f2.have',{a:weeks[0]||'-',b:weeks[weeks.length-1]||'-'})}</div>`;
+  const trend = weeks.slice(Math.max(0, (i<0?weeks.length:i+1)-8), i<0?weeks.length:i+1).map(w=>({k:w, s:f2Agg(w)}));
+  return `
     <div class="sec-title">${T('grp.fac2')} · ${week} (${T('f2.orig')} ${esc2([...new Set(F2.day.filter(r=>r['주차']===week).map(r=>r['원본주차']))].join(', '))}) · ${s.dates[0]} ~ ${s.dates[s.dates.length-1]} · ${T('u.days',{n:s.dates.length})}</div>
-    <div class="tiles">
-      ${tile(T('f2.prod'), fmt(s.prod), '', `${T('f2.good')} ${fmt(s.good)}` + (p&&p.prod?` · ${T('f2.prev')} ${fmt(p.prod)}`:''))}
-      ${tile(T('f2.rate'), s.rate==null?'–':s.rate.toFixed(2), '%', T('f2.ngOf',{n:fmt(s.ng)}) + dPct(s.rate, p&&p.rate, true), rc(s.rate))}
-      ${tile(T('f2.rMc'), s.rMc==null?'–':s.rMc.toFixed(2), '%', T('f2.rMcSub',{n:fmt(s.mc)}) + dPct(s.rMc, p&&p.rMc, true))}
-      ${tile(T('f2.rDc'), s.rDc==null?'–':s.rDc.toFixed(2), '%', T('f2.rDcSub',{n:fmt(s.dc)}) + dPct(s.rDc, p&&p.rDc, true))}
-      ${tile(T('f2.mat'), fmt(s.mat), '', T('f2.matSub') + (s.fg?` · ${T('f2.fg')} ${fmt(s.fg)}`:''))}
-      ${tile(T('f2.yld'), s.yld==null?'–':s.yld.toFixed(1), '%', T('f2.yldSub') + dPct(s.yld, p&&p.yld, false))}
-    </div>
-
+    ${f2Tiles(s, p)}
     <div class="f2-grid">
-      <div>
-        <div class="sec-title">${T('f2.byMc')}</div>
-        <div class="card"><div class="tblwrap"><table class="eq">
-          <thead><tr><th>${T('t.eq')}</th><th>Part no.</th><th>${T('f2.dayN')}</th><th>${T('f2.prod')}</th><th>${T('f2.rate')}</th><th>${T('f2.rMcS')}</th><th>${T('f2.rDcS')}</th><th>Mat'l</th><th>${T('f2.yldS')}</th></tr></thead>
-          <tbody>${mcs.map(o=>`<tr>
-            <td class="name">${esc2(o.mc)}</td><td style="text-align:left;font-size:11.5px">${esc2([...o.parts].join(', '))}</td><td>${o.days}</td><td>${fmt(o.prod)}</td>
-            <td><div class="barcell"><span style="color:${rc(o.rate)};font-weight:700">${o.rate.toFixed(2)}%</span><span class="bartrack"><span class="barfill" style="width:${o.rate/maxR*100}%;background:${rc(o.rate)}"></span></span></div></td>
-            <td>${o.rMc.toFixed(2)}%</td><td>${o.rDc.toFixed(2)}%</td><td>${fmt(o.mat)}</td><td>${o.yld==null?'–':o.yld.toFixed(1)+'%'}</td></tr>`).join('')}</tbody>
-        </table></div></div>
-      </div>
-      <div>
-        <div class="sec-title">${T('f2.top')}</div>
-        <div class="card">${top.length ? top.map(x=>`<div class="f2-bar">
-            <span class="f2-bl"><i class="pill" style="background:${F2_GCOLOR[x.g]||'#999'}"></i>${esc2(x.t)}</span>
-            <span class="bartrack f2-bt"><span class="barfill" style="width:${x.v/topMax*100}%;background:${F2_GCOLOR[x.g]||'#999'}"></span></span>
-            <span class="f2-bv">${fmt(x.v)} <small>(${(x.v/(s.ng||1)*100).toFixed(0)}%)</small></span></div>`).join('')
-          + `<div class="legend">${['가공불량','다캐불량','협력사','고객'].map(g=>`<span><i class="pill" style="background:${F2_GCOLOR[g]}"></i>${T('f2.g.'+g)}</span>`).join('')}</div>`
-          : `<div class="empty">${F2.det.length?T('st.noData'):T('f2.noDet')}</div>`}</div>
-      </div>
+      <div><div class="sec-title">${T('f2.byMc')}</div>${f2McTable(s)}</div>
+      <div><div class="sec-title">${T('f2.top')}</div>${f2TopCard(r=>r['주차']===week, s.ng)}</div>
     </div>
-
     <div class="sec-title">${T('f2.trend')}</div>
-    <div class="card"><div class="tblwrap"><table class="eq">
-      <thead><tr><th>${T('ctl.week')}</th><th>${T('f2.prod')}</th><th>${T('f2.rate')}</th><th>${T('f2.rMcS')}</th><th>${T('f2.rDcS')}</th><th>Mat'l NG</th><th>${T('f2.yldS')}</th></tr></thead>
-      <tbody>${trend.map(x=>`<tr${x.w===week?' style="background:#eef4fd"':''}>
-        <td class="name">${x.w}</td><td>${fmt(x.s.prod)}</td>
-        <td><div class="barcell"><span style="color:${rc(x.s.rate)};font-weight:700">${x.s.rate==null?'–':x.s.rate.toFixed(2)+'%'}</span><span class="bartrack"><span class="barfill" style="width:${(x.s.rate||0)/trMax*100}%;background:${rc(x.s.rate)}"></span></span></div></td>
-        <td>${x.s.rMc==null?'–':x.s.rMc.toFixed(2)+'%'}</td><td>${x.s.rDc==null?'–':x.s.rDc.toFixed(2)+'%'}</td><td>${fmt(x.s.mat)}</td><td>${x.s.yld==null?'–':x.s.yld.toFixed(1)+'%'}</td></tr>`).join('')}</tbody>
+    ${f2Breakdown(trend, T('ctl.week'), week)}
+    <div class="foot">${T('f2.f1')}<br>${T('f2.f2')}<br>${T('f2.f3')}</div>`;
+}
+function f2Tiles(s, p){
+  return `<div class="tiles">
+      ${f2tile(T('f2.prod'), fmt(s.prod), '', `${T('f2.good')} ${fmt(s.good)}` + (p&&p.prod?` · ${T('f2.cmp')} ${fmt(p.prod)}`:''))}
+      ${f2tile(T('f2.rate'), s.rate==null?'–':s.rate.toFixed(2), '%', T('f2.ngOf',{n:fmt(s.ng)}) + dPct(s.rate, p&&p.rate, true), f2rc(s.rate))}
+      ${f2tile(T('f2.rMc'), s.rMc==null?'–':s.rMc.toFixed(2), '%', T('f2.rMcSub',{n:fmt(s.mc)}) + dPct(s.rMc, p&&p.rMc, true))}
+      ${f2tile(T('f2.rDc'), s.rDc==null?'–':s.rDc.toFixed(2), '%', T('f2.rDcSub',{n:fmt(s.dc)}) + dPct(s.rDc, p&&p.rDc, true))}
+      ${f2tile(T('f2.mat'), fmt(s.mat), '', T('f2.matSub') + (s.fg?` · ${T('f2.fg')} ${fmt(s.fg)}`:''))}
+      ${f2tile(T('f2.yld'), s.yld==null?'–':s.yld.toFixed(1), '%', T('f2.yldSub') + dPct(s.yld, p&&p.yld, false))}
+    </div>`;
+}
+
+/* ---- 일일 / 주간 / 월간 품질보고 ---- */
+function f2Report(kind, topWeek){
+  const dates = [...new Set(F2.day.map(r=>r['일자']).filter(Boolean))].sort();
+  const weeks = f2Weeks();
+  const months = [...new Set(dates.map(d=>d.slice(0,7)))].sort();
+  let opts, cur, key, pred, prevKey, prevPred, label, brk = '', brkTitle = '';
+  if(kind==='daily'){
+    cur = F2_SEL.daily && dates.includes(F2_SEL.daily) ? F2_SEL.daily : dates[dates.length-1];
+    opts = dates.slice().reverse(); key = cur;
+    pred = r=>r['일자']===cur; const i = dates.indexOf(cur); prevKey = i>0 ? dates[i-1] : null; prevPred = r=>r['일자']===prevKey;
+    label = cur;
+  } else if(kind==='week'){
+    cur = F2_SEL.week && weeks.includes(F2_SEL.week) ? F2_SEL.week : (weeks.includes(topWeek) ? topWeek : weeks[weeks.length-1]);
+    opts = weeks.slice().reverse(); key = cur;
+    pred = r=>r['주차']===cur; const i = weeks.indexOf(cur); prevKey = i>0 ? weeks[i-1] : null; prevPred = r=>r['주차']===prevKey;
+    const ds = dates.filter(d=>F2.day.some(r=>r['일자']===d && r['주차']===cur));
+    label = `${cur} · ${ds[0]||''} ~ ${ds[ds.length-1]||''}`;
+    brkTitle = T('f2.byDay'); brk = f2Breakdown(ds.map(d=>({k:d, s:f2AggBy(r=>r['일자']===d)})), T('f2.date'), null);
+  } else {
+    cur = F2_SEL.month && months.includes(F2_SEL.month) ? F2_SEL.month : months[months.length-1];
+    opts = months.slice().reverse(); key = cur;
+    pred = r=>String(r['일자']).slice(0,7)===cur; const i = months.indexOf(cur); prevKey = i>0 ? months[i-1] : null; prevPred = r=>String(r['일자']).slice(0,7)===prevKey;
+    label = cur;
+    const ws = weeks.filter(w=>F2.day.some(r=>r['주차']===w && String(r['일자']).slice(0,7)===cur));
+    brkTitle = T('f2.byWeek'); brk = f2Breakdown(ws.map(w=>({k:w, s:f2AggBy(r=>r['주차']===w && String(r['일자']).slice(0,7)===cur)})), T('ctl.week'), null);
+  }
+  const selKey = kind==='daily'?'daily':kind==='week'?'week':'month';
+  const s = f2AggBy(pred), p = prevKey ? f2AggBy(prevPred) : null;
+  const noteKey = kind+'_'+key;
+  let note = ''; try{ note = localStorage.getItem('stc_f2_note_'+noteKey) || ''; }catch(e){}
+  const bar = `<div class="f2-rbar f2-noprint">
+      <label>${T('f2.r.period')} <select onchange="f2SetSel('${selKey}', this.value)">${opts.map(o=>`<option${o===cur?' selected':''}>${o}</option>`).join('')}</select></label>
+      <span class="f2-cmp">${T('f2.r.vs')} <b>${prevKey||'–'}</b></span>
+      <button class="btn-f2" onclick="window.print()">${T('f2.r.print')}</button></div>`;
+  if(!s.rows) return bar + `<div class="card empty">${T('st.noData')}</div>`;
+  const mcs = f2Mcs(s), pm = p ? Object.fromEntries(f2Mcs(p).map(o=>[o.mc,o])) : {};
+  const worst = (arr, f, lab) => arr.slice(0,3).map(o=>`${esc2(o.mc)} ${lab(o)}`);
+  const W = {
+    rate: worst(mcs.filter(o=>o.ng>0), null, o=>o.rate.toFixed(2)+'%'),
+    rMc:  worst(mcs.filter(o=>o.mct>0).sort((a,b)=>b.rMc-a.rMc), null, o=>o.rMc.toFixed(2)+'%'),
+    rDc:  worst(mcs.filter(o=>o.dc>0).sort((a,b)=>b.rDc-a.rDc), null, o=>o.rDc.toFixed(2)+'%'),
+    mat:  worst(mcs.filter(o=>o.mat>0).sort((a,b)=>b.mat-a.mat), null, o=>fmt(o.mat)),
+    yld:  worst(mcs.filter(o=>o.yld!=null).sort((a,b)=>a.yld-b.yld), null, o=>o.yld.toFixed(1)+'%')
+  };
+  const dl = (c,pv,goodDown,dp,u) => { if(c==null||pv==null) return '–'; const d=c-pv; if(Math.abs(d)<Math.pow(10,-dp)/2) return '±0';
+    const good = goodDown ? d<0 : d>0; return `<b style="color:${good?'var(--good)':'var(--critical)'}">${d>0?'+':'−'}${fmt(Math.abs(d),dp)}${u}</b>`; };
+  const rows = [
+    [T('f2.prod'), p&&fmt(p.prod), fmt(s.prod), dl(s.prod,p&&p.prod,false,0,''), []],
+    [T('f2.rate'), p&&p.rate!=null&&p.rate.toFixed(2)+'%', s.rate==null?'–':s.rate.toFixed(2)+'%', dl(s.rate,p&&p.rate,true,2,'%p'), W.rate],
+    [T('f2.rMc'),  p&&p.rMc!=null&&p.rMc.toFixed(2)+'%', s.rMc==null?'–':s.rMc.toFixed(2)+'%', dl(s.rMc,p&&p.rMc,true,2,'%p'), W.rMc],
+    [T('f2.rDc'),  p&&p.rDc!=null&&p.rDc.toFixed(2)+'%', s.rDc==null?'–':s.rDc.toFixed(2)+'%', dl(s.rDc,p&&p.rDc,true,2,'%p'), W.rDc],
+    [T('f2.mat'),  p&&fmt(p.mat), fmt(s.mat), dl(s.mat,p&&p.mat,true,0,''), W.mat],
+    [T('f2.yld'),  p&&p.yld!=null&&p.yld.toFixed(1)+'%', s.yld==null?'–':s.yld.toFixed(1)+'%', dl(s.yld,p&&p.yld,false,1,'%p'), W.yld]
+  ];
+  return bar + `
+    <div class="f2-rhead"><h2>${T('f2.r.title.'+kind)}</h2>
+      <div>${esc2(label)} · ${T('f2.r.vs')} ${esc2(prevKey||'–')}<br><small>${T('f2.r.made',{d:new Date().toISOString().slice(0,10)})}</small></div></div>
+    <div class="sec-title">1. ${T('f2.r.s1')}</div>
+    <div class="card"><div class="tblwrap"><table class="eq f2-kpi">
+      <thead><tr><th>${T('f2.r.kpi')}</th><th>${T('f2.r.prev')}</th><th>${T('f2.r.cur')}</th><th>${T('f2.r.delta')}</th><th>Worst 1</th><th>Worst 2</th><th>Worst 3</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr><td class="name">${r[0]}</td><td>${r[1]||'–'}</td><td><b>${r[2]}</b></td><td>${r[3]}</td>${[0,1,2].map(j=>`<td class="wk">${r[4][j]||'–'}</td>`).join('')}</tr>`).join('')}</tbody>
     </table></div></div>
-    <div class="foot">${T('f2.f1')}<br>${T('f2.f2')}<br>${T('f2.f3')}</div>
-  </div>`;
+    <div class="f2-grid">
+      <div><div class="sec-title">2. ${T('f2.byMc')}</div>${f2McTable(s)}</div>
+      <div><div class="sec-title">3. ${T('f2.top')}</div>${f2TopCard(pred, s.ng)}</div>
+    </div>
+    ${brk ? `<div class="sec-title">4. ${brkTitle}</div>${brk}` : ''}
+    <div class="sec-title">${brk?5:4}. ${T('f2.r.note')}</div>
+    <div class="card"><textarea class="f2-note" data-f2note="${esc2(noteKey)}" placeholder="${T('f2.r.noteph')}">${esc2(note)}</textarea></div>
+    <div class="foot">${T('f2.f2')}<br>${T('f2.f3')}</div>`;
 }
 
 /* =========================================================================
