@@ -344,8 +344,9 @@ ko:{
  'f2.mwk':'MCT 가공 지표 요약 (Worst 3)','f2.issues':'워스트 설비 문제점 · 조치','f2.procSum':'공정별 요약 (MCT · OQC)',
  'f2.k.prod':'총 생산 (Total)','f2.k.fg':'양품률 (FG)','f2.k.ng':'불량 수량 (NG)','f2.k.rate':'불량률 (%NG)','f2.k.rMc':'가공 불량률 (FAC2)','f2.k.rDc':'다캐 불량률 (소재)','f2.k.mat':"Mat'l NG",'f2.k.ach':'UPD 달성률',
  'f2.k.rateS':'%NG','f2.k.rMcS':'가공','f2.k.rDcS':'다캐','f2.k.achS':'달성률','f2.k.detail':'세부사항 (Worst 원인)',
- 'f2.k.note':'※ 증감: 빨강 = 악화 · 초록 = 개선 · Worst = 설비(MC)별 · 총 생산·달성률은 낮은 순, 불량 지표는 높은 순 · 괄호 = 그 설비 주요 불량 · 목표 %NG ≤ {t}%',
+ 'f2.k.note':'※ 증감: 빨강 = 악화 · 초록 = 개선 · Worst = 설비(MC)별 · 총 생산·달성률은 낮은 순, 불량 지표는 높은 순 · 양품률·불량률·가공·다캐·달성률 순위는 생산 기준 이상 설비만 · 괄호 = 주요 불량 · 목표 %NG ≤ {t}%',
  'f2.noWorst':'워스트 설비 없음 (불량·달성률 이상 없음)',
+ 'f2.k.minq':'비율 지표 순위 기준: 생산','f2.k.pcs':'개 이상','f2.k.excl':'소량 생산({n}개 미만)으로 순위 제외',
  'f2.is.perf':'실적','f2.is.def':'주요 불량 TOP3 (MCT)','f2.is.prob':'문제점 (원인)','f2.is.act':'조치 · 담당 · 완료일',
  'f2.is.probPh':'문제점 · 원인 입력','f2.is.actPh':'조치 / 담당 / 완료일','f2.is.note':'※ 대상 = %NG · 가공 불량률 · 다캐 불량률 · UPD 달성률 Worst 3에 든 설비 (중복 제거) · 입력은 이 브라우저에 기간별로 저장 · 색 점: 파랑 = 가공(FAC2), 빨강 = 다캐(소재)',
  'f2.q.d1':'최근일','f2.q.d3':'최근 3일','f2.q.d7':'최근 7일','f2.q.wk':'이번 주','f2.q.mo':'이번 달','f2.workDays':'작업일 {n}일',
@@ -419,6 +420,7 @@ en:{
  'f2.k.rateS':'%NG','f2.k.rMcS':'Mach.','f2.k.rDcS':'Cast.','f2.k.achS':'UPD','f2.k.detail':'Details (worst causes)',
  'f2.k.note':'※ Red = worse · green = better · Worst by machine · production/achievement lowest first, defect KPIs highest first · target %NG ≤ {t}%',
  'f2.noWorst':'No worst machines',
+ 'f2.k.minq':'Rank ratio KPIs only for output ≥','f2.k.pcs':'pcs','f2.k.excl':'Excluded (output < {n})',
  'f2.is.perf':'Output','f2.is.def':'Top 3 defects (MCT)','f2.is.prob':'Problem (cause)','f2.is.act':'Action · owner · due',
  'f2.is.probPh':'Problem / cause','f2.is.actPh':'Action / owner / due','f2.is.note':'※ Machines in Worst 3 of %NG · machining · casting · UPD achievement (deduplicated) · saved in this browser per period',
  'f2.q.d1':'Latest day','f2.q.d3':'Last 3 days','f2.q.d7':'Last 7 days','f2.q.wk':'This week','f2.q.mo':'This month','f2.workDays':'{n} working days',
@@ -997,9 +999,14 @@ function f2McTot(L){
   return a;
 }
 /* 워스트 대상 설비 판정용 (값이 의미 있는 설비만) */
+/* 비율 지표 순위는 생산 f2MinQty()개 이상 설비만 — 소량 생산의 한두 개 불량으로 %가 튀는 것을 막는다 */
+const F2_RATIO_KPI = ['f2.k.fg','f2.k.rate','f2.k.rMc','f2.k.rDc','f2.k.ach'];
+const f2MinQty = () => { try{ const v=parseInt(localStorage.getItem('stc_f2_minqty'),10); return isFinite(v)&&v>=0 ? v : 50; }catch(e){ return 50; } };
+function f2SetMinQty(v){ const n=parseInt(v,10); try{ localStorage.setItem('stc_f2_minqty', String(isFinite(n)&&n>=0?n:50)); }catch(e){} setTimeout(renderF2,0); }
 function f2WorstList(L, k){
   const [,,get,,,,sort] = k;
   let c = L.filter(o=>o.t>0 && get(o)!=null);
+  if(F2_RATIO_KPI.includes(k[0])) c = c.filter(o=>o.t>=f2MinQty());
   if(k[0]==='f2.k.ng'||k[0]==='f2.k.rate') c = c.filter(o=>o.n>0);
   if(k[0]==='f2.k.rMc') c = c.filter(o=>o.mcN>0);
   if(k[0]==='f2.k.rDc') c = c.filter(o=>o.dc>0);
@@ -1031,7 +1038,10 @@ function f2McWorstTable(pred, prevPred, prevLbl){
     <thead><tr><th>NO</th><th>${T('f2.r.kpi')}</th><th>${esc2(prevLbl||T('f2.r.prev'))}</th><th>${T('f2.r.cur')}</th><th>${T('f2.r.delta')}</th>
       <th class="w">Worst 1</th><th class="w">Worst 2</th><th class="w">Worst 3</th><th class="dt">${T('f2.k.detail')}</th></tr></thead>
     <tbody>${rows}</tbody></table></div>
-    <div class="legend" style="margin-top:6px"><span>${T('f2.k.note',{t:f2Target()})}</span></div></div>`;
+    <div class="legend" style="margin-top:6px;align-items:center">
+      <span class="f2-noprint">${T('f2.k.minq')} <input type="number" min="0" step="10" value="${f2MinQty()}" onchange="f2SetMinQty(this.value)" style="width:64px;padding:2px 5px;border:1px solid #ccd;border-radius:4px;font:inherit"> ${T('f2.k.pcs')}</span>
+      ${(()=>{ const ex = L.filter(o=>o.t>0 && o.t<f2MinQty()); return ex.length ? `<span style="color:#b45309">${T('f2.k.excl',{n:f2MinQty()})}: ${ex.map(o=>`${esc2(o.mc)} (${fmt(o.t)})`).join(', ')}</span>` : ''; })()}
+      <span>${T('f2.k.note',{t:f2Target()})}</span></div></div>`;
 }
 /* 문제점·조치 — 불량 쪽 워스트(%NG·가공·다캐)와 달성률 워스트에 나온 설비를 한 번씩만 */
 function f2McIssues(pred, noteKey){
@@ -1110,7 +1120,7 @@ function f2SetRange(from, to){
   if(from) r.from = from; if(to) r.to = to;
   if(!r.from) r.from = r.to || last; if(!r.to) r.to = r.from || last;
   try{ localStorage.setItem('stc_f2_drange', JSON.stringify(r)); }catch(e){}
-  renderF2();
+  setTimeout(renderF2,0);   /* change 이벤트 안에서 바로 다시 그리면 blur 와 겹쳐 오류가 난다 */
 }
 /* 빠른 선택: 최근일 · 최근 3일 · 최근 7일 · 이번 주(시트 주차) · 이번 달 — 모두 데이터 마지막 날 기준 */
 function f2Quick(q){
