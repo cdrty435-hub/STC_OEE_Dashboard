@@ -9605,7 +9605,7 @@ document.addEventListener('DOMContentLoaded', () => {
 .kw table.kw-a tr.idle td{color:#94a3b8;}
 .kw table.kw-a td.hit{font-weight:800;color:#b91c1c;}
 .kw .kw-ph{display:block;font-size:10px;font-weight:600;color:#7c2d12;margin-top:2px;white-space:pre-wrap;}
-.kw table.kw-a select{width:100%;font:inherit;font-size:10.5px;padding:1px;border:1px solid #c9d2dc;border-radius:4px;background:#fff;}
+.kw table.kw-a select{width:100%;max-width:100%;min-width:0;box-sizing:border-box;font:inherit;font-size:10.5px;padding:1px;border:1px solid #c9d2dc;border-radius:4px;background:#fff;}
 .kw select.v-ok{background:#dcfce7;color:#166534;font-weight:800;}
 .kw select.v-ng{background:#fee2e2;color:#b91c1c;font-weight:800;}
 .kw select.v-done{background:#dbeafe;color:#1d4ed8;font-weight:800;}
@@ -9686,27 +9686,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const wm = {};
     TAGS.forEach(([k,lab])=>W[k].forEach((x,j)=>{ (wm[x.m] = wm[x.m] || []).push(lab+'①②③'[j]); }));
     const WM = Object.keys(wm).map(Number).sort((a,b)=>a-b);
+    /* 유형은 설비-전기 계통만 (공무팀 담당) — 금형·설비-라인·관리 제외.
+       UDT 설정과 무관하게 설비-전기 코드의 정지(최소정지 이상)를 모두 센다. */
+    const ELEC = new Set(['설비수리','취출기수리','스프레이수리','전기로회전','래들수리','펌프이상',
+                          '전기로수리','컨베이어수리','진공설비','히터수리'].map(norm));
+    const EL = data.loss.filter(P.cur.f).filter(x=>ELEC.has(norm(x.i)) && x.l >= C.minStop);
+    const elH = {};                                   // 설비별 설비-전기 합계(h)
+    EL.forEach(x=>{ elH[x.m] = (elH[x.m]||0) + x.l/60; });
     const ty = {};
-    Object.values(S.mc).forEach(x=>x.top.forEach(t=>{
-      const o = ty[t.c] || (ty[t.c] = { c:t.c, h:0, n:0, wh:0, wn:0, mcs:0, by:{} });
-      o.h += t.h; o.n += t.n; o.mcs++; o.by[x.m] = t;
-      if (wm[x.m]){ o.wh += t.h; o.wn += t.n; }
-    }));
+    EL.forEach(x=>{
+      const o = ty[x.i] || (ty[x.i] = { c:x.i, h:0, n:0, wh:0, wn:0, mcs:0, by:{} });
+      const t = o.by[x.m] || (o.by[x.m] = { c:x.i, h:0, n:0, p:0 });
+      if (!t.n) o.mcs++;
+      t.h += x.l/60; t.n++; t.p = elH[x.m] ? t.h/elH[x.m] : 0;
+      o.h += x.l/60; o.n++;
+      if (wm[x.m]){ o.wh += x.l/60; o.wn++; }
+    });
     const TY = Object.values(ty).filter(o=>o.wn>0).sort((a,b)=>b.wh-a.wh || b.wn-a.wn);
     const sel = Array.isArray(notes._sel) ? notes._sel.filter(c=>ty[c]) : TY.slice(0,3).map(o=>o.c);
     const TYs = TY.filter((o,i)=>i<10 || sel.includes(o.c));
     const maxH = Math.max(0.0001, ...TYs.flatMap(o=>WM.map(m=>o.by[m]?o.by[m].h:0)));
     const hn = (h,n) => `${f1(h)}h / ${n}건`;
 
-    h += `<h4 class="kw-h">2. 워스트 설비 · 고장 유형 정리 <small>1번 MTTR·MTBF·가용률·로스시간 Worst 설비 ${WM.length}대(중복 제거) · 고장(UDT) 유형별 시간/건수 · ☑ 선택한 유형 = 3번 수평전개 대상</small></h4>`;
+    h += `<h4 class="kw-h">2. 워스트 설비 · 고장 유형 정리 (설비-전기) <small>1번 MTTR·MTBF·가용률·로스시간 Worst 설비 ${WM.length}대(중복 제거) · 설비-전기 계통 유형만(금형·설비-라인·관리 제외) · ☑ 선택한 유형 = 3번 수평전개 대상</small></h4>`;
     if (!WM.length || !TYs.length){
-      h += `<div class="kw-empty">해당 기간 고장 기록 없음</div>`;
+      h += `<div class="kw-empty">해당 기간 워스트 설비의 설비-전기 고장 기록 없음</div>`;
     } else {
       const mw = (46/WM.length).toFixed(2);
       h += `<table class="kw-m"><colgroup><col style="width:5%"><col style="width:11%">${WM.map(()=>`<col style="width:${mw}%">`).join('')}<col style="width:9%"><col style="width:10%"><col style="width:19%"></colgroup>`;
       h += `<thead><tr><th>선택</th><th>고장 유형</th>`;
       WM.forEach(m=>{ const x = S.mc[m];
-        h += `<th class="mh">${DC(m)}<span class="tg">${esc(wm[m].join(' · '))}</span><span class="sm">${f1(x.lossH)}h · ${x.n}건 · ${f1(x.avail)}%</span></th>`; });
+        h += `<th class="mh">${DC(m)}<span class="tg">${esc(wm[m].join(' · '))}</span><span class="sm">${f1(x.lossH)}h · ${x.n}건 · ${f1(x.avail)}%</span><span class="sm">설비-전기 ${f1(elH[m]||0)}h</span></th>`; });
       h += `<th>워스트 합계</th><th>전체 설비</th><th class="dt">문제 부위 · 원인</th></tr></thead><tbody>`;
       TYs.forEach(o=>{
         const on = sel.includes(o.c);
@@ -9717,12 +9727,12 @@ document.addEventListener('DOMContentLoaded', () => {
         h += `<td><textarea data-kwpart="${esc(o.c)}" placeholder="문제 부위 · 원인 (점검 항목)">${esc(part[o.c]||'')}</textarea></td></tr>`;
       });
       h += `</tbody></table>`;
-      h += `<div class="kw-note">※ 셀 = 해당 설비의 유형별 고장시간 / 건수 (괄호 = 그 설비 고장시간 중 비중) · 색이 진할수록 시간이 큼 · 기본 선택 = 워스트 합계 상위 3개 유형 · 선택·문제 부위는 이 기간(${esc(P.cur.label)})에 저장</div>`;
+      h += `<div class="kw-note">※ 셀 = 해당 설비의 유형별 고장시간 / 건수 (괄호 = 그 설비 설비-전기 고장시간 중 비중) · 색이 진할수록 시간이 큼 · 기본 선택 = 워스트 합계 상위 3개 유형 · 선택·문제 부위는 이 기간(${esc(P.cur.label)})에 저장</div>`;
     }
 
     /* --- 3. 액션 — 선택 유형 수평전개 점검표 (전 설비) --- */
     const SEL = sel.map(c=>ty[c]).filter(Boolean);
-    h += `<h4 class="kw-h">3. 액션 — 수평전개 점검표 <small>2번에서 선택한 유형을 전 설비에 점검 · 판정: OK / NG / 조치완료 · 워스트 설비 먼저 표시</small></h4>`;
+    h += `<h4 class="kw-h">3. 액션 — 수평전개 점검표 <small>2번에서 선택한 설비-전기 유형을 전 설비에 점검 · 판정: OK / NG / 조치완료 · 워스트 설비 먼저 표시</small></h4>`;
     if (!SEL.length){
       h += `<div class="kw-empty">2번 표에서 수평전개할 고장 유형을 ☑ 선택하세요.</div>`;
     } else {
