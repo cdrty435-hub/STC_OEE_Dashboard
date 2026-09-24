@@ -365,7 +365,9 @@ $('go').addEventListener('click', async ()=>{
   }catch(e){ console.error(e); setStatus('⚠ '+esc(e.message||e), 'err'); }
   $('go').disabled = false;
 });
-window.FAC2 = { convert, sheetWeek, toCSV };   // 검증용
+window.FAC2 = { convert, sheetWeek, toCSV };
+/* 통합 대시보드 탭(iframe) 안에서는 상단 이동 링크를 숨긴다 */
+try{ if (window.top !== window.self){ const n = document.querySelector('.nav-row'); if (n) n.style.display='none'; } }catch(e){}   // 검증용
 </script>
 </body>
 </html>

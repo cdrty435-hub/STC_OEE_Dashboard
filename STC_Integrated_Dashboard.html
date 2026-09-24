@@ -202,7 +202,8 @@ const TABS = [
   { sep:true },
   { id:'loss',     src:'STC_OEE_LossAnalysis.html',  tool:true },
   { id:'period',   src:'STC_OEE_PeriodSummary.html', tool:true },
-  { id:'conv',     src:'STC_OEE_DataConverter.html', tool:true }
+  { id:'conv',     src:'STC_OEE_DataConverter.html', tool:true },
+  { id:'conv2',    src:'STC_FAC2_DataConverter.html', tool:true, noWeek:true }
 ];
 
 /* =========================================================================
@@ -223,7 +224,7 @@ ko:{
  'ctl.week':'주차','ctl.scope':'범위','ctl.regular':'정규','ctl.all':'전체(특근 포함)',
  'ctl.refresh':'새로고침','ctl.sync':'각 탭에 주차 적용',
  'tab.overview':'종합','tab.weekly':'주간 OEE','tab.quality':'품질 6σ','tab.mttr':'MTTR / MTBF',
- 'tab.mold':'금형 수리이력','tab.loss':'설비/Loss 분석','tab.period':'기간별 종합','tab.conv':'데이터 변환기',
+ 'tab.mold':'금형 수리이력','tab.loss':'설비/Loss 분석','tab.period':'기간별 종합','tab.conv':'데이터 변환기','tab.conv2':'FAC2 변환기',
  'st.loading':'시트를 불러오는 중…','st.weeks':'{n}개 주차','st.rows':'A {a}행 / P {p}행 / Q {q}행',
  'st.asof':'{t} 기준','st.failed':'불러오기 실패','st.frameLoading':'{name} 불러오는 중…',
  'st.frameErr':'{name} 페이지를 불러오지 못했습니다 — 경로 <b>{src}</b> 를 확인해주세요.',
@@ -255,7 +256,7 @@ en:{
  'ctl.week':'Week','ctl.scope':'Scope','ctl.regular':'Regular','ctl.all':'All (incl. weekend)',
  'ctl.refresh':'Refresh','ctl.sync':'Apply week to tabs',
  'tab.overview':'Overview','tab.weekly':'Weekly OEE','tab.quality':'Quality 6σ','tab.mttr':'MTTR / MTBF',
- 'tab.mold':'Mold repairs','tab.loss':'Equipment / Loss','tab.period':'Period summary','tab.conv':'Data converter',
+ 'tab.mold':'Mold repairs','tab.loss':'Equipment / Loss','tab.period':'Period summary','tab.conv':'Data converter','tab.conv2':'FAC2 converter',
  'st.loading':'Loading sheets…','st.weeks':'{n} weeks','st.rows':'A {a} / P {p} / Q {q} rows',
  'st.asof':'as of {t}','st.failed':'Load failed','st.frameLoading':'Loading {name}…',
  'st.frameErr':'Could not load {name} — check the path <b>{src}</b>.',
@@ -287,7 +288,7 @@ th:{
  'ctl.week':'สัปดาห์','ctl.scope':'ช่วง','ctl.regular':'ปกติ','ctl.all':'ทั้งหมด (รวมวันหยุด)',
  'ctl.refresh':'รีเฟรช','ctl.sync':'ใช้สัปดาห์กับทุกแท็บ',
  'tab.overview':'ภาพรวม','tab.weekly':'OEE รายสัปดาห์','tab.quality':'คุณภาพ 6σ','tab.mttr':'MTTR / MTBF',
- 'tab.mold':'ประวัติซ่อมแม่พิมพ์','tab.loss':'เครื่องจักร / ความสูญเสีย','tab.period':'สรุปตามช่วงเวลา','tab.conv':'ตัวแปลงข้อมูล',
+ 'tab.mold':'ประวัติซ่อมแม่พิมพ์','tab.loss':'เครื่องจักร / ความสูญเสีย','tab.period':'สรุปตามช่วงเวลา','tab.conv':'ตัวแปลงข้อมูล','tab.conv2':'ตัวแปลงข้อมูล FAC2',
  'st.loading':'กำลังโหลดข้อมูล…','st.weeks':'{n} สัปดาห์','st.rows':'A {a} / P {p} / Q {q} แถว',
  'st.asof':'ข้อมูล ณ {t}','st.failed':'โหลดไม่สำเร็จ','st.frameLoading':'กำลังโหลด {name}…',
  'st.frameErr':'โหลด {name} ไม่สำเร็จ — ตรวจสอบเส้นทาง <b>{src}</b>',
