@@ -9372,7 +9372,8 @@ document.addEventListener('DOMContentLoaded', () => {
        - 최소정지 : 'stc_min_stop' (기본 10분) · M/C Rate : 'stc_mc_rate'
        - 목표 : 'stc_target_mttr' (기본 1.50) · 'stc_target_mtbf' (기본 10.00)
        - MTTR = UDT 로스시간 ÷ 고장건수 · MTBF = 실가동시간 ÷ 고장건수
-       - 가동률 = 가동시간 ÷ (가동시간 + 전체 로스시간)
+       - 가용률 = MTBF ÷ (MTBF + MTTR) = 가동시간 ÷ (가동시간 + UDT 로스시간)
+         (참고 opr = 가동시간 ÷ (가동시간 + 전체 로스시간) — 금형교체·대기 등 포함)
        - F-COST = UDT 로스분 × 설비별 M/C Rate
    · 워스트 = 대시보드 ② 설비별 차트와 같은 순위 (건수 제한 없음 · 가동 0h 설비 제외)
    · MTTR/MTBF 대시보드 안에서는 이미 읽어 둔 RUN / LOSS 를 그대로 쓰고,
@@ -9515,7 +9516,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const sum = (a,k) => a.reduce((s,x)=>s+(x[k]||0),0);
     const runH = sum(R,'r')/60, planH = sum(R,'p')/60, allH = sum(L,'l')/60, lossH = sum(F,'l')/60, n = F.length;
     const tot = { runH, planH, lossH, allH, n, mttr: n?lossH/n:0, mtbf: n?runH/n:0,
-                  avail: (runH+allH)>0 ? runH/(runH+allH)*100 : 0,
+                  avail: (runH+lossH)>0 ? runH/(runH+lossH)*100 : 0,        // 가용률 = MTBF÷(MTBF+MTTR)
+                  opr:   (runH+allH)>0  ? runH/(runH+allH)*100  : 0,        // 참고: 전체 로스 기준 가동률
                   cost: F.reduce((s,x)=>s+x.l*(rate[x.m]||0),0), days:[...new Set(R.map(x=>x.d))].sort() };
     const codeH = {};
     F.forEach(x=>{ codeH[x.i]=(codeH[x.i]||0)+x.l/60; });
@@ -9529,7 +9531,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const top = Object.keys(by).map(c=>({c, h:by[c].h, n:by[c].n, p: l? by[c].h/l : 0})).sort((a,b)=>b.h-a.h);
       const topN = top.slice().sort((a,b)=>b.n-a.n || b.h-a.h);
       mc[m] = { m, runH:r, planH:p, allH:a, lossH:l, n:k, mttr:k?l/k:0, mtbf:k?r/k:0,
-                avail: (r+a)>0 ? r/(r+a)*100 : 0, cost: ff.reduce((s,x)=>s+x.l*(rate[m]||0),0),
+                avail: (r+l)>0 ? r/(r+l)*100 : 0, opr: (r+a)>0 ? r/(r+a)*100 : 0, cost: ff.reduce((s,x)=>s+x.l*(rate[m]||0),0),
                 top, topN, active: r>0, planned: p>0, lastRun: rr.filter(x=>x.r>0).map(x=>x.d).sort().pop()||'' };
     });
     tot.mc = mc;
@@ -9613,7 +9615,8 @@ document.addEventListener('DOMContentLoaded', () => {
       mttr: { head:`목표 ${f1(C.tMttr,2)} 대비 ${sgn(S.mttr-C.tMttr,2)} ${S.mttr<=C.tMttr?'달성':'미달'}`, items: W.mttr.map(x=>`${DC(x.m)} ${topTxt(x)}`) },
       mtbf: { head:`목표 ${f1(C.tMtbf,2)} ${S.mtbf>=C.tMtbf?'달성':'미달'} (${sgn(S.mtbf-C.tMtbf,2)}) · 실가동 ${f1(S.runH)}h · 고장 ${S.n}건` + (Q ? ` (${sgn(S.n-Q.n,0)}건)` : ''),
               items: W.mtbf.map(x=>`${DC(x.m)} ${x.n}건${x.topN[0]?` (${x.topN[0].c} ${x.topN[0].n}건)`:''}`) },
-      avail: { items: W.avail.map(x=>`${DC(x.m)} ${f1(x.avail)}% (고장 ${f1(x.lossH)}h${x.top[0]?' · '+x.top[0].c:''}${x.lossH<1?' → 계획정지 영향 확인':''})`),
+      avail: { head:`MTBF ÷ (MTBF + MTTR) = ${f1(S.mtbf,2)} ÷ (${f1(S.mtbf,2)} + ${f1(S.mttr,2)}) · 참고 가동률(전체 로스) ${f1(S.opr)}%`,
+               items: W.avail.map(x=>`${DC(x.m)} ${f1(x.avail)}% (고장 ${f1(x.lossH)}h · ${x.n}건${x.top[0]?' · '+x.top[0].c:''})`),
                tail: inact.length ? `가동 기록 없음(순위 제외): ${inact.join('·')}` : '' },
       loss: { items: W.loss.map(x=>`${DC(x.m)} ${f1(x.lossH)}h${x.top[0]?' · '+x.top[0].c+' '+f1(x.top[0].h)+'h':''}`),
               tail: `상위 3대 ${f1(tl)}h = 전체의 ${S.lossH?f1(tl/S.lossH*100,0):0}%` + (codeDelta && Math.abs(codeDelta.d)>=0.05 ? ` · 최대 변동: ${codeDelta.k} ${sgn(codeDelta.d,1)}h (${pl} 대비)` : '') },
@@ -9625,7 +9628,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rows = [
       ['MTTR','mttr', v=>f1(v,2)+' h/건', false, 2, 'mttr', x=>f1(x.mttr,2)+'h'],
       ['MTBF','mtbf', v=>f1(v,2)+' h/건', true, 2, 'mtbf', x=>f1(x.mtbf,2)+'h'],
-      ['가동률','avail', v=>f1(v,1)+' %', true, 1, 'avail', x=>f1(x.avail,1)+'%'],
+      ['가용률','avail', v=>f1(v,1)+' %', true, 1, 'avail', x=>f1(x.avail,1)+'%'],
       ['로스시간','lossH', v=>f1(v,1)+' h', false, 1, 'loss', x=>f1(x.lossH,1)+'h'],
       ['고장건수','n', v=>f0(v)+' 건', false, 0, 'cnt', x=>x.n+'건'],
       ['F-COST','cost', v=>f0(v)+' THB', false, 0, 'cost', x=>f0(x.cost)]
@@ -9649,7 +9652,7 @@ document.addEventListener('DOMContentLoaded', () => {
          + (dd.tail ? `<div class="kw-tail">${esc(dd.tail)}</div>` : '') + `</td></tr>`;
     });
     h += `</tbody></table>`;
-    h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · Worst = 대시보드 ② 설비별 차트 기준(건수 제한 없음, 가동 0h 설비 제외) · 가동률 = 가동 ÷ (가동 + 전체 로스)</div>`;
+    h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · Worst = 대시보드 ② 설비별 차트 기준(건수 제한 없음, 가동 0h 설비 제외) · 가용률 = MTBF ÷ (MTBF + MTTR) = 가동 ÷ (가동 + 고장(UDT) 로스) — 고장 정지만 반영 · 가동률(전체 로스) = 가동 ÷ (가동 + 전체 로스)는 참고값</div>`;
 
     /* --- 2. 워스트 세부사항 --- */
     const notes = notesGet(P.cur.key);
@@ -9662,7 +9665,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tgt = k==='mttr' ? C.tMttr : C.tMtbf;
         const val = `<b>${f1(v,2)} h/건</b>` + (pvv!==null ? ` (${v>pvv?'▲':'▼'}${f1(Math.abs(v-pvv),2)})` : ' (비교 없음)')
                   + `<br>목표 대비 ${sgn(v-tgt,2)}`;
-        const lo = `로스 ${f1(x.lossH)}h · ${x.n}건<br>가동 ${f1(x.runH)}h · 가동률 ${f1(x.avail)}%`;
+        const lo = `로스 ${f1(x.lossH)}h · ${x.n}건<br>가동 ${f1(x.runH)}h · 가용률 ${f1(x.avail)}%`;
         const tp = x.top.slice(0,3).map((t,i)=>`${'①②③'[i]} ${esc(t.c)} ${f1(t.h)}h / ${t.n}건 (${f1(t.p*100,0)}%)`).join('<br>') || '–';
         const nk = DC(x.m), n = notes[nk] || {};
         h += `<tr><td class="kd ${k}">${kind}</td><td class="rk">Worst ${j+1}</td><td class="mc">${nk}</td><td>${val}</td><td>${lo}</td><td>${tp}</td>`
