@@ -185,6 +185,7 @@ table.f2-ms th.v span{writing-mode:vertical-rl;transform:rotate(180deg);font-siz
 table.f2-ms td.l{text-align:left;font-weight:800;background:#eef3fb;}
 table.f2-ms .tt{background:#1e3c72;color:#fff;font-weight:800;}
 table.f2-ms td.mx{color:#c62828;font-weight:800;}
+table.f2-ms td.idle{background:#f3f4f6 !important;color:#b0b7c0;text-align:center;} table.f2-ms th.v.idle span{color:#b0b7c0;font-weight:500;}
 table.f2-ms tr.n td:not(.l):not(.tt){background:#fff5f5;} table.f2-ms tr.m td:not(.l):not(.tt){background:#fffbeb;}
 .f2-mn{font-size:11px;color:var(--ink-muted);margin-top:5px;}
 .f2-m3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
@@ -402,7 +403,7 @@ ko:{
  'f2.m.sec':'FAC2 Measure — 설비·품번별 불량 구성','f2.m.t1':'설비별 %NG','f2.m.t1s':'= NG ÷ Total · 막대 안 = 가공(FAC2)/다캐(소재)/기타 NG 수량 · 아래 회색 = 누적 NG 비중 · 빨간 테두리 = Worst 3 (생산 {n}개 이상)',
  'f2.m.t2':'설비별 가공 품번 · 수량','f2.m.t2s':'FAC1 Measure 표와 같은 가로형 — 설비·품번을 가로로 깔고 Total·FG·NG·Mat\'l 을 행으로','f2.m.t2n':'PROD EA 생산 · OK EA 양품 · NG EA MCT 불량 · Mat\'l NG 가공 전 소재 불량 · 각 행의 최대값은 빨강',
  'f2.m.t3':'Worst 3 설비 불량 구성','f2.m.t3s':'불량유형을 100%로 나눠 본 것 · 색 = 원인 계통','f2.m.cause':'원인 계통 — 가공(FAC2) / 다캐(소재) / 기타(협력사·고객)',
- 'f2.m.가공불량':'가공(FAC2)','f2.m.다캐불량':'다캐(소재)','f2.m.기타':'기타','f2.m.ea':'개',
+ 'f2.m.가공불량':'가공(FAC2)','f2.m.다캐불량':'다캐(소재)','f2.m.기타':'기타','f2.m.ea':'개','f2.m.idle':'가동 없음',
  'f2.k.minq':'순위 기준: 생산','f2.k.pcs':'개 이상','f2.k.excl':'소량 생산({n}개 미만)으로 순위 제외',
  'f2.is.perf':'실적','f2.is.def':'주요 불량 TOP3 (MCT)','f2.is.prob':'문제점 (원인)','f2.is.act':'조치 · 담당 · 완료일',
  'f2.is.probPh':'문제점 · 원인 입력','f2.is.actPh':'조치 / 담당 / 완료일','f2.is.note':'※ 대상 = %NG · 가공 불량률 · 다캐 불량률 · UPD 달성률 Worst 3에 든 설비 (중복 제거) · 입력은 이 브라우저에 기간별로 저장 · 색 점: 파랑 = 가공(FAC2), 빨강 = 다캐(소재)',
@@ -487,7 +488,7 @@ en:{
  'f2.m.sec':'FAC2 Measure — defects by machine · part','f2.m.t1':'%NG by machine','f2.m.t1s':'= NG ÷ Total · segments = machining / casting / other NG · grey = cumulative NG share · red box = Worst 3 (output ≥ {n})',
  'f2.m.t2':'Parts and quantities by machine','f2.m.t2s':'same layout as the FAC1 Measure table','f2.m.t2n':'PROD EA production · OK EA good · NG EA MCT defects · Mat\'l NG material NG before machining · max of each row in red',
  'f2.m.t3':'Worst 3 machines — defect mix','f2.m.t3s':'defect types as 100% · colour = cause','f2.m.cause':'Cause — machining (FAC2) / casting (material) / other',
- 'f2.m.가공불량':'Machining','f2.m.다캐불량':'Casting','f2.m.기타':'Other','f2.m.ea':' pcs',
+ 'f2.m.가공불량':'Machining','f2.m.다캐불량':'Casting','f2.m.기타':'Other','f2.m.ea':' pcs','f2.m.idle':'no run',
  'f2.k.minq':'Rank only for output ≥','f2.k.pcs':'pcs','f2.k.excl':'Excluded (output < {n})',
  'f2.is.perf':'Output','f2.is.def':'Top 3 defects (MCT)','f2.is.prob':'Problem (cause)','f2.is.act':'Action · owner · due',
  'f2.is.probPh':'Problem / cause','f2.is.actPh':'Action / owner / due','f2.is.note':'※ Machines in Worst 3 of %NG · machining · casting · UPD achievement (deduplicated) · saved in this browser per period',
@@ -1227,19 +1228,26 @@ function f2McIssues(pred, noteKey){
    ③ Worst 3 설비 불량 구성 : 불량유형 100% 도넛 + 원인 계통 막대
    ========================================================================= */
 const F2_GC = { '가공불량':'#3a66b8', '다캐불량':'#e0701f', '기타':'#9aa0a6' };
+/* FAC2 보유 MCT 전체 (원본 Search_Detail_MCT 설비 목록) — 기간 중 가동이 없어도 칸을 둔다 */
+const F2_MC_ALL = ['MC02','MC03','MC04','MC05','MC06','MC07','MC08','MC11','MC12','MC13','MC14','MC15','MC16','MC17','MC18'];
+const f2McNo = m => parseInt(String(m).replace(/\D/g,''),10) || 0;
+function f2AllMcs(){ const s = new Set(F2_MC_ALL); F2.mq.forEach(r=>{ if(r['설비명']) s.add(r['설비명']); }); return [...s].sort((a,b)=>f2McNo(a)-f2McNo(b)); }
 function f2Measure(pred){
   if(!F2.mq.length) return `<div class="card empty" style="padding:14px">${T('f2.noMq')}</div>`;
   const L = f2McStats(pred).filter(o=>o.t>0);
   if(!L.length) return `<div class="card empty" style="padding:14px">${T('st.noData')}</div>`;
   const mq = f2MinQty(), totNg = L.reduce((a,o)=>a+o.n,0);
-  const sorted = L.slice().sort((a,b)=>(b.rate||0)-(a.rate||0));
+  const idle = f2AllMcs().filter(m=>!L.some(o=>o.mc===m));            /* 기간 중 가동 없는 설비 */
+  const sorted = L.slice().sort((a,b)=>(b.rate||0)-(a.rate||0)).concat(idle.map(m=>({ mc:m, idle:true, t:0, n:0, dc:0, mcN:0, rate:null })));
   const worst = sorted.filter(o=>o.t>=mq && o.n>0).slice(0,3).map(o=>o.mc);
   /* ① 누적막대 (SVG) */
-  const W = Math.max(1200, sorted.length*110), H = 280, top = 34, bot = 44, ph = H-top-bot, bw = Math.min(64, W/sorted.length*0.62);
+  const W = Math.max(1200, sorted.length*84), H = 280, top = 34, bot = 44, ph = H-top-bot, bw = Math.min(64, W/sorted.length*0.62);
   const maxR = Math.max(1, ...sorted.map(o=>o.rate||0));
   let cum = 0, svg = '';
   sorted.forEach((o,i)=>{
     const cx = (i+0.5)*W/sorted.length, x = cx-bw/2, rate = o.rate||0, hTot = rate/maxR*ph, base = top+ph;
+    if(o.idle){ svg += `<rect x="${x}" y="${base-3}" width="${bw}" height="3" fill="#e3e7ec"/><text x="${cx}" y="${base-10}" text-anchor="middle" font-size="11" fill="#9aa0a6">${T('f2.m.idle')}</text>
+      <text x="${cx}" y="${base+17}" text-anchor="middle" font-size="12" font-weight="700" fill="#9aa0a6">${esc2(o.mc)}</text>`; return; }
     const etc = Math.max(0, o.n-o.mcN-o.dc);
     const segs = [['가공불량',o.mcN],['다캐불량',o.dc],['기타',etc]].filter(s=>s[1]>0);
     let y = base;
@@ -1260,7 +1268,8 @@ function f2Measure(pred){
     <div class="tblwrap"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:720px;display:block" role="img" aria-label="${T('f2.m.t1')}">${svg}</svg></div></div>`;
   /* ② 설비 × 품번 가로표 */
   const cols = [];
-  L.slice().sort((a,b)=>(parseInt(a.mc.replace(/\D/g,''),10)||0)-(parseInt(b.mc.replace(/\D/g,''),10)||0)).forEach(o=>{
+  f2AllMcs().forEach(m=>{ const o = L.find(x=>x.mc===m);
+    if(!o){ cols.push({ mc:m, part:'', idle:true, t:0, f:0, n:0, m:0 }); return; }
     const pm = {};
     F2.mq.forEach(r=>{ if(r['설비명']!==o.mc || !pred(r)) return; const k = r['Part name']||r['Part no.'];
       const x = pm[k] || (pm[k] = {t:0,f:0,n:0,m:0}); x.t+=f2n(r['생산수량']); x.f+=f2n(r['양품']); x.n+=f2n(r['불량수량']); x.m+=f2n(r["Mat'l NG"]); });
@@ -1272,9 +1281,9 @@ function f2Measure(pred){
   const tot = k => cols.reduce((a,c)=>a+c[k],0);
   const c2 = `<div class="card"><div class="f2-mt">② ${T('f2.m.t2')} <small>${T('f2.m.t2s')}</small></div><div class="tblwrap"><table class="f2-ms">
     <thead><tr><th class="h">MCT</th>${Object.keys(mcSpan).map(m=>`<th class="h" colspan="${mcSpan[m]}">${esc2(m)}</th>`).join('')}<th class="h tt" rowspan="2">TOTAL</th></tr>
-      <tr><th class="h">PART NAME</th>${cols.map(c=>`<th class="v"><span>${esc2(c.part)}</span></th>`).join('')}</tr></thead>
-    <tbody>${R2.map(([lab,k])=>{ const m = mx(k); return `<tr class="${k}"><td class="l">${lab}</td>${cols.map(c=>`<td${c[k]===m&&m>0?' class="mx"':''}>${fmt(c[k])}</td>`).join('')}<td class="tt">${fmt(tot(k))}</td></tr>`; }).join('')}
-      <tr class="r"><td class="l">% NG</td>${cols.map(c=>`<td style="color:${f2St(c.t?c.n/c.t*100:null).c};font-weight:700">${c.t?(c.n/c.t*100).toFixed(2)+'%':'–'}</td>`).join('')}<td class="tt">${tot('t')?(tot('n')/tot('t')*100).toFixed(2)+'%':'–'}</td></tr></tbody>
+      <tr><th class="h">PART NAME</th>${cols.map(c=>`<th class="v${c.idle?' idle':''}"><span>${c.idle?T('f2.m.idle'):esc2(c.part)}</span></th>`).join('')}</tr></thead>
+    <tbody>${R2.map(([lab,k])=>{ const m = mx(k); return `<tr class="${k}"><td class="l">${lab}</td>${cols.map(c=>c.idle?'<td class="idle">–</td>':`<td${c[k]===m&&m>0?' class="mx"':''}>${fmt(c[k])}</td>`).join('')}<td class="tt">${fmt(tot(k))}</td></tr>`; }).join('')}
+      <tr class="r"><td class="l">% NG</td>${cols.map(c=>c.idle?'<td class="idle">–</td>':`<td style="color:${f2St(c.t?c.n/c.t*100:null).c};font-weight:700">${c.t?(c.n/c.t*100).toFixed(2)+'%':'–'}</td>`).join('')}<td class="tt">${tot('t')?(tot('n')/tot('t')*100).toFixed(2)+'%':'–'}</td></tr></tbody>
   </table></div><div class="f2-mn">${T('f2.m.t2n')}</div></div>`;
   /* ③ Worst 3 설비 불량 구성 */
   const c3 = worst.length ? `<div class="f2-mt" style="margin-top:4px">③ ${T('f2.m.t3')} <small>${T('f2.m.t3s')}</small></div><div class="f2-m3">${worst.map((mc,i)=>{
