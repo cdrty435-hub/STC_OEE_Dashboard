@@ -1230,7 +1230,7 @@ function f2McIssues(pred, noteKey){
 const F2_GC = { '가공불량':'#3a66b8', '다캐불량':'#e0701f', '기타':'#9aa0a6' };
 /* 설비 목록 = 생산 기록(F2_MCT_Q)에 한 번이라도 나온 MCT — OQC 는 수출 전 출하 검사라 설비 기준에 쓰지 않는다.
    선택 기간에 쉰 설비는 '가동 없음' 칸으로 남고, 새 설비가 기록되면 자동으로 늘어난다. */
-const F2_MC_ALL = [];
+const F2_MC_ALL = ['MC02','MC03','MC04','MC05','MC06','MC07','MC08','MC11','MC12','MC13','MC14','MC15','MC16','MC17','MC18'];   /* FAC2 보유 MCT 전체 (원본 설비 목록) — 기록이 없어도 칸을 둔다 */
 const f2McNo = m => parseInt(String(m).replace(/\D/g,''),10) || 0;
 function f2AllMcs(){ const s = new Set(F2_MC_ALL); F2.mq.forEach(r=>{ if(r['설비명'] && f2n(r['생산수량'])>0) s.add(r['설비명']); }); return [...s].sort((a,b)=>f2McNo(a)-f2McNo(b)); }
 function f2Measure(pred){
