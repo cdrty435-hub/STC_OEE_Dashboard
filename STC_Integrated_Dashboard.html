@@ -151,6 +151,8 @@ table.f2-pt td.t5{text-align:left;white-space:normal;font-size:11.5px;line-heigh
 .f2-wk td.w2{color:#e26b0a;} .f2-wk td.w3{color:#333;}
 .f2-wk td.dt{text-align:left;white-space:normal;font-size:11.5px;line-height:1.55;min-width:240px;}
 .f2-wk td.c{text-align:center;} .f2-wk td.pv{color:#1d4ed8;} .f2-wk td.name,.f2-wk th:nth-child(2){text-align:left;}
+.f2-k3 td{vertical-align:middle;} .f2-k3 td.name small{display:block;font-size:10.5px;font-weight:500;color:var(--ink-muted);margin-top:2px;white-space:normal;}
+.f2-kv{font-size:14px;line-height:1.3;} .f2-ks{font-size:11px;color:var(--ink-2);line-height:1.45;white-space:nowrap;}
 .f2-wk .kw-li{padding-left:1.2em;text-indent:-1.2em;} .f2-why{color:var(--ink-muted);}
 .f2-is td{vertical-align:top;} .f2-is td.mc{font-weight:900;font-size:15px;color:#b71c1c;text-align:center;white-space:nowrap;}
 .f2-is td.mc small{display:block;font-size:10px;font-weight:700;color:#c62828;margin-top:3px;white-space:normal;}
@@ -359,7 +361,10 @@ ko:{
  'f2.k.note':'※ 증감: 빨강 = 악화 · 초록 = 개선 · Worst = 설비(MC)별 · 총 생산·달성률은 낮은 순, 불량 지표는 높은 순 · 양품률·불량률·가공·다캐·달성률 순위는 생산 기준 이상 설비만 · 괄호 = 주요 불량 · 목표 %NG ≤ {t}%',
  'f2.noWorst':'워스트 설비 없음 (불량·달성률 이상 없음)',
  'f2.d.byMc':'전설비 불량(NG) — 설비별 Worst 3','f2.d.byType':'전설비 불량(NG) — 불량유형 Worst 3','f2.d.ngAll':'NG 합계','f2.d.other':'기타','f2.d.units':'대','f2.d.kinds':'종','f2.d.dc':'다캐(소재)','f2.d.mc':'가공(FAC2)','f2.d.etc':'기타',
- 'f2.k.minq':'비율 지표 순위 기준: 생산','f2.k.pcs':'개 이상','f2.k.excl':'소량 생산({n}개 미만)으로 순위 제외',
+ 'f2.k2.prod':'① 생산 실적','f2.k2.prodS':'Total · FG · UPD 달성률','f2.k2.rate':'② 불량률 (%NG)','f2.k2.rateS':'NG ÷ Total = 가공 + 다캐','f2.k2.mat':"③ Mat'l NG",'f2.k2.matS':'가공 전 소재 불량 · 투입 대비 %',
+ 'f2.k.mcS':'가공','f2.k.dcS':'다캐','f2.k.etcS':'기타',
+ 'f2.k2.note':'※ 핵심 지표 3개 — 불량률은 한 줄로 묶고 가공(FAC2)·다캐(소재)는 그 안의 내역 · Worst: ① 달성률 낮은 순 ② %NG 높은 순 (①②는 생산 기준 이상 설비만) ③ 수량 많은 순 · 목표 %NG ≤ {t}% · 빨강 = 악화, 초록 = 개선',
+ 'f2.k.minq':'순위 기준: 생산','f2.k.pcs':'개 이상','f2.k.excl':'소량 생산({n}개 미만)으로 순위 제외',
  'f2.is.perf':'실적','f2.is.def':'주요 불량 TOP3 (MCT)','f2.is.prob':'문제점 (원인)','f2.is.act':'조치 · 담당 · 완료일',
  'f2.is.probPh':'문제점 · 원인 입력','f2.is.actPh':'조치 / 담당 / 완료일','f2.is.note':'※ 대상 = %NG · 가공 불량률 · 다캐 불량률 · UPD 달성률 Worst 3에 든 설비 (중복 제거) · 입력은 이 브라우저에 기간별로 저장 · 색 점: 파랑 = 가공(FAC2), 빨강 = 다캐(소재)',
  'f2.q.d1':'최근일','f2.q.d3':'최근 3일','f2.q.d7':'최근 7일','f2.q.wk':'이번 주','f2.q.mo':'이번 달','f2.workDays':'작업일 {n}일',
@@ -434,7 +439,10 @@ en:{
  'f2.k.note':'※ Red = worse · green = better · Worst by machine · production/achievement lowest first, defect KPIs highest first · target %NG ≤ {t}%',
  'f2.noWorst':'No worst machines',
  'f2.d.byMc':'All-machine NG — Worst 3 machines','f2.d.byType':'All-machine NG — Worst 3 defect types','f2.d.ngAll':'NG total','f2.d.other':'Others','f2.d.units':'','f2.d.kinds':' types','f2.d.dc':'Casting','f2.d.mc':'Machining','f2.d.etc':'Other',
- 'f2.k.minq':'Rank ratio KPIs only for output ≥','f2.k.pcs':'pcs','f2.k.excl':'Excluded (output < {n})',
+ 'f2.k2.prod':'① Output','f2.k2.prodS':'Total · FG · UPD achievement','f2.k2.rate':'② Defect rate (%NG)','f2.k2.rateS':'NG ÷ Total = machining + casting','f2.k2.mat':"③ Mat'l NG",'f2.k2.matS':'material NG before machining · % of input',
+ 'f2.k.mcS':'Mach.','f2.k.dcS':'Cast.','f2.k.etcS':'Other',
+ 'f2.k2.note':'※ 3 core KPIs — one defect rate, split into machining (FAC2) and casting (material) · Worst: ① lowest achievement ② highest %NG (both only for output ≥ threshold) ③ highest Mat\'l NG · target %NG ≤ {t}%',
+ 'f2.k.minq':'Rank only for output ≥','f2.k.pcs':'pcs','f2.k.excl':'Excluded (output < {n})',
  'f2.is.perf':'Output','f2.is.def':'Top 3 defects (MCT)','f2.is.prob':'Problem (cause)','f2.is.act':'Action · owner · due',
  'f2.is.probPh':'Problem / cause','f2.is.actPh':'Action / owner / due','f2.is.note':'※ Machines in Worst 3 of %NG · machining · casting · UPD achievement (deduplicated) · saved in this browser per period',
  'f2.q.d1':'Latest day','f2.q.d3':'Last 3 days','f2.q.d7':'Last 7 days','f2.q.wk':'This week','f2.q.mo':'This month','f2.workDays':'{n} working days',
@@ -1071,42 +1079,66 @@ function f2TypeMcs(pred, t){
   const m = {}; F2.det.forEach(r=>{ if(r['공정']==='MCT' && r['구분']==='NG' && r['불량유형']===t && pred(r)) m[r['설비명']] = (m[r['설비명']]||0) + f2n(r['수량']); });
   return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k,v])=>`${esc2(k)} ${fmt(v)}`).join(' · ');
 }
+/* MCT 핵심 지표 3개 — 불량률은 한 줄로 묶고(가공·다캐는 그 안의 내역), 생산은 UPD 달성률과 함께 본다
+   ① 생산 실적 : Total · FG · UPD 달성률      Worst = 달성률 낮은 순 (생산 기준 이상 설비)
+   ② 불량률 %NG : NG ÷ Total = 가공 + 다캐 (+협력사·고객)   Worst = %NG 높은 순 (생산 기준 이상 설비)
+   ③ Mat'l NG  : 가공 전 소재 불량 수량 · 투입 대비 %      Worst = 수량 많은 순 */
 function f2McWorstTable(pred, prevPred, prevLbl){
   if(!F2.mq.length) return `<div class="card empty" style="padding:14px">${T('f2.noMq')}</div>`;
   const L = f2McStats(pred), P = prevPred ? f2McStats(prevPred) : [];
   if(!L.length) return `<div class="card empty" style="padding:14px">${T('st.noData')}</div>`;
-  const A = f2McTot(L), B = P.length ? f2McTot(P) : null;
-  const fv = (v,dp,u) => v==null ? '–' : fmt(v,dp)+u;
-  const dd = (c,p,dp,u,dir) => { if(c==null||p==null) return '<span class="eq">–</span>'; const d=c-p; if(Math.abs(d)<Math.pow(10,-dp)/2) return '±0';
-    const good = dir>0 ? d>0 : d<0; return `<b style="color:${good?'var(--good)':'var(--critical)'}">${d>0?'+':'−'}${fmt(Math.abs(d),dp)}${u==='%'?'%p':u}</b>`; };
-  const defTxt = (mc, grp) => f2McTopDef(pred, mc, 2, grp).map(x=>`${esc2(x.t)} ${fmt(x.v)}`).join(' · ');
-  const rows = F2_MKPI.map((k,i)=>{
-    const [lab, tot, get, dp, u, dir] = k, W = f2WorstList(L, k);
-    const detail = W.map((o,j)=>{ let why = '';
-      if(lab==='f2.k.rMc') why = defTxt(o.mc,'가공불량'); else if(lab==='f2.k.rDc') why = defTxt(o.mc,'다캐불량');
-      else if(['f2.k.ng','f2.k.rate','f2.k.fg'].includes(lab)) why = defTxt(o.mc);
-      else if(lab==='f2.k.prod'||lab==='f2.k.ach') why = `${T('f2.dayN')} ${o.days.size} · ${esc2([...o.parts].join(', '))}`;
-      else if(lab==='f2.k.mat') why = esc2([...o.parts].join(', '));
-      return `<div class="kw-li"><b>${j+1}.</b> ${esc2(o.mc)} ${fv(get(o),dp,u)}${why?` <span class="f2-why">(${why})</span>`:''}</div>`; }).join('');
-    return `<tr><td class="c">${i+1}</td><td class="name">${T(lab)}</td><td class="pv">${B?fv(tot(B),dp,u):'–'}</td><td><b>${fv(tot(A),dp,u)}</b></td><td>${dd(tot(A),B?tot(B):null,dp,u,dir)}</td>
-      ${[0,1,2].map(j=>`<td class="w w${j+1}">${W[j]?`${esc2(W[j].mc)}<br><small>${fv(get(W[j]),dp,u)}</small>`:'–'}</td>`).join('')}
-      <td class="dt">${detail||'–'}</td></tr>`;
-  }).join('');
-  return f2WorstDonuts(pred) + `<div class="card"><div class="tblwrap"><table class="eq f2-wk">
+  const A = f2McTot(L), B = P.length ? f2McTot(P) : null, mq = f2MinQty();
+  const matR = a => (a.t+a.mat) ? a.mat/(a.t+a.mat)*100 : null;
+  const pct = (v,dp) => v==null ? '–' : v.toFixed(dp)+'%';
+  const dd = (c,p,dp,u,dir) => { if(c==null||p==null) return '–'; const d=c-p; if(Math.abs(d)<Math.pow(10,-dp)/2) return '±0';
+    const good = dir>0 ? d>0 : d<0; return `<b style="color:${good?'var(--good)':'var(--critical)'}">${d>0?'+':'−'}${fmt(Math.abs(d),dp)}${u}</b>`; };
+  const big = (a, lines) => `<div class="f2-kv">${a}</div>${lines.map(x=>`<div class="f2-ks">${x}</div>`).join('')}`;
+  const split = a => `${T('f2.k.mcS')} ${pct(a.rMc,2)} · ${T('f2.k.dcS')} ${pct(a.rDc,2)}${(a.n-a.mcN-a.dc)>0?` · ${T('f2.k.etcS')} ${fmt(a.n-a.mcN-a.dc)}`:''}`;
+  const top2 = (mc, grp) => f2McTopDef(pred, mc, 2, grp).map(x=>`${esc2(x.t)} ${fmt(x.v)}`).join(' · ');
+  const ok = o => o.t >= mq;
+  const W1 = L.filter(o=>ok(o) && o.ach!=null).sort((a,b)=>a.ach-b.ach).slice(0,3);
+  const W2 = L.filter(o=>ok(o) && o.n>0).sort((a,b)=>b.rate-a.rate).slice(0,3);
+  const W3 = L.filter(o=>o.mat>0).sort((a,b)=>b.mat-a.mat).slice(0,3);
+  const wcell = (W, val) => [0,1,2].map(j=>`<td class="w w${j+1}">${W[j]?`${esc2(W[j].mc)}<br><small>${val(W[j])}</small>`:'–'}</td>`).join('');
+  const det = (W, txt) => W.map((o,j)=>`<div class="kw-li"><b>${j+1}.</b> ${txt(o)}</div>`).join('') || '–';
+  const st = f2St(A.rate), stp = B ? f2St(B.rate) : null;
+  const rows = [
+    `<tr><td class="c">1</td><td class="name">${T('f2.k2.prod')}<small>${T('f2.k2.prodS')}</small></td>
+      <td class="pv">${B?big(fmt(B.t),[`FG ${fmt(B.f)}`,`${T('f2.ach')} ${pct(B.ach,1)}`]):'–'}</td>
+      <td>${big(`<b>${fmt(A.t)}</b>`,[`FG ${fmt(A.f)}`,`${T('f2.ach')} <b>${pct(A.ach,1)}</b>`])}</td>
+      <td>${big(dd(A.t,B&&B.t,0,'',+1),['',dd(A.ach,B&&B.ach,1,'%p',+1)])}</td>
+      ${wcell(W1, o=>pct(o.ach,1))}
+      <td class="dt">${det(W1, o=>`${esc2(o.mc)} ${T('f2.ach')} ${pct(o.ach,1)} <span class="f2-why">(Total ${fmt(o.t)} · ${T('f2.dayN')} ${o.days.size} · ${esc2([...o.parts].join(', '))})</span>`)}</td></tr>`,
+    `<tr><td class="c">2</td><td class="name">${T('f2.k2.rate')}<small>${T('f2.k2.rateS')}</small></td>
+      <td class="pv">${B?big(pct(B.rate,2),[`NG ${fmt(B.n)}`, split(B)]):'–'}</td>
+      <td>${big(`<b style="color:${st.c}">${pct(A.rate,2)}</b> <small>${st.l}</small>`,[`NG ${fmt(A.n)}`, split(A)])}</td>
+      <td>${big(dd(A.rate,B&&B.rate,2,'%p',-1),[dd(A.n,B&&B.n,0,'',-1), `${T('f2.k.mcS')} ${dd(A.rMc,B&&B.rMc,2,'%p',-1)} · ${T('f2.k.dcS')} ${dd(A.rDc,B&&B.rDc,2,'%p',-1)}`])}</td>
+      ${wcell(W2, o=>pct(o.rate,2))}
+      <td class="dt">${det(W2, o=>{ const m=top2(o.mc,'가공불량'), d=top2(o.mc,'다캐불량');
+        return `${esc2(o.mc)} <b>${pct(o.rate,2)}</b> = ${T('f2.k.mcS')} ${pct(o.rMc,2)} + ${T('f2.k.dcS')} ${pct(o.rDc,2)}<br><span class="f2-why">${m?`${T('f2.k.mcS')}: ${m}`:''}${m&&d?' / ':''}${d?`${T('f2.k.dcS')}: ${d}`:''}</span>`; })}</td></tr>`,
+    `<tr><td class="c">3</td><td class="name">${T('f2.k2.mat')}<small>${T('f2.k2.matS')}</small></td>
+      <td class="pv">${B?big(fmt(B.mat),[pct(matR(B),2)]):'–'}</td>
+      <td>${big(`<b>${fmt(A.mat)}</b>`,[pct(matR(A),2)])}</td>
+      <td>${big(dd(A.mat,B&&B.mat,0,'',-1),[dd(matR(A),B&&matR(B),2,'%p',-1)])}</td>
+      ${wcell(W3, o=>fmt(o.mat))}
+      <td class="dt">${det(W3, o=>`${esc2(o.mc)} ${fmt(o.mat)} <span class="f2-why">(${pct(matR(o),2)} · ${esc2([...o.parts].join(', '))})</span>`)}</td></tr>`
+  ].join('');
+  const ex = L.filter(o=>o.t>0 && o.t<mq);
+  return f2WorstDonuts(pred) + `<div class="card"><div class="tblwrap"><table class="eq f2-wk f2-k3">
     <thead><tr><th>NO</th><th>${T('f2.r.kpi')}</th><th>${esc2(prevLbl||T('f2.r.prev'))}</th><th>${T('f2.r.cur')}</th><th>${T('f2.r.delta')}</th>
       <th class="w">Worst 1</th><th class="w">Worst 2</th><th class="w">Worst 3</th><th class="dt">${T('f2.k.detail')}</th></tr></thead>
     <tbody>${rows}</tbody></table></div>
     <div class="legend" style="margin-top:6px;align-items:center">
-      <span class="f2-noprint">${T('f2.k.minq')} <input type="number" min="0" step="10" value="${f2MinQty()}" onchange="f2SetMinQty(this.value)" style="width:64px;padding:2px 5px;border:1px solid #ccd;border-radius:4px;font:inherit"> ${T('f2.k.pcs')}</span>
-      ${(()=>{ const ex = L.filter(o=>o.t>0 && o.t<f2MinQty()); return ex.length ? `<span style="color:#b45309">${T('f2.k.excl',{n:f2MinQty()})}: ${ex.map(o=>`${esc2(o.mc)} (${fmt(o.t)})`).join(', ')}</span>` : ''; })()}
-      <span>${T('f2.k.note',{t:f2Target()})}</span></div></div>`;
+      <span class="f2-noprint">${T('f2.k.minq')} <input type="number" min="0" step="10" value="${mq}" onchange="f2SetMinQty(this.value)" style="width:64px;padding:2px 5px;border:1px solid #ccd;border-radius:4px;font:inherit"> ${T('f2.k.pcs')}</span>
+      ${ex.length ? `<span style="color:#b45309">${T('f2.k.excl',{n:mq})}: ${ex.map(o=>`${esc2(o.mc)} (${fmt(o.t)})`).join(', ')}</span>` : ''}
+      <span>${T('f2.k2.note',{t:f2Target()})}</span></div></div>`;
 }
-/* 문제점·조치 — 불량 쪽 워스트(%NG·가공·다캐)와 달성률 워스트에 나온 설비를 한 번씩만 */
+/* 문제점·조치 — 불량률(%NG) 워스트와 UPD 달성률 워스트에 나온 설비를 한 번씩만 */
 function f2McIssues(pred, noteKey){
   if(!F2.mq.length) return '';
   const L = f2McStats(pred); if(!L.length) return '';
   const tags = {};
-  F2_MKPI.forEach(k=>{ if(!['f2.k.rate','f2.k.rMc','f2.k.rDc','f2.k.ach'].includes(k[0])) return;
+  F2_MKPI.forEach(k=>{ if(!['f2.k.rate','f2.k.ach'].includes(k[0])) return;
     f2WorstList(L, k).forEach((o,j)=>{ (tags[o.mc] = tags[o.mc] || []).push(T(k[0]+'S')+'①②③'[j]); }); });
   const mcs = L.filter(o=>tags[o.mc]);
   if(!mcs.length) return `<div class="card empty" style="padding:14px">${T('f2.noWorst')}</div>`;
