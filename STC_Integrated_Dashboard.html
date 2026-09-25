@@ -175,6 +175,32 @@ table.f2-pt td.t5{text-align:left;white-space:normal;font-size:11.5px;line-heigh
 .f2-rbtn:hover{background:#c62828;} .f2-rbtn[disabled]{opacity:.6;cursor:wait;}
 .f2-sst{flex:1 1 420px;min-width:0;font-size:12px;line-height:1.6;display:flex;flex-direction:column;gap:2px;} .f2-sst b{color:#ffe08a;}
 .f2-stale{color:#ffd1a1;font-weight:700;} .f2-stale a{color:#fff;text-decoration:underline;margin-left:6px;}
+.f2-mt{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:14px;font-weight:800;color:#1e3c72;margin-bottom:8px;}
+.f2-mt small{font-size:11.5px;font-weight:500;color:var(--ink-2);}
+table.f2-ms{border-collapse:collapse;font-size:12px;width:100%;}
+table.f2-ms th,table.f2-ms td{border:1px solid #cfd6df;padding:4px 7px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+table.f2-ms th.h{background:#1e3c72;color:#fff;text-align:center;font-weight:800;}
+table.f2-ms th.v{background:#fff;height:150px;vertical-align:bottom;padding:4px 2px;}
+table.f2-ms th.v span{writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;font-weight:700;color:#333;white-space:nowrap;}
+table.f2-ms td.l{text-align:left;font-weight:800;background:#eef3fb;}
+table.f2-ms .tt{background:#1e3c72;color:#fff;font-weight:800;}
+table.f2-ms td.mx{color:#c62828;font-weight:800;}
+table.f2-ms tr.n td:not(.l):not(.tt){background:#fff5f5;} table.f2-ms tr.m td:not(.l):not(.tt){background:#fffbeb;}
+.f2-mn{font-size:11px;color:var(--ink-muted);margin-top:5px;}
+.f2-m3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+@media (max-width:1250px){.f2-m3{grid-template-columns:1fr;}}
+.f2-m3h{text-align:center;margin-bottom:6px;} .f2-m3h b{display:block;font-size:17px;color:#1e3c72;} .f2-m3h small{font-size:11.5px;color:var(--ink-2);}
+.f2-m3l{display:grid;grid-template-columns:18px 11px 1fr auto;gap:6px;align-items:center;font-size:12px;padding:2px 4px;border-radius:4px;}
+.f2-m3l.top{background:#fdecec;font-weight:700;} .f2-m3l i{width:10px;height:10px;border-radius:2px;}
+.f2-m3l .rk{display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;border-radius:3px;background:#c62828;color:#fff;font-size:10.5px;}
+.f2-m3l .rk.o{background:none;} .f2-m3l em{font-style:normal;color:var(--ink-2);font-variant-numeric:tabular-nums;}
+.f2-m3l span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.f2-m3b{border-top:1px dashed #d5dbe3;margin-top:10px;padding-top:8px;}
+.f2-m3bt{font-size:12px;font-weight:800;color:#333;margin-bottom:5px;}
+.f2-m3bar{display:flex;height:12px;border-radius:3px;overflow:hidden;background:#eef1f5;} .f2-m3bar span{display:block;height:100%;border-right:2px solid #fff;}
+.f2-m3tag{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;font-size:11.5px;color:var(--ink-2);}
+.f2-m3tag span{display:inline-flex;align-items:center;gap:4px;padding:1px 6px;border-radius:4px;border:1px solid #e3e7ec;}
+.f2-m3tag span.lead{font-weight:800;color:#333;border-color:#b8c2cf;} .f2-m3tag i{width:9px;height:9px;border-radius:2px;display:inline-block;}
 textarea.f2-note{width:100%;min-height:70px;border:1px dashed #c9d2dc;border-radius:6px;padding:8px;font-family:inherit;font-size:12.5px;background:#fffef5;resize:vertical;}
 @media print{
   header,nav.groups,nav.tabs,.f2-side,.f2-noprint{display:none !important;}
@@ -373,6 +399,10 @@ ko:{
  'f2.sync.btn':'구글시트 새로고침','f2.sync.loading':'구글시트에서 FAC2 데이터를 불러오는 중…','f2.sync.fail':'불러오기 실패 — 아래 안내를 확인하세요',
  'f2.sync.ok':'동기화 완료 — {a} ~ {b} (데이터 있는 날 {n}일)','f2.sync.last':'마지막','f2.sync.rows':'품번일별 {pd} · 불량상세 {det} · 설비실적 {mq}행','f2.sync.at':'기준',
  'f2.sync.stale':'시트의 마지막 데이터가 {n}일 전입니다 — 새 원본 엑셀을 FAC2 변환기로 변환해 F2 탭에 붙여넣어야 반영됩니다',
+ 'f2.m.sec':'FAC2 Measure — 설비·품번별 불량 구성','f2.m.t1':'설비별 %NG','f2.m.t1s':'= NG ÷ Total · 막대 안 = 가공(FAC2)/다캐(소재)/기타 NG 수량 · 아래 회색 = 누적 NG 비중 · 빨간 테두리 = Worst 3 (생산 {n}개 이상)',
+ 'f2.m.t2':'설비별 가공 품번 · 수량','f2.m.t2s':'FAC1 Measure 표와 같은 가로형 — 설비·품번을 가로로 깔고 Total·FG·NG·Mat\'l 을 행으로','f2.m.t2n':'PROD EA 생산 · OK EA 양품 · NG EA MCT 불량 · Mat\'l NG 가공 전 소재 불량 · 각 행의 최대값은 빨강',
+ 'f2.m.t3':'Worst 3 설비 불량 구성','f2.m.t3s':'불량유형을 100%로 나눠 본 것 · 색 = 원인 계통','f2.m.cause':'원인 계통 — 가공(FAC2) / 다캐(소재) / 기타(협력사·고객)',
+ 'f2.m.가공불량':'가공(FAC2)','f2.m.다캐불량':'다캐(소재)','f2.m.기타':'기타','f2.m.ea':'개',
  'f2.k.minq':'순위 기준: 생산','f2.k.pcs':'개 이상','f2.k.excl':'소량 생산({n}개 미만)으로 순위 제외',
  'f2.is.perf':'실적','f2.is.def':'주요 불량 TOP3 (MCT)','f2.is.prob':'문제점 (원인)','f2.is.act':'조치 · 담당 · 완료일',
  'f2.is.probPh':'문제점 · 원인 입력','f2.is.actPh':'조치 / 담당 / 완료일','f2.is.note':'※ 대상 = %NG · 가공 불량률 · 다캐 불량률 · UPD 달성률 Worst 3에 든 설비 (중복 제거) · 입력은 이 브라우저에 기간별로 저장 · 색 점: 파랑 = 가공(FAC2), 빨강 = 다캐(소재)',
@@ -454,6 +484,10 @@ en:{
  'f2.sync.btn':'Refresh from Google Sheet','f2.sync.loading':'Loading FAC2 data…','f2.sync.fail':'Load failed — see below',
  'f2.sync.ok':'Synced — {a} ~ {b} ({n} days with data)','f2.sync.last':'last','f2.sync.rows':'{pd} part-day · {det} defect · {mq} machine rows','f2.sync.at':'',
  'f2.sync.stale':'Latest data in the sheet is {n} days old — convert the new source file with the FAC2 converter and paste it into the F2 tabs',
+ 'f2.m.sec':'FAC2 Measure — defects by machine · part','f2.m.t1':'%NG by machine','f2.m.t1s':'= NG ÷ Total · segments = machining / casting / other NG · grey = cumulative NG share · red box = Worst 3 (output ≥ {n})',
+ 'f2.m.t2':'Parts and quantities by machine','f2.m.t2s':'same layout as the FAC1 Measure table','f2.m.t2n':'PROD EA production · OK EA good · NG EA MCT defects · Mat\'l NG material NG before machining · max of each row in red',
+ 'f2.m.t3':'Worst 3 machines — defect mix','f2.m.t3s':'defect types as 100% · colour = cause','f2.m.cause':'Cause — machining (FAC2) / casting (material) / other',
+ 'f2.m.가공불량':'Machining','f2.m.다캐불량':'Casting','f2.m.기타':'Other','f2.m.ea':' pcs',
  'f2.k.minq':'Rank only for output ≥','f2.k.pcs':'pcs','f2.k.excl':'Excluded (output < {n})',
  'f2.is.perf':'Output','f2.is.def':'Top 3 defects (MCT)','f2.is.prob':'Problem (cause)','f2.is.act':'Action · owner · due',
  'f2.is.probPh':'Problem / cause','f2.is.actPh':'Action / owner / due','f2.is.note':'※ Machines in Worst 3 of %NG · machining · casting · UPD achievement (deduplicated) · saved in this browser per period',
@@ -503,6 +537,7 @@ th:{
  'f2.g.가공불량':'งานกลึง (FAC2)','f2.g.다캐불량':'งานหล่อ (FAC1)','f2.g.협력사':'ซัพพลายเออร์','f2.g.고객':'ลูกค้า',
  'f2.p.MCT':'MCT','f2.p.OQC':'OQC Packing','f2.target':'เป้าหมาย','f2.parts':'ตามชิ้นงาน (PART NAME)','f2.top5r':'ของเสีย TOP5 ตามชิ้นงาน','f2.trend12':'แนวโน้ม NG (12 สัปดาห์)',
  'f2.g.다캐불량':'ของเสียงานหล่อ','f2.g.가공불량':'ของเสียงานกลึง MCT',
+ 'f2.k.mcS':'กลึง','f2.k.dcS':'หล่อ','f2.k.etcS':'อื่นๆ','f2.m.가공불량':'งานกลึง (FAC2)','f2.m.다캐불량':'งานหล่อ (วัตถุดิบ)','f2.m.기타':'อื่นๆ',
  'f2.r.title.daily':'รายงานคุณภาพรายวัน FAC2 (MCT · OQC)','f2.r.title.week':'รายงานคุณภาพรายสัปดาห์ FAC2 (MCT · OQC)','f2.r.title.month':'รายงานคุณภาพรายเดือน FAC2 (MCT · OQC)',
  'st.loading':'กำลังโหลดข้อมูล…','st.weeks':'{n} สัปดาห์','st.rows':'A {a} / P {p} / Q {q} แถว',
  'st.asof':'ข้อมูล ณ {t}','st.failed':'โหลดไม่สำเร็จ','st.frameLoading':'กำลังโหลด {name}…',
@@ -868,11 +903,30 @@ async function f2Fetch(k){
   }
   throw last || new Error(F2_TAB[k]+' 없음');
 }
+/* 불량유형 이름을 화면 언어에 맞춘다 — 코드(1~50)는 원본 열 위치라 고정이므로 코드로 찾는다.
+   · 한국어: 사내 코드표(아래) · 영어/태국어: 원본 Search_Detail_MCT 이름("Peel off ผิวลอกล่อน")을 영어·태국어 부분으로 나눠 쓴다.
+   · 원본 이름이 한국어뿐이면(예전 파일) 영어·태국어 화면에서도 한국어로 둔다. */
+const F2_CODE_KO = ['','기포','미성형','박리','부러짐','깨짐','굽힘','틀어짐','휨','파임','트리밍','변형','핀 들어감','부푸름','소착','오염(Dirty)','흑색 얼룩(Black Stain)',
+  '쇼트 불량','톨 부러짐','부저치 들어감','들어감','칩 마크','스크래치','줄 자국(Filing mark)','날 자국(Blade mark)','톨 마크','가공 오버','드릴 불량','밀링 불량','절삭 불량','연마 불량','사상 불량',
+  '가공 안됨','탭 불량','셋팅 불량','스펙 포지션','스펙 평행도','제품 조도 불량','데이텀 불량','두께 불량','치수 불량','내경 불량','위치 불량','제품 혼입','리크 테스트','절단 테스트','기타',
+  '부푸름(협력사)','도금 불량','백녹','고객 불량'];
+function f2DefName(code, orig){
+  const o = String(orig||'').trim(), c = parseInt(code,10);
+  const hasTh = /[฀-๿]/.test(o), hasKo = /[가-힣]/.test(o);
+  if(LANG==='ko') return (c>=1 && c<=50 && F2_CODE_KO[c]) ? F2_CODE_KO[c] : o;
+  if(hasKo && !hasTh) return o;
+  const i = o.search(/[฀-๿]/);
+  if(LANG==='th') return i>=0 ? o.slice(i).trim() : o;
+  return i>0 ? o.slice(0,i).trim() : o;
+}
+function f2Localize(){
+  F2.det.forEach(r=>{ if(r._orig===undefined) r._orig = r['불량유형']; r['불량유형'] = f2DefName(r['코드'], r._orig); });
+}
 async function loadF2(){
   F2.loading = true; F2.err = null; renderF2();
   try{
     F2.pd = await f2Fetch('pd');
-    try{ F2.det = await f2Fetch('det'); }catch(e){ F2.det = []; }
+    try{ F2.det = await f2Fetch('det'); f2Localize(); }catch(e){ F2.det = []; }
     try{ F2.mq  = await f2Fetch('mq');  }catch(e){ F2.mq  = []; }   /* 설비별 가공 실적용 (없어도 나머지는 뜬다) */
     F2.loaded = true; F2.at = new Date();
   }catch(e){ F2.loaded = false; F2.err = e.message || String(e); F2.at = new Date(); }
@@ -1166,6 +1220,76 @@ function f2McIssues(pred, noteKey){
         <td><textarea class="f2-note" data-f2note="${esc2(nk(o.mc))}_a" placeholder="${T('f2.is.actPh')}">${esc2(a)}</textarea></td></tr>`; }).join('')}</tbody>
   </table></div><div class="legend" style="margin-top:6px"><span>${T('f2.is.note')}</span></div></div>`;
 }
+/* =========================================================================
+   FAC2 Measure — 설비·품번별 불량 구성 (FAC1 Measure 화면과 같은 틀)
+   ① 설비별 %NG 누적막대 : 막대 높이 = %NG, 안은 가공(FAC2)·다캐(소재)·기타 NG 수량, 아래 회색 = 누적 NG 비중
+   ② 설비별 생산 품번·수량 : 설비·품번을 가로로 깔고 Total·FG·NG·Mat'l 을 행으로
+   ③ Worst 3 설비 불량 구성 : 불량유형 100% 도넛 + 원인 계통 막대
+   ========================================================================= */
+const F2_GC = { '가공불량':'#3a66b8', '다캐불량':'#e0701f', '기타':'#9aa0a6' };
+function f2Measure(pred){
+  if(!F2.mq.length) return `<div class="card empty" style="padding:14px">${T('f2.noMq')}</div>`;
+  const L = f2McStats(pred).filter(o=>o.t>0);
+  if(!L.length) return `<div class="card empty" style="padding:14px">${T('st.noData')}</div>`;
+  const mq = f2MinQty(), totNg = L.reduce((a,o)=>a+o.n,0);
+  const sorted = L.slice().sort((a,b)=>(b.rate||0)-(a.rate||0));
+  const worst = sorted.filter(o=>o.t>=mq && o.n>0).slice(0,3).map(o=>o.mc);
+  /* ① 누적막대 (SVG) */
+  const W = Math.max(1200, sorted.length*110), H = 280, top = 34, bot = 44, ph = H-top-bot, bw = Math.min(64, W/sorted.length*0.62);
+  const maxR = Math.max(1, ...sorted.map(o=>o.rate||0));
+  let cum = 0, svg = '';
+  sorted.forEach((o,i)=>{
+    const cx = (i+0.5)*W/sorted.length, x = cx-bw/2, rate = o.rate||0, hTot = rate/maxR*ph, base = top+ph;
+    const etc = Math.max(0, o.n-o.mcN-o.dc);
+    const segs = [['가공불량',o.mcN],['다캐불량',o.dc],['기타',etc]].filter(s=>s[1]>0);
+    let y = base;
+    segs.forEach(([g,v],j)=>{ const h = o.n ? hTot*v/o.n : 0; y -= h;
+      const r = j===segs.length-1 ? 4 : 0;
+      svg += `<path d="M${x},${y+h} V${y+r} Q${x},${y} ${x+r},${y} H${x+bw-r} Q${x+bw},${y} ${x+bw},${y+r} V${y+h} Z" fill="${F2_GC[g]}" stroke="#fff" stroke-width="1.5"><title>${esc2(o.mc)} · ${T('f2.m.'+g)} ${fmt(v)} (${(v/o.t*100).toFixed(2)}%)</title></path>`;
+      if(h >= 16) svg += `<text x="${cx}" y="${y+h/2+4}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">${fmt(v)}</text>`; });
+    const wi = worst.indexOf(o.mc);
+    if(wi>=0) svg += `<rect x="${x-4}" y="${base-hTot-4}" width="${bw+8}" height="${hTot+8}" rx="5" fill="none" stroke="#c62828" stroke-width="2"/>`;
+    svg += `<text x="${cx}" y="${base-hTot-10}" text-anchor="middle" font-size="11.5" font-weight="800" fill="${wi>=0?'#c62828':'#222'}">${rate.toFixed(2)}%</text>`;
+    cum += o.n;
+    svg += `<text x="${cx}" y="${base+17}" text-anchor="middle" font-size="12" font-weight="800" fill="${wi>=0?'#c62828':'#1e3c72'}">${wi>=0?`${wi+1} `:''}${esc2(o.mc)}</text>
+            <text x="${cx}" y="${base+32}" text-anchor="middle" font-size="10.5" fill="#898781">${o.t<mq?`(${fmt(o.t)}${T('f2.m.ea')}) `:''}${totNg?Math.round(cum/totNg*100):0}%</text>`;
+  });
+  svg += `<line x1="0" x2="${W}" y1="${top+ph}" y2="${top+ph}" stroke="#c9ccd1"/>`;
+  const legend = ['가공불량','다캐불량','기타'].map(g=>`<span><i class="pill" style="background:${F2_GC[g]}"></i>${T('f2.m.'+g)}</span>`).join('');
+  const c1 = `<div class="card"><div class="f2-mt">① ${T('f2.m.t1')} <small>${T('f2.m.t1s',{n:mq})}</small><span class="legend" style="margin:0 0 0 auto">${legend}</span></div>
+    <div class="tblwrap"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:720px;display:block" role="img" aria-label="${T('f2.m.t1')}">${svg}</svg></div></div>`;
+  /* ② 설비 × 품번 가로표 */
+  const cols = [];
+  L.slice().sort((a,b)=>(parseInt(a.mc.replace(/\D/g,''),10)||0)-(parseInt(b.mc.replace(/\D/g,''),10)||0)).forEach(o=>{
+    const pm = {};
+    F2.mq.forEach(r=>{ if(r['설비명']!==o.mc || !pred(r)) return; const k = r['Part name']||r['Part no.'];
+      const x = pm[k] || (pm[k] = {t:0,f:0,n:0,m:0}); x.t+=f2n(r['생산수량']); x.f+=f2n(r['양품']); x.n+=f2n(r['불량수량']); x.m+=f2n(r["Mat'l NG"]); });
+    Object.entries(pm).forEach(([k,x])=>cols.push({mc:o.mc, part:k, ...x}));
+  });
+  const mcSpan = {}; cols.forEach(c=>mcSpan[c.mc]=(mcSpan[c.mc]||0)+1);
+  const R2 = [['PROD EA','t'],['OK EA','f'],['NG EA','n'],["Mat'l NG",'m']];
+  const mx = k => Math.max(...cols.map(c=>c[k]));
+  const tot = k => cols.reduce((a,c)=>a+c[k],0);
+  const c2 = `<div class="card"><div class="f2-mt">② ${T('f2.m.t2')} <small>${T('f2.m.t2s')}</small></div><div class="tblwrap"><table class="f2-ms">
+    <thead><tr><th class="h">MCT</th>${Object.keys(mcSpan).map(m=>`<th class="h" colspan="${mcSpan[m]}">${esc2(m)}</th>`).join('')}<th class="h tt" rowspan="2">TOTAL</th></tr>
+      <tr><th class="h">PART NAME</th>${cols.map(c=>`<th class="v"><span>${esc2(c.part)}</span></th>`).join('')}</tr></thead>
+    <tbody>${R2.map(([lab,k])=>{ const m = mx(k); return `<tr class="${k}"><td class="l">${lab}</td>${cols.map(c=>`<td${c[k]===m&&m>0?' class="mx"':''}>${fmt(c[k])}</td>`).join('')}<td class="tt">${fmt(tot(k))}</td></tr>`; }).join('')}
+      <tr class="r"><td class="l">% NG</td>${cols.map(c=>`<td style="color:${f2St(c.t?c.n/c.t*100:null).c};font-weight:700">${c.t?(c.n/c.t*100).toFixed(2)+'%':'–'}</td>`).join('')}<td class="tt">${tot('t')?(tot('n')/tot('t')*100).toFixed(2)+'%':'–'}</td></tr></tbody>
+  </table></div><div class="f2-mn">${T('f2.m.t2n')}</div></div>`;
+  /* ③ Worst 3 설비 불량 구성 */
+  const c3 = worst.length ? `<div class="f2-mt" style="margin-top:4px">③ ${T('f2.m.t3')} <small>${T('f2.m.t3s')}</small></div><div class="f2-m3">${worst.map((mc,i)=>{
+      const o = L.find(x=>x.mc===mc), defs = f2McTopDef(pred, mc, 99), sum = defs.reduce((a,x)=>a+x.v,0);
+      const items = defs.slice(0,3).map(x=>({ label:x.t, v:x.v, c:F2_GC[x.g]||F2_GC['기타'], g:x.g }));
+      const rest = defs.slice(3); if(rest.length) items.push({ label:`${T('f2.d.other')} ${rest.length}${T('f2.d.kinds')}`, v:rest.reduce((a,x)=>a+x.v,0), c:F2_WOTHER });
+      const leg = items.map((x,j)=>`<div class="f2-m3l${j<3?' top':''}">${j<3?`<b class="rk">${j+1}</b>`:'<b class="rk o"></b>'}<i style="background:${x.c}"></i><span>${esc2(x.label)}</span><em>${fmt(x.v)} (${sum?Math.round(x.v/sum*100):0}%)</em></div>`).join('');
+      const g = { '가공불량':o.mcN, '다캐불량':o.dc, '기타':Math.max(0,o.n-o.mcN-o.dc) };
+      const bar = Object.entries(g).filter(e=>e[1]>0).map(([k,v])=>`<span style="width:${o.n?v/o.n*100:0}%;background:${F2_GC[k]}" title="${T('f2.m.'+k)} ${fmt(v)}"></span>`).join('');
+      const tags = Object.entries(g).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).map(([k,v],j)=>`<span class="${j?'':'lead'}"><i style="background:${F2_GC[k]}"></i>${T('f2.m.'+k)} ${o.n?Math.round(v/o.n*100):0}% (${fmt(v)})</span>`).join('');
+      return `<div class="card f2-m3c"><div class="f2-m3h"><b>${esc2(mc)}</b><small>NG ${fmt(o.n)}${T('f2.m.ea')} · %NG ${o.rate.toFixed(2)}% · ${esc2([...o.parts].join(', '))}</small></div>
+        <div class="f2-dbody">${f2DonutSvg(items, sum, fmt(sum), 'NG EA')}<div class="f2-dleg" style="gap:4px">${leg}</div></div>
+        <div class="f2-m3b"><div class="f2-m3bt">${T('f2.m.cause')}</div><div class="f2-m3bar">${bar}</div><div class="f2-m3tag">${tags}</div></div></div>`; }).join('')}</div>` : '';
+  return c1 + c2 + c3;
+}
 /* 품번 선택 칩 */
 function f2PartChips(s){
   const withNg = s.partList.filter(pt=>pt.MCT.n+pt.OQC.n>0).sort((a,b)=>(b.MCT.n+b.OQC.n)-(a.MCT.n+a.OQC.n));
@@ -1296,6 +1420,7 @@ function f2Dash(week){
     ${f2KpiRow('OQC', s.OQC, p && p.OQC)}
     <div class="sec-title">${T('f2.mwk')}</div>${f2McWorstTable(pred, pw?(r=>r['주차']===pw):null, pw, week)}
     <div class="sec-title">${T('f2.parts')}</div>${f2PartTable(s)}
+    <div class="sec-title">${T('f2.m.sec')}</div>${f2Measure(pred)}
     <div class="sec-title">${T('f2.mcs')}</div>${f2McTable(pred)}
     <div class="sec-title">${T('f2.top5')}</div>${chips.html}${pt?f2Top5Lists(pred, pt):''}
     <div class="sec-title">${T('f2.trend12')}${part&&part.topName?` · ${esc2(part.name)} ${T('f2.top1')} “${esc2(part.topName)}”`:''}</div>
@@ -1377,7 +1502,8 @@ function f2Report(kind, topWeek){
         <tr>${[0,1].map(()=>`<th>${esc2(prevKey||T('f2.r.prev'))}</th><th>${esc2(kind==='daily'&&dFrom!==dTo?`${dFrom} ~ ${dTo}`:cur)}</th><th>${T('f2.r.delta')}</th>`).join('')}</tr></thead>
       <tbody>${rows}</tbody></table></div></div>
     <div class="sec-title">4. ${T('f2.parts')}</div>${f2PartTable(s)}
-    <div class="sec-title">5. ${T('f2.mcs')}</div>${f2McTable(pred)}
+    <div class="sec-title">5. ${T('f2.m.sec')}</div>${f2Measure(pred)}
+    <div class="sec-title">5-1. ${T('f2.mcs')}</div>${f2McTable(pred)}
     <div class="sec-title">6. ${T('f2.top5r')}</div>
     <div class="card"><div class="tblwrap"><table class="eq f2-pt f2-t5t">
       <thead><tr><th>PART NAME</th><th>${T('f2.proc')}</th><th>NG</th><th>% NG</th><th>${T('f2.g.다캐불량')} TOP5</th><th>${T('f2.g.가공불량')} TOP5</th></tr></thead>
@@ -1524,7 +1650,7 @@ function setLang(lang){
   writeChildLangPrefs();
   applyStaticI18n();
   renderOverview();
-  renderF2();
+  f2Localize(); renderF2();
   refreshStatus();
   syncLangToAllFrames();
 }
