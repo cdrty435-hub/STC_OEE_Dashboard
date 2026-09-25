@@ -155,6 +155,18 @@ table.f2-pt td.t5{text-align:left;white-space:normal;font-size:11.5px;line-heigh
 .f2-is td{vertical-align:top;} .f2-is td.mc{font-weight:900;font-size:15px;color:#b71c1c;text-align:center;white-space:nowrap;}
 .f2-is td.mc small{display:block;font-size:10px;font-weight:700;color:#c62828;margin-top:3px;white-space:normal;}
 .f2-is textarea.f2-note{min-height:62px;font-size:12px;}
+.f2-dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px;}
+@media (max-width:1100px){.f2-dgrid{grid-template-columns:1fr;}}
+.f2-donut .f2-dt{font-size:12.5px;font-weight:800;color:var(--ink-2);margin-bottom:6px;}
+.f2-dbody{display:flex;align-items:center;gap:14px;}
+.f2-dbody svg{flex:0 0 150px;}
+.f2-dleg{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:7px;}
+.f2-dl{display:grid;grid-template-columns:12px 1fr auto 52px;column-gap:8px;align-items:baseline;font-size:12.5px;}
+.f2-dl i{width:11px;height:11px;border-radius:3px;align-self:center;}
+.f2-dl .n{font-weight:700;color:var(--ink-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.f2-dl .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;}
+.f2-dl .p{color:var(--ink-2);font-variant-numeric:tabular-nums;text-align:right;}
+.f2-dl .s{grid-column:2 / 5;font-size:11px;color:var(--ink-muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 textarea.f2-note{width:100%;min-height:70px;border:1px dashed #c9d2dc;border-radius:6px;padding:8px;font-family:inherit;font-size:12.5px;background:#fffef5;resize:vertical;}
 @media print{
   header,nav.groups,nav.tabs,.f2-side,.f2-noprint{display:none !important;}
@@ -346,6 +358,7 @@ ko:{
  'f2.k.rateS':'%NG','f2.k.rMcS':'가공','f2.k.rDcS':'다캐','f2.k.achS':'달성률','f2.k.detail':'세부사항 (Worst 원인)',
  'f2.k.note':'※ 증감: 빨강 = 악화 · 초록 = 개선 · Worst = 설비(MC)별 · 총 생산·달성률은 낮은 순, 불량 지표는 높은 순 · 양품률·불량률·가공·다캐·달성률 순위는 생산 기준 이상 설비만 · 괄호 = 주요 불량 · 목표 %NG ≤ {t}%',
  'f2.noWorst':'워스트 설비 없음 (불량·달성률 이상 없음)',
+ 'f2.d.byMc':'전설비 불량(NG) — 설비별 Worst 3','f2.d.byType':'전설비 불량(NG) — 불량유형 Worst 3','f2.d.ngAll':'NG 합계','f2.d.other':'기타','f2.d.units':'대','f2.d.kinds':'종','f2.d.dc':'다캐(소재)','f2.d.mc':'가공(FAC2)','f2.d.etc':'기타',
  'f2.k.minq':'비율 지표 순위 기준: 생산','f2.k.pcs':'개 이상','f2.k.excl':'소량 생산({n}개 미만)으로 순위 제외',
  'f2.is.perf':'실적','f2.is.def':'주요 불량 TOP3 (MCT)','f2.is.prob':'문제점 (원인)','f2.is.act':'조치 · 담당 · 완료일',
  'f2.is.probPh':'문제점 · 원인 입력','f2.is.actPh':'조치 / 담당 / 완료일','f2.is.note':'※ 대상 = %NG · 가공 불량률 · 다캐 불량률 · UPD 달성률 Worst 3에 든 설비 (중복 제거) · 입력은 이 브라우저에 기간별로 저장 · 색 점: 파랑 = 가공(FAC2), 빨강 = 다캐(소재)',
@@ -420,6 +433,7 @@ en:{
  'f2.k.rateS':'%NG','f2.k.rMcS':'Mach.','f2.k.rDcS':'Cast.','f2.k.achS':'UPD','f2.k.detail':'Details (worst causes)',
  'f2.k.note':'※ Red = worse · green = better · Worst by machine · production/achievement lowest first, defect KPIs highest first · target %NG ≤ {t}%',
  'f2.noWorst':'No worst machines',
+ 'f2.d.byMc':'All-machine NG — Worst 3 machines','f2.d.byType':'All-machine NG — Worst 3 defect types','f2.d.ngAll':'NG total','f2.d.other':'Others','f2.d.units':'','f2.d.kinds':' types','f2.d.dc':'Casting','f2.d.mc':'Machining','f2.d.etc':'Other',
  'f2.k.minq':'Rank ratio KPIs only for output ≥','f2.k.pcs':'pcs','f2.k.excl':'Excluded (output < {n})',
  'f2.is.perf':'Output','f2.is.def':'Top 3 defects (MCT)','f2.is.prob':'Problem (cause)','f2.is.act':'Action · owner · due',
  'f2.is.probPh':'Problem / cause','f2.is.actPh':'Action / owner / due','f2.is.note':'※ Machines in Worst 3 of %NG · machining · casting · UPD achievement (deduplicated) · saved in this browser per period',
@@ -1013,6 +1027,50 @@ function f2WorstList(L, k){
   if(k[0]==='f2.k.mat') c = c.filter(o=>o.mat>0);
   return c.slice().sort(sort).slice(0,3);
 }
+/* ---- 도넛 : 전설비 불량(NG) 중 Worst 3 비중 — Worst 1·2·3 만 색, 나머지는 회색 '기타' ----
+   색은 dataviz 검증기 통과(대비 3:1 · CVD ΔE ≥ 15) · 조각 사이 2px 흰 간격 · 범례에 이름·수량·% 함께(색만으로 구분하지 않음) */
+const F2_WCOL = ['#b91c1c','#e0701f','#3a66b8'], F2_WOTHER = '#d5dbe3';
+function f2DonutSvg(items, total, center, sub){
+  const R = 62, r = 40, cx = 75, cy = 75; let a0 = -Math.PI/2, paths = '';
+  const pt = (rad, a) => [cx + rad*Math.cos(a), cy + rad*Math.sin(a)];
+  items.filter(x=>x.v>0).forEach(x=>{
+    const frac = total ? x.v/total : 0; if(frac<=0) return;
+    const a1 = a0 + frac*2*Math.PI - (frac>=0.9999?0.0001:0), big = (a1-a0) > Math.PI ? 1 : 0;
+    const [x0,y0]=pt(R,a0),[x1,y1]=pt(R,a1),[x2,y2]=pt(r,a1),[x3,y3]=pt(r,a0);
+    paths += `<path d="M${x0.toFixed(2)},${y0.toFixed(2)} A${R},${R} 0 ${big} 1 ${x1.toFixed(2)},${y1.toFixed(2)} L${x2.toFixed(2)},${y2.toFixed(2)} A${r},${r} 0 ${big} 0 ${x3.toFixed(2)},${y3.toFixed(2)} Z"
+      fill="${x.c}" stroke="#fff" stroke-width="2"><title>${esc2(x.label)} · ${fmt(x.v)} (${(frac*100).toFixed(1)}%)</title></path>`;
+    a0 = a1 + (frac>=0.9999?0.0001:0);
+  });
+  return `<svg viewBox="0 0 150 150" width="150" height="150" role="img" aria-label="${esc2(center)}">${paths}
+    <text x="75" y="72" text-anchor="middle" font-size="19" font-weight="700" fill="#0b0b0b">${esc2(center)}</text>
+    <text x="75" y="90" text-anchor="middle" font-size="10.5" fill="#52514e">${esc2(sub)}</text></svg>`;
+}
+function f2DonutCard(title, items, total, unitSub){
+  const legend = items.map(x=>`<div class="f2-dl"><i style="background:${x.c}"></i><span class="n">${esc2(x.label)}</span>
+      <span class="v">${fmt(x.v)}</span><span class="p">${total?(x.v/total*100).toFixed(1):'0.0'}%</span>${x.sub?`<span class="s">${x.sub}</span>`:''}</div>`).join('');
+  return `<div class="card f2-donut"><div class="f2-dt">${title}</div><div class="f2-dbody">${f2DonutSvg(items, total, fmt(total), unitSub)}<div class="f2-dleg">${legend}</div></div></div>`;
+}
+function f2WorstDonuts(pred){
+  const L = f2McStats(pred), tot = L.reduce((a,o)=>a+o.n,0);
+  if(!tot) return '';
+  /* ① 설비별 : NG 수량 많은 순 Worst 3 */
+  const byMc = L.filter(o=>o.n>0).sort((a,b)=>b.n-a.n);
+  const mcItems = byMc.slice(0,3).map((o,i)=>({ label:`Worst ${i+1} · ${o.mc}`, v:o.n, c:F2_WCOL[i],
+      sub:`%NG ${o.rate==null?'–':o.rate.toFixed(2)+'%'} · ${esc2([...o.parts].join(', '))}` }));
+  const restMc = byMc.slice(3); if(restMc.length) mcItems.push({ label:`${T('f2.d.other')} ${restMc.length}${T('f2.d.units')}`, v:restMc.reduce((a,o)=>a+o.n,0), c:F2_WOTHER, sub:esc2(restMc.map(o=>o.mc).join(', ')) });
+  /* ② 불량유형별 : 전설비 MCT NG 코드 합계 Worst 3 */
+  const m = {};
+  F2.det.forEach(r=>{ if(r['공정']!=='MCT' || r['구분']!=='NG' || !pred(r)) return; const k=r['불량유형']; const o=m[k]||(m[k]={t:k,g:r['계통'],v:0}); o.v+=f2n(r['수량']); });
+  const types = Object.values(m).sort((a,b)=>b.v-a.v), tsum = types.reduce((a,x)=>a+x.v,0);
+  const tyItems = types.slice(0,3).map((x,i)=>({ label:`Worst ${i+1} · ${x.t}`, v:x.v, c:F2_WCOL[i], sub:`${T(x.g==='다캐불량'?'f2.d.dc':x.g==='가공불량'?'f2.d.mc':'f2.d.etc')} · ${f2TypeMcs(pred, x.t)}` }));
+  const restTy = types.slice(3); if(restTy.length) tyItems.push({ label:`${T('f2.d.other')} ${restTy.length}${T('f2.d.kinds')}`, v:restTy.reduce((a,x)=>a+x.v,0), c:F2_WOTHER, sub:'' });
+  return `<div class="f2-dgrid">${f2DonutCard(T('f2.d.byMc'), mcItems, tot, T('f2.d.ngAll'))}${tsum?f2DonutCard(T('f2.d.byType'), tyItems, tsum, T('f2.d.ngAll')):''}</div>`;
+}
+/* 그 불량유형이 많이 나온 설비 (상위 2) */
+function f2TypeMcs(pred, t){
+  const m = {}; F2.det.forEach(r=>{ if(r['공정']==='MCT' && r['구분']==='NG' && r['불량유형']===t && pred(r)) m[r['설비명']] = (m[r['설비명']]||0) + f2n(r['수량']); });
+  return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k,v])=>`${esc2(k)} ${fmt(v)}`).join(' · ');
+}
 function f2McWorstTable(pred, prevPred, prevLbl){
   if(!F2.mq.length) return `<div class="card empty" style="padding:14px">${T('f2.noMq')}</div>`;
   const L = f2McStats(pred), P = prevPred ? f2McStats(prevPred) : [];
@@ -1034,7 +1092,7 @@ function f2McWorstTable(pred, prevPred, prevLbl){
       ${[0,1,2].map(j=>`<td class="w w${j+1}">${W[j]?`${esc2(W[j].mc)}<br><small>${fv(get(W[j]),dp,u)}</small>`:'–'}</td>`).join('')}
       <td class="dt">${detail||'–'}</td></tr>`;
   }).join('');
-  return `<div class="card"><div class="tblwrap"><table class="eq f2-wk">
+  return f2WorstDonuts(pred) + `<div class="card"><div class="tblwrap"><table class="eq f2-wk">
     <thead><tr><th>NO</th><th>${T('f2.r.kpi')}</th><th>${esc2(prevLbl||T('f2.r.prev'))}</th><th>${T('f2.r.cur')}</th><th>${T('f2.r.delta')}</th>
       <th class="w">Worst 1</th><th class="w">Worst 2</th><th class="w">Worst 3</th><th class="dt">${T('f2.k.detail')}</th></tr></thead>
     <tbody>${rows}</tbody></table></div>
