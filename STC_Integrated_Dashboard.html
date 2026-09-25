@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" translate="no" class="notranslate">
 <head>
 <meta charset="UTF-8">
+<meta name="google" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>STC 설비관리 통합 대시보드</title>
 <style>
@@ -1094,7 +1095,7 @@ function f2TypeMcs(pred, t){
    ① 생산 실적 : Total · FG · UPD 달성률      Worst = 달성률 낮은 순 (생산 기준 이상 설비)
    ② 불량률 %NG : NG ÷ Total = 가공 + 다캐 (+협력사·고객)   Worst = %NG 높은 순 (생산 기준 이상 설비)
    ③ Mat'l NG  : 가공 전 소재 불량 수량 · 투입 대비 %      Worst = 수량 많은 순 */
-function f2McWorstTable(pred, prevPred, prevLbl){
+function f2McWorstTable(pred, prevPred, prevLbl, curLbl){
   if(!F2.mq.length) return `<div class="card empty" style="padding:14px">${T('f2.noMq')}</div>`;
   const L = f2McStats(pred), P = prevPred ? f2McStats(prevPred) : [];
   if(!L.length) return `<div class="card empty" style="padding:14px">${T('st.noData')}</div>`;
@@ -1135,14 +1136,14 @@ function f2McWorstTable(pred, prevPred, prevLbl){
       <td class="dt">${det(W3, o=>`${esc2(o.mc)} ${fmt(o.mat)} <span class="f2-why">(${pct(matR(o),2)} · ${esc2([...o.parts].join(', '))})</span>`)}</td></tr>`
   ].join('');
   const ex = L.filter(o=>o.t>0 && o.t<mq);
-  return f2WorstDonuts(pred) + `<div class="card"><div class="tblwrap"><table class="eq f2-wk f2-k3">
-    <thead><tr><th>NO</th><th>${T('f2.r.kpi')}</th><th>${esc2(prevLbl||T('f2.r.prev'))}</th><th>${T('f2.r.cur')}</th><th>${T('f2.r.delta')}</th>
+  return `<div class="card" style="margin-bottom:12px"><div class="tblwrap"><table class="eq f2-wk f2-k3">
+    <thead><tr><th>NO</th><th>${T('f2.r.kpi')}</th><th>${esc2(prevLbl||T('f2.r.prev'))}</th><th>${esc2(curLbl||T('f2.r.cur'))}</th><th>${T('f2.r.delta')}</th>
       <th class="w">Worst 1</th><th class="w">Worst 2</th><th class="w">Worst 3</th><th class="dt">${T('f2.k.detail')}</th></tr></thead>
     <tbody>${rows}</tbody></table></div>
     <div class="legend" style="margin-top:6px;align-items:center">
       <span class="f2-noprint">${T('f2.k.minq')} <input type="number" min="0" step="10" value="${mq}" onchange="f2SetMinQty(this.value)" style="width:64px;padding:2px 5px;border:1px solid #ccd;border-radius:4px;font:inherit"> ${T('f2.k.pcs')}</span>
       ${ex.length ? `<span style="color:#b45309">${T('f2.k.excl',{n:mq})}: ${ex.map(o=>`${esc2(o.mc)} (${fmt(o.t)})`).join(', ')}</span>` : ''}
-      <span>${T('f2.k2.note',{t:f2Target()})}</span></div></div>`;
+      <span>${T('f2.k2.note',{t:f2Target()})}</span></div></div>` + f2WorstDonuts(pred);
 }
 /* 문제점·조치 — 불량률(%NG) 워스트와 UPD 달성률 워스트에 나온 설비를 한 번씩만 */
 function f2McIssues(pred, noteKey){
@@ -1293,7 +1294,7 @@ function f2Dash(week){
     <div class="sec-title">${T('grp.fac2')} · ${week}${ow?` (${T('f2.orig')} ${esc2(ow)})`:''} · ${s.days[0]} ~ ${s.days[s.days.length-1]} · ${T('u.days',{n:s.days.length})}</div>
     ${f2KpiRow('MCT', s.MCT, p && p.MCT)}
     ${f2KpiRow('OQC', s.OQC, p && p.OQC)}
-    <div class="sec-title">${T('f2.mwk')}</div>${f2McWorstTable(pred, pw?(r=>r['주차']===pw):null, pw)}
+    <div class="sec-title">${T('f2.mwk')}</div>${f2McWorstTable(pred, pw?(r=>r['주차']===pw):null, pw, week)}
     <div class="sec-title">${T('f2.parts')}</div>${f2PartTable(s)}
     <div class="sec-title">${T('f2.mcs')}</div>${f2McTable(pred)}
     <div class="sec-title">${T('f2.top5')}</div>${chips.html}${pt?f2Top5Lists(pred, pt):''}
@@ -1368,12 +1369,12 @@ function f2Report(kind, topWeek){
   return bar + `
     <div class="f2-rhead"><h2>${T('f2.r.title.'+kind)}</h2>
       <div>${esc2(label)} · ${T('f2.r.vs')} ${esc2(prevKey||'–')}<br><small>${T('f2.r.made',{d:new Date().toISOString().slice(0,10)})}</small></div></div>
-    <div class="sec-title">1. ${T('f2.mwk')}</div>${f2McWorstTable(pred, prevKey?prevPred:null, prevKey)}
+    <div class="sec-title">1. ${T('f2.mwk')}</div>${f2McWorstTable(pred, prevKey?prevPred:null, prevKey, kind==='daily'&&dFrom!==dTo?`${dFrom} ~ ${dTo}`:cur)}
     <div class="sec-title">2. ${T('f2.issues')}</div>${f2McIssues(pred, noteKey)}
     <div class="sec-title">3. ${T('f2.procSum')} <span style="text-transform:none;font-weight:600">(${T('f2.target')} %NG ≤ ${f2Target()}%)</span></div>
     <div class="card"><div class="tblwrap"><table class="eq f2-pt">
       <thead><tr><th rowspan="2">${T('f2.r.kpi')}</th><th colspan="3" class="grp">${T('f2.p.MCT')}</th><th colspan="3" class="grp">${T('f2.p.OQC')}</th></tr>
-        <tr><th>${T('f2.r.prev')}</th><th>${T('f2.r.cur')}</th><th>${T('f2.r.delta')}</th><th>${T('f2.r.prev')}</th><th>${T('f2.r.cur')}</th><th>${T('f2.r.delta')}</th></tr></thead>
+        <tr>${[0,1].map(()=>`<th>${esc2(prevKey||T('f2.r.prev'))}</th><th>${esc2(kind==='daily'&&dFrom!==dTo?`${dFrom} ~ ${dTo}`:cur)}</th><th>${T('f2.r.delta')}</th>`).join('')}</tr></thead>
       <tbody>${rows}</tbody></table></div></div>
     <div class="sec-title">4. ${T('f2.parts')}</div>${f2PartTable(s)}
     <div class="sec-title">5. ${T('f2.mcs')}</div>${f2McTable(pred)}
