@@ -359,8 +359,11 @@ function equipmentAvailability(rows, downList, roster) {
   return { filtered, list };
 }
 
+/* 식별용 열(금형 번호 edition no., 품번 Part no., 모델, CAV)은 Loss 원인이 아니므로 제외.
+   시트 헤더 표기(대소문자·공백·마침표)가 달라도 걸리도록 정규식으로 판정한다. */
+const NON_REASON_RE = /^edition\s*no\.?$|^part\s*no\.?$|^model$|^cav\.?$|^금형\s*번호$|^품번$|^모델$/i;
 function reasonColumns(header) {
-  return header.filter(h => !NON_REASON_COLS.has(h) && h !== '');
+  return header.filter(h => h !== '' && !NON_REASON_COLS.has(h) && !NON_REASON_RE.test(String(h).trim()));
 }
 
 function lossBreakdown(rows, reasonCols, topN) {
