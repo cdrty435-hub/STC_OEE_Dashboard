@@ -129,6 +129,12 @@
         <select id="scopeSelect" onchange="renderAll()">
           <option value="all">전체 (주말포함)</option>
           <option value="regular">정규만 (특근제외)</option>
+          <optgroup label="교대별 가동률">
+            <option value="day_shift">주간 · 쉬프트시간 기준</option>
+            <option value="day_plan">주간 · 계획시간 기준</option>
+            <option value="night_shift">야간 · 쉬프트시간 기준</option>
+            <option value="night_plan">야간 · 계획시간 기준</option>
+          </optgroup>
         </select>
       </div>
       <div class="control-group">
@@ -217,6 +223,12 @@
         <select id="trendScope" style="flex:none; padding:5px 8px; border:1px solid #ddd; border-radius:4px; font-size:13px;" onchange="renderWeekTrendChart()">
           <option value="all">전체 (주말포함)</option>
           <option value="regular">정규만 (특근제외)</option>
+          <optgroup label="교대별 가동률">
+            <option value="day_shift">주간 · 쉬프트시간 기준</option>
+            <option value="day_plan">주간 · 계획시간 기준</option>
+            <option value="night_shift">야간 · 쉬프트시간 기준</option>
+            <option value="night_plan">야간 · 계획시간 기준</option>
+          </optgroup>
         </select>
         <label style="flex:none; white-space:nowrap;">시작 주차:</label>
         <select id="trendStartWeek" onchange="onTrendWeekChange('start')" style="flex:none; padding:5px 8px; border:1px solid #ddd; border-radius:4px; font-size:13px;"></select>
@@ -248,7 +260,7 @@
       <div class="chart-title" id="dailyTitle">A(%) PERFORMANCE</div>
       <div class="chart-wrap"><canvas id="chart-daily-a"></canvas></div>
       <table class="mini" id="table-daily"></table>
-      <div class="footnote">※ 일자별 가동율은 상단 "범위" 선택(전체/정규만)을 그대로 따릅니다. 정규만 선택 시 특근일은 표에서 공란으로 표시됩니다.</div>
+      <div class="footnote">※ 일자별 가동율은 상단 "범위" 선택을 그대로 따릅니다. 정규만 선택 시 특근일은 표에서 공란으로 표시됩니다. 주간/야간 범위는 해당 교대 행만 모으며, 가동률 분모를 쉬프트시간 또는 계획시간 중 선택한 기준으로 계산합니다.</div>
     </div>
 
     <div class="quad-card qty-card">
@@ -346,16 +358,42 @@ function shiftMinutesOf(r){
   return num(r['계획시간_분']);
 }
 
+/* ---------- 범위(scope) ----------
+   all / regular        : 주간+야간, 분모 = 쉬프트시간
+   day_* / night_*      : 교대(주간/야간) 한쪽만, 특근 포함
+     *_shift            : 가동률(A) 분모 = 쉬프트시간_분
+     *_plan             : 가동률(A) 분모 = 계획시간_분
+   P·Q 는 같은 교대 행만 골라 계산한다(분모 차이는 A에만 적용). */
+const SCOPES = ['all','regular','day_shift','day_plan','night_shift','night_plan'];
+const SCOPE_LABEL = { all:'전체', regular:'정규만', day_shift:'주간·쉬프트', day_plan:'주간·계획',
+                      night_shift:'야간·쉬프트', night_plan:'야간·계획' };
+function inScope(r, scope){
+  if (scope === 'regular') return r['구분'] === '정규';
+  if (scope && scope.startsWith('day_'))   return String(r['교대']||'').trim() === '주간';
+  if (scope && scope.startsWith('night_')) return String(r['교대']||'').trim() === '야간';
+  return true;
+}
+function denomOf(r, scope){
+  return (scope && scope.endsWith('_plan')) ? num(r['계획시간_분']) : shiftMinutesOf(r);
+}
+/* 주차 캐시에 해당 범위 값이 없으면(예전 캐시·새 범위) 원자료로 다시 계산 */
+function weekPctOf(w, scope){
+  if (w && w.pct && w.pct[scope]) return w.pct[scope];
+  if (w && w.startDate && typeof hasRawRows === 'function' && hasRawRows())
+    return periodSummaryFromStore(w.startDate, w.endDate || w.startDate, scope);
+  return { A:null, P:null, Q:null, OEE:null };
+}
+
 function computeA(rows) {
   // Availability(A) = Σ가동시간 / Σ쉬프트시간 (쉬프트시간 컬럼이 없는 구 데이터는 계획시간_분으로 대체)
   const out = {};
-  for (const scope of ['all','regular']) {
+  for (const scope of SCOPES) {
     const daily = {};
     let plan=0, run=0;
     for (const r of rows) {
-      if (scope==='regular' && r['구분']!=='정규') continue;
+      if (!inScope(r, scope)) continue;
       const d = r['일자'];
-      const p = shiftMinutesOf(r);
+      const p = denomOf(r, scope);
       const rn = num(r['가동시간_분']);
       if (!daily[d]) daily[d] = {plan:0, run:0};
       daily[d].plan += p; daily[d].run += rn;
@@ -369,10 +407,10 @@ function computeA(rows) {
 function computeP(rows) {
   // 성능(P) = 원자료 컬럼 값의 단순 평균 (행 단위 캡핑 없음)
   const out = {};
-  for (const scope of ['all','regular']) {
+  for (const scope of SCOPES) {
     let sum=0, cnt=0;
     for (const r of rows) {
-      if (scope==='regular' && r['구분']!=='정규') continue;
+      if (!inScope(r, scope)) continue;
       const raw = r['성능(P)'];
       if (raw===undefined || raw===null || String(raw).trim()==='') continue;
       const p = num(raw);
@@ -386,10 +424,10 @@ function computeP(rows) {
 
 function computeQ(rows) {
   const out = {};
-  for (const scope of ['all','regular']) {
+  for (const scope of SCOPES) {
     let good=0, total=0;
     for (const r of rows) {
-      if (scope==='regular' && r['구분']!=='정규') continue;
+      if (!inScope(r, scope)) continue;
       const t = num(r['Qty_Total']);
       if (t <= 0) continue;
       good += num(r['Qty_Good']); total += t;
@@ -427,7 +465,7 @@ function buildWeekRecord(aRows, pRows, qRows) {
   const meta = weekMeta(aRows);
   const A = computeA(aRows), P = computeP(pRows), Q = computeQ(qRows);
   const pct = {};
-  for (const scope of ['all','regular']) {
+  for (const scope of SCOPES) {
     const a = pctA(A[scope].total), p = pctP(P[scope].total), q = pctQ(Q[scope].total);
     const oee = (a!=null && p!=null && q!=null) ? (a*p*q/10000) : null;
     pct[scope] = { A:a, P:p, Q:q, OEE:oee };
@@ -559,16 +597,16 @@ function trendDateRange(weeks){
 
 // 주차 하나의 KPI를 (주차 ∩ 선택 일자) 구간으로 계산
 function trendKpiOf(week, scope, range){
-  if (!range || range.full) return week.pct[scope];
+  if (!range || range.full) return weekPctOf(week, scope);
   const ws = week.startDate, we = week.endDate || week.startDate;
   const s = ws > range.start ? ws : range.start;
   const e = we < range.end   ? we : range.end;
   if (s > e) return { A:null, P:null, Q:null, OEE:null };      // 이 주차는 선택 일자에 걸치지 않음
-  if (s <= ws && e >= we) return week.pct[scope];              // 이 주차는 통째로 포함
+  if (s <= ws && e >= we) return weekPctOf(week, scope);             // 이 주차는 통째로 포함
   if (typeof hasRawRows === 'function' && hasRawRows()) {
     return periodSummaryFromStore(s, e, scope);                // 부분 포함 → 원자료로 재계산
   }
-  return week.pct[scope];                                      // 원자료 없으면 주차 전체값 유지
+  return weekPctOf(week, scope);                                      // 원자료 없으면 주차 전체값 유지
 }
 
 function onTrendWeekChange(which){
@@ -674,7 +712,7 @@ function monthlyTrend(scope, opts) {
       const ws = byMonth[mk];
       if (!ws || !ws.length) continue;
       const totalDays = ws.reduce((s,w)=>s+(w.dayCount||1),0);
-      const wsum = (f) => ws.reduce((s,w)=> s + (w.pct[scope][f] ?? 0) * (w.dayCount||1), 0) / totalDays;
+      const wsum = (f) => ws.reduce((s,w)=> s + (weekPctOf(w, scope)[f] ?? 0) * (w.dayCount||1), 0) / totalDays;
       v = { A: wsum('A'), P: wsum('P'), Q: wsum('Q'), OEE: wsum('OEE') };
       approx = true;
     }
@@ -758,7 +796,7 @@ function monthlyQty(year, scope, opts){
     for (const r of rows) {
       const d = String(r['일자'] || '').trim();
       if (d < start || d > end) continue;
-      if (scope === 'regular' && r['구분'] !== '정규') continue;
+      if (!inScope(r, scope)) continue;
       if (isOutsideWeekFix(r)) continue;
       const t = num(r['Qty_Total']);
       if (t <= 0) continue;
@@ -1049,7 +1087,7 @@ function renderQtyPanel(){
   } else if (clip) {
     note = `※ 선택 구간(${sel.start} ~ ${sel.end})과 겹치는 부분만 집계했습니다. 데이터가 없는 달은 "-"로 표시됩니다.`;
   } else {
-    note = `※ ${year}년 1~12월을 해당 월 1일~말일 기준으로 집계했습니다. 상단 "범위"(${scope==='regular'?'정규만':'전체'}) 선택을 그대로 따릅니다. 데이터가 없는 달은 "-"로 표시됩니다.`;
+    note = `※ ${year}년 1~12월을 해당 월 1일~말일 기준으로 집계했습니다. 상단 "범위"(${SCOPE_LABEL[scope]||'전체'}) 선택을 그대로 따릅니다. 데이터가 없는 달은 "-"로 표시됩니다.`;
     if (hasSel && rows.some(inSel)) note += ' 선택 구간에 해당하는 달은 표에 강조 표시됩니다.';
   }
   if (rows.some(r => r.fixed)) {
@@ -1153,11 +1191,11 @@ function isOutsideWeekFix(r){
 
 function periodSummaryFromStore(startDate, endDate, scope){
   if (!DATA.rawA || !DATA.rawP || !DATA.rawQ) return {A:null,P:null,Q:null,OEE:null};
-  const inRange = r => r['일자'] >= startDate && r['일자'] <= endDate && (scope==='all' || r['구분']==='정규') && !isOutsideWeekFix(r);
+  const inRange = r => r['일자'] >= startDate && r['일자'] <= endDate && inScope(r, scope) && !isOutsideWeekFix(r);
   const aSel = DATA.rawA.rows.filter(inRange);
   const pSel = DATA.rawP.rows.filter(inRange).filter(r => r['성능(P)']!==undefined && r['성능(P)']!==null && String(r['성능(P)']).trim()!=='');
   const qSel = DATA.rawQ.rows.filter(inRange).filter(r => num(r['Qty_Total'])>0);
-  const plan = aSel.reduce((s,r)=>s+shiftMinutesOf(r),0);
+  const plan = aSel.reduce((s,r)=>s+denomOf(r, scope),0);
   const run = aSel.reduce((s,r)=>s+num(r['가동시간_분']),0);
   // 성능(P) = 원자료 컬럼 값의 단순 평균 (행 단위 캡핑 없음)
   let pSum=0, pCnt=0;
@@ -1173,12 +1211,12 @@ function periodSummaryFromStore(startDate, endDate, scope){
 
 function dailyFromStore(startDate, endDate, scope){
   if (!DATA.rawA) return {dates:[], A:[]};
-  const rows = DATA.rawA.rows.filter(r => r['일자']>=startDate && r['일자']<=endDate && (scope==='all' || r['구분']==='정규') && !isOutsideWeekFix(r));
+  const rows = DATA.rawA.rows.filter(r => r['일자']>=startDate && r['일자']<=endDate && inScope(r, scope) && !isOutsideWeekFix(r));
   const byDate = {};
   for (const r of rows) {
     const d = r['일자'];
     if (!byDate[d]) byDate[d] = {plan:0, run:0};
-    byDate[d].plan += shiftMinutesOf(r); byDate[d].run += num(r['가동시간_분']);
+    byDate[d].plan += denomOf(r, scope); byDate[d].run += num(r['가동시간_분']);
   }
   const dates = Object.keys(byDate).sort();
   const A = dates.map(d => byDate[d].plan>0 ? byDate[d].run/byDate[d].plan*100 : null);
@@ -1353,7 +1391,7 @@ function renderGauges(){
       titleText = `목표 대비 실적 (${currentWeekLabel()} 중 ${sub.start} ~ ${sub.end})`;
     } else {
       const w = DATA.weeks[currentWeekLabel()];
-      p = w ? w.pct[s] : {A:null,P:null,Q:null};
+      p = w ? weekPctOf(w, s) : {A:null,P:null,Q:null};
       titleText = `목표 대비 실적 (${currentWeekLabel()||'-'})`;
     }
   }
@@ -1602,7 +1640,9 @@ function renderDailyChart(){
     titleText = `A(%) PERFORMANCE (${sd||'-'} ~ ${ed||'-'})`;
   } else {
     const w = DATA.weeks[currentWeekLabel()];
-    const daily = w ? (scope==='all' ? w.dailyAll : w.dailyRegular) : {dates:[], A:[]};
+    const daily = !w ? {dates:[], A:[]}
+      : scope==='all' ? w.dailyAll : scope==='regular' ? w.dailyRegular
+      : (hasRawRows() ? dailyFromStore(w.startDate, w.endDate || w.startDate, scope) : {dates:[], A:[]});
     const sub = weekSubRange();
     if (!sub.full) {
       // 주차 안에서 좁힌 구간만 남긴다 (원자료 없이도 동작)
