@@ -10189,6 +10189,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const a = iqcAgg(rows); a.rowsRaw = rows; return a;
   }
 
+  /* 1. 품질 지표 요약에 DO 납품계획 행을 넣을지 — 일일·주간·월간 공통. 다시 넣을 때 true 로 바꾼다. */
+  const DO_IN_KPI = false;
   /* ---------- DO(납품계획) × OQC(출하) ---------- */
   const pkey = v => String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   function doStats(from, to, OQ){
@@ -10299,7 +10301,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const tops = OQ.partList.slice(0,3), ngs = OQ.partList.filter(p=>p.ng>0).sort((a,b)=>b.ng-a.ng).slice(0,3);
       const wOq = arr => [0,1,2].map(j => arr[j] ? `<div style="white-space:normal;font-size:11px;line-height:1.3">${esc(arr[j].code||arr[j].part)}<br>${f0(arr[j].qty)} EA</div>` : '–');
       /* 출하 수량의 Worst = DO(마케팅 납품계획) 대비 부족 수량 상위 3 품번 */
-      const hasDO = !!(DO && !DO.err && DO.items && DO.items.length);
+      /* DO 납품계획은 1. 품질 지표에서 잠시 뺀다(추후 재적용) — 출하 수량 Worst 는 출하 상위 3 품번으로 표시 */
+      const hasDO = DO_IN_KPI && !!(DO && !DO.err && DO.items && DO.items.length);
       const sh = hasDO ? DO.items.filter(x => x.plan > x.ship).slice()
                            .sort((a,b) => (b.plan-b.ship) - (a.plan-a.ship) || b.plan - a.plan).slice(0,3) : [];
       const wSh = [0,1,2].map(j => sh[j]
@@ -10318,7 +10321,7 @@ document.addEventListener('DOMContentLoaded', () => {
       rows.push(['oqc', T('k_onr'), (OQp&&OQp.ngRate!=null)?OQp.ngRate:null, OQ.ngRate, v=>f1(v,2)+' %', 2, '%p',
                  OQ.hasInsp ? wOq(ngs) : ['–','–','–'], dNg, T('noInsp')]);
     }
-    if (DO && !DO.err){
+    if (DO_IN_KPI && DO && !DO.err){
       const wDo = arr => [0,1,2].map(j => arr[j] ? `<div style="white-space:normal;font-size:11px;line-height:1.3">${esc(arr[j].pc||arr[j].pn)}<br>${arr[j].rate!=null?f1(arr[j].rate,0)+'%':'–'} (${f0(arr[j].plan-arr[j].ship)}EA)</div>` : '–');
       const lows = DO.items.filter(x => x.ship < x.plan).slice(0,3);
       const dRate = L3(DO.items.slice(0,3).map(x => `${x.pc||x.pn} ${x.rate!=null?f1(x.rate,0):'–'}% (계획 ${f0(x.plan)} · 출하 ${f0(x.ship)})`), T('na'),
