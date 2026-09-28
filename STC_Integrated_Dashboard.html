@@ -127,6 +127,15 @@ main{flex:1 1 auto;position:relative;overflow:hidden;}
 .f2-quick button{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:14px;padding:4px 10px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
 .f2-quick button:hover{background:#eef3fb;}
 .f2-cmp{color:var(--ink-2);font-weight:500;}
+.qt-box{border:1px solid #dbe3ee;border-radius:6px;padding:10px 14px 6px;margin:0 0 16px;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;page-break-inside:avoid;}
+.qt-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;border-left:4px solid #f59e0b;padding-left:8px;margin-bottom:4px;}
+.qt-h b{font-size:15px;color:#1e3c72;font-weight:900;} .qt-h small{font-size:11.5px;color:#6b7280;}
+.qt-lg{display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px;color:#374151;margin:2px 0 2px 12px;}
+.qt-lg i{display:inline-block;width:16px;height:4px;border-radius:2px;vertical-align:middle;margin-right:5px;}
+.qt-lg i.tg{height:0;border-top:2px dashed #dc2626;background:none;} .qt-lg i.hi{height:10px;background:#fde68a;}
+.qt-tip{display:none;position:absolute;pointer-events:none;min-width:170px;background:#fff;border:1px solid #cbd5e1;border-radius:6px;box-shadow:0 4px 14px rgba(15,23,42,.15);padding:6px 9px;font-size:11.5px;color:#111827;line-height:1.55;z-index:5;}
+.qt-tip i{display:inline-block;width:10px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px;}
+.qt-tip .ex{color:#6b7280;font-size:10.5px;border-top:1px solid #eef2f7;margin-top:3px;padding-top:3px;}
 .f2-cover{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;background:linear-gradient(135deg,#12233f 0%,#1e3c72 60%,#2a5298 100%);color:#fff;border-radius:6px;padding:20px 26px 18px;margin:4px 0 20px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 .f2-cover .kicker{font-size:13px;font-weight:700;letter-spacing:.16em;opacity:.8;text-transform:uppercase;}
 .f2-cover h1{margin:4px 0 6px;font-size:34px;font-weight:900;letter-spacing:-.01em;line-height:1.15;color:#fff;}
@@ -1448,6 +1457,101 @@ function f2Dash(week){
 }
 
 /* ---- 일일 / 주간 / 월간 품질보고 ---- */
+/* ---------- 일일 불량률 추이 (보고서 맨 앞) — SVG 선 차트 · 목표선 · 보고 기간 음영 · 마우스 툴팁 ---------- */
+window.__qt = window.__qt || {};
+function qtTrendHtml(o){
+  /* o = { id, title, sub, dates:[YYYY-MM-DD], series:[{name,color,vals:[n|null],main}], target, tLabel, hiFrom, hiTo } */
+  const W = 1000, H = 250, L = 46, R = 92, T = 16, B = 34;
+  const n = o.dates.length;
+  const all = o.series.flatMap(s=>s.vals).filter(v=>v!=null);
+  if (!n || !all.length) return '';
+  let ymax = Math.max(o.target || 0, ...all) * 1.15; ymax = ymax <= 0 ? 1 : ymax;
+  const stp = [0.5,1,2,2.5,5,10,20,25,50].find(s=>ymax/s <= 6) || 100; ymax = Math.ceil(ymax/stp)*stp;
+  const xw = (W-L-R) / Math.max(1, n-1);
+  const X = i => n===1 ? (L+(W-L-R)/2) : L + i*xw, Y = v => T + (H-T-B)*(1 - v/ymax);
+  let g = '';
+  /* 보고 기간 음영 */
+  const hi = o.dates.map((d,i)=>d>=o.hiFrom && d<=o.hiTo ? i : -1).filter(i=>i>=0);
+  if (hi.length){ const x0 = X(hi[0]) - (n>1?xw/2:20), x1 = X(hi[hi.length-1]) + (n>1?xw/2:20);
+    g += `<rect x="${Math.max(L,x0).toFixed(1)}" y="${T}" width="${(Math.min(W-R,x1)-Math.max(L,x0)).toFixed(1)}" height="${H-T-B}" fill="#fde68a" opacity=".35"/>`; }
+  /* 격자 · y축 */
+  for (let v=0; v<=ymax+1e-9; v+=stp){ const y = Y(v).toFixed(1);
+    g += `<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`
+       + `<text x="${L-6}" y="${(+y+4)}" text-anchor="end" font-size="11" fill="#6b7280">${+v.toFixed(2)}%</text>`; }
+  /* x축 라벨 (겹치지 않게 솎아냄) */
+  const every = Math.ceil(n / 15);
+  o.dates.forEach((d,i)=>{ if (i % every && i !== n-1) return; const w = new Date(d+'T00:00:00Z').getUTCDay();
+    g += `<text x="${X(i).toFixed(1)}" y="${H-B+16}" text-anchor="middle" font-size="10.5" fill="${w===0?'#dc2626':'#6b7280'}">${d.slice(5).replace('-','/')}</text>`; });
+  /* 목표선 */
+  if (o.target){ const y = Y(o.target).toFixed(1);
+    g += `<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="6 4"/>`
+; }
+  /* 선 · 점 */
+  const ends = [];
+  o.series.forEach(s=>{
+    let d = '', pen = false;
+    s.vals.forEach((v,i)=>{ if (v==null){ pen = false; return; } d += (pen?'L':'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1) + ' '; pen = true; });
+    g += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.main?2.5:2}" stroke-linejoin="round" stroke-linecap="round"${s.main?'':' opacity=".9"'}/>`;
+    s.vals.forEach((v,i)=>{ if (v==null) return; const h = o.dates[i]>=o.hiFrom && o.dates[i]<=o.hiTo;
+      g += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${h?4.5:3}" fill="${s.color}" stroke="#fff" stroke-width="1.5"/>`;
+      if (h && s.main) g += `<text x="${X(i).toFixed(1)}" y="${(Y(v)-9).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="800" fill="#111827">${v.toFixed(2)}</text>`; });
+    let li = s.vals.length-1; while (li>=0 && s.vals[li]==null) li--;
+    if (li>=0) ends.push({ y:Y(s.vals[li]), s, v:s.vals[li] });
+  });
+  /* 오른쪽 끝 직접 라벨 (겹치면 아래로 밀기) */
+  if (o.target) ends.push({ y:Y(o.target), tg:true });
+  ends.sort((a,b)=>a.y-b.y); let last = -99;
+  ends.forEach(e=>{ const y = Math.max(e.y+4, last+13); last = y;
+    g += e.tg ? `<text x="${W-R+6}" y="${y.toFixed(1)}" font-size="11" font-weight="700" fill="#b91c1c">${o.tLabel||'목표'} ${o.target}%</text>`
+              : `<text x="${W-R+6}" y="${y.toFixed(1)}" font-size="11" font-weight="700" fill="#374151"><tspan fill="${e.s.color}">●</tspan> ${e.v.toFixed(2)}%</text>`; });
+  g += `<line id="${o.id}-x" x1="0" x2="0" y1="${T}" y2="${H-B}" stroke="#94a3b8" stroke-width="1" visibility="hidden"/>`;
+  g += `<rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}" fill="transparent" onmousemove="qtHover(event,'${o.id}')" onmouseleave="qtHover(null,'${o.id}')"/>`;
+  window.__qt[o.id] = { o, X, xw, n, L, W, R };
+  const lg = o.series.map(s=>`<span><i style="background:${s.color}"></i>${s.name}</span>`).join('')
+    + (o.target ? `<span><i class="tg"></i>${o.tLabel||'목표'} ${o.target}%</span>` : '')
+    + (hi.length ? `<span><i class="hi"></i>${o.hiLabel||'보고 기간'}</span>` : '');
+  return `<div class="qt-box"><div class="qt-h"><b>${o.title}</b><small>${o.sub||''}</small></div>`
+    + `<div class="qt-lg">${lg}</div>`
+    + `<div class="qt-wrap" style="position:relative"><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${o.title}" style="display:block">${g}</svg>`
+    + `<div class="qt-tip" id="${o.id}-tip"></div></div></div>`;
+}
+function qtHover(e, id){
+  const S = window.__qt[id], tip = document.getElementById(id+'-tip'), ln = document.getElementById(id+'-x');
+  if (!S || !tip || !ln) return;
+  if (!e){ tip.style.display = 'none'; ln.setAttribute('visibility','hidden'); return; }
+  const svg = e.target.ownerSVGElement, r = svg.getBoundingClientRect(), k = S.W / r.width;
+  const x = (e.clientX - r.left) * k;
+  const i = S.n===1 ? 0 : Math.max(0, Math.min(S.n-1, Math.round((x - S.L) / S.xw)));
+  const d = S.o.dates[i], w = '일월화수목금토'[new Date(d+'T00:00:00Z').getUTCDay()];
+  ln.setAttribute('x1', S.X(i)); ln.setAttribute('x2', S.X(i)); ln.setAttribute('visibility','visible');
+  tip.innerHTML = `<b>${d} (${w})</b>` + S.o.series.map(s=>`<div><i style="background:${s.color}"></i>${s.name} <b>${s.vals[i]==null?'–':s.vals[i].toFixed(2)+'%'}</b></div>`).join('')
+    + (S.o.extra ? `<div class="ex">${S.o.extra(i)}</div>` : '');
+  tip.style.display = 'block';
+  const px = S.X(i) / k, box = svg.parentNode.getBoundingClientRect().width;
+  tip.style.left = (px + 14 + 190 > box ? px - 200 : px + 14) + 'px'; tip.style.top = '8px';
+}
+/* FAC2 일일 불량률 추이 — 종료일 기준 최근 30일 (MCT 가공 공정) */
+function f2TrendTop(dFrom, dTo){
+  const TX = { ko:{ t:'FAC2 일일 불량률 추이 (MCT)', s:'최근 {n}일 ({a} ~ {b}) · 노란 음영 = 보고 기간 · 점 위 숫자 = 보고 기간 %NG',
+                    r:'불량률 %NG', mc:'가공 불량률 (FAC2)', dc:'다캐 불량률 (소재)', tg:'목표', hi:'보고 기간', p:'생산' },
+               en:{ t:'FAC2 daily defect-rate trend (MCT)', s:'last {n} days ({a} ~ {b}) · yellow = report period · labels = %NG in the period',
+                    r:'%NG', mc:'Machining NG (FAC2)', dc:'Casting NG (material)', tg:'Target', hi:'Report period', p:'Output' },
+               th:{ t:'แนวโน้มอัตราของเสียรายวัน FAC2 (MCT)', s:'{n} วันล่าสุด ({a} ~ {b}) · สีเหลือง = ช่วงรายงาน',
+                    r:'%NG', mc:'ของเสียแมชชีนนิ่ง (FAC2)', dc:'ของเสียไดคาสติ้ง (วัตถุดิบ)', tg:'เป้าหมาย', hi:'ช่วงรายงาน', p:'ผลิต' } };
+  const X = TX[TX[LANG] ? LANG : 'ko'];
+  const ds = f2Dates().filter(d => d <= dTo).slice(-30);
+  const rows = ds.map(d => ({ d, a:f2Sum(r => r['일자'] === d).MCT })).filter(x => x.a.t > 0);
+  if (!rows.length) return '';
+  const pc = (x, k) => +(x.a[k] / x.a.t * 100).toFixed(3);
+  return qtTrendHtml({ id:'qtFac2', title:X.t,
+    sub:X.s.replace('{n}', rows.length).replace('{a}', rows[0].d).replace('{b}', rows[rows.length-1].d),
+    dates:rows.map(x => x.d),
+    series:[ { name:X.r, color:'#2a78d6', vals:rows.map(x => pc(x,'n')), main:true },
+             { name:X.mc, color:'#eb6834', vals:rows.map(x => pc(x,'mc')) },
+             { name:X.dc, color:'#1baf7a', vals:rows.map(x => pc(x,'dc')) } ],
+    target:f2Target(), tLabel:X.tg, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
+    extra:i => X.p + ' ' + rows[i].a.t.toLocaleString() + ' · NG ' + rows[i].a.n.toLocaleString() });
+}
 /* ---------- FAC2 보고서 표지 제목 (FAC1 과 같은 형식 · 일일 / 주간 / 월간) ---------- */
 const F2_COVER_TXT = {
   ko:{ daily:'FAC2 공정품질 일일 보고서', week:'FAC2 공정품질 주간 보고서', month:'FAC2 공정품질 월간 보고서', kicker:'Quality Report',
@@ -1536,6 +1640,7 @@ function f2Report(kind, topWeek){
       <td style="color:${f2St(f2Rate(pt[pc])).c};font-weight:700">${f2pc(pt[pc])}</td><td class="t5">${t5(pc,pt,'다캐불량')}</td><td class="t5">${t5(pc,pt,'가공불량')}</td></tr>`); }));
   return bar + `
     ${f2CoverHtml(kind, cvPer, cvNote, prevKey)}
+    ${kind==='daily' ? f2TrendTop(dFrom, dTo) : ''}
     <div class="f2-rhead"><h2>${T('f2.r.title.'+kind)}</h2>
       <div>${esc2(label)} · ${T('f2.r.vs')} ${esc2(prevKey||'–')}<br><small>${T('f2.r.made',{d:new Date().toISOString().slice(0,10)})}</small></div></div>
     <div class="sec-title">1. ${T('f2.mwk')}</div>${f2McWorstTable(pred, prevKey?prevPred:null, prevKey, kind==='daily'&&dFrom!==dTo?`${dFrom} ~ ${dTo}`:cur)}
