@@ -10595,7 +10595,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let h = $(hostId);
     if (!h || !box.contains(h)){ h = document.createElement('div'); h.id = hostId; h.className = 'kw-host'; }
     const cover = box.querySelector(':scope > .rpt-cover, :scope > #qrCover');
-    const anchor = cover ? cover.nextSibling : box.firstChild;
+    const trend = box.querySelector(':scope > .qt-box');          // 일일 불량률 추이는 표지 바로 다음(맨 앞) 유지
+    const anchor = trend ? trend.nextSibling : (cover ? cover.nextSibling : box.firstChild);
     let bar = h.previousElementSibling && h.previousElementSibling.classList.contains('kw-part') ? h.previousElementSibling : null;
     if (!bar){ bar = document.createElement('div'); bar.className = 'kw-part'; }
     box.insertBefore(bar, anchor); box.insertBefore(h, bar.nextSibling);
