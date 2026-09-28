@@ -41,6 +41,8 @@
     font-weight:500;
   }
   .wrap{max-width:1400px; margin:0 auto; padding:32px 28px 70px;}
+  /* 주간·일일·월간 보고는 화면 폭을 넓게 쓴다 (PM 플랜 간트 등 넓은 표) */
+  .wrap:has(#tab-weekly.show), .wrap:has(#tab-daily.show), .wrap:has(#tab-monthly.show){max-width:1900px;}
 
   header{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:20px;}
   .title-block .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; color:var(--amber); text-transform:uppercase; margin-bottom:8px; font-weight:600;}
@@ -7646,6 +7648,29 @@ loadData();
 .kw select.v-done{background:#dbeafe;color:#1d4ed8;font-weight:800;}
 .kw table.kw-a tfoot td{background:#f1f5f9;font-weight:700;font-size:10.5px;text-align:center;}
 .kw table.kw-a tbody td{padding:3px 5px;}
+.kw .kw-gwrap{overflow-x:auto;}
+.kw table.kw-g td.gty{padding:3px 6px !important;} .kw table.kw-g td.gty .gt{font-size:11px;line-height:1.45;}
+.kw table.kw-g td.mc{white-space:nowrap;font-size:12px;}
+.kw table.kw-g textarea{min-height:34px;font-size:11.5px;}
+.kw table.kw-g select{font-size:11px;padding:2px 3px;}
+.kw table.kw-g th{white-space:nowrap;}
+.kw table.kw-g th.gj{white-space:normal;}
+.kw table.kw-g{font-size:12.5px;color:#111827;}
+.kw table.kw-g th{font-size:12.5px;color:#111827;font-weight:800;}
+.kw table.kw-g th.gd{font-size:12px;} .kw table.kw-g th .sm{font-size:11px;color:#334155;font-weight:700;}
+.kw table.kw-g td.mc{font-size:13.5px;color:#0f172a;font-weight:900;}
+.kw table.kw-g tr.idle td.mc{color:#64748b;}
+.kw table.kw-g td.gty .gt{font-size:12px;font-weight:600;color:#1f2937;}
+.kw table.kw-g td.gty .gt.hit{color:#b91c1c;font-weight:700;} .kw table.kw-g td.gty .gt span{font-size:11.5px;color:#1d4ed8;font-weight:800;}
+.kw table.kw-g select{font-size:12px;font-weight:700;color:#111827;border-color:#94a3b8;}
+.kw table.kw-g textarea{font-size:12.5px;color:#111827;border-color:#94a3b8;}
+.kw table.kw-g textarea::placeholder{color:#6b7280;}
+.kw table.kw-g .bar{font-size:11px;}
+.kw table.kw-g tfoot td{font-size:12px;color:#111827;} .kw table.kw-g tfoot td.gj{font-size:11px;}
+.kw .kw-gbar{font-size:12px;color:#1f2937;} .kw .kw-psel{font-size:12px;} .kw .kw-psel button{font-size:12px;}
+.kw .kw-psel button:not(.on):not(.hit){color:#475569;border-color:#94a3b8;}
+.kw .kw-note{font-size:11.5px;color:#374151;}
+@media print{ .kw .kw-gwrap{overflow:visible;} .kw table.kw-g{min-width:0 !important;} .kw table.kw-g td.gty .gt{font-size:9.5px;} }
 .kw .kw-psel{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:2px 0 6px;font-size:11px;}
 .kw .kw-psel .lb{font-weight:700;color:#1e3c72;margin-right:4px;} .kw .kw-psel .lb b{color:#dc2626;}
 .kw .kw-psel button{font:inherit;font-size:11px;font-weight:700;padding:2px 8px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#94a3b8;cursor:pointer;}
@@ -7844,7 +7869,9 @@ loadData();
       h += `<div class="kw-gbar kw-noprint"><span><i class="lg hit"></i>이번 기간 고장 발생 설비 <i class="lg"></i>예방 점검 <i class="lg idle"></i>가동 없음</span>`
          + `<span>날짜 칸을 누르면 PM 시작일 이동 · 일수 = PM 기간</span>`
          + `<button type="button" data-kwpmreset="1" title="직접 바꾼 PM 일정·일수를 지우고 기본 배정으로 되돌립니다">↺ 일정 자동 배정</button></div>`;
-      h += `<table class="kw-a kw-g"><colgroup><col style="width:6%"><col style="width:13%"><col style="width:4%">${GD.map(()=>`<col style="width:${gw}%">`).join('')}${SEL.map(()=>`<col style="width:${jw}%">`).join('')}<col style="width:16%"><col style="width:7%"></colgroup>`;
+      /* 고정 폭(px) — 조치 내용 칸이 남는 폭을 모두 쓴다 · 좁으면 가로 스크롤 */
+      const gMin = 84+190+60+GD.length*58+SEL.length*86+130+260;
+      h += `<div class="kw-gwrap"><table class="kw-a kw-g" style="min-width:${gMin}px"><colgroup><col style="width:84px"><col style="width:190px"><col style="width:60px">${GD.map(()=>`<col style="width:58px">`).join('')}${SEL.map(()=>`<col style="width:86px">`).join('')}<col><col style="width:130px"></colgroup>`;
       h += `<thead><tr><th rowspan="2">설비</th><th rowspan="2" class="dt">점검 유형 (이번 기간 발생)</th><th rowspan="2">일수</th>`
          + `<th colspan="${GD.length}">PM 일정 (${GD[0].slice(5)} ~ ${GD[GD.length-1].slice(5)})</th>`
          + `<th colspan="${SEL.length}">판정</th><th rowspan="2" class="dt">점검 결과 · 조치 내용</th><th rowspan="2" class="dt">담당 / 완료일</th></tr><tr>`;
@@ -7872,7 +7899,7 @@ loadData();
       h += `</tbody><tfoot><tr><td colspan="3">PM 대수 / 일 (총 ${ML.length}대)</td>`;
       perDay.forEach((c,i)=>{ h += `<td class="${new Date(GD[i]+'T00:00:00Z').getUTCDay()===0?'sun':''}">${c||''}</td>`; });
       cnt.forEach(c=>{ h += `<td class="gj">OK ${c.OK}<br>NG ${c.NG}<br>완료 ${c.DONE}<br>미점검 ${c['']}</td>`; });
-      h += `<td colspan="2" style="text-align:left">'예방' = 이번 기간 발생 없음 → 예방 점검</td></tr></tfoot></table>`;
+      h += `<td colspan="2" style="text-align:left">'예방' = 이번 기간 발생 없음 → 예방 점검</td></tr></tfoot></table></div>`;
       h += `<div class="kw-note">※ PM 기본 일정 = ${slots[0].slice(5)} ~ ${slots[slots.length-1].slice(5)} (일요일 제외)에 발생 설비부터 고르게 배정 · 빨강 막대 = 이번 기간 고장 발생 설비 · 날짜 칸 클릭 = 시작일 이동, 일수 = PM 기간(1~3일) · 판정·조치·일정은 이 브라우저에 기간(${esc(P.cur.label)})별로 저장 · 유형 아래 문구 = 2번 '문제 부위 · 원인' (점검 항목)</div>`;
     }
     h += `</div>`;
