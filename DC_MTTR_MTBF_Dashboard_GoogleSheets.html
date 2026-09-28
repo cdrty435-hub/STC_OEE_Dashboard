@@ -7646,6 +7646,18 @@ loadData();
 .kw select.v-done{background:#dbeafe;color:#1d4ed8;font-weight:800;}
 .kw table.kw-a tfoot td{background:#f1f5f9;font-weight:700;font-size:10.5px;text-align:center;}
 .kw table.kw-a tbody td{padding:3px 5px;}
+.kw .kw-psel{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:2px 0 6px;font-size:11px;}
+.kw .kw-psel .lb{font-weight:700;color:#1e3c72;margin-right:4px;} .kw .kw-psel .lb b{color:#dc2626;}
+.kw .kw-psel button{font:inherit;font-size:11px;font-weight:700;padding:2px 8px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#94a3b8;cursor:pointer;}
+.kw .kw-psel button.on{background:#1e3c72;border-color:#1e3c72;color:#fff;}
+.kw .kw-psel button.hit:not(.on){color:#dc2626;border-color:#fca5a5;}
+.kw .kw-psel button.on.hit{background:#b91c1c;border-color:#b91c1c;}
+.kw .kw-psel button small{font-size:9px;margin-left:2px;background:#f59e0b;color:#1f2937;border-radius:6px;padding:0 3px;}
+.kw .kw-psel .act{margin-left:auto;display:inline-flex;gap:4px;}
+.kw .kw-psel .act button{color:#334155;font-weight:600;}
+.kw table.kw-g td.mc label.pk{display:inline-flex;align-items:center;gap:3px;cursor:pointer;}
+.kw table.kw-g td.mc label.pk input{width:13px;height:13px;margin:0;cursor:pointer;}
+@media print{ .kw table.kw-g td.mc label.pk input{display:none;} }
 .kw .kw-gbar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:11px;color:#475569;margin:2px 0 5px;}
 .kw .kw-gbar .lg{display:inline-block;width:18px;height:9px;border-radius:3px;background:#3b82f6;margin:0 4px 0 8px;vertical-align:middle;}
 .kw .kw-gbar .lg.hit{background:#dc2626;} .kw .kw-gbar .lg.idle{background:#94a3b8;}
@@ -7792,7 +7804,7 @@ loadData();
        PM 예정일 기본값 = 기간 다음 주(수~화, 일요일 제외)에 발생 설비부터 고르게 배정. */
     const SEL = sel.map(c=>ty[c]).filter(Boolean);
     const WX = MACHINES.filter(m=>wm[m]);
-    h += `<h4 class="kw-h">3. 액션 및 PM 플랜 <small>워스트 설비 ${WX.length}대(${WX.map(DC).join('·')||'–'})는 2번 개별 조치 → 제외 · 나머지 설비는 PM 일정을 잡아 이번 기간 발생 유형(2번 ☑)을 점검 · 판정: OK / NG / 조치완료</small></h4>`;
+    h += `<h4 class="kw-h">3. 액션 및 PM 플랜 <small>워스트 설비 ${WX.length}대(${WX.map(DC).join('·')||'–'})는 2번 개별 조치 → 기본 제외 (설비 선택에서 추가·제외 가능) · 선택한 설비는 PM 일정을 잡아 이번 기간 발생 유형(2번 ☑)을 점검 · 판정: OK / NG / 조치완료</small></h4>`;
     if (!SEL.length){
       h += `<div class="kw-empty">2번 표에서 PM 점검할 고장 유형을 ☑ 선택하세요.</div>`;
     } else {
@@ -7804,10 +7816,16 @@ loadData();
       if (opt.mode === 'week'){ for (let i=0;i<7 && new Date(st+'T00:00:00Z').getUTCDay()!==3;i++) st = addDays(st,1); }
       const slots = []; for (let i=0;i<7;i++){ const d = addDays(st,i); if (new Date(d+'T00:00:00Z').getUTCDay()!==0) slots.push(d); }
       const hitN = m => SEL.reduce((a,o)=>a+(o.by[m]?o.by[m].n:0),0);
-      const PL = MACHINES.filter(m=>!wm[m]);
+      /* 설비 선택 — 기본 = 워스트 제외 전 설비 · 사용자가 켜고 끈 값(_pmsel)이 우선 */
+      const psel = notes._pmsel || {};
+      const isOn = m => (DC(m) in psel) ? !!psel[DC(m)] : !wm[m];
+      const PL = MACHINES.filter(isOn);
+      h += `<div class="kw-psel kw-noprint"><span class="lb">설비 선택 <b>${PL.length}</b>/${MACHINES.length}</span>`
+         + MACHINES.map(m=>`<button type="button" data-kwpmchip="${DC(m)}" class="${isOn(m)?'on':''}${hitN(m)?' hit':''}" title="${wm[m]?'워스트 설비 (2번 개별 조치)':''}">${isOn(m)?'✓ ':''}${DC(m)}${wm[m]?'<small>W</small>':''}</button>`).join('')
+         + `<span class="act"><button type="button" data-kwpmall="all">전체 선택</button><button type="button" data-kwpmall="def">기본 (워스트 제외)</button><button type="button" data-kwpmall="none">전체 해제</button></span></div>`;
       /* 기본 배정: 발생 건수 많은 설비 → 가동 설비 → 가동 없음 순으로 날짜를 고르게 채움 */
       const ord = PL.slice().sort((a,b)=>hitN(b)-hitN(a) || ((S.mc[b].planned||S.mc[b].active)?1:0)-((S.mc[a].planned||S.mc[a].active)?1:0) || a-b);
-      const per = Math.ceil(ord.length / slots.length);
+      const per = Math.max(1, Math.ceil(ord.length / slots.length));
       const auto = {}; ord.forEach((m,i)=>{ auto[m] = slots[Math.min(slots.length-1, Math.floor(i/per))]; });
       const pmOf = m => pm[DC(m)] || auto[m];
       const ML = PL.slice().sort((a,b)=>pmOf(a).localeCompare(pmOf(b)) || a-b);
@@ -7839,7 +7857,7 @@ loadData();
         const x = S.mc[m], nk = DC(m), n = notes[nk] || {}, d0 = pmOf(m), d1 = endOf(m);
         const run = x.planned||x.active, hit = hitN(m) > 0;
         const tyList = SEL.map(o=>{ const t = o.by[m]; return t ? `<div class="gt hit">${esc(o.c)} <b>${f1(t.h)}h · ${t.n}건</b></div>` : `<div class="gt">${esc(o.c)} <span>예방</span></div>`; }).join('');
-        h += `<tr class="${run?'':'idle'}"><td class="mc">${nk}${run?'':'<span class="sm">가동 없음</span>'}</td><td class="gty">${tyList}</td>`
+        h += `<tr class="${run?'':'idle'}"><td class="mc"><label class="pk"><input type="checkbox" checked data-kwpmsel="${nk}" title="체크 해제 = PM 플랜에서 제외">${nk}</label>${wm[m]?'<span class="tg">워스트</span>':''}${run?'':'<span class="sm">가동 없음</span>'}</td><td class="gty">${tyList}</td>`
            + `<td class="c"><select data-kwpmd="${nk}">${[1,2,3].map(k=>`<option value="${k}"${k===durOf(m)?' selected':''}>${k}일</option>`).join('')}</select></td>`;
         GD.forEach(d=>{ const w = new Date(d+'T00:00:00Z').getUTCDay(), on = d>=d0 && d<=d1;
           const cls = on ? ('bar' + (hit?' hit':'') + (run?'':' idle') + (d===d0?' b0':'') + (d===d1?' b1':'')) : '';
@@ -7850,6 +7868,7 @@ loadData();
         h += `<td><textarea data-kw="${nk}" data-f="c" placeholder="점검 결과 · 조치 내용">${esc(n.c||'')}</textarea></td>`
            + `<td><textarea data-kw="${nk}" data-f="s" placeholder="담당 / 완료일">${esc(n.s||'')}</textarea></td></tr>`;
       });
+      if (!ML.length) h += `<tr><td colspan="${3+GD.length+SEL.length+2}" class="c" style="padding:14px;color:#6b7280">선택된 설비가 없습니다 — 위 '설비 선택'에서 PM 할 설비를 고르세요</td></tr>`;
       h += `</tbody><tfoot><tr><td colspan="3">PM 대수 / 일 (총 ${ML.length}대)</td>`;
       perDay.forEach((c,i)=>{ h += `<td class="${new Date(GD[i]+'T00:00:00Z').getUTCDay()===0?'sun':''}">${c||''}</td>`; });
       cnt.forEach(c=>{ h += `<td class="gj">OK ${c.OK}<br>NG ${c.NG}<br>완료 ${c.DONE}<br>미점검 ${c['']}</td>`; });
@@ -7888,6 +7907,22 @@ loadData();
     host.querySelectorAll('input[data-kwsel]').forEach(el=>{
       el.addEventListener('change', ()=>{
         save(o=>{ o._sel = [...host.querySelectorAll('input[data-kwsel]:checked')].map(x=>x.dataset.kwsel); });
+        redraw();
+      });
+    });
+    /* 3번 설비 선택 (칩 · 행 체크박스 · 일괄) */
+    const pmSel = (nk, on) => { save(o=>{ o._pmsel = o._pmsel || {}; o._pmsel[nk] = on; }); redraw(); };
+    host.querySelectorAll('[data-kwpmchip]').forEach(el=>{
+      el.addEventListener('click', ()=>pmSel(el.dataset.kwpmchip, !el.classList.contains('on')));
+    });
+    host.querySelectorAll('input[data-kwpmsel]').forEach(el=>{
+      el.addEventListener('change', ()=>pmSel(el.dataset.kwpmsel, el.checked));
+    });
+    host.querySelectorAll('[data-kwpmall]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const k = el.dataset.kwpmall;
+        save(o=>{ if (k==='def'){ delete o._pmsel; return; }
+          o._pmsel = {}; host.querySelectorAll('[data-kwpmchip]').forEach(c=>{ o._pmsel[c.dataset.kwpmchip] = (k==='all'); }); });
         redraw();
       });
     });
