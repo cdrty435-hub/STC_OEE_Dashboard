@@ -7671,15 +7671,25 @@ loadData();
 .kw .kw-psel button:not(.on):not(.hit){color:#475569;border-color:#94a3b8;}
 .kw .kw-note{font-size:11.5px;color:#374151;}
 @media print{ .kw .kw-gwrap{overflow:visible;} .kw table.kw-g{min-width:0 !important;} .kw table.kw-g td.gty .gt{font-size:9.5px;} }
-.kw .kw-psel{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:2px 0 6px;font-size:11px;}
-.kw .kw-psel .lb{font-weight:700;color:#1e3c72;margin-right:4px;} .kw .kw-psel .lb b{color:#dc2626;}
-.kw .kw-psel button{font:inherit;font-size:11px;font-weight:700;padding:2px 8px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#94a3b8;cursor:pointer;}
-.kw .kw-psel button.on{background:#1e3c72;border-color:#1e3c72;color:#fff;}
-.kw .kw-psel button.hit:not(.on){color:#dc2626;border-color:#fca5a5;}
-.kw .kw-psel button.on.hit{background:#b91c1c;border-color:#b91c1c;}
-.kw .kw-psel button small{font-size:9px;margin-left:2px;background:#f59e0b;color:#1f2937;border-radius:6px;padding:0 3px;}
-.kw .kw-psel .act{margin-left:auto;display:inline-flex;gap:4px;}
-.kw .kw-psel .act button{color:#334155;font-weight:600;}
+.kw .kw-psel{border:1px solid #d5dde8;background:#f8fafc;border-radius:8px;padding:8px 10px 10px;margin:4px 0 8px;}
+.kw .kw-psel .hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:7px;}
+.kw .kw-psel .lb{font-size:12.5px;font-weight:800;color:#1e3c72;}
+.kw .kw-psel .cnt{font-size:12px;color:#475569;} .kw .kw-psel .cnt b{color:#1e3c72;font-size:13px;}
+.kw .kw-psel .lg{font-size:11.5px;color:#475569;display:inline-flex;align-items:center;gap:5px;}
+.kw .kw-psel .lg i.w{margin-left:8px;}
+.kw .kw-psel .act{margin-left:auto;display:inline-flex;border:1px solid #94a3b8;border-radius:7px;overflow:hidden;}
+.kw .kw-psel .act button{font:inherit;font-size:12px;font-weight:700;color:#1e3c72;background:#fff;border:0;border-left:1px solid #cbd5e1;padding:4px 11px;cursor:pointer;}
+.kw .kw-psel .act button:first-child{border-left:0;} .kw .kw-psel .act button:hover{background:#eef3fb;}
+.kw .kw-psel .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px;}
+.kw .kw-psel .grid button{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;height:30px;font:inherit;font-size:12.5px;font-weight:800;
+  color:#64748b;background:#fff;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;transition:background .12s,border-color .12s;}
+.kw .kw-psel .grid button:hover{border-color:#1e3c72;color:#1e3c72;}
+.kw .kw-psel .grid button.on{background:#1e3c72;border-color:#1e3c72;color:#fff;}
+.kw .kw-psel .grid .ck{display:inline-block;width:10px;font-size:11px;}
+.kw .kw-psel i.d{display:inline-block;width:7px;height:7px;border-radius:50%;background:#dc2626;}
+.kw .kw-psel .grid i.d{position:absolute;top:4px;right:4px;box-shadow:0 0 0 1.5px #fff;}
+.kw .kw-psel i.w{display:inline-block;font-style:normal;font-size:9px;font-weight:900;line-height:13px;width:13px;text-align:center;border-radius:3px;background:#f59e0b;color:#1f2937;}
+.kw .kw-psel .grid i.w{position:absolute;bottom:3px;right:3px;width:12px;line-height:12px;font-size:8.5px;}
 .kw table.kw-g td.mc label.pk{display:inline-flex;align-items:center;gap:3px;cursor:pointer;}
 .kw table.kw-g td.mc label.pk input{width:13px;height:13px;margin:0;cursor:pointer;}
 @media print{ .kw table.kw-g td.mc label.pk input{display:none;} }
@@ -7845,9 +7855,11 @@ loadData();
       const psel = notes._pmsel || {};
       const isOn = m => (DC(m) in psel) ? !!psel[DC(m)] : !wm[m];
       const PL = MACHINES.filter(isOn);
-      h += `<div class="kw-psel kw-noprint"><span class="lb">설비 선택 <b>${PL.length}</b>/${MACHINES.length}</span>`
-         + MACHINES.map(m=>`<button type="button" data-kwpmchip="${DC(m)}" class="${isOn(m)?'on':''}${hitN(m)?' hit':''}" title="${wm[m]?'워스트 설비 (2번 개별 조치)':''}">${isOn(m)?'✓ ':''}${DC(m)}${wm[m]?'<small>W</small>':''}</button>`).join('')
-         + `<span class="act"><button type="button" data-kwpmall="all">전체 선택</button><button type="button" data-kwpmall="def">기본 (워스트 제외)</button><button type="button" data-kwpmall="none">전체 해제</button></span></div>`;
+      h += `<div class="kw-psel kw-noprint"><div class="hd"><span class="lb">설비 선택</span><span class="cnt"><b>${PL.length}</b> / ${MACHINES.length}대</span>`
+         + `<span class="lg"><i class="d"></i>이번 기간 고장 <i class="w">W</i>워스트</span>`
+         + `<span class="act"><button type="button" data-kwpmall="all">전체 선택</button><button type="button" data-kwpmall="def">기본 (워스트 제외)</button><button type="button" data-kwpmall="none">전체 해제</button></span></div>`
+         + `<div class="grid">` + MACHINES.map(m=>`<button type="button" data-kwpmchip="${DC(m)}" class="${isOn(m)?'on':''}" title="${[hitN(m)?'이번 기간 고장 발생':'', wm[m]?'워스트 설비 (2번 개별 조치)':''].filter(Boolean).join(' · ')}">`
+             + `<span class="ck">${isOn(m)?'✓':''}</span>${DC(m)}${hitN(m)?'<i class="d"></i>':''}${wm[m]?'<i class="w">W</i>':''}</button>`).join('') + `</div></div>`;
       /* 기본 배정: 발생 건수 많은 설비 → 가동 설비 → 가동 없음 순으로 날짜를 고르게 채움 */
       const ord = PL.slice().sort((a,b)=>hitN(b)-hitN(a) || ((S.mc[b].planned||S.mc[b].active)?1:0)-((S.mc[a].planned||S.mc[a].active)?1:0) || a-b);
       const per = Math.max(1, Math.ceil(ord.length / slots.length));
