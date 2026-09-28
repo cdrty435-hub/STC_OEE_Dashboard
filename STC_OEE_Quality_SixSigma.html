@@ -118,7 +118,13 @@
   .qt-lg{display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px;color:#374151;margin:2px 0 2px 12px;}
   .qt-lg i{display:inline-block;width:16px;height:4px;border-radius:2px;vertical-align:middle;margin-right:5px;}
   .qt-lg i.tg{height:0;border-top:2px dashed #dc2626;background:none;} .qt-lg i.hi{height:10px;background:#fde68a;}
-  .qt-tip{display:none;position:absolute;pointer-events:none;min-width:170px;background:#fff;border:1px solid #cbd5e1;border-radius:6px;box-shadow:0 4px 14px rgba(15,23,42,.15);padding:6px 9px;font-size:11.5px;color:#111827;line-height:1.55;z-index:5;}
+  .qt-rng{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:11.5px;color:#475569;margin:0 0 4px 12px;}
+.qt-rng button{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:12px;padding:2px 9px;font:inherit;font-size:11px;font-weight:600;cursor:pointer;color:#334155;}
+.qt-rng button:hover{background:#eef3fb;} .qt-rng button.on{background:#1e3c72;border-color:#1e3c72;color:#fff;}
+.qt-rng input[type=date]{font:inherit;font-size:11px;padding:1px 4px;border:1px solid #cbd5e1;border-radius:5px;}
+.qt-rng .sep{width:1px;height:14px;background:#cbd5e1;margin:0 4px;}
+@media print{ .qt-rng{display:none;} }
+.qt-tip{display:none;position:absolute;pointer-events:none;min-width:170px;background:#fff;border:1px solid #cbd5e1;border-radius:6px;box-shadow:0 4px 14px rgba(15,23,42,.15);padding:6px 9px;font-size:11.5px;color:#111827;line-height:1.55;z-index:5;}
   .qt-tip i{display:inline-block;width:10px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px;}
   .qt-tip .ex{color:#6b7280;font-size:10.5px;border-top:1px solid #eef2f7;margin-top:3px;padding-top:3px;}
   /* 보고서 표지 제목 — 일일 / 주간 보고의 맨 앞 */
@@ -8898,8 +8904,33 @@ function qtTrendHtml(o){
     + (hi.length ? `<span><i class="hi"></i>${o.hiLabel||'보고 기간'}</span>` : '');
   return `<div class="qt-box"><div class="qt-h"><b>${o.title}</b><small>${o.sub||''}</small></div>`
     + `<div class="qt-lg">${lg}</div>`
+    + (o.ctl || '')
     + `<div class="qt-wrap" style="position:relative"><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${o.title}" style="display:block">${g}</svg>`
     + `<div class="qt-tip" id="${o.id}-tip"></div></div></div>`;
+}
+/* 추이 기간 지정 — { n:일수 } = 보고 종료일 기준 최근 N일(데이터 있는 날) · { from, to } = 직접 지정 (브라우저에 저장) */
+function qtRangeGet(id){ try{ const v = JSON.parse(localStorage.getItem('stc_qt_rng_'+id) || 'null'); if (v && (v.n || (v.from && v.to))) return v; }catch(e){} return { n:30 }; }
+function qtRangeSet(id, v){
+  if (v && v.from && v.to && v.from > v.to){ const x = v.from; v.from = v.to; v.to = x; }
+  try{ localStorage.setItem('stc_qt_rng_'+id, JSON.stringify(v)); }catch(e){}
+  const f = (window.__qtRe || {})[id]; if (f) setTimeout(f, 0);
+}
+function qtRangeApply(id){
+  const a = document.getElementById(id+'-f'), b = document.getElementById(id+'-t');
+  if (a && b && a.value && b.value) qtRangeSet(id, { from:a.value, to:b.value });
+}
+/* all = 데이터 있는 날짜 전체(정렬), end = 보고 종료일 → { dates, ctl(html) } */
+function qtRangePick(id, all, end){
+  const r = qtRangeGet(id);
+  const dates = r.n ? all.filter(d => d <= end).slice(-r.n) : all.filter(d => d >= r.from && d <= r.to);
+  const f0 = r.n ? (dates[0] || all[0] || '') : r.from, t0 = r.n ? (dates[dates.length-1] || end) : r.to;
+  const mn = all[0] || '', mx = all[all.length-1] || '';
+  const ctl = '<div class="qt-rng">기간 ' +
+    [7,14,30,60,90].map(n => `<button type="button" class="${r.n===n?'on':''}" onclick="qtRangeSet('${id}',{n:${n}})">${n}일</button>`).join('') +
+    `<span class="sep"></span><input type="date" id="${id}-f" value="${f0}" min="${mn}" max="${mx}">` +
+    `<span>~</span><input type="date" id="${id}-t" value="${t0}" min="${mn}" max="${mx}">` +
+    `<button type="button" class="ap${r.n?'':' on'}" onclick="qtRangeApply('${id}')">적용</button></div>`;
+  return { dates, ctl, custom: !r.n };
 }
 function qtHover(e, id){
   const S = window.__qt[id], tip = document.getElementById(id+'-tip'), ln = document.getElementById(id+'-x');
@@ -8918,17 +8949,18 @@ function qtHover(e, id){
 }
 /* FAC1 일일 불량률 추이 — 종료일 기준 최근 30일 (데이터 있는 날) */
 function dqTrendTop(span, sc){
-  const TX = { ko:{ t:'FAC1 일일 불량률 추이', s:'최근 {n}일 ({a} ~ {b}) · 노란 음영 = 보고 기간 · 점 위 숫자 = 보고 기간 총 불량률',
-                    r:'총 불량률', ng:'순수 NG율', ws:'웜샷율', tg:'목표', hi:'보고 기간', p:'생산' },
-               en:{ t:'FAC1 daily defect-rate trend', s:'last {n} days ({a} ~ {b}) · yellow = report period · labels = total defect rate in the period',
-                    r:'Total defect rate', ng:'Pure NG rate', ws:'Warm-shot rate', tg:'Target', hi:'Report period', p:'Output' },
-               th:{ t:'แนวโน้มอัตราของเสียรายวัน FAC1', s:'{n} วันล่าสุด ({a} ~ {b}) · สีเหลือง = ช่วงรายงาน',
-                    r:'อัตราของเสียรวม', ng:'อัตรา NG สุทธิ', ws:'อัตรา Warm shot', tg:'เป้าหมาย', hi:'ช่วงรายงาน', p:'ผลิต' } };
+  const TX = { ko:{ t:'FAC1 일일 불량률 추이', s:'{n}일 ({a} ~ {b}) · 노란 음영 = 보고 기간 · 점 위 숫자 = 보고 기간 총 불량률',
+                    r:'총 불량률', none:'선택한 기간에 데이터가 없습니다', ng:'순수 NG율', ws:'웜샷율', tg:'목표', hi:'보고 기간', p:'생산' },
+               en:{ t:'FAC1 daily defect-rate trend', s:'{n} days ({a} ~ {b}) · yellow = report period · labels = total defect rate in the period',
+                    r:'Total defect rate', none:'No data in the selected range', ng:'Pure NG rate', ws:'Warm-shot rate', tg:'Target', hi:'Report period', p:'Output' },
+               th:{ t:'แนวโน้มอัตราของเสียรายวัน FAC1', s:'{n} วัน ({a} ~ {b}) · สีเหลือง = ช่วงรายงาน',
+                    r:'อัตราของเสียรวม', none:'ไม่มีข้อมูลในช่วงที่เลือก', ng:'อัตรา NG สุทธิ', ws:'อัตรา Warm shot', tg:'เป้าหมาย', hi:'ช่วงรายงาน', p:'ผลิต' } };
   const X = TX[typeof LANG !== 'undefined' && TX[LANG] ? LANG : 'ko'];
-  const ds = dqDates().filter(d => d <= span.to).slice(-30);
-  if (!ds.length) return '';
-  const S = dqSeries({ from:ds[0], to:span.to, n:ds.length }, sc).filter(x => x.prod > 0);
-  if (!S.length) return '';
+  window.__qtRe = window.__qtRe || {}; window.__qtRe.qtFac1 = () => renderDaily();
+  const R = qtRangePick('qtFac1', dqDates(), span.to);
+  const ds = R.dates;
+  const S = ds.length ? dqSeries({ from:ds[0], to:ds[ds.length-1], n:ds.length }, sc).filter(x => x.prod > 0) : [];
+  if (!S.length) return '<div class="qt-box"><div class="qt-h"><b>' + X.t + '</b></div>' + R.ctl + '<div style="padding:14px;color:#6b7280;font-size:12px">' + X.none + '</div></div>';
   const v = k => S.map(x => +x[k].toFixed(3));
   return qtTrendHtml({ id:'qtFac1', title:X.t,
     sub:X.s.replace('{n}', S.length).replace('{a}', S[0].week).replace('{b}', S[S.length-1].week),
@@ -8936,7 +8968,7 @@ function dqTrendTop(span, sc){
     series:[ { name:X.r, color:'#2a78d6', vals:v('rej'), main:true },
              { name:X.ng, color:'#eb6834', vals:v('ngr') },
              { name:X.ws, color:'#1baf7a', vals:v('wsr') } ],
-    target:+(100 - QR_TARGET_Q).toFixed(2), tLabel:X.tg, hiLabel:X.hi, hiFrom:span.from, hiTo:span.to,
+    ctl:R.ctl, target:+(100 - QR_TARGET_Q).toFixed(2), tLabel:X.tg, hiLabel:X.hi, hiFrom:span.from, hiTo:span.to,
     extra:i => X.p + ' ' + S[i].prod.toLocaleString() + ' EA' });
 }
 function renderDaily(){
