@@ -4530,10 +4530,13 @@ function renderWeekly(){
     ` · MTBF ${mtbfBasisLabel()}`;
 
   /* ---------- ① 요약 KPI ---------- */
+  /* 가용률 = MTBF ÷ (MTBF + MTTR) = 가동 ÷ (가동 + 고장 정지) — 1번 지표 요약과 같은 기준 */
+  const gaOf = x => !x ? null : ((x.mtbf + x.mttr) > 0 ? x.mtbf / (x.mtbf + x.mttr) * 100 : 100);
+  const gaC = gaOf(cur), gaP = gaOf(prv);
   const K = [
     [`MTTR (평균 수리시간)${catIsAll(cats1)?'':' · '+catLabel(cats1)}`, fmt(cur.mttr,2), 'h/건', wkDelta(cur.mttr, prv&&prv.mttr, false, 2)],
     ['MTBF (평균 무고장시간)', fmt(cur.mtbf,2), 'h/건', wkDelta(cur.mtbf, prv&&prv.mtbf, true, 2)],
-    ['가동률', fmt(cur.avail,1), '%', wkDelta(cur.avail, prv&&prv.avail, true, 1, '%p')],
+    ['가용률', fmt(gaC,1), '%', wkDelta(gaC, prv ? gaP : null, true, 1, '%p')],
     ['로스시간 / 고장횟수', fmt(cur.lossH,1), 'h / '+cntTxt(cur.cnt)+'건', wkDelta(cur.lossH, prv&&prv.lossH, false, 1, 'h')],
     ['F-COST 손실비용', Math.round(cur.cost).toLocaleString(), 'THB', wkDelta(cur.cost, prv&&prv.cost, false, 0, '')]
   ];
@@ -4554,7 +4557,10 @@ function renderWeekly(){
     const note = document.getElementById('wkAvailNote');
     if(note) note.innerHTML =
       `<button class="cls" onclick="document.getElementById('wkAvailNote').style.display='none'">닫기 ✕</button>
-       <h5>이 보고서의 가동률과 OEE 가동률은 분모가 다릅니다</h5>
+       <h5>가용률 = MTBF ÷ (MTBF + MTTR)</h5>
+       <div>· <b>가용률</b> = <span class="fx">${fmt(cur.mtbf,2)} ÷ (${fmt(cur.mtbf,2)} + ${fmt(cur.mttr,2)}) = ${fmt(gaC,1)}%</span>
+            — 가동시간 ÷ (가동시간 + 고장 정지시간). 고장(${STD_MODE?'계획외 고장 UDT':'전체 로스'}) 정지만 반영하며 1번 지표 요약의 가용률과 같은 값입니다.</div>
+       <h5 style="margin-top:8px">참고 — 가동률(전체 로스)과 OEE 가동률</h5>
        <div>· <b>주간보고 가동률</b> = <span class="fx">가동시간 ÷ (가동시간 + 로스시간)</span>
             — 실제로 기록된 가동·로스 시간만으로 계산합니다. 로스로 기록되지 않은 시간은 분모에 들어가지 않습니다.</div>
        <div>· <b>OEE 가동률</b> = <span class="fx">가동시간 ÷ 계획생산시간(PPT)</span>
@@ -4612,7 +4618,7 @@ function renderWeekly(){
     const dM = cur.mttr-prv.mttr, dB = cur.mtbf-prv.mtbf, dA = cur.avail-prv.avail;
     L.push(`MTTR ${fmt(prv.mttr,2)} → <b>${fmt(cur.mttr,2)}</b> h/건 (${dM>=0?'+':''}${fmt(dM,2)}${wkPct(cur.mttr,prv.mttr)}) · ` +
            `MTBF ${fmt(prv.mtbf,2)} → <b>${fmt(cur.mtbf,2)}</b> h/건 (${dB>=0?'+':''}${fmt(dB,2)}${wkPct(cur.mtbf,prv.mtbf)}) · ` +
-           `가동률 ${fmt(prv.avail,1)} → <b>${fmt(cur.avail,1)}</b>% (${dA>=0?'+':''}${fmt(dA,1)}%p)`);
+           `가용률 ${fmt(gaP,1)} → <b>${fmt(gaC,1)}</b>% (${gaC-gaP>=0?'+':''}${fmt(gaC-gaP,1)}%p)`);
     const jm = dM<0 ? '수리시간 단축' : dM>0 ? '수리시간 증가' : '수리시간 보합';
     const jb = dB>0 ? '고장 간격 개선' : dB<0 ? '고장 간격 악화' : '고장 간격 보합';
     L.push(`전주 대비 <b>${jm}</b>, <b>${jb}</b>.` +
@@ -4620,7 +4626,7 @@ function renderWeekly(){
         ? ` 주된 변동 요인은 <b>${drv.k}</b> 계통으로 로스시간이 ${drv.d>0?'+':''}${fmt(drv.d,1)}h 변동했습니다.`
         : ' 계통별 로스 변동은 크지 않습니다.'));
   }else{
-    L.push(`MTTR <b>${fmt(cur.mttr,2)}</b> h/건 · MTBF <b>${fmt(cur.mtbf,2)}</b> h/건 · 가동률 <b>${fmt(cur.avail,1)}</b>% (전주 데이터 없음)`);
+    L.push(`MTTR <b>${fmt(cur.mttr,2)}</b> h/건 · MTBF <b>${fmt(cur.mtbf,2)}</b> h/건 · 가용률 <b>${fmt(gaC,1)}</b>% (전주 데이터 없음)`);
   }
   if(tM || tB){
     const t = [];
