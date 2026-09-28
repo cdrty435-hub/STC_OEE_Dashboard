@@ -127,6 +127,15 @@ main{flex:1 1 auto;position:relative;overflow:hidden;}
 .f2-quick button{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:14px;padding:4px 10px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
 .f2-quick button:hover{background:#eef3fb;}
 .f2-cmp{color:var(--ink-2);font-weight:500;}
+.f2-cover{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;background:linear-gradient(135deg,#12233f 0%,#1e3c72 60%,#2a5298 100%);color:#fff;border-radius:6px;padding:20px 26px 18px;margin:4px 0 20px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.f2-cover .kicker{font-size:13px;font-weight:700;letter-spacing:.16em;opacity:.8;text-transform:uppercase;}
+.f2-cover h1{margin:4px 0 6px;font-size:34px;font-weight:900;letter-spacing:-.01em;line-height:1.15;color:#fff;}
+.f2-cover h1 small{display:block;font-size:15px;font-weight:600;opacity:.8;letter-spacing:.02em;margin-top:3px;}
+.f2-cover .per{display:inline-block;font-size:16px;font-weight:800;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:4px 12px;}
+.f2-cover .per span{font-weight:500;opacity:.85;margin-left:8px;font-size:14px;}
+.f2-cover .side{text-align:right;font-size:13px;line-height:1.75;opacity:.95;white-space:nowrap;}
+.f2-cover .side b{font-size:16px;font-weight:900;letter-spacing:.02em;}
+@media screen and (max-width:900px){ .f2-cover{flex-direction:column;align-items:flex-start;} .f2-cover .side{text-align:left;white-space:normal;} .f2-cover h1{font-size:26px;} }
 .f2-rhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:3px solid var(--brand-1);padding-bottom:8px;margin-bottom:6px;}
 .f2-rhead h2{font-size:19px;color:var(--brand-1);}
 .f2-rhead div{text-align:right;font-size:12px;color:var(--ink-2);line-height:1.5;}
@@ -1439,6 +1448,27 @@ function f2Dash(week){
 }
 
 /* ---- 일일 / 주간 / 월간 품질보고 ---- */
+/* ---------- FAC2 보고서 표지 제목 (FAC1 과 같은 형식 · 일일 / 주간 / 월간) ---------- */
+const F2_COVER_TXT = {
+  ko:{ daily:'FAC2 공정품질 일일 보고서', week:'FAC2 공정품질 주간 보고서', month:'FAC2 공정품질 월간 보고서', kicker:'Quality Report',
+       dSub:'Daily Quality Report', wSub:'Weekly Quality Report', mSub:'Monthly Quality Report',
+       co:'STC Co., Ltd.', line:'MCT 가공 · OQC 출하검사', vs:'비교', issued:'발행' },
+  en:{ daily:'FAC2 Process Quality — Daily Report', week:'FAC2 Process Quality — Weekly Report', month:'FAC2 Process Quality — Monthly Report', kicker:'Quality Report',
+       dSub:'', wSub:'', mSub:'', co:'STC Co., Ltd.', line:'MCT machining · OQC outgoing', vs:'vs', issued:'Issued' },
+  th:{ daily:'FAC2 คุณภาพกระบวนการ รายงานคุณภาพประจำวัน', week:'FAC2 คุณภาพกระบวนการ รายงานคุณภาพประจำสัปดาห์', month:'FAC2 คุณภาพกระบวนการ รายงานคุณภาพประจำเดือน', kicker:'Quality Report',
+       dSub:'Daily Quality Report', wSub:'Weekly Quality Report', mSub:'Monthly Quality Report',
+       co:'STC Co., Ltd.', line:'MCT แมชชีนนิ่ง · OQC ตรวจก่อนส่ง', vs:'เทียบ', issued:'วันที่ออก' }
+};
+function f2CoverHtml(kind, period, note, prevKey){
+  const C = F2_COVER_TXT[LANG] || F2_COVER_TXT.ko;
+  const sub = kind==='week' ? C.wSub : kind==='month' ? C.mSub : C.dSub;
+  const today = new Date().toISOString().slice(0,10);
+  return `<div class="f2-cover"><div>
+      <div class="kicker">${C.kicker}</div>
+      <h1>${C[kind]}${sub?`<small>${sub}</small>`:''}</h1>
+      <div class="per">${esc2(period)}${note?`<span>${esc2(note)}</span>`:''}</div>
+    </div><div class="side"><b>${C.co}</b><br>${C.line}<br>${prevKey?`${C.vs} ${esc2(prevKey)}<br>`:''}${C.issued} ${today}</div></div>`;
+}
 function f2Report(kind, topWeek){
   const dates = f2Dates(), weeks = f2Weeks(), months = [...new Set(dates.map(d=>d.slice(0,7)))].sort();
   let opts, cur, pred, prevKey, prevPred, label, trend = [], trendLbl = '';
@@ -1473,6 +1503,9 @@ function f2Report(kind, topWeek){
     const ws = weeks.filter(w=>F2.pd.some(r=>r['주차']===w && mon(r)===cur));
     trendLbl = T('f2.byWeek'); trend = ws.map(w=>({k:w, s:f2Sum(r=>r['주차']===w && mon(r)===cur)}));
   }
+  let cvPer = cur, cvNote = '';
+  if(kind==='daily'){ const n = f2DayDiff(dFrom, dTo) + 1; cvPer = n===1 ? dFrom : `${dFrom} ~ ${dTo}`; cvNote = n===1 ? '' : `${T('u.days',{n})} (${T('f2.workDays',{n:dates.filter(d=>d>=dFrom && d<=dTo).length})})`; }
+  else if(kind==='week'){ cvNote = label.slice(String(cur).length).replace(/^\s*·\s*/,'').trim(); }
   const selKey = kind==='daily'?'daily':kind==='week'?'week':'month';
   const s = f2Sum(pred), p = prevKey ? f2Sum(prevPred) : null;
   const noteKey = kind+'_'+cur;
@@ -1502,6 +1535,7 @@ function f2Report(kind, topWeek){
   s.partList.forEach(pt=>F2_PROCS.forEach(pc=>{ if(pt[pc].n>0) t5rows.push(`<tr><td class="name">${esc2(pt.name)}</td><td>${T('f2.p.'+pc)}</td><td>${fmt(pt[pc].n)}</td>
       <td style="color:${f2St(f2Rate(pt[pc])).c};font-weight:700">${f2pc(pt[pc])}</td><td class="t5">${t5(pc,pt,'다캐불량')}</td><td class="t5">${t5(pc,pt,'가공불량')}</td></tr>`); }));
   return bar + `
+    ${f2CoverHtml(kind, cvPer, cvNote, prevKey)}
     <div class="f2-rhead"><h2>${T('f2.r.title.'+kind)}</h2>
       <div>${esc2(label)} · ${T('f2.r.vs')} ${esc2(prevKey||'–')}<br><small>${T('f2.r.made',{d:new Date().toISOString().slice(0,10)})}</small></div></div>
     <div class="sec-title">1. ${T('f2.mwk')}</div>${f2McWorstTable(pred, prevKey?prevPred:null, prevKey, kind==='daily'&&dFrom!==dTo?`${dFrom} ~ ${dTo}`:cur)}
