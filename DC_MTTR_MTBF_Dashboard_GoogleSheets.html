@@ -7784,7 +7784,7 @@ loadData();
       h += `<table class="kw-m"><colgroup><col style="width:5%"><col style="width:11%">${WM.map(()=>`<col style="width:${mw}%">`).join('')}<col style="width:9%"><col style="width:10%"><col style="width:19%"></colgroup>`;
       h += `<thead><tr><th>선택</th><th>고장 유형</th>`;
       WM.forEach(m=>{ const x = S.mc[m];
-        h += `<th class="mh">${DC(m)}<span class="tg">${esc(wm[m].join(' · '))}</span><span class="sm">${f1(x.lossH)}h · ${x.n}건 · ${f1(x.avail)}%</span><span class="sm">설비-전기 ${f1(elH[m]||0)}h</span></th>`; });
+        h += `<th class="mh" title="${esc(wm[m].join(' · '))} · 로스 ${f1(x.lossH)}h · ${x.n}건 · 가용률 ${f1(x.avail)}% · 설비-전기 ${f1(elH[m]||0)}h">${DC(m)}</th>`; });
       h += `<th>워스트 합계</th><th>전체 설비</th><th class="dt">문제 부위 · 원인</th></tr></thead><tbody>`;
       TYs.forEach(o=>{
         const on = sel.includes(o.c);
