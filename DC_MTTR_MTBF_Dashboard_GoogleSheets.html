@@ -894,6 +894,50 @@
   body.report-mode .wk-focus{background:#1f3864; color:#fff;}
   @media print{ .wk-focus{display:none;} }
 </style>
+<style>
+  /* 주간보고 화면 — 행 높이·글자 크게 (인쇄는 기존 크기 유지) */
+  @media screen{
+    #wkSheet{font-size:14px;}
+    #wkSheet .wk-hd h3{font-size:19px;} #wkSheet .wk-hd .meta{font-size:12.5px;}
+    #wkSheet .wk-blk{margin-top:18px;}
+    #wkSheet .wk-blk > h4{font-size:16px;margin-bottom:9px;padding-left:9px;}
+    #wkSheet .wk-tgt, #wkSheet .wk-catbar{font-size:12px;}
+    #wkSheet .wk-catbar select{font-size:12.5px;}
+    #wkSheet .wk-kpi{gap:10px;}
+    #wkSheet .wk-k{padding:12px 14px;}
+    #wkSheet .wk-k .l{font-size:13px;} #wkSheet .wk-k .info{font-size:11px;}
+    #wkSheet .wk-k .v{font-size:28px;} #wkSheet .wk-k .v .u{font-size:13.5px;}
+    #wkSheet .wk-k .d{font-size:13.5px;}
+    #wkSheet .wk-verdict{font-size:14px;line-height:1.8;padding:11px 14px;}
+    #wkSheet .wk-avail-note{font-size:13px;} #wkSheet .wk-avail-note h5{font-size:13.5px;}
+    #wkSheet .wk-avail-note table{font-size:12.5px;}
+    #wkSheet .wk-canv h5{font-size:13.5px;}
+    #wkSheet .wk-issue{gap:10px;}
+    #wkSheet .wk-issue .ic{padding:10px 13px;}
+    #wkSheet .wk-issue .ic .nm{font-size:15px;}
+    #wkSheet .wk-issue .ic .vd{font-size:11.5px;padding:2px 8px;}
+    #wkSheet .wk-issue .ic .mt{font-size:12.5px;margin-top:5px;}
+    #wkSheet .wk-issue .ic .is{font-size:13px;line-height:1.7;margin-top:5px;color:#1f2937;}
+    #wkSheet table.wk-t{font-size:13.5px;}
+    #wkSheet table.wk-t th{font-size:13px;padding:9px 8px;color:#1f2937;}
+    #wkSheet table.wk-t td{padding:8px 8px;color:#1f2937;}
+    #wkSheet table.wk-t.mini th, #wkSheet table.wk-t.mini td{font-size:13px;padding:8px 7px;}
+    #wkSheet table.wk-t input.act, #wkSheet table.wk-t.down input, #wkSheet table.wk-t.down select,
+    #wkSheet table.wk-t.down textarea{font-size:13px;}
+    #wkSheet .wk-ppt-note{font-size:12px;}
+    #wkSheet .wkw-band, #wkSheet .wkc-band, #wkSheet .hw-sub{font-size:12px;}
+    #wkSheet .wkw-h .mc{font-size:16px;} #wkSheet .wkw-h .rk{font-size:11px;}
+    #wkSheet .wkw-v{font-size:12.5px;} #wkSheet .wkw-m{font-size:12px;}
+    #wkSheet .wkw-card ul{font-size:12.5px;line-height:1.6;}
+    #wkSheet .wkw-card textarea, #wkSheet .wkw-card input{font-size:12.5px;}
+    #wkSheet .wkc-k .l{font-size:11px;} #wkSheet .wkc-k .v{font-size:18px;} #wkSheet .wkc-k .d{font-size:11.5px;}
+    #wkSheet .wkc-bar .lb, #wkSheet .wkc-bar label, #wkSheet .wkc-bar select{font-size:12.5px;}
+    #wkSheet .wkc-c .n{font-size:13px;} #wkSheet .wkc-c .m{font-size:12.5px;} #wkSheet .wkc-c .s{font-size:11.5px;}
+    #wkSheet .wkc-w{font-size:12.5px;}
+    #wkSheet .wk-memo{font-size:13.5px;min-height:70px;}
+    #wkSheet .wk-foot{font-size:12px;}
+  }
+</style>
 </head>
 <body>
 
