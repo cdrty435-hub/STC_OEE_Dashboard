@@ -232,6 +232,10 @@ table.f2-ms tr.n td:not(.l):not(.tt){background:#fff5f5;} table.f2-ms tr.m td:no
 .f2-m3tag{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;font-size:11.5px;color:var(--ink-2);}
 .f2-m3tag span{display:inline-flex;align-items:center;gap:4px;padding:1px 6px;border-radius:4px;border:1px solid #e3e7ec;}
 .f2-m3tag span.lead{font-weight:800;color:#333;border-color:#b8c2cf;} .f2-m3tag i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+.f2-psec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;padding:10px 14px;border-radius:10px;color:#fff;font-size:16px;font-weight:800;}
+.f2-psec.mct{background:linear-gradient(135deg,#1e3c72,#2a5298);} .f2-psec.oqc{background:linear-gradient(135deg,#0f5132,#198754);}
+.f2-psec b{display:inline-flex;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);align-items:center;justify-content:center;}
+.f2-psec small{font-size:12px;font-weight:500;opacity:.85;margin-left:6px;}
 textarea.f2-note{width:100%;min-height:70px;border:1px dashed #c9d2dc;border-radius:6px;padding:8px;font-family:inherit;font-size:12.5px;background:#fffef5;resize:vertical;}
 @media print{
   header,nav.groups,nav.tabs,.f2-side,.f2-noprint{display:none !important;}
@@ -416,6 +420,7 @@ ko:{
  'f2.f2':'· 지표는 원본 KPI MCT · KPI OQC와 같습니다: % NG = NG Q\'ty ÷ Total Q\'ty. Mat\'l NG(가공 전 소재 불량)·FG QC Sorting은 NG에 넣지 않습니다. TOP5: Die Casting = 코드 1~16, MCT(FAC.2) = 17~46.',
  'f2.f3':'· 판정: %NG ≤ {t}% 😄 Good · 초과 😭 Critical (원본 KPI MCT·OQC Target 3.5%와 같은 기준).',
  'f2.noProc':'이 기간 실적 없음 (원본에 아직 입력되지 않음)',
+ 'f2.ps.MCT':'가공 공정 품질 — 생산 실적·설비·불량 원인','f2.ps.OQC':'수출 전 최종 검사 — 품번별 검사 결과',
  'f2.mcs':'설비별 가공 실적 (MCT)','f2.ach':'UPD 달성률','f2.noMq':'F2_MCT_Q 탭이 없어 설비별 실적을 표시하지 못합니다 — FAC2 변환기의 F2_MCT_Q CSV를 같은 이름의 탭으로 넣어 주세요.',
  'f2.achNote':'UPD 달성률 = Σ생산 ÷ Σ UPD(95%) (설비·일자·품번마다 하루 능력 1회) — 원본 actual yield(실제수율)를 기간으로 합친 값 · 85% 이상 녹색 · 60% 이상 노랑',
  'f2.mwk':'MCT 가공 지표 요약 (Worst 3)','f2.issues':'워스트 설비 문제점 · 조치','f2.procSum':'공정별 요약 (MCT · OQC)',
@@ -501,6 +506,7 @@ en:{
  'f2.f2':'· Same KPIs as KPI MCT · KPI OQC: %NG = NG ÷ Total. Mat\'l NG and FG QC sorting are not counted as NG. TOP5: die casting = codes 1–16, MCT = 17–46.',
  'f2.f3':'· Status: %NG ≤ {t}% 😄 Good · above 😭 Critical (same as KPI sheets).',
  'f2.noProc':'No output in this period',
+ 'f2.ps.MCT':'machining quality — output, machines, defect causes','f2.ps.OQC':'final inspection before export — results by part',
  'f2.mcs':'By machine (MCT output)','f2.ach':'UPD achievement','f2.noMq':'F2_MCT_Q tab not found — add the F2_MCT_Q CSV from the FAC2 converter as a tab with the same name.',
  'f2.achNote':'UPD achievement = Σ production ÷ Σ UPD(95%) (one day-capacity per machine·date·part) — the source actual yield over the period · ≥85% green · ≥60% amber',
  'f2.mwk':'MCT KPI summary (Worst 3)','f2.issues':'Worst machines — problems & actions','f2.procSum':'Process summary (MCT · OQC)',
@@ -1442,29 +1448,95 @@ function renderF2(){
 }
 
 /* ---- 현황 (선택 주차 · KPI MCT 화면과 같은 구성) ---- */
+/* ---- 공정별(MCT 가공 / OQC 수출검사) 분리 표 ---- */
+function f2SecHead(proc){
+  return `<div class="f2-psec ${proc==='MCT'?'mct':'oqc'}"><b>${proc==='MCT'?'A':'B'}</b>${T('f2.p.'+proc)}<small>${T('f2.ps.'+proc)}</small></div>`;
+}
+function f2ProcKpiTable(s, p, proc, prevLbl, curLbl){
+  const a = s[proc], b = p ? p[proc] : null;
+  if(!a.t && !(b&&b.t)) return `<div class="card empty" style="padding:12px">${T('f2.noProc')}</div>`;
+  const kv = (x,k) => !x ? null : k==='r' ? f2Rate(x) : x[k];
+  const dl = (c,pv,dp,u,gd) => { if(c==null||pv==null) return '–'; const d=c-pv; if(Math.abs(d)<Math.pow(10,-dp)/2) return '±0';
+    const good = gd ? d<0 : d>0; return `<b style="color:${good?'var(--good)':'var(--critical)'}">${d>0?'+':'−'}${fmt(Math.abs(d),dp)}${u}</b>`; };
+  const cv = (x,k) => { const v = kv(x,k); if(v==null || (k!=='r' && !x.t && !v)) return '–'; if(k==='r'){ const st=f2St(v); return `<span style="color:${st.c};font-weight:700">${v.toFixed(2)}%</span> <small>${st.l}</small>`; } return fmt(v,0); };
+  const KP = [["Total Q'ty",'t',0,'',false],["FG Q'ty",'f',0,'',false],["NG Q'ty",'n',0,'',true],['% NG','r',2,'%p',true]].concat(proc==='MCT'?[["Mat'l NG",'m',0,'',true]]:[]);
+  return `<div class="card"><div class="tblwrap"><table class="eq f2-pt">
+    <thead><tr><th>${T('f2.r.kpi')}</th><th>${esc2(prevLbl||T('f2.r.prev'))}</th><th>${esc2(curLbl||T('f2.r.cur'))}</th><th>${T('f2.r.delta')}</th></tr></thead>
+    <tbody>${KP.map(([lab,k,dp,u,gd])=>`<tr><td class="name">${lab}</td><td>${b?cv(b,k):'–'}</td><td><b>${cv(a,k)}</b></td><td>${dl(kv(a,k), b&&b.t?kv(b,k):null, dp, u, gd)}</td></tr>`).join('')}</tbody></table></div></div>`;
+}
+function f2PartTableP(s, proc){
+  const L = s.partList.filter(pt=>pt[proc].t>0);
+  if(!L.length) return `<div class="card empty" style="padding:12px">${T('f2.noProc')}</div>`;
+  const m = proc==='MCT';
+  const cell = a => `<td>${fmt(a.t)}</td><td>${fmt(a.f)}</td><td>${fmt(a.n)}</td><td style="color:${f2St(f2Rate(a)).c};font-weight:700">${f2pc(a)}</td>${m?`<td>${fmt(a.m)}</td>`:''}`;
+  return `<div class="card"><div class="tblwrap"><table class="eq f2-pt">
+    <thead><tr><th>PART NAME</th><th>Total</th><th>FG</th><th>NG</th><th>% NG</th>${m?"<th>Mat'l NG</th>":''}</tr></thead>
+    <tbody>${L.map(pt=>`<tr><td class="name">${esc2(pt.name)}<br><small style="color:var(--ink-muted);font-weight:500">${esc2(pt.no)}</small></td>${cell(pt[proc])}</tr>`).join('')}
+      <tr class="tot"><td class="name">Total</td>${cell(s[proc])}</tr></tbody></table></div></div>`;
+}
+function f2Top5TableP(pred, s, proc){
+  const t5 = (pt, grp) => { const L = f2TopN(pred, proc, pt.no, grp, 5); return L.length ? L.map(x=>`${esc2(x.t)} <b>${fmt(x.v)}</b>`).join(' · ') : '–'; };
+  const rows = s.partList.filter(pt=>pt[proc].n>0).map(pt=>`<tr><td class="name">${esc2(pt.name)}</td><td>${fmt(pt[proc].n)}</td>
+      <td style="color:${f2St(f2Rate(pt[proc])).c};font-weight:700">${f2pc(pt[proc])}</td><td class="t5">${t5(pt,'다캐불량')}</td><td class="t5">${t5(pt,'가공불량')}</td></tr>`);
+  return `<div class="card"><div class="tblwrap"><table class="eq f2-pt f2-t5t">
+    <thead><tr><th>PART NAME</th><th>NG</th><th>% NG</th><th>${T('f2.g.다캐불량')} TOP5</th><th>${T('f2.g.가공불량')} TOP5</th></tr></thead>
+    <tbody>${rows.join('') || `<tr><td colspan="5" class="empty">${T('f2.none5')}</td></tr>`}</tbody></table></div></div>`;
+}
+function f2TrendTableP(list, label, curKey, proc, part){
+  const m = proc==='MCT';
+  return `<div class="card"><div class="tblwrap"><table class="eq f2-pt">
+    <thead><tr><th>${label}</th><th>Total</th><th>FG</th><th>NG</th><th>% NG</th>${m?"<th>Mat'l</th>":''}${part?`<th>${esc2(part.name)} %NG</th><th>${esc2(part.topName||'-')}</th>`:''}</tr></thead>
+    <tbody>${list.map(x=>{ const a = x.s[proc], pp = part ? (x.s.parts[part.no]||{MCT:f2mk(),OQC:f2mk()})[proc] : null;
+      return `<tr${x.k===curKey?' style="background:#eef4fd"':''}><td class="name">${esc2(x.k)}</td>
+        <td>${a.t?fmt(a.t):'–'}</td><td>${a.t?fmt(a.f):'–'}</td><td>${a.t?fmt(a.n):'–'}</td><td style="color:${f2St(f2Rate(a)).c};font-weight:700">${a.t?f2pc(a):'–'}</td>${m?`<td>${a.t?fmt(a.m):'–'}</td>`:''}
+        ${part?`<td>${pp&&pp.t?f2pc(pp):'–'}</td><td><b>${fmt(x.topCnt||0)}</b></td>`:''}</tr>`; }).join('')}</tbody></table></div></div>`;
+}
+/* 품번 칩 + TOP5 (한 공정) */
+function f2PartChipsP(s, proc){
+  const list = s.partList.filter(pt=>pt[proc].t>0).sort((a,b)=>b[proc].n-a[proc].n);
+  const key = 'part'+proc, cur = list.find(pt=>pt.no===F2_SEL[key]) || list[0];
+  return { cur, html: list.length ? `<div class="f2-chips">${list.map(pt=>`<button class="${pt===cur?'on':''}" onclick="f2SetSel('${key}','${esc2(pt.no)}')">${esc2(pt.name)} <small>NG ${fmt(pt[proc].n)}</small></button>`).join('')}</div>` : '' };
+}
+function f2Top5Boxes(pred, pt, proc){
+  const box = grp => { const a = pt[proc], L = f2TopN(pred, proc, pt.no, grp, 5), mx = Math.max(1, ...L.map(x=>x.v));
+    return `<div class="card f2-t5"><div class="f2-t5h">${T('f2.g.'+grp)}</div>
+      ${L.length ? L.map((x,i)=>`<div class="f2-bar"><span class="f2-rk">${i+1}</span><span class="f2-bl">${esc2(x.t)}</span>
+        <span class="bartrack f2-bt"><span class="barfill" style="width:${x.v/mx*100}%;background:${F2_GCOLOR[grp]}"></span></span>
+        <span class="f2-bv">${fmt(x.v)} <small>${a.n?(x.v/a.n*100).toFixed(0)+'%':''}</small></span></div>`).join('') : `<div class="empty" style="padding:10px 0">${T('f2.none5')}</div>`}</div>`; };
+  return `<div class="f2-t5g" style="grid-template-columns:repeat(2,minmax(0,1fr))">${box('다캐불량')}${box('가공불량')}</div>`;
+}
+/* 12주 추이 (한 공정 + 선택 품번 1위 불량) */
+function f2Trend12(weeks, i, week, proc, pt){
+  const trW = weeks.slice(Math.max(0,(i<0?weeks.length:i+1)-12), i<0?weeks.length:i+1);
+  const top1 = pt ? f2TopN(r=>r['주차']===week, proc, pt.no, null, 1)[0] : null;
+  const part = pt ? { no:pt.no, name:pt.name, topName: top1 ? top1.t : null } : null;
+  const list = trW.map(w=>{ const pr = r=>r['주차']===w; const o = { k:w, s:f2Sum(pr) };
+    if(part && part.topName) o.topCnt = F2.det.filter(r=>pr(r) && r['공정']===proc && r['구분']==='NG' && r['Part no.']===part.no && r['불량유형']===part.topName).reduce((a,r)=>a+f2n(r['수량']),0);
+    return o; });
+  return `<div class="sec-title">${T('f2.p.'+proc)} · ${T('f2.trend12')}${part&&part.topName?` · ${esc2(part.name)} ${T('f2.top1')} “${esc2(part.topName)}”`:''}</div>${f2TrendTableP(list, T('ctl.week'), week, proc, part && part.topName ? part : null)}`;
+}
+
 function f2Dash(week){
   const weeks = f2Weeks(), i = weeks.indexOf(week), pw = i>0 ? weeks[i-1] : null;
   const pred = r=>r['주차']===week, s = f2Sum(pred), p = pw ? f2Sum(r=>r['주차']===pw) : null;
   if(!s.days.length) return `<div class="sec-title">${T('grp.fac2')} · ${week}</div><div class="card empty">${T('f2.noWeek',{w:week})}<br>${T('f2.have',{a:weeks[0]||'-',b:weeks[weeks.length-1]||'-'})}</div>`;
   const ow = [...new Set(F2.pd.filter(pred).map(r=>r['원본주차']).filter(Boolean))].join(', ');
-  const chips = f2PartChips(s), pt = chips.cur;
-  const trW = weeks.slice(Math.max(0,(i<0?weeks.length:i+1)-12), i<0?weeks.length:i+1);
-  const top1 = pt ? f2TopN(pred, 'MCT', pt.no, null, 1)[0] : null;
-  const part = pt ? { no:pt.no, name:pt.name, topName: top1 ? top1.t : null } : null;
-  const trend = trW.map(w=>{ const pr = r=>r['주차']===w; const o = { k:w, s:f2Sum(pr) };
-    if(part && part.topName) o.topCnt = F2.det.filter(r=>pr(r) && r['공정']==='MCT' && r['구분']==='NG' && r['Part no.']===part.no && r['불량유형']===part.topName).reduce((a,r)=>a+f2n(r['수량']),0);
-    return o; });
+  const cM = f2PartChipsP(s,'MCT'), cO = f2PartChipsP(s,'OQC');
   return `
     <div class="sec-title">${T('grp.fac2')} · ${week}${ow?` (${T('f2.orig')} ${esc2(ow)})`:''} · ${s.days[0]} ~ ${s.days[s.days.length-1]} · ${T('u.days',{n:s.days.length})}</div>
+    ${f2SecHead('MCT')}
     ${f2KpiRow('MCT', s.MCT, p && p.MCT)}
-    ${f2KpiRow('OQC', s.OQC, p && p.OQC)}
     <div class="sec-title">${T('f2.mwk')}</div>${f2McWorstTable(pred, pw?(r=>r['주차']===pw):null, pw, week)}
-    <div class="sec-title">${T('f2.parts')}</div>${f2PartTable(s)}
+    <div class="sec-title">${T('f2.p.MCT')} · ${T('f2.parts')}</div>${f2PartTableP(s,'MCT')}
     <div class="sec-title">${T('f2.m.sec')}</div>${f2Measure(pred)}
     <div class="sec-title">${T('f2.mcs')}</div>${f2McTable(pred)}
-    <div class="sec-title">${T('f2.top5')}</div>${chips.html}${pt?f2Top5Lists(pred, pt):''}
-    <div class="sec-title">${T('f2.trend12')}${part&&part.topName?` · ${esc2(part.name)} ${T('f2.top1')} “${esc2(part.topName)}”`:''}</div>
-    ${f2TrendTable(trend, T('ctl.week'), week, part)}
+    <div class="sec-title">${T('f2.p.MCT')} · ${T('f2.top5r')}</div>${cM.html}${cM.cur?f2Top5Boxes(pred, cM.cur, 'MCT'):`<div class="card empty">${T('f2.none5')}</div>`}
+    ${f2Trend12(weeks, i, week, 'MCT', cM.cur)}
+    ${f2SecHead('OQC')}
+    ${f2KpiRow('OQC', s.OQC, p && p.OQC)}
+    <div class="sec-title">${T('f2.p.OQC')} · ${T('f2.parts')}</div>${f2PartTableP(s,'OQC')}
+    <div class="sec-title">${T('f2.p.OQC')} · ${T('f2.top5r')}</div>${cO.html}${cO.cur?f2Top5Boxes(pred, cO.cur, 'OQC'):`<div class="card empty">${T('f2.none5')}</div>`}
+    ${f2Trend12(weeks, i, week, 'OQC', cO.cur)}
     <div class="foot">${T('f2.f1')}<br>${T('f2.f2')}<br>${T('f2.f3',{t:f2Target()})}</div>`;
 }
 
@@ -1681,22 +1753,20 @@ function f2Report(kind, topWeek){
     ${kind==='daily' ? f2TrendTop(dFrom, dTo) : ''}
     <div class="f2-rhead"><h2>${T('f2.r.title.'+kind)}</h2>
       <div>${esc2(label)} · ${T('f2.r.vs')} ${esc2(prevKey||'–')}<br><small>${T('f2.r.made',{d:new Date().toISOString().slice(0,10)})}</small></div></div>
+    ${f2SecHead('MCT')}
     <div class="sec-title">1. ${T('f2.mwk')}</div>${f2McWorstTable(pred, prevKey?prevPred:null, prevKey, kind==='daily'&&dFrom!==dTo?`${dFrom} ~ ${dTo}`:cur)}
     <div class="sec-title">2. ${T('f2.issues')}</div>${f2McIssues(pred, noteKey)}
-    <div class="sec-title">3. ${T('f2.procSum')} <span style="text-transform:none;font-weight:600">(${T('f2.target')} %NG ≤ ${f2Target()}%)</span></div>
-    <div class="card"><div class="tblwrap"><table class="eq f2-pt">
-      <thead><tr><th rowspan="2">${T('f2.r.kpi')}</th><th colspan="3" class="grp">${T('f2.p.MCT')}</th><th colspan="3" class="grp">${T('f2.p.OQC')}</th></tr>
-        <tr>${[0,1].map(()=>`<th>${esc2(prevKey||T('f2.r.prev'))}</th><th>${esc2(kind==='daily'&&dFrom!==dTo?`${dFrom} ~ ${dTo}`:cur)}</th><th>${T('f2.r.delta')}</th>`).join('')}</tr></thead>
-      <tbody>${rows}</tbody></table></div></div>
-    <div class="sec-title">4. ${T('f2.parts')}</div>${f2PartTable(s)}
-    <div class="sec-title">5. ${T('f2.m.sec')}</div>${f2Measure(pred)}
-    <div class="sec-title">5-1. ${T('f2.mcs')}</div>${f2McTable(pred)}
-    <div class="sec-title">6. ${T('f2.top5r')}</div>
-    <div class="card"><div class="tblwrap"><table class="eq f2-pt f2-t5t">
-      <thead><tr><th>PART NAME</th><th>${T('f2.proc')}</th><th>NG</th><th>% NG</th><th>${T('f2.g.다캐불량')} TOP5</th><th>${T('f2.g.가공불량')} TOP5</th></tr></thead>
-      <tbody>${t5rows.join('') || `<tr><td colspan="6" class="empty">${T('st.noData')}</td></tr>`}</tbody></table></div></div>
-    ${trend.length ? `<div class="sec-title">7. ${trendLbl}</div>${f2TrendTable(trend, kind==='month'?T('ctl.week'):T('f2.date'), kind==='daily'?cur:null, null)}` : ''}
-    <div class="sec-title">${trend.length?8:7}. ${T('f2.r.note')}</div>
+    <div class="sec-title">3. ${T('f2.p.MCT')} · ${T('f2.parts')}</div>${f2PartTableP(s,'MCT')}
+    <div class="sec-title">4. ${T('f2.m.sec')}</div>${f2Measure(pred)}
+    <div class="sec-title">4-1. ${T('f2.mcs')}</div>${f2McTable(pred)}
+    <div class="sec-title">5. ${T('f2.p.MCT')} · ${T('f2.top5r')}</div>${f2Top5TableP(pred, s, 'MCT')}
+    ${trend.length ? `<div class="sec-title">6. ${T('f2.p.MCT')} · ${trendLbl}</div>${f2TrendTableP(trend, kind==='month'?T('ctl.week'):T('f2.date'), kind==='daily'?cur:null, 'MCT')}` : ''}
+    ${f2SecHead('OQC')}
+    <div class="sec-title">7. ${T('f2.p.OQC')} · ${T('f2.r.s1')} <span style="text-transform:none;font-weight:600">(${T('f2.target')} %NG ≤ ${f2Target()}%)</span></div>${f2ProcKpiTable(s, p, 'OQC', prevKey, (kind==='daily'&&dFrom!==dTo?`${dFrom} ~ ${dTo}`:cur))}
+    <div class="sec-title">8. ${T('f2.p.OQC')} · ${T('f2.parts')}</div>${f2PartTableP(s,'OQC')}
+    <div class="sec-title">9. ${T('f2.p.OQC')} · ${T('f2.top5r')}</div>${f2Top5TableP(pred, s, 'OQC')}
+    ${trend.length ? `<div class="sec-title">10. ${T('f2.p.OQC')} · ${trendLbl}</div>${f2TrendTableP(trend, kind==='month'?T('ctl.week'):T('f2.date'), kind==='daily'?cur:null, 'OQC')}` : ''}
+    <div class="sec-title">11. ${T('f2.r.note')}</div>
     <div class="card"><textarea class="f2-note" data-f2note="${esc2(noteKey)}" placeholder="${T('f2.r.noteph')}">${esc2(note)}</textarea></div>
     <div class="foot">${T('f2.f2')}<br>${T('f2.f3',{t:f2Target()})}</div>`;
 }
