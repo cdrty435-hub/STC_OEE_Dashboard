@@ -959,12 +959,23 @@ function f2DefName(code, orig){
 function f2Localize(){
   F2.det.forEach(r=>{ if(r._orig===undefined) r._orig = r['불량유형']; r['불량유형'] = f2DefName(r['코드'], r._orig); });
 }
+/* 품번 → 모델 (원본 Master list 기준). Part name 앞에 모델명을 붙여 풀네임으로 표시 */
+const F2_PART_MODEL = { 'CF624L3LAA02':'CT', 'CF623L3LAA03':'CT', 'CF620CTEAA-01':'CT', 'CF620CTEBA-01':'CT',
+  'CR620L8FAA-01':'CN8', 'CR624L9SAA02':'CN8', 'CR623L9SAA02':'CN8' };
+function f2FullName(name, no){
+  const n = String(name||'').trim(), k = String(no||'').trim(), m = F2_PART_MODEL[k];
+  if(!n) return k;
+  return (m && !n.toUpperCase().startsWith(m.toUpperCase()+' ')) ? m+' '+n : n;
+}
+function f2NormParts(rows){ (rows||[]).forEach(r=>{ if(r._pn===undefined) r._pn = r['Part name']; r['Part name'] = f2FullName(r._pn, r['Part no.']); }); }
+const f2PartLbl = r => { const n = r['Part name'], k = String(r['Part no.']||'').trim(); return n && k && n!==k ? `${n} (${k})` : (n||k); };
 async function loadF2(){
   F2.loading = true; F2.err = null; renderF2();
   try{
     F2.pd = await f2Fetch('pd');
     try{ F2.det = await f2Fetch('det'); f2Localize(); }catch(e){ F2.det = []; }
     try{ F2.mq  = await f2Fetch('mq');  }catch(e){ F2.mq  = []; }   /* 설비별 가공 실적용 (없어도 나머지는 뜬다) */
+    f2NormParts(F2.pd); f2NormParts(F2.det); f2NormParts(F2.mq);
     F2.loaded = true; F2.at = new Date();
   }catch(e){ F2.loaded = false; F2.err = e.message || String(e); F2.at = new Date(); }
   F2.loading = false;
@@ -1069,7 +1080,7 @@ function f2McSum(pred){
   F2.mq.forEach(r=>{ if(!pred(r)) return;
     const k = r['설비명'] || '-';
     const o = m[k] || (m[k] = { mc:k, days:new Set(), parts:new Set(), ops:new Set(), t:0, f:0, n:0, dc:0, mcN:0, mat:0, cap:0, capKeys:new Set() });
-    o.days.add(r['일자']); if(r['Part name']||r['Part no.']) o.parts.add(r['Part name']||r['Part no.']); if(r['OP']) o.ops.add(r['OP']);
+    o.days.add(r['일자']); if(r['Part name']||r['Part no.']) o.parts.add(f2PartLbl(r)); if(r['OP']) o.ops.add(r['OP']);
     o.t+=f2n(r['생산수량']); o.f+=f2n(r['양품']); o.n+=f2n(r['불량수량']); o.dc+=f2n(r['다캐불량']); o.mcN+=f2n(r['가공불량']); o.mat+=f2n(r["Mat'l NG"]);
     const ck = r['일자']+'|'+r['Part no.'];
     if(!o.capKeys.has(ck)){ o.capKeys.add(ck); o.cap+=f2n(r['UPD_95']); }
