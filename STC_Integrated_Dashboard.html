@@ -232,6 +232,8 @@ table.f2-ms tr.n td:not(.l):not(.tt){background:#fff5f5;} table.f2-ms tr.m td:no
 .f2-m3tag{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;font-size:11.5px;color:var(--ink-2);}
 .f2-m3tag span{display:inline-flex;align-items:center;gap:4px;padding:1px 6px;border-radius:4px;border:1px solid #e3e7ec;}
 .f2-m3tag span.lead{font-weight:800;color:#333;border-color:#b8c2cf;} .f2-m3tag i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+.f2-mcd td.f2-dcell{vertical-align:top;border-right:1px solid var(--line,#e5e7eb);white-space:nowrap;color:var(--accent,#1e40af)}
+.f2-mcd td.f2-dcell{text-align:left} .f2-mcd tr.f2-dsub td.name{text-align:left} .f2-mcd tr.f2-dsub td{background:#f3f6fb;font-weight:700;border-bottom:2px solid #cbd5e1}
 .f2-psec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;padding:10px 14px;border-radius:10px;color:#fff;font-size:16px;font-weight:800;}
 .f2-psec.mct{background:linear-gradient(135deg,#1e3c72,#2a5298);} .f2-psec.oqc{background:linear-gradient(135deg,#0f5132,#198754);}
 .f2-psec b{display:inline-flex;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);align-items:center;justify-content:center;}
@@ -411,7 +413,7 @@ ko:{
  'f2.f1':'· 원천: 구글시트 F2_MCT_일별 · F2_불량상세 (FAC2 변환기 출력). 주차는 FAC1과 같은 수~화 기준입니다(원본 WEEK38 = W39).',
  'f2.f2':'· 불량률 = 불량수량(CODE DEFECT 1~50) ÷ 생산. 가공 = 코드 17~46, 다캐 = 코드 1~16. Mat\'l NG(가공 전 소재 불량)·선별은 불량률에 넣지 않습니다(원본 KPI MCT와 동일).',
  'f2.f3':'· 불량률 색: 목표 3.5% 이하 녹색 · 6% 이하 노랑 · 초과 빨강 (원본 KPI MCT Target 3.5%).',
- 'f2.p.MCT':'MCT 가공 (생산)','f2.p.OQC':'OQC 수출검사','f2.target':'목표','f2.parts':'품번별 실적 (PART NAME)','f2.top5':'품번별 불량 TOP5 — Die Casting Defect / MCT (FAC.2) Defect',
+ 'f2.p.MCT':'MCT 가공 (생산)','f2.date':'일자','f2.daySub':'일자 소계','f2.daysU':'일','f2.p.OQC':'OQC 수출검사','f2.target':'목표','f2.parts':'품번별 실적 (PART NAME)','f2.top5':'품번별 불량 TOP5 — Die Casting Defect / MCT (FAC.2) Defect',
  'f2.top5r':'품번별 불량 TOP5','f2.trend12':'NG 추이 (최근 12주)','f2.top1':'1위 불량','f2.none5':'불량 없음','f2.noOqc':'OQC 실적 없음','f2.worstPart':'%NG 최고 품번 (MCT)',
  'f2.last7':'최근 7일','f2.proc':'공정','f2.g.다캐불량':'다캐 불량 (Die Casting)','f2.g.가공불량':'FAC2 가공 불량 (MCT)',
  'f2.none':'구글시트에서 FAC2 탭(F2_품번일별)을 찾지 못했습니다.',
@@ -497,7 +499,7 @@ en:{
  'f2.f1':'· Source: F2_MCT_일별 · F2_불량상세 (FAC2 converter). Weeks follow the FAC1 Wed–Tue rule (orig. WEEK38 = W39).',
  'f2.f2':'· Defect rate = NG (codes 1–50) ÷ production. Machining = codes 17–46, casting = 1–16. Mat\'l NG and sorting are excluded (same as KPI MCT).',
  'f2.f3':'· Colour: ≤3.5% target green · ≤6% amber · above red.',
- 'f2.p.MCT':'MCT (production)','f2.p.OQC':'OQC (export inspection)','f2.target':'Target','f2.parts':'By part (PART NAME)','f2.top5':'TOP5 by part — Die Casting / MCT (FAC.2) defects',
+ 'f2.p.MCT':'MCT (production)','f2.date':'Date','f2.daySub':'Daily subtotal','f2.daysU':' days','f2.p.OQC':'OQC (export inspection)','f2.target':'Target','f2.parts':'By part (PART NAME)','f2.top5':'TOP5 by part — Die Casting / MCT (FAC.2) defects',
  'f2.top5r':'TOP5 defects by part','f2.trend12':'NG trend (last 12 weeks)','f2.top1':'#1 defect','f2.none5':'No NG','f2.noOqc':'No OQC output','f2.worstPart':'Worst part %NG (MCT)',
  'f2.last7':'Last 7 days','f2.proc':'Process','f2.g.다캐불량':'Die casting defect','f2.g.가공불량':'MCT (FAC.2) defect',
  'f2.none':'FAC2 tab (F2_품번일별) not found in the Google Sheet.',
@@ -572,7 +574,7 @@ th:{
  'f2.prod':'ยอดผลิต','f2.good':'ของดี','f2.rate':'อัตราของเสีย','f2.rMc':'ของเสียจากงานกลึง (FAC2)','f2.rDc':'ของเสียจากงานหล่อ (FAC1)',
  'f2.yld':'อัตราผลผลิตจริง (เฉลี่ย)','f2.mat':'Mat\'l NG','f2.prev':'สัปดาห์ก่อน','f2.byMc':'ตามเครื่องจักร','f2.top':'ประเภทของเสีย TOP 8 (MCT)','f2.trend':'แนวโน้มรายสัปดาห์ (8 สัปดาห์)',
  'f2.g.가공불량':'งานกลึง (FAC2)','f2.g.다캐불량':'งานหล่อ (FAC1)','f2.g.협력사':'ซัพพลายเออร์','f2.g.고객':'ลูกค้า',
- 'f2.p.MCT':'MCT (ผลิต)','f2.p.OQC':'OQC ตรวจก่อนส่งออก','f2.target':'เป้าหมาย','f2.parts':'ตามชิ้นงาน (PART NAME)','f2.top5r':'ของเสีย TOP5 ตามชิ้นงาน','f2.trend12':'แนวโน้ม NG (12 สัปดาห์)',
+ 'f2.p.MCT':'MCT (ผลิต)','f2.date':'วันที่','f2.daySub':'รวมรายวัน','f2.daysU':' วัน','f2.p.OQC':'OQC ตรวจก่อนส่งออก','f2.target':'เป้าหมาย','f2.parts':'ตามชิ้นงาน (PART NAME)','f2.top5r':'ของเสีย TOP5 ตามชิ้นงาน','f2.trend12':'แนวโน้ม NG (12 สัปดาห์)',
  'f2.g.다캐불량':'ของเสียงานหล่อ','f2.g.가공불량':'ของเสียงานกลึง MCT',
  'f2.k.mcS':'กลึง','f2.k.dcS':'หล่อ','f2.k.etcS':'อื่นๆ','f2.m.가공불량':'งานกลึง (FAC2)','f2.m.다캐불량':'งานหล่อ (วัตถุดิบ)','f2.m.기타':'อื่นๆ',
  'f2.r.title.daily':'รายงานคุณภาพรายวัน FAC2 (MCT · OQC)','f2.r.title.week':'รายงานคุณภาพรายสัปดาห์ FAC2 (MCT · OQC)','f2.r.title.month':'รายงานคุณภาพรายเดือน FAC2 (MCT · OQC)',
@@ -1091,21 +1093,31 @@ function f2McTable(pred){
   if(!F2.mq.length) return `<div class="card empty" style="padding:14px">${T('f2.noMq')}</div>`;
   const L = f2McSum(pred);
   if(!L.length) return `<div class="card empty" style="padding:14px">${T('st.noData')}</div>`;
-  const tot = L.reduce((a,o)=>{ ['t','f','n','dc','mcN','mat','cap'].forEach(k=>a[k]+=o[k]); return a; }, {t:0,f:0,n:0,dc:0,mcN:0,mat:0,cap:0});
+  const KS = ['t','f','n','dc','mcN','mat','cap'];
+  const sum = arr => arr.reduce((a,o)=>{ KS.forEach(k=>a[k]+=o[k]); return a; }, {t:0,f:0,n:0,dc:0,mcN:0,mat:0,cap:0});
   const ach = o => o.cap ? o.t/o.cap*100 : null;
   const achC = v => v==null ? 'var(--ink-muted)' : v>=85 ? 'var(--good)' : v>=60 ? 'var(--warning)' : 'var(--critical)';
-  const row = (o, isTot) => { const r = o.t ? o.n/o.t*100 : null, a = ach(o);
-    return `<tr${isTot?' class="tot"':''}><td class="name">${isTot?'Total':esc2(o.mc)}</td>
-      <td style="text-align:left;font-size:11.5px">${isTot?'':esc2([...o.parts].join(', '))}</td><td>${isTot?'':o.days.size}</td>
-      <td>${fmt(o.t)}</td><td>${fmt(o.f)}</td><td>${fmt(o.n)}</td>
+  const nums = o => { const r = o.t ? o.n/o.t*100 : null, a = ach(o);
+    return `<td>${fmt(o.t)}</td><td>${fmt(o.f)}</td><td>${fmt(o.n)}</td>
       <td style="color:${f2St(r).c};font-weight:700">${r==null?'–':r.toFixed(2)+'%'}</td>
       <td>${o.t?(o.dc/o.t*100).toFixed(2)+'%':'–'}</td><td>${o.t?(o.mcN/o.t*100).toFixed(2)+'%':'–'}</td><td>${fmt(o.mat)}</td>
       <td><div class="barcell"><span style="color:${achC(a)};font-weight:700">${a==null?'–':a.toFixed(1)+'%'}</span>
-        <span class="bartrack"><span class="barfill" style="width:${a==null?0:Math.min(100,a)}%;background:${achC(a)}"></span></span></div></td></tr>`; };
-  return `<div class="card"><div class="tblwrap"><table class="eq f2-pt">
-    <thead><tr><th>${T('t.eq')}</th><th>PART NAME</th><th>${T('f2.dayN')}</th><th>Total</th><th>FG</th><th>NG</th><th>% NG</th>
+        <span class="bartrack"><span class="barfill" style="width:${a==null?0:Math.min(100,a)}%;background:${achC(a)}"></span></span></div></td>`; };
+  /* 일자별로 나눠서: 일자 → 설비 행 → 일자 소계, 맨 아래 기간 Total */
+  const dates = [...new Set(F2.mq.filter(pred).map(r=>r['일자']).filter(Boolean))].sort();
+  const multi = dates.length > 1;
+  const body = dates.map(d=>{
+    const D = f2McSum(r=>pred(r) && r['일자']===d); if(!D.length) return '';
+    const rows = D.map((o,i)=>`<tr>${i===0?`<td class="name f2-dcell" rowspan="${D.length+(multi?1:0)}">${esc2(d)}</td>`:''}<td class="name" style="text-align:left">${esc2(o.mc)}</td>
+      <td style="text-align:left;font-size:11.5px">${esc2([...o.parts].join(', '))}</td>${nums(o)}</tr>`).join('');
+    const sub = multi ? `<tr class="f2-dsub"><td class="name" colspan="2">${T('f2.daySub')}</td>${nums(sum(D))}</tr>` : '';
+    return rows + sub;
+  }).join('');
+  const tot = `<tr class="tot"><td class="name" colspan="3">Total${multi?` <small style="font-weight:500;color:var(--ink-muted)">(${dates.length}${T('f2.daysU')})</small>`:''}</td>${nums(sum(L))}</tr>`;
+  return `<div class="card"><div class="tblwrap"><table class="eq f2-pt f2-mcd">
+    <thead><tr><th>${T('f2.date')}</th><th>${T('t.eq')}</th><th>PART NAME</th><th>Total</th><th>FG</th><th>NG</th><th>% NG</th>
       <th>${T('f2.rDcS')}</th><th>${T('f2.rMcS')}</th><th>Mat'l</th><th>${T('f2.ach')}</th></tr></thead>
-    <tbody>${L.map(o=>row(o,false)).join('')}${row(tot,true)}</tbody></table></div>
+    <tbody>${body}${tot}</tbody></table></div>
     <div class="legend" style="margin-top:6px"><span>${T('f2.achNote')}</span></div></div>`;
 }
 /* ---- MCT 가공 : 지표 요약 (Worst 3) + 문제점·조치 — FAC1 지표 요약과 같은 틀 ---- */
