@@ -1663,7 +1663,7 @@ function qtHover(e, id){
   tip.style.left = (px + 14 + 190 > box ? px - 200 : px + 14) + 'px'; tip.style.top = '8px';
 }
 /* FAC2 일일 불량률 추이 — 종료일 기준 최근 30일 (MCT 가공 공정) */
-function f2TrendTop(dFrom, dTo){
+function f2TrendTop(dFrom, dTo, part){
   const TX = { ko:{ t:'FAC2 일일 불량률 추이 (MCT)', s:'{n}일 ({a} ~ {b}) · 노란 음영 = 보고 기간 · 점 위 숫자 = 보고 기간 %NG',
                     r:'불량률 %NG', none:'선택한 기간에 데이터가 없습니다', mc:'가공 불량률 (FAC2)', dc:'다캐 불량률 (소재)', tg:'목표', hi:'보고 기간', p:'생산' },
                en:{ t:'FAC2 daily defect-rate trend (MCT)', s:'{n} days ({a} ~ {b}) · yellow = report period · labels = %NG in the period',
@@ -1673,17 +1673,29 @@ function f2TrendTop(dFrom, dTo){
   const X = TX[TX[LANG] ? LANG : 'ko'];
   window.__qtRe = window.__qtRe || {}; window.__qtRe.qtFac2 = () => renderF2();
   const R = qtRangePick('qtFac2', f2Dates(), dTo);
-  const rows = R.dates.map(d => ({ d, a:f2Sum(r => r['일자'] === d).MCT })).filter(x => x.a.t > 0);
-  if (!rows.length) return `<div class="qt-box"><div class="qt-h"><b>${X.t}</b></div>${R.ctl}<div style="padding:14px;color:#6b7280;font-size:12px">${X.none}</div></div>`;
-  const pc = (x, k) => +(x.a[k] / x.a.t * 100).toFixed(3);
-  return qtTrendHtml({ id:'qtFac2', title:X.t,
-    sub:X.s.replace('{n}', rows.length).replace('{a}', rows[0].d).replace('{b}', rows[rows.length-1].d),
+  /* part = { no, name } → 해당 품번만 (기간 버튼은 전체 차트와 공유) */
+  const id = part ? 'qtFac2_' + String(part.no).replace(/\W/g,'') : 'qtFac2';
+  const title = part ? `${X.t} — ${esc2(part.name)} (${esc2(part.no)})` : X.t;
+  const ctl = part ? '' : R.ctl;
+  const rows = R.dates.map(d => ({ d, a:f2Sum(r => r['일자'] === d && (!part || r['Part no.'] === part.no)).MCT, all:f2Sum(r => r['일자'] === d).MCT.t }))
+    .filter(x => part ? x.all > 0 : x.a.t > 0);   /* 품번 차트는 전체 차트와 같은 날짜축 (생산 없는 날 = 빈칸) */
+  if (part && !rows.some(x => x.a.t > 0)) rows.length = 0;
+  if (!rows.length) return `<div class="qt-box"><div class="qt-h"><b>${title}</b></div>${ctl}<div style="padding:14px;color:#6b7280;font-size:12px">${X.none}</div></div>`;
+  const pc = (x, k) => x.a.t ? +(x.a[k] / x.a.t * 100).toFixed(3) : null;
+  return qtTrendHtml({ id, title,
+    sub:X.s.replace('{n}', rows.filter(x=>x.a.t>0).length).replace('{a}', rows[0].d).replace('{b}', rows[rows.length-1].d),
     dates:rows.map(x => x.d),
     series:[ { name:X.r, color:'#2a78d6', vals:rows.map(x => pc(x,'n')), main:true },
              { name:X.mc, color:'#eb6834', vals:rows.map(x => pc(x,'mc')) },
              { name:X.dc, color:'#1baf7a', vals:rows.map(x => pc(x,'dc')) } ],
-    ctl:R.ctl, target:f2Target(), tLabel:X.tg, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
+    ctl, target:f2Target(), tLabel:X.tg, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
     extra:i => X.p + ' ' + rows[i].a.t.toLocaleString() + ' · NG ' + rows[i].a.n.toLocaleString() });
+}
+/* CT Cover · CT Support 품번별 일일 불량률 추이 */
+const F2_TREND_PARTS = ['CF624L3LAA02', 'CF623L3LAA03'];
+function f2TrendParts(dFrom, dTo){
+  return F2_TREND_PARTS.map(no=>{ const r = F2.pd.find(x=>x['Part no.']===no);
+    return f2TrendTop(dFrom, dTo, { no, name: r ? r['Part name'] : f2FullName('', no) }); }).join('');
 }
 /* ---------- FAC2 보고서 표지 제목 (FAC1 과 같은 형식 · 일일 / 주간 / 월간) ---------- */
 const F2_COVER_TXT = {
@@ -1773,7 +1785,7 @@ function f2Report(kind, topWeek){
       <td style="color:${f2St(f2Rate(pt[pc])).c};font-weight:700">${f2pc(pt[pc])}</td><td class="t5">${t5(pc,pt,'다캐불량')}</td><td class="t5">${t5(pc,pt,'가공불량')}</td></tr>`); }));
   return bar + `
     ${f2CoverHtml(kind, cvPer, cvNote, prevKey)}
-    ${kind==='daily' ? f2TrendTop(dFrom, dTo) : ''}
+    ${kind==='daily' ? f2TrendTop(dFrom, dTo) + f2TrendParts(dFrom, dTo) : ''}
     <div class="f2-rhead"><h2>${T('f2.r.title.'+kind)}</h2>
       <div>${esc2(label)} · ${T('f2.r.vs')} ${esc2(prevKey||'–')}<br><small>${T('f2.r.made',{d:new Date().toISOString().slice(0,10)})}</small></div></div>
     ${f2SecHead('MCT')}
