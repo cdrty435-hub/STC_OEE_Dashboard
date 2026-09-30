@@ -120,6 +120,9 @@ main{flex:1 1 auto;position:relative;overflow:hidden;}
 .fc-top-bar .ctl{display:flex;align-items:center;gap:5px;font-size:13px;color:#334155;font-weight:700;}
 .fc-top-bar .ctl button{font:inherit;font-size:12.5px;padding:4px 12px;border:1px solid #94a3b8;border-radius:14px;background:#fff;color:#1e3c72;cursor:pointer;}
 .fc-top-bar .ctl button.on{background:#1e3c72;color:#fff;border-color:#1e3c72;} .fc-top-bar .ctl .rf{margin-left:8px;}
+.fc-top-bar .ctl{flex-wrap:wrap;} .fc-top-bar .ctl .grp{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid #d5dde8;border-radius:18px;background:#fff;}
+.fc-top-bar .ctl .grp.dt input{font:inherit;font-size:12.5px;padding:2px 5px;border:1px solid #94a3b8;border-radius:5px;}
+table.fc-t th:first-child,table.fc-t td.k{position:sticky;left:0;z-index:1;min-width:190px;}
 .fc-reg{display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:#fff;border:1px solid #d5dde8;border-radius:8px;padding:8px 12px;margin-bottom:14px;}
 .fc-reg .lb{font-size:13px;font-weight:800;color:#1e3c72;margin-right:4px;}
 .fc-reg .chip{font-size:13px;font-weight:800;padding:4px 12px;border-radius:14px;background:#b91c1c;color:#fff;text-decoration:none;}
@@ -2426,7 +2429,18 @@ const fcDate = raw => { const s = String(raw||'').trim(); let m;
   return s.slice(0,10); };
 function focusItems(){ try{ const v = JSON.parse(localStorage.getItem(FOCUS_KEY)||'null'); if(Array.isArray(v)) return v; }catch(e){} return FOCUS_DEFAULT.slice(); }
 function focusSave(a){ try{ localStorage.setItem(FOCUS_KEY, JSON.stringify(a)); }catch(e){} }
-function focusRng(){ try{ return localStorage.getItem(FOCUS_RNG_KEY) || '12'; }catch(e){ return '12'; } }
+/* 기간·단위 설정 — { q:'8'|'12'|'26'|'all'|'custom', from, to, unit:'week'|'month' } */
+function focusRng(){ let v = null; try{ v = JSON.parse(localStorage.getItem(FOCUS_RNG_KEY)||'null'); }catch(e){}
+  if(!v || typeof v !== 'object') v = {}; return { q:v.q||'12', from:v.from||'', to:v.to||'', unit:v.unit==='month'?'month':'week' }; }
+function focusRngSet(patch){ const v = Object.assign(focusRng(), patch); try{ localStorage.setItem(FOCUS_RNG_KEY, JSON.stringify(v)); }catch(e){} renderFocus(); }
+/* 주차 행 → 월 행 (주차 시작일의 월 기준) */
+function focusByMonth(rows){
+  const M = {};
+  rows.forEach(x=>{ const k = (x.d && x.d!=='9999') ? x.d.slice(0,7) : x.w;
+    const o = M[k] || (M[k] = { w: k.length===7 ? `${+k.slice(5)}월` : k, d:x.d, f1:{t:0,g:0,d:0}, mct:{t:0,n:0,dc:0,mc:0,m:0}, oqc:{t:0,n:0,dc:0,mc:0} });
+    ['t','g','d'].forEach(q=>o.f1[q]+=x.f1[q]); ['t','n','dc','mc','m'].forEach(q=>o.mct[q]+=x.mct[q]); ['t','n'].forEach(q=>o.oqc[q]+=x.oqc[q]); });
+  return Object.keys(M).sort().map(k=>M[k]);
+}
 async function focusLoadQ(){
   if(FOCUS.qLoading) return; FOCUS.qLoading = true; FOCUS.qErr = null;
   try{
@@ -2443,17 +2457,17 @@ async function focusLoadQ(){
 /* 한 품번의 주차별 집계 */
 function focusAgg(it){
   const W = {};
-  const g = w => W[w] || (W[w] = { w, f1:{t:0,g:0,d:0,days:new Set(),def:{},mc:{}}, mct:{t:0,n:0,dc:0,mc:0,m:0,days:new Set()}, oqc:{t:0,n:0,dc:0,mc:0} });
+  const g = w => W[w] || (W[w] = { w, d:'9999', f1:{t:0,g:0,d:0,days:new Set(),def:{},mc:{}}, mct:{t:0,n:0,dc:0,mc:0,m:0,days:new Set()}, oqc:{t:0,n:0,dc:0,mc:0} });
   if(it.f1) FOCUS.q.forEach(r=>{
     if(String(r['Model']||'').trim().toUpperCase() !== it.f1.toUpperCase() || !r._w) return;
-    const o = g(r._w).f1, t = num(r['Qty_Total']);
+    const gw = g(r._w); if(r._d && r._d < gw.d) gw.d = r._d; const o = gw.f1, t = num(r['Qty_Total']);
     o.t += t; o.g += num(r['Qty_Good']); o.days.add(r._d);
     FOCUS_DEF1.forEach(k=>{ const v = num(r[k]); if(v){ o.d += v; o.def[k] = (o.def[k]||0) + v; } });
     const e = eqOf(r); if(e){ const mm = o.mc[e] || (o.mc[e] = {t:0,g:0}); mm.t += t; mm.g += num(r['Qty_Good']); }
   });
   F2.pd.forEach(r=>{
     if(String(r['Part no.']||'').trim() !== it.f2) return;
-    const w = r['주차']; if(!w) return; const p = r['공정'];
+    const w = r['주차']; if(!w) return; const p = r['공정']; const gw = g(w), dd = fcDate(r['일자']); if(dd && dd < gw.d) gw.d = dd;
     const o = p==='MCT' ? g(w).mct : p==='OQC' ? g(w).oqc : null; if(!o) return;
     o.t += f2n(r["Total Q'ty"]); o.n += f2n(r["NG Q'ty"]); o.dc += f2n(r['다캐불량']); o.mc += f2n(r['가공불량']);
     if(p==='MCT'){ o.m += f2n(r["Mat'l NG"]); o.days.add(r['일자']); }
@@ -2513,22 +2527,27 @@ function focusTopList(title, obj, total, color){
 function focusItemHtml(it, rng){
   const allRows = focusAgg(it);
   if(!allRows.length) return `<div class="fc-card"><div class="fc-hd"><h3>${fcEsc(it.name)}</h3></div><div class="nil">이 품번의 FAC1·FAC2 기록이 없습니다 — FAC2 품번(${fcEsc(it.f2)})·FAC1 모델(${fcEsc(it.f1||'–')}) 이름을 확인하세요.</div></div>`;
-  const rows = rng==='all' ? allRows : allRows.slice(-(+rng));
-  const weeks = rows.map(x=>x.w);
+  const wrows = rng.q==='custom' ? allRows.filter(x=>(!rng.from || x.d>=rng.from) && (!rng.to || x.d<=rng.to))
+               : rng.q==='all' ? allRows : allRows.slice(-(+rng.q));
+  if(!wrows.length) return `<div class="fc-card"><div class="fc-hd"><h3>${fcEsc(it.name)}</h3></div><div class="nil">선택한 기간에 기록이 없습니다.</div></div>`;
+  const weeks = wrows.map(x=>x.w), isM = rng.unit==='month', pu = isM ? '전월' : '전주';
+  const rows = isM ? focusByMonth(wrows) : wrows;
+  const dA = wrows[0].d!=='9999' ? wrows[0].d : '', lastD = wrows[wrows.length-1].d, dB = lastD && lastD!=='9999' ? (()=>{ const t = new Date(lastD+'T00:00:00Z'); t.setUTCDate(t.getUTCDate()+6); return t.toISOString().slice(0,10); })() : '';
   const T = rows.reduce((a,x)=>{ a.t1+=x.f1.t; a.g1+=x.f1.g; a.d1+=x.f1.d; a.t2+=x.mct.t; a.n2+=x.mct.n; a.dc+=x.mct.dc; a.mc+=x.mct.mc; a.m2+=x.mct.m; a.to+=x.oqc.t; a.no+=x.oqc.n; return a; },
     {t1:0,g1:0,d1:0,t2:0,n2:0,dc:0,mc:0,m2:0,to:0,no:0});
   const lastF1 = [...rows].reverse().find(x=>x.f1.t>0), lastF2 = [...rows].reverse().find(x=>x.mct.t>0);
-  const prevF2 = lastF2 ? [...rows].reverse().find(x=>x.mct.t>0 && wkNum(x.w)<wkNum(lastF2.w)) : null;
+  const iL2 = lastF2 ? rows.indexOf(lastF2) : -1;
+  const prevF2 = iL2 > 0 ? [...rows.slice(0,iL2)].reverse().find(x=>x.mct.t>0) || null : null;
   const tg = f2Target();
   const kc = (v) => v==null ? '' : (v > tg ? 'bad' : 'ok');
   const kpi = (lab, v, sub, cls) => `<div class="fc-k ${cls||''}"><div class="l">${lab}</div><div class="v">${v==null?'–':v.toFixed(2)+'<u>%</u>'}</div><div class="s">${sub}</div></div>`;
-  const dtxt = (c,p) => c==null||p==null ? '' : ` · 전주 ${p.toFixed(2)}% <b class="${c>p?'up':'dn'}">${c>p?'▲':'▼'}${Math.abs(c-p).toFixed(2)}</b>`;
+  const dtxt = (c,p) => c==null||p==null ? '' : ` · ${pu} ${p.toFixed(2)}% <b class="${c>p?'up':'dn'}">${c>p?'▲':'▼'}${Math.abs(c-p).toFixed(2)}</b>`;
   const lf2 = lastF2 ? { r:fcPct(lastF2.mct.n,lastF2.mct.t), dc:fcPct(lastF2.mct.dc,lastF2.mct.t), mc:fcPct(lastF2.mct.mc,lastF2.mct.t) } : {};
   const pf2 = prevF2 ? { r:fcPct(prevF2.mct.n,prevF2.mct.t), dc:fcPct(prevF2.mct.dc,prevF2.mct.t), mc:fcPct(prevF2.mct.mc,prevF2.mct.t) } : {};
   const f1r = lastF1 ? fcPct(lastF1.f1.d, lastF1.f1.t) : null;
   let h = `<div class="fc-card" id="fc-${fcEsc(it.id)}"><div class="fc-hd"><h3>${fcEsc(it.name)}</h3>
       <span class="pn">FAC2 ${fcEsc(it.f2)}</span>${it.f1?`<span class="pn">FAC1 모델 ${fcEsc(it.f1)}</span>`:''}
-      <span class="rg">${weeks[0]} ~ ${weeks[weeks.length-1]} (${weeks.length}주)</span>
+      <span class="rg">${dA} ~ ${dB} · ${weeks[0]} ~ ${weeks[weeks.length-1]} (${weeks.length}주${isM?` · ${rows.length}개월`:''}) · ${isM?'월간':'주간'} 보기</span>
       <button class="fc-del" data-fcdel="${fcEsc(it.id)}" title="중점관리에서 해제">해제 ✕</button></div>`;
   h += `<div class="fc-kpi">`
     + kpi('FAC1 다캐 불량률 (자체)', T.t1?fcPct(T.d1,T.t1):null, `기간 누계 · 생산 ${T.t1.toLocaleString()} · 총 불량률(웜샷 포함) ${fcF(fcPct(T.t1-T.g1,T.t1))}%${lastF1?` · 최근 ${lastF1.w} ${fcF(f1r)}%`:''}`, kc(T.t1?fcPct(T.d1,T.t1):null))
@@ -2538,9 +2557,9 @@ function focusItemHtml(it, rng){
     + kpi('OQC 불량률 (출하검사)', T.to?fcPct(T.no,T.to):null, `기간 누계 · 검사 ${T.to.toLocaleString()} · Mat'l NG ${T.m2.toLocaleString()}`, '')
     + `</div>`;
   h += `<div class="fc-chart">${focusChart(rows)}</div>`;
-  /* 주차별 표 */
+  /* 주차별 / 월별 표 */
   const cell = (v, b) => v==null ? '<td class="n">–</td>' : `<td class="n${b && v>tg?' bad':''}">${v.toFixed(2)}</td>`;
-  h += `<div class="fc-tw"><table class="fc-t"><thead><tr><th>주차</th>${rows.map(x=>`<th>${x.w}</th>`).join('')}<th class="tot">누계</th></tr></thead><tbody>
+  h += `<div class="fc-tw"><table class="fc-t"><thead><tr><th>${isM?'월':'주차'}</th>${rows.map(x=>`<th>${x.w}</th>`).join('')}<th class="tot">누계</th></tr></thead><tbody>
     <tr><td class="k">FAC1 생산</td>${rows.map(x=>`<td class="n">${x.f1.t?x.f1.t.toLocaleString():'–'}</td>`).join('')}<td class="n tot">${T.t1.toLocaleString()}</td></tr>
     <tr><td class="k">FAC1 다캐 불량률 %</td>${rows.map(x=>cell(fcPct(x.f1.d,x.f1.t),1)).join('')}${cell(fcPct(T.d1,T.t1),1).replace('<td class="n','<td class="n tot')}</tr>
     <tr><td class="k sub">FAC1 총 불량률 % (웜샷 포함)</td>${rows.map(x=>cell(fcPct(x.f1.t-x.f1.g,x.f1.t))).join('')}${cell(fcPct(T.t1-T.g1,T.t1)).replace('<td class="n','<td class="n tot')}</tr>
@@ -2552,7 +2571,7 @@ function focusItemHtml(it, rng){
   </tbody></table></div>`;
   /* 불량 유형 TOP · 설비 */
   const def1 = {}, mc1 = {};
-  rows.forEach(x=>{ Object.entries(x.f1.def).forEach(([k,v])=>def1[k]=(def1[k]||0)+v); Object.entries(x.f1.mc).forEach(([k,v])=>mc1[k]=(mc1[k]||0)+(v.t-v.g)); });
+  wrows.forEach(x=>{ Object.entries(x.f1.def).forEach(([k,v])=>def1[k]=(def1[k]||0)+v); Object.entries(x.f1.mc).forEach(([k,v])=>mc1[k]=(mc1[k]||0)+(v.t-v.g)); });
   const mc2 = focusF2Mc(it, weeks);
   h += `<div class="fc-tops">`
     + focusTopList('FAC1 다캐 불량 유형 TOP5', def1, T.t1, '#2a78d6')
@@ -2570,13 +2589,17 @@ function renderFocus(){
   const host = document.getElementById('panel-focus'); if(!host) return;
   if(!FOCUS.qLoaded && !FOCUS.qLoading && !FOCUS.qErr) focusLoadQ();
   const items = focusItems(), rng = focusRng();
+  const allD = [...F2.pd.map(r=>fcDate(r['일자'])), ...FOCUS.q.map(r=>r._d)].filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+  const dMin = allD[0] || '', dMax = allD[allD.length-1] || '';
   const f2Parts = {}; F2.pd.forEach(r=>{ const k = String(r['Part no.']||'').trim(); if(k && !f2Parts[k]) f2Parts[k] = r['Part name']||k; });
   const f1Models = [...new Set(FOCUS.q.map(r=>String(r['Model']||'').trim()).filter(Boolean))].sort();
   const st = [ F2.loaded ? `FAC2 ${F2.pd.length.toLocaleString()}행` : (F2.err ? `FAC2 불러오기 실패: ${fcEsc(F2.err)}` : 'FAC2 불러오는 중…'),
                FOCUS.qLoaded ? `FAC1 Q_Model상세 ${FOCUS.q.length.toLocaleString()}행` : (FOCUS.qErr ? `FAC1 불러오기 실패: ${fcEsc(FOCUS.qErr)}` : 'FAC1 불러오는 중…') ].join(' · ');
   let h = `<div class="fc-wrap"><div class="fc-top-bar">
       <div><h2>중점관리 품번</h2><div class="sub">FAC1 다이캐스팅 → FAC2 MCT 가공 → OQC 출하까지 한 품번을 이어서 봅니다 · ${st}</div></div>
-      <div class="ctl">기간 ${[['8','8주'],['12','12주'],['26','26주'],['all','전체']].map(([v,l])=>`<button class="${rng===v?'on':''}" data-fcrng="${v}">${l}</button>`).join('')}
+      <div class="ctl"><span class="grp">보기 ${[['week','주간'],['month','월간']].map(([v,l])=>`<button class="${rng.unit===v?'on':''}" data-fcunit="${v}">${l}</button>`).join('')}</span>
+        <span class="grp">기간 ${[['8','8주'],['12','12주'],['26','26주'],['all','전체']].map(([v,l])=>`<button class="${rng.q===v?'on':''}" data-fcrng="${v}">${l}</button>`).join('')}</span>
+        <span class="grp dt"><input type="date" id="fcFrom" value="${fcEsc(rng.from)}" min="${dMin}" max="${dMax}"><span>~</span><input type="date" id="fcTo" value="${fcEsc(rng.to)}" min="${dMin}" max="${dMax}"><button class="${rng.q==='custom'?'on':''}" id="fcApply">기간 적용</button></span>
         <button class="rf" onclick="FOCUS.qLoaded=false;FOCUS.qErr=null;focusLoadQ();loadF2();">🔄 새로고침</button></div></div>
     <div class="fc-reg"><span class="lb">등록 ${items.length}개</span>${items.map(it=>`<a href="#fc-${fcEsc(it.id)}" class="chip">${fcEsc(it.name)}</a>`).join('')}
       <details class="add"><summary>＋ 중점관리 품번 추가</summary><div class="form">
@@ -2589,7 +2612,12 @@ function renderFocus(){
   else h += items.map(it=>focusItemHtml(it, rng)).join('');
   h += `<div class="fc-foot">※ FAC1 다캐 불량률 = 불량 유형(미성형~기타) 합계 ÷ 생산 · 총 불량률 = (생산 − 양품) ÷ 생산 (웜샷 포함) · FAC2 %NG = NG ÷ Total (다캐 = 소재 불량, 가공 = FAC2 가공 불량) · 목표 %NG ≤ ${f2Target()}% (빨강 = 초과) · 주차는 FAC1·FAC2 모두 수~화 기준 · 등록 목록·메모는 이 브라우저에 저장됩니다</div></div>`;
   const y = host.scrollTop; host.innerHTML = h; host.scrollTop = y;
-  host.querySelectorAll('[data-fcrng]').forEach(b=>b.onclick=()=>{ try{ localStorage.setItem(FOCUS_RNG_KEY, b.dataset.fcrng); }catch(e){} renderFocus(); });
+  host.querySelectorAll('[data-fcrng]').forEach(b=>b.onclick=()=>focusRngSet({ q:b.dataset.fcrng }));
+  host.querySelectorAll('[data-fcunit]').forEach(b=>b.onclick=()=>focusRngSet({ unit:b.dataset.fcunit }));
+  const ap = host.querySelector('#fcApply');
+  if(ap) ap.onclick = ()=>{ let a = host.querySelector('#fcFrom').value, z = host.querySelector('#fcTo').value;
+    if(!a && !z){ alert('시작일이나 종료일을 넣어 주세요'); return; } if(a && z && a > z){ const t = a; a = z; z = t; }
+    focusRngSet({ q:'custom', from:a, to:z }); };
   host.querySelectorAll('[data-fcdel]').forEach(b=>b.onclick=()=>{ const it = items.find(x=>x.id===b.dataset.fcdel);
     if(it && confirm(`'${it.name}' 을(를) 중점관리에서 해제할까요? (데이터는 지워지지 않습니다)`)){ focusSave(items.filter(x=>x!==it)); renderFocus(); } });
   host.querySelectorAll('textarea[data-fcmemo]').forEach(t=>t.oninput=()=>{ try{ localStorage.setItem('stc_focus_memo_'+t.dataset.fcmemo, t.value); }catch(e){} });
