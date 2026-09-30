@@ -2431,7 +2431,7 @@ function focusItems(){ try{ const v = JSON.parse(localStorage.getItem(FOCUS_KEY)
 function focusSave(a){ try{ localStorage.setItem(FOCUS_KEY, JSON.stringify(a)); }catch(e){} }
 /* 기간·단위 설정 — { q:'8'|'12'|'26'|'all'|'custom', from, to, unit:'week'|'month' } */
 function focusRng(){ let v = null; try{ v = JSON.parse(localStorage.getItem(FOCUS_RNG_KEY)||'null'); }catch(e){}
-  if(!v || typeof v !== 'object') v = {}; return { q:v.q||'12', from:v.from||'', to:v.to||'', unit:v.unit==='month'?'month':'week' }; }
+  if(!v || typeof v !== 'object') v = {}; return { q:v.q||'12', from:v.from||'', to:v.to||'', unit:['month','day'].includes(v.unit)?v.unit:'week' }; }
 function focusRngSet(patch){ const v = Object.assign(focusRng(), patch); try{ localStorage.setItem(FOCUS_RNG_KEY, JSON.stringify(v)); }catch(e){} renderFocus(); }
 /* 주차 행 → 월 행 (주차 시작일의 월 기준) */
 function focusByMonth(rows){
@@ -2455,24 +2455,27 @@ async function focusLoadQ(){
   if(activeTab==='focus') renderFocus();
 }
 /* 한 품번의 주차별 집계 */
-function focusAgg(it){
+function focusAgg(it, byDay){
   const W = {};
   const g = w => W[w] || (W[w] = { w, d:'9999', f1:{t:0,g:0,d:0,days:new Set(),def:{},mc:{}}, mct:{t:0,n:0,dc:0,mc:0,m:0,days:new Set()}, oqc:{t:0,n:0,dc:0,mc:0} });
   if(it.f1) FOCUS.q.forEach(r=>{
     if(String(r['Model']||'').trim().toUpperCase() !== it.f1.toUpperCase() || !r._w) return;
-    const gw = g(r._w); if(r._d && r._d < gw.d) gw.d = r._d; const o = gw.f1, t = num(r['Qty_Total']);
+    if(byDay && !/^\d{4}-\d{2}-\d{2}$/.test(r._d)) return;
+    const gw = g(byDay ? r._d : r._w); if(r._d && r._d < gw.d) gw.d = r._d; const o = gw.f1, t = num(r['Qty_Total']);
     o.t += t; o.g += num(r['Qty_Good']); o.days.add(r._d);
     FOCUS_DEF1.forEach(k=>{ const v = num(r[k]); if(v){ o.d += v; o.def[k] = (o.def[k]||0) + v; } });
     const e = eqOf(r); if(e){ const mm = o.mc[e] || (o.mc[e] = {t:0,g:0}); mm.t += t; mm.g += num(r['Qty_Good']); }
   });
   F2.pd.forEach(r=>{
     if(String(r['Part no.']||'').trim() !== it.f2) return;
-    const w = r['주차']; if(!w) return; const p = r['공정']; const gw = g(w), dd = fcDate(r['일자']); if(dd && dd < gw.d) gw.d = dd;
-    const o = p==='MCT' ? g(w).mct : p==='OQC' ? g(w).oqc : null; if(!o) return;
+    const dd = fcDate(r['일자']); const w = byDay ? dd : r['주차']; if(!w || (byDay && !/^\d{4}-\d{2}-\d{2}$/.test(dd))) return; const p = r['공정']; const gw = g(w); if(dd && dd < gw.d) gw.d = dd;
+    const o = p==='MCT' ? gw.mct : p==='OQC' ? gw.oqc : null; if(!o) return;
     o.t += f2n(r["Total Q'ty"]); o.n += f2n(r["NG Q'ty"]); o.dc += f2n(r['다캐불량']); o.mc += f2n(r['가공불량']);
     if(p==='MCT'){ o.m += f2n(r["Mat'l NG"]); o.days.add(r['일자']); }
   });
-  return Object.values(W).sort((a,b)=>wkNum(a.w)-wkNum(b.w));
+  const out = Object.values(W);
+  if(byDay){ out.forEach(x=>{ x.day = x.w; x.w = x.w.slice(5).replace('-','/'); }); return out.sort((a,b)=>a.d.localeCompare(b.d)); }
+  return out.sort((a,b)=>wkNum(a.w)-wkNum(b.w));
 }
 const fcPct = (a,b) => b ? a/b*100 : null;
 const fcF = (v,dp) => v==null ? '–' : v.toFixed(dp==null?2:dp);
@@ -2543,9 +2546,12 @@ function focusItemHtml(it, rng){
   const wrows = rng.q==='custom' ? allRows.filter(x=>(!rng.from || x.d>=rng.from) && (!rng.to || x.d<=rng.to))
                : rng.q==='all' ? allRows : allRows.slice(-(+rng.q));
   if(!wrows.length) return `<div class="fc-card"><div class="fc-hd"><h3>${fcEsc(it.name)}</h3></div><div class="nil">선택한 기간에 기록이 없습니다.</div></div>`;
-  const weeks = wrows.map(x=>x.w), isM = rng.unit==='month', pu = isM ? '전월' : '전주';
-  const rows = isM ? focusByMonth(wrows) : wrows;
+  const weeks = wrows.map(x=>x.w), isM = rng.unit==='month', isD = rng.unit==='day', pu = isM ? '전월' : isD ? '전일' : '전주';
   const dA = wrows[0].d!=='9999' ? wrows[0].d : '', lastD = wrows[wrows.length-1].d, dB = lastD && lastD!=='9999' ? (()=>{ const t = new Date(lastD+'T00:00:00Z'); t.setUTCDate(t.getUTCDate()+6); return t.toISOString().slice(0,10); })() : '';
+  /* 일간 = 선택 기간(주차 시작일 ~ 마지막 주 +6일, 직접 지정이면 그 날짜) 안의 날짜별 */
+  const dFrom = rng.q==='custom' && rng.from ? rng.from : dA, dTo = rng.q==='custom' && rng.to ? rng.to : dB;
+  const rows = isM ? focusByMonth(wrows) : isD ? focusAgg(it, true).filter(x=>(!dFrom || x.d>=dFrom) && (!dTo || x.d<=dTo)) : wrows;
+  if(!rows.length) return `<div class="fc-card"><div class="fc-hd"><h3>${fcEsc(it.name)}</h3></div><div class="nil">선택한 기간에 기록이 없습니다.</div></div>`;
   const T = rows.reduce((a,x)=>{ a.t1+=x.f1.t; a.g1+=x.f1.g; a.d1+=x.f1.d; a.t2+=x.mct.t; a.n2+=x.mct.n; a.dc+=x.mct.dc; a.mc+=x.mct.mc; a.m2+=x.mct.m; a.to+=x.oqc.t; a.no+=x.oqc.n; return a; },
     {t1:0,g1:0,d1:0,t2:0,n2:0,dc:0,mc:0,m2:0,to:0,no:0});
   const lastF1 = [...rows].reverse().find(x=>x.f1.t>0), lastF2 = [...rows].reverse().find(x=>x.mct.t>0);
@@ -2560,7 +2566,7 @@ function focusItemHtml(it, rng){
   const f1r = lastF1 ? fcPct(lastF1.f1.d, lastF1.f1.t) : null;
   let h = `<div class="fc-card" id="fc-${fcEsc(it.id)}"><div class="fc-hd"><h3>${fcEsc(it.name)}</h3>
       <span class="pn">FAC2 ${fcEsc(it.f2)}</span>${it.f1?`<span class="pn">FAC1 모델 ${fcEsc(it.f1)}</span>`:''}
-      <span class="rg">${dA} ~ ${dB} · ${weeks[0]} ~ ${weeks[weeks.length-1]} (${weeks.length}주${isM?` · ${rows.length}개월`:''}) · ${isM?'월간':'주간'} 보기</span>
+      <span class="rg">${dA} ~ ${dB} · ${weeks[0]} ~ ${weeks[weeks.length-1]} (${weeks.length}주${isM?` · ${rows.length}개월`:isD?` · ${rows.length}일`:''}) · ${isM?'월간':isD?'일간':'주간'} 보기</span>
       <button class="fc-del" data-fcdel="${fcEsc(it.id)}" title="중점관리에서 해제">해제 ✕</button></div>`;
   h += `<div class="fc-kpi">`
     + kpi('FAC1 다캐 불량률 (자체)', T.t1?fcPct(T.d1,T.t1):null, `기간 누계 · 생산 ${T.t1.toLocaleString()} · 총 불량률(웜샷 포함) ${fcF(fcPct(T.t1-T.g1,T.t1))}%${lastF1?` · 최근 ${lastF1.w} ${fcF(f1r)}%`:''}`, kc(T.t1?fcPct(T.d1,T.t1):null))
@@ -2572,7 +2578,7 @@ function focusItemHtml(it, rng){
   h += `<div class="fc-chart">${focusChart(rows)}</div>`;
   /* 주차별 / 월별 표 */
   const cell = (v, b) => v==null ? '<td class="n">–</td>' : `<td class="n${b && v>tg?' bad':''}">${v.toFixed(2)}</td>`;
-  h += `<div class="fc-tw"><table class="fc-t"><thead><tr><th>${isM?'월':'주차'}</th>${rows.map(x=>`<th>${x.w}</th>`).join('')}<th class="tot">누계</th></tr></thead><tbody>
+  h += `<div class="fc-tw"><table class="fc-t"><thead><tr><th>${isM?'월':isD?'일자':'주차'}</th>${rows.map(x=>`<th>${x.w}</th>`).join('')}<th class="tot">누계</th></tr></thead><tbody>
     <tr><td class="k">FAC1 생산</td>${rows.map(x=>`<td class="n">${x.f1.t?x.f1.t.toLocaleString():'–'}</td>`).join('')}<td class="n tot">${T.t1.toLocaleString()}</td></tr>
     <tr><td class="k">FAC1 다캐 불량률 %</td>${rows.map(x=>cell(fcPct(x.f1.d,x.f1.t),1)).join('')}${cell(fcPct(T.d1,T.t1),1).replace('<td class="n','<td class="n tot')}</tr>
     <tr><td class="k sub">FAC1 총 불량률 % (웜샷 포함)</td>${rows.map(x=>cell(fcPct(x.f1.t-x.f1.g,x.f1.t))).join('')}${cell(fcPct(T.t1-T.g1,T.t1)).replace('<td class="n','<td class="n tot')}</tr>
@@ -2610,7 +2616,7 @@ function renderFocus(){
                FOCUS.qLoaded ? `FAC1 Q_Model상세 ${FOCUS.q.length.toLocaleString()}행` : (FOCUS.qErr ? `FAC1 불러오기 실패: ${fcEsc(FOCUS.qErr)}` : 'FAC1 불러오는 중…') ].join(' · ');
   let h = `<div class="fc-wrap"><div class="fc-top-bar">
       <div><h2>중점관리 품번</h2><div class="sub">FAC1 다이캐스팅 → FAC2 MCT 가공 → OQC 출하까지 한 품번을 이어서 봅니다 · ${st}</div></div>
-      <div class="ctl"><span class="grp">보기 ${[['week','주간'],['month','월간']].map(([v,l])=>`<button class="${rng.unit===v?'on':''}" data-fcunit="${v}">${l}</button>`).join('')}</span>
+      <div class="ctl"><span class="grp">보기 ${[['day','일간'],['week','주간'],['month','월간']].map(([v,l])=>`<button class="${rng.unit===v?'on':''}" data-fcunit="${v}">${l}</button>`).join('')}</span>
         <span class="grp">기간 ${[['8','8주'],['12','12주'],['26','26주'],['all','전체']].map(([v,l])=>`<button class="${rng.q===v?'on':''}" data-fcrng="${v}">${l}</button>`).join('')}</span>
         <span class="grp dt"><input type="date" id="fcFrom" value="${fcEsc(rng.from)}" min="${dMin}" max="${dMax}"><span>~</span><input type="date" id="fcTo" value="${fcEsc(rng.to)}" min="${dMin}" max="${dMax}"><button class="${rng.q==='custom'?'on':''}" id="fcApply">기간 적용</button></span>
         <button class="rf" onclick="FOCUS.qLoaded=false;FOCUS.qErr=null;focusLoadQ();loadF2();">🔄 새로고침</button></div></div>
