@@ -2416,7 +2416,7 @@ loadAll();
 const FOCUS_KEY = 'stc_focus_items', FOCUS_RNG_KEY = 'stc_focus_rng';
 const FOCUS_DEFAULT = [
   { id:'ct-support', name:'CT Support', f2:'CF623L3LAA03', f1:'SUPPORT', f1pn:'CR623L3LAA', since:'2026-09-30' },
-  { id:'ct-cover',   name:'CT Cover',   f2:'CF624L3LAA02', f1:'COVER',   f1pn:'',           since:'2026-09-30' }
+  { id:'ct-cover',   name:'CT Cover',   f2:'CF624L3LAA02', f1:'COVER',   f1pn:'CR624L3LAA', since:'2026-09-30' }
 ];
 const FOCUS_MODEL_GID = '635880711';                               /* OEE_RawData_APQ › Q_Model상세 */
 const FOCUS_DEF1 = ['미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스',
@@ -2428,7 +2428,8 @@ const fcDate = raw => { const s = String(raw||'').trim(); let m;
   if((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))) return `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
   return s.slice(0,10); };
 function focusItems(){ try{ const v = JSON.parse(localStorage.getItem(FOCUS_KEY)||'null');
-    if(Array.isArray(v)){ v.forEach(it=>{ if(it.f1pn===undefined){ const d = FOCUS_DEFAULT.find(x=>x.id===it.id); it.f1pn = d ? d.f1pn : ''; } }); return v; } }catch(e){}
+    if(Array.isArray(v)){ v.forEach(it=>{ if(it.f1pn===undefined){ const d = FOCUS_DEFAULT.find(x=>x.id===it.id); it.f1pn = d ? d.f1pn : ''; }
+      if(it.id==='ct-cover' && !it.f1pn) it.f1pn = 'CR624L3LAA'; }); return v; } }catch(e){}
   return FOCUS_DEFAULT.map(x=>Object.assign({}, x)); }
 function focusSave(a){ try{ localStorage.setItem(FOCUS_KEY, JSON.stringify(a)); }catch(e){} }
 /* 기간·단위 설정 — { q:'8'|'12'|'26'|'all'|'custom', from, to, unit:'week'|'month' } */
@@ -2463,7 +2464,8 @@ function focusAgg(it, byDay){
   const f1m = String(it.f1||'').trim().toUpperCase(), f1p = String(it.f1pn||'').trim().toUpperCase();
   if(f1m || f1p) FOCUS.q.forEach(r=>{
     const rm = String(r['Model']||'').trim().toUpperCase(), rp = String(r['Part no.']||'').trim().toUpperCase();
-    if(!((f1m && rm===f1m) || (f1p && rp===f1p)) || !r._w) return;
+    /* FAC1 은 품번(Part no.)으로 입력 — 품번이 우선, 품번 칸이 비어 있던 9/9 이전 기록은 모델명으로 잡는다 */
+    if(!((f1p && (rp===f1p || rm===f1p)) || (f1m && !rp && rm===f1m)) || !r._w) return;
     if(byDay && !/^\d{4}-\d{2}-\d{2}$/.test(r._d)) return;
     const gw = g(byDay ? r._d : r._w); if(r._d && r._d < gw.d) gw.d = r._d; const o = gw.f1, t = num(r['Qty_Total']);
     o.t += t; o.g += num(r['Qty_Good']); o.days.add(r._d);
