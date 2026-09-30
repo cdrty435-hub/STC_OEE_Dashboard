@@ -155,12 +155,12 @@ main{flex:1 1 auto;position:relative;overflow:hidden;}
 .note-hist{padding:10px 16px;max-height:50vh;overflow:auto;} .note-sub{font-weight:700;color:#475569;margin-bottom:6px;}
 .note-it{padding:10px 0;border-bottom:1px solid #f1f5f9;} .note-meta{display:flex;align-items:center;gap:8px;font-size:12px;color:#64748b;}
 .note-tag{padding:1px 7px;border-radius:9px;background:#e0e7ff;color:#3730a3;font-size:11px;}
-.note-del{margin-left:auto;border:0;background:none;cursor:pointer;opacity:.6;} .note-del:hover{opacity:1;}
+.note-del{margin-left:auto;border:1px solid #fca5a5;background:#fff;color:#b91c1c;border-radius:6px;padding:3px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;} .note-del:hover{background:#fee2e2;}
 .note-txt{white-space:pre-wrap;margin-top:4px;line-height:1.55;color:#111827;}
 .note-empty{color:#94a3b8;padding:8px 0;} .note-err{margin:8px 16px 0;color:#b91c1c;font-size:12px;}
 .note-ft{padding:8px 16px 12px;text-align:right;} .note-ft button{border:0;background:none;color:#64748b;cursor:pointer;font-size:12px;}
 .note-rep{padding:6px 16px;} .note-rep .note-ph img{width:180px;height:135px;}
-@media print{.note-bg{display:none!important;} .note-rep .note-ph img{width:150px;height:112px;}}
+@media print{.note-bg{display:none!important;} .qt-ndel{display:none;} .note-rep .note-ph img{width:150px;height:112px;}}
 .qt-rng{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:11.5px;color:#475569;margin:0 0 4px 12px;}
 .qt-rng button{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:12px;padding:2px 9px;font:inherit;font-size:11px;font-weight:600;cursor:pointer;color:#334155;}
 .qt-rng button:hover{background:#eef3fb;} .qt-rng button.on{background:#1e3c72;border-color:#1e3c72;color:#fff;}
@@ -1603,7 +1603,7 @@ function qtTrendHtml(o){
       const cap = (L.find(x=>x.text) || {}).text || '';
       const x = Math.max(Lx + TW/2 - 20, Math.min(1000 - Rx + 30, X0(i)));
       const r = [0,1,2].find(k => x - TW/2 >= lastX[k] + TG);
-      const t = { i, d, r: r==null ? -1 : r, src: ph[0] ? ph[0].src : '', n: ph.length, m: L.length, cap: cap.split('\n')[0].trim() };
+      const t = { ids: L.map(x=>x.id), i, d, r: r==null ? -1 : r, src: ph[0] ? ph[0].src : '', n: ph.length, m: L.length, cap: cap.split('\n')[0].trim() };
       if (t.r >= 0){ lastX[t.r] = x + TW/2; rowsUsed = Math.max(rowsUsed, t.r+1); t.cx = x; }
       thumbs.push(t); }); }
   const SLOT = TH + CAP + TG;
@@ -1637,7 +1637,7 @@ function qtTrendHtml(o){
   const ends = [];
   o.series.forEach(s=>{
     let d = '', pen = false;
-    s.vals.forEach((v,i)=>{ if (v==null){ pen = false; return; } d += (pen?'L':'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1) + ' '; pen = true; });
+    s.vals.forEach((v,i)=>{ if (v==null) return;   /* 생산 없는 날은 건너뛰고 앞뒤 점을 이어서 그림 */ d += (pen?'L':'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1) + ' '; pen = true; });
     g += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.main?2.5:2}" stroke-linejoin="round" stroke-linecap="round"${s.main?'':' opacity=".9"'}/>`;
     s.vals.forEach((v,i)=>{ if (v==null) return; const h = o.dates[i]>=o.hiFrom && o.dates[i]<=o.hiTo;
       g += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${h?4.5:3}" fill="${s.color}" stroke="#fff" stroke-width="1.5"/>`;
@@ -1681,6 +1681,11 @@ function qtTrendHtml(o){
          + `<text x="${x.toFixed(1)}" y="${y+TH-5}" text-anchor="middle" font-size="10" font-weight="800" fill="#fff">📝 ${md}</text>`;
     }
     g += `<text x="${x.toFixed(1)}" y="${y+TH+CAP-3.5}" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">${capTxt(t.cap) || '조치'}</text></g>`;
+    /* 카드 오른쪽 위 ✕ = 삭제 (1건이면 바로 삭제 확인, 여러 건이면 메모 창에서 고르기) */
+    const dx = x + TW/2 - 1, dy = (t.src ? y : y+TH-18) + 1;
+    g += `<g class="qt-ndel" style="cursor:pointer" onclick="event.stopPropagation();${t.ids.length===1?`noteDel('${esc2(t.ids[0])}')`:`noteOpen('${t.d}','${esc2(o.noteTag||'')}')`}"><title>삭제</title>`
+       + `<circle cx="${dx.toFixed(1)}" cy="${dy}" r="8" fill="#dc2626" stroke="#fff" stroke-width="1.5"/>`
+       + `<text x="${dx.toFixed(1)}" y="${dy+3.5}" text-anchor="middle" font-size="10" font-weight="900" fill="#fff">✕</text></g>`;
   });
   window.__qt[o.id] = { o, X, xw, n, L, W, R };
   const lg = o.series.map(s=>`<span><i style="background:${s.color}"></i>${s.name}</span>`).join('')
@@ -1784,7 +1789,7 @@ function noteRenderModal(){
   let au = ''; try{ au = localStorage.getItem('stc_note_author')||''; }catch(e){}
   const hist = L.length ? L.map(x=>`<div class="note-it" data-no-tr>
       <div class="note-meta"><b>${esc2(x.author||'—')}</b>${x.tag?`<span class="note-tag">${esc2(x.tag)}</span>`:''}<span>${esc2(String(x.ts||'').replace('T',' ').slice(0,16))}</span>
-        <button class="note-del" title="삭제" onclick="noteDel('${esc2(x.id)}')">🗑</button></div>
+        <button class="note-del" onclick="noteDel('${esc2(x.id)}')">🗑 삭제</button></div>
       ${x.text?`<div class="note-txt">${esc2(x.text)}</div>`:''}
       ${(x.photos||[]).length?`<div class="note-ph">${x.photos.map(p=>`<a href="${esc2(p.full||p.src)}" target="_blank" rel="noopener"><img src="${esc2(p.src)}" loading="lazy" alt=""></a>`).join('')}</div>`:''}
     </div>`).join('') : `<div class="note-empty">아직 기록이 없습니다</div>`;
