@@ -1608,23 +1608,33 @@ function qtTrendHtml(o){
       thumbs.push(t); }); }
   const SLOT = TH + CAP + TG;
   const SH = rowsUsed ? rowsUsed*SLOT + 6 : 0;
-  const W = 1000, H = 250 + SH, L = Lx, R = Rx, T = (o.noteScope ? 24 : 16) + SH, B = 34;
+  const BH = o.bars ? 64 : 0;   /* 생산수량 막대 띠 (선 차트 아래, 같은 날짜축) */
+  const W = 1000, H = 250 + SH + BH, L = Lx, R = Rx, T = (o.noteScope ? 24 : 16) + SH, B = 34, PB = H - B - BH;
   const n = o.dates.length;
   const all = o.series.flatMap(s=>s.vals).filter(v=>v!=null);
   if (!n || !all.length) return '';
   let ymax = Math.max(o.target || 0, ...all) * 1.15; ymax = ymax <= 0 ? 1 : ymax;
   const stp = [0.5,1,2,2.5,5,10,20,25,50].find(s=>ymax/s <= 6) || 100; ymax = Math.ceil(ymax/stp)*stp;
   const xw = (W-L-R) / Math.max(1, n-1);
-  const X = i => n===1 ? (L+(W-L-R)/2) : L + i*xw, Y = v => T + (H-T-B)*(1 - v/ymax);
+  const X = i => n===1 ? (L+(W-L-R)/2) : L + i*xw, Y = v => T + (PB-T)*(1 - v/ymax);
   let g = '';
   /* 보고 기간 음영 */
   const hi = o.dates.map((d,i)=>d>=o.hiFrom && d<=o.hiTo ? i : -1).filter(i=>i>=0);
   if (hi.length){ const x0 = X(hi[0]) - (n>1?xw/2:20), x1 = X(hi[hi.length-1]) + (n>1?xw/2:20);
-    g += `<rect x="${Math.max(L,x0).toFixed(1)}" y="${T}" width="${(Math.min(W-R,x1)-Math.max(L,x0)).toFixed(1)}" height="${H-T-B}" fill="#fde68a" opacity=".35"/>`; }
+    g += `<rect x="${Math.max(L,x0).toFixed(1)}" y="${T}" width="${(Math.min(W-R,x1)-Math.max(L,x0)).toFixed(1)}" height="${PB-T}" fill="#fde68a" opacity=".35"/>`; }
   /* 격자 · y축 */
   for (let v=0; v<=ymax+1e-9; v+=stp){ const y = Y(v).toFixed(1);
     g += `<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`
        + `<text x="${L-6}" y="${(+y+4)}" text-anchor="end" font-size="11" fill="#6b7280">${+v.toFixed(2)}%</text>`; }
+  /* 생산수량 막대 */
+  if (o.bars){ const bv = o.bars.vals, bmax = Math.max(1, ...bv.filter(v=>v!=null)), by0 = PB + 12, bh = H - B - by0 - 4;
+    const bw = Math.max(3, Math.min(22, xw*0.6)), kf = v => v>=10000 ? Math.round(v/1000)+'k' : v>=1000 ? (v/1000).toFixed(1)+'k' : String(v);
+    g += `<line x1="${L}" x2="${W-R}" y1="${H-B-4}" y2="${H-B-4}" stroke="#cbd5e1" stroke-width="1"/>`
+       + `<text x="${L-16}" y="${(by0+bh/2+4).toFixed(1)}" text-anchor="end" font-size="10" font-weight="700" fill="#64748b">${o.bars.name}</text>`;
+    bv.forEach((v,i)=>{ if(!v) return; const h = (bh-12) * v / bmax, x = X(i), y = H - B - 4 - h;
+      const inP = o.dates[i]>=o.hiFrom && o.dates[i]<=o.hiTo;
+      g += `<rect x="${(x-bw/2).toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${inP?'#64748b':'#cbd5e1'}"/>`;
+      if (xw >= 22 || inP || v===bmax) g += `<text x="${x.toFixed(1)}" y="${(y-3).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="${inP?800:600}" fill="${inP?'#111827':'#64748b'}">${kf(v)}</text>`; }); }
   /* x축 라벨 (겹치지 않게 솎아냄) */
   const every = Math.ceil(n / 15);
   o.dates.forEach((d,i)=>{ if (i % every && i !== n-1) return; const w = new Date(d+'T00:00:00Z').getUTCDay();
@@ -1689,6 +1699,7 @@ function qtTrendHtml(o){
   });
   window.__qt[o.id] = { o, X, xw, n, L, W, R };
   const lg = o.series.map(s=>`<span><i style="background:${s.color}"></i>${s.name}</span>`).join('')
+    + (o.bars ? `<span><i style="background:#cbd5e1;height:9px;width:12px;border-radius:2px"></i>${o.bars.name} (EA)</span>` : '')
     + (o.target ? `<span><i class="tg"></i>${o.tLabel||'목표'} ${o.target}%</span>` : '')
     + (hi.length ? `<span><i class="hi"></i>${o.hiLabel||'보고 기간'}</span>` : '');
   return `<div class="qt-box"><div class="qt-h"><b>${o.title}</b><small>${o.sub||''}</small></div>`
@@ -1898,6 +1909,7 @@ function f2TrendTop(dFrom, dTo, part){
              { name:X.mc, color:'#eb6834', vals:rows.map(x => pc(x,'mc')) },
              { name:X.dc, color:'#1baf7a', vals:rows.map(x => pc(x,'dc')) } ],
     ctl, noteScope:'FAC2', noteTag: part ? part.name : '', target:f2Target(), tLabel:X.tg, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
+    bars:{ name:X.p, vals:rows.map(x => x.a.t || null) },
     extra:i => X.p + ' ' + rows[i].a.t.toLocaleString() + ' · NG ' + rows[i].a.n.toLocaleString() });
 }
 /* CT Cover · CT Support 품번별 일일 불량률 추이 */
