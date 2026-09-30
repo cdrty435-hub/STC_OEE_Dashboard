@@ -1740,11 +1740,13 @@ function qtHover(e, id){
   tip.style.left = (px + 14 + 190 > box ? px - 200 : px + 14) + 'px'; tip.style.top = '8px';
 }
 /* ================= 일자별 메모 · 사진 (FAC2 일일 불량률 추이 날짜 클릭) =================
-   저장 위치: ① 구글 드라이브(공유) — Apps Script 웹앱 URL 이 있으면 사진은 드라이브 폴더, 기록은 구글시트 F2_메모 탭
+   저장 위치: ① 구글 드라이브(공유) — Apps Script 웹앱 URL 이 있으면 사진은 드라이브 폴더, 기록은 구글시트 품질_메모 탭
              ② 이 PC 브라우저(IndexedDB) — URL 이 없을 때. 같은 PC·같은 브라우저에서만 보임
    기록은 지우지 않고 계속 쌓임 (삭제도 '삭제 표시'만 남김) */
 const NOTE_API_DEFAULT = '';   /* Apps Script 배포 후 웹앱 URL 을 여기에 넣으면 모든 PC 가 공유 */
-const NOTE = { list:[], loaded:false, loading:false, err:null, scope:'FAC2' };
+const NOTE = { list:[], loaded:false, loading:false, err:null, scope:'FAC2', allLabel:'전체 (MCT)', tags:null, rerender:()=>{ if(typeof renderF2==='function') renderF2(); }, example:'MC14 지그 클램프 교체' };
+function noteRerender(){ try{ NOTE.rerender && NOTE.rerender(); }catch(e){} }
+const noteEsc = v => String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function noteApi(){ try{ return localStorage.getItem('stc_note_api') || NOTE_API_DEFAULT; }catch(e){ return NOTE_API_DEFAULT; } }
 function noteIdb(){ return new Promise((ok,no)=>{ const q = indexedDB.open('stc_notes', 1);
   q.onupgradeneeded = () => { const s = q.result.createObjectStore('notes', { keyPath:'id' }); s.createIndex('date','date'); };
@@ -1765,7 +1767,7 @@ function noteByDate(d){ return NOTE.list.filter(x=>x.date===d).sort((a,b)=>Strin
 /* 품번 차트 = 그 품번 + 전체(태그 없음) 메모, 전체 차트 = 모든 메모 */
 function noteFor(d, tag){ return NOTE.list.filter(x=>x.date===d && (!tag || !x.tag || x.tag===tag)); }
 function noteCount(d){ return NOTE.list.reduce((a,x)=>a+(x.date===d?1:0),0); }
-function noteRefresh(){ noteLoad().then(()=>{ if(typeof renderF2==='function') renderF2(); if(NOTE_UI.date) noteRenderModal(); }); }
+function noteRefresh(){ noteLoad().then(()=>{ noteRerender(); if(NOTE_UI.date) noteRenderModal(); }); }
 /* 사진 줄이기 — 긴 변 1600px JPEG */
 function noteShrink(file){ return new Promise((ok,no)=>{ const fr = new FileReader();
   fr.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, 1600/Math.max(im.width, im.height));
@@ -1776,7 +1778,7 @@ function noteShrink(file){ return new Promise((ok,no)=>{ const fr = new FileRead
 const NOTE_UI = { date:null, tag:'', pics:[], busy:false };
 function noteOpen(date, tag){ NOTE_UI.date = date; NOTE_UI.tag = tag||''; NOTE_UI.pics = []; noteRenderModal(); }
 function noteClose(){ NOTE_UI.date = null; const m = document.getElementById('noteModal'); if(m) m.remove(); }
-function noteParts(){ const m = {}; (F2.pd||[]).forEach(r=>{ if(r['공정']==='MCT' && r['Part name']) m[r['Part name']] = 1; }); return Object.keys(m); }
+function noteParts(){ if(NOTE.tags) return NOTE.tags(); const m = {}; (F2.pd||[]).forEach(r=>{ if(r['공정']==='MCT' && r['Part name']) m[r['Part name']] = 1; }); return Object.keys(m); }
 function noteRenderModal(){
   const d = NOTE_UI.date; if(!d) return;
   let m = document.getElementById('noteModal');
@@ -1788,20 +1790,20 @@ function noteRenderModal(){
   const api = noteApi(), L = noteByDate(d);
   let au = ''; try{ au = localStorage.getItem('stc_note_author')||''; }catch(e){}
   const hist = L.length ? L.map(x=>`<div class="note-it" data-no-tr>
-      <div class="note-meta"><b>${esc2(x.author||'—')}</b>${x.tag?`<span class="note-tag">${esc2(x.tag)}</span>`:''}<span>${esc2(String(x.ts||'').replace('T',' ').slice(0,16))}</span>
-        <button class="note-del" onclick="noteDel('${esc2(x.id)}')">🗑 삭제</button></div>
-      ${x.text?`<div class="note-txt">${esc2(x.text)}</div>`:''}
-      ${(x.photos||[]).length?`<div class="note-ph">${x.photos.map(p=>`<a href="${esc2(p.full||p.src)}" target="_blank" rel="noopener"><img src="${esc2(p.src)}" loading="lazy" alt=""></a>`).join('')}</div>`:''}
+      <div class="note-meta"><b>${noteEsc(x.author||'—')}</b>${x.tag?`<span class="note-tag">${noteEsc(x.tag)}</span>`:''}<span>${noteEsc(String(x.ts||'').replace('T',' ').slice(0,16))}</span>
+        <button class="note-del" onclick="noteDel('${noteEsc(x.id)}')">🗑 삭제</button></div>
+      ${x.text?`<div class="note-txt">${noteEsc(x.text)}</div>`:''}
+      ${(x.photos||[]).length?`<div class="note-ph">${x.photos.map(p=>`<a href="${noteEsc(p.full||p.src)}" target="_blank" rel="noopener"><img src="${noteEsc(p.src)}" loading="lazy" alt=""></a>`).join('')}</div>`:''}
     </div>`).join('') : `<div class="note-empty">아직 기록이 없습니다</div>`;
   const tags = noteParts();
   m.innerHTML = `<div class="note-box" role="dialog" aria-label="메모">
     <div class="note-hd"><b>📝 ${d} (${wd}) 메모 · 사진</b><span class="note-where ${api?'on':''}">${api?'☁ 구글 드라이브 (공유)':'💻 이 PC 브라우저에만 저장'}</span>
       <button class="note-x" onclick="noteClose()" aria-label="닫기">✕</button></div>
-    ${NOTE.err?`<div class="note-err">불러오기 실패: ${esc2(NOTE.err)}</div>`:''}
+    ${NOTE.err?`<div class="note-err">불러오기 실패: ${noteEsc(NOTE.err)}</div>`:''}
     <div class="note-new">
-      <div class="note-row"><input id="noteAu" placeholder="작성자" value="${esc2(keep&&keep.au!=null?keep.au:au)}">
-        <select id="noteTag"><option value="">전체 (MCT)</option>${tags.map(t=>`<option${(keep?keep.tag:NOTE_UI.tag)===t?' selected':''}>${esc2(t)}</option>`).join('')}</select></div>
-      <textarea id="noteTxt" rows="4" placeholder="첫 줄 = 차트에 표시되는 조치 제목 (예: MC14 지그 클램프 교체)&#10;둘째 줄부터 = 원인 · 조치 내용 · 결과">${esc2(keep?keep.txt:'')}</textarea>
+      <div class="note-row"><input id="noteAu" placeholder="작성자" value="${noteEsc(keep&&keep.au!=null?keep.au:au)}">
+        <select id="noteTag"><option value="">${NOTE.allLabel||'전체'}</option>${tags.map(t=>`<option${(keep?keep.tag:NOTE_UI.tag)===t?' selected':''}>${noteEsc(t)}</option>`).join('')}</select></div>
+      <textarea id="noteTxt" rows="4" placeholder="첫 줄 = 차트에 표시되는 조치 제목 (예: ${NOTE.example})&#10;둘째 줄부터 = 원인 · 조치 내용 · 결과">${noteEsc(keep?keep.txt:'')}</textarea>
       <div class="note-drop" id="noteDrop">
         <label class="note-add">📷 사진 추가<input type="file" accept="image/*" multiple onchange="noteAddFiles(this.files);this.value=''"></label>
         <span>또는 사진을 끌어다 놓기 · Ctrl+V 붙여넣기</span></div>
@@ -1837,7 +1839,7 @@ async function noteSave(){
     else await noteIdbPut({ ...en, photos:NOTE_UI.pics.map(src=>({src})) });
     NOTE_UI.pics = []; const t = m.querySelector('#noteTxt'); if(t) t.value = '';
     NOTE_UI.busy = false; await noteLoad(); noteRenderModal(); const x = document.getElementById('noteTxt'); if(x) x.value = '';
-    if(typeof renderF2==='function') renderF2();
+    noteRerender();
   }catch(e){ NOTE_UI.busy = false; noteRenderModal(); alert('저장 실패: ' + (e.message||e)); }
 }
 async function noteDel(id){
@@ -1846,7 +1848,7 @@ async function noteDel(id){
     const api = noteApi();
     if(api){ const r = await fetch(api, { method:'POST', body:JSON.stringify({ action:'del', id }) }); const j = await r.json(); if(!j.ok) throw new Error(j.err||'del'); }
     else { const all = await noteIdbAll(); const o = all.find(x=>x.id===id); if(o){ o.del = new Date().toISOString(); await noteIdbPut(o); } }
-    await noteLoad(); noteRenderModal(); if(typeof renderF2==='function') renderF2();
+    await noteLoad(); noteRenderModal(); noteRerender();
   }catch(e){ alert('삭제 실패: ' + (e.message||e)); }
 }
 function noteSetApi(){
@@ -1859,9 +1861,9 @@ function f2NoteList(dates){
   const L = NOTE.list.filter(x=>dates.includes(x.date)).sort((a,b)=>a.date.localeCompare(b.date) || String(a.ts).localeCompare(String(b.ts)));
   if(!L.length) return '';
   return `<div class="sec-title">📝 일자별 메모 · 사진</div><div class="card note-rep">${L.map(x=>`<div class="note-it" data-no-tr>
-      <div class="note-meta"><a href="javascript:void 0" onclick="noteOpen('${x.date}')"><b>${x.date}</b></a> <b>${esc2(x.author||'')}</b>${x.tag?`<span class="note-tag">${esc2(x.tag)}</span>`:''}</div>
-      ${x.text?`<div class="note-txt">${esc2(x.text)}</div>`:''}
-      ${(x.photos||[]).length?`<div class="note-ph">${x.photos.map(p=>`<a href="${esc2(p.full||p.src)}" target="_blank" rel="noopener"><img src="${esc2(p.src)}" loading="lazy" alt=""></a>`).join('')}</div>`:''}</div>`).join('')}</div>`;
+      <div class="note-meta"><a href="javascript:void 0" onclick="noteOpen('${x.date}')"><b>${x.date}</b></a> <b>${noteEsc(x.author||'')}</b>${x.tag?`<span class="note-tag">${noteEsc(x.tag)}</span>`:''}</div>
+      ${x.text?`<div class="note-txt">${noteEsc(x.text)}</div>`:''}
+      ${(x.photos||[]).length?`<div class="note-ph">${x.photos.map(p=>`<a href="${noteEsc(p.full||p.src)}" target="_blank" rel="noopener"><img src="${noteEsc(p.src)}" loading="lazy" alt=""></a>`).join('')}</div>`:''}</div>`).join('')}</div>`;
 }
 function qtClick(e, id){
   const S = window.__qt[id]; if(!S || !S.o.noteScope) return;
