@@ -2415,8 +2415,8 @@ loadAll();
    ========================================================================= */
 const FOCUS_KEY = 'stc_focus_items', FOCUS_RNG_KEY = 'stc_focus_rng';
 const FOCUS_DEFAULT = [
-  { id:'ct-support', name:'CT Support', f2:'CF623L3LAA03', f1:'SUPPORT', since:'2026-09-30' },
-  { id:'ct-cover',   name:'CT Cover',   f2:'CF624L3LAA02', f1:'COVER',   since:'2026-09-30' }
+  { id:'ct-support', name:'CT Support', f2:'CF623L3LAA03', f1:'SUPPORT', f1pn:'CR623L3LAA', since:'2026-09-30' },
+  { id:'ct-cover',   name:'CT Cover',   f2:'CF624L3LAA02', f1:'COVER',   f1pn:'',           since:'2026-09-30' }
 ];
 const FOCUS_MODEL_GID = '635880711';                               /* OEE_RawData_APQ › Q_Model상세 */
 const FOCUS_DEF1 = ['미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스',
@@ -2427,7 +2427,9 @@ const fcDate = raw => { const s = String(raw||'').trim(); let m;
   if((m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/))) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
   if((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))) return `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
   return s.slice(0,10); };
-function focusItems(){ try{ const v = JSON.parse(localStorage.getItem(FOCUS_KEY)||'null'); if(Array.isArray(v)) return v; }catch(e){} return FOCUS_DEFAULT.slice(); }
+function focusItems(){ try{ const v = JSON.parse(localStorage.getItem(FOCUS_KEY)||'null');
+    if(Array.isArray(v)){ v.forEach(it=>{ if(it.f1pn===undefined){ const d = FOCUS_DEFAULT.find(x=>x.id===it.id); it.f1pn = d ? d.f1pn : ''; } }); return v; } }catch(e){}
+  return FOCUS_DEFAULT.map(x=>Object.assign({}, x)); }
 function focusSave(a){ try{ localStorage.setItem(FOCUS_KEY, JSON.stringify(a)); }catch(e){} }
 /* 기간·단위 설정 — { q:'8'|'12'|'26'|'all'|'custom', from, to, unit:'week'|'month' } */
 function focusRng(){ let v = null; try{ v = JSON.parse(localStorage.getItem(FOCUS_RNG_KEY)||'null'); }catch(e){}
@@ -2458,8 +2460,10 @@ async function focusLoadQ(){
 function focusAgg(it, byDay){
   const W = {};
   const g = w => W[w] || (W[w] = { w, d:'9999', f1:{t:0,g:0,d:0,days:new Set(),def:{},mc:{}}, mct:{t:0,n:0,dc:0,mc:0,m:0,days:new Set()}, oqc:{t:0,n:0,dc:0,mc:0} });
-  if(it.f1) FOCUS.q.forEach(r=>{
-    if(String(r['Model']||'').trim().toUpperCase() !== it.f1.toUpperCase() || !r._w) return;
+  const f1m = String(it.f1||'').trim().toUpperCase(), f1p = String(it.f1pn||'').trim().toUpperCase();
+  if(f1m || f1p) FOCUS.q.forEach(r=>{
+    const rm = String(r['Model']||'').trim().toUpperCase(), rp = String(r['Part no.']||'').trim().toUpperCase();
+    if(!((f1m && rm===f1m) || (f1p && rp===f1p)) || !r._w) return;
     if(byDay && !/^\d{4}-\d{2}-\d{2}$/.test(r._d)) return;
     const gw = g(byDay ? r._d : r._w); if(r._d && r._d < gw.d) gw.d = r._d; const o = gw.f1, t = num(r['Qty_Total']);
     o.t += t; o.g += num(r['Qty_Good']); o.days.add(r._d);
@@ -2565,7 +2569,7 @@ function focusItemHtml(it, rng){
   const pf2 = prevF2 ? { r:fcPct(prevF2.mct.n,prevF2.mct.t), dc:fcPct(prevF2.mct.dc,prevF2.mct.t), mc:fcPct(prevF2.mct.mc,prevF2.mct.t) } : {};
   const f1r = lastF1 ? fcPct(lastF1.f1.d, lastF1.f1.t) : null;
   let h = `<div class="fc-card" id="fc-${fcEsc(it.id)}"><div class="fc-hd"><h3>${fcEsc(it.name)}</h3>
-      <span class="pn">FAC2 ${fcEsc(it.f2)}</span>${it.f1?`<span class="pn">FAC1 모델 ${fcEsc(it.f1)}</span>`:''}
+      <span class="pn">FAC2 ${fcEsc(it.f2)}</span>${it.f1?`<span class="pn">FAC1 모델 ${fcEsc(it.f1)}</span>`:''}${it.f1pn?`<span class="pn">FAC1 품번 ${fcEsc(it.f1pn)}</span>`:''}
       <span class="rg">${dA} ~ ${dB} · ${weeks[0]} ~ ${weeks[weeks.length-1]} (${weeks.length}주${isM?` · ${rows.length}개월`:isD?` · ${rows.length}일`:''}) · ${isM?'월간':isD?'일간':'주간'} 보기</span>
       <button class="fc-del" data-fcdel="${fcEsc(it.id)}" title="중점관리에서 해제">해제 ✕</button></div>`;
   h += `<div class="fc-kpi">`
@@ -2612,6 +2616,8 @@ function renderFocus(){
   const dMin = allD[0] || '', dMax = allD[allD.length-1] || '';
   const f2Parts = {}; F2.pd.forEach(r=>{ const k = String(r['Part no.']||'').trim(); if(k && !f2Parts[k]) f2Parts[k] = r['Part name']||k; });
   const f1Models = [...new Set(FOCUS.q.map(r=>String(r['Model']||'').trim()).filter(Boolean))].sort();
+  const f1PM = {}; FOCUS.q.forEach(r=>{ const k = String(r['Part no.']||'').trim(); if(k && !f1PM[k]) f1PM[k] = String(r['Model']||'').trim(); });
+  const f1Parts = Object.entries(f1PM).sort((a,b)=>a[1].localeCompare(b[1]));
   const st = [ F2.loaded ? `FAC2 ${F2.pd.length.toLocaleString()}행` : (F2.err ? `FAC2 불러오기 실패: ${fcEsc(F2.err)}` : 'FAC2 불러오는 중…'),
                FOCUS.qLoaded ? `FAC1 Q_Model상세 ${FOCUS.q.length.toLocaleString()}행` : (FOCUS.qErr ? `FAC1 불러오기 실패: ${fcEsc(FOCUS.qErr)}` : 'FAC1 불러오는 중…') ].join(' · ');
   let h = `<div class="fc-wrap"><div class="fc-top-bar">
@@ -2625,7 +2631,8 @@ function renderFocus(){
         <label>이름 <input id="fcName" placeholder="예: CN8 Support"></label>
         <label>FAC2 품번 <select id="fcF2"><option value="">선택</option>${Object.entries(f2Parts).sort((a,b)=>String(a[1]).localeCompare(b[1])).map(([k,v])=>`<option value="${fcEsc(k)}">${fcEsc(v)} (${fcEsc(k)})</option>`).join('')}</select></label>
         <label>FAC1 모델 <select id="fcF1"><option value="">(없음)</option>${f1Models.map(m=>`<option>${fcEsc(m)}</option>`).join('')}</select></label>
-        <button id="fcAdd">추가</button><span class="hint">FAC1 모델은 Q_Model상세의 Model 이름 · FAC2 품번과 짝이 맞는 것을 고르세요</span></div></details></div>`;
+        <label>FAC1 품번 <select id="fcF1p"><option value="">(없음)</option>${f1Parts.map(([k,m])=>`<option value="${fcEsc(k)}">${fcEsc(k)} · ${fcEsc(m)}</option>`).join('')}</select></label>
+        <button id="fcAdd">추가</button><span class="hint">FAC1은 모델 이름 또는 품번으로 찾습니다 (둘 중 하나만 맞아도 집계) · Q_Model상세 품번 기록은 9/9부터</span></div></details></div>`;
   if(!F2.loaded && !FOCUS.qLoaded) h += `<div class="fc-card nil">데이터를 불러오는 중입니다…</div>`;
   else if(!items.length) h += `<div class="fc-card nil">등록된 중점관리 품번이 없습니다 — 위 '품번 추가'로 등록하세요.</div>`;
   else h += items.map(it=>focusItemHtml(it, rng)).join('');
@@ -2642,11 +2649,12 @@ function renderFocus(){
   host.querySelectorAll('textarea[data-fcmemo]').forEach(t=>t.oninput=()=>{ try{ localStorage.setItem('stc_focus_memo_'+t.dataset.fcmemo, t.value); }catch(e){} });
   const add = host.querySelector('#fcAdd');
   if(add) add.onclick = ()=>{
-    const f2 = host.querySelector('#fcF2').value, f1 = host.querySelector('#fcF1').value;
+    const f2 = host.querySelector('#fcF2').value, f1pn = host.querySelector('#fcF1p').value;
+    const f1 = host.querySelector('#fcF1').value || (f1pn ? (f1PM[f1pn]||'') : '');
     const name = host.querySelector('#fcName').value.trim() || (f2 ? (f2Parts[f2]||f2) : f1);
-    if(!f2 && !f1){ alert('FAC2 품번이나 FAC1 모델 중 하나는 골라 주세요'); return; }
+    if(!f2 && !f1 && !f1pn){ alert('FAC2 품번이나 FAC1 모델·품번 중 하나는 골라 주세요'); return; }
     if(items.some(x=>x.f2===f2 && x.f1===f1)){ alert('이미 등록된 품번입니다'); return; }
-    items.push({ id:'fc'+Date.now().toString(36), name, f2, f1, since:new Date().toISOString().slice(0,10) });
+    items.push({ id:'fc'+Date.now().toString(36), name, f2, f1, f1pn, since:new Date().toISOString().slice(0,10) });
     focusSave(items); renderFocus();
   };
 }
