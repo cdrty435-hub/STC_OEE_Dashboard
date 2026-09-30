@@ -113,6 +113,52 @@ main{flex:1 1 auto;position:relative;overflow:hidden;}
 
 #panel-overview{overflow-y:auto;padding:18px 20px 30px;}
 #panel-f2ov{overflow:hidden;}
+#panel-focus{overflow-y:auto;padding:16px 20px 40px;background:#f4f6fa;}
+.fc-wrap{max-width:1700px;margin:0 auto;color:#111827;}
+.fc-top-bar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+.fc-top-bar h2{margin:0;font-size:22px;color:#1e3c72;font-weight:900;} .fc-top-bar .sub{font-size:12.5px;color:#475569;margin-top:3px;}
+.fc-top-bar .ctl{display:flex;align-items:center;gap:5px;font-size:13px;color:#334155;font-weight:700;}
+.fc-top-bar .ctl button{font:inherit;font-size:12.5px;padding:4px 12px;border:1px solid #94a3b8;border-radius:14px;background:#fff;color:#1e3c72;cursor:pointer;}
+.fc-top-bar .ctl button.on{background:#1e3c72;color:#fff;border-color:#1e3c72;} .fc-top-bar .ctl .rf{margin-left:8px;}
+.fc-reg{display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:#fff;border:1px solid #d5dde8;border-radius:8px;padding:8px 12px;margin-bottom:14px;}
+.fc-reg .lb{font-size:13px;font-weight:800;color:#1e3c72;margin-right:4px;}
+.fc-reg .chip{font-size:13px;font-weight:800;padding:4px 12px;border-radius:14px;background:#b91c1c;color:#fff;text-decoration:none;}
+.fc-reg .add{margin-left:auto;} .fc-reg summary{cursor:pointer;font-size:13px;font-weight:800;color:#1e3c72;padding:4px 10px;border:1px dashed #1e3c72;border-radius:14px;list-style:none;}
+.fc-reg .form{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;font-size:12.5px;}
+.fc-reg .form input,.fc-reg .form select{font:inherit;font-size:12.5px;padding:4px 6px;border:1px solid #94a3b8;border-radius:5px;margin-left:4px;max-width:320px;}
+.fc-reg .form button{font:inherit;font-size:12.5px;font-weight:800;padding:5px 16px;border:0;border-radius:6px;background:#1e3c72;color:#fff;cursor:pointer;}
+.fc-reg .form .hint{font-size:11.5px;color:#64748b;}
+.fc-card{background:#fff;border:1px solid #d5dde8;border-left:5px solid #b91c1c;border-radius:8px;padding:14px 16px;margin-bottom:18px;scroll-margin-top:10px;}
+.fc-card.nil,.fc-card .nil{color:#64748b;font-size:13px;}
+.fc-hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.fc-hd h3{margin:0;font-size:20px;font-weight:900;color:#0f172a;}
+.fc-hd .pn{font-size:12px;font-weight:700;color:#1e3c72;background:#e8eef8;border-radius:5px;padding:2px 8px;}
+.fc-hd .rg{font-size:12.5px;color:#475569;}
+.fc-hd .fc-del{margin-left:auto;font:inherit;font-size:12px;color:#64748b;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:3px 10px;cursor:pointer;}
+.fc-kpi{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:10px;}
+.fc-k{border:1px solid #e2e8f0;border-radius:8px;padding:9px 12px;background:#fafbfd;}
+.fc-k .l{font-size:12.5px;font-weight:800;color:#334155;} .fc-k .v{font-size:26px;font-weight:900;color:#0f172a;line-height:1.25;} .fc-k .v u{font-size:13px;text-decoration:none;margin-left:2px;color:#475569;}
+.fc-k .s{font-size:11.5px;color:#475569;line-height:1.5;} .fc-k .s b.up{color:#c00000;} .fc-k .s b.dn{color:#15803d;}
+.fc-k.bad{border-color:#fca5a5;background:#fff5f5;} .fc-k.bad .v{color:#b91c1c;} .fc-k.ok .v{color:#15803d;}
+.fc-chart{border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px 4px;margin-bottom:10px;}
+.fc-lg{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:#334155;margin:0 0 4px 6px;}
+.fc-lg i{display:inline-block;width:16px;height:4px;border-radius:2px;vertical-align:middle;margin-right:5px;} .fc-lg i.tg{height:0;border-top:2px dashed #dc2626;}
+.fc-tw{overflow-x:auto;margin-bottom:10px;}
+table.fc-t{border-collapse:collapse;width:100%;font-size:12.5px;}
+table.fc-t th,table.fc-t td{border:1px solid #d5dde8;padding:6px 7px;white-space:nowrap;}
+table.fc-t th{background:#e8eef8;color:#0f172a;font-weight:800;} table.fc-t td.k{font-weight:800;color:#0f172a;background:#f8fafc;} table.fc-t td.k.sub{font-weight:600;color:#334155;}
+table.fc-t td.n{text-align:right;font-variant-numeric:tabular-nums;} table.fc-t td.bad{color:#b91c1c;font-weight:800;background:#fff5f5;}
+table.fc-t .tot{background:#eef2f7;font-weight:800;}
+.fc-tops{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px;}
+.fc-top{border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;}
+.fc-top .h{font-size:13px;font-weight:900;color:#0f172a;border-left:4px solid;padding-left:7px;margin-bottom:5px;} .fc-top .h small{font-weight:600;color:#475569;font-size:11.5px;}
+.fc-top ol{margin:0;padding-left:20px;font-size:12.5px;} .fc-top li{padding:2px 0;} .fc-top li span{display:inline-block;min-width:55%;} .fc-top li b{display:inline-block;min-width:48px;text-align:right;} .fc-top li em{font-style:normal;color:#64748b;margin-left:6px;font-size:11.5px;}
+.fc-top .mcs{font-size:12.5px;line-height:1.8;}
+.fc-memo .h{font-size:13px;font-weight:900;color:#0f172a;margin-bottom:4px;}
+.fc-memo textarea{width:100%;box-sizing:border-box;min-height:70px;font:inherit;font-size:13px;padding:7px 9px;border:1px dashed #94a3b8;border-radius:6px;background:#fffef5;resize:vertical;}
+.fc-foot{font-size:11.5px;color:#475569;margin-top:6px;line-height:1.6;}
+@media (max-width:1100px){ .fc-kpi{grid-template-columns:repeat(2,minmax(0,1fr));} .fc-tops{grid-template-columns:repeat(2,minmax(0,1fr));} }
+
 .f2-wrap{display:flex;height:100%;}
 .f2-side{flex:0 0 190px;background:var(--surface-1);border-right:1px solid var(--hairline);padding:14px 10px;overflow-y:auto;}
 .f2-side .f2-sec{font-size:11px;font-weight:700;color:var(--ink-muted);margin:14px 8px 6px;letter-spacing:.04em;}
@@ -379,6 +425,7 @@ const PORTAL_BUILD = Date.now().toString(36);   /* 열 때마다 바뀌는 캐�
 const GROUPS = ['all','fac1','fac2'];      /* 1. 종합(FAC1·FAC2)  2. FAC1 다이캐스팅  3. FAC2 MCT */
 const TABS = [
   { id:'overview', g:'all',  src:null },
+  { id:'focus',    g:'all',  src:null },
   { id:'weekly',   g:'fac1', src:'STC_OEE_Dashboard_Weekly.html' },
   { id:'quality',  g:'fac1', src:'STC_OEE_Quality_SixSigma.html' },
   { id:'mttr',     g:'fac1', src:'DC_MTTR_MTBF_Dashboard_GoogleSheets.html' },
@@ -421,7 +468,7 @@ ko:{
  'f2.r.title.daily':'FAC2 MCT 일일 품질보고','f2.r.title.week':'FAC2 MCT 주간 품질보고','f2.r.title.month':'FAC2 MCT 월간 품질보고',
  'f2.r.s1':'지표 요약','f2.r.kpi':'지표','f2.r.prev':'비교기간','f2.r.cur':'금기간','f2.r.delta':'증감','f2.r.note':'특이사항 · 조치','f2.r.noteph':'원인 · 조치 · 담당 · 완료일 (이 브라우저에 기간별로 저장)',
  'grp.all':'종합 (FAC1·FAC2)','grp.fac1':'FAC1 다이캐스팅','grp.fac2':'FAC2 (MCT·OQC)',
- 'tab.moldsig':'금형 6σ','tab.lossdash':'로스 대시보드','tab.monthly':'월별 가동률','tab.kpi':'설비 KPI','tab.f2ov':'FAC2 현황',
+ 'tab.moldsig':'금형 6σ','tab.lossdash':'로스 대시보드','tab.monthly':'월별 가동률','tab.kpi':'설비 KPI','tab.f2ov':'FAC2 현황','tab.focus':'중점관리 품번',
  'f2.loading':'FAC2 데이터를 불러오는 중…','f2.none':'구글시트에서 FAC2 탭(F2_MCT_일별)을 찾지 못했습니다.',
  'f2.how':'① 「FAC2 변환기」로 CSV를 만들어 ② 구글시트에 탭 이름 <b>F2_MCT_일별 · F2_불량상세</b> 그대로 추가하고 ③ 시트 게시가 「전체 문서」인지 확인하세요. 자동으로 못 찾으면 각 탭 주소의 <b>gid=숫자</b>를 아래에 넣으세요.',
  'f2.retry':'저장 후 다시 불러오기','f2.noWeek':'{w} 주차 FAC2 데이터가 없습니다.','f2.have':'FAC2 데이터 범위: {a} ~ {b}',
@@ -507,7 +554,7 @@ en:{
  'f2.r.title.daily':'FAC2 MCT Daily Quality Report','f2.r.title.week':'FAC2 MCT Weekly Quality Report','f2.r.title.month':'FAC2 MCT Monthly Quality Report',
  'f2.r.s1':'KPI summary','f2.r.kpi':'KPI','f2.r.prev':'Previous','f2.r.cur':'Current','f2.r.delta':'Change','f2.r.note':'Remarks · actions','f2.r.noteph':'Cause · action · owner · due (saved in this browser per period)',
  'grp.all':'Overview (FAC1·FAC2)','grp.fac1':'FAC1 Die-casting','grp.fac2':'FAC2 (MCT·OQC)',
- 'tab.moldsig':'Mold 6σ','tab.lossdash':'Loss dashboard','tab.monthly':'Monthly availability','tab.kpi':'Equipment KPI','tab.f2ov':'FAC2 status',
+ 'tab.moldsig':'Mold 6σ','tab.lossdash':'Loss dashboard','tab.monthly':'Monthly availability','tab.kpi':'Equipment KPI','tab.f2ov':'FAC2 status','tab.focus':'Focus parts',
  'f2.loading':'Loading FAC2 data…','f2.none':'FAC2 tab (F2_MCT_일별) not found in the Google Sheet.',
  'f2.how':'① Make the CSVs with the FAC2 converter ② add them to the sheet as tabs named <b>F2_MCT_일별 · F2_불량상세</b> ③ make sure the whole document is published. If still not found, enter each tab\'s <b>gid</b> below.',
  'f2.retry':'Save & reload','f2.noWeek':'No FAC2 data for {w}.','f2.have':'FAC2 data range: {a} ~ {b}',
@@ -591,7 +638,7 @@ th:{
  'f2.r.title.daily':'รายงานคุณภาพรายวัน FAC2 MCT','f2.r.title.week':'รายงานคุณภาพรายสัปดาห์ FAC2 MCT','f2.r.title.month':'รายงานคุณภาพรายเดือน FAC2 MCT',
  'f2.r.print':'พิมพ์ / PDF','f2.r.note':'หมายเหตุ · การแก้ไข',
  'grp.all':'ภาพรวม (FAC1·FAC2)','grp.fac1':'FAC1 ไดคาสติ้ง','grp.fac2':'FAC2 (MCT·OQC)',
- 'tab.moldsig':'แม่พิมพ์ 6σ','tab.lossdash':'แดชบอร์ดความสูญเสีย','tab.monthly':'อัตราเดินเครื่องรายเดือน','tab.kpi':'KPI เครื่องจักร','tab.f2ov':'สถานะ FAC2',
+ 'tab.moldsig':'แม่พิมพ์ 6σ','tab.lossdash':'แดชบอร์ดความสูญเสีย','tab.monthly':'อัตราเดินเครื่องรายเดือน','tab.kpi':'KPI เครื่องจักร','tab.f2ov':'สถานะ FAC2','tab.focus':'ชิ้นงานควบคุมพิเศษ',
  'f2.loading':'กำลังโหลดข้อมูล FAC2…','f2.none':'ไม่พบแท็บ FAC2 (F2_MCT_일별) ใน Google Sheet',
  'f2.prod':'ยอดผลิต','f2.good':'ของดี','f2.rate':'อัตราของเสีย','f2.rMc':'ของเสียจากงานกลึง (FAC2)','f2.rDc':'ของเสียจากงานหล่อ (FAC1)',
  'f2.yld':'อัตราผลผลิตจริง (เฉลี่ย)','f2.mat':'Mat\'l NG','f2.prev':'สัปดาห์ก่อน','f2.byMc':'ตามเครื่องจักร','f2.top':'ประเภทของเสีย TOP 8 (MCT)','f2.trend':'แนวโน้มรายสัปดาห์ (8 สัปดาห์)',
@@ -1004,6 +1051,7 @@ async function loadF2(){
   }catch(e){ F2.loaded = false; F2.err = e.message || String(e); F2.at = new Date(); }
   F2.loading = false;
   renderF2(); if(RAW.a.length) renderOverview();
+  if(activeTab==='focus' && typeof renderFocus==='function') renderFocus();
   noteRefresh();
 }
 const wkNum = w => parseInt(String(w||'').replace(/\D/g,''),10) || 0;
@@ -2080,6 +2128,7 @@ function selectTab(id){
   const t=TABS.find(x=>x.id===id);
   if(t && t.src) ensureFrame(t);
   if(id==='f2ov') renderF2();
+  if(id==='focus') renderFocus();
 }
 
 function ensureFrame(t){
@@ -2354,6 +2403,206 @@ document.getElementById('btnRefresh').addEventListener('click', loadAll);
 document.getElementById('syncChk').addEventListener('change', e=>{ if(e.target.checked) syncWeekToAllFrames(); });
 document.querySelectorAll('#langSwitch button').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
 loadAll();
+</script>
+<script>
+/* =========================================================================
+   중점관리 품번 (종합 탭) — FAC1 다이캐스팅(Q_Model상세) + FAC2 MCT·OQC(F2 탭)를 품번 하나로 묶어 본다.
+   · 기본 등록: CT Support (FAC2 CF623L3LAA03 ↔ FAC1 모델 SUPPORT), CT Cover (CF624L3LAA02 ↔ COVER)
+   · '품번 추가'로 언제든 늘리고 뺄 수 있다 (목록·메모는 이 브라우저에 저장)
+   ========================================================================= */
+const FOCUS_KEY = 'stc_focus_items', FOCUS_RNG_KEY = 'stc_focus_rng';
+const FOCUS_DEFAULT = [
+  { id:'ct-support', name:'CT Support', f2:'CF623L3LAA03', f1:'SUPPORT', since:'2026-09-30' },
+  { id:'ct-cover',   name:'CT Cover',   f2:'CF624L3LAA02', f1:'COVER',   since:'2026-09-30' }
+];
+const FOCUS_MODEL_GID = '635880711';                               /* OEE_RawData_APQ › Q_Model상세 */
+const FOCUS_DEF1 = ['미성형','깨짐','찍힘','자동불량','표면오염','기포','핀파손','부풀음','박리','수축','스크래치','소착','언밸런스',
+  '품질확인','버','변형','제품끼임','밀핀짧음','밀핀긺','게이트파임','홀틀어짐','게이트파손','중량미달','스펙미달','비스켓두께미달','기타'];
+const FOCUS = { q:[], qLoaded:false, qErr:null, qLoading:false };
+const fcEsc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fcDate = raw => { const s = String(raw||'').trim(); let m;
+  if((m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/))) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  if((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))) return `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  return s.slice(0,10); };
+function focusItems(){ try{ const v = JSON.parse(localStorage.getItem(FOCUS_KEY)||'null'); if(Array.isArray(v)) return v; }catch(e){} return FOCUS_DEFAULT.slice(); }
+function focusSave(a){ try{ localStorage.setItem(FOCUS_KEY, JSON.stringify(a)); }catch(e){} }
+function focusRng(){ try{ return localStorage.getItem(FOCUS_RNG_KEY) || '12'; }catch(e){ return '12'; } }
+async function focusLoadQ(){
+  if(FOCUS.qLoading) return; FOCUS.qLoading = true; FOCUS.qErr = null;
+  try{
+    const res = await fetch(sheetCsvUrl(FOCUS_MODEL_GID) + '&_=' + Date.now(), {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const rows = parseCSV(await res.text());
+    if(!hasCol(rows,'Model') || !hasCol(rows,'Qty_Total')) throw new Error('Q_Model상세 머리글이 아님');
+    rows.forEach(r=>{ r._d = fcDate(r['일자']); r._w = String(r['주차']||'').trim(); });
+    FOCUS.q = rows; FOCUS.qLoaded = true;
+  }catch(e){ FOCUS.qErr = e.message || String(e); }
+  FOCUS.qLoading = false;
+  if(activeTab==='focus') renderFocus();
+}
+/* 한 품번의 주차별 집계 */
+function focusAgg(it){
+  const W = {};
+  const g = w => W[w] || (W[w] = { w, f1:{t:0,g:0,d:0,days:new Set(),def:{},mc:{}}, mct:{t:0,n:0,dc:0,mc:0,m:0,days:new Set()}, oqc:{t:0,n:0,dc:0,mc:0} });
+  if(it.f1) FOCUS.q.forEach(r=>{
+    if(String(r['Model']||'').trim().toUpperCase() !== it.f1.toUpperCase() || !r._w) return;
+    const o = g(r._w).f1, t = num(r['Qty_Total']);
+    o.t += t; o.g += num(r['Qty_Good']); o.days.add(r._d);
+    FOCUS_DEF1.forEach(k=>{ const v = num(r[k]); if(v){ o.d += v; o.def[k] = (o.def[k]||0) + v; } });
+    const e = eqOf(r); if(e){ const mm = o.mc[e] || (o.mc[e] = {t:0,g:0}); mm.t += t; mm.g += num(r['Qty_Good']); }
+  });
+  F2.pd.forEach(r=>{
+    if(String(r['Part no.']||'').trim() !== it.f2) return;
+    const w = r['주차']; if(!w) return; const p = r['공정'];
+    const o = p==='MCT' ? g(w).mct : p==='OQC' ? g(w).oqc : null; if(!o) return;
+    o.t += f2n(r["Total Q'ty"]); o.n += f2n(r["NG Q'ty"]); o.dc += f2n(r['다캐불량']); o.mc += f2n(r['가공불량']);
+    if(p==='MCT'){ o.m += f2n(r["Mat'l NG"]); o.days.add(r['일자']); }
+  });
+  return Object.values(W).sort((a,b)=>wkNum(a.w)-wkNum(b.w));
+}
+const fcPct = (a,b) => b ? a/b*100 : null;
+const fcF = (v,dp) => v==null ? '–' : v.toFixed(dp==null?2:dp);
+function focusTop(obj, n){ return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n||5); }
+/* FAC2 불량상세 — 품번·공정·계통별 유형 TOP */
+function focusF2Top(it, weeks, grp){
+  const m = {}, ws = new Set(weeks);
+  F2.det.forEach(r=>{ if(r['공정']!=='MCT' || r['구분']!=='NG' || String(r['Part no.']||'').trim()!==it.f2 || r['계통']!==grp || !ws.has(r['주차'])) return;
+    const k = r['불량유형']; m[k] = (m[k]||0) + f2n(r['수량']); });
+  return m;
+}
+function focusF2Mc(it, weeks){
+  const m = {}, ws = new Set(weeks);
+  F2.det.forEach(r=>{ if(r['공정']!=='MCT' || r['구분']!=='NG' || String(r['Part no.']||'').trim()!==it.f2 || !ws.has(r['주차'])) return;
+    const k = String(r['설비명']||'').trim() || '–'; m[k] = (m[k]||0) + f2n(r['수량']); });
+  return m;
+}
+/* 선 차트 (한 축 %) — 계열 4개, 목표선, 점 위 툴팁 */
+function focusChart(rows){
+  const S = [
+    { n:'FAC1 다캐 불량률 (자체)', c:'#2a78d6', v:rows.map(x=>fcPct(x.f1.d, x.f1.t)) },
+    { n:'FAC2 다캐 불량률 (소재)', c:'#1baf7a', v:rows.map(x=>fcPct(x.mct.dc, x.mct.t)) },
+    { n:'FAC2 가공 불량률', c:'#eb6834', v:rows.map(x=>fcPct(x.mct.mc, x.mct.t)) },
+    { n:'OQC 불량률 (출하)', c:'#4a3aa7', v:rows.map(x=>fcPct(x.oqc.n, x.oqc.t)) }
+  ];
+  const W = 1000, H = 250, L = 44, R = 16, Tp = 14, B = 30, n = rows.length;
+  const all = S.flatMap(s=>s.v).filter(v=>v!=null);
+  let hi = Math.max(3.5, ...all) * 1.12; const stp = [1,2,2.5,5,10,20].find(s=>hi/s<=6) || 25; hi = Math.ceil(hi/stp)*stp;
+  const X = i => L + (W-L-R) * (n===1 ? .5 : i/(n-1)), Y = v => Tp + (H-Tp-B) * (1 - v/hi);
+  let g = '';
+  for(let v=0; v<=hi+1e-9; v+=stp){ const y = Y(v).toFixed(1);
+    g += `<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#e5e7eb"/><text x="${L-6}" y="${+y+4}" text-anchor="end" font-size="11" fill="#6b7280">${v}%</text>`; }
+  const ty = Y(f2Target()).toFixed(1);
+  g += `<line x1="${L}" x2="${W-R}" y1="${ty}" y2="${ty}" stroke="#dc2626" stroke-width="1.3" stroke-dasharray="6 4"/><text x="${L+4}" y="${+ty-5}" font-size="11" font-weight="700" fill="#b91c1c">목표 ${f2Target()}%</text>`;
+  const every = Math.ceil(n/16);
+  rows.forEach((x,i)=>{ if(i%every && i!==n-1) return; g += `<text x="${X(i).toFixed(1)}" y="${H-10}" text-anchor="middle" font-size="11" fill="#475569">${x.w}</text>`; });
+  S.forEach(s=>{
+    let d = '', pen = false;
+    s.v.forEach((v,i)=>{ if(v==null){ pen=false; return; } d += (pen?'L':'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1) + ' '; pen = true; });
+    g += `<path d="${d}" fill="none" stroke="${s.c}" stroke-width="2.2" stroke-linejoin="round"/>`;
+    s.v.forEach((v,i)=>{ if(v==null) return; const last = i===n-1;
+      g += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${last?4.5:3}" fill="${s.c}" stroke="#fff" stroke-width="1.3"><title>${rows[i].w} · ${s.n} ${v.toFixed(2)}%</title></circle>`; });
+  });
+  const lg = S.map(s=>`<span><i style="background:${s.c}"></i>${s.n}</span>`).join('') + `<span><i class="tg"></i>목표 ${f2Target()}%</span>`;
+  return `<div class="fc-lg">${lg}</div><svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">${g}</svg>`;
+}
+function focusTopList(title, obj, total, color){
+  const L = focusTop(obj, 5), sum = Object.values(obj).reduce((a,b)=>a+b,0);
+  return `<div class="fc-top"><div class="h" style="border-color:${color}">${title} <small>${sum.toLocaleString()}개${total?` · ${fcF(sum/total*100)}%`:''}</small></div>`
+    + (L.length ? `<ol>${L.map(([k,v])=>`<li><span>${fcEsc(k)}</span><b>${v.toLocaleString()}</b><em>${sum?Math.round(v/sum*100):0}%</em></li>`).join('')}</ol>` : `<div class="nil">기록 없음</div>`) + `</div>`;
+}
+function focusItemHtml(it, rng){
+  const allRows = focusAgg(it);
+  if(!allRows.length) return `<div class="fc-card"><div class="fc-hd"><h3>${fcEsc(it.name)}</h3></div><div class="nil">이 품번의 FAC1·FAC2 기록이 없습니다 — FAC2 품번(${fcEsc(it.f2)})·FAC1 모델(${fcEsc(it.f1||'–')}) 이름을 확인하세요.</div></div>`;
+  const rows = rng==='all' ? allRows : allRows.slice(-(+rng));
+  const weeks = rows.map(x=>x.w);
+  const T = rows.reduce((a,x)=>{ a.t1+=x.f1.t; a.g1+=x.f1.g; a.d1+=x.f1.d; a.t2+=x.mct.t; a.n2+=x.mct.n; a.dc+=x.mct.dc; a.mc+=x.mct.mc; a.m2+=x.mct.m; a.to+=x.oqc.t; a.no+=x.oqc.n; return a; },
+    {t1:0,g1:0,d1:0,t2:0,n2:0,dc:0,mc:0,m2:0,to:0,no:0});
+  const lastF1 = [...rows].reverse().find(x=>x.f1.t>0), lastF2 = [...rows].reverse().find(x=>x.mct.t>0);
+  const prevF2 = lastF2 ? [...rows].reverse().find(x=>x.mct.t>0 && wkNum(x.w)<wkNum(lastF2.w)) : null;
+  const tg = f2Target();
+  const kc = (v) => v==null ? '' : (v > tg ? 'bad' : 'ok');
+  const kpi = (lab, v, sub, cls) => `<div class="fc-k ${cls||''}"><div class="l">${lab}</div><div class="v">${v==null?'–':v.toFixed(2)+'<u>%</u>'}</div><div class="s">${sub}</div></div>`;
+  const dtxt = (c,p) => c==null||p==null ? '' : ` · 전주 ${p.toFixed(2)}% <b class="${c>p?'up':'dn'}">${c>p?'▲':'▼'}${Math.abs(c-p).toFixed(2)}</b>`;
+  const lf2 = lastF2 ? { r:fcPct(lastF2.mct.n,lastF2.mct.t), dc:fcPct(lastF2.mct.dc,lastF2.mct.t), mc:fcPct(lastF2.mct.mc,lastF2.mct.t) } : {};
+  const pf2 = prevF2 ? { r:fcPct(prevF2.mct.n,prevF2.mct.t), dc:fcPct(prevF2.mct.dc,prevF2.mct.t), mc:fcPct(prevF2.mct.mc,prevF2.mct.t) } : {};
+  const f1r = lastF1 ? fcPct(lastF1.f1.d, lastF1.f1.t) : null;
+  let h = `<div class="fc-card" id="fc-${fcEsc(it.id)}"><div class="fc-hd"><h3>${fcEsc(it.name)}</h3>
+      <span class="pn">FAC2 ${fcEsc(it.f2)}</span>${it.f1?`<span class="pn">FAC1 모델 ${fcEsc(it.f1)}</span>`:''}
+      <span class="rg">${weeks[0]} ~ ${weeks[weeks.length-1]} (${weeks.length}주)</span>
+      <button class="fc-del" data-fcdel="${fcEsc(it.id)}" title="중점관리에서 해제">해제 ✕</button></div>`;
+  h += `<div class="fc-kpi">`
+    + kpi('FAC1 다캐 불량률 (자체)', T.t1?fcPct(T.d1,T.t1):null, `기간 누계 · 생산 ${T.t1.toLocaleString()} · 총 불량률(웜샷 포함) ${fcF(fcPct(T.t1-T.g1,T.t1))}%${lastF1?` · 최근 ${lastF1.w} ${fcF(f1r)}%`:''}`, kc(T.t1?fcPct(T.d1,T.t1):null))
+    + kpi('FAC2 MCT 불량률 %NG', lf2.r, lastF2?`${lastF2.w} · 생산 ${lastF2.mct.t.toLocaleString()}${dtxt(lf2.r,pf2.r)}<br>기간 누계 ${fcF(fcPct(T.n2,T.t2))}%`:'기록 없음', kc(lf2.r))
+    + kpi('└ 다캐 불량 (소재)', lf2.dc, lastF2?`${lastF2.w}${dtxt(lf2.dc,pf2.dc)}<br>기간 누계 ${fcF(fcPct(T.dc,T.t2))}%`:'', kc(lf2.dc))
+    + kpi('└ 가공 불량 (FAC2)', lf2.mc, lastF2?`${lastF2.w}${dtxt(lf2.mc,pf2.mc)}<br>기간 누계 ${fcF(fcPct(T.mc,T.t2))}%`:'', kc(lf2.mc))
+    + kpi('OQC 불량률 (출하검사)', T.to?fcPct(T.no,T.to):null, `기간 누계 · 검사 ${T.to.toLocaleString()} · Mat'l NG ${T.m2.toLocaleString()}`, '')
+    + `</div>`;
+  h += `<div class="fc-chart">${focusChart(rows)}</div>`;
+  /* 주차별 표 */
+  const cell = (v, b) => v==null ? '<td class="n">–</td>' : `<td class="n${b && v>tg?' bad':''}">${v.toFixed(2)}</td>`;
+  h += `<div class="fc-tw"><table class="fc-t"><thead><tr><th>주차</th>${rows.map(x=>`<th>${x.w}</th>`).join('')}<th class="tot">누계</th></tr></thead><tbody>
+    <tr><td class="k">FAC1 생산</td>${rows.map(x=>`<td class="n">${x.f1.t?x.f1.t.toLocaleString():'–'}</td>`).join('')}<td class="n tot">${T.t1.toLocaleString()}</td></tr>
+    <tr><td class="k">FAC1 다캐 불량률 %</td>${rows.map(x=>cell(fcPct(x.f1.d,x.f1.t),1)).join('')}${cell(fcPct(T.d1,T.t1),1).replace('<td class="n','<td class="n tot')}</tr>
+    <tr><td class="k sub">FAC1 총 불량률 % (웜샷 포함)</td>${rows.map(x=>cell(fcPct(x.f1.t-x.f1.g,x.f1.t))).join('')}${cell(fcPct(T.t1-T.g1,T.t1)).replace('<td class="n','<td class="n tot')}</tr>
+    <tr><td class="k">FAC2 MCT 생산</td>${rows.map(x=>`<td class="n">${x.mct.t?x.mct.t.toLocaleString():'–'}</td>`).join('')}<td class="n tot">${T.t2.toLocaleString()}</td></tr>
+    <tr><td class="k">FAC2 %NG</td>${rows.map(x=>cell(fcPct(x.mct.n,x.mct.t),1)).join('')}${cell(fcPct(T.n2,T.t2),1).replace('<td class="n','<td class="n tot')}</tr>
+    <tr><td class="k sub">└ 다캐 (소재) %</td>${rows.map(x=>cell(fcPct(x.mct.dc,x.mct.t))).join('')}${cell(fcPct(T.dc,T.t2)).replace('<td class="n','<td class="n tot')}</tr>
+    <tr><td class="k sub">└ 가공 (FAC2) %</td>${rows.map(x=>cell(fcPct(x.mct.mc,x.mct.t))).join('')}${cell(fcPct(T.mc,T.t2)).replace('<td class="n','<td class="n tot')}</tr>
+    <tr><td class="k">OQC 불량률 %</td>${rows.map(x=>cell(fcPct(x.oqc.n,x.oqc.t))).join('')}${cell(fcPct(T.no,T.to)).replace('<td class="n','<td class="n tot')}</tr>
+  </tbody></table></div>`;
+  /* 불량 유형 TOP · 설비 */
+  const def1 = {}, mc1 = {};
+  rows.forEach(x=>{ Object.entries(x.f1.def).forEach(([k,v])=>def1[k]=(def1[k]||0)+v); Object.entries(x.f1.mc).forEach(([k,v])=>mc1[k]=(mc1[k]||0)+(v.t-v.g)); });
+  const mc2 = focusF2Mc(it, weeks);
+  h += `<div class="fc-tops">`
+    + focusTopList('FAC1 다캐 불량 유형 TOP5', def1, T.t1, '#2a78d6')
+    + focusTopList('FAC2 다캐(소재) 불량 TOP5', focusF2Top(it, weeks, '다캐불량'), T.t2, '#1baf7a')
+    + focusTopList('FAC2 가공 불량 TOP5', focusF2Top(it, weeks, '가공불량'), T.t2, '#eb6834')
+    + `<div class="fc-top"><div class="h" style="border-color:#94a3b8">생산 설비</div><div class="mcs">`
+    + `<div><b>FAC1</b> ${Object.keys(mc1).map(fcEsc).join(' · ')||'–'}</div>`
+    + `<div><b>FAC2 NG</b> ${focusTop(mc2,6).map(([k,v])=>`${fcEsc(k)} ${v.toLocaleString()}`).join(' · ')||'–'}</div></div></div>`
+    + `</div>`;
+  let memo = ''; try{ memo = localStorage.getItem('stc_focus_memo_'+it.id) || ''; }catch(e){}
+  h += `<div class="fc-memo"><div class="h">관리 메모 · 대책 · 진행</div><textarea data-fcmemo="${fcEsc(it.id)}" placeholder="원인 분석, 대책, 담당, 목표일, 진행 상황을 적어 두세요 (이 브라우저에 저장)">${fcEsc(memo)}</textarea></div>`;
+  return h + `</div>`;
+}
+function renderFocus(){
+  const host = document.getElementById('panel-focus'); if(!host) return;
+  if(!FOCUS.qLoaded && !FOCUS.qLoading && !FOCUS.qErr) focusLoadQ();
+  const items = focusItems(), rng = focusRng();
+  const f2Parts = {}; F2.pd.forEach(r=>{ const k = String(r['Part no.']||'').trim(); if(k && !f2Parts[k]) f2Parts[k] = r['Part name']||k; });
+  const f1Models = [...new Set(FOCUS.q.map(r=>String(r['Model']||'').trim()).filter(Boolean))].sort();
+  const st = [ F2.loaded ? `FAC2 ${F2.pd.length.toLocaleString()}행` : (F2.err ? `FAC2 불러오기 실패: ${fcEsc(F2.err)}` : 'FAC2 불러오는 중…'),
+               FOCUS.qLoaded ? `FAC1 Q_Model상세 ${FOCUS.q.length.toLocaleString()}행` : (FOCUS.qErr ? `FAC1 불러오기 실패: ${fcEsc(FOCUS.qErr)}` : 'FAC1 불러오는 중…') ].join(' · ');
+  let h = `<div class="fc-wrap"><div class="fc-top-bar">
+      <div><h2>중점관리 품번</h2><div class="sub">FAC1 다이캐스팅 → FAC2 MCT 가공 → OQC 출하까지 한 품번을 이어서 봅니다 · ${st}</div></div>
+      <div class="ctl">기간 ${[['8','8주'],['12','12주'],['26','26주'],['all','전체']].map(([v,l])=>`<button class="${rng===v?'on':''}" data-fcrng="${v}">${l}</button>`).join('')}
+        <button class="rf" onclick="FOCUS.qLoaded=false;FOCUS.qErr=null;focusLoadQ();loadF2();">🔄 새로고침</button></div></div>
+    <div class="fc-reg"><span class="lb">등록 ${items.length}개</span>${items.map(it=>`<a href="#fc-${fcEsc(it.id)}" class="chip">${fcEsc(it.name)}</a>`).join('')}
+      <details class="add"><summary>＋ 중점관리 품번 추가</summary><div class="form">
+        <label>이름 <input id="fcName" placeholder="예: CN8 Support"></label>
+        <label>FAC2 품번 <select id="fcF2"><option value="">선택</option>${Object.entries(f2Parts).sort((a,b)=>String(a[1]).localeCompare(b[1])).map(([k,v])=>`<option value="${fcEsc(k)}">${fcEsc(v)} (${fcEsc(k)})</option>`).join('')}</select></label>
+        <label>FAC1 모델 <select id="fcF1"><option value="">(없음)</option>${f1Models.map(m=>`<option>${fcEsc(m)}</option>`).join('')}</select></label>
+        <button id="fcAdd">추가</button><span class="hint">FAC1 모델은 Q_Model상세의 Model 이름 · FAC2 품번과 짝이 맞는 것을 고르세요</span></div></details></div>`;
+  if(!F2.loaded && !FOCUS.qLoaded) h += `<div class="fc-card nil">데이터를 불러오는 중입니다…</div>`;
+  else if(!items.length) h += `<div class="fc-card nil">등록된 중점관리 품번이 없습니다 — 위 '품번 추가'로 등록하세요.</div>`;
+  else h += items.map(it=>focusItemHtml(it, rng)).join('');
+  h += `<div class="fc-foot">※ FAC1 다캐 불량률 = 불량 유형(미성형~기타) 합계 ÷ 생산 · 총 불량률 = (생산 − 양품) ÷ 생산 (웜샷 포함) · FAC2 %NG = NG ÷ Total (다캐 = 소재 불량, 가공 = FAC2 가공 불량) · 목표 %NG ≤ ${f2Target()}% (빨강 = 초과) · 주차는 FAC1·FAC2 모두 수~화 기준 · 등록 목록·메모는 이 브라우저에 저장됩니다</div></div>`;
+  const y = host.scrollTop; host.innerHTML = h; host.scrollTop = y;
+  host.querySelectorAll('[data-fcrng]').forEach(b=>b.onclick=()=>{ try{ localStorage.setItem(FOCUS_RNG_KEY, b.dataset.fcrng); }catch(e){} renderFocus(); });
+  host.querySelectorAll('[data-fcdel]').forEach(b=>b.onclick=()=>{ const it = items.find(x=>x.id===b.dataset.fcdel);
+    if(it && confirm(`'${it.name}' 을(를) 중점관리에서 해제할까요? (데이터는 지워지지 않습니다)`)){ focusSave(items.filter(x=>x!==it)); renderFocus(); } });
+  host.querySelectorAll('textarea[data-fcmemo]').forEach(t=>t.oninput=()=>{ try{ localStorage.setItem('stc_focus_memo_'+t.dataset.fcmemo, t.value); }catch(e){} });
+  const add = host.querySelector('#fcAdd');
+  if(add) add.onclick = ()=>{
+    const f2 = host.querySelector('#fcF2').value, f1 = host.querySelector('#fcF1').value;
+    const name = host.querySelector('#fcName').value.trim() || (f2 ? (f2Parts[f2]||f2) : f1);
+    if(!f2 && !f1){ alert('FAC2 품번이나 FAC1 모델 중 하나는 골라 주세요'); return; }
+    if(items.some(x=>x.f2===f2 && x.f1===f1)){ alert('이미 등록된 품번입니다'); return; }
+    items.push({ id:'fc'+Date.now().toString(36), name, f2, f1, since:new Date().toISOString().slice(0,10) });
+    focusSave(items); renderFocus();
+  };
+}
 </script>
 </body>
 </html>
