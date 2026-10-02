@@ -5687,7 +5687,7 @@ function f1GroupTrend(id, from, to, sc, rerender){
    · 효과 확인: 조치 완료일 기준 앞 7일 vs 뒤 7일 — 같은 설비 · 같은 불량유형의 불량률 (생산 대비 %)
    ========================================================================= */
 const ACT = { list:[], loaded:false, loading:false, err:'', src:{}, rerender:[] };
-const ACT_API_DEFAULT = '';   /* Apps Script 배포 후 웹 앱 URL 을 넣으면 모든 PC 가 공유 */
+const ACT_API_DEFAULT = 'https://script.google.com/macros/s/AKfycbxR5cDCb5XcWXpLZX_qt3_wvyJkZECm8um9ysMynK8w4dPjxtdRdKoV7Zk7ixuIYabU/exec';   /* Apps Script 배포 후 웹 앱 URL 을 넣으면 모든 PC 가 공유 */
 const ACT_ST = ['계획','진행','완료','보류'];
 const ACT_CAT = ['설비','금형','소재','방법(조건)','사람','기타'];
 const ACT_CAT_EN = { '설비':'Machine', '금형':'Mold', '소재':'Material', '방법(조건)':'Method', '사람':'Man', '기타':'Other' };
