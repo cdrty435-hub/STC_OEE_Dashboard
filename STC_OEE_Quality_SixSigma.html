@@ -11138,7 +11138,7 @@ try{ if(typeof NAV_CUR!=='undefined' && NAV_CUR==='sq') sqShow(); }catch(e){}
    · 웹 앱 주소가 있으면: 글은 Summary 시트 F·M열(나머지 칸은 메모), 첨부는 Drive 폴더 + 칸에 링크
    · 주소가 없으면: 지금처럼 이 브라우저에만 저장
    ========================================================================= */
-const SQ_API_DEFAULT = '';          /* 배포한 웹 앱 주소(…/exec)를 여기에 넣으면 모든 PC에 기본 적용 */
+const SQ_API_DEFAULT = 'https://script.google.com/macros/s/AKfycbzL-F8EMRN2iwsm0ehDR_wgnOgPZJpKhFS89D-IZgc1ph_JD1YhZjDTYWSrn6NntGeKfA/exec';          /* 배포한 웹 앱 주소(…/exec)를 여기에 넣으면 모든 PC에 기본 적용 */
 const SQ_API_KEY = 'stc_sq_api';
 let SQ_REMOTE = { ok:false, err:null, at:null, busy:0 };
 const sqApi = () => { try{ return localStorage.getItem(SQ_API_KEY) || SQ_API_DEFAULT; }catch(e){ return SQ_API_DEFAULT; } };
