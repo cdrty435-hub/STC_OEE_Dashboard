@@ -2022,18 +2022,17 @@ function f2pReport(kind, topWeek){
     ${f2NoteList(dates.filter(d=>d>=dFrom && d<=dTo))}
     <div class="f2-rhead"><h2>${X.rh[kind]}</h2>
       <div>${esc2(cvPer)}${cvNote?` · ${esc2(cvNote)}`:''} · ${X.vs} ${esc2(prevKey||'–')}<br><small>${X.made.replace('{d}', new Date().toISOString().slice(0,10))}</small></div></div>
-    <div class="sec-title">1. ${X.s1}</div>${f2pKpiWorst(S, P, prevKey, curLbl)}
-    <div class="sec-title">2. ${T('f2.issues')}</div>${f2pIssues(S, noteKey)}
-    <div class="sec-title">3. ${X.s3}</div>${f2pMcTable(S, P)}
-    <div class="sec-title">4. ${T('f2.m.sec')}</div>${f2Measure(pred, f2pMeasureSrc(S, pred))}
-    <div class="sec-title">4-1. ${X.dayMc}</div>${f2pMcDayTable(pred)}
-    <div class="sec-title">5. ${X.s4}</div>${f2pDefects(S)}
-    <div class="sec-title">6. ${X.s5}</div>${f2pLosses(S)}
-    <div class="sec-title">7. ${X.s6}</div>${f2pParts(S)}
-    <div class="sec-title">8. ${tLbl}</div>${f2pTrendTable(trend, isDay?T('f2.date'):T('ctl.week'), isDay)}
-    <div class="sec-title">9. ${X.s7}</div>${f2pDayMatrix(pred, S, dFrom, dTo)}
-    <div class="sec-title">10. ${X.s8}</div>${chk}
-    <div class="sec-title">11. ${X.s9}</div>
+    <div class="sec-title">1. ${T('f2.issues')}</div>${f2pIssues(S, noteKey)}
+    <div class="sec-title">2. ${X.s3}</div>${f2pMcTable(S, P)}
+    <div class="sec-title">3. ${T('f2.m.sec')}</div>${f2Measure(pred, f2pMeasureSrc(S, pred))}
+    <div class="sec-title">3-1. ${X.dayMc}</div>${f2pMcDayTable(pred)}
+    <div class="sec-title">4. ${X.s4}</div>${f2pDefects(S)}
+    <div class="sec-title">5. ${X.s5}</div>${f2pLosses(S)}
+    <div class="sec-title">6. ${X.s6}</div>${f2pParts(S)}
+    <div class="sec-title">7. ${tLbl}</div>${f2pTrendTable(trend, isDay?T('f2.date'):T('ctl.week'), isDay)}
+    <div class="sec-title">8. ${X.s7}</div>${f2pDayMatrix(pred, S, dFrom, dTo)}
+    <div class="sec-title">9. ${X.s8}</div>${chk}
+    <div class="sec-title">10. ${X.s9}</div>
     <div class="card"><textarea class="f2-note" data-f2note="${esc2(noteKey)}" placeholder="${X.noteph}">${esc2(note)}</textarea></div>
     <div class="foot">${X.foot}</div>`;
 }
@@ -2104,6 +2103,7 @@ function renderF2(){
     }).join('') + `</aside>`;
   const st = f2Status();
   let body;
+  NOTE.cur = F2_VIEW[0]==='p' ? 'FAC2P' : 'FAC2';
   if(F2_VIEW[0]==='p') body = f2pStatus() || f2pReport(F2_VIEW.slice(1), week);
   else if(st) body = `<div class="sec-title">${T('grp.fac2')} · ${week||''}</div>${st}`;
   else if(F2_VIEW==='dash') body = f2Dash(week);
@@ -2378,7 +2378,7 @@ function qtHover(e, id){
              ② 이 PC 브라우저(IndexedDB) — URL 이 없을 때. 같은 PC·같은 브라우저에서만 보임
    기록은 지우지 않고 계속 쌓임 (삭제도 '삭제 표시'만 남김) */
 const NOTE_API_DEFAULT = '';   /* Apps Script 배포 후 웹앱 URL 을 여기에 넣으면 모든 PC 가 공유 */
-const NOTE = { list:[], loaded:false, loading:false, err:null, scope:'FAC2', allLabel:'전체 (MCT)', tags:null, rerender:()=>{ if(typeof renderF2==='function') renderF2(); }, example:'MC14 지그 클램프 교체' };
+const NOTE = { list:[], loaded:false, loading:false, err:null, scope:'FAC2', cur:'FAC2', scopes:['FAC2','FAC2P'], allLabel:'전체 (MCT)', tags:null, rerender:()=>{ if(typeof renderF2==='function') renderF2(); }, example:'MC14 지그 클램프 교체' };
 function noteRerender(){ try{ NOTE.rerender && NOTE.rerender(); }catch(e){} }
 const noteEsc = v => String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function noteApi(){ try{ return localStorage.getItem('stc_note_api') || NOTE_API_DEFAULT; }catch(e){ return NOTE_API_DEFAULT; } }
@@ -2391,16 +2391,20 @@ async function noteLoad(){
   if(NOTE.loading) return; NOTE.loading = true; NOTE.err = null;
   try{
     const api = noteApi();
-    if(api){ const r = await fetch(api + (api.includes('?')?'&':'?') + 'action=list&scope=' + NOTE.scope + '&_=' + Date.now());
-      const j = await r.json(); if(!j.ok) throw new Error(j.err||'list'); NOTE.list = j.list || []; }
-    else NOTE.list = (await noteIdbAll()).filter(x=>x.scope===NOTE.scope && !x.del);
+    /* FAC2 = 품질보고 메모 · FAC2P = 설비 생산실적 메모 — 따로 저장하고 화면에 맞는 것만 보여 준다 */
+    if(api){ const all = await Promise.all(NOTE.scopes.map(async sc=>{
+        const r = await fetch(api + (api.includes('?')?'&':'?') + 'action=list&scope=' + sc + '&_=' + Date.now());
+        const j = await r.json(); if(!j.ok) throw new Error(j.err||'list'); return (j.list || []).map(x=>({ ...x, scope:x.scope||sc })); }));
+      NOTE.list = all.flat(); }
+    else NOTE.list = (await noteIdbAll()).filter(x=>NOTE.scopes.includes(x.scope) && !x.del);
   }catch(e){ NOTE.err = e.message || String(e); }
   NOTE.loaded = true; NOTE.loading = false;
 }
-function noteByDate(d){ return NOTE.list.filter(x=>x.date===d).sort((a,b)=>String(b.ts).localeCompare(String(a.ts))); }
+const noteCur = () => NOTE.list.filter(x=>(x.scope||'FAC2')===NOTE.cur);
+function noteByDate(d){ return noteCur().filter(x=>x.date===d).sort((a,b)=>String(b.ts).localeCompare(String(a.ts))); }
 /* 품번 차트 = 그 품번 + 전체(태그 없음) 메모, 전체 차트 = 모든 메모 */
-function noteFor(d, tag){ return NOTE.list.filter(x=>x.date===d && (!tag || !x.tag || x.tag===tag)); }
-function noteCount(d){ return NOTE.list.reduce((a,x)=>a+(x.date===d?1:0),0); }
+function noteFor(d, tag){ return noteCur().filter(x=>x.date===d && (!tag || !x.tag || x.tag===tag)); }
+function noteCount(d){ return noteCur().reduce((a,x)=>a+(x.date===d?1:0),0); }
 function noteRefresh(){ noteLoad().then(()=>{ noteRerender(); if(NOTE_UI.date) noteRenderModal(); }); }
 /* 사진 줄이기 — 긴 변 1600px JPEG */
 function noteShrink(file){ return new Promise((ok,no)=>{ const fr = new FileReader();
@@ -2412,9 +2416,10 @@ function noteShrink(file){ return new Promise((ok,no)=>{ const fr = new FileRead
 const NOTE_UI = { date:null, tag:'', pics:[], busy:false };
 function noteOpen(date, tag){ NOTE_UI.date = date; NOTE_UI.tag = tag||''; NOTE_UI.pics = []; noteRenderModal(); }
 function noteClose(){ NOTE_UI.date = null; const m = document.getElementById('noteModal'); if(m) m.remove(); }
-function noteParts(){ if(NOTE.tags) return NOTE.tags(); const m = {}; (F2.pd||[]).forEach(r=>{ if(r['공정']==='MCT' && r['Part name']) m[r['Part name']] = 1; });
-  const mc = [...new Set((F2.pm||[]).map(r=>r.mc))].sort();   /* 설비 생산실적 메모용 — 설비로도 고를 수 있게 */
-  return Object.keys(m).concat(mc); }
+function noteParts(){ if(NOTE.tags) return NOTE.tags();
+  if(NOTE.cur==='FAC2P') return [...new Set((F2.pm||[]).map(r=>r.mc))].sort();   /* 생산실적 메모 = 설비별 */
+  const m = {}; (F2.pd||[]).forEach(r=>{ if(r['공정']==='MCT' && r['Part name']) m[r['Part name']] = 1; });
+  return Object.keys(m); }
 function noteRenderModal(){
   const d = NOTE_UI.date; if(!d) return;
   let m = document.getElementById('noteModal');
@@ -2433,12 +2438,12 @@ function noteRenderModal(){
     </div>`).join('') : `<div class="note-empty">아직 기록이 없습니다</div>`;
   const tags = noteParts();
   m.innerHTML = `<div class="note-box" role="dialog" aria-label="메모">
-    <div class="note-hd"><b>📝 ${d} (${wd}) 메모 · 사진</b><span class="note-where ${api?'on':''}">${api?'☁ 구글 드라이브 (공유)':'💻 이 PC 브라우저에만 저장'}</span>
+    <div class="note-hd"><b>📝 ${d} (${wd}) ${NOTE.cur==='FAC2P'?'생산실적':'품질'} 메모 · 사진</b><span class="note-where ${api?'on':''}">${api?'☁ 구글 드라이브 (공유)':'💻 이 PC 브라우저에만 저장'}</span>
       <button class="note-x" onclick="noteClose()" aria-label="닫기">✕</button></div>
     ${NOTE.err?`<div class="note-err">불러오기 실패: ${noteEsc(NOTE.err)}</div>`:''}
     <div class="note-new">
       <div class="note-row"><input id="noteAu" placeholder="작성자" value="${noteEsc(keep&&keep.au!=null?keep.au:au)}">
-        <select id="noteTag"><option value="">${NOTE.allLabel||'전체'}</option>${tags.map(t=>`<option${(keep?keep.tag:NOTE_UI.tag)===t?' selected':''}>${noteEsc(t)}</option>`).join('')}</select></div>
+        <select id="noteTag"><option value="">${NOTE.cur==='FAC2P'?'전체 설비':(NOTE.allLabel||'전체')}</option>${tags.map(t=>`<option${(keep?keep.tag:NOTE_UI.tag)===t?' selected':''}>${noteEsc(t)}</option>`).join('')}</select></div>
       <textarea id="noteTxt" rows="4" placeholder="첫 줄 = 차트에 표시되는 조치 제목 (예: ${NOTE.example})&#10;둘째 줄부터 = 원인 · 조치 내용 · 결과">${noteEsc(keep?keep.txt:'')}</textarea>
       <div class="note-drop" id="noteDrop">
         <label class="note-add">📷 사진 추가<input type="file" accept="image/*" multiple onchange="noteAddFiles(this.files);this.value=''"></label>
@@ -2465,7 +2470,7 @@ async function noteSave(){
   const text = m.querySelector('#noteTxt').value.trim(), author = m.querySelector('#noteAu').value.trim(), tag = m.querySelector('#noteTag').value;
   if(!text && !NOTE_UI.pics.length){ alert('내용이나 사진을 넣어 주세요'); return; }
   try{ localStorage.setItem('stc_note_author', author); }catch(e){}
-  const en = { id:'N'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), scope:NOTE.scope, date:NOTE_UI.date, tag, author, text,
+  const en = { id:'N'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), scope:NOTE.cur, date:NOTE_UI.date, tag, author, text,
                ts:new Date(Date.now()+7*3600e3).toISOString().slice(0,19) };
   NOTE_UI.busy = true; noteRenderModal();
   try{
@@ -2494,7 +2499,7 @@ function noteSetApi(){
 }
 /* 보고서용 — 기간 안의 메모 목록 */
 function f2NoteList(dates){
-  const L = NOTE.list.filter(x=>dates.includes(x.date)).sort((a,b)=>a.date.localeCompare(b.date) || String(a.ts).localeCompare(String(b.ts)));
+  const L = noteCur().filter(x=>dates.includes(x.date)).sort((a,b)=>a.date.localeCompare(b.date) || String(a.ts).localeCompare(String(b.ts)));
   if(!L.length) return '';
   return `<div class="sec-title">📝 일자별 메모 · 사진</div><div class="card note-rep">${L.map(x=>`<div class="note-it" data-no-tr>
       <div class="note-meta"><a href="javascript:void 0" onclick="noteOpen('${x.date}')"><b>${x.date}</b></a> <b>${noteEsc(x.author||'')}</b>${x.tag?`<span class="note-tag">${noteEsc(x.tag)}</span>`:''}</div>
