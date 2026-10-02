@@ -10988,7 +10988,7 @@ async function sqDelFile(id){
 function sqCellAtt(no, col){
   const k = no+'|'+col, L = SQ_FILES[k] || [], img = L.find(f=>/^image\//.test(f.type));
   return `<td class="sq-att${L.length?' has':''}" data-sqatt="${k}" title="클릭 = 첨부 열기 · 파일을 끌어다 놓아도 됩니다">`
-    + (L.length ? (img ? `<img src="${img.url}" alt="">` : `<span class="fi">📎</span>`) + `<span class="cnt">${L.length}</span>` : `<span class="add">＋</span>`) + `</td>`;
+    + (L.length ? (img ? `<img src="${img.src||img.url}" alt="" referrerpolicy="no-referrer">` : `<span class="fi">📎</span>`) + `<span class="cnt">${L.length}</span>` : `<span class="add">＋</span>`) + `</td>`;
 }
 function sqCellTxt(no, col, cls, base){
   const k = no+'|'+col, v = SQ_T[k] || '';
@@ -11082,7 +11082,7 @@ function sqOpenAtt(k){
     m.innerHTML = `<div class="box"><div class="h"><div><b>${sqEsc(no)} · ${A[1]}</b> <small>${A[2]}</small><div class="it">${sqEsc(String(it?it.text:'').split('\n')[0])}</div></div><button type="button" class="x">✕</button></div>
       <label class="drop"><input type="file" multiple hidden><div class="big">📂</div><div>사진·자료를 여기로 끌어다 놓거나 <u>클릭해서 선택</u></div><small>이미지 · PDF · 엑셀 · 워드 등 모든 파일 · 여러 개 가능 · 화면 캡처는 Ctrl+V 로 붙여넣기</small></label>
       <div class="gal">${L.length ? L.map(f=>/^image\//.test(f.type)
-          ? `<div class="g"><a href="${f.url}" target="_blank"><img src="${f.url}" alt=""></a><div class="nm" title="${sqEsc(f.name)}">${sqEsc(f.name)}</div><button type="button" data-del="${f.id}" title="삭제">✕</button></div>`
+          ? `<div class="g"><a href="${f.url}" target="_blank"><img src="${f.src||f.url}" alt="" referrerpolicy="no-referrer"></a><div class="nm" title="${sqEsc(f.name)}">${sqEsc(f.name)}</div><button type="button" data-del="${f.id}" title="삭제">✕</button></div>`
           : `<div class="g f"><a href="${f.url}" target="_blank" download="${sqEsc(f.name)}"><span class="ic">${/pdf/.test(f.type)?'📕':/sheet|excel/.test(f.type)?'📗':/word/.test(f.type)?'📘':'📄'}</span></a><div class="nm" title="${sqEsc(f.name)}">${sqEsc(f.name)}</div><div class="sz">${(f.size/1024).toFixed(0)} KB</div><button type="button" data-del="${f.id}" title="삭제">✕</button></div>`).join('')
         : '<div class="none">첨부된 자료가 없습니다</div>'}</div></div>`;
     const drop = m.querySelector('.drop'), inp = m.querySelector('input');
@@ -11132,5 +11132,98 @@ let SQ_INIT = false;
 async function sqShow(){ if(!SQ_INIT){ SQ_INIT = true; await sqLoadFiles(); } renderSQ(); }
 try{ if(typeof NAV_CUR!=='undefined' && NAV_CUR==='sq') sqShow(); }catch(e){}
 </script>
+<script>
+/* =========================================================================
+   SQ Summary ↔ 구글시트 연동 (Apps Script 웹 앱)
+   · 웹 앱 주소가 있으면: 글은 Summary 시트 F·M열(나머지 칸은 메모), 첨부는 Drive 폴더 + 칸에 링크
+   · 주소가 없으면: 지금처럼 이 브라우저에만 저장
+   ========================================================================= */
+const SQ_API_DEFAULT = '';          /* 배포한 웹 앱 주소(…/exec)를 여기에 넣으면 모든 PC에 기본 적용 */
+const SQ_API_KEY = 'stc_sq_api';
+let SQ_REMOTE = { ok:false, err:null, at:null, busy:0 };
+const sqApi = () => { try{ return localStorage.getItem(SQ_API_KEY) || SQ_API_DEFAULT; }catch(e){ return SQ_API_DEFAULT; } };
+const sqWho = () => { try{ return localStorage.getItem('stc_sq_who') || ''; }catch(e){ return ''; } };
+async function sqPost(o){
+  const res = await fetch(sqApi(), { method:'POST', body:JSON.stringify(Object.assign({ by:sqWho() }, o)) });
+  const j = await res.json(); if(!j.ok) throw new Error(j.error || '실패'); return j;
+}
+async function sqLoadRemote(){
+  SQ_REMOTE.busy++; sqStatus();
+  try{
+    const res = await fetch(sqApi() + (sqApi().indexOf('?')>=0?'&':'?') + 'action=read&_=' + Date.now());
+    const j = await res.json(); if(!j.ok) throw new Error(j.error || '읽기 실패');
+    SQ_T = j.text || {}; try{ localStorage.setItem(SQ_TXT_KEY, JSON.stringify(SQ_T)); }catch(e){}
+    SQ_FILES = {};
+    (j.files||[]).sort((a,b)=>a.ts-b.ts).forEach(f=>{ (SQ_FILES[f.key] = SQ_FILES[f.key] || []).push({ id:f.id, name:f.name, type:f.type, size:f.size, ts:f.ts, url:f.url,
+      src: /^image\//.test(f.type) ? `https://drive.google.com/thumbnail?id=${f.id}&sz=w400` : '' }); });
+    SQ_REMOTE.ok = true; SQ_REMOTE.err = null; SQ_REMOTE.at = new Date();
+  }catch(e){ SQ_REMOTE.ok = false; SQ_REMOTE.err = e.message || String(e); }
+  SQ_REMOTE.busy--; renderSQ();
+}
+/* 기존 동작 감싸기 */
+const _sqShowLocal = window.sqShow, _sqAddLocal = window.sqAddFiles, _sqDelLocal = window.sqDelFile, _sqClosePopLocal = window.sqClosePop, _renderSQLocal = window.renderSQ;
+window.sqShow = async function(){ if(sqApi()){ if(!SQ_INIT){ SQ_INIT = true; } renderSQ(); return sqLoadRemote(); } return _sqShowLocal(); };
+window.sqClosePop = function(save){
+  const p = document.getElementById('sqPop');
+  const k = p && p.dataset.k, v = p ? p.querySelector('textarea').value.trim() : '', before = k ? (SQ_T[k]||'') : '';
+  _sqClosePopLocal(save);
+  if(save && k && sqApi() && v !== before){
+    SQ_REMOTE.busy++; sqStatus();
+    sqPost({ action:'text', key:k, value:v }).then(()=>{ SQ_REMOTE.at = new Date(); SQ_REMOTE.err = null; })
+      .catch(e=>{ SQ_REMOTE.err = '저장 실패: ' + (e.message||e); alert('구글시트 저장 실패 — ' + (e.message||e)); })
+      .finally(()=>{ SQ_REMOTE.busy--; sqStatus(); });
+  }
+};
+const sqB64 = f => new Promise((ok,no)=>{ const r = new FileReader(); r.onload = ()=>ok(r.result); r.onerror = ()=>no(r.error); r.readAsDataURL(f); });
+window.sqAddFiles = async function(key, list){
+  if(!sqApi()) return _sqAddLocal(key, list);
+  const big = list.filter(f=>f.size > 25*1024*1024); if(big.length){ alert('25MB 넘는 파일은 올릴 수 없습니다: ' + big.map(f=>f.name).join(', ')); list = list.filter(f=>f.size <= 25*1024*1024); }
+  SQ_REMOTE.busy++; sqStatus(`업로드 중… (${list.length}개)`);
+  try{ for(const f of list){ await sqPost({ action:'upload', key, name:f.name || 'file', type:f.type || '', data: await sqB64(f) }); } }
+  catch(e){ alert('업로드 실패 — ' + (e.message||e)); }
+  SQ_REMOTE.busy--; await sqLoadRemote();
+};
+window.sqDelFile = async function(id){
+  if(!sqApi()) return _sqDelLocal(id);
+  SQ_REMOTE.busy++; sqStatus('삭제 중…');
+  try{ await sqPost({ action:'del', id }); }catch(e){ alert('삭제 실패 — ' + (e.message||e)); }
+  SQ_REMOTE.busy--; await sqLoadRemote();
+};
+/* 상태 표시줄 */
+function sqStatus(msg){
+  const el = document.getElementById('sqSync'); if(!el) return;
+  const api = sqApi();
+  let st = !api ? '<b class="off">● 이 브라우저에만 저장</b>'
+    : SQ_REMOTE.busy ? `<b class="busy">● ${msg || '구글시트와 동기화 중…'}</b>`
+    : SQ_REMOTE.err ? `<b class="err">● 구글시트 오류</b> <span>${sqEsc(SQ_REMOTE.err)}</span>`
+    : SQ_REMOTE.ok ? `<b class="on">● 구글시트 연결됨</b> <span>마지막 동기화 ${SQ_REMOTE.at ? SQ_REMOTE.at.toTimeString().slice(0,5) : ''}</span>` : '<b class="busy">● 연결 확인 중…</b>';
+  el.innerHTML = st + ` <button type="button" id="sqApiBtn">${api ? '연결 설정' : '구글시트 연결'}</button>` + (api ? ' <button type="button" id="sqReload">↻ 시트에서 새로고침</button>' : '')
+    + ` <label>작성자 <input id="sqWho" value="${sqEsc(sqWho())}" placeholder="이름" size="8"></label>`;
+  const b = document.getElementById('sqApiBtn'); if(b) b.onclick = ()=>{
+    const v = prompt('Apps Script 웹 앱 주소(…/exec)를 붙여넣으세요.\n비우고 확인하면 연결을 끊고 이 브라우저 저장으로 돌아갑니다.', api);
+    if(v === null) return; try{ if(v.trim()) localStorage.setItem(SQ_API_KEY, v.trim()); else localStorage.removeItem(SQ_API_KEY); }catch(e){}
+    SQ_REMOTE = { ok:false, err:null, at:null, busy:0 }; SQ_INIT = false; sqShow();
+  };
+  const r = document.getElementById('sqReload'); if(r) r.onclick = ()=>sqLoadRemote();
+  const w = document.getElementById('sqWho'); if(w) w.onchange = ()=>{ try{ localStorage.setItem('stc_sq_who', w.value.trim()); }catch(e){} };
+}
+window.renderSQ = function(){
+  _renderSQLocal();
+  const tool = document.querySelector('#sqSheet .sq-tool'); if(!tool) return;
+  if(!document.getElementById('sqSync')){ const d = document.createElement('div'); d.id = 'sqSync'; d.className = 'sq-sync qr-noprint'; tool.parentNode.insertBefore(d, tool); }
+  sqStatus();
+  if(sqApi()){ const ex = document.getElementById('sqExport'); const im = document.getElementById('sqImport'); if(ex) ex.style.display='none'; if(im) im.parentNode.style.display='none'; }
+  const ft = document.querySelector('#sqSheet .sq-foot');
+  if(ft && sqApi()) ft.innerHTML = '※ 구글시트 연결 모드 — 글은 Summary 시트 F열(Improvement Action)·M열(Final Score)에, 나머지 칸은 시트 메모로, 첨부는 Drive 폴더 「SQ_Audit_2026-06-03_첨부」에 저장되고 G~L 칸에 파일 링크가 붙습니다 · 입력 이력은 SQ_Log 탭';
+};
+try{ if(typeof NAV_CUR!=='undefined' && NAV_CUR==='sq'){ SQ_INIT = false; sqShow(); } }catch(e){}
+</script>
+<style>
+.sq-sync{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:#334155;background:#f8fafc;border:1px solid #d5dde8;border-radius:8px;padding:6px 10px;margin:0 0 6px;}
+.sq-sync b.on{color:#15803d;} .sq-sync b.off{color:#64748b;} .sq-sync b.busy{color:#b45309;} .sq-sync b.err{color:#b91c1c;}
+.sq-sync span{color:#64748b;font-size:12px;}
+.sq-sync button{font:inherit;font-size:12px;font-weight:700;padding:3px 10px;border:1px solid #94a3b8;border-radius:6px;background:#fff;color:#1e3c72;cursor:pointer;}
+.sq-sync label{margin-left:auto;font-size:12px;} .sq-sync input{font:inherit;font-size:12px;padding:2px 6px;border:1px solid #cbd5e1;border-radius:5px;}
+</style>
 </body>
 </html>
