@@ -990,6 +990,9 @@
     </div>
   </div>
 
+  <!-- ===== SQ 감사 — Summary ===== -->
+  <div id="sqWrap" style="display:none"><div id="sqSheet"></div></div>
+
   <!-- ===== 주간 품질보고 2 — 사내 품질보고서 서식 ===== -->
   <div id="qr2Wrap">
     <div class="qr-toolbar qr-noprint">
@@ -6572,7 +6575,7 @@ function renderPQAll(){
    ========================================================================= */
 Object.assign(I18N.ko, {
   'nav.cat.status':'현황', 'nav.cat.defect':'불량 분석', 'nav.cat.equip':'설비 관리',
-  'nav.cat.mgmt':'경영관리 (보고서 서식)', 'nav.cat.report':'보고서',
+  'nav.cat.mgmt':'경영관리 (보고서 서식)', 'nav.cat.report':'보고서', 'nav.cat.sq':'SQ', 'nav.sq':'Summary (감사 결과)',
   'nav.all':'전체 보기', 'nav.weekly':'주간 OEE 분석', 'nav.sigma':'Six Sigma 요약',
   'nav.month':'월별 품질 추이', 'nav.defect5':'불량유형 WORST-5', 'nav.trend':'Worst-5 트렌드',
   'nav.model':'모델별 품질', 'nav.eq':'설비별 상세', 'nav.warm':'웜샷 구조로스',
@@ -6583,7 +6586,7 @@ Object.assign(I18N.ko, {
 });
 Object.assign(I18N.th, {
   'nav.cat.status':'ภาพรวม', 'nav.cat.defect':'วิเคราะห์ของเสีย', 'nav.cat.equip':'จัดการเครื่องจักร',
-  'nav.cat.mgmt':'การจัดการเชิงบริหาร', 'nav.cat.report':'รายงาน',
+  'nav.cat.mgmt':'การจัดการเชิงบริหาร', 'nav.cat.report':'รายงาน', 'nav.cat.sq':'SQ', 'nav.sq':'Summary (ผลการตรวจ)',
   'nav.all':'ดูทั้งหมด', 'nav.weekly':'วิเคราะห์ OEE รายสัปดาห์', 'nav.sigma':'สรุป Six Sigma',
   'nav.month':'แนวโน้มคุณภาพรายเดือน', 'nav.defect5':'ประเภทของเสีย WORST-5', 'nav.trend':'แนวโน้ม Worst-5',
   'nav.model':'คุณภาพรายโมเดล', 'nav.eq':'รายละเอียดรายเครื่อง', 'nav.warm':'ความสูญเสีย Warm shot',
@@ -6594,7 +6597,7 @@ Object.assign(I18N.th, {
 });
 Object.assign(I18N.en, {
   'nav.cat.status':'Overview', 'nav.cat.defect':'Defect analysis', 'nav.cat.equip':'Equipment',
-  'nav.cat.mgmt':'Management (report format)', 'nav.cat.report':'Report',
+  'nav.cat.mgmt':'Management (report format)', 'nav.cat.report':'Report', 'nav.cat.sq':'SQ', 'nav.sq':'Summary (audit result)',
   'nav.all':'Show all', 'nav.weekly':'Weekly OEE analysis', 'nav.sigma':'Six Sigma summary',
   'nav.month':'Monthly quality trend', 'nav.defect5':'WORST-5 defect types', 'nav.trend':'Worst-5 trend',
   'nav.model':'Quality by model', 'nav.eq':'Equipment detail', 'nav.warm':'Warm-shot structural loss',
@@ -6623,7 +6626,8 @@ const NAV_MARKERS = [
   ['daily',    '#dqSheet'],
   ['monthly',  '#mqSheet'],
   ['report',   '#qrSheet'],
-  ['report2',  '#qr2Sheet']
+  ['report2',  '#qr2Sheet'],
+  ['sq',       '#sqSheet']
 ];
 const NAV_SECTIONS = [
   { cat:'nav.cat.status', items:[
@@ -6648,7 +6652,9 @@ const NAV_SECTIONS = [
       { id:'daily',    icon:'🗓️', key:'nav.daily' },
       { id:'report',   icon:'📄', key:'nav.report2' },
       { id:'monthly',  icon:'🗂️', key:'nav.monthly' },
-      { id:'report2',  icon:'📋', key:'nav.report2b' } ] }
+      { id:'report2',  icon:'📋', key:'nav.report2b' } ] },
+  { cat:'nav.cat.sq', items:[
+      { id:'sq',       icon:'🛡️', key:'nav.sq' } ] }
 ];
 let NAV_CUR = 'weekly';
 let NAV_READY = false;
@@ -6694,14 +6700,15 @@ function navGo(id, skipRender){
   const isReport2 = (id === 'report2');
   const isDaily   = (id === 'daily');
   const isMonthly = (id === 'monthly');
+  const isSQ      = (id === 'sq');
   QR_VIEW = isReport ? 'report' : 'dash';
   /* 보고서 화면들은 표를 나란히 놓아야 해서 본문 폭을 넓게 준다 */
-  try{ document.body.classList.toggle('qr-view', isReport || isReport2 || isDaily || isMonthly); }catch(e){}
+  try{ document.body.classList.toggle('qr-view', isReport || isReport2 || isDaily || isMonthly || isSQ); }catch(e){}
 
   document.querySelectorAll('#mainArea > [data-nav]').forEach(el => {
     const sec = el.getAttribute('data-nav');
-    const show = (id === 'all') ? (sec !== 'report' && sec !== 'monthly') : (sec === id);
-    const forceBlock = (el.id === 'qrWrap' || el.id === 'qr2Wrap' || el.id === 'dqWrap' || el.id === 'mqWrap');
+    const show = (id === 'all') ? (sec !== 'report' && sec !== 'monthly' && sec !== 'sq') : (sec === id);
+    const forceBlock = (el.id === 'qrWrap' || el.id === 'qr2Wrap' || el.id === 'dqWrap' || el.id === 'mqWrap' || el.id === 'sqWrap');
     el.style.display = show ? (forceBlock ? 'block' : (el.getAttribute('data-disp') || '')) : 'none';
   });
   document.querySelectorAll('#sideNav button').forEach(b =>
@@ -6711,6 +6718,7 @@ function navGo(id, skipRender){
   if (tEl && item){
     tEl.innerHTML = `<span>${item.icon}</span><span data-i18n="${item.key}">${t(item.key)}</span>`;
   }
+  if (isSQ){ if (typeof sqShow === 'function') sqShow(); return; }
   if (skipRender) return;
   if (typeof RAW_Q !== 'undefined' && RAW_Q && RAW_Q.length){
     /* 숨겨져 있던 캔버스는 폭이 0이라, 표시 후 다시 그려야 정확히 맞는다 */
@@ -10878,6 +10886,251 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 })();
 
+</script>
+<style>
+/* ===== SQ Summary ===== */
+#sqSheet{color:#111827;}
+.sq-cover{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;background:linear-gradient(135deg,#12233f 0%,#1e3c72 60%,#2a5298 100%);color:#fff;border-radius:6px;padding:18px 24px 16px;margin-bottom:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.sq-cover .kicker{font-size:12px;font-weight:700;letter-spacing:.16em;opacity:.8;text-transform:uppercase;}
+.sq-cover h1{margin:4px 0 0;font-size:30px;font-weight:900;line-height:1.15;color:#fff;} .sq-cover h1 small{display:block;font-size:14px;font-weight:600;opacity:.8;margin-top:3px;}
+.sq-cover .side{text-align:right;font-size:13px;line-height:1.7;} .sq-cover .side b{font-size:16px;}
+.sq-kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px;}
+.sq-kpi .k{border:1px solid #d5dde8;border-radius:8px;padding:10px 14px;background:#fff;}
+.sq-kpi .l{font-size:12.5px;font-weight:800;color:#334155;} .sq-kpi .v{font-size:28px;font-weight:900;color:#1e3c72;line-height:1.3;} .sq-kpi .v u{text-decoration:none;font-size:14px;color:#64748b;font-weight:700;}
+.sq-kpi .s{font-size:12px;color:#475569;} .sq-kpi .bar{height:7px;border-radius:4px;background:#e5e7eb;margin-top:6px;overflow:hidden;} .sq-kpi .bar i{display:block;height:100%;background:#1e3c72;} .sq-kpi .bar.o i{background:#ff9900;}
+.sq-tool{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:#475569;margin:0 0 6px;}
+.sq-tool .r{display:inline-flex;gap:6px;} .sq-tool button,.sq-tool .btn{font:inherit;font-size:12px;font-weight:700;padding:5px 12px;border:1px solid #94a3b8;border-radius:6px;background:#fff;color:#1e3c72;cursor:pointer;}
+.sq-tw{overflow-x:auto;}
+table.sq-t{width:100%;min-width:1380px;border-collapse:collapse;table-layout:fixed;font-size:12.5px;background:#fff;}
+table.sq-t th,table.sq-t td{border:1px solid #9aa7b8;padding:6px 7px;vertical-align:middle;}
+table.sq-t thead th{background:#e2efd9;font-weight:800;color:#0f172a;text-align:center;font-size:12.5px;line-height:1.3;position:sticky;top:0;z-index:2;}
+table.sq-t thead th small{font-weight:600;color:#475569;font-size:10.5px;} table.sq-t thead th.o{background:#ff9900;color:#111;} table.sq-t thead th.o small{color:#3b2a00;}
+table.sq-t td.no{text-align:center;font-weight:800;background:#e7e6e6;}
+table.sq-t td.cat{background:#f8fafc;font-weight:800;text-align:center;font-size:12.5px;line-height:1.45;vertical-align:top;padding-top:14px;}
+table.sq-t td.item{background:#f3f3f3;line-height:1.45;} table.sq-t td.item .ko{font-weight:700;color:#0f172a;} table.sq-t td.item .en{font-size:11.5px;color:#334155;} table.sq-t td.item .th{font-size:11.5px;color:#64748b;}
+table.sq-t td.n{text-align:center;font-weight:700;font-variant-numeric:tabular-nums;}
+table.sq-t td.sc-low{color:#b91c1c;background:#fff1f1;} table.sq-t td.sc-mid{color:#b45309;background:#fff8eb;} table.sq-t td.sc-ok{color:#15803d;}
+table.sq-t td.sq-tx{cursor:pointer;position:relative;} table.sq-t td.sq-tx:hover{outline:2px solid #3b82f6;outline-offset:-2px;}
+table.sq-t td.act{font-size:12px;line-height:1.5;background:#fffef5;} table.sq-t td.fin{background:#fffef5;font-size:14px;color:#1e3c72;}
+table.sq-t td .ph{color:#94a3b8;font-size:11.5px;font-weight:500;}
+table.sq-t td i.nt{position:absolute;top:2px;right:3px;font-style:normal;font-size:11px;}
+table.sq-t td.sq-att{background:#fff4e5;text-align:center;cursor:pointer;position:relative;height:64px;padding:3px;}
+table.sq-t td.sq-att:hover,table.sq-t td.sq-att.drag{background:#ffe0b2;outline:2px dashed #ff9900;outline-offset:-3px;}
+table.sq-t td.sq-att .add{color:#e08a00;font-size:20px;font-weight:300;}
+table.sq-t td.sq-att img{max-width:100%;max-height:56px;border-radius:3px;display:block;margin:0 auto;object-fit:cover;}
+table.sq-t td.sq-att .fi{font-size:24px;} table.sq-t td.sq-att .cnt{position:absolute;top:2px;right:3px;background:#e65100;color:#fff;font-size:10.5px;font-weight:800;border-radius:9px;padding:0 6px;line-height:16px;}
+table.sq-t tr.sub td{background:#4a86e8;color:#fff;font-weight:800;-webkit-print-color-adjust:exact;print-color-adjust:exact;} table.sq-t tr.sub td:first-child{background:#a4c2f4;color:#0f172a;}
+table.sq-t tr.tot td{background:#1e3c72;color:#fff;font-weight:900;font-size:13.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.sq-foot{font-size:11.5px;color:#475569;margin-top:6px;}
+.sq-pop{position:absolute;z-index:9999;background:#fff;border:1px solid #94a3b8;border-radius:10px;box-shadow:0 10px 30px rgba(15,23,42,.25);padding:10px 12px;}
+.sq-pop::before{content:"";position:absolute;top:-8px;left:var(--ax,50%);margin-left:-8px;border:8px solid transparent;border-top:0;border-bottom-color:#94a3b8;}
+.sq-pop::after{content:"";position:absolute;top:-7px;left:var(--ax,50%);margin-left:-7px;border:7px solid transparent;border-top:0;border-bottom-color:#fff;}
+.sq-pop .h{display:flex;align-items:center;gap:6px;font-size:13px;color:#334155;margin-bottom:6px;} .sq-pop .h b{color:#1e3c72;} .sq-pop .x{margin-left:auto;border:0;background:none;font-size:14px;cursor:pointer;color:#64748b;}
+.sq-pop textarea{width:100%;box-sizing:border-box;min-height:110px;font:inherit;font-size:13px;padding:7px 9px;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;}
+.sq-pop .b{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:11px;color:#94a3b8;} .sq-pop .b span{margin:0 auto;}
+.sq-pop .b button{font:inherit;font-size:12px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer;} .sq-pop .ok{background:#1e3c72;color:#fff;border:0;} .sq-pop .del{background:#fff;color:#b91c1c;border:1px solid #fca5a5;}
+.sq-modal{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;padding:20px;}
+.sq-modal .box{background:#fff;border-radius:12px;width:min(860px,100%);max-height:90vh;overflow:auto;padding:16px 18px;box-shadow:0 20px 50px rgba(0,0,0,.3);}
+.sq-modal .h{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px;} .sq-modal .h b{font-size:16px;color:#1e3c72;} .sq-modal .h small{color:#e65100;font-weight:800;margin-left:4px;} .sq-modal .h .it{font-size:12.5px;color:#475569;margin-top:3px;}
+.sq-modal .x{border:0;background:none;font-size:18px;cursor:pointer;color:#64748b;align-self:flex-start;}
+.sq-modal .drop{display:block;border:2.5px dashed #ff9900;border-radius:10px;background:#fff8ef;text-align:center;padding:22px 10px;cursor:pointer;color:#7c4a00;font-size:14px;font-weight:700;}
+.sq-modal .drop.on{background:#ffe0b2;border-color:#e65100;} .sq-modal .drop .big{font-size:34px;} .sq-modal .drop small{display:block;font-weight:500;color:#8a6a3a;margin-top:4px;font-size:12px;}
+.sq-modal .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px;}
+.sq-modal .g{position:relative;border:1px solid #e2e8f0;border-radius:8px;padding:6px;background:#fafbfc;text-align:center;}
+.sq-modal .g img{width:100%;height:110px;object-fit:cover;border-radius:5px;display:block;} .sq-modal .g .ic{font-size:46px;display:block;line-height:110px;}
+.sq-modal .g .nm{font-size:11.5px;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px;} .sq-modal .g .sz{font-size:10.5px;color:#94a3b8;}
+.sq-modal .g button{position:absolute;top:4px;right:4px;border:0;background:rgba(185,28,28,.9);color:#fff;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:11px;}
+.sq-modal .none{grid-column:1/-1;text-align:center;color:#94a3b8;font-size:13px;padding:10px;}
+@media print{ #sqSheet .qr-noprint{display:none !important;} table.sq-t{min-width:0;font-size:9px;} table.sq-t td.sq-att{height:44px;} table.sq-t td.sq-att img{max-height:40px;} .sq-kpi .v{font-size:20px;} table.sq-t thead th{position:static;} }
+@media (max-width:1100px){ .sq-kpi{grid-template-columns:repeat(2,minmax(0,1fr));} }
+</style>
+<script>
+/* =========================================================================
+   SQ 감사 — Summary (Audit result of 2026-06-03 › Summary 시트 서식)
+   · 주황 칸(Before/After 사진 · WI · Check Sheet · Process Flow · Control Plan) = 자료 첨부
+     — 클릭하면 첨부 창, 사진·파일을 끌어다 놓거나 선택해서 넣는다 (칸에 바로 끌어다 놓아도 됨)
+   · 나머지 칸 = 클릭하면 말풍선이 열리고 내용을 적는다
+   · 저장: 글 = localStorage, 첨부 = IndexedDB (이 브라우저) · 백업 내보내기/가져오기로 다른 PC에 옮김
+   ========================================================================= */
+const SQ_DATA = [{"name": "생산조건관리\nProduction Control Management", "items": [{"no": "1_1", "text": "* 표준류 작성 및 준수상태\nStandard Documentation Preparation & Compliance Status\nสถานะการจัดทำและการปฏิบัติตามเอกสารมาตรฐาน", "score": 20, "stc": 9, "hl": null}, {"no": "1_2", "text": "* 설비 가동중단(계획/비계획)후 재가동시 업무처리 절차 수립 및 준수상태\nProcedure Establishment and Compliance for Equipment Restart after Planned/Unplanned Shutdown\nการจัดทำและการปฏิบัติตามขั้นตอนการเริ่มเดินเครื่องใหม่หลังการหยุดเครื่องจักร (ตามแผน/นอกแผน)", "score": 20, "stc": 14, "hl": null}, {"no": "1_3", "text": "* 외국인 배치 운영공정 현지어 번역/게시된 표준류 반영상태\nStatus of Translation/Postings of Standards in Local Language for Foreign Workers\nไทย: สถานะการแปลและติดประกาศเอกสารมาตรฐานเป็นภาษาท้องถิ่นสำหรับพนักงานต่างชาติ", "score": 10, "stc": 10, "hl": null}, {"no": "1_4", "text": "* 품질관리 취약 시간대 관리기준 수립 및 관리상태 (주말특근 및 비지정 작업자 투입시포함)\nManagement Standards for Vulnerable Quality Control Periods (Including Weekend Overtime and Non-designated Operators)\nไทย: มาตรฐานและสถานะการบริหารจัดการช่วงเวลาที่มีความเสี่ยงด้านคุณภาพ (รวม OT วันหยุดและพนักงานที่ไม่ได้รับมอบหมายโดยตรง)", "score": 20, "stc": 18, "hl": null}, {"no": "1_5", "text": "*재질별/품목별 용해로 온도, 출탕온도 관리기준 설정 및 준수여부\nEstablishment and Compliance of Melting Furnace Temperature and Tapping Temperature Control Standards by Material/Product\nการกำหนดและการปฏิบัติตามมาตรฐานการควบคุมอุณหภูมิเตาหลอมและอุณหภูมิเทน้ำโลหะ แยกตามชนิดวัสดุ/ผลิตภัณฑ์", "score": 30, "stc": 27, "hl": null}, {"no": "1_6", "text": "* 이물질 관리 및 로청소 주기 설정 준수여부 점검\nForeign Material Control and Furnace Cleaning Frequency Management\nการควบคุมสิ่งแปลกปลอมและการกำหนด/ปฏิบัติตามรอบการทำความสะอาดเตา", "score": 30, "stc": 27, "hl": null}, {"no": "1_7", "text": "* 보온로 관리기준 설정 및 실측, 기록상태\nHolding Furnace Control Standards, Measurement and Record Status\nมาตรฐานการควบคุมเตารักษาอุณหภูมิ การตรวจวัดจริง และการบันทึกข้อมูล", "score": 20, "stc": 20, "hl": null}, {"no": "1_8", "text": "* 품목별 주요 주조조건(고속/저속 속도, 압력, 위치, 형개시간 등) 기준 설정 상태\nEstablishment Status of Key Casting Process Parameters by Product (High/Low Speed, Pressure, Position, Die Open Time, etc.)\nสถานะการกำหนดมาตรฐานเงื่อนไขการหล่อที่สำคัญของแต่ละผลิตภัณฑ์ (ความเร็วสูง/ต่ำ, แรงดัน, ตำแหน่ง, เวลาเปิดแม่พิมพ์ ฯลฯ)", "score": 20, "stc": 14, "hl": null}, {"no": "1_9", "text": "* 품목별 사탕( 초기 허용불량수 ) 관리기준 설정근거 확보 및 준수상태\nEstablishment and Compliance of Initial Scrap Allowance Standards\nการกำหนดและการปฏิบัติตามมาตรฐานจำนวนชิ้นเสียที่ยอมรับได้ในช่วงเริ่มผลิต (Initial Scrap Allowance)", "score": 30, "stc": 21, "hl": null}, {"no": "1_10", "text": "* 다이케스팅 조건관리 기준 수립 및 준수상태\nDie Casting Process Parameter Management Standards and Compliance Status\nการกำหนดและการปฏิบัติตามมาตรฐานการควบคุมเงื่อนไขกระบวนการ Die Casting", "score": 10, "stc": 4.5, "hl": null}, {"no": "1_11", "text": "▣ 이형제 관리기준(사용량, 희석비, 분사상태, 캐비티내 수분잔류상태 등) 설정 및 준수상태\nEstablishment and Compliance of Release Agent Control Standards (Usage, Dilution Ratio, Spray Condition, Residual Moisture in Cavity, etc.)\nการกำหนดและการปฏิบัติตามมาตรฐานการควบคุมสารแยกแบบ (ปริมาณการใช้, อัตราส่วนการเจือจาง, สภาพการพ่น, ความชื้นตกค้างใน Cavity ฯลฯ)", "score": 10, "stc": 4.5, "hl": null}, {"no": "1_12", "text": "▣ 이형제 스프레이 카세트 보관/세척 프로세스 수립 및 준수상태\nEstablishment and Compliance of Release Agent Spray Cassette Storage and Cleaning Process\nการกำหนดและการปฏิบัติตามกระบวนการจัดเก็บและทำความสะอาดชุดสเปรย์สารแยกแบบ", "score": 10, "stc": 9, "hl": null}, {"no": "1_13", "text": "▣ 후가공(쇼트)공정 SHOT BALL 교체주기 설정기준 수립 및 준수여부\nEstablishment and compliance of SHOT BALL replacement cycle criteria for the Shot Blasting Process\nการกำหนดเกณฑ์รอบการเปลี่ยน SHOT BALL และการปฏิบัติตามในกระบวนการ Shot Blasting", "score": 10, "stc": 7, "hl": null}], "max": 240, "stc": 185}, {"name": "금형관리_합\nMold Management_Total", "items": [{"no": "2_1", "text": "▣ 수입검사 실시기준 수립 및 준수상태\nEstablishment and compliance of Incoming Inspection criteria\nการกำหนดเกณฑ์การตรวจรับเข้าและการปฏิบัติตาม", "score": 30, "stc": 7.5, "hl": null}, {"no": "2_2", "text": "수입검사 누락방지 절차 수립(수입검사 대장 LIST 작성) 및 준수 상태\nIncoming Inspection Omission Prevention Procedure Establishment (Creation of Incoming Inspection Master List) and Compliance Status\nการจัดทำขั้นตอนป้องกันการตกหล่นของการตรวจรับเข้า (จัดทำ Master List การตรวจรับเข้า) และสถานะการปฏิบัติตาม", "score": 30, "stc": 0, "hl": null}, {"no": "2_3", "text": "검사용 마스터(한도견본) 관리기준 수립 및 준수상태\nInspection Master Sample (Limit Sample) Management Criteria Establishment and Compliance Status\nการกำหนดมาตรฐานการบริหาร Master Sample (Limit Sample) และสถานะการปฏิบัติตาม", "score": 20, "stc": 9, "hl": null}, {"no": "2_4", "text": "정기검사(신뢰성 시험 포함) 실시계획 수립 및 준수상태 (실시결과 신뢰성 확보 요구됨)\nEstablish and comply with a periodic inspection plan including reliability tests (test result reliability must be ensured).\nจัดทำและปฏิบัติตามแผนการตรวจสอบตามรอบ รวมถึงการทดสอบความน่าเชื่อถือ (ต้องรับรองความน่าเชื่อถือของผลการทดสอบ)", "score": 30, "stc": 13.5, "hl": null}, {"no": "2_5", "text": "▣ 계측기/검사구 보유 및 신뢰성 확보상태 (검교정 주기설정, 교정상태)\nMeasurement Equipment / Inspection Tools Retention and Reliability Assurance Status (Calibration Cycle Setting & Calibration Status)\nสถานะการมีอยู่ของเครื่องมือวัด/เครื่องมือตรวจสอบ และการรับรองความน่าเชื่อถือ (การกำหนดรอบการสอบเทียบและสถานะการสอบเทียบ)", "score": 20, "stc": 14, "hl": null}, {"no": "2_6", "text": "▣ 게이지 R&R 실시기준 수립 및 준수 상태\nGauge R&R Implementation Criteria and Compliance Status\nเกณฑ์การดำเนินการ Gauge R&R และสถานะการปฏิบัติตาม", "score": 20, "stc": 14, "hl": null}, {"no": "2_7", "text": "▣ 제품별 자주검사/순회검사 기준 설정 및 준수, 기록관리 상태\nEstablish and comply with self-inspection and patrol inspection standards for each product and manage records.\nกำหนดเกณฑ์การตรวจสอบด้วยตนเองและการตรวจ巡回สำหรับแต่ละผลิตภัณฑ์ พร้อมบริหารจัดการบันทึก", "score": 50, "stc": 35, "hl": null}, {"no": "2_8", "text": "▣ 완제품 검사 기준 설정 및 준수상태\nEstablishment and compliance status of final product inspection criteria.\nการกำหนดมาตรฐานการตรวจสอบสินค้าสำเร็จรูปและสถานะการปฏิบัติตาม", "score": 50, "stc": 45, "hl": "FF92D050"}, {"no": "2_9", "text": "▣ 원소재 투입량 검사 적합성 및 검사결과 신뢰도 확보 여부\nAdequacy of raw material input quantity inspection and reliability of inspection results.\nความเหมาะสมของการตรวจสอบปริมาณวัตถุดิบที่ใช้และการรับรองความน่าเชื่อถือของผลการตรวจสอบ", "score": 10, "stc": 9, "hl": null}, {"no": "2_10", "text": "▣ 용탕 성분분석 관리기준 설정 및 실시상태, 측정결과 신뢰도 확보여부\nEstablishment and implementation status of molten metal composition analysis standards and assurance of measurement result reliability.\nการกำหนดมาตรฐานการวิเคราะห์ส่วนประกอบของน้ำโลหะ สถานะการดำเนินการ และการรับรองความน่าเชื่อถือของผลการวัด", "score": 30, "stc": 21, "hl": null}, {"no": "2_11", "text": "▣ 재공품 내부기포 검사방법 설정 및 준수여부(검사결과 신뢰도 확보 요구됨)\nEstablishment and compliance of internal porosity inspection methods for WIP products (Reliability of inspection results must be ensured).\nการกำหนดวิธีการตรวจสอบโพรงอากาศ/รูพรุนภายในของงานระหว่างผลิต (WIP) และการปฏิบัติตามวิธีการดังกล่าว โดยต้องสามารถรับรองความน่าเชื่อถือของผลการตรวจสอบได้", "score": 30, "stc": 13.5, "hl": null}], "max": 320, "stc": 181.5}, {"name": "설비관리\nFacility Management", "items": [{"no": "3_1", "text": "▣ 설비 일상점검 업무절차 수립 및 준수여부\n▣ Establishment and compliance status of daily equipment inspection procedures.\n▣ สถานะการจัดทำและการปฏิบัติตามขั้นตอนการตรวจสอบเครื่องจักรและอุปกรณ์ประจำวัน (Daily Equipment Inspection Procedure).", "score": 30, "stc": 13.5, "hl": null}, {"no": "3_2", "text": "▣ 설비 정기점검 업무절차 수립 및 준수여부\n▣ Establishment and compliance of periodic equipment inspection procedures.\n▣ การจัดทำและการปฏิบัติตามขั้นตอนการตรวจสอบเครื่องจักรและอุปกรณ์ตามรอบระยะเวลา (Periodic Equipment Inspection Procedure).", "score": 30, "stc": 7.5, "hl": null}], "max": 60, "stc": 21}, {"name": "금형관리\nMold Managment", "items": [{"no": "4_1", "text": "▣ 금형 일상/점기점검 프로세스 수립 및 준수상태\n▣ Establishment and compliance status of daily and periodic mold inspection processes.\n▣ สถานะการจัดทำและการปฏิบัติตามกระบวนการตรวจสอบแม่พิมพ์ประจำวันและการตรวจสอบตามรอบระยะเวลา (Periodic Inspection).", "score": 30, "stc": 21, "hl": null}, {"no": "4_2", "text": "▣ 금형 세척관리 프로세스 수립 및 준수상태\n▣ Establishment and compliance status of the mold cleaning management process.\n▣ สถานะการจัดทำและการปฏิบัติตามกระบวนการบริหารจัดการการทำความสะอาดแม่พิมพ์ (Mold Cleaning Management Process).", "score": 30, "stc": 13.5, "hl": null}, {"no": "4_3", "text": "▣ 금형 보전 프로세스 수립 및 준수상태\nEstablishment and compliance status of daily/periodic mold inspection processes.\nการจัดทำและการปฏิบัติตามกระบวนการตรวจสอบแม่พิมพ์ประจำวันและตามรอบ", "score": 10, "stc": 4.5, "hl": null}, {"no": "4_4", "text": "▣ 금형 보관 프로세스 수립 및 준수상태\nEstablishment and compliance status of mold cleaning management processes.\nการจัดทำและการปฏิบัติตามกระบวนการควบคุมการล้างแม่พิมพ์", "score": 10, "stc": 2.5, "hl": null}, {"no": "4_5", "text": "▣ 금형 이관 프로세스 수립 및 준수상태\n▣ Establishment and compliance status of the mold transfer management process.\n▣ สถานะการจัดทำและการปฏิบัติตามกระบวนการโอนย้าย/ส่งมอบแม่พิมพ์ (Mold Transfer Process) รวมถึงการควบคุมและติดตามสถานะแม่พิมพ์อย่างเหมาะสม.", "score": 10, "stc": 9, "hl": null}], "max": 90, "stc": 50.5}, {"name": "자재관리\nMaterial Management", "items": [{"no": "5_1", "text": "▣ 원자재 및 재공품, 출하품 LOT 추적성 관리 프로세스 수립 및 준수상태\n▣ Establishment and compliance status of the lot traceability management process for raw materials, work-in-process (WIP), and shipped products.\n▣ สถานะการจัดทำและการปฏิบัติตามกระบวนการบริหารจัดการการสอบกลับตามล็อต (LOT Traceability) สำหรับวัตถุดิบ งานระหว่างผลิต (WIP) และสินค้าที่จัดส่งให้ลูกค้า.", "score": 30, "stc": 21, "hl": null}, {"no": "5_2", "text": "▣ 수입자재 보관장 관리기준 수립 및 준수상태\n▣ Establishment and compliance status of management standards for incoming material storage areas.\n▣ สถานะการจัดทำมาตรฐานการบริหารจัดการพื้นที่จัดเก็บวัตถุดิบ/วัสดุรับเข้า และการปฏิบัติตามมาตรฐานที่กำหนด.", "score": 20, "stc": 18, "hl": null}, {"no": "5_3", "text": "▣ 입고품 식별관리 기준 수립 및 준수여부\n▣ Establishment and compliance of identification management standards for incoming materials/products.\n▣ การจัดทำมาตรฐานการระบุและการจัดการสถานะของวัตถุดิบ/สินค้าที่รับเข้า และการปฏิบัติตามมาตรฐานที่กำหนด.", "score": 20, "stc": 0, "hl": null}, {"no": "5_4", "text": "▣ 재공품/완제품 용기 표준화 관리기준 수립 및 이행상태\n▣ Establishment and implementation status of standardized container management standards for work-in-process (WIP) and finished products.\n▣ สถานะการจัดทำมาตรฐานการใช้และการบริหารภาชนะบรรจุสำหรับงานระหว่างผลิต (WIP) และสินค้าสำเร็จรูป รวมถึงการนำมาตรฐานดังกล่าวไปปฏิบัติ.", "score": 20, "stc": 9, "hl": null}], "max": 90, "stc": 48}, {"name": "품질경영체제\nQuality Management System", "items": [{"no": "6_1", "text": "▣ 안전사고 발생 예방을 위한 업무 프로세스 수립 및 준수실태\n▣ Establishment and compliance status of work processes for preventing safety accidents.\n▣ สถานะการจัดทำและการปฏิบัติตามกระบวนการทำงานเพื่อป้องกันการเกิดอุบัติเหตุและเหตุการณ์ด้านความปลอดภัยในการทำงาน.", "score": 30, "stc": 27, "hl": null}, {"no": "6_2", "text": "▣ 설계변경, 4M 변경처리 업무절차 수립 및 준수여부\n▣ Establishment and compliance of work procedures for design changes and 4M change management.\n▣ การจัดทำและการปฏิบัติตามขั้นตอนการดำเนินงานสำหรับการเปลี่ยนแปลงแบบ (Design Change) และการบริหารจัดการการเปลี่ยนแปลง 4M (Man, Machine, Material, Method)", "score": 20, "stc": 9, "hl": null}, {"no": "6_3", "text": "▣ 품목별 도면기준 검사협정 체결 및 관리기준 준수상태 (도면 일치성) \nStatus of inspection agreement establishment and compliance with management standards based on drawings by product (drawing consistency).\nสถานะการจัดทำข้อตกลงการตรวจสอบตามแบบ (Drawing) ของแต่ละผลิตภัณฑ์ และการปฏิบัติตามมาตรฐานที่กำหนด (ความสอดคล้องกับแบบ)", "score": 20, "stc": 9, "hl": "FFFFC000"}, {"no": "6_4", "text": "▣ 품질경영체제 구축/유지를 위한 조직구성 및 운영상태\n▣ Organization structure and operational status for establishing and maintaining the Quality Management System (QMS).\n▣ โครงสร้างองค์กรและสถานะการดำเนินงานเพื่อการจัดตั้งและรักษาระบบบริหารคุณภาพ (Quality Management System: QMS) ให้มีประสิทธิภาพและต่อเนื่อง.", "score": 10, "stc": 7, "hl": null}, {"no": "6_5", "text": "▣ 자격인증 관리기준 수립 및 준수상태\n▣ Establishment and compliance status of qualification and certification management standards.\n▣ สถานะการจัดทำมาตรฐานการบริหารจัดการคุณวุฒิและการรับรองความสามารถ (Qualification & Certification) รวมถึงการปฏิบัติตามมาตรฐานที่กำหนด.", "score": 20, "stc": 18, "hl": null}, {"no": "6_6", "text": "▣ 수입검사/생산공정/최종검사 부적합(추정)품에 대한 격리/식별절차 수립 및 준수여부\n▣ Establishment and compliance of segregation and identification procedures for nonconforming (or suspected nonconforming) products in incoming inspection, production processes, and final inspection.\n▣ การจัดทำและการปฏิบัติตามขั้นตอนการแยกกัก (Segregation) และการระบุสถานะ (Identification) สำหรับผลิตภัณฑ์ที่ไม่เป็นไปตามข้อกำหนด หรือสงสัยว่าไม่เป็นไปตามข้อกำหนด ในขั้นตอนการตรวจรับเข้า กระบวนการผลิต และการตรวจสอบขั้นสุดท้าย.", "score": 20, "stc": 18, "hl": null}, {"no": "6_7", "text": "▣ 품질실적 점검 프로세스 수립 및 개선활동 실시상태\n▣ Establishment of a quality performance review process and status of improvement activities implementation.\n▣ สถานะการจัดทำกระบวนการตรวจติดตามผลการดำเนินงานด้านคุณภาพ และการดำเนินกิจกรรมปรับปรุงแก้ไขอย่างต่อเนื่อง.", "score": 20, "stc": 18, "hl": null}, {"no": "6_8", "text": "▣ 검사 유효성 확보를 위한 조도관리 프로세스 수립 및 준수실태\n▣ Establishment and compliance status of the illumination (lighting) management process to ensure inspection effectiveness.\n▣ สถานะการจัดทำและการปฏิบัติตามกระบวนการบริหารจัดการความสว่าง (Illumination/Lux) เพื่อให้มั่นใจในประสิทธิผลและความถูกต้องของการตรวจสอบคุณภาพ.", "score": 10, "stc": 7, "hl": null}, {"no": "6_9", "text": "▣ 3정 5행 관리 프로세스 수립 및 준수실태\n▣ Establishment of the 3J 5S management process and compliance status.\n▣ สถานะการจัดทำกระบวนการบริหาร 3정 5행 และการปฏิบัติตามมาตรฐานที่กำหนด", "score": 10, "stc": 10, "hl": null}, {"no": "6_10", "text": "▣ 불량부품 REWORK시 관리기준 수립 및 이행 상태\nEstablishment and implementation status of management standards for rework of defective parts.\nการจัดทำและการปฏิบัติตามมาตรฐานการควบคุมงาน Rework สำหรับชิ้นงานเสีย", "score": 10, "stc": "해당없음", "hl": "FFFFC000"}, {"no": "6_11", "text": "▣ 공정 누락 방지를 위한 작업환경 설정 상태\n▣ Status of work environment setup to prevent process omission.\n▣ สถานะการจัดเตรียมและกำหนดสภาพแวดล้อมการทำงานเพื่อป้องกันการตกหล่นของกระบวนการผลิต (Process Omission Prevention).", "score": 10, "stc": 4.5, "hl": null}, {"no": "6_12", "text": "▣ 『정성품질』 운영 프로세스는 마련되어 있고, 점검 및 포상활동은 실시되는가?\nIs a \"Sincerity Quality (정성품질)\" operation process established, and are inspection and reward activities being conducted?\n▣ มีการจัดทำกระบวนการดำเนินงานด้าน “คุณภาพด้วยความใส่ใจ (정성품질)” และมีการดำเนินกิจกรรมการตรวจติดตามและการให้รางวัลหรือไม่?", "score": 20, "stc": "해당없음", "hl": null}], "max": 200, "stc": 127.5}];
+const SQ_META = { title:'SQ 감사 결과 Summary', audit:'2026-06-03', src:'Audit result of 2026-06-03.xlsm › Summary' };
+const SQ_ATT = [ ['G','Before Photos','개선 전 사진'], ['H','After photos','개선 후 사진'], ['I','WI','작업표준서'], ['J','Check Sheet','체크시트'], ['K','Process Flow','공정흐름도'], ['L','Control Plan Update (With Revision)','관리계획서 개정'] ];
+const SQ_TXT_KEY = 'stc_sq_summary_v1';
+let SQ_T = {}; try{ SQ_T = JSON.parse(localStorage.getItem(SQ_TXT_KEY)||'{}') || {}; }catch(e){ SQ_T = {}; }
+const sqSaveT = () => { try{ localStorage.setItem(SQ_TXT_KEY, JSON.stringify(SQ_T)); }catch(e){ alert('저장 공간이 부족합니다'); } };
+const sqEsc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const sqNum = v => { const n = parseFloat(String(v==null?'':v).replace(/,/g,'')); return isNaN(n) ? null : n; };
+/* ---------- IndexedDB (첨부) ---------- */
+let SQ_DB = null, SQ_FILES = {};   /* key('1_1|G') → [{id,name,type,size,ts,url}] */
+function sqDb(){ return new Promise((ok,no)=>{ if(SQ_DB) return ok(SQ_DB);
+  const rq = indexedDB.open('stc_sq_files', 1);
+  rq.onupgradeneeded = () => { const db = rq.result; if(!db.objectStoreNames.contains('files')){ const s = db.createObjectStore('files',{keyPath:'id'}); s.createIndex('key','key'); } };
+  rq.onsuccess = () => { SQ_DB = rq.result; ok(SQ_DB); }; rq.onerror = () => no(rq.error); }); }
+async function sqLoadFiles(){
+  try{ const db = await sqDb();
+    const all = await new Promise((ok,no)=>{ const r = db.transaction('files').objectStore('files').getAll(); r.onsuccess=()=>ok(r.result); r.onerror=()=>no(r.error); });
+    Object.values(SQ_FILES).flat().forEach(f=>{ try{ URL.revokeObjectURL(f.url); }catch(e){} });
+    SQ_FILES = {};
+    all.sort((a,b)=>a.ts-b.ts).forEach(f=>{ (SQ_FILES[f.key] = SQ_FILES[f.key] || []).push({ id:f.id, name:f.name, type:f.type, size:f.size, ts:f.ts, url:URL.createObjectURL(f.blob) }); });
+  }catch(e){ console.warn('SQ files', e); }
+}
+async function sqAddFiles(key, list){
+  const db = await sqDb(); const tx = db.transaction('files','readwrite'), st = tx.objectStore('files');
+  for(const f of list){ st.put({ id:'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,7), key, name:f.name||'file', type:f.type||'', size:f.size||0, ts:Date.now(), blob:f }); }
+  await new Promise((ok,no)=>{ tx.oncomplete=ok; tx.onerror=()=>no(tx.error); });
+  await sqLoadFiles();
+}
+async function sqDelFile(id){
+  const db = await sqDb(); const tx = db.transaction('files','readwrite'); tx.objectStore('files').delete(id);
+  await new Promise(ok=>{ tx.oncomplete=ok; }); await sqLoadFiles();
+}
+/* ---------- 표 ---------- */
+function sqCellAtt(no, col){
+  const k = no+'|'+col, L = SQ_FILES[k] || [], img = L.find(f=>/^image\//.test(f.type));
+  return `<td class="sq-att${L.length?' has':''}" data-sqatt="${k}" title="클릭 = 첨부 열기 · 파일을 끌어다 놓아도 됩니다">`
+    + (L.length ? (img ? `<img src="${img.url}" alt="">` : `<span class="fi">📎</span>`) + `<span class="cnt">${L.length}</span>` : `<span class="add">＋</span>`) + `</td>`;
+}
+function sqCellTxt(no, col, cls, base){
+  const k = no+'|'+col, v = SQ_T[k] || '';
+  if(col==='F' || col==='M') return `<td class="sq-tx ${cls||''}${v?' has':''}" data-sqtx="${k}">${v ? sqEsc(v).replace(/\n/g,'<br>') : '<span class="ph">클릭해서 입력</span>'}</td>`;
+  return `<td class="sq-tx ${cls||''}${v?' note':''}" data-sqtx="${k}">${base}${v?'<i class="nt" title="메모 있음">💬</i>':''}</td>`;
+}
+function renderSQ(){
+  const host = document.getElementById('sqSheet'); if(!host) return;
+  let D = 0, E = 0, Fn = 0, Mt = 0, Mn = 0, attC = 0, attN = 0, items = 0;
+  let body = '';
+  SQ_DATA.forEach((c,ci)=>{
+    const n = c.items.length; let cF = 0, cM = 0, cMn = 0; const cA = {};
+    c.items.forEach((it,i)=>{
+      items++;
+      const e = sqNum(it.stc), s = sqNum(it.score), r = (e!=null && s) ? e/s : null;
+      const sc = r==null ? 'na' : r < 0.5 ? 'low' : r < 0.8 ? 'mid' : 'ok';
+      if(SQ_T[it.no+'|F']) { cF++; Fn++; }
+      const m = sqNum(SQ_T[it.no+'|M']); if(m!=null){ cM += m; cMn++; Mt += m; Mn++; }
+      SQ_ATT.forEach(([col])=>{ const L = (SQ_FILES[it.no+'|'+col]||[]).length; cA[col] = (cA[col]||0) + (L?1:0); attN++; if(L) attC++; });
+      const lines = String(it.text).split('\n');
+      const txt = `<div class="ko">${sqEsc(lines[0])}</div>` + lines.slice(1).map((l,j)=>`<div class="${j===0?'en':'th'}">${sqEsc(l)}</div>`).join('');
+      body += `<tr>${sqCellTxt(it.no,'A','no',sqEsc(it.no))}`
+        + (i===0 ? `<td class="cat" rowspan="${n}">${sqEsc(c.name).replace(/\n/g,'<br>')}</td>` : '')
+        + sqCellTxt(it.no,'C','item'+(it.hl?' hl':''), txt).replace('class="sq-tx', it.hl?`style="background:#${it.hl.slice(2)}" class="sq-tx`:'class="sq-tx')
+        + sqCellTxt(it.no,'D','n', sqEsc(it.score))
+        + sqCellTxt(it.no,'E','n sc-'+sc, sqEsc(it.stc))
+        + sqCellTxt(it.no,'F','act')
+        + SQ_ATT.map(([col])=>sqCellAtt(it.no,col)).join('')
+        + sqCellTxt(it.no,'M','n fin') + `</tr>`;
+    });
+    D += sqNum(c.max)||0; E += sqNum(c.stc)||0;
+    body += `<tr class="sub"><td colspan="3">SCORE CRITERIAL (${ci+1}) ${sqEsc(c.name).replace(/\n/g,' · ')}</td><td class="n">${c.max}</td><td class="n">${c.stc}</td>`
+      + `<td class="n">${cF} / ${n}</td>` + SQ_ATT.map(([col])=>`<td class="n">${cA[col]} / ${n}</td>`).join('') + `<td class="n">${cMn ? +cM.toFixed(1) : ''}</td></tr>`;
+  });
+  body += `<tr class="tot"><td colspan="3">합계 TOTAL</td><td class="n">${D}</td><td class="n">${+E.toFixed(1)}</td><td class="n">${Fn} / ${items}</td>`
+    + SQ_ATT.map(([col])=>{ let k=0; SQ_DATA.forEach(c=>c.items.forEach(it=>{ if((SQ_FILES[it.no+'|'+col]||[]).length) k++; })); return `<td class="n">${k} / ${items}</td>`; }).join('')
+    + `<td class="n">${Mn ? +Mt.toFixed(1) : ''}</td></tr>`;
+  const pct = (a,b) => b ? Math.round(a/b*100) : 0;
+  host.innerHTML = `<div class="sq-cover"><div><div class="kicker">SQ Audit · Supplier Quality</div><h1>${SQ_META.title}<small>Audit result of ${SQ_META.audit}</small></h1></div>
+      <div class="side"><b>STC Co., Ltd.</b><br>FAC1 다이캐스팅 · FAC2 가공<br>감사일 ${SQ_META.audit}</div></div>
+    <div class="sq-kpi">
+      <div class="k"><div class="l">STC SCORE (감사 점수)</div><div class="v">${+E.toFixed(1)}<u> / ${D}</u></div><div class="s">${(E/D*100).toFixed(1)}%</div></div>
+      <div class="k"><div class="l">Final Score (개선 후)</div><div class="v">${Mn ? +Mt.toFixed(1) : '–'}<u> / ${D}</u></div><div class="s">${Mn}개 항목 입력</div></div>
+      <div class="k"><div class="l">Improvement Action 입력</div><div class="v">${Fn}<u> / ${items}</u></div><div class="bar"><i style="width:${pct(Fn,items)}%"></i></div></div>
+      <div class="k"><div class="l">자료 첨부 (주황 칸)</div><div class="v">${attC}<u> / ${attN}</u></div><div class="bar o"><i style="width:${pct(attC,attN)}%"></i></div></div>
+    </div>
+    <div class="sq-tool qr-noprint"><span>주황 칸 = 자료 첨부 (클릭 또는 파일을 칸에 끌어다 놓기) · 나머지 칸 = 클릭하면 말풍선에 내용 입력 · 점수 색: 빨강 &lt;50% · 주황 &lt;80%</span>
+      <span class="r"><button type="button" id="sqExport">⬇ 백업 내보내기</button><label class="btn">⬆ 백업 가져오기<input type="file" id="sqImport" accept=".json" hidden></label><button type="button" onclick="window.print()">🖨 인쇄 / PDF</button></span></div>
+    <div class="sq-tw"><table class="sq-t"><colgroup><col style="width:50px"><col style="width:112px"><col><col style="width:56px"><col style="width:62px"><col style="width:175px">${SQ_ATT.map(()=>'<col style="width:84px">').join('')}<col style="width:68px"></colgroup>
+      <thead><tr><th>No</th><th>평가항목<br><small>Evaluation Item</small></th><th>세부항목<br><small>Detailed Item</small></th><th>Score</th><th>STC SCORE</th><th>Improvement Action</th>${SQ_ATT.map(([c,en,ko])=>`<th class="o">${en}<br><small>${ko}</small></th>`).join('')}<th>Final Score</th></tr></thead>
+      <tbody>${body}</tbody></table></div>
+    <div class="sq-foot">※ 원본: ${SQ_META.src} · 글은 이 브라우저(localStorage), 첨부 파일은 이 브라우저(IndexedDB)에 저장됩니다 — 다른 PC로 옮기려면 '백업 내보내기 → 가져오기'를 쓰세요.</div>`;
+  sqWire(host);
+}
+/* ---------- 말풍선 (글 입력) ---------- */
+function sqClosePop(save){
+  const p = document.getElementById('sqPop'); if(!p) return;
+  if(save){ const k = p.dataset.k, v = p.querySelector('textarea').value.trim(); if(v) SQ_T[k] = v; else delete SQ_T[k]; sqSaveT(); }
+  p.remove(); if(save) renderSQ();
+}
+function sqOpenPop(td){
+  sqClosePop(true);
+  const k = td.dataset.sqtx, [no,col] = k.split('|');
+  const lab = { A:'No 메모', C:'세부항목 메모', D:'Score 메모', E:'STC SCORE 메모', F:'Improvement Action (개선 내용)', M:'Final Score (개선 후 점수)' }[col] || '메모';
+  const p = document.createElement('div'); p.id = 'sqPop'; p.className = 'sq-pop'; p.dataset.k = k;
+  p.innerHTML = `<div class="h"><b>${sqEsc(no)}</b> · ${lab}<button type="button" class="x" title="닫기">✕</button></div>`
+    + `<textarea placeholder="${col==='M'?'예: 18':'내용을 적으세요'}">${sqEsc(SQ_T[k]||'')}</textarea>`
+    + `<div class="b"><button type="button" class="del">지우기</button><span>Ctrl+Enter 저장 · Esc 닫기</span><button type="button" class="ok">저장</button></div>`;
+  document.body.appendChild(p);
+  const r = td.getBoundingClientRect(), pw = Math.min(380, window.innerWidth-20);
+  p.style.width = pw+'px';
+  let left = r.left + window.scrollX + r.width/2 - pw/2; left = Math.max(window.scrollX+10, Math.min(left, window.scrollX+window.innerWidth-pw-10));
+  p.style.left = left+'px'; p.style.top = (r.bottom + window.scrollY + 10)+'px';
+  p.style.setProperty('--ax', (r.left + window.scrollX + r.width/2 - left)+'px');
+  const ta = p.querySelector('textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+  p.querySelector('.ok').onclick = ()=>sqClosePop(true);
+  p.querySelector('.x').onclick = ()=>sqClosePop(true);
+  p.querySelector('.del').onclick = ()=>{ ta.value=''; sqClosePop(true); };
+  ta.onkeydown = e=>{ if(e.key==='Escape'){ e.preventDefault(); sqClosePop(true); } if(e.key==='Enter' && (e.ctrlKey||e.metaKey)){ e.preventDefault(); sqClosePop(true); } e.stopPropagation(); };
+  p.onclick = e=>e.stopPropagation();
+}
+document.addEventListener('click', e=>{ const p = document.getElementById('sqPop'); if(p && !p.contains(e.target) && !e.target.closest('[data-sqtx]')) sqClosePop(true); });
+/* ---------- 첨부 창 ---------- */
+function sqOpenAtt(k){
+  sqClosePop(true);
+  const [no,col] = k.split('|'), A = SQ_ATT.find(x=>x[0]===col), it = SQ_DATA.flatMap(c=>c.items).find(x=>x.no===no);
+  let m = document.getElementById('sqModal'); if(m) m.remove();
+  m = document.createElement('div'); m.id = 'sqModal'; m.className = 'sq-modal';
+  const draw = ()=>{
+    const L = SQ_FILES[k] || [];
+    m.innerHTML = `<div class="box"><div class="h"><div><b>${sqEsc(no)} · ${A[1]}</b> <small>${A[2]}</small><div class="it">${sqEsc(String(it?it.text:'').split('\n')[0])}</div></div><button type="button" class="x">✕</button></div>
+      <label class="drop"><input type="file" multiple hidden><div class="big">📂</div><div>사진·자료를 여기로 끌어다 놓거나 <u>클릭해서 선택</u></div><small>이미지 · PDF · 엑셀 · 워드 등 모든 파일 · 여러 개 가능 · 화면 캡처는 Ctrl+V 로 붙여넣기</small></label>
+      <div class="gal">${L.length ? L.map(f=>/^image\//.test(f.type)
+          ? `<div class="g"><a href="${f.url}" target="_blank"><img src="${f.url}" alt=""></a><div class="nm" title="${sqEsc(f.name)}">${sqEsc(f.name)}</div><button type="button" data-del="${f.id}" title="삭제">✕</button></div>`
+          : `<div class="g f"><a href="${f.url}" target="_blank" download="${sqEsc(f.name)}"><span class="ic">${/pdf/.test(f.type)?'📕':/sheet|excel/.test(f.type)?'📗':/word/.test(f.type)?'📘':'📄'}</span></a><div class="nm" title="${sqEsc(f.name)}">${sqEsc(f.name)}</div><div class="sz">${(f.size/1024).toFixed(0)} KB</div><button type="button" data-del="${f.id}" title="삭제">✕</button></div>`).join('')
+        : '<div class="none">첨부된 자료가 없습니다</div>'}</div></div>`;
+    const drop = m.querySelector('.drop'), inp = m.querySelector('input');
+    inp.onchange = async ()=>{ if(inp.files.length){ await sqAddFiles(k, [...inp.files]); draw(); renderSQ(); } };
+    ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.add('on'); }));
+    ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.remove('on'); }));
+    drop.addEventListener('drop', async e=>{ const fs = [...(e.dataTransfer.files||[])]; if(fs.length){ await sqAddFiles(k, fs); draw(); renderSQ(); } });
+    m.querySelectorAll('[data-del]').forEach(b=>b.onclick = async ()=>{ if(confirm('이 파일을 삭제할까요?')){ await sqDelFile(b.dataset.del); draw(); renderSQ(); } });
+    m.querySelector('.x').onclick = ()=>{ m.remove(); document.removeEventListener('paste', onPaste); };
+  };
+  const onPaste = async e=>{ if(!document.getElementById('sqModal')) return document.removeEventListener('paste', onPaste);
+    const fs = [...(e.clipboardData.files||[])]; if(fs.length){ e.preventDefault(); await sqAddFiles(k, fs.map((f,i)=>f.name && f.name!=='image.png' ? f : new File([f], `capture_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'')}_${i+1}.png`, {type:f.type}))); draw(); renderSQ(); } };
+  document.addEventListener('paste', onPaste);
+  m.onclick = e=>{ if(e.target===m){ m.remove(); document.removeEventListener('paste', onPaste); } };
+  document.body.appendChild(m); draw();
+}
+function sqWire(host){
+  host.querySelectorAll('[data-sqtx]').forEach(td=>td.onclick = e=>{ e.stopPropagation(); sqOpenPop(td); });
+  host.querySelectorAll('[data-sqatt]').forEach(td=>{
+    td.onclick = ()=>sqOpenAtt(td.dataset.sqatt);
+    td.ondragover = e=>{ e.preventDefault(); td.classList.add('drag'); };
+    td.ondragleave = ()=>td.classList.remove('drag');
+    td.ondrop = async e=>{ e.preventDefault(); td.classList.remove('drag'); const fs = [...(e.dataTransfer.files||[])]; if(fs.length){ await sqAddFiles(td.dataset.sqatt, fs); renderSQ(); } };
+  });
+  const ex = host.querySelector('#sqExport'); if(ex) ex.onclick = sqExport;
+  const im = host.querySelector('#sqImport'); if(im) im.onchange = ()=>{ if(im.files[0]) sqImport(im.files[0]); };
+}
+/* ---------- 백업 ---------- */
+async function sqExport(){
+  const db = await sqDb();
+  const all = await new Promise(ok=>{ const r = db.transaction('files').objectStore('files').getAll(); r.onsuccess=()=>ok(r.result); });
+  const files = await Promise.all(all.map(f=>new Promise(ok=>{ const fr = new FileReader(); fr.onload=()=>ok({ id:f.id, key:f.key, name:f.name, type:f.type, size:f.size, ts:f.ts, data:fr.result }); fr.readAsDataURL(f.blob); })));
+  const blob = new Blob([JSON.stringify({ v:1, audit:SQ_META.audit, text:SQ_T, files })], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `SQ_Summary_${SQ_META.audit}_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+}
+async function sqImport(file){
+  try{
+    const o = JSON.parse(await file.text()); if(!o || !o.text) throw new Error('형식이 아님');
+    if(!confirm(`백업을 가져올까요? 글 ${Object.keys(o.text).length}개 · 파일 ${(o.files||[]).length}개 — 같은 칸의 글은 덮어쓰고 파일은 추가됩니다.`)) return;
+    Object.assign(SQ_T, o.text); sqSaveT();
+    const db = await sqDb(); const tx = db.transaction('files','readwrite'), st = tx.objectStore('files');
+    for(const f of (o.files||[])){ const b = await (await fetch(f.data)).blob(); st.put({ id:f.id, key:f.key, name:f.name, type:f.type, size:f.size, ts:f.ts, blob:b }); }
+    await new Promise(ok=>{ tx.oncomplete=ok; }); await sqLoadFiles(); renderSQ(); alert('가져오기 완료');
+  }catch(e){ alert('가져오기 실패: '+(e.message||e)); }
+}
+let SQ_INIT = false;
+async function sqShow(){ if(!SQ_INIT){ SQ_INIT = true; await sqLoadFiles(); } renderSQ(); }
+try{ if(typeof NAV_CUR!=='undefined' && NAV_CUR==='sq') sqShow(); }catch(e){}
 </script>
 </body>
 </html>
