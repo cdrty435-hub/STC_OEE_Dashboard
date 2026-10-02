@@ -279,6 +279,22 @@ table.f2g-t tr.ty.off td{color:#9aa0a6;} table.f2g-t tr.r.sel td.lb{color:#c6282
 table.f2g-t tr.sub td{background:#f8fafc;color:var(--ink-muted);font-size:11px;font-weight:700;text-align:left;}
 table.f2g-t .nil{color:#cbd5e1;}
 table.f2g-sum td{vertical-align:middle;}
+.gt-card{background:#fff;border:1px solid #e3e7ee;border-radius:10px;padding:12px 14px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+.gt-empty{color:#898781;font-size:12.5px;padding:16px;}
+.gt-scroll{overflow-x:auto;}
+table.gt-sumt{width:100%;border-collapse:collapse;font-size:12.5px;}
+table.gt-sumt th,table.gt-sumt td{padding:6px 9px;border-bottom:1px solid #eceef2;text-align:right;white-space:nowrap;vertical-align:middle;font-variant-numeric:tabular-nums;}
+table.gt-sumt th{font-size:11px;color:#52514e;font-weight:700;border-bottom:1.5px solid #cfd6e0;}
+table.gt-sumt .l{text-align:left;white-space:normal;} table.gt-sumt th:first-child,table.gt-sumt td:first-child{text-align:center;width:52px;}
+table.gt-sumt small{color:#898781;font-size:11px;}
+.gt-jump{margin-left:8px;background:#fffbeb;border:1px solid #e5d3a6;color:#92400e !important;border-radius:5px;padding:1px 7px;font-size:11px;font-weight:700;text-decoration:none;}
+.gt-foot{font-size:11.5px;color:#898781;margin:2px 2px 10px;}
+@media print{.gt-jump{display:none;}}
+.f2g-h .kp.gt-kp{margin:0 auto;display:inline-flex;gap:22px;align-items:baseline;font-size:14px;font-weight:700;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:3px 18px;}
+.f2g-h .kp.gt-kp b{font-size:20px;font-weight:900;color:#0f172a;margin-left:4px;}
+.gt-jsp{width:70px;}
+.gt-pbar{display:inline-block;width:10px;height:10px;background:#e2e8f0;border:1px solid #cbd5e1;border-radius:2px;margin-right:4px;vertical-align:-1px;}
+
 table.f2g-t tr.sub td{padding:1px 6px;}
 .f2g-nb{display:inline-block;background:#f59e0b;color:#fff;border-radius:3px;padding:0 3px;font-size:9.5px;font-weight:800;line-height:1.35;}
 .f2g-notes{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:5px 10px;margin:2px 0 6px;font-size:11.5px;line-height:1.6;}
@@ -1581,6 +1597,9 @@ function f2OverviewBlock(week){
         · 지표: Total · FG · NG · %NG · Mat'l(Before+After) · 가동률(실가동 ÷ 계획) · OEE(계획시간 가중) · 로스시간
         · 구글시트가 OP '10-20' · '10-30' 을 날짜(10월 20일)로 바꿔 넣는 경우가 있어 읽을 때 되돌린다
    ========================================================================= */
+Object.assign(I18N.ko, { 'f2.gt':'설비 · 모델별 일일 불량 추이 (불량 많은 순)' });
+Object.assign(I18N.en, { 'f2.gt':'Daily defect trend by machine · model (worst first)' });
+Object.assign(I18N.th, { 'f2.gt':'แนวโน้มของเสียรายวันตามเครื่อง · รุ่น' });
 Object.assign(I18N.ko, { 'f2.sec.prod':'설비 생산실적 (전 설비)', 'f2.v.pdaily':'일일 생산실적', 'f2.v.pweek':'주간 생산실적', 'f2.v.pmonth':'월간 생산실적' });
 Object.assign(I18N.en, { 'f2.sec.prod':'Machine output (all M/C)', 'f2.v.pdaily':'Daily production', 'f2.v.pweek':'Weekly production', 'f2.v.pmonth':'Monthly production' });
 Object.assign(I18N.th, { 'f2.sec.prod':'ผลผลิตเครื่องจักร (ทุกเครื่อง)', 'f2.v.pdaily':'ผลผลิตรายวัน', 'f2.v.pweek':'ผลผลิตรายสัปดาห์', 'f2.v.pmonth':'ผลผลิตรายเดือน' });
@@ -2034,133 +2053,186 @@ function f2pTrendTable(list, label, isDay, curKey){
    · 묶음 = 설비 + 모델(품번 · OP) · 보고 기간 NG 수량이 많은 순으로 위에서 아래로
    · 묶음마다: 작은 추이 차트(생산 막대 + %NG 선) + 표(PRODUCTION · DEFECT · DEFECT RATE · 불량유형별 % — 생산 대비)
    · 열 = 일자 (보고 기간이 7일보다 짧으면 앞 7일까지 · 최대 31일) + 기간 합계 */
-function f2gHidden(k){ try{ const m = JSON.parse(localStorage.getItem('stc_f2g_hide')||'{}'); return m[k] || []; }catch(e){ return []; } }
-function f2gSave(k, arr){ try{ const m = JSON.parse(localStorage.getItem('stc_f2g_hide')||'{}'); if(arr && arr.length) m[k] = arr; else delete m[k]; localStorage.setItem('stc_f2g_hide', JSON.stringify(m)); }catch(e){} renderF2(); }
-function f2gTog(ek, en){ const k = decodeURIComponent(ek), n = decodeURIComponent(en), h = f2gHidden(k); const i = h.indexOf(n); if(i>=0) h.splice(i,1); else h.push(n); f2gSave(k, h); }
-function f2gSetAll(ek, names){ const k = decodeURIComponent(ek); f2gSave(k, names ? JSON.parse(decodeURIComponent(names)) : []); }
-function f2pGroupTrend(pred, pFrom, dTo){
-  const X = f2pTx(), L = LANG==='en'?'en':LANG==='th'?'th':'ko';
-  const TX = { ko:{ none:'선택한 기간에 데이터가 없습니다', rank:'우선순위', grp:'설비 · 모델', top:'주요 불량유형', per:'기간 합계', prod:'PRODUCTION QTY', def:'DEFECT QTY', rate:'DEFECT RATE (%)', typ:'유형별 불량률 (생산 대비 %)',
-                    note:'※ 순서 = 보고 기간 불량(NG) 수량이 많은 순 · 노란 열 = 보고 기간 · 유형별 % = 그 유형 수량 ÷ 생산 · 빨간 글자 = 목표 {t}% 초과 · 날짜를 누르면 그날 메모·사진', more:'전체 {n}개 묶음 · 아래 표 펼치기' },
-               en:{ none:'No data in the selected period', rank:'Priority', grp:'Machine · model', top:'Top defect types', per:'Period total', prod:'PRODUCTION QTY', def:'DEFECT QTY', rate:'DEFECT RATE (%)', typ:'Defect rate by type (% of output)',
-                    note:'※ Order = NG qty in the report period (largest first) · yellow = report period · type % = type qty ÷ output · red = above target {t}%', more:'{n} groups' },
-               th:{ none:'ไม่มีข้อมูล', rank:'ลำดับ', grp:'เครื่อง · รุ่น', top:'ของเสียหลัก', per:'รวมช่วง', prod:'PRODUCTION QTY', def:'DEFECT QTY', rate:'DEFECT RATE (%)', typ:'อัตราของเสียตามประเภท (% ของผลิต)',
-                    note:'※ เรียงตามจำนวน NG ในช่วงรายงาน · สีเหลือง = ช่วงรายงาน', more:'{n} กลุ่ม' } }[L];
-  const tg = f2Target(), CAP = 31;
-  const t0 = pFrom < f2AddDays(dTo, -30) ? pFrom : f2AddDays(dTo, -30);   /* 한 달(31일) 칸 — 보고 종료일 기준 */
-  let days = [...new Set(F2.pm.filter(r=>r.d>=t0 && r.d<=dTo).map(r=>r.d))].sort();
-  if(days.length > CAP) days = days.slice(-CAP);
-  /* 유형 목록 : 불량유형 11종 + Mat'l Before/After + Setting */
-  const TY = F2P.defs.map((k,i)=>({ k:f2pRaw(k), get:r=>r.df[i] })).concat([{ k:"Mat'l Before", get:r=>r.mb }, { k:"Mat'l After", get:r=>r.ma }, { k:'Setting', get:r=>r.set }]).map(y=>({ ...y, t:f2pLoc(y.k) }));
+/* =========================================================================
+   설비 · 모델별 일일 불량 추이 (불량 많은 순) — 공용 부품 (FAC1 품질 6σ · FAC2 품질보고 · FAC2 생산실적)
+   gtHtml(cfg)
+     cfg.id      : 화면 구분 (저장 키 · 요소 id 앞머리)
+     cfg.rows    : [{ d:'YYYY-MM-DD', key, mc, name, sub, t, n, ty:[유형별 수량 · cfg.types 순서] }]
+     cfg.types   : [{ k:원래이름(저장용), t:화면 이름 }]
+     cfg.pFrom/pTo : 보고 기간 (노란 칸 · 순위 기준)
+     cfg.tg      : 목표 불량률 % (없으면 null)
+     cfg.lang    : 'ko' | 'en' | 'th'
+     cfg.rerender: 유형 선택을 바꾼 뒤 다시 그릴 함수
+     cfg.noteTag : (mc) => 메모 대상 이름 (없으면 메모 기능 끔)
+     cfg.lbl     : { grp, prod, def, rate, rateName, sumNote } 바꿀 글자
+   · 열 = 보고 종료일 기준 최근 31일(보고 기간이 더 길면 그 기간) 중 데이터 있는 날
+   · 묶음 순서 = 보고 기간 불량 수량 많은 순 → 맨 위 1·2·3위 그래프 모아보기 → 순위표 → 묶음별 그래프 + 표
+   ========================================================================= */
+window.__gtRe = window.__gtRe || {};
+const GT_COL = ['#2a78d6','#eb6834','#1baf7a','#8e44ad','#d4a017','#00838f','#c2185b','#6d4c41','#5c6bc0','#7cb342','#90a4ae','#f06292','#26a69a','#ff7043'];
+const gtEsc = v => String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const gtFmt = (v,d) => v==null||!isFinite(v) ? '–' : Number(v).toLocaleString('en-US',{ minimumFractionDigits:d||0, maximumFractionDigits:d||0 });
+const gtAdd = (s,n) => { const d = new Date(s+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
+const gtEnc = v => encodeURIComponent(v).replace(/'/g,'%27');
+function gtSmooth(P){   /* 단조 3차 곡선 (Fritsch–Carlson) — 값보다 튀어나가지 않는 부드러운 선 */
+  const n = P.length; if(!n) return ''; if(n < 3) return P.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const dx = [], sl = [], m = [];
+  for(let i=0;i<n-1;i++){ dx[i] = P[i+1][0]-P[i][0]; sl[i] = (P[i+1][1]-P[i][1]) / (dx[i]||1); }
+  m[0] = sl[0]; m[n-1] = sl[n-2];
+  for(let i=1;i<n-1;i++) m[i] = (sl[i-1]*sl[i] <= 0) ? 0 : 3*(dx[i-1]+dx[i]) / ((2*dx[i]+dx[i-1])/sl[i-1] + (dx[i]+2*dx[i-1])/sl[i]);
+  let d = 'M'+P[0][0].toFixed(1)+' '+P[0][1].toFixed(1);
+  for(let i=0;i<n-1;i++){ const h = dx[i]/3;
+    d += ` C${(P[i][0]+h).toFixed(1)} ${(P[i][1]+m[i]*h).toFixed(1)} ${(P[i+1][0]-h).toFixed(1)} ${(P[i+1][1]-m[i+1]*h).toFixed(1)} ${P[i+1][0].toFixed(1)} ${P[i+1][1].toFixed(1)}`; }
+  return d;
+}
+/* 처음에는 많이 나온 유형 5개만 켠다 (window.__gtDef = 묶음별 기본으로 끌 유형) · 한 번이라도 고르면 그 선택을 저장 */
+window.__gtDef = window.__gtDef || {};
+function gtHidden(id, k){ try{ const m = JSON.parse(localStorage.getItem('stc_gt_hide_'+id)||'{}'); if(Array.isArray(m[k])) return m[k]; }catch(e){} return window.__gtDef[id+'|'+k] || []; }
+function gtSave(id, k, arr){ try{ const m = JSON.parse(localStorage.getItem('stc_gt_hide_'+id)||'{}'); m[k] = arr || []; localStorage.setItem('stc_gt_hide_'+id, JSON.stringify(m)); }catch(e){}
+  const f = window.__gtRe[id]; if(f) setTimeout(f, 0); }
+function gtTog(id, ek, en){ const k = decodeURIComponent(ek), n = decodeURIComponent(en), h = gtHidden(id, k); const i = h.indexOf(n); if(i>=0) h.splice(i,1); else h.push(n); gtSave(id, k, h); }
+function gtSetAll(id, ek, names){ gtSave(id, decodeURIComponent(ek), names ? JSON.parse(decodeURIComponent(names)) : []); }
+function gtNote(id, d, tag){ window.__gtLast = id; if(typeof noteOpen==='function') noteOpen(d, tag); }
+function gtJump(id, i){ const el = document.getElementById(id+'-g'+i); if(el) el.scrollIntoView({ behavior:'smooth', block:'start' }); }
+function gtHtml(cfg){
+  const id = cfg.id, L = cfg.lang==='en' ? 'en' : cfg.lang==='th' ? 'th' : 'ko', tg = cfg.tg;
+  if(cfg.rerender) window.__gtRe[id] = cfg.rerender;
+  const TX = Object.assign({ ko:{ none:'선택한 기간에 데이터가 없습니다', rank:'우선순위', grp:'설비 · 모델', top:'주요 불량유형', per:'기간 합계', prod:'PRODUCTION QTY', def:'DEFECT QTY', rate:'DEFECT RATE (%)',
+                    typ:'유형별 불량률 (생산 대비 %)', rateName:'전체 불량률', sel:'유형 선택', all:'전체', none2:'해제', tg:'목표', top3:'불량 상위 3개 설비 · 모델 — 유형별 불량률 추이', tbl:'표 보기 ↓',
+                    note:'※ 순서 = 보고 기간 불량 수량이 많은 순 · 노란 칸 = 보고 기간 · 유형별 % = 그 유형 수량 ÷ 생산 · 유형 칩을 누르면 그래프 선과 표 행이 같이 바뀝니다', memo:'클릭 → 메모·사진', memoN:'메모 {n}건', prodLg:'생산수량' },
+               en:{ none:'No data in the selected period', rank:'Priority', grp:'Machine · model', top:'Top defect types', per:'Period total', prod:'PRODUCTION QTY', def:'DEFECT QTY', rate:'DEFECT RATE (%)',
+                    typ:'Defect rate by type (% of output)', rateName:'Total %NG', sel:'Types', all:'All', none2:'None', tg:'Target', top3:'Top 3 machine · model — defect rate by type', tbl:'Table ↓',
+                    note:'※ Order = defect qty in the report period (largest first) · yellow = report period · type % = type qty ÷ output', memo:'click → notes · photos', memoN:'{n} notes', prodLg:'Output' },
+               th:{ none:'ไม่มีข้อมูล', rank:'ลำดับ', grp:'เครื่อง · รุ่น', top:'ของเสียหลัก', per:'รวมช่วง', prod:'PRODUCTION QTY', def:'DEFECT QTY', rate:'DEFECT RATE (%)',
+                    typ:'อัตราของเสียตามประเภท (% ของผลิต)', rateName:'%NG รวม', sel:'ประเภท', all:'ทั้งหมด', none2:'ล้าง', tg:'เป้าหมาย', top3:'3 อันดับแรก — อัตราของเสียตามประเภท', tbl:'ตาราง ↓',
+                    note:'※ เรียงตามจำนวนของเสียในช่วงรายงาน · สีเหลือง = ช่วงรายงาน', memo:'คลิก → บันทึก · รูป', memoN:'บันทึก {n}', prodLg:'ผลิต' } }[L], cfg.lbl || {});
+  const TY = cfg.types, pFrom = cfg.pFrom, pTo = cfg.pTo, CAP = 31;
+  const t0 = pFrom < gtAdd(pTo, -30) ? pFrom : gtAdd(pTo, -30);
+  let days = [...new Set(cfg.rows.filter(r=>r.d>=t0 && r.d<=pTo).map(r=>r.d))].sort();
+  if(days.length > CAP && pFrom >= gtAdd(pTo, -30)) days = days.slice(-CAP);
+  const inP = d => d>=pFrom && d<=pTo;
   const mk = () => ({ t:0, n:0, ty:TY.map(()=>0) });
-  const add = (o, r) => { o.t += r.t; o.n += r.n; TY.forEach((y,i)=>o.ty[i] += y.get(r)); };
+  const add = (o, r) => { o.t += r.t; o.n += r.n; r.ty.forEach((v,i)=>{ o.ty[i] += v||0; }); };
   const G = {};
-  F2.pm.forEach(r=>{
-    const inDays = days.includes(r.d), inP = pred(r); if(!inDays && !inP) return;
-    const k = r.mc + '|' + r.pn + '|' + r.op;
-    const g = G[k] || (G[k] = { mc:r.mc, pn:r.pn, op:r.op, name:f2pShort(r.pn, r.name), P:mk(), D:{} });
-    if(inP) add(g.P, r);
-    if(inDays) add(g.D[r.d] || (g.D[r.d] = mk()), r);
+  cfg.rows.forEach(r=>{
+    const inD = days.includes(r.d), inPer = inP(r.d); if(!inD && !inPer) return;
+    const g = G[r.key] || (G[r.key] = { key:r.key, mc:r.mc, name:r.name, sub:r.sub, P:mk(), D:{} });
+    if(inPer) add(g.P, r);
+    if(inD) add(g.D[r.d] || (g.D[r.d] = mk()), r);
   });
   const list = Object.values(G).filter(g=>g.P.t>0).sort((a,b)=> b.P.n-a.P.n || (b.P.n/b.P.t)-(a.P.n/a.P.t));
-  if(!list.length) return `<div class="card empty" style="padding:14px">${TX.none}</div>`;
+  if(!list.length) return `<div class="gt-card gt-empty">${TX.none}</div>`;
   const pc = (v,t) => t ? v/t*100 : null;
-  const inP = d => d>=pFrom && d<=dTo;
   const md = d => d.slice(5).replace('-','/');
-  /* 우선순위 요약 */
-  const sum = `<div class="card"><div class="tblwrap"><table class="eq f2-pt f2g-sum">
-    <thead><tr><th>${TX.rank}</th><th style="text-align:left">${TX.grp}</th><th>Total</th><th>NG</th><th>% NG</th><th style="text-align:left">${TX.top}</th></tr></thead>
-    <tbody>${list.map((g,i)=>{ const r = pc(g.P.n,g.P.t), top = TY.map((y,j)=>({ t:y.t, v:g.P.ty[j] })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,3);
-      return `<tr><td class="name"><a href="#f2g-${i}" onclick="document.getElementById('f2g-${i}').scrollIntoView({behavior:'smooth',block:'start'});return false;" class="f2g-rk${i<3?' t':''}">${i+1}</a></td>
-        <td style="text-align:left"><b>${esc2(g.mc)}</b> · ${esc2(g.name)} <small style="color:var(--ink-muted)">${esc2(g.pn)} · OP${esc2(g.op)}</small></td>
-        <td>${fmt(g.P.t)}</td><td><b>${fmt(g.P.n)}</b></td><td style="color:${f2St(r).c};font-weight:800">${f2pPc(r)}</td>
-        <td style="text-align:left;font-size:11.5px">${top.map(x=>`${esc2(x.t)} <b>${fmt(x.v)}</b> (${(x.v/g.P.t*100).toFixed(2)}%)`).join(' · ') || '–'}</td></tr>`; }).join('')}</tbody></table></div></div>`;
-  /* 묶음별 차트 + 표 */
-  /* 묶음별 유형별 불량률 꺾은선 — 선 하나 = 불량유형 하나(생산 대비 %) · 빨간 점선 = 전체 불량률 · 생산 없는 날은 건너뜀 */
-  const F2G_COL = ['#2a78d6','#eb6834','#1baf7a','#8e44ad','#d4a017','#00838f','#c2185b','#6d4c41','#5c6bc0','#7cb342','#90a4ae','#f06292','#26a69a','#ff7043'];
-  const mini = (g, tyIdx) => {
+  const rc = v => v==null ? '#9aa0a6' : (tg!=null && v>tg) ? '#c62828' : '#1b7a3c';
+  const noteOn = typeof cfg.noteTag==='function' && typeof noteFor==='function';
+  const notesOf = (d, g) => noteOn ? noteFor(d, cfg.noteTag(g.mc)) : [];
+  const nOpen = (d, g) => noteOn ? `gtNote('${id}','${d}','${gtEsc(cfg.noteTag(g.mc))}')` : '';
+  const head = (g, i, jump) => { const rP = pc(g.P.n, g.P.t);
+    return `<div class="f2g-h"><span class="f2g-rk${i<3?' t':''}">${i+1}</span><b>${gtEsc(g.mc)}</b><span class="nm">${gtEsc(g.name)}</span>${g.sub?`<small>${gtEsc(g.sub)}</small>`:''}
+      <span class="kp gt-kp"><span>Total <b>${gtFmt(g.P.t)}</b></span><span>NG <b>${gtFmt(g.P.n)}</b></span><span>%NG <b style="color:${rc(rP)}">${rP==null?'–':rP.toFixed(2)+'%'}</b></span></span>${jump?`<a href="#" class="gt-jump" onclick="gtJump('${id}',${i});return false;">${TX.tbl}</a>`:'<span class="gt-jsp"></span>'}</div>`; };
+  const tyOf = g => { const L = TY.map((y,j)=>j).filter(j=>g.P.ty[j]>0 || days.some(d=>g.D[d] && g.D[d].ty[j]>0)).sort((a,b)=>g.P.ty[b]-g.P.ty[a]);
+    window.__gtDef[id+'|'+g.key] = L.slice(cfg.topN || 5).map(j=>TY[j].k); return L; };
+  /* 그래프 — 선 하나 = 불량유형 하나 · 빨간 점선 = 전체 불량률 */
+  const chart = (g, tyIdx) => {
     const W = 1000, H = 262, Lx = 46, Rx = 150, T = 28, B = 26, PH = H-T-B, n = days.length, cw = (W-Lx-Rx)/Math.max(1,n);
-    const has = days.map(d=>{ const o = g.D[d]; return !!(o && o.t); });
-    const gk = g.mc+'|'+g.pn+'|'+g.op, hid = f2gHidden(gk);
-    const serAll = tyIdx.map((j,k)=>({ name:TY[j].t, key:TY[j].k, c:F2G_COL[k % F2G_COL.length], v:days.map(d=>{ const o = g.D[d]; return o && o.t ? o.ty[j]/o.t*100 : null; }) }));
+    const hid = gtHidden(id, g.key);
+    const serAll = tyIdx.map((j,k)=>({ name:TY[j].t, key:TY[j].k, c:GT_COL[k % GT_COL.length], v:days.map(d=>{ const o = g.D[d]; return o && o.t ? o.ty[j]/o.t*100 : null; }) }));
     const ser = serAll.filter(sr=>!hid.includes(sr.key));
-    const tot = { name:L==='ko'?'전체 불량률':L==='th'?'%NG รวม':'Total %NG', c:'#c62828', tot:true, v:days.map(d=>{ const o = g.D[d]; return o && o.t ? o.n/o.t*100 : null; }) };
+    const tot = { name:TX.rateName, key:'__tot', c:'#c62828', tot:true, v:days.map(d=>{ const o = g.D[d]; return o && o.t ? o.n/o.t*100 : null; }) };
     const showTot = !hid.includes('__tot');
     const all = (showTot ? [tot] : []).concat(ser);
-    const vmax = Math.max(tg, ...all.flatMap(s=>s.v.filter(x=>x!=null)));
+    const vmax = Math.max(tg||0, 0.5, ...all.flatMap(s=>s.v.filter(x=>x!=null)));
     const st = [0.5,1,2,2.5,5,10,20,25,50].find(x=>vmax*1.12/x<=6) || 100, ymax = Math.ceil(vmax*1.12/st)*st;
     const PX = i => Lx + cw*(i+0.5), Y = v => T + PH*(1 - v/ymax);
     let s = '';
     days.forEach((d,i)=>{ if(inP(d)) s += `<rect x="${(PX(i)-cw/2).toFixed(1)}" y="${T}" width="${cw.toFixed(1)}" height="${PH}" fill="#fde68a" opacity=".35"/>`; });
-    /* 날짜 칸 클릭 → 그 설비의 생산실적 메모·사진 (메모 있는 날 = 주황 점선 + 📝 건수) */
-    days.forEach((d,i)=>{ const L = noteFor(d, g.mc), x = PX(i);
-      s += `<rect class="f2g-hit" x="${(x-cw/2).toFixed(1)}" y="0" width="${cw.toFixed(1)}" height="${H-4}" fill="transparent" onclick="noteOpen('${d}','${esc2(g.mc)}')"><title>${d} · ${esc2(g.mc)} — ${L.length?`메모 ${L.length}건 · `:''}클릭 → 메모·사진</title></rect>`;
-      if(L.length){ const cap = String((L.find(x=>x.text)||{}).text||'').split('\n')[0].slice(0,40);
+    if(noteOn) days.forEach((d,i)=>{ const N = notesOf(d, g), x = PX(i);
+      s += `<rect class="f2g-hit" x="${(x-cw/2).toFixed(1)}" y="0" width="${cw.toFixed(1)}" height="${H-4}" fill="transparent" onclick="${nOpen(d,g)}"><title>${d} · ${gtEsc(g.mc)} — ${N.length?TX.memoN.replace('{n}',N.length)+' · ':''}${TX.memo}</title></rect>`;
+      if(N.length){ const cap = String((N.find(x=>x.text)||{}).text||'').split('\n')[0].slice(0,40);
         s += `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${T}" y2="${T+PH}" stroke="#f59e0b" stroke-width="1.4" stroke-dasharray="4 3" pointer-events="none"/>`
-           + `<g style="cursor:pointer" onclick="noteOpen('${d}','${esc2(g.mc)}')"><title>${d} · ${esc2(cap)}</title><rect x="${(x-15).toFixed(1)}" y="3" width="30" height="17" rx="4" fill="#f59e0b"/><text x="${x.toFixed(1)}" y="15.5" text-anchor="middle" font-size="10.5" font-weight="800" fill="#fff">📝${L.length}</text></g>`; } });
-    for(let v=0; v<=ymax+1e-9; v+=st){ const y = Y(v).toFixed(1); s += `<line x1="${Lx}" x2="${W-Rx}" y1="${y}" y2="${y}" stroke="#eef0f3"/><text x="${Lx-6}" y="${+y+4}" text-anchor="end" font-size="10" fill="#6b7280">${+v.toFixed(1)}%</text>`; }
-    const yt = Y(tg).toFixed(1);
-    s += `<line x1="${Lx}" x2="${W-Rx}" y1="${yt}" y2="${yt}" stroke="#9ca3af" stroke-dasharray="2 3" stroke-width="1"/>`;
+           + `<g style="cursor:pointer" onclick="${nOpen(d,g)}"><title>${d} · ${gtEsc(cap)}</title><rect x="${(x-15).toFixed(1)}" y="3" width="30" height="17" rx="4" fill="#f59e0b"/><text x="${x.toFixed(1)}" y="15.5" text-anchor="middle" font-size="10.5" font-weight="800" fill="#fff">📝${N.length}</text></g>`; } });
+    /* 생산수량 — 옅은 막대 (플롯 아래쪽 45% 높이 · 오른쪽 축 없이 막대 위 숫자) */
+    const tmax = Math.max(1, ...days.map(d=>(g.D[d]||{}).t||0)), bw = Math.max(3, Math.min(20, cw*0.55));
+    days.forEach((d,i)=>{ const o = g.D[d]; if(!o || !o.t) return; const h = PH*0.45*o.t/tmax, x = PX(i);
+      s += `<rect x="${(x-bw/2).toFixed(1)}" y="${(T+PH-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${inP(d)?'#cbd5e1':'#e2e8f0'}" pointer-events="none"/>`;
+      if(n<=16 || inP(d)) s += `<text x="${x.toFixed(1)}" y="${(T+PH-h-3).toFixed(1)}" text-anchor="middle" font-size="9" fill="#94a3b8" pointer-events="none">${o.t>=1000?(o.t/1000).toFixed(1)+'k':o.t}</text>`; });
+    for(let v=0; v<=ymax+1e-9; v+=st){ const y = Y(v).toFixed(1); s += `<line x1="${Lx}" x2="${W-Rx}" y1="${y}" y2="${y}" stroke="#eef0f3" pointer-events="none"/><text x="${Lx-6}" y="${+y+4}" text-anchor="end" font-size="10" fill="#6b7280">${+v.toFixed(1)}%</text>`; }
+    if(tg!=null){ const yt = Y(tg).toFixed(1); s += `<line x1="${Lx}" x2="${W-Rx}" y1="${yt}" y2="${yt}" stroke="#9ca3af" stroke-dasharray="2 3" stroke-width="1" pointer-events="none"/>`; }
     days.forEach((d,i)=>{ if(n<=16 || i%Math.ceil(n/16)===0 || i===n-1) s += `<text x="${PX(i).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="10.5" fill="${new Date(d+'T00:00:00Z').getUTCDay()===0?'#dc2626':'#6b7280'}">${md(d)}</text>`; });
     const ends = [];
     [...ser].reverse().concat(showTot?[tot]:[]).forEach(sr=>{
       const P = []; sr.v.forEach((v,i)=>{ if(v!=null) P.push([PX(i), Y(v)]); });
-      s += `<path d="${fcSmooth(P)}" pointer-events="none" fill="none" stroke="${sr.c}" stroke-width="${sr.tot?2.6:1.8}"${sr.tot?' stroke-dasharray="7 4"':''} stroke-linejoin="round"/>`;
+      s += `<path d="${gtSmooth(P)}" pointer-events="none" fill="none" stroke="${sr.c}" stroke-width="${sr.tot?2.6:1.8}"${sr.tot?' stroke-dasharray="7 4"':''} stroke-linejoin="round"/>`;
       sr.v.forEach((v,i)=>{ if(v==null) return;
-        s += `<circle style="cursor:pointer" onclick="noteOpen('${days[i]}','${esc2(g.mc)}')" cx="${PX(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${sr.tot?3.6:2.8}" fill="${sr.tot?'#fff':sr.c}" stroke="${sr.c}" stroke-width="${sr.tot?2:1}"><title>${days[i]} · ${esc2(sr.name)} ${v.toFixed(2)}%</title></circle>`;
-        if(sr.tot && (n<=16 || inP(days[i]))) s += `<text x="${PX(i).toFixed(1)}" y="${(Y(v)-8).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="800" fill="#b91c1c">${v.toFixed(1)}</text>`; });
+        s += `<circle${noteOn?` style="cursor:pointer" onclick="${nOpen(days[i],g)}"`:''} cx="${PX(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${sr.tot?3.6:2.8}" fill="${sr.tot?'#fff':sr.c}" stroke="${sr.c}" stroke-width="${sr.tot?2:1}"><title>${days[i]} · ${gtEsc(sr.name)} ${v.toFixed(2)}%</title></circle>`;
+        if(sr.tot && (n<=16 || inP(days[i]))) s += `<text x="${PX(i).toFixed(1)}" y="${(Y(v)-8).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="800" fill="#b91c1c" pointer-events="none">${v.toFixed(1)}</text>`; });
       let li = sr.v.length-1; while(li>=0 && sr.v[li]==null) li--;
       if(li>=0) ends.push({ y:Y(sr.v[li]), sr, v:sr.v[li] });
     });
-    /* 오른쪽 끝 라벨 (겹치면 아래로) */
-    /* 겹치면 아래로 밀고, 플롯 아래로 넘치는 라벨(값이 작은 유형)은 생략 — 범례·표에서 확인 */
     ends.sort((a,b)=>a.y-b.y); let last = -99;
     ends.forEach(e=>{ const y = Math.max(e.y+4, last+12); if(y > H-B+2 && !e.sr.tot) return; last = y;
-      s += `<text x="${W-Rx+8}" y="${y.toFixed(1)}" font-size="10.5" font-weight="${e.sr.tot?800:600}" fill="${e.sr.c}">● ${esc2(e.sr.name)} ${e.v.toFixed(2)}%</text>`; });
-    /* 유형 선택 — 칩을 눌러 선을 켜고 끈다 (설비·모델마다 따로 · 이 브라우저에 저장) */
-    const enc = v => encodeURIComponent(v).replace(/'/g,'%27');   /* Mat'l 의 ' 가 onclick 따옴표를 깨지 않게 */
-    const ek = enc(gk), names = enc(JSON.stringify(serAll.map(sr=>sr.key)));
-    const chip = (sr, on, key) => `<button class="f2g-chip${on?' on':''}" onclick="f2gTog('${ek}','${enc(key)}')" style="--c:${sr.c}"><i></i>${esc2(sr.name)}</button>`;
-    const lg = `<span class="f2g-sel">${L==='ko'?'유형 선택':'Types'}</span>` + chip(tot, showTot, '__tot') + serAll.map(sr=>chip(sr, !hid.includes(sr.key), sr.key)).join('')
-      + `<button class="f2g-all" onclick="f2gSetAll('${ek}', null)">${L==='ko'?'전체':'All'}</button><button class="f2g-all" onclick="f2gSetAll('${ek}','${names}')">${L==='ko'?'해제':'None'}</button>`
-      + `<span class="f2g-tgl"><i></i>${X.tg} ${tg}%</span>`;
-    return `<div class="f2g-lg">${lg}</div><svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;min-width:680px" role="img" aria-label="${esc2(g.mc)} defect trend">${s}</svg>`;
+      s += `<text x="${W-Rx+8}" y="${y.toFixed(1)}" font-size="10.5" font-weight="${e.sr.tot?800:600}" fill="${e.sr.c}">● ${gtEsc(e.sr.name)} ${e.v.toFixed(2)}%</text>`; });
+    const ek = gtEnc(g.key), names = gtEnc(JSON.stringify(serAll.map(sr=>sr.key)));
+    const chip = (sr, on) => `<button class="f2g-chip${on?' on':''}" onclick="gtTog('${id}','${ek}','${gtEnc(sr.key)}')" style="--c:${sr.c}"><i></i>${gtEsc(sr.name)}</button>`;
+    const lg = `<span class="f2g-sel">${TX.sel}</span>` + chip(tot, showTot) + serAll.map(sr=>chip(sr, !hid.includes(sr.key))).join('')
+      + `<button class="f2g-all" onclick="gtSetAll('${id}','${ek}', null)">${TX.all}</button><button class="f2g-all" onclick="gtSetAll('${id}','${ek}','${names}')">${TX.none2}</button>`
+      + `<span class="f2g-tgl"><b class="gt-pbar"></b>${TX.prodLg}${tg!=null?` <i></i>${TX.tg} ${tg}%`:''}</span>`;
+    return `<div class="f2g-lg">${lg}</div><div class="gt-scroll"><svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;min-width:680px" role="img" aria-label="${gtEsc(g.mc)}">${s}</svg></div>`;
   };
-  const tyOf = g => TY.map((y,j)=>j).filter(j=>g.P.ty[j]>0 || days.some(d=>g.D[d] && g.D[d].ty[j]>0)).sort((a,b)=>g.P.ty[b]-g.P.ty[a]);
-  /* 맨 위 — 1·2·3위 그래프만 모아 보기 (선택한 유형·메모는 아래 카드와 같이 쓴다) */
-  const top3 = `<div class="card f2g-top"><div class="f2g-toph">${L==='ko'?'불량 상위 3개 설비 · 모델 — 유형별 불량률 추이':'Top 3 machine · model — defect rate by type'}</div>`
-    + list.slice(0,3).map((g,i)=>{ const rP = pc(g.P.n,g.P.t);
-      return `<div class="f2g-tc"><div class="f2g-h"><span class="f2g-rk t">${i+1}</span><b>${esc2(g.mc)}</b><span class="nm">${esc2(g.name)}</span><small>${esc2(g.pn)} · OP${esc2(g.op)}</small>
-        <span class="kp">Total <b>${fmt(g.P.t)}</b> · NG <b>${fmt(g.P.n)}</b> · %NG <b style="color:${f2St(rP).c}">${f2pPc(rP)}</b>
-        <a href="#f2g-${i}" class="f2p-nb" style="margin-left:8px;text-decoration:none" onclick="document.getElementById('f2g-${i}').scrollIntoView({behavior:'smooth',block:'start'});return false;">${L==='ko'?'표 보기 ↓':'Table ↓'}</a></span></div>
-        <div class="tblwrap">${mini(g, tyOf(g))}</div></div>`; }).join('') + `</div>`;
+  /* ① 1·2·3위 그래프만 */
+  const top3 = `<div class="gt-card f2g-top"><div class="f2g-toph">${TX.top3}</div>`
+    + list.slice(0,3).map((g,i)=>`<div class="f2g-tc">${head(g, i, true)}${chart(g, tyOf(g))}</div>`).join('') + `</div>`;
+  /* ② 순위표 */
+  const sum = `<div class="gt-card"><div class="gt-scroll"><table class="gt-sumt">
+    <thead><tr><th>${TX.rank}</th><th class="l">${TX.grp}</th><th>Total</th><th>NG</th><th>% NG</th><th class="l">${TX.top}</th></tr></thead>
+    <tbody>${list.map((g,i)=>{ const r = pc(g.P.n,g.P.t), top = TY.map((y,j)=>({ t:y.t, v:g.P.ty[j] })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,3);
+      return `<tr><td><a href="#" onclick="gtJump('${id}',${i});return false;" class="f2g-rk${i<3?' t':''}">${i+1}</a></td>
+        <td class="l"><b>${gtEsc(g.mc)}</b> · ${gtEsc(g.name)} ${g.sub?`<small>${gtEsc(g.sub)}</small>`:''}</td>
+        <td>${gtFmt(g.P.t)}</td><td><b>${gtFmt(g.P.n)}</b></td><td style="color:${rc(r)};font-weight:800">${r==null?'–':r.toFixed(2)+'%'}</td>
+        <td class="l" style="font-size:11.5px">${top.map(x=>`${gtEsc(x.t)} <b>${gtFmt(x.v)}</b> (${(x.v/g.P.t*100).toFixed(2)}%)`).join(' · ') || '–'}</td></tr>`; }).join('')}</tbody></table></div></div>`;
+  /* ③ 묶음별 그래프 + 표 */
   const cards = list.map((g,i)=>{
-    const P = g.P, rP = pc(P.n,P.t);
-    const tyIdx = tyOf(g);
-    const hd = days.map(d=>{ const c = noteFor(d, g.mc).length; return `<th class="${inP(d)?'in':''}"><a href="#" onclick="noteOpen('${d}','${esc2(g.mc)}');return false;" title="${d} 클릭 → 메모·사진">${+d.slice(5,7)}/${+d.slice(8,10)}${c?` <span class="f2g-nb">📝${c}</span>`:''}</a></th>`; }).join('');
-    const notes = days.flatMap(d=>noteFor(d, g.mc).map(x=>({ ...x, d }))).sort((a,b)=>a.d.localeCompare(b.d));
-    const nlist = notes.length ? `<div class="f2g-notes">${notes.map(x=>`<div><a href="#" onclick="noteOpen('${x.d}','${esc2(g.mc)}');return false;"><b>📝 ${md(x.d)}</b></a>${x.tag?` <span class="note-tag">${esc2(x.tag)}</span>`:''} ${esc2(String(x.text||'').split('\n')[0])}${(x.photos||[]).length?` <span class="ph">📷${x.photos.length}</span>`:''}${x.author?` <small>— ${esc2(x.author)}</small>`:''}</div>`).join('')}</div>` : '';
+    const P = g.P, rP = pc(P.n,P.t), tyIdx = tyOf(g), hid = gtHidden(id, g.key);
+    const hd = days.map(d=>{ const c = notesOf(d, g).length;
+      const lb = `${+d.slice(5,7)}/${+d.slice(8,10)}${c?` <span class="f2g-nb">📝${c}</span>`:''}`;
+      return `<th class="${inP(d)?'in':''}">${noteOn?`<a href="#" onclick="${nOpen(d,g)};return false;" title="${d} ${TX.memo}">${lb}</a>`:lb}</th>`; }).join('');
+    const notes = noteOn ? days.flatMap(d=>notesOf(d, g).map(x=>({ ...x, d }))).sort((a,b)=>a.d.localeCompare(b.d)) : [];
+    const nlist = notes.length ? `<div class="f2g-notes">${notes.map(x=>`<div><a href="#" onclick="${nOpen(x.d,g)};return false;"><b>📝 ${md(x.d)}</b></a>${x.tag?` <span class="note-tag">${gtEsc(x.tag)}</span>`:''} ${gtEsc(String(x.text||'').split('\n')[0])}${(x.photos||[]).length?` <span class="ph">📷${x.photos.length}</span>`:''}${x.author?` <small>— ${gtEsc(x.author)}</small>`:''}</div>`).join('')}</div>` : '';
     const cell = (d, f) => { const o = g.D[d]; return `<td class="${inP(d)?'in':''}">${o && o.t ? f(o) : '<span class="nil">·</span>'}</td>`; };
-    const rcol = v => v==null ? '' : v>tg ? ' style="color:#c62828;font-weight:800"' : '';
-    const hidT = f2gHidden(g.mc+'|'+g.pn+'|'+g.op).includes('__tot');
+    const rcol = v => v==null ? '' : (tg!=null && v>tg) ? ' style="color:#c62828;font-weight:800"' : '';
     const rows = [
-      `<tr class="q"><td class="lb">${TX.prod}</td>${days.map(d=>cell(d,o=>fmt(o.t))).join('')}<td class="pt">${fmt(P.t)}</td></tr>`,
-      `<tr class="q"><td class="lb">${TX.def}</td>${days.map(d=>cell(d,o=>o.n?fmt(o.n):'0')).join('')}<td class="pt">${fmt(P.n)}</td></tr>`,
-      `<tr class="r${hidT?' off':' sel'}" style="--c:#c62828"><td class="lb">${TX.rate}</td>${days.map(d=>{ const o = g.D[d], v = o && o.t ? o.n/o.t*100 : null; return `<td class="${inP(d)?'in':''}"${rcol(v)}>${v==null?'<span class="nil">·</span>':v.toFixed(2)}</td>`; }).join('')}<td class="pt"${rcol(rP)}>${f2pPc(rP)}</td></tr>`
-    ].concat(tyIdx.map((j,k)=>{
-      /* 그래프에서 고른 유형 = 선 색으로 행을 칠한다 (안 고른 유형은 흐리게) */
-      const hidG = f2gHidden(g.mc+'|'+g.pn+'|'+g.op), onT = !hidG.includes(TY[j].k), col = F2G_COL[k % F2G_COL.length];
-      return `<tr class="ty${k===0?' first':''}${onT?' sel':' off'}" style="--c:${col}"><td class="lb"><i class="sw"></i>${esc2(TY[j].t)} %</td>${days.map(d=>{ const o = g.D[d]; if(!o || !o.t) return `<td class="${inP(d)?'in':''}"><span class="nil">·</span></td>`;
-          const v = o.ty[j]/o.t*100; if(!o.ty[j]) return `<td class="${inP(d)?'in':''}"><span class="nil">·</span></td>`;
-          return `<td class="${inP(d)?'in':''}" title="${esc2(TY[j].t)} ${fmt(o.ty[j])} / ${fmt(o.t)}">${v.toFixed(2)}</td>`; }).join('')}
-        <td class="pt">${P.ty[j]?(P.ty[j]/P.t*100).toFixed(2)+'%':'–'} <small>(${fmt(P.ty[j])})</small></td></tr>`; }));
-    return `<div class="card f2g" id="f2g-${i}"><div class="f2g-h"><span class="f2g-rk${i<3?' t':''}">${i+1}</span><b>${esc2(g.mc)}</b><span class="nm">${esc2(g.name)}</span><small>${esc2(g.pn)} · OP${esc2(g.op)}</small>
-        <span class="kp">Total <b>${fmt(P.t)}</b> · NG <b>${fmt(P.n)}</b> · %NG <b style="color:${f2St(rP).c}">${f2pPc(rP)}</b></span></div>
-      <div class="tblwrap">${mini(g, tyIdx)}</div>${nlist}
-      <div class="tblwrap"><table class="f2g-t"><colgroup><col class="c-lb">${days.map(()=>'<col>').join('')}<col class="c-pt"></colgroup><thead><tr><th class="lb">${TX.grp}</th>${hd}<th class="pt">${TX.per}</th></tr></thead>
+      `<tr class="q"><td class="lb">${TX.prod}</td>${days.map(d=>cell(d,o=>gtFmt(o.t))).join('')}<td class="pt">${gtFmt(P.t)}</td></tr>`,
+      `<tr class="q"><td class="lb">${TX.def}</td>${days.map(d=>cell(d,o=>o.n?gtFmt(o.n):'0')).join('')}<td class="pt">${gtFmt(P.n)}</td></tr>`,
+      `<tr class="r${hid.includes('__tot')?' off':' sel'}" style="--c:#c62828"><td class="lb">${TX.rate}</td>${days.map(d=>{ const o = g.D[d], v = o && o.t ? o.n/o.t*100 : null; return `<td class="${inP(d)?'in':''}"${rcol(v)}>${v==null?'<span class="nil">·</span>':v.toFixed(2)}</td>`; }).join('')}<td class="pt"${rcol(rP)}>${rP==null?'–':rP.toFixed(2)+'%'}</td></tr>`
+    ].concat(tyIdx.map((j,k)=>{ const on = !hid.includes(TY[j].k), col = GT_COL[k % GT_COL.length];
+      return `<tr class="ty${on?' sel':' off'}" style="--c:${col}"><td class="lb"><i class="sw"></i>${gtEsc(TY[j].t)} %</td>${days.map(d=>{ const o = g.D[d];
+          if(!o || !o.t || !o.ty[j]) return `<td class="${inP(d)?'in':''}"><span class="nil">·</span></td>`;
+          return `<td class="${inP(d)?'in':''}" title="${gtEsc(TY[j].t)} ${gtFmt(o.ty[j])} / ${gtFmt(o.t)}">${(o.ty[j]/o.t*100).toFixed(2)}</td>`; }).join('')}
+        <td class="pt">${P.ty[j]?(P.ty[j]/P.t*100).toFixed(2)+'%':'–'} <small>(${gtFmt(P.ty[j])})</small></td></tr>`; }));
+    return `<div class="gt-card f2g" id="${id}-g${i}">${head(g, i, false)}${chart(g, tyIdx)}${nlist}
+      <div class="gt-scroll"><table class="f2g-t"><colgroup><col class="c-lb">${days.map(()=>'<col>').join('')}<col class="c-pt"></colgroup><thead><tr><th class="lb">${TX.grp}</th>${hd}<th class="pt">${TX.per}</th></tr></thead>
         <tbody>${rows.slice(0,3).join('')}${tyIdx.length?`<tr class="sub"><td class="lb" colspan="${days.length+2}">${TX.typ}</td></tr>`:''}${rows.slice(3).join('')}</tbody></table></div></div>`;
   }).join('');
-  return top3 + sum + cards + `<div class="legend" style="margin-top:2px"><span>${TX.note.replace('{t}', tg)}</span></div>`;
+  return `<div class="gt-wrap">${top3}${sum}${cards}<div class="gt-foot">${TX.note}</div></div>`;
+}
+/* FAC2 생산실적 (F2_생산실적 · 전 설비) → 공용 부품 */
+function f2pGroupTrend(pred, pFrom, dTo){
+  const TY = F2P.defs.map((k,i)=>({ k:f2pRaw(k), get:r=>r.df[i] })).concat([{ k:"Mat'l Before", get:r=>r.mb }, { k:"Mat'l After", get:r=>r.ma }, { k:'Setting', get:r=>r.set }]).map(y=>({ ...y, t:f2pLoc(y.k) }));
+  const nm = {}; const short = (pn, name) => nm[pn] || (nm[pn] = f2pShort(pn, name));
+  const rows = F2.pm.map(r=>({ d:r.d, key:r.mc+'|'+r.pn+'|'+r.op, mc:r.mc, name:short(r.pn, r.name), sub:`${r.pn} · OP${r.op}`, t:r.t, n:r.n, ty:TY.map(y=>y.get(r)) }));
+  return gtHtml({ id:'f2p', rows, types:TY.map(y=>({ k:y.k, t:y.t })), pFrom, pTo:dTo, tg:f2Target(), lang:LANG, rerender:renderF2, noteTag:mc=>mc });
+}
+/* FAC2 품질보고 (F2_MCT_Q · MCT 최종 가공 설비 · 불량코드 01~50) → 공용 부품 */
+function f2qGroupTrend(pFrom, pTo){
+  if(!F2.mq.length) return `<div class="card empty" style="padding:14px">${T('f2.noMq')}</div>`;
+  const cols = Object.keys(F2.mq[0]).filter(k=>/^\d{2}\s/.test(k));
+  const orig = {}; F2.det.forEach(r=>{ const c = parseInt(r['코드'],10); if(c && !orig[c]) orig[c] = r._orig || r['불량유형']; });
+  const TY = cols.map(k=>{ const c = parseInt(k,10); return { k, t:f2DefName(c, orig[c] || k.replace(/^\d{2}\s*/,'')) }; });
+  const rows = F2.mq.map(r=>{ const d = String(r['일자']||'').slice(0,10); const pn = String(r['Part no.']||'').trim(), op = String(r['OP']||'').trim();
+    return { d, key:r['설비명']+'|'+pn+'|'+op, mc:r['설비명'], name:r['Part name']||pn, sub:`${pn}${op?' · '+op:''}`, t:f2n(r['생산수량']), n:f2n(r['불량수량']), ty:cols.map(k=>f2n(r[k])) }; })
+    .filter(r=>r.d && r.mc && r.t>0);
+  return gtHtml({ id:'f2q', rows, types:TY, pFrom, pTo, tg:f2Target(), lang:LANG, rerender:renderF2, noteTag:mc=>mc });
 }
 
 function f2pReport(kind, topWeek){
@@ -2728,6 +2800,7 @@ function noteClose(){ NOTE_UI.date = null; const m = document.getElementById('no
 function noteParts(){ if(NOTE.tags) return NOTE.tags();
   if(NOTE.cur==='FAC2P') return [...new Set((F2.pm||[]).map(r=>r.mc))].sort();   /* 생산실적 메모 = 설비별 */
   const m = {}; (F2.pd||[]).forEach(r=>{ if(r['공정']==='MCT' && r['Part name']) m[r['Part name']] = 1; });
+  (F2.mq||[]).forEach(r=>{ if(r['설비명']) m[r['설비명']] = 1; });   /* 설비별 불량 추이에서 설비로 메모 */
   return Object.keys(m); }
 function noteRenderModal(){
   const d = NOTE_UI.date; if(!d) return;
@@ -2954,7 +3027,8 @@ function f2Report(kind, topWeek){
     <div class="sec-title">2. ${T('f2.issues')}</div>${f2McIssues(pred, noteKey)}
     <div class="sec-title">3. ${T('f2.p.MCT')} · ${T('f2.parts')}</div>${f2PartTableP(s,'MCT')}
     <div class="sec-title">4. ${T('f2.m.sec')}</div>${f2Measure(pred)}
-    <div class="sec-title">4-1. ${T('f2.mcs')}</div>${f2McTable(pred)}
+    <div class="sec-title">4-1. ${T('f2.gt')}</div>${(()=>{ const pd = dates.filter(d=>F2.pd.some(r=>r['일자']===d && pred(r))); return f2qGroupTrend(pd[0]||dFrom, pd[pd.length-1]||dTo); })()}
+    <div class="sec-title">4-2. ${T('f2.mcs')}</div>${f2McTable(pred)}
     <div class="sec-title">5. ${T('f2.p.MCT')} · ${T('f2.top5r')}</div>${f2Top5TableP(pred, s, 'MCT')}
     ${trend.length ? `<div class="sec-title">6. ${T('f2.p.MCT')} · ${trendLbl}</div>${f2TrendTableP(trend, kind==='month'?T('ctl.week'):T('f2.date'), kind==='daily'?cur:null, 'MCT')}` : ''}
     ${f2SecHead('OQC')}
