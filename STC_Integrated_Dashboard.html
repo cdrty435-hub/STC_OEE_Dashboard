@@ -1724,12 +1724,8 @@ function f2pTrend(dFrom, dTo){
     ctl:R.ctl, noteScope:'FAC2', noteTag:'', target:f2Target(), tLabel:X.tg, maxLbl:12, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
     bars:{ name:X.prod, vals:days.map(d=>S.day[d].t || null) },
     extra:i => { const a = S.day[days[i]]; return `${X.prod} ${a.t.toLocaleString()} · NG ${a.n.toLocaleString()} · ${a.mcs.size} M/C`; } });
-  const c2 = qtTrendHtml({ id:'qtF2pA', title:X.tAv, sub, dates:days,
-    series:[ { name:X.av, color:'#2a5298', vals:days.map(d=>r3(f2pAv(S.day[d]))), main:true },
-             { name:X.oee, color:'#eb6834', vals:days.map(d=>r3(f2pOEE(S.day[d]))) } ],
-    noteScope:'FAC2', noteTag:'', maxLbl:12, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
-    extra:i => { const a = S.day[days[i]]; return `Loss ${f2pH(a.tl)}h · ${a.mcs.size} M/C`; } });
-  return c1 + c2 + `<div class="legend f2-noprint" style="margin:-8px 0 14px"><span>📝 ${X.clickNote}</span></div>`;
+  /* 일별 가동률 · OEE 차트는 빼기로 함 (2026-10-02) */
+  return c1 + `<div class="legend f2-noprint" style="margin:-8px 0 14px"><span>📝 ${X.clickNote}</span></div>`;
 }
 /* 설비별 실적 */
 function f2pMcTable(S, P){
