@@ -283,7 +283,10 @@ table.f2g-t tr.sub td{padding:1px 6px;}
 .f2g-nb{display:inline-block;background:#f59e0b;color:#fff;border-radius:3px;padding:0 3px;font-size:9.5px;font-weight:800;line-height:1.35;}
 .f2g-notes{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:5px 10px;margin:2px 0 6px;font-size:11.5px;line-height:1.6;}
 .f2g-notes a{color:#92400e;text-decoration:none;} .f2g-notes .ph{color:#92400e;font-weight:700;} .f2g-notes small{color:var(--ink-muted);}
-.f2g-hit{cursor:pointer;} .f2g-hit:hover{fill:rgba(245,158,11,.10);}
+.f2g-hit{cursor:pointer;}
+.f2g-top{padding:12px 14px 6px;margin-bottom:12px;}
+.f2g-toph{font-size:15px;font-weight:900;color:#b71c1c;margin-bottom:8px;}
+.f2g-tc{padding-bottom:8px;margin-bottom:10px;border-bottom:1px dashed #e2e8f0;page-break-inside:avoid;} .f2g-tc:last-child{border-bottom:none;margin-bottom:0;} .f2g-hit:hover{fill:rgba(245,158,11,.10);}
 .f2g-lg{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#374151;margin:4px 0 2px;}
 .f2g-sel{font-weight:800;color:#1e3c72;margin-right:2px;}
 .f2g-chip{appearance:none;display:inline-flex;align-items:center;gap:5px;border:1px solid #d5dbe3;background:#fff;color:#9aa0a6;border-radius:12px;padding:2px 9px;font:inherit;font-size:11px;font-weight:700;cursor:pointer;}
@@ -2123,9 +2126,17 @@ function f2pGroupTrend(pred, pFrom, dTo){
       + `<span class="f2g-tgl"><i></i>${X.tg} ${tg}%</span>`;
     return `<div class="f2g-lg">${lg}</div><svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;min-width:680px" role="img" aria-label="${esc2(g.mc)} defect trend">${s}</svg>`;
   };
+  const tyOf = g => TY.map((y,j)=>j).filter(j=>g.P.ty[j]>0 || days.some(d=>g.D[d] && g.D[d].ty[j]>0)).sort((a,b)=>g.P.ty[b]-g.P.ty[a]);
+  /* 맨 위 — 1·2·3위 그래프만 모아 보기 (선택한 유형·메모는 아래 카드와 같이 쓴다) */
+  const top3 = `<div class="card f2g-top"><div class="f2g-toph">${L==='ko'?'불량 상위 3개 설비 · 모델 — 유형별 불량률 추이':'Top 3 machine · model — defect rate by type'}</div>`
+    + list.slice(0,3).map((g,i)=>{ const rP = pc(g.P.n,g.P.t);
+      return `<div class="f2g-tc"><div class="f2g-h"><span class="f2g-rk t">${i+1}</span><b>${esc2(g.mc)}</b><span class="nm">${esc2(g.name)}</span><small>${esc2(g.pn)} · OP${esc2(g.op)}</small>
+        <span class="kp">Total <b>${fmt(g.P.t)}</b> · NG <b>${fmt(g.P.n)}</b> · %NG <b style="color:${f2St(rP).c}">${f2pPc(rP)}</b>
+        <a href="#f2g-${i}" class="f2p-nb" style="margin-left:8px;text-decoration:none" onclick="document.getElementById('f2g-${i}').scrollIntoView({behavior:'smooth',block:'start'});return false;">${L==='ko'?'표 보기 ↓':'Table ↓'}</a></span></div>
+        <div class="tblwrap">${mini(g, tyOf(g))}</div></div>`; }).join('') + `</div>`;
   const cards = list.map((g,i)=>{
     const P = g.P, rP = pc(P.n,P.t);
-    const tyIdx = TY.map((y,j)=>j).filter(j=>P.ty[j]>0 || days.some(d=>g.D[d] && g.D[d].ty[j]>0)).sort((a,b)=>P.ty[b]-P.ty[a]);
+    const tyIdx = tyOf(g);
     const hd = days.map(d=>{ const c = noteFor(d, g.mc).length; return `<th class="${inP(d)?'in':''}"><a href="#" onclick="noteOpen('${d}','${esc2(g.mc)}');return false;" title="${d} 클릭 → 메모·사진">${+d.slice(5,7)}/${+d.slice(8,10)}${c?` <span class="f2g-nb">📝${c}</span>`:''}</a></th>`; }).join('');
     const notes = days.flatMap(d=>noteFor(d, g.mc).map(x=>({ ...x, d }))).sort((a,b)=>a.d.localeCompare(b.d));
     const nlist = notes.length ? `<div class="f2g-notes">${notes.map(x=>`<div><a href="#" onclick="noteOpen('${x.d}','${esc2(g.mc)}');return false;"><b>📝 ${md(x.d)}</b></a>${x.tag?` <span class="note-tag">${esc2(x.tag)}</span>`:''} ${esc2(String(x.text||'').split('\n')[0])}${(x.photos||[]).length?` <span class="ph">📷${x.photos.length}</span>`:''}${x.author?` <small>— ${esc2(x.author)}</small>`:''}</div>`).join('')}</div>` : '';
@@ -2149,7 +2160,7 @@ function f2pGroupTrend(pred, pFrom, dTo){
       <div class="tblwrap"><table class="f2g-t"><colgroup><col class="c-lb">${days.map(()=>'<col>').join('')}<col class="c-pt"></colgroup><thead><tr><th class="lb">${TX.grp}</th>${hd}<th class="pt">${TX.per}</th></tr></thead>
         <tbody>${rows.slice(0,3).join('')}${tyIdx.length?`<tr class="sub"><td class="lb" colspan="${days.length+2}">${TX.typ}</td></tr>`:''}${rows.slice(3).join('')}</tbody></table></div></div>`;
   }).join('');
-  return sum + cards + `<div class="legend" style="margin-top:2px"><span>${TX.note.replace('{t}', tg)}</span></div>`;
+  return top3 + sum + cards + `<div class="legend" style="margin-top:2px"><span>${TX.note.replace('{t}', tg)}</span></div>`;
 }
 
 function f2pReport(kind, topWeek){
