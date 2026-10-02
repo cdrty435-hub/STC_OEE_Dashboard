@@ -254,6 +254,9 @@ table.eq.f2p-dm td.in{box-shadow:inset 0 0 0 1px #b45309;}
 .f2p-chk div{display:flex;flex-direction:column;gap:3px;}
 .f2p-chk span{color:var(--ink-muted);font-size:11.5px;}
 .f2p-chk b{font-size:15px;}
+.f2p-nb{appearance:none;border:1px solid #e5d3a6;background:#fffbeb;color:#92400e;border-radius:5px;padding:2px 8px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;}
+.f2p-nb.on{background:#f59e0b;border-color:#f59e0b;color:#fff;}
+@media print{.f2p-nb{border:none;background:none;}}
 @media screen and (max-width:900px){ .f2-cover{flex-direction:column;align-items:flex-start;} .f2-cover .side{text-align:left;white-space:normal;} .f2-cover h1{font-size:26px;} }
 .f2-rhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:3px solid var(--brand-1);padding-bottom:8px;margin-bottom:6px;}
 .f2-rhead h2{font-size:19px;color:var(--brand-1);}
@@ -1517,7 +1520,7 @@ const F2P_TX = {
        sub:{daily:'Daily Production Report', week:'Weekly Production Report', month:'Monthly Production Report'}, kicker:'Production Report',
        line:'전 설비 {m} · 전 OP', vs:'비교', issued:'발행', period:'보고 기간', print:'인쇄 / PDF',
        k:{t:'생산 Total', f:'양품 FG', n:'불량 NG', m:"Mat'l 불량", a:'가동률', o:'OEE', l:'로스 시간'}, ksub:{a:'실가동 ÷ 계획', o:'계획시간 가중 평균', l:'총 로스 (분 → 시간)', m:'Before {b} · After {a}'},
-       s1:'핵심 지표', s2:'일별 추이', s3:'설비별 실적', s4:'불량유형별 (NG 내역)', s5:'로스유형별 (비가동 시간)', s6:'품번 · OP별 실적', s7:'설비 × 일자', s8:'데이터 점검', s9:'특이사항 / 조치',
+       s1:'설비 KPI 요약 (Worst 3)', s2:'일별 추이', s3:'설비별 실적', s4:'불량유형별 (NG 내역)', s5:'로스유형별 (비가동 시간)', s6:'품번 · OP별 실적', s7:'설비 × 일자', s8:'데이터 점검', s9:'특이사항 / 조치',
        tNg:'FAC2 전 설비 일별 불량률 · 생산', tAv:'FAC2 전 설비 일별 가동률 · OEE', tSub:'{n}일 ({a} ~ {b}) · 노란 음영 = 보고 기간',
        ng:'불량률 %NG', mat:"Mat'l 불량률", av:'가동률', oee:'OEE', prod:'생산', tg:'목표', hi:'보고 기간',
        h:{mc:'설비', days:'가동일', part:'품번', op:'OP', mat:"Mat'l", av:'가동률', oee:'OEE', loss:'로스(h)', pNg:'비교 %NG', dNg:'증감', name:'Part name', top:'주요 불량', type:'유형', qty:'수량', shNg:'NG 중', shT:'생산 대비', hrs:'시간(h)', shL:'로스 중', tot:'합계'},
@@ -1526,12 +1529,16 @@ const F2P_TX = {
        noteph:'설비별 이슈 · 로스 원인 · 조치 계획을 적어 두세요 (이 브라우저에 저장)',
        foot:'원천: 구글시트 F2_생산실적 · F2_설비일별 (FAC2 Raw Data › In-Out Data → FAC2 변환기) · %NG = NG ÷ Total · NG 에는 불량유형 11종 + Mat\'l Before/After + Setting 포함 · 가동률 = 실가동(h) ÷ 계획(h) · OEE = 원본 OEE% 를 계획시간으로 가중 평균 · 주차 = 수~화',
        none:'F2_생산실적 탭을 읽지 못했습니다', how:'구글시트 OEE_RawData_APQ 의 F2_생산실적 · F2_설비일별 탭 gid 를 확인하세요 (FAC2 변환기 → In-Out Data 변환 결과).', retry:'다시 읽기', loading:'F2_생산실적 읽는 중…', noData:'선택한 기간에 데이터가 없습니다',
-       days:'{n}일', work:'작업일 {n}일', more:'외 {n}' },
+       days:'{n}일', work:'작업일 {n}일', more:'외 {n}',
+       rh:{daily:'FAC2 전 설비 일일 생산실적', week:'FAC2 전 설비 주간 생산실적', month:'FAC2 전 설비 월간 생산실적'}, made:'작성일 {d} · 원천 F2_생산실적 · F2_설비일별',
+       kr:{p:['생산 · 가동률','Total · FG · 가동률 (Worst = 가동률 낮은 설비)'], r:['불량률 %NG','NG ÷ Total (Worst = %NG 높은 설비)'], m:["Mat'l 불량",'소재 불량 Before + After'], o:['OEE','계획시간 가중 (Worst = OEE 낮은 설비)'], l:['로스 시간','비가동 로스 합계 (Worst = 로스 많은 설비)']},
+       is:{perf:'실적', def:'주요 불량 · 로스 TOP3', note:'※ 대상 = %NG · 가동률 · 로스 시간 Worst 3에 든 설비 (중복 제거) · 입력은 이 브라우저에 기간별로 저장', none:'Worst 설비가 없습니다'},
+       sT:'일자별 추이', sW:'주차별 추이', memo:'메모', clickNote:'그래프 점·날짜를 누르면 그날의 메모 · 사진을 넣을 수 있습니다' },
   en:{ cov:{daily:'FAC2 Machine Production — Daily Report', week:'FAC2 Machine Production — Weekly Report', month:'FAC2 Machine Production — Monthly Report'},
        sub:{daily:'', week:'', month:''}, kicker:'Production Report',
        line:'All machines {m} · all OP', vs:'vs', issued:'Issued', period:'Period', print:'Print / PDF',
        k:{t:'Output Total', f:'Good FG', n:'Defect NG', m:"Mat'l NG", a:'Availability', o:'OEE', l:'Loss time'}, ksub:{a:'Actual ÷ planned', o:'Weighted by planned hrs', l:'Total loss (min → h)', m:'Before {b} · After {a}'},
-       s1:'Key indicators', s2:'Daily trend', s3:'By machine', s4:'By defect type (NG breakdown)', s5:'By loss type (downtime)', s6:'By part · OP', s7:'Machine × date', s8:'Data check', s9:'Remarks / actions',
+       s1:'Machine KPI summary (Worst 3)', s2:'Daily trend', s3:'By machine', s4:'By defect type (NG breakdown)', s5:'By loss type (downtime)', s6:'By part · OP', s7:'Machine × date', s8:'Data check', s9:'Remarks / actions',
        tNg:'FAC2 all machines — daily %NG · output', tAv:'FAC2 all machines — daily availability · OEE', tSub:'{n} days ({a} ~ {b}) · yellow = report period',
        ng:'%NG', mat:"Mat'l NG %", av:'Availability', oee:'OEE', prod:'Output', tg:'Target', hi:'Report period',
        h:{mc:'M/C', days:'Days', part:'Part', op:'OP', mat:"Mat'l", av:'Avail.', oee:'OEE', loss:'Loss(h)', pNg:'Prev %NG', dNg:'Δ', name:'Part name', top:'Top defects', type:'Type', qty:'Qty', shNg:'of NG', shT:'of output', hrs:'Hours', shL:'of loss', tot:'Total'},
@@ -1540,12 +1547,16 @@ const F2P_TX = {
        noteph:'Machine issues, loss causes and action plans (saved in this browser)',
        foot:"Source: Google Sheet F2_생산실적 · F2_설비일별 (FAC2 Raw Data › In-Out Data → FAC2 converter) · %NG = NG ÷ Total · NG includes 11 defect types + Mat'l Before/After + Setting · Availability = actual ÷ planned hrs · OEE = source OEE% weighted by planned hrs · week = Wed–Tue",
        none:'Could not read the F2_생산실적 tab', how:'Check the gid of F2_생산실적 · F2_설비일별 in the OEE_RawData_APQ sheet (FAC2 converter → In-Out Data output).', retry:'Reload', loading:'Loading F2_생산실적…', noData:'No data in the selected period',
-       days:'{n} days', work:'{n} working days', more:'+{n}' },
+       days:'{n} days', work:'{n} working days', more:'+{n}',
+       rh:{daily:'FAC2 all machines — daily production', week:'FAC2 all machines — weekly production', month:'FAC2 all machines — monthly production'}, made:'Made {d} · source F2_생산실적 · F2_설비일별',
+       kr:{p:['Output · availability','Total · FG · availability (worst = lowest availability)'], r:['%NG','NG ÷ Total (worst = highest %NG)'], m:["Mat'l NG",'Material NG before + after'], o:['OEE','Weighted by planned hrs (worst = lowest)'], l:['Loss time','Total downtime (worst = most loss)']},
+       is:{perf:'Result', def:'Top 3 defects · losses', note:'※ Machines in Worst 3 of %NG · availability · loss time (deduplicated) · saved in this browser per period', none:'No worst machines'},
+       sT:'Daily trend table', sW:'Weekly trend table', memo:'Notes', clickNote:'Click a point/date on the chart to add notes and photos for that day' },
   th:{ cov:{daily:'FAC2 ผลผลิตเครื่องจักร รายงานประจำวัน', week:'FAC2 ผลผลิตเครื่องจักร รายงานประจำสัปดาห์', month:'FAC2 ผลผลิตเครื่องจักร รายงานประจำเดือน'},
        sub:{daily:'Daily Production Report', week:'Weekly Production Report', month:'Monthly Production Report'}, kicker:'Production Report',
        line:'ทุกเครื่อง {m} · ทุก OP', vs:'เทียบ', issued:'วันที่ออก', period:'ช่วงรายงาน', print:'พิมพ์ / PDF',
        k:{t:'ผลิต Total', f:'ของดี FG', n:'ของเสีย NG', m:"Mat'l NG", a:'อัตราเดินเครื่อง', o:'OEE', l:'เวลาสูญเสีย'}, ksub:{a:'เวลาจริง ÷ แผน', o:'ถ่วงน้ำหนักตามชั่วโมงแผน', l:'Loss รวม (นาที → ชม.)', m:'Before {b} · After {a}'},
-       s1:'ตัวชี้วัดหลัก', s2:'แนวโน้มรายวัน', s3:'ตามเครื่องจักร', s4:'ตามประเภทของเสีย', s5:'ตามประเภท Loss', s6:'ตามพาร์ท · OP', s7:'เครื่องจักร × วันที่', s8:'ตรวจสอบข้อมูล', s9:'หมายเหตุ / การแก้ไข',
+       s1:'สรุป KPI เครื่องจักร (Worst 3)', s2:'แนวโน้มรายวัน', s3:'ตามเครื่องจักร', s4:'ตามประเภทของเสีย', s5:'ตามประเภท Loss', s6:'ตามพาร์ท · OP', s7:'เครื่องจักร × วันที่', s8:'ตรวจสอบข้อมูล', s9:'หมายเหตุ / การแก้ไข',
        tNg:'FAC2 ทุกเครื่อง — %NG · ผลผลิตรายวัน', tAv:'FAC2 ทุกเครื่อง — อัตราเดินเครื่อง · OEE รายวัน', tSub:'{n} วัน ({a} ~ {b}) · สีเหลือง = ช่วงรายงาน',
        ng:'%NG', mat:"Mat'l NG %", av:'อัตราเดินเครื่อง', oee:'OEE', prod:'ผลิต', tg:'เป้าหมาย', hi:'ช่วงรายงาน',
        h:{mc:'เครื่อง', days:'วัน', part:'พาร์ท', op:'OP', mat:"Mat'l", av:'เดินเครื่อง', oee:'OEE', loss:'Loss(ชม.)', pNg:'%NG ก่อน', dNg:'Δ', name:'Part name', top:'ของเสียหลัก', type:'ประเภท', qty:'จำนวน', shNg:'ของ NG', shT:'ของผลิต', hrs:'ชม.', shL:'ของ Loss', tot:'รวม'},
@@ -1554,7 +1565,11 @@ const F2P_TX = {
        noteph:'ปัญหาเครื่องจักร สาเหตุ Loss และแผนแก้ไข (บันทึกในเบราว์เซอร์นี้)',
        foot:'ที่มา: Google Sheet F2_생산실적 · F2_설비일별 · %NG = NG ÷ Total · อัตราเดินเครื่อง = ชม.จริง ÷ ชม.แผน · OEE ถ่วงน้ำหนักตามชม.แผน · สัปดาห์ = พุธ–อังคาร',
        none:'อ่านแท็บ F2_생산실적 ไม่ได้', how:'ตรวจสอบ gid ของแท็บ F2_생산실적 · F2_설비일별', retry:'โหลดใหม่', loading:'กำลังโหลด F2_생산실적…', noData:'ไม่มีข้อมูลในช่วงที่เลือก',
-       days:'{n} วัน', work:'ทำงาน {n} วัน', more:'+{n}' }
+       days:'{n} วัน', work:'ทำงาน {n} วัน', more:'+{n}',
+       rh:{daily:'FAC2 ทุกเครื่อง — ผลผลิตรายวัน', week:'FAC2 ทุกเครื่อง — ผลผลิตรายสัปดาห์', month:'FAC2 ทุกเครื่อง — ผลผลิตรายเดือน'}, made:'วันที่ทำ {d} · ที่มา F2_생산실적 · F2_설비일별',
+       kr:{p:['ผลผลิต · อัตราเดินเครื่อง','Total · FG · อัตราเดินเครื่อง'], r:['%NG','NG ÷ Total'], m:["Mat'l NG",'Before + After'], o:['OEE','ถ่วงน้ำหนักตามชม.แผน'], l:['เวลาสูญเสีย','Loss รวม']},
+       is:{perf:'ผลงาน', def:'ของเสีย · Loss หลัก TOP3', note:'※ เครื่องที่อยู่ใน Worst 3 ของ %NG · อัตราเดินเครื่อง · Loss · บันทึกในเบราว์เซอร์นี้', none:'ไม่มีเครื่อง Worst'},
+       sT:'ตารางแนวโน้มรายวัน', sW:'ตารางแนวโน้มรายสัปดาห์', memo:'บันทึก', clickNote:'คลิกจุด/วันที่บนกราฟเพื่อบันทึกข้อความและรูปภาพ' }
 };
 const f2pTx = () => F2P_TX[LANG] || F2P_TX.ko;
 const F2P = { defs:[], loss:[], opFix:0 };
@@ -1703,15 +1718,15 @@ function f2pTrend(dFrom, dTo){
   const c1 = qtTrendHtml({ id:'qtF2p', title:X.tNg, sub, dates:days,
     series:[ { name:X.ng, color:'#2a78d6', vals:days.map(d=>r3(f2pNG(S.day[d]))), main:true },
              { name:X.mat, color:'#1baf7a', vals:days.map(d=>r3(f2pMR(S.day[d]))) } ],
-    ctl:R.ctl, target:f2Target(), tLabel:X.tg, maxLbl:12, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
+    ctl:R.ctl, noteScope:'FAC2', noteTag:'', target:f2Target(), tLabel:X.tg, maxLbl:12, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
     bars:{ name:X.prod, vals:days.map(d=>S.day[d].t || null) },
     extra:i => { const a = S.day[days[i]]; return `${X.prod} ${a.t.toLocaleString()} · NG ${a.n.toLocaleString()} · ${a.mcs.size} M/C`; } });
   const c2 = qtTrendHtml({ id:'qtF2pA', title:X.tAv, sub, dates:days,
     series:[ { name:X.av, color:'#2a5298', vals:days.map(d=>r3(f2pAv(S.day[d]))), main:true },
              { name:X.oee, color:'#eb6834', vals:days.map(d=>r3(f2pOEE(S.day[d]))) } ],
-    maxLbl:12, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
+    noteScope:'FAC2', noteTag:'', maxLbl:12, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
     extra:i => { const a = S.day[days[i]]; return `Loss ${f2pH(a.tl)}h · ${a.mcs.size} M/C`; } });
-  return c1 + c2;
+  return c1 + c2 + `<div class="legend f2-noprint" style="margin:-8px 0 14px"><span>📝 ${X.clickNote}</span></div>`;
 }
 /* 설비별 실적 */
 function f2pMcTable(S, P){
@@ -1802,6 +1817,89 @@ function f2pDayMatrix(pred, S, pFrom, dTo){
         return `<td class="${d>=pFrom?'in':''}" style="background:${bg(r)}" title="${mc} ${d}\nTotal ${o.t.toLocaleString()} · NG ${o.n.toLocaleString()} · %NG ${r.toFixed(2)}%${av!=null?`\n${X.av} ${av.toFixed(1)}%`:''}"><span>${kf(o.t)}</span><b>${r.toFixed(1)}</b></td>`; }).join('')}</tr>`).join('')}
     </tbody></table></div></div>`;
 }
+/* 설비 KPI 요약 — 일일 품질보고 「1. 설비 KPI」 와 같은 틀 (전기간 · 이번 · 증감 · Worst 1~3 · 세부) */
+const f2pTopDef  = (A, n) => F2P.defs.map((k,i)=>({ t:f2pDefName(k), v:A.df[i] })).concat([{ t:"Mat'l", v:A.mb+A.ma }, { t:'Setting', v:A.set }]).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,n);
+const f2pTopLoss = (A, n) => F2P.loss.map((k,i)=>({ t:f2pLossName(k), v:A.ls[i]/60 })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,n);
+function f2pWorst(S){
+  const mq = f2MinQty(), L = S.mcList.map(mc=>Object.assign({ mc }, S.mc[mc])), ok = o => o.t >= mq;
+  return {
+    p: L.filter(o=>ok(o) && f2pAv(o)!=null).sort((a,b)=>f2pAv(a)-f2pAv(b)).slice(0,3),
+    r: L.filter(o=>ok(o) && o.n>0).sort((a,b)=>f2pNG(b)-f2pNG(a)).slice(0,3),
+    m: L.filter(o=>o.mb+o.ma>0).sort((a,b)=>(b.mb+b.ma)-(a.mb+a.ma)).slice(0,3),
+    o: L.filter(o=>ok(o) && f2pOEE(o)!=null).sort((a,b)=>f2pOEE(a)-f2pOEE(b)).slice(0,3),
+    l: L.filter(o=>o.tl>0).sort((a,b)=>b.tl-a.tl).slice(0,3), L, mq };
+}
+function f2pKpiWorst(S, P, prevLbl, curLbl){
+  const X = f2pTx(), A = S.all, B = P && P.all.rows ? P.all : null, W = f2pWorst(S);
+  const pct = (v,dp) => v==null ? '–' : v.toFixed(dp)+'%';
+  const dd = (c,p,dp,u,dir) => { if(c==null||p==null) return '–'; const d=c-p; if(Math.abs(d)<Math.pow(10,-dp)/2) return '±0';
+    const good = dir>0 ? d>0 : d<0; return `<b style="color:${good?'var(--good)':'var(--critical)'}">${d>0?'+':'−'}${fmt(Math.abs(d),dp)}${u}</b>`; };
+  const big = (a, lines) => `<div class="f2-kv">${a}</div>${lines.map(x=>`<div class="f2-ks">${x}</div>`).join('')}`;
+  const wcell = (L, val) => [0,1,2].map(j=>`<td class="w w${j+1}">${L[j]?`${esc2(L[j].mc)}<br><small>${val(L[j])}</small>`:'–'}</td>`).join('');
+  const det = (L, txt) => L.map((o,j)=>`<div class="kw-li"><b>${j+1}.</b> ${txt(o)}</div>`).join('') || '–';
+  const nm = o => esc2([...o.pns].map(pn=>S.names[pn]||pn).join(', '));
+  const top = (L, n, h) => L.map(x=>`${esc2(x.t)} ${h?fmt(x.v,1)+'h':fmt(x.v)}`).join(' · ');
+  const st = f2St(f2pNG(A));
+  const row = (no, k, prev, cur, delta, WL, wv, dt) => `<tr><td class="c">${no}</td><td class="name">${X.kr[k][0]}<small>${X.kr[k][1]}</small></td>
+      <td class="pv">${B?prev:'–'}</td><td>${cur}</td><td>${B?delta:'–'}</td>${wcell(WL, wv)}<td class="dt">${dt}</td></tr>`;
+  const rows = [
+    row(1,'p', B&&big(fmt(B.t),[`FG ${fmt(B.f)}`,`${X.av} ${pct(f2pAv(B),1)}`]), big(`<b>${fmt(A.t)}</b>`,[`FG ${fmt(A.f)}`,`${X.av} <b>${pct(f2pAv(A),1)}</b>`]),
+      B&&big(dd(A.t,B.t,0,'',+1),['',dd(f2pAv(A),f2pAv(B),1,'%p',+1)]), W.p, o=>pct(f2pAv(o),1),
+      det(W.p, o=>`${esc2(o.mc)} ${X.av} ${pct(f2pAv(o),1)} <span class="f2-why">(Total ${fmt(o.t)} · Loss ${f2pH(o.tl)}h · ${top(f2pTopLoss(o,2),2,true)||'–'})</span>`)),
+    row(2,'r', B&&big(pct(f2pNG(B),2),[`NG ${fmt(B.n)}`]), big(`<b style="color:${st.c}">${pct(f2pNG(A),2)}</b> <small>${st.l}</small>`,[`NG ${fmt(A.n)}`]),
+      B&&big(dd(f2pNG(A),f2pNG(B),2,'%p',-1),[dd(A.n,B.n,0,'',-1)]), W.r, o=>pct(f2pNG(o),2),
+      det(W.r, o=>`${esc2(o.mc)} <b>${pct(f2pNG(o),2)}</b> (NG ${fmt(o.n)} / ${fmt(o.t)})<br><span class="f2-why">${top(f2pTopDef(o,3))} · ${nm(o)}</span>`)),
+    row(3,'m', B&&big(fmt(B.mb+B.ma),[pct(f2pMR(B),2)]), big(`<b>${fmt(A.mb+A.ma)}</b>`,[`${pct(f2pMR(A),2)} · B ${fmt(A.mb)} / A ${fmt(A.ma)}`]),
+      B&&big(dd(A.mb+A.ma,B.mb+B.ma,0,'',-1),[dd(f2pMR(A),f2pMR(B),2,'%p',-1)]), W.m, o=>fmt(o.mb+o.ma),
+      det(W.m, o=>`${esc2(o.mc)} ${fmt(o.mb+o.ma)} <span class="f2-why">(${pct(f2pMR(o),2)} · Before ${fmt(o.mb)} · After ${fmt(o.ma)} · ${nm(o)})</span>`)),
+    row(4,'o', B&&big(pct(f2pOEE(B),1),[]), big(`<b style="color:${f2pAvC(f2pOEE(A))}">${pct(f2pOEE(A),1)}</b>`,[]),
+      B&&big(dd(f2pOEE(A),f2pOEE(B),1,'%p',+1),[]), W.o, o=>pct(f2pOEE(o),1),
+      det(W.o, o=>`${esc2(o.mc)} OEE ${pct(f2pOEE(o),1)} <span class="f2-why">(${X.av} ${pct(f2pAv(o),1)} · %NG ${pct(f2pNG(o),2)})</span>`)),
+    row(5,'l', B&&big(f2pH(B.tl)+'h',[]), big(`<b>${f2pH(A.tl)}h</b>`,[top(f2pTopLoss(A,2),2,true)]),
+      B&&big(dd(A.tl/60,B.tl/60,1,'h',-1),[]), W.l, o=>f2pH(o.tl)+'h',
+      det(W.l, o=>`${esc2(o.mc)} ${f2pH(o.tl)}h <span class="f2-why">(${top(f2pTopLoss(o,3),3,true)})</span>`))
+  ].join('');
+  const ex = W.L.filter(o=>o.t>0 && o.t<W.mq);
+  return `<div class="card" style="margin-bottom:12px"><div class="tblwrap"><table class="eq f2-wk f2-k3">
+    <thead><tr><th>NO</th><th>${T('f2.r.kpi')}</th><th>${esc2(prevLbl||T('f2.r.prev'))}</th><th>${esc2(curLbl||T('f2.r.cur'))}</th><th>${T('f2.r.delta')}</th>
+      <th class="w">Worst 1</th><th class="w">Worst 2</th><th class="w">Worst 3</th><th class="dt">${T('f2.k.detail')}</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>
+    <div class="legend" style="margin-top:6px;align-items:center">
+      <span class="f2-noprint">${T('f2.k.minq')} <input type="number" min="0" step="10" value="${W.mq}" onchange="f2SetMinQty(this.value)" style="width:64px;padding:2px 5px;border:1px solid #ccd;border-radius:4px;font:inherit"> ${T('f2.k.pcs')}</span>
+      ${ex.length ? `<span style="color:#b45309">${T('f2.k.excl',{n:W.mq})}: ${ex.map(o=>`${esc2(o.mc)} (${fmt(o.t)})`).join(', ')}</span>` : ''}
+      <span>${X.tg} %NG ≤ ${f2Target()}%</span></div></div>`;
+}
+/* 문제점 · 조치 — %NG · 가동률 · 로스 Worst 3 설비 (중복 제거) */
+function f2pIssues(S, noteKey){
+  const X = f2pTx(), W = f2pWorst(S), tags = {};
+  [['r','%NG'],['p',X.av],['l','Loss']].forEach(([k,lab])=>W[k].forEach((o,j)=>{ (tags[o.mc] = tags[o.mc] || []).push(lab+'①②③'[j]); }));
+  const mcs = S.mcList.filter(mc=>tags[mc]);
+  if(!mcs.length) return `<div class="card empty" style="padding:14px">${X.is.none}</div>`;
+  const nk = m => `${noteKey}_${m}`;
+  return `<div class="card"><div class="tblwrap"><table class="eq f2-wk f2-is">
+    <thead><tr><th>${T('t.eq')}</th><th>${X.is.perf}</th><th>${X.is.def}</th><th class="dt">${T('f2.is.prob')}</th><th class="dt">${T('f2.is.act')}</th></tr></thead>
+    <tbody>${mcs.map(mc=>{ const o = S.mc[mc], ng = f2pNG(o);
+      let p='', a=''; try{ p = localStorage.getItem('stc_f2_note_'+nk(mc)+'_p')||''; a = localStorage.getItem('stc_f2_note_'+nk(mc)+'_a')||''; }catch(e){}
+      const td = f2pTopDef(o,3), tl = f2pTopLoss(o,3);
+      return `<tr><td class="mc">${esc2(mc)}<small>${esc2(tags[mc].join(' · '))}</small></td>
+        <td style="text-align:left;font-size:11.5px;line-height:1.55">${esc2([...o.pns].map(pn=>S.names[pn]||pn).join(', '))} · OP ${esc2([...o.ops].join(', '))}<br>Total ${fmt(o.t)} · NG ${fmt(o.n)} (<b style="color:${f2St(ng).c}">${f2pPc(ng)}</b>)<br>${X.av} <b style="color:${f2pAvC(f2pAv(o))}">${f2pPc(f2pAv(o),1)}</b> · OEE ${f2pPc(f2pOEE(o),1)} · Loss ${f2pH(o.tl)}h</td>
+        <td style="text-align:left;font-size:11.5px;line-height:1.55">${td.length?td.map((x,j)=>`${'①②③'[j]} <i class="pill" style="background:#dc2626"></i>${esc2(x.t)} ${fmt(x.v)} (${o.n?(x.v/o.n*100).toFixed(0):0}%)`).join('<br>'):'NG –'}
+          ${tl.length?'<br>'+tl.map((x,j)=>`${'①②③'[j]} <i class="pill" style="background:#eb6834"></i>${esc2(x.t)} ${fmt(x.v,1)}h`).join('<br>'):''}</td>
+        <td><textarea class="f2-note" data-f2note="${esc2(nk(mc))}_p" placeholder="${T('f2.is.probPh')}">${esc2(p)}</textarea></td>
+        <td><textarea class="f2-note" data-f2note="${esc2(nk(mc))}_a" placeholder="${T('f2.is.actPh')}">${esc2(a)}</textarea></td></tr>`; }).join('')}</tbody>
+  </table></div><div class="legend" style="margin-top:6px"><span>${X.is.note}</span><span><i class="pill" style="background:#dc2626"></i>NG <i class="pill" style="background:#eb6834;margin-left:8px"></i>Loss</span></div></div>`;
+}
+/* 일자별(주차별) 추이 표 — 날짜를 누르면 메모 · 사진 */
+function f2pTrendTable(list, label, isDay, curKey){
+  const X = f2pTx();
+  return `<div class="card"><div class="tblwrap"><table class="eq f2-pt">
+    <thead><tr><th>${label}</th><th>Total</th><th>FG</th><th>NG</th><th>% NG</th><th>${X.h.mat}</th><th>${X.h.av}</th><th>OEE</th><th>${X.h.loss}</th><th>M/C</th>${isDay?`<th>📝 ${X.memo}</th>`:''}</tr></thead>
+    <tbody>${list.map(x=>{ const a = x.a, ng = f2pNG(a), av = f2pAv(a), nc = isDay ? noteFor(x.k,'').length : 0;
+      return `<tr${x.hi?' style="background:#fff8db"':''}><td class="name">${isDay?`<a href="#" onclick="noteOpen('${x.k}','');return false;" style="color:inherit">${esc2(x.k)}</a>`:esc2(x.k)}</td>
+        <td>${fmt(a.t)}</td><td>${fmt(a.f)}</td><td>${fmt(a.n)}</td><td style="color:${f2St(ng).c};font-weight:800">${f2pPc(ng)}</td><td>${fmt(a.mb+a.ma)}</td>
+        <td style="color:${f2pAvC(av)};font-weight:700">${f2pPc(av,1)}</td><td>${f2pPc(f2pOEE(a),1)}</td><td>${f2pH(a.tl)}</td><td>${a.mcs.size}</td>
+        ${isDay?`<td><button class="f2p-nb${nc?' on':''}" onclick="noteOpen('${x.k}','')">${nc?`📝 ${nc}`:'＋'}</button></td>`:''}</tr>`; }).join('')}</tbody></table></div></div>`;
+}
 function f2pReport(kind, topWeek){
   const X = f2pTx();
   const dates = f2pDates(), weeks = f2pWeeks(), months = [...new Set(dates.map(d=>d.slice(0,7)))].sort();
@@ -1850,17 +1948,29 @@ function f2pReport(kind, topWeek){
       <div><span>${X.ck.dup}</span><b style="color:${A.dup?'#b45309':'var(--good)'}">${A.dup?`${fmt(A.dup)} (${fmt(A.dupQ)} EA)`:X.ck.none}</b></div>
       <div><span>${X.ck.guess}</span><b style="color:${A.guess?'#b45309':'var(--good)'}">${A.guess?`${fmt(A.guess)} (${fmt(A.guessQ)} EA)`:X.ck.none}</b></div>
       <div><span>${X.ck.opfix}</span><b>${F2P.opFix?fmt(F2P.opFix):X.ck.none}</b></div></div>`;
+  /* 추이 표: 일일·주간 = 일자별(기간 7일 미만이면 앞 7일까지), 월간 = 주차별 */
+  let trend, tLbl, isDay = kind!=='month';
+  if(isDay){ const t0 = f2DayDiff(dFrom, dTo) < 6 ? f2AddDays(dTo, -6) : dFrom;
+    const T7 = f2pSum(r => r.d>=t0 && r.d<=dTo);
+    trend = Object.keys(T7.day).sort().map(d=>({ k:d, a:T7.day[d], hi:d>=dFrom && d<=dTo })); tLbl = X.sT; }
+  else { trend = weeks.map(w=>({ k:w, a:f2pSum(r=>r.w===w && r.d.slice(0,7)===cur).all })).filter(x=>x.a.rows).map(x=>Object.assign(x,{hi:true})); tLbl = X.sW; }
+  const curLbl = kind==='daily' && dFrom!==dTo ? `${dFrom} ~ ${dTo}` : cur;
   return bar + `
     ${f2pCover(kind, cvPer, cvNote, prevKey, S.mcList)}
-    <div class="sec-title">1. ${X.s1}</div>${f2pTiles(A, P && P.all)}
-    <div class="sec-title">2. ${X.s2}</div>${f2pTrend(dFrom, dTo)}
+    ${f2pTrend(dFrom, dTo)}
+    ${f2NoteList(dates.filter(d=>d>=dFrom && d<=dTo))}
+    <div class="f2-rhead"><h2>${X.rh[kind]}</h2>
+      <div>${esc2(cvPer)}${cvNote?` · ${esc2(cvNote)}`:''} · ${X.vs} ${esc2(prevKey||'–')}<br><small>${X.made.replace('{d}', new Date().toISOString().slice(0,10))}</small></div></div>
+    <div class="sec-title">1. ${X.s1}</div>${f2pKpiWorst(S, P, prevKey, curLbl)}
+    <div class="sec-title">2. ${T('f2.issues')}</div>${f2pIssues(S, noteKey)}
     <div class="sec-title">3. ${X.s3}</div>${f2pMcTable(S, P)}
     <div class="sec-title">4. ${X.s4}</div>${f2pDefects(S)}
     <div class="sec-title">5. ${X.s5}</div>${f2pLosses(S)}
     <div class="sec-title">6. ${X.s6}</div>${f2pParts(S)}
-    <div class="sec-title">7. ${X.s7}</div>${f2pDayMatrix(pred, S, dFrom, dTo)}
-    <div class="sec-title">8. ${X.s8}</div>${chk}
-    <div class="sec-title">9. ${X.s9}</div>
+    <div class="sec-title">7. ${tLbl}</div>${f2pTrendTable(trend, isDay?T('f2.date'):T('ctl.week'), isDay)}
+    <div class="sec-title">8. ${X.s7}</div>${f2pDayMatrix(pred, S, dFrom, dTo)}
+    <div class="sec-title">9. ${X.s8}</div>${chk}
+    <div class="sec-title">10. ${X.s9}</div>
     <div class="card"><textarea class="f2-note" data-f2note="${esc2(noteKey)}" placeholder="${X.noteph}">${esc2(note)}</textarea></div>
     <div class="foot">${X.foot}</div>`;
 }
@@ -2239,7 +2349,9 @@ function noteShrink(file){ return new Promise((ok,no)=>{ const fr = new FileRead
 const NOTE_UI = { date:null, tag:'', pics:[], busy:false };
 function noteOpen(date, tag){ NOTE_UI.date = date; NOTE_UI.tag = tag||''; NOTE_UI.pics = []; noteRenderModal(); }
 function noteClose(){ NOTE_UI.date = null; const m = document.getElementById('noteModal'); if(m) m.remove(); }
-function noteParts(){ if(NOTE.tags) return NOTE.tags(); const m = {}; (F2.pd||[]).forEach(r=>{ if(r['공정']==='MCT' && r['Part name']) m[r['Part name']] = 1; }); return Object.keys(m); }
+function noteParts(){ if(NOTE.tags) return NOTE.tags(); const m = {}; (F2.pd||[]).forEach(r=>{ if(r['공정']==='MCT' && r['Part name']) m[r['Part name']] = 1; });
+  const mc = [...new Set((F2.pm||[]).map(r=>r.mc))].sort();   /* 설비 생산실적 메모용 — 설비로도 고를 수 있게 */
+  return Object.keys(m).concat(mc); }
 function noteRenderModal(){
   const d = NOTE_UI.date; if(!d) return;
   let m = document.getElementById('noteModal');
