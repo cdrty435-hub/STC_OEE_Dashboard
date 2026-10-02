@@ -261,7 +261,7 @@ table.eq.f2p-dm td.in{box-shadow:inset 0 0 0 1px #b45309;}
 .f2g-rk{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:5px;background:#64748b;color:#fff !important;font-weight:900;font-size:12px;text-decoration:none;padding:0 4px;align-self:center;}
 .f2g-rk.t{background:#c62828;}
 table.f2g-t{border-collapse:collapse;font-size:10.5px;width:100%;table-layout:fixed;min-width:1240px;}
-table.f2g-t col.c-lb{width:128px;} table.f2g-t col.c-pt{width:96px;}
+table.f2g-t col.c-lb{width:150px;} table.f2g-t col.c-pt{width:96px;}
 table.f2g-t th,table.f2g-t td{border:1px solid #dfe3ea;padding:1px 3px;line-height:1.3;overflow:hidden;text-overflow:clip;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
 table.f2g-t th{background:#dbe7f7;color:#1e3c72;font-weight:800;text-align:center;}
 table.f2g-t th a{color:inherit;text-decoration:none;} table.f2g-t th.in{background:#fde68a;}
@@ -269,7 +269,13 @@ table.f2g-t td.lb,table.f2g-t th.lb{text-align:left;font-weight:800;background:#
 table.f2g-t th{font-size:10px;padding:2px 1px;}
 table.f2g-t td.in{}
 table.f2g-t td.pt,table.f2g-t th.pt{background:#eef4fd;font-weight:800;} table.f2g-t td.pt small{font-weight:500;color:var(--ink-muted);}
-table.f2g-t tr.r td.lb{color:#c62828;} table.f2g-t tr.ty td.lb{font-weight:600;padding-left:16px;}
+table.f2g-t tr.r td.lb{color:#c62828;} table.f2g-t tr.ty td.lb{font-weight:600;padding-left:6px;}
+table.f2g-t tr.ty td.lb .sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;background:#d5dbe3;vertical-align:0;}
+table.f2g-t tr.sel td{background:color-mix(in srgb, var(--c) 10%, #fff);}
+table.f2g-t tr.sel td.lb{background:color-mix(in srgb, var(--c) 18%, #fff);color:#111827;font-weight:800;box-shadow:inset 3px 0 0 var(--c);}
+table.f2g-t tr.sel td.lb .sw{background:var(--c);}
+table.f2g-t tr.sel td.pt{background:color-mix(in srgb, var(--c) 16%, #eef4fd);}
+table.f2g-t tr.ty.off td{color:#9aa0a6;} table.f2g-t tr.r.sel td.lb{color:#c62828;}
 table.f2g-t tr.sub td{background:#f8fafc;color:var(--ink-muted);font-size:11px;font-weight:700;text-align:left;}
 table.f2g-t .nil{color:#cbd5e1;}
 table.f2g-sum td{vertical-align:middle;}
@@ -1677,7 +1683,13 @@ function f2pNormD(rows){
   }).filter(o=>o && o.mc);
   F2P.opFix = keep; return out;
 }
-const f2pDefName  = k => k.replace(/^불량_/,'');
+/* 불량유형 이름 — 한국어 화면은 한글로 (원본 In-Out Data 영어 이름 기준) */
+const F2P_KO = { 'striped':'줄무늬', 'scratch':'스크래치', 'hit':'찍힘', 'dent, chip mark':'눌림 · 칩 마크', 'dent':'눌림', 'chip mark':'칩 마크',
+  'porosity':'기포', 'squashed':'틀어짐', 'deep crack':'크랙', 'crack':'크랙', 'peel off':'박리', 'stain':'얼룩', 'spec out':'치수 불량', 'other':'기타', 'others':'기타',
+  "mat'l before":'소재 불량 (가공 전)', "mat'l after":'소재 불량 (가공 후)', "mat'l":'소재 불량', 'setting':'셋팅 불량' };
+const f2pLoc = n => LANG==='ko' ? (F2P_KO[String(n).trim().toLowerCase()] || n) : n;
+const f2pRaw = k => k.replace(/^불량_/,'');
+const f2pDefName  = k => f2pLoc(f2pRaw(k));
 const f2pLossName = k => k.replace(/^로스_/,'').replace(/\(분\)$/,'');
 const f2pDates = () => [...new Set(F2.pm.map(r=>r.d))].sort();
 const f2pWeeks = () => [...new Set(F2.pm.map(r=>r.w))].sort((a,b)=>wkNum(a)-wkNum(b));
@@ -1826,7 +1838,7 @@ function f2pDefects(S){
   const X = f2pTx(), A = S.all;
   /* NG = 불량유형 11종 + Mat'l Before/After + Setting */
   const cols = F2P.defs.map((k,i)=>({ t:f2pDefName(k), i, c:'#2a78d6' }))
-    .concat([{ t:"Mat'l Before", i:'mb', c:'#1baf7a' }, { t:"Mat'l After", i:'ma', c:'#1baf7a' }, { t:'Setting', i:'set', c:'#94a3b8' }]);
+    .concat([{ t:f2pLoc("Mat'l Before"), i:'mb', c:'#1baf7a' }, { t:f2pLoc("Mat'l After"), i:'ma', c:'#1baf7a' }, { t:f2pLoc('Setting'), i:'set', c:'#94a3b8' }]);
   const get = (a, i) => typeof i === 'number' ? a.df[i] : a[i];
   const list = cols.map(c=>({ t:c.t, v:get(A,c.i), c:c.c, i:c.i })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
   if(!list.length) return `<div class="card empty" style="padding:12px">NG 0</div>`;
@@ -1845,7 +1857,7 @@ function f2pLosses(S){
 function f2pParts(S){
   const X = f2pTx(), H = X.h;
   const L = Object.values(S.part).sort((a,b)=> a.pn<b.pn?-1:a.pn>b.pn?1: String(a.opk).localeCompare(String(b.opk), undefined, {numeric:true}));
-  const top = a => { const t = F2P.defs.map((k,i)=>({ t:f2pDefName(k), v:a.df[i] })).concat([{ t:"Mat'l", v:a.mb+a.ma }])
+  const top = a => { const t = F2P.defs.map((k,i)=>({ t:f2pDefName(k), v:a.df[i] })).concat([{ t:f2pLoc("Mat'l"), v:a.mb+a.ma }])
       .filter(x=>x.v>0).sort((x,y)=>y.v-x.v).slice(0,3); return t.length ? t.map(x=>`${esc2(x.t)} <b>${fmt(x.v)}</b>`).join(' · ') : '–'; };
   return `<div class="card"><div class="tblwrap"><table class="eq f2-pt f2p-pt">
     <thead><tr><th>${H.part}</th><th style="text-align:left">${H.name}</th><th style="text-align:left">${H.op}</th><th style="text-align:left">${H.mc}</th><th>Total</th><th>FG</th><th>NG</th><th>% NG</th><th>${H.mat}</th><th>${H.av}</th><th style="text-align:left">${H.top}</th></tr></thead>
@@ -1877,8 +1889,8 @@ function f2pDayMatrix(pred, S, pFrom, dTo){
 /* FAC2 Measure (전 설비) — 불량유형을 가공(FAC2) / 다캐(소재) / 기타로 나눈다 (F2_불량상세 계통 기준과 맞춤) */
 function f2pGrp(name){
   const k = String(name).toLowerCase();
-  if(/mat'?l|porosity|peel|crack|squash|stain|short|swell|broken|bend|deform|dirty/.test(k)) return '다캐불량';
-  if(/^other/.test(k)) return '기타';
+  if(/mat'?l|porosity|peel|crack|squash|stain|short|swell|broken|bend|deform|dirty|소재|기포|박리|크랙|틀어짐|얼룩/.test(k)) return '다캐불량';
+  if(/^other|^기타/.test(k)) return '기타';
   return '가공불량';
 }
 /* 품번 짧은 이름 — 품질 쪽(F2_품번일별) 이름이 있으면 그것(예: CT Support), 없으면 원본 이름에서 'HSG-' 를 뺀다 */
@@ -1890,7 +1902,7 @@ function f2pShort(pn, name){
 function f2pMcDayTable(pred){
   const X = f2pTx(), rows = F2.pm.filter(pred);
   if(!rows.length) return `<div class="card empty" style="padding:14px">${X.noData}</div>`;
-  const gIdx = F2P.defs.map(k=>f2pGrp(f2pDefName(k)));
+  const gIdx = F2P.defs.map(k=>f2pGrp(f2pRaw(k)));
   const mk = () => ({ t:0, f:0, n:0, dc:0, mcN:0, mat:0, tq:0, p:0, a:0, parts:new Set() });
   const add = (o, r) => { o.t+=r.t; o.f+=r.f; o.n+=r.n; o.mat+=r.mb+r.ma; o.tq+=r.tq; o.p+=r.p; o.a+=r.a;
     o.dc += r.mb + r.ma; r.df.forEach((v,i)=>{ if(gIdx[i]==='다캐불량') o.dc+=v; else if(gIdx[i]==='가공불량') o.mcN+=v; }); o.mcN += r.set;
@@ -1919,8 +1931,8 @@ function f2pMcDayTable(pred){
     <div class="legend" style="margin-top:6px"><span>${X.achNote}</span></div></div>`;
 }
 function f2pMeasureSrc(S, pred){
-  const defs = A => F2P.defs.map((k,i)=>({ t:f2pDefName(k), v:A.df[i] })).concat([{ t:"Mat'l Before", v:A.mb }, { t:"Mat'l After", v:A.ma }, { t:'Setting', v:A.set }])
-    .filter(x=>x.v>0).map(x=>({ ...x, g:f2pGrp(x.t) })).sort((a,b)=>b.v-a.v);
+  const defs = A => F2P.defs.map((k,i)=>({ t:f2pDefName(k), raw:f2pRaw(k), v:A.df[i] })).concat([{ t:"Mat'l Before", v:A.mb }, { t:"Mat'l After", v:A.ma }, { t:'Setting', v:A.set }].map(x=>({ ...x, t:f2pLoc(x.t), raw:x.t })))
+    .filter(x=>x.v>0).map(x=>({ ...x, g:f2pGrp(x.raw || x.t) })).sort((a,b)=>b.v-a.v);
   const sum = (L, g) => L.filter(x=>x.g===g).reduce((a,x)=>a+x.v,0);
   return {
     stats:()=>S.mcList.map(mc=>{ const A = S.mc[mc], d = defs(A);
@@ -1933,7 +1945,7 @@ function f2pMeasureSrc(S, pred){
       return Object.entries(m).map(([k,x])=>({ part:k, ...x })); } };
 }
 /* 설비 KPI 요약 — 일일 품질보고 「1. 설비 KPI」 와 같은 틀 (전기간 · 이번 · 증감 · Worst 1~3 · 세부) */
-const f2pTopDef  = (A, n) => F2P.defs.map((k,i)=>({ t:f2pDefName(k), v:A.df[i] })).concat([{ t:"Mat'l", v:A.mb+A.ma }, { t:'Setting', v:A.set }]).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,n);
+const f2pTopDef  = (A, n) => F2P.defs.map((k,i)=>({ t:f2pDefName(k), v:A.df[i] })).concat([{ t:f2pLoc("Mat'l"), v:A.mb+A.ma }, { t:f2pLoc('Setting'), v:A.set }]).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,n);
 const f2pTopLoss = (A, n) => F2P.loss.map((k,i)=>({ t:f2pLossName(k), v:A.ls[i]/60 })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,n);
 function f2pWorst(S){
   const mq = f2MinQty(), L = S.mcList.map(mc=>Object.assign({ mc }, S.mc[mc])), ok = o => o.t >= mq;
@@ -2036,7 +2048,7 @@ function f2pGroupTrend(pred, pFrom, dTo){
   let days = [...new Set(F2.pm.filter(r=>r.d>=t0 && r.d<=dTo).map(r=>r.d))].sort();
   if(days.length > CAP) days = days.slice(-CAP);
   /* 유형 목록 : 불량유형 11종 + Mat'l Before/After + Setting */
-  const TY = F2P.defs.map((k,i)=>({ t:f2pDefName(k), get:r=>r.df[i] })).concat([{ t:"Mat'l Before", get:r=>r.mb }, { t:"Mat'l After", get:r=>r.ma }, { t:'Setting', get:r=>r.set }]);
+  const TY = F2P.defs.map((k,i)=>({ k:f2pRaw(k), get:r=>r.df[i] })).concat([{ k:"Mat'l Before", get:r=>r.mb }, { k:"Mat'l After", get:r=>r.ma }, { k:'Setting', get:r=>r.set }]).map(y=>({ ...y, t:f2pLoc(y.k) }));
   const mk = () => ({ t:0, n:0, ty:TY.map(()=>0) });
   const add = (o, r) => { o.t += r.t; o.n += r.n; TY.forEach((y,i)=>o.ty[i] += y.get(r)); };
   const G = {};
@@ -2067,8 +2079,8 @@ function f2pGroupTrend(pred, pFrom, dTo){
     const W = 1000, H = 262, Lx = 46, Rx = 150, T = 28, B = 26, PH = H-T-B, n = days.length, cw = (W-Lx-Rx)/Math.max(1,n);
     const has = days.map(d=>{ const o = g.D[d]; return !!(o && o.t); });
     const gk = g.mc+'|'+g.pn+'|'+g.op, hid = f2gHidden(gk);
-    const serAll = tyIdx.map((j,k)=>({ name:TY[j].t, c:F2G_COL[k % F2G_COL.length], v:days.map(d=>{ const o = g.D[d]; return o && o.t ? o.ty[j]/o.t*100 : null; }) }));
-    const ser = serAll.filter(sr=>!hid.includes(sr.name));
+    const serAll = tyIdx.map((j,k)=>({ name:TY[j].t, key:TY[j].k, c:F2G_COL[k % F2G_COL.length], v:days.map(d=>{ const o = g.D[d]; return o && o.t ? o.ty[j]/o.t*100 : null; }) }));
+    const ser = serAll.filter(sr=>!hid.includes(sr.key));
     const tot = { name:L==='ko'?'전체 불량률':L==='th'?'%NG รวม':'Total %NG', c:'#c62828', tot:true, v:days.map(d=>{ const o = g.D[d]; return o && o.t ? o.n/o.t*100 : null; }) };
     const showTot = !hid.includes('__tot');
     const all = (showTot ? [tot] : []).concat(ser);
@@ -2104,9 +2116,9 @@ function f2pGroupTrend(pred, pFrom, dTo){
       s += `<text x="${W-Rx+8}" y="${y.toFixed(1)}" font-size="10.5" font-weight="${e.sr.tot?800:600}" fill="${e.sr.c}">● ${esc2(e.sr.name)} ${e.v.toFixed(2)}%</text>`; });
     /* 유형 선택 — 칩을 눌러 선을 켜고 끈다 (설비·모델마다 따로 · 이 브라우저에 저장) */
     const enc = v => encodeURIComponent(v).replace(/'/g,'%27');   /* Mat'l 의 ' 가 onclick 따옴표를 깨지 않게 */
-    const ek = enc(gk), names = enc(JSON.stringify(serAll.map(sr=>sr.name)));
+    const ek = enc(gk), names = enc(JSON.stringify(serAll.map(sr=>sr.key)));
     const chip = (sr, on, key) => `<button class="f2g-chip${on?' on':''}" onclick="f2gTog('${ek}','${enc(key)}')" style="--c:${sr.c}"><i></i>${esc2(sr.name)}</button>`;
-    const lg = `<span class="f2g-sel">${L==='ko'?'유형 선택':'Types'}</span>` + chip(tot, showTot, '__tot') + serAll.map(sr=>chip(sr, !hid.includes(sr.name), sr.name)).join('')
+    const lg = `<span class="f2g-sel">${L==='ko'?'유형 선택':'Types'}</span>` + chip(tot, showTot, '__tot') + serAll.map(sr=>chip(sr, !hid.includes(sr.key), sr.key)).join('')
       + `<button class="f2g-all" onclick="f2gSetAll('${ek}', null)">${L==='ko'?'전체':'All'}</button><button class="f2g-all" onclick="f2gSetAll('${ek}','${names}')">${L==='ko'?'해제':'None'}</button>`
       + `<span class="f2g-tgl"><i></i>${X.tg} ${tg}%</span>`;
     return `<div class="f2g-lg">${lg}</div><svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;min-width:680px" role="img" aria-label="${esc2(g.mc)} defect trend">${s}</svg>`;
@@ -2119,12 +2131,15 @@ function f2pGroupTrend(pred, pFrom, dTo){
     const nlist = notes.length ? `<div class="f2g-notes">${notes.map(x=>`<div><a href="#" onclick="noteOpen('${x.d}','${esc2(g.mc)}');return false;"><b>📝 ${md(x.d)}</b></a>${x.tag?` <span class="note-tag">${esc2(x.tag)}</span>`:''} ${esc2(String(x.text||'').split('\n')[0])}${(x.photos||[]).length?` <span class="ph">📷${x.photos.length}</span>`:''}${x.author?` <small>— ${esc2(x.author)}</small>`:''}</div>`).join('')}</div>` : '';
     const cell = (d, f) => { const o = g.D[d]; return `<td class="${inP(d)?'in':''}">${o && o.t ? f(o) : '<span class="nil">·</span>'}</td>`; };
     const rcol = v => v==null ? '' : v>tg ? ' style="color:#c62828;font-weight:800"' : '';
+    const hidT = f2gHidden(g.mc+'|'+g.pn+'|'+g.op).includes('__tot');
     const rows = [
       `<tr class="q"><td class="lb">${TX.prod}</td>${days.map(d=>cell(d,o=>fmt(o.t))).join('')}<td class="pt">${fmt(P.t)}</td></tr>`,
       `<tr class="q"><td class="lb">${TX.def}</td>${days.map(d=>cell(d,o=>o.n?fmt(o.n):'0')).join('')}<td class="pt">${fmt(P.n)}</td></tr>`,
-      `<tr class="r"><td class="lb">${TX.rate}</td>${days.map(d=>{ const o = g.D[d], v = o && o.t ? o.n/o.t*100 : null; return `<td class="${inP(d)?'in':''}"${rcol(v)}>${v==null?'<span class="nil">·</span>':v.toFixed(2)}</td>`; }).join('')}<td class="pt"${rcol(rP)}>${f2pPc(rP)}</td></tr>`
+      `<tr class="r${hidT?' off':' sel'}" style="--c:#c62828"><td class="lb">${TX.rate}</td>${days.map(d=>{ const o = g.D[d], v = o && o.t ? o.n/o.t*100 : null; return `<td class="${inP(d)?'in':''}"${rcol(v)}>${v==null?'<span class="nil">·</span>':v.toFixed(2)}</td>`; }).join('')}<td class="pt"${rcol(rP)}>${f2pPc(rP)}</td></tr>`
     ].concat(tyIdx.map((j,k)=>{
-      return `<tr class="ty${k===0?' first':''}"><td class="lb">${esc2(TY[j].t)} %</td>${days.map(d=>{ const o = g.D[d]; if(!o || !o.t) return `<td class="${inP(d)?'in':''}"><span class="nil">·</span></td>`;
+      /* 그래프에서 고른 유형 = 선 색으로 행을 칠한다 (안 고른 유형은 흐리게) */
+      const hidG = f2gHidden(g.mc+'|'+g.pn+'|'+g.op), onT = !hidG.includes(TY[j].k), col = F2G_COL[k % F2G_COL.length];
+      return `<tr class="ty${k===0?' first':''}${onT?' sel':' off'}" style="--c:${col}"><td class="lb"><i class="sw"></i>${esc2(TY[j].t)} %</td>${days.map(d=>{ const o = g.D[d]; if(!o || !o.t) return `<td class="${inP(d)?'in':''}"><span class="nil">·</span></td>`;
           const v = o.ty[j]/o.t*100; if(!o.ty[j]) return `<td class="${inP(d)?'in':''}"><span class="nil">·</span></td>`;
           return `<td class="${inP(d)?'in':''}" title="${esc2(TY[j].t)} ${fmt(o.ty[j])} / ${fmt(o.t)}">${v.toFixed(2)}</td>`; }).join('')}
         <td class="pt">${P.ty[j]?(P.ty[j]/P.t*100).toFixed(2)+'%':'–'} <small>(${fmt(P.ty[j])})</small></td></tr>`; }));
