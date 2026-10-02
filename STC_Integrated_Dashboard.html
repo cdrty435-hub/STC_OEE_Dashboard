@@ -260,8 +260,8 @@ table.eq.f2p-dm td.in{box-shadow:inset 0 0 0 1px #b45309;}
 .f2g-h .kp{margin-left:auto;font-size:12.5px;} .f2g-h .kp b{font-size:13px;color:inherit;}
 .f2g-rk{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:5px;background:#64748b;color:#fff !important;font-weight:900;font-size:12px;text-decoration:none;padding:0 4px;align-self:center;}
 .f2g-rk.t{background:#c62828;}
-table.f2g-t{border-collapse:collapse;font-size:11.5px;width:100%;}
-table.f2g-t th,table.f2g-t td{border:1px solid #dfe3ea;padding:4px 6px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+table.f2g-t{border-collapse:collapse;font-size:11px;width:100%;}
+table.f2g-t th,table.f2g-t td{border:1px solid #dfe3ea;padding:1px 6px;line-height:1.3;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
 table.f2g-t th{background:#dbe7f7;color:#1e3c72;font-weight:800;text-align:center;}
 table.f2g-t th a{color:inherit;text-decoration:none;} table.f2g-t th.in{background:#fde68a;}
 table.f2g-t td.lb,table.f2g-t th.lb{text-align:left;font-weight:800;background:#f4f6fa;color:#334155;position:sticky;left:0;min-width:150px;}
@@ -271,6 +271,13 @@ table.f2g-t tr.r td.lb{color:#c62828;} table.f2g-t tr.ty td.lb{font-weight:600;p
 table.f2g-t tr.sub td{background:#f8fafc;color:var(--ink-muted);font-size:11px;font-weight:700;text-align:left;}
 table.f2g-t .nil{color:#cbd5e1;}
 table.f2g-sum td{vertical-align:middle;}
+table.f2g-t tr.sub td{padding:1px 6px;}
+.f2g-nb{display:inline-block;background:#f59e0b;color:#fff;border-radius:3px;padding:0 3px;font-size:9.5px;font-weight:800;line-height:1.35;}
+.f2g-notes{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:5px 10px;margin:2px 0 6px;font-size:11.5px;line-height:1.6;}
+.f2g-notes a{color:#92400e;text-decoration:none;} .f2g-notes .ph{color:#92400e;font-weight:700;} .f2g-notes small{color:var(--ink-muted);}
+.f2g-hit{cursor:pointer;} .f2g-hit:hover{fill:rgba(245,158,11,.10);}
+.f2g-lg{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:#374151;margin:2px 0 2px;}
+.f2g-lg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px;}
 .f2q{padding:18px 20px;}
 .f2q-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:3px solid #1e88e5;padding-bottom:10px;margin-bottom:12px;}
 .f2q-head h3{margin:0;font-size:18px;font-weight:900;}
@@ -2040,32 +2047,54 @@ function f2pGroupTrend(pred, pFrom, dTo){
         <td>${fmt(g.P.t)}</td><td><b>${fmt(g.P.n)}</b></td><td style="color:${f2St(r).c};font-weight:800">${f2pPc(r)}</td>
         <td style="text-align:left;font-size:11.5px">${top.map(x=>`${esc2(x.t)} <b>${fmt(x.v)}</b> (${(x.v/g.P.t*100).toFixed(2)}%)`).join(' · ') || '–'}</td></tr>`; }).join('')}</tbody></table></div></div>`;
   /* 묶음별 차트 + 표 */
-  const mini = (g) => {
-    const W = 1000, H = 130, Lx = 46, Rx = 70, T = 18, B = 22, PH = H-T-B, n = days.length, cw = (W-Lx-Rx)/Math.max(1,n);
-    const tmax = Math.max(1, ...days.map(d=>(g.D[d]||{}).t||0));
-    const rs = days.map(d=>{ const o = g.D[d]; return o && o.t ? o.n/o.t*100 : null; });
-    const rmax = Math.max(tg*1.2, ...rs.filter(v=>v!=null))*1.15;
+  /* 묶음별 유형별 불량률 꺾은선 — 선 하나 = 불량유형 하나(생산 대비 %) · 빨간 점선 = 전체 불량률 · 생산 없는 날은 건너뜀 */
+  const F2G_COL = ['#2a78d6','#eb6834','#1baf7a','#8e44ad','#d4a017','#00838f','#c2185b','#6d4c41','#5c6bc0','#7cb342','#90a4ae','#f06292','#26a69a','#ff7043'];
+  const mini = (g, tyIdx) => {
+    const W = 1000, H = 262, Lx = 46, Rx = 150, T = 28, B = 26, PH = H-T-B, n = days.length, cw = (W-Lx-Rx)/Math.max(1,n);
+    const has = days.map(d=>{ const o = g.D[d]; return !!(o && o.t); });
+    const ser = tyIdx.map((j,k)=>({ name:TY[j].t, c:F2G_COL[k % F2G_COL.length], v:days.map(d=>{ const o = g.D[d]; return o && o.t ? o.ty[j]/o.t*100 : null; }) }));
+    const tot = { name:L==='ko'?'전체 불량률':L==='th'?'%NG รวม':'Total %NG', c:'#c62828', tot:true, v:days.map(d=>{ const o = g.D[d]; return o && o.t ? o.n/o.t*100 : null; }) };
+    const all = [tot, ...ser];
+    const vmax = Math.max(tg, ...all.flatMap(s=>s.v.filter(x=>x!=null)));
+    const st = [0.5,1,2,2.5,5,10,20,25,50].find(x=>vmax*1.12/x<=6) || 100, ymax = Math.ceil(vmax*1.12/st)*st;
+    const PX = i => Lx + cw*(i+0.5), Y = v => T + PH*(1 - v/ymax);
     let s = '';
-    days.forEach((d,i)=>{ const o = g.D[d], cx = Lx + cw*(i+0.5);
-      if(inP(d)) s += `<rect x="${(cx-cw/2).toFixed(1)}" y="${T}" width="${cw.toFixed(1)}" height="${PH}" fill="#fde68a" opacity=".35"/>`;
-      if(o && o.t){ const h = PH*0.55*o.t/tmax; s += `<rect x="${(cx-Math.min(16,cw*0.5)/2).toFixed(1)}" y="${(T+PH-h).toFixed(1)}" width="${Math.min(16,cw*0.5).toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${inP(d)?'#94a3b8':'#cbd5e1'}"><title>${d} ${X.prod} ${fmt(o.t)}</title></rect>`; }
-      if(n<=16 || i%Math.ceil(n/16)===0 || i===n-1) s += `<text x="${cx.toFixed(1)}" y="${H-6}" text-anchor="middle" font-size="10" fill="#6b7280">${md(d)}</text>`; });
-    const Y = v => T + PH*(1 - v/rmax);
+    days.forEach((d,i)=>{ if(inP(d)) s += `<rect x="${(PX(i)-cw/2).toFixed(1)}" y="${T}" width="${cw.toFixed(1)}" height="${PH}" fill="#fde68a" opacity=".35"/>`; });
+    /* 날짜 칸 클릭 → 그 설비의 생산실적 메모·사진 (메모 있는 날 = 주황 점선 + 📝 건수) */
+    days.forEach((d,i)=>{ const L = noteFor(d, g.mc), x = PX(i);
+      s += `<rect class="f2g-hit" x="${(x-cw/2).toFixed(1)}" y="0" width="${cw.toFixed(1)}" height="${H-4}" fill="transparent" onclick="noteOpen('${d}','${esc2(g.mc)}')"><title>${d} · ${esc2(g.mc)} — ${L.length?`메모 ${L.length}건 · `:''}클릭 → 메모·사진</title></rect>`;
+      if(L.length){ const cap = String((L.find(x=>x.text)||{}).text||'').split('\n')[0].slice(0,40);
+        s += `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${T}" y2="${T+PH}" stroke="#f59e0b" stroke-width="1.4" stroke-dasharray="4 3" pointer-events="none"/>`
+           + `<g style="cursor:pointer" onclick="noteOpen('${d}','${esc2(g.mc)}')"><title>${d} · ${esc2(cap)}</title><rect x="${(x-15).toFixed(1)}" y="3" width="30" height="17" rx="4" fill="#f59e0b"/><text x="${x.toFixed(1)}" y="15.5" text-anchor="middle" font-size="10.5" font-weight="800" fill="#fff">📝${L.length}</text></g>`; } });
+    for(let v=0; v<=ymax+1e-9; v+=st){ const y = Y(v).toFixed(1); s += `<line x1="${Lx}" x2="${W-Rx}" y1="${y}" y2="${y}" stroke="#eef0f3"/><text x="${Lx-6}" y="${+y+4}" text-anchor="end" font-size="10" fill="#6b7280">${+v.toFixed(1)}%</text>`; }
     const yt = Y(tg).toFixed(1);
-    s += `<line x1="${Lx}" x2="${W-Rx}" y1="${yt}" y2="${yt}" stroke="#dc2626" stroke-dasharray="5 4" stroke-width="1.2"/><text x="${W-Rx+6}" y="${+yt+4}" font-size="10" fill="#b91c1c">${X.tg} ${tg}%</text>`;
-    let path = '', pen = false;
-    rs.forEach((v,i)=>{ if(v==null){ return; } const x = Lx + cw*(i+0.5); path += (pen?'L':'M') + x.toFixed(1) + ' ' + Y(v).toFixed(1) + ' '; pen = true; });
-    s += `<path d="${path}" fill="none" stroke="#2a78d6" stroke-width="2"/>`;
-    rs.forEach((v,i)=>{ if(v==null) return; const x = Lx + cw*(i+0.5), y = Y(v);
-      s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.2" fill="${v>tg?'#dc2626':'#2a78d6'}" stroke="#fff" stroke-width="1.2"/>`;
-      if(n<=16 || inP(days[i])) s += `<text x="${x.toFixed(1)}" y="${(y-6).toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="700" fill="${v>tg?'#b91c1c':'#1e3a8a'}">${v.toFixed(1)}</text>`; });
-    s += `<text x="${Lx-6}" y="${T+8}" text-anchor="end" font-size="10" fill="#6b7280">%NG</text>`;
-    return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;min-width:640px" role="img" aria-label="${esc2(g.mc)} %NG">${s}</svg>`;
+    s += `<line x1="${Lx}" x2="${W-Rx}" y1="${yt}" y2="${yt}" stroke="#9ca3af" stroke-dasharray="2 3" stroke-width="1"/>`;
+    days.forEach((d,i)=>{ if(n<=16 || i%Math.ceil(n/16)===0 || i===n-1) s += `<text x="${PX(i).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="10.5" fill="${new Date(d+'T00:00:00Z').getUTCDay()===0?'#dc2626':'#6b7280'}">${md(d)}</text>`; });
+    const ends = [];
+    [...ser].reverse().concat([tot]).forEach(sr=>{
+      const P = []; sr.v.forEach((v,i)=>{ if(v!=null) P.push([PX(i), Y(v)]); });
+      s += `<path d="${fcSmooth(P)}" pointer-events="none" fill="none" stroke="${sr.c}" stroke-width="${sr.tot?2.6:1.8}"${sr.tot?' stroke-dasharray="7 4"':''} stroke-linejoin="round"/>`;
+      sr.v.forEach((v,i)=>{ if(v==null) return;
+        s += `<circle style="cursor:pointer" onclick="noteOpen('${days[i]}','${esc2(g.mc)}')" cx="${PX(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${sr.tot?3.6:2.8}" fill="${sr.tot?'#fff':sr.c}" stroke="${sr.c}" stroke-width="${sr.tot?2:1}"><title>${days[i]} · ${esc2(sr.name)} ${v.toFixed(2)}%</title></circle>`;
+        if(sr.tot && (n<=16 || inP(days[i]))) s += `<text x="${PX(i).toFixed(1)}" y="${(Y(v)-8).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="800" fill="#b91c1c">${v.toFixed(1)}</text>`; });
+      let li = sr.v.length-1; while(li>=0 && sr.v[li]==null) li--;
+      if(li>=0) ends.push({ y:Y(sr.v[li]), sr, v:sr.v[li] });
+    });
+    /* 오른쪽 끝 라벨 (겹치면 아래로) */
+    /* 겹치면 아래로 밀고, 플롯 아래로 넘치는 라벨(값이 작은 유형)은 생략 — 범례·표에서 확인 */
+    ends.sort((a,b)=>a.y-b.y); let last = -99;
+    ends.forEach(e=>{ const y = Math.max(e.y+4, last+12); if(y > H-B+2 && !e.sr.tot) return; last = y;
+      s += `<text x="${W-Rx+8}" y="${y.toFixed(1)}" font-size="10.5" font-weight="${e.sr.tot?800:600}" fill="${e.sr.c}">● ${esc2(e.sr.name)} ${e.v.toFixed(2)}%</text>`; });
+    const lg = all.map(sr=>`<span><i style="background:${sr.c}${sr.tot?';height:3px;width:16px;vertical-align:3px':''}"></i>${esc2(sr.name)}</span>`).join('')
+      + `<span><i style="background:#9ca3af;height:2px;width:16px;vertical-align:3px"></i>${X.tg} ${tg}%</span>`;
+    return `<div class="f2g-lg">${lg}</div><svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;min-width:680px" role="img" aria-label="${esc2(g.mc)} defect trend">${s}</svg>`;
   };
   const cards = list.map((g,i)=>{
     const P = g.P, rP = pc(P.n,P.t);
     const tyIdx = TY.map((y,j)=>j).filter(j=>P.ty[j]>0 || days.some(d=>g.D[d] && g.D[d].ty[j]>0)).sort((a,b)=>P.ty[b]-P.ty[a]);
-    const hd = days.map(d=>`<th class="${inP(d)?'in':''}"><a href="#" onclick="noteOpen('${d}','${esc2(g.mc)}');return false;">${md(d)}</a></th>`).join('');
+    const hd = days.map(d=>{ const c = noteFor(d, g.mc).length; return `<th class="${inP(d)?'in':''}"><a href="#" onclick="noteOpen('${d}','${esc2(g.mc)}');return false;" title="클릭 → 메모·사진">${md(d)}${c?` <span class="f2g-nb">📝${c}</span>`:''}</a></th>`; }).join('');
+    const notes = days.flatMap(d=>noteFor(d, g.mc).map(x=>({ ...x, d }))).sort((a,b)=>a.d.localeCompare(b.d));
+    const nlist = notes.length ? `<div class="f2g-notes">${notes.map(x=>`<div><a href="#" onclick="noteOpen('${x.d}','${esc2(g.mc)}');return false;"><b>📝 ${md(x.d)}</b></a>${x.tag?` <span class="note-tag">${esc2(x.tag)}</span>`:''} ${esc2(String(x.text||'').split('\n')[0])}${(x.photos||[]).length?` <span class="ph">📷${x.photos.length}</span>`:''}${x.author?` <small>— ${esc2(x.author)}</small>`:''}</div>`).join('')}</div>` : '';
     const cell = (d, f) => { const o = g.D[d]; return `<td class="${inP(d)?'in':''}">${o && o.t ? f(o) : '<span class="nil">·</span>'}</td>`; };
     const rcol = v => v==null ? '' : v>tg ? ' style="color:#c62828;font-weight:800"' : ' style="color:#1b5e20;font-weight:700"';
     const rows = [
@@ -2079,7 +2108,7 @@ function f2pGroupTrend(pred, pFrom, dTo){
         <td class="pt">${P.ty[j]?(P.ty[j]/P.t*100).toFixed(2)+'%':'–'} <small>(${fmt(P.ty[j])})</small></td></tr>`; }));
     return `<div class="card f2g" id="f2g-${i}"><div class="f2g-h"><span class="f2g-rk${i<3?' t':''}">${i+1}</span><b>${esc2(g.mc)}</b><span class="nm">${esc2(g.name)}</span><small>${esc2(g.pn)} · OP${esc2(g.op)}</small>
         <span class="kp">Total <b>${fmt(P.t)}</b> · NG <b>${fmt(P.n)}</b> · %NG <b style="color:${f2St(rP).c}">${f2pPc(rP)}</b></span></div>
-      <div class="tblwrap">${mini(g)}</div>
+      <div class="tblwrap">${mini(g, tyIdx)}</div>${nlist}
       <div class="tblwrap"><table class="f2g-t"><thead><tr><th class="lb">${TX.grp}</th>${hd}<th class="pt">${TX.per}</th></tr></thead>
         <tbody>${rows.slice(0,3).join('')}${tyIdx.length?`<tr class="sub"><td class="lb" colspan="${days.length+2}">${TX.typ}</td></tr>`:''}${rows.slice(3).join('')}</tbody></table></div></div>`;
   }).join('');
