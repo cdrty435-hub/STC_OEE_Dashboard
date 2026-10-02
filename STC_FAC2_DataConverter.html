@@ -63,8 +63,8 @@
 <body>
 <div class="container">
   <header>
-    <h1>🔄 FAC2 데이터 변환기 (MCT · OQC Packing)</h1>
-    <p class="sub">FAC2 「MCT &amp; OQC Daily CT-CN8 Report」 엑셀의 <b>Raw_Data MCT</b> · <b>Raw_Data OQC Packing</b> + 불량유형 <b>Search_Detail_MCT</b> → 구글시트 OEE_RawData_APQ 추가 탭(F2_*) 형식으로 변환</p>
+    <h1>🔄 FAC2 데이터 변환기 (MCT · OQC Packing · 설비별 생산실적)</h1>
+    <p class="sub">파일 종류를 자동으로 알아봅니다 — ① 「MCT &amp; OQC Daily CT-CN8 Report」(<b>Raw_Data MCT</b> · <b>Raw_Data OQC Packing</b>) ② 「FAC2 Raw Data」 · Productivity Manager(<b>In-Out Data</b> = 설비별 생산·불량·로스) → 구글시트 OEE_RawData_APQ 추가 탭(F2_*) 형식으로 변환</p>
     <div class="nav-row">
       <a href="./STC_OEE_DataConverter.html">← FAC1 다이캐스팅 변환기</a>
       <a href="./STC_Integrated_Dashboard.html">통합 대시보드</a>
@@ -74,7 +74,7 @@
   <div class="card">
     <div class="card-title">① 원본 엑셀 선택</div>
     <div class="form-row">
-      <div class="field"><label>FAC2 리포트 (.xlsx)</label><input type="file" id="file" accept=".xlsx,.xlsm,.xls"></div>
+      <div class="field"><label>FAC2 리포트 / FAC2 Raw Data (.xlsx)</label><input type="file" id="file" accept=".xlsx,.xlsm,.xls"></div>
       <div class="field"><label>시작일 (비우면 전체)</label><input type="date" id="from"></div>
       <div class="field"><label>종료일 (비우면 전체)</label><input type="date" id="to"></div>
       <button class="convert-btn" id="go" disabled>변환</button>
@@ -106,6 +106,7 @@
     <div class="card-title">변환 기준</div>
     <div class="footnote">
       · <b>원본 시트</b> : 「Raw_Data MCT」(MCT 가공) · 「Raw_Data OQC Packing」(출하 포장 검사) · 불량유형 「Search_Detail_MCT」.<br>
+      · <b>FAC2 Raw Data (In-Out Data)</b> : 전 설비(MC02~MC18)·전 OP의 생산(TOTAL · F/G · NG) · 불량유형 11종 · Mat'l Before/After · 로스시간 · 가동률 → <b>F2_생산실적</b>(원본 1행=1행)과 <b>F2_설비일별</b>(일자 × 설비 합계). QC 리포트에 없는 OP10 계열(MC02·04·05·11·13·15)과 HS15(MC06)까지 들어갑니다. 품번은 QC 리포트와 같은 표기로 맞춘 「품번(QC)」 열을 함께 둡니다 (예: CF623L3LAA-03 → CF623L3LAA03, CF620L8FAA-01 → CR620L8FAA-01).<br>
       · <b>주차</b> = 구글시트(FAC1) 기준 수~화 주차. FAC2 원본 <code>WEEK38</code>(9/16~9/22)은 시트 기준 <code>W39</code>로 <b>한 주 차이</b>가 납니다. 원본 표기는 「원본주차」 열에 둡니다.<br>
       · <b>KPI 단위</b> (원본 KPI MCT / KPI OQC와 같음) : Total Q'ty · FG Q'ty · NG Q'ty · %NG(= NG ÷ Total, 목표 3.5%) · Mat'l NG(MCT만). 대시보드는 <b>F2_품번일별</b>(일자×공정×품번)과 <b>F2_불량상세</b>를 읽습니다.<br>
       · <b>불량 계통</b> : 1~16 다캐 불량(Die Casting Defect) · 17~46 FAC2 가공 불량(MCT Defect) · 47~49 협력사 · 50 고객.<br>
@@ -391,6 +392,113 @@ function render(res, from, to){
   ['outCard','chkCard','pvCard'].forEach(id=>$(id).classList.remove('hidden'));
 }
 
+
+/* =========================================================================
+   FAC2 Raw Data (Productivity Manager › In-Out Data) → F2_생산실적 · F2_설비일별
+   머리글 2줄(0행 = 묶음 제목, 1행 = 열 이름)을 합쳐 열 위치를 찾는다
+   ========================================================================= */
+const PM_QC_PART = { 'CF623L3LAA03':'CF623L3LAA03', 'CF623L3AA03':'CF623L3LAA03', 'CF624L3LAA02':'CF624L3LAA02',
+  'CF620L8FAA01':'CR620L8FAA-01', 'CR620L8FAA01':'CR620L8FAA-01', 'CF620CTEAA01':'CF620CTEAA-01', 'CF620CTEBA01':'CF620CTEBA-01' };
+const pmPartQC = v => { const k = key(v); return PM_QC_PART[k] || txt(v); };
+function pmHeader(A){
+  for (let i = 0; i < Math.min(A.length, 15); i++){
+    const r = A[i].map(key);
+    if (r.includes('MACHINE') && r.includes('TOTAL') && r.includes('DATE')) return i;
+  }
+  return -1;
+}
+function convertPM(wb, from, to){
+  const sh = wb.SheetNames.find(n=>key(n)==='INOUTDATA');
+  const A = XLSX.utils.sheet_to_json(wb.Sheets[sh],{header:1,raw:true,defval:''});
+  const hr = pmHeader(A); if (hr < 0) throw new Error("In-Out Data 에서 머리글('DATE', 'MACHINE', 'TOTAL')을 찾지 못했습니다");
+  const H1 = A[hr].map(x=>txt(x)), H0 = (A[hr-1]||[]).map(x=>txt(x));
+  const H = H1.map((h,i)=>h || H0[i] || '');
+  const K = H.map(key), first = n => K.indexOf(n), last = n => K.lastIndexOf(n);
+  const c = { date:first('DATE'), part:last('PARTCODE'), name:first('PARTNAME'), cav:first('#'), mc:first('MACHINE'), op:first('OP'), lot:first('LOTNODC'),
+    tot:first('TOTAL'), fg:first('FG'), setting:first('SETTING'), matB:first('MATLBEFORE'), matA:first('MATLAFTER'),
+    plan:first('PLANNEDHRS'), tloss:first('TOTALLOSSMIN'), meet:first('MEETINGBREAK'), act:first('ACTUALWORKHRS'),
+    rate:first('TIMEOPERATIONRATE%'), tph:first('TARGETHRS'), tgt:first('TARGETED'), kpi:first('KPI%'), oee:first('OEE%') };
+  c.ng = c.fg + 1;
+  ['date','part','mc','tot','fg','matA','plan'].forEach(k=>{ if (c[k] < 0) throw new Error(`In-Out Data 에서 '${k}' 열을 찾지 못했습니다`); });
+  const DEF = []; for (let i = c.matA + 1; i < c.plan; i++){ if (H1[i]) DEF.push(i); }
+  const LOSS = []; for (let i = c.plan + 1; i < (c.tloss > 0 ? c.tloss : c.plan); i++){ if (H1[i]) LOSS.push(i); }
+  /* 'Peel off\nล่อน' → 'Peel off' (태국어 빼고 영어 이름 전체) */
+  const dn = i => String(A[hr][i]||'').replace(/[\u0E00-\u0E7F]+/g,' ').replace(/\s+/g,' ').trim().replace(/[\s,\/]+$/,'') || txt(H1[i]);
+  /* 설비: 'MC 6' · 'MCT6' → MC06 · 빈 칸은 같은 품번이 가장 많이 돈 설비로 채우고 '설비추정'=Y (예: HS15 실린더 → MC06) */
+  const pmMC = v => { const s = txt(v); const m = s.match(/^M\s*C\s*T?\s*[-_ ]?0*(\d{1,2})$/i); return m ? 'MC'+pad(m[1]) : ''; };
+  const MODE = {}; for (let r = hr + 1; r < A.length; r++){ const mc = pmMC(A[r][c.mc]), pk = key(A[r][c.part]); if (mc && pk){ const o = MODE[pk] || (MODE[pk] = {}); o[mc] = (o[mc]||0) + 1; } }
+  const modeMC = pk => { const o = MODE[pk]; if (!o) return ''; return Object.keys(o).sort((a,b)=>o[b]-o[a])[0]; };
+  const head = ['일자','주차','설비','OP','품번','품번(QC)','Part name','Cavity','Lot d/c','Total','FG','NG','%NG',"Mat'l Before","Mat'l After",'Setting',
+    ...DEF.map(i=>'불량_'+dn(i)), '계획(h)', ...LOSS.map(i=>'로스_'+dn(i)+'(분)'), '총로스(분)', '회의·휴식(분)', '실가동(h)', '가동률', '목표(개/h)', '목표수량', '성능(KPI)', 'OEE', '중복의심', '설비추정'];
+  const rows = [], chk = { rows:0, skip:0, skipRange:0, tfg:0, tfgQty:0, def:0, dup:0, dupQty:0, guess:0, guessQty:0 }, seen = {};
+  const P = v => { const n = num(v); return n ? Math.round(n*10000)/10000 : ''; };
+  for (let r = hr + 1; r < A.length; r++){
+    const R = A[r]; const d = toISO(R[c.date]); const t = num(R[c.tot]); let mc = pmMC(R[c.mc]), guess = '';
+    if (!mc && txt(R[c.part])){ mc = modeMC(key(R[c.part])); if (mc) guess = 'Y'; }
+    if (!d || !mc || !txt(R[c.part]) || t <= 0){ if (d && t > 0) chk.skip++; continue; }
+    if (guess){ chk.guess++; chk.guessQty += t; }
+    if ((from && d < from) || (to && d > to)){ chk.skipRange++; continue; }
+    const fg = num(R[c.fg]), ng = num(R[c.ng]), defs = DEF.map(i=>num(R[i]));
+    if (Math.abs(t - fg - ng) > 0.5){ chk.tfg++; chk.tfgQty += t - fg - ng; }
+    const dsum = defs.reduce((a,b)=>a+b,0); if (ng && Math.abs(dsum - ng) > 0.5 && Math.abs(dsum + num(R[c.matB]) + num(R[c.matA]) + num(R[c.setting]) - ng) > 0.5) chk.def++;
+    const kk = [d, mc, key(R[c.part]), txt(R[c.cav]), txt(R[c.op])].join('|'); let dup = '';
+    if (seen[kk]){ dup = 'Y'; chk.dup++; chk.dupQty += t; } seen[kk] = 1;
+    rows.push([d, sheetWeek(d), mc, txt(R[c.op]), txt(R[c.part]), pmPartQC(R[c.part]), txt(R[c.name]), txt(R[c.cav]), lotText(R[c.lot]),
+      t, fg, ng, t ? Math.round(ng/t*10000)/10000 : 0, num(R[c.matB])||'', num(R[c.matA])||'', num(R[c.setting])||'',
+      ...defs.map(v=>v||''), num(R[c.plan])||'', ...LOSS.map(i=>num(R[i])||''), c.tloss>=0?(num(R[c.tloss])||''):'', c.meet>=0?(num(R[c.meet])||''):'',
+      c.act>=0?(r2(num(R[c.act]))||''):'', c.rate>=0?P(R[c.rate]):'', c.tph>=0?(r2(num(R[c.tph]))||''):'', c.tgt>=0?(Math.round(num(R[c.tgt]))||''):'',
+      c.kpi>=0?P(R[c.kpi]):'', c.oee>=0?P(R[c.oee]):'', dup, guess]);
+  }
+  rows.sort((a,b)=> a[0]<b[0]?-1:a[0]>b[0]?1: a[2]<b[2]?-1:a[2]>b[2]?1:0);
+  chk.rows = rows.length;
+  /* 일자 × 설비 합계 */
+  const D = {}, iT = head.indexOf('Total'), iF = head.indexOf('FG'), iN = head.indexOf('NG'), iMB = head.indexOf("Mat'l Before"), iMA = head.indexOf("Mat'l After"),
+        iP = head.indexOf('계획(h)'), iA = head.indexOf('실가동(h)'), iL = head.indexOf('총로스(분)');
+  rows.forEach(x=>{ const k = x[0]+'|'+x[2]; const o = D[k] || (D[k] = { d:x[0], w:x[1], mc:x[2], t:0, f:0, n:0, mb:0, ma:0, p:0, a:0, l:0, parts:new Set(), ops:new Set(), dup:0 });
+    o.t += num(x[iT]); o.f += num(x[iF]); o.n += num(x[iN]); o.mb += num(x[iMB]); o.ma += num(x[iMA]); o.p += num(x[iP]); o.a += num(x[iA]); o.l += num(x[iL]);
+    o.parts.add(x[5]); if (x[3]) o.ops.add(x[3]); if (x[x.length-2]) o.dup++; });
+  const DH = ['일자','주차','설비','품번(QC)','OP','Total','FG','NG','%NG',"Mat'l Before","Mat'l After",'계획(h)','실가동(h)','총로스(분)','중복의심(행)'];
+  const DR = Object.values(D).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:a.mc<b.mc?-1:1).map(o=>[o.d,o.w,o.mc,[...o.parts].join(' / '),[...o.ops].join(' / '),o.t,o.f,o.n,o.t?Math.round(o.n/o.t*10000)/10000:0,o.mb||'',o.ma||'',r2(o.p)||'',r2(o.a)||'',Math.round(o.l)||'',o.dup||'']);
+  /* 주차 × 설비 요약 (검증표) */
+  const W = {}; rows.forEach(x=>{ const o = W[x[1]] || (W[x[1]] = { wk:x[1], d0:x[0], d1:x[0], mc:{}, t:0, f:0, n:0 }); o.d0 = x[0]<o.d0?x[0]:o.d0; o.d1 = x[0]>o.d1?x[0]:o.d1;
+    o.t += num(x[iT]); o.f += num(x[iF]); o.n += num(x[iN]); o.mc[x[2]] = (o.mc[x[2]]||0) + num(x[iT]); });
+  return { mode:'pm', sheet:sh, tabs:[
+      { name:'F2_생산실적', head, rows, desc:'In-Out Data 원본 1행 = 1행 · 전 설비·전 OP 생산/양품/불량 · 불량유형 · Mat\'l · 로스 · 가동률' },
+      { name:'F2_설비일별', head:DH, rows:DR, desc:'일자 × 설비 합계 — 설비별 생산·불량·가동 현황용' } ],
+    chk, weeks:Object.values(W).sort((a,b)=>a.wk<b.wk?-1:1), mcs:[...new Set(rows.map(x=>x[2]))].sort(), defNames:DEF.map(dn) };
+}
+function renderPM(res, from, to){
+  RESULT = res;
+  const tag = (from||to) ? `_${from||'시작'}~${to||'끝'}` : '';
+  $('dl').innerHTML = res.tabs.map((t,i)=>`<div class="dl-card"><h3><code>${esc(t.name)}</code></h3><p>${esc(t.desc)}</p>
+      <div class="cnt">${t.rows.length.toLocaleString()} 행 × ${t.head.length} 열</div>
+      <div class="btns"><a class="dl-btn" download="${esc(t.name+tag)}.csv" href="${URL.createObjectURL(new Blob([toCSV(t)],{type:'text/csv;charset=utf-8'}))}">CSV</a>
+      <button class="dl-btn cp" data-i="${i}">복사</button></div></div>`).join('');
+  $('dl').querySelectorAll('button.cp').forEach(b=>b.onclick = async ()=>{
+    const t = RESULT.tabs[+b.dataset.i];
+    try{ await navigator.clipboard.writeText(toTSV(t)); b.textContent='복사됨 ✓'; setTimeout(()=>b.textContent='복사',1800); }
+    catch(e){ alert('클립보드 복사가 막혀 있습니다. CSV 로 받아 주세요.'); } });
+  const k = res.chk;
+  let h = `<table class="chk"><tr><th>검증 항목</th><th>결과</th><th>설명</th></tr>
+    <tr><td class="l">변환 행수</td><td class="ok">${k.rows.toLocaleString()}</td><td class="l" style="white-space:normal">「${esc(res.sheet)}」 · 설비 ${res.mcs.length}대 (${res.mcs.join(' · ')})${k.skipRange?` · 기간 밖 ${k.skipRange}행 제외`:''}${k.skip?` · 설비·품번이 없는 ${k.skip}행 제외`:''} · 불량유형 ${res.defNames.length}종 (${esc(res.defNames.join(', '))})</td></tr>
+    <tr><td class="l">TOTAL = F/G + NG</td><td class="${k.tfg?'ng':'ok'}">${k.tfg?`${k.tfg} 행`:'일치'}</td><td class="l">${k.tfg?`어긋난 행의 차이 합계 ${r2(k.tfgQty).toLocaleString()}개 — 원본 입력 확인`:'모든 행 일치'}</td></tr>
+    <tr><td class="l">NG = 불량유형 합</td><td class="${k.def?'ng':'ok'}">${k.def?`${k.def} 행`:'일치'}</td><td class="l">${k.def?"불량유형 합(또는 + Mat'l·Setting)이 NG와 다른 행":'NG 와 불량유형 합계'}</td></tr>
+    <tr><td class="l">설비 빈 칸 추정</td><td class="${k.guess?'ng':'ok'}">${k.guess?`${k.guess} 행`:'없음'}</td><td class="l">${k.guess?`MACHINE 칸이 빈 행 ${k.guess}개(${k.guessQty.toLocaleString()}개 생산)를 같은 품번이 가장 많이 돈 설비로 채움 — F2_생산실적 '설비추정'=Y`:'모든 행에 설비 기입됨'}</td></tr>
+    <tr><td class="l">중복 의심</td><td class="${k.dup?'ng':'ok'}">${k.dup?`${k.dup} 행`:'없음'}</td><td class="l">${k.dup?`같은 일자·설비·품번·Cavity·OP가 두 번 이상 — ${k.dupQty.toLocaleString()}개 · F2_생산실적 '중복의심'=Y 로 표시 (집계에는 포함)`:'같은 일자·설비·품번·Cavity·OP 중복 없음'}</td></tr></table>`;
+  const pc = (n,t) => t ? (n/t*100).toFixed(2)+'%' : '-';
+  h += `<h4 style="margin:16px 0 4px;font-size:13px">주차별 설비 생산 합계 (Total) — 원본 Productivity Manager 와 대조하세요</h4>
+    <div style="overflow-x:auto"><table class="chk"><tr><th>시트 주차</th><th>기간</th><th>Total</th><th>F/G</th><th>NG</th><th>% NG</th>${res.mcs.map(m=>`<th>${m}</th>`).join('')}</tr>` +
+    res.weeks.slice().reverse().map(w=>`<tr><td class="l"><b>${w.wk}</b></td><td class="l">${w.d0} ~ ${w.d1}</td><td>${w.t.toLocaleString()}</td><td>${w.f.toLocaleString()}</td><td>${w.n.toLocaleString()}</td><td>${pc(w.n,w.t)}</td>${res.mcs.map(m=>`<td>${w.mc[m]?w.mc[m].toLocaleString():'–'}</td>`).join('')}</tr>`).join('') + `</table></div>`;
+  $('chk').innerHTML = h;
+  $('pvTabs').innerHTML = res.tabs.map((t,i)=>`<button data-i="${i}" class="${i?'':'on'}">${esc(t.name)}</button>`).join('');
+  const show = i => { const t = res.tabs[i];
+    $('pv').innerHTML = `<tr>${t.head.map(x=>`<th>${esc(x)}</th>`).join('')}</tr>` + t.rows.slice(0,200).map(r=>`<tr>${r.map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('');
+    $('pvTabs').querySelectorAll('button').forEach(b=>b.classList.toggle('on', +b.dataset.i===i)); };
+  $('pvTabs').querySelectorAll('button').forEach(b=>b.onclick = ()=>show(+b.dataset.i));
+  show(0);
+  ['outCard','chkCard','pvCard'].forEach(id=>$(id).classList.remove('hidden'));
+}
+
 function setStatus(msg, kind){ const s = $('status'); s.className = 'status-line' + (kind?' '+kind:''); s.innerHTML = msg; }
 $('file').addEventListener('change', ()=>{ $('go').disabled = !$('file').files.length; if ($('file').files.length) setStatus('「변환」을 누르세요.'); });
 $('go').addEventListener('click', async ()=>{
@@ -400,10 +508,19 @@ $('go').addEventListener('click', async ()=>{
   try{
     const buf = await f.arrayBuffer();
     const wb0 = XLSX.read(buf, { type:'array', bookSheets:true });
+    const from = $('from').value, to = $('to').value;
+    /* FAC2 Raw Data (Productivity Manager › In-Out Data) */
+    if (wb0.SheetNames.some(n=>key(n)==='INOUTDATA') && !wb0.SheetNames.some(n=>key(n)==='RAWDATAMCT')){
+      const wbp = XLSX.read(buf, { type:'array', cellDates:false, sheets: wb0.SheetNames.filter(n=>key(n)==='INOUTDATA') });
+      const res = convertPM(wbp, from, to); renderPM(res, from, to);
+      const k = res.chk, warn = k.tfg || k.dup;
+      setStatus(`✅ FAC2 Raw Data(In-Out Data) ${k.rows.toLocaleString()}행 · 설비 ${res.mcs.length}대 변환 완료 — 탭 ${res.tabs.length}개 준비됨${warn?' · ⚠ 검증에서 확인할 행이 있습니다 (③ 확인)':''}`, warn?'err':'ok');
+      $('go').disabled = false; return;
+    }
     const want = wb0.SheetNames.filter(n=>['RAWDATAMCT','RAWDATAOQCPACKING','SEARCHDETAILMCT'].includes(key(n)));
     /* 날짜는 엑셀 일련번호 그대로 읽어 SSF 로 푼다 — cellDates 는 PC 시간대에 따라 하루 밀리는 경우가 있다 */
+    if (!want.length) throw new Error('알아볼 수 있는 시트가 없습니다 — Raw_Data MCT / Raw_Data OQC Packing 또는 In-Out Data 가 있어야 합니다 (시트: '+wb0.SheetNames.join(', ')+')');
     const wb = XLSX.read(buf, { type:'array', cellDates:false, sheets: want });
-    const from = $('from').value, to = $('to').value;
     const res = convert(wb, from, to);
     render(res, from, to);
     const m = res.chk.M, o = res.chk.O, warn = m.pgd || m.ngSum || o.tfg;
@@ -411,7 +528,7 @@ $('go').addEventListener('click', async ()=>{
   }catch(e){ console.error(e); setStatus('⚠ '+esc(e.message||e), 'err'); }
   $('go').disabled = false;
 });
-window.FAC2 = { convert, sheetWeek, toCSV };   // 검증용
+window.FAC2 = { convert, convertPM, sheetWeek, toCSV };   // 검증용
 /* 통합 대시보드 탭(iframe) 안에서는 상단 이동 링크를 숨긴다 */
 try{ if (window.top !== window.self){ const n = document.querySelector('.nav-row'); if (n) n.style.display='none'; } }catch(e){}
 </script>
