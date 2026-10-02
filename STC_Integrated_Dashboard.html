@@ -254,6 +254,30 @@ table.eq.f2p-dm td.in{box-shadow:inset 0 0 0 1px #b45309;}
 .f2p-chk div{display:flex;flex-direction:column;gap:3px;}
 .f2p-chk span{color:var(--ink-muted);font-size:11.5px;}
 .f2p-chk b{font-size:15px;}
+.f2q{padding:18px 20px;}
+.f2q-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:3px solid #1e88e5;padding-bottom:10px;margin-bottom:12px;}
+.f2q-head h3{margin:0;font-size:18px;font-weight:900;}
+.f2q-ctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12.5px;font-weight:600;}
+.f2q-ctl select{padding:5px 8px;border:1px solid #cfd6e0;border-radius:5px;font:inherit;}
+.f2q-mode button{appearance:none;border:1px solid #cfd6e0;background:#fff;border-radius:14px;padding:4px 12px;margin-left:4px;font:inherit;font-weight:700;cursor:pointer;}
+.f2q-mode button.on{background:#1e88e5;border-color:#1e88e5;color:#fff;}
+.f2q-title{text-align:center;font-size:15px;font-weight:800;letter-spacing:.02em;margin:4px 0 10px;}
+.f2q-title small{display:block;font-size:11.5px;font-weight:600;color:var(--ink-muted);letter-spacing:0;margin-top:2px;}
+.f2q-pick{display:flex;gap:18px;flex-wrap:wrap;background:#f6f8fb;border:1px solid #e6eaf0;border-radius:6px;padding:7px 12px;font-size:12.5px;font-weight:700;margin-bottom:12px;}
+.f2q-pick label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;} .f2q-pick em{font-weight:500;color:var(--ink-muted);font-style:normal;}
+.f2q-pick .sw{display:inline-block;width:12px;height:12px;border-radius:2px;} .f2q-pick .sw.ln{height:3px;width:16px;}
+.f2q-body{display:grid;grid-template-columns:minmax(320px,400px) 1fr;gap:20px;align-items:start;}
+@media (max-width:900px){.f2q-body{grid-template-columns:1fr;}}
+table.f2q-t{width:100%;border-collapse:collapse;font-size:13px;}
+table.f2q-t th,table.f2q-t td{border-bottom:1px solid #eee;padding:5px 8px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+table.f2q-t th{background:#f6f7f9;font-weight:700;color:#444;}
+table.f2q-t th:first-child,table.f2q-t td:first-child{text-align:left;font-weight:700;color:#555;}
+table.f2q-t tr.empty td{color:#c3c8d0;} table.f2q-t tr.hl td{background:#FFF6DA;}
+table.f2q-t td.bad{color:#D32F2F;} table.f2q-t tr.empty td.bad{color:#c3c8d0;}
+table.f2q-t tfoot td{border-top:2px solid #d7dce3;font-weight:800;background:#fafbfc;}
+.f2q-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:#555;margin-bottom:2px;}
+.f2q-lg i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:4px;vertical-align:-1px;} .f2q-lg i.ln{height:3px;width:16px;vertical-align:3px;}
+.f2q-lg .r{margin-left:auto;color:#E65100;font-weight:700;}
 .f2p-nb{appearance:none;border:1px solid #e5d3a6;background:#fffbeb;color:#92400e;border-radius:5px;padding:2px 8px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;}
 .f2p-nb.on{background:#f59e0b;border-color:#f59e0b;color:#fff;}
 @media print{.f2p-nb{border:none;background:none;}}
@@ -2033,9 +2057,114 @@ function f2pReport(kind, topWeek){
     <div class="foot">${X.foot}</div>`;
 }
 
+/* =========================================================================
+   FAC2 월별 생산량 집계 — FAC1 「월별 생산량 집계」와 같은 틀 (표 1~12월 + 막대·불량률 선)
+   · 기준 선택: MCT 가공(F2_품번일별 · 품질보고 기준) / OQC 출하검사 / 전 설비 전 OP(F2_생산실적 · OP마다 따로 세어 합계가 커짐)
+   · 연간 전체 = 1~12월 · 선택 구간 = 상단 주차의 날짜 범위만
+   ========================================================================= */
+Object.assign(I18N.ko, { 'f2.v.qty':'월별 생산량 집계' });
+Object.assign(I18N.en, { 'f2.v.qty':'Monthly production' });
+Object.assign(I18N.th, { 'f2.v.qty':'ยอดผลิตรายเดือน' });
+const F2Q_SER = [ { k:'t', c:'#1976D2', ko:'총생산량', en:'Total', th:'ผลิตรวม' }, { k:'f', c:'#2E7D32', ko:'양품', en:'Good', th:'ของดี' },
+                  { k:'n', c:'#C62828', ko:'불량', en:'NG', th:'ของเสีย' }, { k:'r', c:'#E65100', ko:'불량률', en:'%NG', th:'%NG', line:true } ];
+const F2Q_SRC = { mct:{ ko:'MCT 가공 (품질보고 기준)', en:'MCT machining (quality report)', th:'MCT (รายงานคุณภาพ)' },
+                  oqc:{ ko:'OQC 출하검사', en:'OQC outgoing', th:'OQC ตรวจก่อนส่ง' },
+                  all:{ ko:'전 설비 · 전 OP 합계', en:'All machines · all OP', th:'ทุกเครื่อง · ทุก OP' } };
+const f2qGet = (k, d) => { try{ const v = localStorage.getItem('stc_f2q_'+k); return v==null ? d : v; }catch(e){ return d; } };
+const f2qSet = (k, v) => { try{ localStorage.setItem('stc_f2q_'+k, v); }catch(e){} setTimeout(renderF2, 0); };
+function f2qRows(src){
+  /* → [{ d:'YYYY-MM-DD', t, f, n }] */
+  if(src==='all') return F2.pm.map(r=>({ d:r.d, t:r.t, f:r.f, n:r.n }));
+  const proc = src==='oqc' ? 'OQC' : 'MCT';
+  return F2.pd.filter(r=>r['공정']===proc).map(r=>({ d:String(r['일자']||'').slice(0,10), t:f2n(r["Total Q'ty"]), f:f2n(r["FG Q'ty"]), n:f2n(r["NG Q'ty"]) })).filter(r=>r.d);
+}
+function f2qWeekRange(week){
+  /* 상단 주차(W41 등) → 수~화 날짜 범위 */
+  const n = wkNum(week); if(!n) return null;
+  const from = f2AddDays('2026-09-16', (n-39)*7); return { from, to:f2AddDays(from, 6) };
+}
+function f2Qty(topWeek){
+  const L = LANG==='en'?'en':LANG==='th'?'th':'ko';
+  const TX = { ko:{ t:'월별 생산량 집계', year:'연간 전체', per:'선택 구간', yr:'{y}년', m:'월', tot:'합계', src:'기준', none:'이 기준의 데이터가 없습니다',
+                    foot:'※ {y}년 1~12월을 해당 월 1일~말일 기준으로 집계했습니다. 데이터가 없는 달은 "-" 로 표시합니다. 노란 행 = 상단 주차({w}) 가 속한 달. 불량률 = 불량 ÷ 총생산량. 「전 설비 · 전 OP」 는 같은 제품이 OP10 · OP20 처럼 여러 공정을 거치면 공정마다 따로 세므로 완성품 수량보다 큽니다.',
+                    per2:'선택 구간 = 상단 주차 {w} ({a} ~ {b})' },
+               en:{ t:'Monthly production', year:'Full year', per:'Selected period', yr:'{y}', m:'', tot:'Total', src:'Basis', none:'No data for this basis',
+                    foot:'※ Months Jan–Dec {y} (1st to last day). "-" = no data. Yellow row = month of the selected week ({w}). %NG = NG ÷ Total. "All machines · all OP" counts each operation separately (OP10 + OP20 …), so it exceeds finished-part output.',
+                    per2:'Selected period = week {w} ({a} ~ {b})' },
+               th:{ t:'ยอดผลิตรายเดือน', year:'ทั้งปี', per:'ช่วงที่เลือก', yr:'ปี {y}', m:'', tot:'รวม', src:'ฐาน', none:'ไม่มีข้อมูล',
+                    foot:'※ รวมรายเดือน ม.ค.–ธ.ค. {y} · "-" = ไม่มีข้อมูล · %NG = NG ÷ Total · "ทุก OP" นับแต่ละ OP แยกกัน',
+                    per2:'ช่วงที่เลือก = สัปดาห์ {w} ({a} ~ {b})' } }[L];
+  const src = f2qGet('src','mct'), mode = f2qGet('mode','year');
+  const hidden = f2qGet('hide','').split(',').filter(Boolean);
+  const R = f2qRows(src);
+  const years = [...new Set(R.map(r=>r.d.slice(0,4)))].sort();
+  const wr = f2qWeekRange(topWeek);
+  let year = f2qGet('year',''); if(!years.includes(year)) year = wr && years.includes(wr.from.slice(0,4)) ? wr.from.slice(0,4) : years[years.length-1];
+  const clip = mode==='period' && wr;
+  const M = Array.from({length:12}, (_,i)=>({ m:i+1, key:`${year}-${f2p2(i+1)}`, t:0, f:0, n:0, rows:0 }));
+  R.forEach(r=>{ if(r.d.slice(0,4)!==year) return; if(clip && (r.d<wr.from || r.d>wr.to)) return;
+    const o = M[+r.d.slice(5,7)-1]; o.t+=r.t; o.f+=r.f; o.n+=r.n; o.rows++; });
+  const S = M.reduce((a,o)=>{ a.t+=o.t; a.f+=o.f; a.n+=o.n; return a; }, {t:0,f:0,n:0});
+  const hlKey = wr ? wr.to.slice(0,7) : '';
+  const rate = o => o.t ? o.n/o.t*100 : null;
+  const mLbl = i => L==='ko' ? `${i}월` : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i-1];
+  /* 머리 */
+  const head = `<div class="f2q-head"><h3>📦 ${TX.t}</h3>
+    <div class="f2q-ctl f2-noprint">
+      <label>${TX.src} <select onchange="f2qSet('src', this.value)">${Object.keys(F2Q_SRC).map(k=>`<option value="${k}"${k===src?' selected':''}>${F2Q_SRC[k][L]}</option>`).join('')}</select></label>
+      <select onchange="f2qSet('year', this.value)">${years.map(y=>`<option value="${y}"${y===year?' selected':''}>${TX.yr.replace('{y}',y)}</option>`).join('')}</select>
+      <span class="f2q-mode"><button class="${mode!=='period'?'on':''}" onclick="f2qSet('mode','year')">${TX.year}</button><button class="${mode==='period'?'on':''}" onclick="f2qSet('mode','period')">${TX.per}</button></span>
+    </div></div>`;
+  if(!R.length) return `<div class="card f2q">${head}<div class="empty" style="padding:20px">${TX.none}</div></div>`;
+  const title = clip ? `PRODUCTION QUANTITY (${wr.from} ~ ${wr.to})` : `PRODUCTION QUANTITY (${TX.yr.replace('{y}',year)})`;
+  const pick = `<div class="f2q-pick f2-noprint">${F2Q_SER.map(s=>`<label><input type="checkbox"${hidden.includes(s.k)?'':' checked'} onchange="f2qToggle('${s.k}', this.checked)"><span class="sw${s.line?' ln':''}" style="background:${s.c}"></span>${s[L]}${s.line?` <em>(${L==='ko'?'선 · 우측 축':'line · right axis'})</em>`:''}</label>`).join('')}</div>`;
+  /* 표 */
+  const tb = `<table class="f2q-t"><thead><tr><th>${L==='ko'?'월':'Month'}</th><th>${F2Q_SER[0][L]}</th><th>${F2Q_SER[1][L]}</th><th>${F2Q_SER[2][L]}</th><th>${F2Q_SER[3][L]}</th></tr></thead>
+    <tbody>${M.map(o=>{ if(!o.rows) return `<tr class="empty"><td>${mLbl(o.m)}</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>`;
+      const r = rate(o); return `<tr${!clip && o.key===hlKey?' class="hl"':''}><td>${mLbl(o.m)}</td><td>${fmt(o.t)}</td><td>${fmt(o.f)}</td><td class="bad">${fmt(o.n)}</td><td class="bad">${r==null?'–':r.toFixed(2)+'%'}</td></tr>`; }).join('')}</tbody>
+    <tfoot><tr><td>${TX.tot}</td><td>${fmt(S.t)}</td><td>${fmt(S.f)}</td><td class="bad">${fmt(S.n)}</td><td class="bad">${S.t?(S.n/S.t*100).toFixed(2)+'%':'–'}</td></tr></tfoot></table>`;
+  /* 차트 (SVG) */
+  const W = 900, H = 400, Lx = 70, Rx = 60, T = 44, B = 34, PH = H-T-B, PW = W-Lx-Rx, cw = PW/12;
+  const on = k => !hidden.includes(k);
+  const bars = F2Q_SER.filter(s=>!s.line && on(s.k));
+  const vmax = Math.max(1, ...M.flatMap(o=>bars.map(s=>o[s.k])));
+  const nice = v => { const p = Math.pow(10, Math.floor(Math.log10(v))), x = v/p; return (x<=1?1:x<=1.5?1.5:x<=2?2:x<=2.5?2.5:x<=3?3:x<=5?5:10)*p; };
+  const ymax = nice(vmax*1.12), rmax = (()=>{ const v = Math.max(1, ...M.map(o=>rate(o)||0))*1.25, st = [0.2,0.5,1,2,2.5,5,10].find(x=>v/5<=x) || 20; return st*5; })();
+  const Y = v => T + PH*(1 - v/ymax), YR = v => T + PH*(1 - v/rmax);
+  const kf = v => v>=1e6 ? (v/1e6).toFixed(2)+'M' : v>=1e3 ? Math.round(v/1e3)+'K' : String(Math.round(v));
+  let g = '';
+  for(let i=0;i<=5;i++){ const v = ymax*i/5, y = Y(v).toFixed(1);
+    g += `<line x1="${Lx}" x2="${W-Rx}" y1="${y}" y2="${y}" stroke="#eef0f3"/><text x="${Lx-8}" y="${+y+4}" text-anchor="end" font-size="11" fill="#6b7280">${Math.round(v).toLocaleString()}</text>`;
+    if(on('r')) g += `<text x="${W-Rx+8}" y="${(+YR(rmax*i/5)+4).toFixed(1)}" font-size="11" fill="#E65100">${+(rmax*i/5).toFixed(1)}%</text>`; }
+  const bw = Math.min(26, cw*0.8/Math.max(1,bars.length));
+  M.forEach((o,i)=>{ const cx = Lx + cw*(i+0.5);
+    if(!clip && o.key===hlKey && o.rows) g += `<rect x="${(cx-cw/2).toFixed(1)}" y="${T}" width="${cw.toFixed(1)}" height="${PH}" fill="#FFF6DA"/>`;
+    g += `<text x="${cx.toFixed(1)}" y="${H-B+18}" text-anchor="middle" font-size="12" fill="#374151">${mLbl(o.m)}</text>`;
+    if(!o.rows) return;
+    bars.forEach((s,j)=>{ const v = o[s.k], x = cx - bars.length*bw/2 + j*bw, y = Y(v), h = T+PH-y;
+      g += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${Math.max(0,h).toFixed(1)}" rx="2" fill="${s.c}"><title>${mLbl(o.m)} ${s[L]} ${fmt(v)}</title></rect>`;
+      const tx = x + (bw-2)/2 + 4;
+      g += `<text transform="translate(${tx.toFixed(1)},${(y-4).toFixed(1)}) rotate(-90)" font-size="10" font-weight="700" fill="${s.c}">${kf(v)}</text>`; }); });
+  if(on('r')){ const pts = M.map((o,i)=>o.rows && o.t ? [Lx + cw*(i+0.5), YR(rate(o)), rate(o)] : null).filter(Boolean);
+    g += `<polyline points="${pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="none" stroke="#E65100" stroke-width="2.2"/>`;
+    pts.forEach(p=>{ const lb = p[2].toFixed(2)+'%', w = lb.length*6.4+8;
+      g += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.5" fill="#fff" stroke="#E65100" stroke-width="2"/>
+        <rect x="${(p[0]-w/2).toFixed(1)}" y="${(p[1]-26).toFixed(1)}" width="${w.toFixed(1)}" height="16" rx="3" fill="#FFF3E0" stroke="#E65100" stroke-width=".8"/>
+        <text x="${p[0].toFixed(1)}" y="${(p[1]-14).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#BF360C">${lb}</text>`; }); }
+  g += `<line x1="${Lx}" x2="${W-Rx}" y1="${T+PH}" y2="${T+PH}" stroke="#c9ccd1"/>`;
+  const lg = F2Q_SER.filter(s=>on(s.k)).map(s=>`<span><i class="${s.line?'ln':''}" style="background:${s.c}"></i>${s[L]}</span>`).join('');
+  const chart = `<div class="f2q-c"><div class="f2q-lg">${lg}${on('r')?`<span class="r">${F2Q_SER[3][L]} — ${L==='ko'?'우측 축':'right axis'}</span>`:''}</div>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${title}">${g}</svg></div>`;
+  return `<div class="card f2q">${head}<div class="f2q-title">${title}<small>${F2Q_SRC[src][L]}</small></div>${pick}
+    <div class="f2q-body">${tb}${chart}</div>
+    <div class="foot" style="margin-top:8px">${TX.foot.replace(/\{y\}/g,year).replace('{w}',esc2(topWeek||'–'))}${clip?`<br>${TX.per2.replace('{w}',esc2(topWeek)).replace('{a}',wr.from).replace('{b}',wr.to)}`:''}</div></div>`;
+}
+function f2qToggle(k, v){ const h = new Set(f2qGet('hide','').split(',').filter(Boolean)); if(v) h.delete(k); else h.add(k); f2qSet('hide', [...h].join(',')); }
+
 /* ---- FAC2 탭 — 왼쪽 메뉴: 현황 / 일일·주간·월간 품질보고 ---- */
 const F2_VIEWS = [
   { id:'dash',  icon:'📊', sec:'f2.sec.dash' },
+  { id:'qty',   icon:'📦', sec:'f2.sec.dash' },
   { id:'daily', icon:'📅', sec:'f2.sec.rep' },
   { id:'week',  icon:'📄', sec:'f2.sec.rep' },
   { id:'month', icon:'🗂️', sec:'f2.sec.rep' },
@@ -2100,7 +2229,8 @@ function renderF2(){
   const st = f2Status();
   let body;
   NOTE.cur = F2_VIEW[0]==='p' ? 'FAC2P' : 'FAC2';
-  if(F2_VIEW[0]==='p') body = f2pStatus() || f2pReport(F2_VIEW.slice(1), week);
+  if(F2_VIEW==='qty') body = (F2.loading && !F2.pd.length && !F2.pm.length) ? `<div class="empty">${T('f2.loading')}</div>` : f2Qty(week);
+  else if(F2_VIEW[0]==='p') body = f2pStatus() || f2pReport(F2_VIEW.slice(1), week);
   else if(st) body = `<div class="sec-title">${T('grp.fac2')} · ${week||''}</div>${st}`;
   else if(F2_VIEW==='dash') body = f2Dash(week);
   else body = f2Report(F2_VIEW, week);
