@@ -300,6 +300,59 @@ table.gt-sumt small{color:#898781;font-size:11px;}
 .gt-mode button.on{background:#1e3c72;border-color:#1e3c72;color:#fff;} .gt-mode span{font-weight:500;color:#898781;font-size:11.5px;margin-left:6px;}
 table.f2g-t tr.mdl td{font-size:9px;color:#475569;background:#f8fafc;} table.f2g-t tr.mdl td.chg{box-shadow:inset 2px 0 0 #64748b;font-weight:800;color:#0f172a;}
 @media print{.gt-mode button:not(.on){display:none;}}
+.f2g-h .kp.gt-kp .gt-kd b{color:#1e3c72;} .f2g-h .kp.gt-kp .gt-kd{padding-right:16px;border-right:1px solid #cbd5e1;}
+/* 워스트 원인 · 조치 */
+.act-wrap{padding:12px 14px;}
+.act-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.act-top b{font-size:15px;font-weight:900;color:#1e3c72;} .act-top select{padding:4px 8px;border:1px solid #cbd5e1;border-radius:5px;font:inherit;font-size:12px;}
+.act-api{font-size:11.5px;color:#898781;margin-right:auto;}
+.act-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+@media (max-width:1200px){.act-grid{grid-template-columns:1fr;}}
+.act-card{border:1px solid #e2e8f0;border-top:3px solid #c62828;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:#fff;}
+.act-h{display:flex;align-items:center;gap:8px;} .act-h b{font-size:16px;font-weight:900;color:#1e3c72;} .act-h span:not(.f2g-rk){font-size:12.5px;font-weight:700;color:#334155;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.act-h em{font-style:normal;font-size:16px;font-weight:900;}
+.act-ph{font-size:11.5px;color:#374151;background:#f8fafc;border-radius:6px;padding:5px 8px;line-height:1.6;} .act-ph i,.act-l2 i{font-style:normal;font-weight:800;color:#64748b;margin-right:6px;}
+.act-list{display:flex;flex-direction:column;gap:6px;}
+.act-it{border:1px solid #e5e7eb;border-left:4px solid #1e88e5;border-radius:6px;padding:6px 8px;cursor:pointer;font-size:11.5px;line-height:1.5;}
+.act-it:hover{background:#f8fafc;} .act-it.late{border-left-color:#c62828;background:#fff5f5;} .act-it.done{border-left-color:#2e7d32;}
+.act-l1{display:flex;align-items:center;gap:6px;flex-wrap:wrap;} .act-l1 b{font-size:12px;}
+.act-l2{color:#374151;} .act-l3{color:#898781;font-size:11px;}
+.act-cat{font-size:10.5px;background:#eef2f7;color:#334155;border-radius:4px;padding:0 6px;font-weight:700;}
+.act-st{display:inline-block;font-size:10.5px;font-weight:800;color:#fff;border-radius:10px;padding:0 8px;line-height:17px;background:#64748b;}
+.act-st.s0{background:#94a3b8;} .act-st.s1{background:#1e88e5;} .act-st.s2{background:#2e7d32;} .act-st.s3{background:#a16207;}
+.act-late{font-size:10.5px;font-weight:800;color:#c62828;}
+.act-eff{display:inline-flex;align-items:baseline;gap:4px;font-size:10.5px;font-weight:800;border-radius:4px;padding:0 6px;margin-left:auto;}
+.act-eff small{font-weight:600;color:#475569;} .act-eff.good{background:#dcfce7;color:#166534;} .act-eff.bad{background:#fee2e2;color:#b91c1c;}
+.act-eff.same{background:#fef9c3;color:#854d0e;} .act-eff.wait{background:#e0f2fe;color:#075985;} .act-eff.no{color:#cbd5e1;background:none;}
+.act-none{font-size:12px;color:#b45309;background:#fffbeb;border:1px dashed #f59e0b;border-radius:6px;padding:8px;text-align:center;}
+.act-more{font-size:11px;color:#898781;text-align:right;}
+.act-add{appearance:none;border:1px dashed #1e3c72;background:#f5f8ff;color:#1e3c72;border-radius:6px;padding:6px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;}
+.act-add:hover{background:#e6eefc;} .act-add.sm{border-style:solid;padding:4px 10px;}
+.act-sm{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:5px;padding:4px 9px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;color:#475569;}
+.act-tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:12px;}
+.act-tile{appearance:none;border:1px solid #e2e8f0;background:#fff;border-radius:8px;padding:8px 12px;text-align:left;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px;}
+.act-tile span{font-size:11.5px;color:#64748b;font-weight:700;} .act-tile b{font-size:22px;font-weight:900;} .act-tile.on{border-color:#1e3c72;box-shadow:0 0 0 2px rgba(30,60,114,.18);} .act-tile.st{cursor:default;}
+table.act-t{width:100%;border-collapse:collapse;font-size:12px;min-width:1200px;}
+table.act-t th,table.act-t td{border-bottom:1px solid #eceef2;padding:6px 7px;text-align:center;vertical-align:top;}
+table.act-t th{font-size:11px;color:#52514e;background:#f6f7f9;border-bottom:1.5px solid #cfd6e0;white-space:nowrap;}
+table.act-t .l{text-align:left;} table.act-t .w{min-width:150px;max-width:260px;white-space:pre-wrap;} table.act-t .b{font-weight:900;color:#1e3c72;}
+table.act-t tbody tr{cursor:pointer;} table.act-t tbody tr:hover{background:#f8fafc;} table.act-t tr.late{background:#fff5f5;} table.act-t td.lt{color:#c62828;font-weight:800;}
+table.act-t tr.done td{color:#64748b;}
+.act-bg{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:5vh 12px;overflow:auto;}
+.act-box{background:#fff;border-radius:10px;width:min(760px,100%);box-shadow:0 12px 40px rgba(0,0,0,.3);font-size:12.5px;}
+.act-mh{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e5e7eb;} .act-mh b{font-size:15px;color:#1e3c72;}
+.act-x{appearance:none;border:0;background:none;font-size:18px;cursor:pointer;color:#64748b;}
+.act-fg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px;padding:14px 16px;}
+.act-f{display:flex;flex-direction:column;gap:3px;} .act-f span{font-size:11px;font-weight:800;color:#475569;}
+.act-f input,.act-f select,.act-f textarea{font:inherit;font-size:12.5px;padding:5px 7px;border:1px solid #cbd5e1;border-radius:5px;width:100%;box-sizing:border-box;}
+.act-cause,.act-tmp,.act-perm{grid-column:span 4;} .act-type{grid-column:span 2;}
+@media (max-width:640px){.act-fg{grid-template-columns:1fr 1fr;} .act-cause,.act-tmp,.act-perm,.act-type{grid-column:span 2;}}
+.act-effrow{padding:0 16px 8px;font-weight:700;}
+.act-btns{display:flex;align-items:center;gap:8px;padding:10px 16px 14px;border-top:1px solid #e5e7eb;}
+.act-where{margin-right:auto;font-size:11px;color:#898781;}
+.act-btns button{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:6px;padding:6px 14px;font:inherit;font-weight:700;cursor:pointer;}
+.act-save{background:#1e3c72 !important;color:#fff;border-color:#1e3c72 !important;} .act-del{color:#c62828;border-color:#fecaca !important;}
+@media print{.act-add,.act-sm,.act-top select{display:none;}}
 .gt-pbar{display:inline-block;width:10px;height:10px;background:#e2e8f0;border:1px solid #cbd5e1;border-radius:2px;margin-right:4px;vertical-align:-1px;}
 
 table.f2g-t tr.sub td{padding:1px 6px;}
@@ -1604,6 +1657,9 @@ function f2OverviewBlock(week){
         · 지표: Total · FG · NG · %NG · Mat'l(Before+After) · 가동률(실가동 ÷ 계획) · OEE(계획시간 가중) · 로스시간
         · 구글시트가 OP '10-20' · '10-30' 을 날짜(10월 20일)로 바꿔 넣는 경우가 있어 읽을 때 되돌린다
    ========================================================================= */
+Object.assign(I18N.ko, { 'f2.sec.act':'개선관리', 'f2.v.act':'워스트 원인 · 조치' });
+Object.assign(I18N.en, { 'f2.sec.act':'Improvement', 'f2.v.act':'Worst causes & actions' });
+Object.assign(I18N.th, { 'f2.sec.act':'การปรับปรุง', 'f2.v.act':'สาเหตุ · การแก้ไข' });
 Object.assign(I18N.ko, { 'f2.gt':'설비 · 모델별 일일 불량 추이 (불량 많은 순)' });
 Object.assign(I18N.en, { 'f2.gt':'Daily defect trend by machine · model (worst first)' });
 Object.assign(I18N.th, { 'f2.gt':'แนวโน้มของเสียรายวันตามเครื่อง · รุ่น' });
@@ -2139,6 +2195,10 @@ function gtHtml(cfg){
   if(byMc) Object.values(G).forEach(g=>{ const ms = Object.entries(g.M).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
     g.name = ms[0] || mainOf(g.D[Object.keys(g.D).sort().pop()]); g.sub = ms.length > 1 ? '+ ' + ms.slice(1).join(' / ') : ''; });
   const list = Object.values(G).filter(g=>g.P.t>0).sort((a,b)=> b.P.n-a.P.n || (b.P.n/b.P.t)-(a.P.n/a.P.t));
+  /* 워스트 원인·조치 카드가 같은 순위를 쓰도록 저장 */
+  window.__gtList = window.__gtList || {};
+  window.__gtList[id] = { list:list.slice(0,3).map(g=>({ mc:g.mc, name:g.name, sub:g.sub, t:g.P.t, n:g.P.n,
+      top:TY.map((y,j)=>({ k:y.k, t:y.t, v:g.P.ty[j] })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,3) })), types:TY.map(y=>({ k:y.k, t:y.t })), pFrom, pTo, tg };
   if(!list.length) return `<div class="gt-card gt-empty">${TX.none}</div>`;
   const pc = (v,t) => t ? v/t*100 : null;
   const md = d => d.slice(5).replace('-','/');
@@ -2148,7 +2208,7 @@ function gtHtml(cfg){
   const nOpen = (d, g) => noteOn ? `gtNote('${id}','${d}','${gtEsc(cfg.noteTag(g.mc))}')` : '';
   const head = (g, i, jump) => { const rP = pc(g.P.n, g.P.t);
     return `<div class="f2g-h"><span class="f2g-rk${i<3?' t':''}">${i+1}</span><b>${gtEsc(g.mc)}</b><span class="nm">${gtEsc(g.name)}</span>${g.sub?`<small>${gtEsc(g.sub)}</small>`:''}
-      <span class="kp gt-kp"><span>Total <b>${gtFmt(g.P.t)}</b></span><span>NG <b>${gtFmt(g.P.n)}</b></span><span>%NG <b style="color:${rc(rP)}">${rP==null?'–':rP.toFixed(2)+'%'}</b></span></span>${jump?`<a href="#" class="gt-jump" onclick="gtJump('${id}',${i});return false;">${TX.tbl}</a>`:'<span class="gt-jsp"></span>'}</div>`; };
+      <span class="kp gt-kp"><span class="gt-kd">📅 <b>${pFrom===pTo ? pTo.slice(5).replace('-','/') : pFrom.slice(5).replace('-','/')+' ~ '+pTo.slice(5).replace('-','/')}</b></span><span>Total <b>${gtFmt(g.P.t)}</b></span><span>NG <b>${gtFmt(g.P.n)}</b></span><span>%NG <b style="color:${rc(rP)}">${rP==null?'–':rP.toFixed(2)+'%'}</b></span></span>${jump?`<a href="#" class="gt-jump" onclick="gtJump('${id}',${i});return false;">${TX.tbl}</a>`:'<span class="gt-jsp"></span>'}</div>`; };
   const tyOf = g => { const L = TY.map((y,j)=>j).filter(j=>g.P.ty[j]>0 || days.some(d=>g.D[d] && g.D[d].ty[j]>0)).sort((a,b)=>g.P.ty[b]-g.P.ty[a]);
     window.__gtDef[id+'|'+g.key] = L.slice(cfg.topN || 5).map(j=>TY[j].k); return L; };
   /* 그래프 — 선 하나 = 불량유형 하나 · 빨간 점선 = 전체 불량률 */
@@ -2247,24 +2307,251 @@ function gtHtml(cfg){
   return `<div class="gt-wrap">${modeUI}${top3}${sum}${cards}<div class="gt-foot">${TX.note}</div></div>`;
 }
 /* FAC2 생산실적 (F2_생산실적 · 전 설비) → 공용 부품 */
-function f2pGroupTrend(pred, pFrom, dTo){
+function f2pRowsTypes(){
   const TY = F2P.defs.map((k,i)=>({ k:f2pRaw(k), get:r=>r.df[i] })).concat([{ k:"Mat'l Before", get:r=>r.mb }, { k:"Mat'l After", get:r=>r.ma }, { k:'Setting', get:r=>r.set }]).map(y=>({ ...y, t:f2pLoc(y.k) }));
   const nm = {}; const short = (pn, name) => nm[pn] || (nm[pn] = f2pShort(pn, name));
   const rows = F2.pm.map(r=>({ d:r.d, key:r.mc+'|'+r.pn+'|'+r.op, mc:r.mc, name:short(r.pn, r.name), sub:`${r.pn} · OP${r.op}`, t:r.t, n:r.n, ty:TY.map(y=>y.get(r)) }));
-  return gtHtml({ id:'f2p', rows, types:TY.map(y=>({ k:y.k, t:y.t })), pFrom, pTo:dTo, tg:f2Target(), lang:LANG, rerender:renderF2, noteTag:mc=>mc });
+  return { rows, types:TY.map(y=>({ k:y.k, t:y.t })) };
+}
+function f2pGroupTrend(pred, pFrom, dTo){
+  const D = f2pRowsTypes();
+  return gtHtml({ id:'f2p', rows:D.rows, types:D.types, pFrom, pTo:dTo, tg:f2Target(), lang:LANG, rerender:renderF2, noteTag:mc=>mc });
 }
 /* FAC2 품질보고 (F2_MCT_Q · MCT 최종 가공 설비 · 불량코드 01~50) → 공용 부품 */
-function f2qGroupTrend(pFrom, pTo){
-  if(!F2.mq.length) return `<div class="card empty" style="padding:14px">${T('f2.noMq')}</div>`;
+function f2qRowsTypes(){
+  if(!F2.mq.length) return { rows:[], types:[] };
   const cols = Object.keys(F2.mq[0]).filter(k=>/^\d{2}\s/.test(k));
   const orig = {}; F2.det.forEach(r=>{ const c = parseInt(r['코드'],10); if(c && !orig[c]) orig[c] = r._orig || r['불량유형']; });
-  const TY = cols.map(k=>{ const c = parseInt(k,10); return { k, t:f2DefName(c, orig[c] || k.replace(/^\d{2}\s*/,'')) }; });
+  const types = cols.map(k=>{ const c = parseInt(k,10); return { k, t:f2DefName(c, orig[c] || k.replace(/^\d{2}\s*/,'')) }; });
   const rows = F2.mq.map(r=>{ const d = String(r['일자']||'').slice(0,10); const pn = String(r['Part no.']||'').trim(), op = String(r['OP']||'').trim();
     return { d, key:r['설비명']+'|'+pn+'|'+op, mc:r['설비명'], name:r['Part name']||pn, sub:`${pn}${op?' · '+op:''}`, t:f2n(r['생산수량']), n:f2n(r['불량수량']), ty:cols.map(k=>f2n(r[k])) }; })
     .filter(r=>r.d && r.mc && r.t>0);
-  return gtHtml({ id:'f2q', rows, types:TY, pFrom, pTo, tg:f2Target(), lang:LANG, rerender:renderF2, noteTag:mc=>mc });
+  return { rows, types };
+}
+function f2qGroupTrend(pFrom, pTo){
+  if(!F2.mq.length) return `<div class="card empty" style="padding:14px">${T('f2.noMq')}</div>`;
+  const D = f2qRowsTypes();
+  return gtHtml({ id:'f2q', rows:D.rows, types:D.types, pFrom, pTo, tg:f2Target(), lang:LANG, rerender:renderF2, noteTag:mc=>mc });
+}
+/* =========================================================================
+   워스트 설비 원인 · 조치 (PDCA) — FAC1 · FAC2 공용
+   · 저장: 구글시트 OEE_RawData_APQ 「개선조치」 탭 (Apps Script 웹 앱 · apps_script/Action_Code.gs)
+           웹 앱 주소가 없으면 이 브라우저에만 저장 (FAC1 · FAC2 화면은 같은 브라우저 저장소를 함께 씀)
+   · 효과 확인: 조치 완료일 기준 앞 7일 vs 뒤 7일 — 같은 설비 · 같은 불량유형의 불량률 (생산 대비 %)
+   ========================================================================= */
+const ACT = { list:[], loaded:false, loading:false, err:'', src:{}, rerender:[] };
+const ACT_API_DEFAULT = '';   /* Apps Script 배포 후 웹 앱 URL 을 넣으면 모든 PC 가 공유 */
+const ACT_ST = ['계획','진행','완료','보류'];
+const ACT_CAT = ['설비','금형','소재','방법(조건)','사람','기타'];
+const ACT_CAT_EN = { '설비':'Machine', '금형':'Mold', '소재':'Material', '방법(조건)':'Method', '사람':'Man', '기타':'Other' };
+const ACT_ST_EN = { '계획':'Plan', '진행':'Doing', '완료':'Done', '보류':'Hold' };
+const actL = () => (typeof LANG!=='undefined' && LANG==='en') ? 'en' : (typeof LANG!=='undefined' && LANG==='th') ? 'th' : 'ko';
+const actT = k => { const D = {
+    ko:{ sec:'워스트 설비 원인 · 조치', add:'+ 원인 · 조치 등록', none:'등록된 조치가 없습니다 — 「원인 · 조치 등록」으로 시작하세요', phen:'현상', acts:'원인 · 조치',
+         mc:'설비', model:'모델', type:'불량유형', found:'발견일', cat:'원인 분류', cause:'원인 (확인 결과)', tmp:'임시조치', perm:'근본조치', owner:'담당', due:'완료 예정', st:'상태', done:'완료일', author:'작성자',
+         eff:'효과', effWait:'확인 중', effGood:'개선', effSame:'변화 없음', effBad:'악화', effNo:'–', save:'저장', cancel:'닫기', del:'삭제', edit:'수정', total:'전체 불량률',
+         board:'워스트 원인 · 조치 현황', all:'전체', open:'진행 중', late:'기한 지남', closed:'완료', fac:'공장', api:'⚙ 저장 위치 (구글시트)', apiOn:'☁ 구글시트 공유', apiOff:'💻 이 브라우저에만 저장',
+         reload:'🔄 다시 읽기', newAct:'+ 새 조치', bAll:'모든 공장', effNote:'효과 = 완료일 앞 7일 vs 뒤 7일 같은 유형 불량률 (뒤 3일 이상 생산해야 판정) · 30% 이상 감소 = 개선 · 10% 이상 증가 = 악화',
+         delQ:'이 조치를 삭제할까요? (구글시트에는 삭제 표시로 남습니다)', needMc:'설비를 입력해 주세요', chk:'조치 확인 필요', days:'{n}일 지남' },
+    en:{ sec:'Worst machines — causes & actions', add:'+ Add cause & action', none:'No actions yet', phen:'Symptom', acts:'Causes · actions',
+         mc:'Machine', model:'Model', type:'Defect type', found:'Found', cat:'Cause group', cause:'Cause (verified)', tmp:'Containment', perm:'Permanent fix', owner:'Owner', due:'Due', st:'Status', done:'Done on', author:'Author',
+         eff:'Effect', effWait:'checking', effGood:'improved', effSame:'no change', effBad:'worse', effNo:'–', save:'Save', cancel:'Close', del:'Delete', edit:'Edit', total:'Total %NG',
+         board:'Worst machines — action board', all:'All', open:'Open', late:'Overdue', closed:'Done', fac:'Plant', api:'⚙ Storage (Google Sheet)', apiOn:'☁ Shared Google Sheet', apiOff:'💻 This browser only',
+         reload:'🔄 Reload', newAct:'+ New action', bAll:'All plants', effNote:'Effect = 7 days before vs after the done date, same defect type (needs ≥3 production days after) · −30% = improved · +10% = worse',
+         delQ:'Delete this action?', needMc:'Enter a machine', chk:'action needed', days:'{n} days late' } };
+  const L = actL()==='ko' ? 'ko' : 'en'; return D[L][k] != null ? D[L][k] : D.ko[k]; };
+const actEsc = v => String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const actToday = () => new Date(Date.now()+7*3600e3).toISOString().slice(0,10);
+const actCatLbl = c => actL()==='ko' ? c : (ACT_CAT_EN[c]||c);
+const actStLbl = s => actL()==='ko' ? s : (ACT_ST_EN[s]||s);
+function actApi(){ try{ return localStorage.getItem('stc_act_api') || ACT_API_DEFAULT; }catch(e){ return ACT_API_DEFAULT; } }
+function actLocal(){ try{ return JSON.parse(localStorage.getItem('stc_act_list_v1')||'[]'); }catch(e){ return []; } }
+function actLocalSave(L){ try{ localStorage.setItem('stc_act_list_v1', JSON.stringify(L)); }catch(e){} }
+function actRerender(){ ACT.rerender.forEach(f=>{ try{ f(); }catch(e){} }); }
+async function actLoad(force){
+  if(ACT.loading || (ACT.loaded && !force)) return;
+  ACT.loading = true; ACT.err = '';
+  try{
+    const api = actApi();
+    if(api){ const r = await fetch(api + (api.includes('?')?'&':'?') + 'action=list&_=' + Date.now()); const j = await r.json();
+      if(!j.ok) throw new Error(j.err||'list'); ACT.list = (j.list||[]).filter(x=>x.id && !x.del); actLocalSave(ACT.list); }
+    else ACT.list = actLocal().filter(x=>!x.del);
+  }catch(e){ ACT.err = e.message || String(e); ACT.list = actLocal().filter(x=>!x.del); }
+  ACT.loaded = true; ACT.loading = false; actRerender();
+}
+async function actSave(item){
+  item.ts = new Date(Date.now()+7*3600e3).toISOString().slice(0,19).replace('T',' ');
+  const api = actApi();
+  if(api){ const r = await fetch(api, { method:'POST', body:JSON.stringify({ action:'save', item }) }); const j = await r.json(); if(!j.ok) throw new Error(j.err||'save'); }
+  const L = actLocal(); const i = L.findIndex(x=>x.id===item.id); if(i>=0) L[i] = item; else L.push(item); actLocalSave(L);
+  const k = ACT.list.findIndex(x=>x.id===item.id); if(k>=0) ACT.list[k] = item; else ACT.list.push(item);
+  actRerender();
+}
+async function actDel(id){
+  if(!confirm(actT('delQ'))) return;
+  try{
+    const api = actApi();
+    if(api){ const r = await fetch(api, { method:'POST', body:JSON.stringify({ action:'del', id }) }); const j = await r.json(); if(!j.ok) throw new Error(j.err||'del'); }
+    actLocalSave(actLocal().filter(x=>x.id!==id)); ACT.list = ACT.list.filter(x=>x.id!==id); actClose(); actRerender();
+  }catch(e){ alert('삭제 실패: ' + (e.message||e)); }
+}
+function actSetApi(){
+  const v = prompt('Apps Script 웹 앱 URL (비우면 이 브라우저에만 저장)', actApi()); if(v===null) return;
+  try{ localStorage.setItem('stc_act_api', v.trim()); }catch(e){} actLoad(true);
+}
+const actLate = it => it.status!=='완료' && it.status!=='보류' && it.due && it.due < actToday();
+/* 효과 — 완료일 앞 7일 vs 뒤 7일 (같은 설비 · 같은 유형) */
+function actEffect(it){
+  if(it.status!=='완료' || !it.done) return null;
+  const P = ACT.src[it.src]; if(!P) return null;
+  const b0 = gtAdd(it.done, -7), a1 = gtAdd(it.done, 7);
+  let D; try{ D = P(b0, a1); }catch(e){ return null; } if(!D) return null;
+  const j = it.typeKey ? D.types.findIndex(y=>y.k===it.typeKey) : -1;
+  const B = { t:0, v:0 }, A = { t:0, v:0, days:new Set() };
+  D.rows.forEach(r=>{ if(r.mc!==it.mc) return; const v = j>=0 ? (r.ty[j]||0) : r.n;
+    if(r.d>=b0 && r.d<it.done){ B.t += r.t; B.v += v; }
+    else if(r.d>it.done && r.d<=a1){ A.t += r.t; A.v += v; A.days.add(r.d); } });
+  const rb = B.t ? B.v/B.t*100 : null, ra = A.t ? A.v/A.t*100 : null;
+  let v = 'wait';
+  if(ra!=null && A.days.size>=3 && rb!=null) v = ra <= rb*0.7 ? 'good' : ra >= rb*1.1 && ra-rb >= 0.05 ? 'bad' : 'same';
+  return { rb, ra, v, n:A.days.size };
+}
+function actEffHtml(it){
+  const e = actEffect(it); if(!e) return `<span class="act-eff no">${actT('effNo')}</span>`;
+  const lb = { wait:actT('effWait'), good:actT('effGood'), same:actT('effSame'), bad:actT('effBad') }[e.v];
+  const f = v => v==null ? '–' : v.toFixed(2)+'%';
+  return `<span class="act-eff ${e.v}" title="앞 7일 ${f(e.rb)} → 뒤 ${e.n}일 ${f(e.ra)}">${lb}<small>${f(e.rb)} → ${f(e.ra)}</small></span>`;
+}
+function actRow(it, compact){
+  const late = actLate(it), dd = late ? Math.round((new Date(actToday()) - new Date(it.due))/86400000) : 0;
+  return `<div class="act-it${late?' late':''}${it.status==='완료'?' done':''}" onclick="actOpen('${actEsc(it.id)}')">
+    <div class="act-l1"><span class="act-st s${ACT_ST.indexOf(it.status)}">${actStLbl(it.status||'계획')}</span><b>${actEsc(it.type||actT('total'))}</b>
+      <span class="act-cat">${actEsc(actCatLbl(it.cat||''))}</span>${late?`<span class="act-late">${actT('days').replace('{n}',dd)}</span>`:''}${actEffHtml(it)}</div>
+    ${it.cause?`<div class="act-l2"><i>${actT('cause').split(' ')[0]}</i> ${actEsc(it.cause)}</div>`:''}
+    ${it.tmp||it.perm?`<div class="act-l2"><i>${actT('acts').split(' · ')[1]||'조치'}</i> ${actEsc([it.tmp, it.perm].filter(Boolean).join(' / '))}</div>`:''}
+    <div class="act-l3">${it.owner?`👤 ${actEsc(it.owner)}`:''}${it.due?` · ${actT('due')} ${actEsc(it.due)}`:''}${it.done?` · ${actT('done')} ${actEsc(it.done)}`:''}</div></div>`;
+}
+/* 품질보고 · 생산실적 안 — 워스트 3 설비 카드 (gtHtml 이 정한 순위를 그대로) */
+function actWorstHtml(gid, fac, src){
+  if(!ACT.loaded) actLoad();
+  const W0 = (window.__gtList||{})[gid]; if(!W0) return '';
+  const W = { ...W0, list:W0.list.filter(g=>g.n>0) };   /* 불량 0 인 설비는 워스트에서 뺀다 */
+  if(!W.list.length) return '';
+  ACT.ctx = ACT.ctx || {}; ACT.ctx[gid] = { fac, src, types:W.types, pTo:W.pTo };
+  const cards = W.list.map((g,i)=>{
+    const its = ACT.list.filter(x=>x.fac===fac && x.mc===g.mc).sort((a,b)=> (a.status==='완료')-(b.status==='완료') || String(b.ts).localeCompare(String(a.ts)));
+    const r = g.t ? g.n/g.t*100 : null;
+    return `<div class="act-card"><div class="act-h"><span class="f2g-rk t">${i+1}</span><b>${actEsc(g.mc)}</b><span>${actEsc(g.name)}</span>
+        <em style="color:${W.tg!=null && r>W.tg ? '#c62828' : '#1b7a3c'}">${r==null?'–':r.toFixed(2)+'%'}</em></div>
+      <div class="act-ph"><i>${actT('phen')}</i>${g.top.map(x=>`${actEsc(x.t)} <b>${(x.v/g.t*100).toFixed(2)}%</b> <small>(${x.v})</small>`).join(' · ') || '–'}</div>
+      <div class="act-list">${its.length ? its.slice(0,4).map(x=>actRow(x)).join('') + (its.length>4?`<div class="act-more">+${its.length-4}</div>`:'') : `<div class="act-none">${actT('chk')}</div>`}</div>
+      <button class="act-add" onclick="actNew('${gid}',${i})">${actT('add')}</button></div>`; }).join('');
+  return `<div class="gt-card act-wrap"><div class="act-top"><b>${actT('sec')}</b><span class="act-api">${actApi()?actT('apiOn'):actT('apiOff')}${ACT.err?` · <span style="color:#c62828">${actEsc(ACT.err)}</span>`:''}</span></div>
+    <div class="act-grid">${cards}</div><div class="gt-foot" style="margin:6px 0 0">${actT('effNote')}</div></div>`;
+}
+/* ---- 입력 창 ---- */
+function actNew(gid, i){
+  const C = ACT.ctx[gid], g = window.__gtList[gid].list.filter(x=>x.n>0)[i];
+  actForm({ id:'A'+Date.now().toString(36)+Math.random().toString(36).slice(2,5), fac:C.fac, src:C.src, mc:g.mc, model:g.name,
+            typeKey:(g.top[0]||{}).k||'', type:(g.top[0]||{}).t||'', found:C.pTo || actToday(), cat:'', cause:'', tmp:'', perm:'', owner:'', due:'', status:'계획', done:'',
+            author:(()=>{ try{ return localStorage.getItem('stc_note_author')||''; }catch(e){ return ''; } })() }, C.types, true);
+}
+function actOpen(id){
+  const it = ACT.list.find(x=>x.id===id); if(!it) return;
+  const C = Object.values(ACT.ctx||{}).find(c=>c.src===it.src);
+  let types = C ? C.types : null;
+  if(!types && ACT.src[it.src]){ try{ types = ACT.src[it.src](actToday(), actToday()).types; }catch(e){} }
+  actForm({ ...it }, types || [], false);
+}
+function actForm(it, types, isNew){
+  ACT.cur = it;
+  let m = document.getElementById('actModal');
+  if(!m){ m = document.createElement('div'); m.id = 'actModal'; m.className = 'act-bg'; document.body.appendChild(m); m.addEventListener('click', e=>{ if(e.target===m) actClose(); }); }
+  const opt = (L, v, lbl) => L.map(x=>`<option value="${actEsc(x)}"${x===v?' selected':''}>${actEsc(lbl?lbl(x):x)}</option>`).join('');
+  const tOpts = `<option value=""${!it.typeKey?' selected':''}>${actT('total')}</option>` + types.map(y=>`<option value="${actEsc(y.k)}"${y.k===it.typeKey?' selected':''}>${actEsc(y.t)}</option>`).join('');
+  const f = (k, lbl, html) => `<label class="act-f act-${k}"><span>${lbl}</span>${html}</label>`;
+  m.innerHTML = `<div class="act-box" role="dialog">
+    <div class="act-mh"><b>🛠 ${actEsc(it.fac)} · ${actEsc(it.mc)} ${actEsc(it.model||'')}</b><button class="act-x" onclick="actClose()">✕</button></div>
+    <div class="act-fg">
+      ${f('mc', actT('mc'), `<input id="actMc" value="${actEsc(it.mc)}">`)}
+      ${f('model', actT('model'), `<input id="actModel" value="${actEsc(it.model)}">`)}
+      ${f('type', actT('type'), `<select id="actType">${tOpts}</select>`)}
+      ${f('found', actT('found'), `<input id="actFound" type="date" value="${actEsc(it.found)}">`)}
+      ${f('cat', actT('cat'), `<select id="actCat"><option value=""></option>${opt(ACT_CAT, it.cat, actCatLbl)}</select>`)}
+      ${f('cause', actT('cause'), `<textarea id="actCause" rows="2">${actEsc(it.cause)}</textarea>`)}
+      ${f('tmp', actT('tmp'), `<textarea id="actTmp" rows="2">${actEsc(it.tmp)}</textarea>`)}
+      ${f('perm', actT('perm'), `<textarea id="actPerm" rows="2">${actEsc(it.perm)}</textarea>`)}
+      ${f('owner', actT('owner'), `<input id="actOwner" value="${actEsc(it.owner)}">`)}
+      ${f('due', actT('due'), `<input id="actDue" type="date" value="${actEsc(it.due)}">`)}
+      ${f('st', actT('st'), `<select id="actSt">${opt(ACT_ST, it.status||'계획', actStLbl)}</select>`)}
+      ${f('done', actT('done'), `<input id="actDone" type="date" value="${actEsc(it.done)}">`)}
+      ${f('author', actT('author'), `<input id="actAuthor" value="${actEsc(it.author)}">`)}
+    </div>
+    ${!isNew ? `<div class="act-effrow">${actT('eff')} : ${actEffHtml(it)}</div>` : ''}
+    <div class="act-btns">${!isNew?`<button class="act-del" onclick="actDel('${actEsc(it.id)}')">🗑 ${actT('del')}</button>`:''}
+      <span class="act-where">${actApi()?actT('apiOn'):actT('apiOff')}</span>
+      <button class="act-cancel" onclick="actClose()">${actT('cancel')}</button><button class="act-save" id="actSaveBtn" onclick="actSubmit()">${actT('save')}</button></div></div>`;
+  const st = m.querySelector('#actSt'), dn = m.querySelector('#actDone');
+  st.addEventListener('change', ()=>{ if(st.value==='완료' && !dn.value) dn.value = actToday(); });
+}
+function actClose(){ const m = document.getElementById('actModal'); if(m) m.remove(); ACT.cur = null; }
+async function actSubmit(){
+  const m = document.getElementById('actModal'); if(!m || !ACT.cur) return;
+  const g = id => (m.querySelector('#'+id)||{}).value || '';
+  const sel = m.querySelector('#actType');
+  const it = { ...ACT.cur, mc:g('actMc').trim(), model:g('actModel').trim(), typeKey:g('actType'), type:sel && sel.value ? sel.options[sel.selectedIndex].text : '',
+    found:g('actFound'), cat:g('actCat'), cause:g('actCause').trim(), tmp:g('actTmp').trim(), perm:g('actPerm').trim(), owner:g('actOwner').trim(),
+    due:g('actDue'), status:g('actSt'), done:g('actDone'), author:g('actAuthor').trim() };
+  if(!it.mc){ alert(actT('needMc')); return; }
+  if(it.status!=='완료') it.done = it.done || '';
+  try{ localStorage.setItem('stc_note_author', it.author); }catch(e){}
+  const b = m.querySelector('#actSaveBtn'); b.disabled = true; b.textContent = '…';
+  try{ await actSave(it); actClose(); }catch(e){ b.disabled = false; b.textContent = actT('save'); alert('저장 실패: ' + (e.message||e)); }
+}
+/* ---- 현황판 (개선관리) ---- */
+function actBoardHtml(fac){
+  if(!ACT.loaded) actLoad();
+  let flt = 'open', fsel = fac; try{ flt = localStorage.getItem('stc_act_flt') || 'open'; fsel = localStorage.getItem('stc_act_fac_'+fac) || fac; }catch(e){}
+  const base = ACT.list.filter(x=>fsel==='ALL' || x.fac===fsel);
+  const cnt = { all:base.length, open:base.filter(x=>x.status!=='완료').length, late:base.filter(actLate).length, closed:base.filter(x=>x.status==='완료').length };
+  const effs = base.filter(x=>x.status==='완료').map(actEffect).filter(Boolean);
+  const good = effs.filter(e=>e.v==='good').length;
+  const L = base.filter(x=> flt==='all' ? true : flt==='open' ? x.status!=='완료' : flt==='late' ? actLate(x) : x.status==='완료')
+    .sort((a,b)=> actLate(b)-actLate(a) || (a.status==='완료')-(b.status==='완료') || String(a.due||'9').localeCompare(String(b.due||'9')));
+  const tile = (k, lbl, v, c) => `<button class="act-tile${flt===k?' on':''}" onclick="actFlt('${k}')"><span>${lbl}</span><b style="color:${c}">${v}</b></button>`;
+  const machines = [...new Set(Object.keys(ACT.src).filter(k=>ACT.src[k]).flatMap(k=>{ try{ return ACT.src[k](gtAdd(actToday(),-30), actToday()).rows.map(r=>r.mc); }catch(e){ return []; } }))].sort();
+  const rows = L.map((it,i)=>`<tr class="${actLate(it)?'late':''}${it.status==='완료'?' done':''}" onclick="actOpen('${actEsc(it.id)}')">
+      <td>${i+1}</td><td>${actEsc(it.fac)}</td><td class="b">${actEsc(it.mc)}</td><td class="l">${actEsc(it.model)}</td><td class="l">${actEsc(it.type||actT('total'))}</td>
+      <td>${actEsc(actCatLbl(it.cat||''))}</td><td class="l w">${actEsc(it.cause)}</td><td class="l w">${actEsc(it.tmp)}</td><td class="l w">${actEsc(it.perm)}</td>
+      <td>${actEsc(it.owner)}</td><td class="${actLate(it)?'lt':''}">${actEsc(it.due)}</td><td><span class="act-st s${ACT_ST.indexOf(it.status)}">${actStLbl(it.status)}</span></td><td>${actEsc(it.done)}</td><td>${actEffHtml(it)}</td></tr>`).join('');
+  return `<div class="gt-card act-board">
+    <div class="act-top"><b>${actT('board')}</b>
+      <select onchange="actFac('${fac}', this.value)"><option value="${fac}"${fsel===fac?' selected':''}>${fac}</option><option value="ALL"${fsel==='ALL'?' selected':''}>${actT('bAll')}</option></select>
+      <span class="act-api">${actApi()?actT('apiOn'):actT('apiOff')}${ACT.err?` · <span style="color:#c62828">${actEsc(ACT.err)}</span>`:''}</span>
+      <button class="act-sm" onclick="actLoad(true)">${actT('reload')}</button><button class="act-sm" onclick="actSetApi()">${actT('api')}</button>
+      <button class="act-add sm" onclick="actNewFree('${fac}')">${actT('newAct')}</button></div>
+    <datalist id="actMcList">${machines.map(x=>`<option value="${actEsc(x)}">`).join('')}</datalist>
+    <div class="act-tiles">${tile('all', actT('all'), cnt.all, '#1e3c72')}${tile('open', actT('open'), cnt.open, '#1e88e5')}${tile('late', actT('late'), cnt.late, '#c62828')}${tile('closed', actT('closed'), cnt.closed, '#2e7d32')}
+      <div class="act-tile st"><span>${actT('eff')} ${actT('effGood')}</span><b style="color:#2e7d32">${good} / ${effs.length}</b></div></div>
+    <div class="gt-scroll"><table class="act-t"><thead><tr><th>#</th><th>${actT('fac')}</th><th>${actT('mc')}</th><th class="l">${actT('model')}</th><th class="l">${actT('type')}</th><th>${actT('cat')}</th>
+      <th class="l">${actT('cause')}</th><th class="l">${actT('tmp')}</th><th class="l">${actT('perm')}</th><th>${actT('owner')}</th><th>${actT('due')}</th><th>${actT('st')}</th><th>${actT('done')}</th><th>${actT('eff')}</th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="14" class="act-none">${actT('none')}</td></tr>`}</tbody></table></div>
+    <div class="gt-foot" style="margin:8px 0 0">${actT('effNote')}</div></div>`;
+}
+function actFlt(k){ try{ localStorage.setItem('stc_act_flt', k); }catch(e){} actRerender(); }
+function actFac(fac, v){ try{ localStorage.setItem('stc_act_fac_'+fac, v); }catch(e){} actRerender(); }
+function actNewFree(fac){
+  const src = Object.keys(ACT.src).find(k=>ACT.src[k]) || '';
+  let types = []; try{ if(src) types = ACT.src[src](actToday(), actToday()).types; }catch(e){}
+  actForm({ id:'A'+Date.now().toString(36)+Math.random().toString(36).slice(2,5), fac, src, mc:'', model:'', typeKey:'', type:'', found:actToday(), cat:'', cause:'', tmp:'', perm:'', owner:'', due:'', status:'계획', done:'',
+            author:(()=>{ try{ return localStorage.getItem('stc_note_author')||''; }catch(e){ return ''; } })() }, types, true);
+  const mc = document.getElementById('actMc'); if(mc) mc.setAttribute('list','actMcList');
 }
 
+/* FAC2 — 효과 확인용 데이터 원천 · 저장 후 다시 그리기 */
+ACT.src.f2q = () => f2qRowsTypes();
+ACT.src.f2p = () => f2pRowsTypes();
+ACT.rerender.push(()=>{ if(typeof renderF2==='function') renderF2(); });
 function f2pReport(kind, topWeek){
   const X = f2pTx();
   const dates = f2pDates(), weeks = f2pWeeks(), months = [...new Set(dates.map(d=>d.slice(0,7)))].sort();
@@ -2330,7 +2617,8 @@ function f2pReport(kind, topWeek){
     <div class="sec-title">2. ${X.s3}</div>${f2pMcTable(S, P)}
     <div class="sec-title">3. ${T('f2.m.sec')}</div>${f2Measure(pred, f2pMeasureSrc(S, pred))}
     <div class="sec-title">3-1. ${X.grpT}</div>${f2pGroupTrend(pred, dFrom, dTo)}
-    <div class="sec-title">3-2. ${X.dayMc}</div>${f2pMcDayTable(pred)}
+    <div class="sec-title">3-2. ${actT('sec')}</div>${actWorstHtml('f2p','FAC2','f2p')}
+    <div class="sec-title">3-3. ${X.dayMc}</div>${f2pMcDayTable(pred)}
     <div class="sec-title">4. ${X.s4}</div>${f2pDefects(S)}
     <div class="sec-title">5. ${X.s5}</div>${f2pLosses(S)}
     <div class="sec-title">6. ${X.s6}</div>${f2pParts(S)}
@@ -2455,7 +2743,8 @@ const F2_VIEWS = [
   { id:'month', icon:'🗂️', sec:'f2.sec.rep' },
   { id:'pdaily', icon:'🏭', sec:'f2.sec.prod' },
   { id:'pweek',  icon:'⚙️', sec:'f2.sec.prod' },
-  { id:'pmonth', icon:'📦', sec:'f2.sec.prod' }
+  { id:'pmonth', icon:'📦', sec:'f2.sec.prod' },
+  { id:'act',    icon:'🛠️', sec:'f2.sec.act' }
 ];
 let F2_VIEW = (()=>{ try{ return localStorage.getItem('stc_f2_view') || 'dash'; }catch(e){ return 'dash'; } })();
 const F2_SEL = { daily:'', week:'', month:'', part:'' };
@@ -2514,7 +2803,8 @@ function renderF2(){
   const st = f2Status();
   let body;
   NOTE.cur = F2_VIEW[0]==='p' ? 'FAC2P' : 'FAC2';
-  if(F2_VIEW==='qty') body = (F2.loading && !F2.pd.length && !F2.pm.length) ? `<div class="empty">${T('f2.loading')}</div>` : f2Qty(week);
+  if(F2_VIEW==='act') body = actBoardHtml('FAC2');
+  else if(F2_VIEW==='qty') body = (F2.loading && !F2.pd.length && !F2.pm.length) ? `<div class="empty">${T('f2.loading')}</div>` : f2Qty(week);
   else if(F2_VIEW[0]==='p') body = f2pStatus() || f2pReport(F2_VIEW.slice(1), week);
   else if(st) body = `<div class="sec-title">${T('grp.fac2')} · ${week||''}</div>${st}`;
   else if(F2_VIEW==='dash') body = f2Dash(week);
@@ -3058,7 +3348,8 @@ function f2Report(kind, topWeek){
     <div class="sec-title">3. ${T('f2.p.MCT')} · ${T('f2.parts')}</div>${f2PartTableP(s,'MCT')}
     <div class="sec-title">4. ${T('f2.m.sec')}</div>${f2Measure(pred)}
     <div class="sec-title">4-1. ${T('f2.gt')}</div>${(()=>{ const pd = dates.filter(d=>F2.pd.some(r=>r['일자']===d && pred(r))); return f2qGroupTrend(pd[0]||dFrom, pd[pd.length-1]||dTo); })()}
-    <div class="sec-title">4-2. ${T('f2.mcs')}</div>${f2McTable(pred)}
+    <div class="sec-title">4-2. ${actT('sec')}</div>${actWorstHtml('f2q','FAC2','f2q')}
+    <div class="sec-title">4-3. ${T('f2.mcs')}</div>${f2McTable(pred)}
     <div class="sec-title">5. ${T('f2.p.MCT')} · ${T('f2.top5r')}</div>${f2Top5TableP(pred, s, 'MCT')}
     ${trend.length ? `<div class="sec-title">6. ${T('f2.p.MCT')} · ${trendLbl}</div>${f2TrendTableP(trend, kind==='month'?T('ctl.week'):T('f2.date'), kind==='daily'?cur:null, 'MCT')}` : ''}
     ${f2SecHead('OQC')}

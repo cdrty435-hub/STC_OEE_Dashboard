@@ -866,6 +866,59 @@ table.gt-sumt small{color:#898781;font-size:11px;}
 .gt-mode button.on{background:#1e3c72;border-color:#1e3c72;color:#fff;} .gt-mode span{font-weight:500;color:#898781;font-size:11.5px;margin-left:6px;}
 table.f2g-t tr.mdl td{font-size:9px;color:#475569;background:#f8fafc;} table.f2g-t tr.mdl td.chg{box-shadow:inset 2px 0 0 #64748b;font-weight:800;color:#0f172a;}
 @media print{.gt-mode button:not(.on){display:none;}}
+.f2g-h .kp.gt-kp .gt-kd b{color:#1e3c72;} .f2g-h .kp.gt-kp .gt-kd{padding-right:16px;border-right:1px solid #cbd5e1;}
+/* 워스트 원인 · 조치 */
+.act-wrap{padding:12px 14px;}
+.act-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.act-top b{font-size:15px;font-weight:900;color:#1e3c72;} .act-top select{padding:4px 8px;border:1px solid #cbd5e1;border-radius:5px;font:inherit;font-size:12px;}
+.act-api{font-size:11.5px;color:#898781;margin-right:auto;}
+.act-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+@media (max-width:1200px){.act-grid{grid-template-columns:1fr;}}
+.act-card{border:1px solid #e2e8f0;border-top:3px solid #c62828;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:#fff;}
+.act-h{display:flex;align-items:center;gap:8px;} .act-h b{font-size:16px;font-weight:900;color:#1e3c72;} .act-h span:not(.f2g-rk){font-size:12.5px;font-weight:700;color:#334155;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.act-h em{font-style:normal;font-size:16px;font-weight:900;}
+.act-ph{font-size:11.5px;color:#374151;background:#f8fafc;border-radius:6px;padding:5px 8px;line-height:1.6;} .act-ph i,.act-l2 i{font-style:normal;font-weight:800;color:#64748b;margin-right:6px;}
+.act-list{display:flex;flex-direction:column;gap:6px;}
+.act-it{border:1px solid #e5e7eb;border-left:4px solid #1e88e5;border-radius:6px;padding:6px 8px;cursor:pointer;font-size:11.5px;line-height:1.5;}
+.act-it:hover{background:#f8fafc;} .act-it.late{border-left-color:#c62828;background:#fff5f5;} .act-it.done{border-left-color:#2e7d32;}
+.act-l1{display:flex;align-items:center;gap:6px;flex-wrap:wrap;} .act-l1 b{font-size:12px;}
+.act-l2{color:#374151;} .act-l3{color:#898781;font-size:11px;}
+.act-cat{font-size:10.5px;background:#eef2f7;color:#334155;border-radius:4px;padding:0 6px;font-weight:700;}
+.act-st{display:inline-block;font-size:10.5px;font-weight:800;color:#fff;border-radius:10px;padding:0 8px;line-height:17px;background:#64748b;}
+.act-st.s0{background:#94a3b8;} .act-st.s1{background:#1e88e5;} .act-st.s2{background:#2e7d32;} .act-st.s3{background:#a16207;}
+.act-late{font-size:10.5px;font-weight:800;color:#c62828;}
+.act-eff{display:inline-flex;align-items:baseline;gap:4px;font-size:10.5px;font-weight:800;border-radius:4px;padding:0 6px;margin-left:auto;}
+.act-eff small{font-weight:600;color:#475569;} .act-eff.good{background:#dcfce7;color:#166534;} .act-eff.bad{background:#fee2e2;color:#b91c1c;}
+.act-eff.same{background:#fef9c3;color:#854d0e;} .act-eff.wait{background:#e0f2fe;color:#075985;} .act-eff.no{color:#cbd5e1;background:none;}
+.act-none{font-size:12px;color:#b45309;background:#fffbeb;border:1px dashed #f59e0b;border-radius:6px;padding:8px;text-align:center;}
+.act-more{font-size:11px;color:#898781;text-align:right;}
+.act-add{appearance:none;border:1px dashed #1e3c72;background:#f5f8ff;color:#1e3c72;border-radius:6px;padding:6px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;}
+.act-add:hover{background:#e6eefc;} .act-add.sm{border-style:solid;padding:4px 10px;}
+.act-sm{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:5px;padding:4px 9px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;color:#475569;}
+.act-tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:12px;}
+.act-tile{appearance:none;border:1px solid #e2e8f0;background:#fff;border-radius:8px;padding:8px 12px;text-align:left;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px;}
+.act-tile span{font-size:11.5px;color:#64748b;font-weight:700;} .act-tile b{font-size:22px;font-weight:900;} .act-tile.on{border-color:#1e3c72;box-shadow:0 0 0 2px rgba(30,60,114,.18);} .act-tile.st{cursor:default;}
+table.act-t{width:100%;border-collapse:collapse;font-size:12px;min-width:1200px;}
+table.act-t th,table.act-t td{border-bottom:1px solid #eceef2;padding:6px 7px;text-align:center;vertical-align:top;}
+table.act-t th{font-size:11px;color:#52514e;background:#f6f7f9;border-bottom:1.5px solid #cfd6e0;white-space:nowrap;}
+table.act-t .l{text-align:left;} table.act-t .w{min-width:150px;max-width:260px;white-space:pre-wrap;} table.act-t .b{font-weight:900;color:#1e3c72;}
+table.act-t tbody tr{cursor:pointer;} table.act-t tbody tr:hover{background:#f8fafc;} table.act-t tr.late{background:#fff5f5;} table.act-t td.lt{color:#c62828;font-weight:800;}
+table.act-t tr.done td{color:#64748b;}
+.act-bg{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:5vh 12px;overflow:auto;}
+.act-box{background:#fff;border-radius:10px;width:min(760px,100%);box-shadow:0 12px 40px rgba(0,0,0,.3);font-size:12.5px;}
+.act-mh{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e5e7eb;} .act-mh b{font-size:15px;color:#1e3c72;}
+.act-x{appearance:none;border:0;background:none;font-size:18px;cursor:pointer;color:#64748b;}
+.act-fg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px;padding:14px 16px;}
+.act-f{display:flex;flex-direction:column;gap:3px;} .act-f span{font-size:11px;font-weight:800;color:#475569;}
+.act-f input,.act-f select,.act-f textarea{font:inherit;font-size:12.5px;padding:5px 7px;border:1px solid #cbd5e1;border-radius:5px;width:100%;box-sizing:border-box;}
+.act-cause,.act-tmp,.act-perm{grid-column:span 4;} .act-type{grid-column:span 2;}
+@media (max-width:640px){.act-fg{grid-template-columns:1fr 1fr;} .act-cause,.act-tmp,.act-perm,.act-type{grid-column:span 2;}}
+.act-effrow{padding:0 16px 8px;font-weight:700;}
+.act-btns{display:flex;align-items:center;gap:8px;padding:10px 16px 14px;border-top:1px solid #e5e7eb;}
+.act-where{margin-right:auto;font-size:11px;color:#898781;}
+.act-btns button{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:6px;padding:6px 14px;font:inherit;font-weight:700;cursor:pointer;}
+.act-save{background:#1e3c72 !important;color:#fff;border-color:#1e3c72 !important;} .act-del{color:#c62828;border-color:#fecaca !important;}
+@media print{.act-add,.act-sm,.act-top select{display:none;}}
 .gt-pbar{display:inline-block;width:10px;height:10px;background:#e2e8f0;border:1px solid #cbd5e1;border-radius:2px;margin-right:4px;vertical-align:-1px;}
 .f2g-h .kp.gt-kp{margin:0 auto;display:inline-flex;gap:22px;align-items:baseline;font-size:14px;font-weight:700;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:3px 18px;}
 .f2g-h .kp.gt-kp b{font-size:20px;font-weight:900;color:#0f172a;margin-left:4px;}
@@ -1057,6 +1110,7 @@ table.f2g-t tr.mdl td{font-size:9px;color:#475569;background:#f8fafc;} table.f2g
 
   <!-- ===== SQ 감사 — Summary ===== -->
   <div id="sqWrap" style="display:none"><div id="sqSheet"></div></div>
+  <div id="actWrap" style="display:none"><div id="actSheet"></div></div>
 
   <!-- ===== 주간 품질보고 2 — 사내 품질보고서 서식 ===== -->
   <div id="qr2Wrap">
@@ -4564,7 +4618,7 @@ function qrRenderTables(){
   if (wEl) wEl.innerHTML = qrWorstHtml(b, pa);
   const mEl = document.getElementById('qrMeasure');
   if (mEl){ const wr = qrWeekRange(QR_CMP.b);
-    mEl.innerHTML = qrMeasureHtml(QR_CMP.b) + (wr ? '<div class="gt-f1">' + f1GroupTrend('f1w', wr.start, wr.end, null, qrRenderTables) + '</div>' : ''); mvDraw(); }
+    mEl.innerHTML = qrMeasureHtml(QR_CMP.b) + (wr ? '<div class="gt-f1">' + f1GroupTrend('f1w', wr.start, wr.end, null, qrRenderTables) + actWorstHtml('f1w','FAC1','f1') + '</div>' : ''); mvDraw(); }
 }
 
 /* 컨트롤 이벤트 — 표만 다시 그리므로 보고서 전체를 재계산하지 않는다 */
@@ -5488,6 +5542,10 @@ function gtHtml(cfg){
   if(byMc) Object.values(G).forEach(g=>{ const ms = Object.entries(g.M).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
     g.name = ms[0] || mainOf(g.D[Object.keys(g.D).sort().pop()]); g.sub = ms.length > 1 ? '+ ' + ms.slice(1).join(' / ') : ''; });
   const list = Object.values(G).filter(g=>g.P.t>0).sort((a,b)=> b.P.n-a.P.n || (b.P.n/b.P.t)-(a.P.n/a.P.t));
+  /* 워스트 원인·조치 카드가 같은 순위를 쓰도록 저장 */
+  window.__gtList = window.__gtList || {};
+  window.__gtList[id] = { list:list.slice(0,3).map(g=>({ mc:g.mc, name:g.name, sub:g.sub, t:g.P.t, n:g.P.n,
+      top:TY.map((y,j)=>({ k:y.k, t:y.t, v:g.P.ty[j] })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,3) })), types:TY.map(y=>({ k:y.k, t:y.t })), pFrom, pTo, tg };
   if(!list.length) return `<div class="gt-card gt-empty">${TX.none}</div>`;
   const pc = (v,t) => t ? v/t*100 : null;
   const md = d => d.slice(5).replace('-','/');
@@ -5497,7 +5555,7 @@ function gtHtml(cfg){
   const nOpen = (d, g) => noteOn ? `gtNote('${id}','${d}','${gtEsc(cfg.noteTag(g.mc))}')` : '';
   const head = (g, i, jump) => { const rP = pc(g.P.n, g.P.t);
     return `<div class="f2g-h"><span class="f2g-rk${i<3?' t':''}">${i+1}</span><b>${gtEsc(g.mc)}</b><span class="nm">${gtEsc(g.name)}</span>${g.sub?`<small>${gtEsc(g.sub)}</small>`:''}
-      <span class="kp gt-kp"><span>Total <b>${gtFmt(g.P.t)}</b></span><span>NG <b>${gtFmt(g.P.n)}</b></span><span>%NG <b style="color:${rc(rP)}">${rP==null?'–':rP.toFixed(2)+'%'}</b></span></span>${jump?`<a href="#" class="gt-jump" onclick="gtJump('${id}',${i});return false;">${TX.tbl}</a>`:'<span class="gt-jsp"></span>'}</div>`; };
+      <span class="kp gt-kp"><span class="gt-kd">📅 <b>${pFrom===pTo ? pTo.slice(5).replace('-','/') : pFrom.slice(5).replace('-','/')+' ~ '+pTo.slice(5).replace('-','/')}</b></span><span>Total <b>${gtFmt(g.P.t)}</b></span><span>NG <b>${gtFmt(g.P.n)}</b></span><span>%NG <b style="color:${rc(rP)}">${rP==null?'–':rP.toFixed(2)+'%'}</b></span></span>${jump?`<a href="#" class="gt-jump" onclick="gtJump('${id}',${i});return false;">${TX.tbl}</a>`:'<span class="gt-jsp"></span>'}</div>`; };
   const tyOf = g => { const L = TY.map((y,j)=>j).filter(j=>g.P.ty[j]>0 || days.some(d=>g.D[d] && g.D[d].ty[j]>0)).sort((a,b)=>g.P.ty[b]-g.P.ty[a]);
     window.__gtDef[id+'|'+g.key] = L.slice(cfg.topN || 5).map(j=>TY[j].k); return L; };
   /* 그래프 — 선 하나 = 불량유형 하나 · 빨간 점선 = 전체 불량률 */
@@ -5596,9 +5654,8 @@ function gtHtml(cfg){
   return `<div class="gt-wrap">${modeUI}${top3}${sum}${cards}<div class="gt-foot">${TX.note}</div></div>`;
 }
 /* FAC1 다이캐스팅 (Q_Model상세) → 공용 부품 · 묶음 = 설비 + 모델 · 불량 = 순수 NG + 웜샷 (TOTAL NG%, Measure 와 같은 정의) */
-function f1GroupTrend(id, from, to, sc, rerender){
-  const t0 = from < gtAdd(to, -30) ? from : gtAdd(to, -30);
-  const src = qrModelRowsBetween(t0, to, sc);
+function f1RowsTypes(from, to, sc){
+  const src = qrModelRowsBetween(from, to, sc);
   const WS = [['__wstd', WS_STD_KEYS, t('ms.wstd')], ['__wexc', WS_EXC_KEYS, t('ms.wexc')]];
   const TY = DEFECT_COLS.map(c=>({ k:c, t:LANG==='ko' ? c : trTerm(c) })).concat(WS.map(w=>({ k:w[0], t:w[2] })));
   const rows = [];
@@ -5610,6 +5667,11 @@ function f1GroupTrend(id, from, to, sc, rerender){
     rows.push({ d:String(r['일자']||'').trim().slice(0,10), key:eq+'|'+md, mc:eq, name:md, sub:String(r['Part no.']||'').trim(),
       t:tot, n:ng + ws[0] + ws[1], ty:DEFECT_COLS.map(c=>num(r[c])).concat(ws) });
   });
+  return { rows, types:TY };
+}
+function f1GroupTrend(id, from, to, sc, rerender){
+  const t0 = from < gtAdd(to, -30) ? from : gtAdd(to, -30);
+  const { rows, types:TY } = f1RowsTypes(t0, to, sc);
   const L = { ko:{ h:'설비 · 모델별 일일 불량 추이 (워스트 순)', s:'TOTAL NG% = (불량 + 웜샷) ÷ 투입 · 유형별 % = 그 유형 수량 ÷ 투입 · 날짜를 누르면 그 설비 메모·사진' },
               en:{ h:'Daily defect trend by machine · model (worst first)', s:'TOTAL NG% = (NG + warm shots) ÷ input · type % = type qty ÷ input' },
               th:{ h:'แนวโน้มของเสียรายวันตามเครื่อง · รุ่น', s:'TOTAL NG% = (NG + วอร์มช็อต) ÷ ยอดฉีด' } }[LANG] || {};
@@ -5618,6 +5680,225 @@ function f1GroupTrend(id, from, to, sc, rerender){
                noteTag: mc => { const m = String(mc).match(/(\d+)/); return m ? 'DC'+parseInt(m[1],10) : mc; },
                lbl: LANG==='ko' ? { prod:'투입 (PROD EA)', def:'TOTAL NG (불량+웜샷)', rate:'TOTAL NG%', rateName:'TOTAL NG%', typ:'유형별 비율 (투입 대비 %) — 불량유형 + 웜샷' } : { rate:'TOTAL NG%', rateName:'TOTAL NG%' } });
 }
+/* =========================================================================
+   워스트 설비 원인 · 조치 (PDCA) — FAC1 · FAC2 공용
+   · 저장: 구글시트 OEE_RawData_APQ 「개선조치」 탭 (Apps Script 웹 앱 · apps_script/Action_Code.gs)
+           웹 앱 주소가 없으면 이 브라우저에만 저장 (FAC1 · FAC2 화면은 같은 브라우저 저장소를 함께 씀)
+   · 효과 확인: 조치 완료일 기준 앞 7일 vs 뒤 7일 — 같은 설비 · 같은 불량유형의 불량률 (생산 대비 %)
+   ========================================================================= */
+const ACT = { list:[], loaded:false, loading:false, err:'', src:{}, rerender:[] };
+const ACT_API_DEFAULT = '';   /* Apps Script 배포 후 웹 앱 URL 을 넣으면 모든 PC 가 공유 */
+const ACT_ST = ['계획','진행','완료','보류'];
+const ACT_CAT = ['설비','금형','소재','방법(조건)','사람','기타'];
+const ACT_CAT_EN = { '설비':'Machine', '금형':'Mold', '소재':'Material', '방법(조건)':'Method', '사람':'Man', '기타':'Other' };
+const ACT_ST_EN = { '계획':'Plan', '진행':'Doing', '완료':'Done', '보류':'Hold' };
+const actL = () => (typeof LANG!=='undefined' && LANG==='en') ? 'en' : (typeof LANG!=='undefined' && LANG==='th') ? 'th' : 'ko';
+const actT = k => { const D = {
+    ko:{ sec:'워스트 설비 원인 · 조치', add:'+ 원인 · 조치 등록', none:'등록된 조치가 없습니다 — 「원인 · 조치 등록」으로 시작하세요', phen:'현상', acts:'원인 · 조치',
+         mc:'설비', model:'모델', type:'불량유형', found:'발견일', cat:'원인 분류', cause:'원인 (확인 결과)', tmp:'임시조치', perm:'근본조치', owner:'담당', due:'완료 예정', st:'상태', done:'완료일', author:'작성자',
+         eff:'효과', effWait:'확인 중', effGood:'개선', effSame:'변화 없음', effBad:'악화', effNo:'–', save:'저장', cancel:'닫기', del:'삭제', edit:'수정', total:'전체 불량률',
+         board:'워스트 원인 · 조치 현황', all:'전체', open:'진행 중', late:'기한 지남', closed:'완료', fac:'공장', api:'⚙ 저장 위치 (구글시트)', apiOn:'☁ 구글시트 공유', apiOff:'💻 이 브라우저에만 저장',
+         reload:'🔄 다시 읽기', newAct:'+ 새 조치', bAll:'모든 공장', effNote:'효과 = 완료일 앞 7일 vs 뒤 7일 같은 유형 불량률 (뒤 3일 이상 생산해야 판정) · 30% 이상 감소 = 개선 · 10% 이상 증가 = 악화',
+         delQ:'이 조치를 삭제할까요? (구글시트에는 삭제 표시로 남습니다)', needMc:'설비를 입력해 주세요', chk:'조치 확인 필요', days:'{n}일 지남' },
+    en:{ sec:'Worst machines — causes & actions', add:'+ Add cause & action', none:'No actions yet', phen:'Symptom', acts:'Causes · actions',
+         mc:'Machine', model:'Model', type:'Defect type', found:'Found', cat:'Cause group', cause:'Cause (verified)', tmp:'Containment', perm:'Permanent fix', owner:'Owner', due:'Due', st:'Status', done:'Done on', author:'Author',
+         eff:'Effect', effWait:'checking', effGood:'improved', effSame:'no change', effBad:'worse', effNo:'–', save:'Save', cancel:'Close', del:'Delete', edit:'Edit', total:'Total %NG',
+         board:'Worst machines — action board', all:'All', open:'Open', late:'Overdue', closed:'Done', fac:'Plant', api:'⚙ Storage (Google Sheet)', apiOn:'☁ Shared Google Sheet', apiOff:'💻 This browser only',
+         reload:'🔄 Reload', newAct:'+ New action', bAll:'All plants', effNote:'Effect = 7 days before vs after the done date, same defect type (needs ≥3 production days after) · −30% = improved · +10% = worse',
+         delQ:'Delete this action?', needMc:'Enter a machine', chk:'action needed', days:'{n} days late' } };
+  const L = actL()==='ko' ? 'ko' : 'en'; return D[L][k] != null ? D[L][k] : D.ko[k]; };
+const actEsc = v => String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const actToday = () => new Date(Date.now()+7*3600e3).toISOString().slice(0,10);
+const actCatLbl = c => actL()==='ko' ? c : (ACT_CAT_EN[c]||c);
+const actStLbl = s => actL()==='ko' ? s : (ACT_ST_EN[s]||s);
+function actApi(){ try{ return localStorage.getItem('stc_act_api') || ACT_API_DEFAULT; }catch(e){ return ACT_API_DEFAULT; } }
+function actLocal(){ try{ return JSON.parse(localStorage.getItem('stc_act_list_v1')||'[]'); }catch(e){ return []; } }
+function actLocalSave(L){ try{ localStorage.setItem('stc_act_list_v1', JSON.stringify(L)); }catch(e){} }
+function actRerender(){ ACT.rerender.forEach(f=>{ try{ f(); }catch(e){} }); }
+async function actLoad(force){
+  if(ACT.loading || (ACT.loaded && !force)) return;
+  ACT.loading = true; ACT.err = '';
+  try{
+    const api = actApi();
+    if(api){ const r = await fetch(api + (api.includes('?')?'&':'?') + 'action=list&_=' + Date.now()); const j = await r.json();
+      if(!j.ok) throw new Error(j.err||'list'); ACT.list = (j.list||[]).filter(x=>x.id && !x.del); actLocalSave(ACT.list); }
+    else ACT.list = actLocal().filter(x=>!x.del);
+  }catch(e){ ACT.err = e.message || String(e); ACT.list = actLocal().filter(x=>!x.del); }
+  ACT.loaded = true; ACT.loading = false; actRerender();
+}
+async function actSave(item){
+  item.ts = new Date(Date.now()+7*3600e3).toISOString().slice(0,19).replace('T',' ');
+  const api = actApi();
+  if(api){ const r = await fetch(api, { method:'POST', body:JSON.stringify({ action:'save', item }) }); const j = await r.json(); if(!j.ok) throw new Error(j.err||'save'); }
+  const L = actLocal(); const i = L.findIndex(x=>x.id===item.id); if(i>=0) L[i] = item; else L.push(item); actLocalSave(L);
+  const k = ACT.list.findIndex(x=>x.id===item.id); if(k>=0) ACT.list[k] = item; else ACT.list.push(item);
+  actRerender();
+}
+async function actDel(id){
+  if(!confirm(actT('delQ'))) return;
+  try{
+    const api = actApi();
+    if(api){ const r = await fetch(api, { method:'POST', body:JSON.stringify({ action:'del', id }) }); const j = await r.json(); if(!j.ok) throw new Error(j.err||'del'); }
+    actLocalSave(actLocal().filter(x=>x.id!==id)); ACT.list = ACT.list.filter(x=>x.id!==id); actClose(); actRerender();
+  }catch(e){ alert('삭제 실패: ' + (e.message||e)); }
+}
+function actSetApi(){
+  const v = prompt('Apps Script 웹 앱 URL (비우면 이 브라우저에만 저장)', actApi()); if(v===null) return;
+  try{ localStorage.setItem('stc_act_api', v.trim()); }catch(e){} actLoad(true);
+}
+const actLate = it => it.status!=='완료' && it.status!=='보류' && it.due && it.due < actToday();
+/* 효과 — 완료일 앞 7일 vs 뒤 7일 (같은 설비 · 같은 유형) */
+function actEffect(it){
+  if(it.status!=='완료' || !it.done) return null;
+  const P = ACT.src[it.src]; if(!P) return null;
+  const b0 = gtAdd(it.done, -7), a1 = gtAdd(it.done, 7);
+  let D; try{ D = P(b0, a1); }catch(e){ return null; } if(!D) return null;
+  const j = it.typeKey ? D.types.findIndex(y=>y.k===it.typeKey) : -1;
+  const B = { t:0, v:0 }, A = { t:0, v:0, days:new Set() };
+  D.rows.forEach(r=>{ if(r.mc!==it.mc) return; const v = j>=0 ? (r.ty[j]||0) : r.n;
+    if(r.d>=b0 && r.d<it.done){ B.t += r.t; B.v += v; }
+    else if(r.d>it.done && r.d<=a1){ A.t += r.t; A.v += v; A.days.add(r.d); } });
+  const rb = B.t ? B.v/B.t*100 : null, ra = A.t ? A.v/A.t*100 : null;
+  let v = 'wait';
+  if(ra!=null && A.days.size>=3 && rb!=null) v = ra <= rb*0.7 ? 'good' : ra >= rb*1.1 && ra-rb >= 0.05 ? 'bad' : 'same';
+  return { rb, ra, v, n:A.days.size };
+}
+function actEffHtml(it){
+  const e = actEffect(it); if(!e) return `<span class="act-eff no">${actT('effNo')}</span>`;
+  const lb = { wait:actT('effWait'), good:actT('effGood'), same:actT('effSame'), bad:actT('effBad') }[e.v];
+  const f = v => v==null ? '–' : v.toFixed(2)+'%';
+  return `<span class="act-eff ${e.v}" title="앞 7일 ${f(e.rb)} → 뒤 ${e.n}일 ${f(e.ra)}">${lb}<small>${f(e.rb)} → ${f(e.ra)}</small></span>`;
+}
+function actRow(it, compact){
+  const late = actLate(it), dd = late ? Math.round((new Date(actToday()) - new Date(it.due))/86400000) : 0;
+  return `<div class="act-it${late?' late':''}${it.status==='완료'?' done':''}" onclick="actOpen('${actEsc(it.id)}')">
+    <div class="act-l1"><span class="act-st s${ACT_ST.indexOf(it.status)}">${actStLbl(it.status||'계획')}</span><b>${actEsc(it.type||actT('total'))}</b>
+      <span class="act-cat">${actEsc(actCatLbl(it.cat||''))}</span>${late?`<span class="act-late">${actT('days').replace('{n}',dd)}</span>`:''}${actEffHtml(it)}</div>
+    ${it.cause?`<div class="act-l2"><i>${actT('cause').split(' ')[0]}</i> ${actEsc(it.cause)}</div>`:''}
+    ${it.tmp||it.perm?`<div class="act-l2"><i>${actT('acts').split(' · ')[1]||'조치'}</i> ${actEsc([it.tmp, it.perm].filter(Boolean).join(' / '))}</div>`:''}
+    <div class="act-l3">${it.owner?`👤 ${actEsc(it.owner)}`:''}${it.due?` · ${actT('due')} ${actEsc(it.due)}`:''}${it.done?` · ${actT('done')} ${actEsc(it.done)}`:''}</div></div>`;
+}
+/* 품질보고 · 생산실적 안 — 워스트 3 설비 카드 (gtHtml 이 정한 순위를 그대로) */
+function actWorstHtml(gid, fac, src){
+  if(!ACT.loaded) actLoad();
+  const W0 = (window.__gtList||{})[gid]; if(!W0) return '';
+  const W = { ...W0, list:W0.list.filter(g=>g.n>0) };   /* 불량 0 인 설비는 워스트에서 뺀다 */
+  if(!W.list.length) return '';
+  ACT.ctx = ACT.ctx || {}; ACT.ctx[gid] = { fac, src, types:W.types, pTo:W.pTo };
+  const cards = W.list.map((g,i)=>{
+    const its = ACT.list.filter(x=>x.fac===fac && x.mc===g.mc).sort((a,b)=> (a.status==='완료')-(b.status==='완료') || String(b.ts).localeCompare(String(a.ts)));
+    const r = g.t ? g.n/g.t*100 : null;
+    return `<div class="act-card"><div class="act-h"><span class="f2g-rk t">${i+1}</span><b>${actEsc(g.mc)}</b><span>${actEsc(g.name)}</span>
+        <em style="color:${W.tg!=null && r>W.tg ? '#c62828' : '#1b7a3c'}">${r==null?'–':r.toFixed(2)+'%'}</em></div>
+      <div class="act-ph"><i>${actT('phen')}</i>${g.top.map(x=>`${actEsc(x.t)} <b>${(x.v/g.t*100).toFixed(2)}%</b> <small>(${x.v})</small>`).join(' · ') || '–'}</div>
+      <div class="act-list">${its.length ? its.slice(0,4).map(x=>actRow(x)).join('') + (its.length>4?`<div class="act-more">+${its.length-4}</div>`:'') : `<div class="act-none">${actT('chk')}</div>`}</div>
+      <button class="act-add" onclick="actNew('${gid}',${i})">${actT('add')}</button></div>`; }).join('');
+  return `<div class="gt-card act-wrap"><div class="act-top"><b>${actT('sec')}</b><span class="act-api">${actApi()?actT('apiOn'):actT('apiOff')}${ACT.err?` · <span style="color:#c62828">${actEsc(ACT.err)}</span>`:''}</span></div>
+    <div class="act-grid">${cards}</div><div class="gt-foot" style="margin:6px 0 0">${actT('effNote')}</div></div>`;
+}
+/* ---- 입력 창 ---- */
+function actNew(gid, i){
+  const C = ACT.ctx[gid], g = window.__gtList[gid].list.filter(x=>x.n>0)[i];
+  actForm({ id:'A'+Date.now().toString(36)+Math.random().toString(36).slice(2,5), fac:C.fac, src:C.src, mc:g.mc, model:g.name,
+            typeKey:(g.top[0]||{}).k||'', type:(g.top[0]||{}).t||'', found:C.pTo || actToday(), cat:'', cause:'', tmp:'', perm:'', owner:'', due:'', status:'계획', done:'',
+            author:(()=>{ try{ return localStorage.getItem('stc_note_author')||''; }catch(e){ return ''; } })() }, C.types, true);
+}
+function actOpen(id){
+  const it = ACT.list.find(x=>x.id===id); if(!it) return;
+  const C = Object.values(ACT.ctx||{}).find(c=>c.src===it.src);
+  let types = C ? C.types : null;
+  if(!types && ACT.src[it.src]){ try{ types = ACT.src[it.src](actToday(), actToday()).types; }catch(e){} }
+  actForm({ ...it }, types || [], false);
+}
+function actForm(it, types, isNew){
+  ACT.cur = it;
+  let m = document.getElementById('actModal');
+  if(!m){ m = document.createElement('div'); m.id = 'actModal'; m.className = 'act-bg'; document.body.appendChild(m); m.addEventListener('click', e=>{ if(e.target===m) actClose(); }); }
+  const opt = (L, v, lbl) => L.map(x=>`<option value="${actEsc(x)}"${x===v?' selected':''}>${actEsc(lbl?lbl(x):x)}</option>`).join('');
+  const tOpts = `<option value=""${!it.typeKey?' selected':''}>${actT('total')}</option>` + types.map(y=>`<option value="${actEsc(y.k)}"${y.k===it.typeKey?' selected':''}>${actEsc(y.t)}</option>`).join('');
+  const f = (k, lbl, html) => `<label class="act-f act-${k}"><span>${lbl}</span>${html}</label>`;
+  m.innerHTML = `<div class="act-box" role="dialog">
+    <div class="act-mh"><b>🛠 ${actEsc(it.fac)} · ${actEsc(it.mc)} ${actEsc(it.model||'')}</b><button class="act-x" onclick="actClose()">✕</button></div>
+    <div class="act-fg">
+      ${f('mc', actT('mc'), `<input id="actMc" value="${actEsc(it.mc)}">`)}
+      ${f('model', actT('model'), `<input id="actModel" value="${actEsc(it.model)}">`)}
+      ${f('type', actT('type'), `<select id="actType">${tOpts}</select>`)}
+      ${f('found', actT('found'), `<input id="actFound" type="date" value="${actEsc(it.found)}">`)}
+      ${f('cat', actT('cat'), `<select id="actCat"><option value=""></option>${opt(ACT_CAT, it.cat, actCatLbl)}</select>`)}
+      ${f('cause', actT('cause'), `<textarea id="actCause" rows="2">${actEsc(it.cause)}</textarea>`)}
+      ${f('tmp', actT('tmp'), `<textarea id="actTmp" rows="2">${actEsc(it.tmp)}</textarea>`)}
+      ${f('perm', actT('perm'), `<textarea id="actPerm" rows="2">${actEsc(it.perm)}</textarea>`)}
+      ${f('owner', actT('owner'), `<input id="actOwner" value="${actEsc(it.owner)}">`)}
+      ${f('due', actT('due'), `<input id="actDue" type="date" value="${actEsc(it.due)}">`)}
+      ${f('st', actT('st'), `<select id="actSt">${opt(ACT_ST, it.status||'계획', actStLbl)}</select>`)}
+      ${f('done', actT('done'), `<input id="actDone" type="date" value="${actEsc(it.done)}">`)}
+      ${f('author', actT('author'), `<input id="actAuthor" value="${actEsc(it.author)}">`)}
+    </div>
+    ${!isNew ? `<div class="act-effrow">${actT('eff')} : ${actEffHtml(it)}</div>` : ''}
+    <div class="act-btns">${!isNew?`<button class="act-del" onclick="actDel('${actEsc(it.id)}')">🗑 ${actT('del')}</button>`:''}
+      <span class="act-where">${actApi()?actT('apiOn'):actT('apiOff')}</span>
+      <button class="act-cancel" onclick="actClose()">${actT('cancel')}</button><button class="act-save" id="actSaveBtn" onclick="actSubmit()">${actT('save')}</button></div></div>`;
+  const st = m.querySelector('#actSt'), dn = m.querySelector('#actDone');
+  st.addEventListener('change', ()=>{ if(st.value==='완료' && !dn.value) dn.value = actToday(); });
+}
+function actClose(){ const m = document.getElementById('actModal'); if(m) m.remove(); ACT.cur = null; }
+async function actSubmit(){
+  const m = document.getElementById('actModal'); if(!m || !ACT.cur) return;
+  const g = id => (m.querySelector('#'+id)||{}).value || '';
+  const sel = m.querySelector('#actType');
+  const it = { ...ACT.cur, mc:g('actMc').trim(), model:g('actModel').trim(), typeKey:g('actType'), type:sel && sel.value ? sel.options[sel.selectedIndex].text : '',
+    found:g('actFound'), cat:g('actCat'), cause:g('actCause').trim(), tmp:g('actTmp').trim(), perm:g('actPerm').trim(), owner:g('actOwner').trim(),
+    due:g('actDue'), status:g('actSt'), done:g('actDone'), author:g('actAuthor').trim() };
+  if(!it.mc){ alert(actT('needMc')); return; }
+  if(it.status!=='완료') it.done = it.done || '';
+  try{ localStorage.setItem('stc_note_author', it.author); }catch(e){}
+  const b = m.querySelector('#actSaveBtn'); b.disabled = true; b.textContent = '…';
+  try{ await actSave(it); actClose(); }catch(e){ b.disabled = false; b.textContent = actT('save'); alert('저장 실패: ' + (e.message||e)); }
+}
+/* ---- 현황판 (개선관리) ---- */
+function actBoardHtml(fac){
+  if(!ACT.loaded) actLoad();
+  let flt = 'open', fsel = fac; try{ flt = localStorage.getItem('stc_act_flt') || 'open'; fsel = localStorage.getItem('stc_act_fac_'+fac) || fac; }catch(e){}
+  const base = ACT.list.filter(x=>fsel==='ALL' || x.fac===fsel);
+  const cnt = { all:base.length, open:base.filter(x=>x.status!=='완료').length, late:base.filter(actLate).length, closed:base.filter(x=>x.status==='완료').length };
+  const effs = base.filter(x=>x.status==='완료').map(actEffect).filter(Boolean);
+  const good = effs.filter(e=>e.v==='good').length;
+  const L = base.filter(x=> flt==='all' ? true : flt==='open' ? x.status!=='완료' : flt==='late' ? actLate(x) : x.status==='완료')
+    .sort((a,b)=> actLate(b)-actLate(a) || (a.status==='완료')-(b.status==='완료') || String(a.due||'9').localeCompare(String(b.due||'9')));
+  const tile = (k, lbl, v, c) => `<button class="act-tile${flt===k?' on':''}" onclick="actFlt('${k}')"><span>${lbl}</span><b style="color:${c}">${v}</b></button>`;
+  const machines = [...new Set(Object.keys(ACT.src).filter(k=>ACT.src[k]).flatMap(k=>{ try{ return ACT.src[k](gtAdd(actToday(),-30), actToday()).rows.map(r=>r.mc); }catch(e){ return []; } }))].sort();
+  const rows = L.map((it,i)=>`<tr class="${actLate(it)?'late':''}${it.status==='완료'?' done':''}" onclick="actOpen('${actEsc(it.id)}')">
+      <td>${i+1}</td><td>${actEsc(it.fac)}</td><td class="b">${actEsc(it.mc)}</td><td class="l">${actEsc(it.model)}</td><td class="l">${actEsc(it.type||actT('total'))}</td>
+      <td>${actEsc(actCatLbl(it.cat||''))}</td><td class="l w">${actEsc(it.cause)}</td><td class="l w">${actEsc(it.tmp)}</td><td class="l w">${actEsc(it.perm)}</td>
+      <td>${actEsc(it.owner)}</td><td class="${actLate(it)?'lt':''}">${actEsc(it.due)}</td><td><span class="act-st s${ACT_ST.indexOf(it.status)}">${actStLbl(it.status)}</span></td><td>${actEsc(it.done)}</td><td>${actEffHtml(it)}</td></tr>`).join('');
+  return `<div class="gt-card act-board">
+    <div class="act-top"><b>${actT('board')}</b>
+      <select onchange="actFac('${fac}', this.value)"><option value="${fac}"${fsel===fac?' selected':''}>${fac}</option><option value="ALL"${fsel==='ALL'?' selected':''}>${actT('bAll')}</option></select>
+      <span class="act-api">${actApi()?actT('apiOn'):actT('apiOff')}${ACT.err?` · <span style="color:#c62828">${actEsc(ACT.err)}</span>`:''}</span>
+      <button class="act-sm" onclick="actLoad(true)">${actT('reload')}</button><button class="act-sm" onclick="actSetApi()">${actT('api')}</button>
+      <button class="act-add sm" onclick="actNewFree('${fac}')">${actT('newAct')}</button></div>
+    <datalist id="actMcList">${machines.map(x=>`<option value="${actEsc(x)}">`).join('')}</datalist>
+    <div class="act-tiles">${tile('all', actT('all'), cnt.all, '#1e3c72')}${tile('open', actT('open'), cnt.open, '#1e88e5')}${tile('late', actT('late'), cnt.late, '#c62828')}${tile('closed', actT('closed'), cnt.closed, '#2e7d32')}
+      <div class="act-tile st"><span>${actT('eff')} ${actT('effGood')}</span><b style="color:#2e7d32">${good} / ${effs.length}</b></div></div>
+    <div class="gt-scroll"><table class="act-t"><thead><tr><th>#</th><th>${actT('fac')}</th><th>${actT('mc')}</th><th class="l">${actT('model')}</th><th class="l">${actT('type')}</th><th>${actT('cat')}</th>
+      <th class="l">${actT('cause')}</th><th class="l">${actT('tmp')}</th><th class="l">${actT('perm')}</th><th>${actT('owner')}</th><th>${actT('due')}</th><th>${actT('st')}</th><th>${actT('done')}</th><th>${actT('eff')}</th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="14" class="act-none">${actT('none')}</td></tr>`}</tbody></table></div>
+    <div class="gt-foot" style="margin:8px 0 0">${actT('effNote')}</div></div>`;
+}
+function actFlt(k){ try{ localStorage.setItem('stc_act_flt', k); }catch(e){} actRerender(); }
+function actFac(fac, v){ try{ localStorage.setItem('stc_act_fac_'+fac, v); }catch(e){} actRerender(); }
+function actNewFree(fac){
+  const src = Object.keys(ACT.src).find(k=>ACT.src[k]) || '';
+  let types = []; try{ if(src) types = ACT.src[src](actToday(), actToday()).types; }catch(e){}
+  actForm({ id:'A'+Date.now().toString(36)+Math.random().toString(36).slice(2,5), fac, src, mc:'', model:'', typeKey:'', type:'', found:actToday(), cat:'', cause:'', tmp:'', perm:'', owner:'', due:'', status:'계획', done:'',
+            author:(()=>{ try{ return localStorage.getItem('stc_note_author')||''; }catch(e){ return ''; } })() }, types, true);
+  const mc = document.getElementById('actMc'); if(mc) mc.setAttribute('list','actMcList');
+}
+
+/* FAC1 — 효과 확인용 데이터 원천 · 저장 후 지금 보고 있는 화면 다시 그리기 */
+ACT.src.f1 = (a, b) => f1RowsTypes(a, b, 'all');
+ACT.rerender.push(()=>{ if(typeof navGo==='function' && typeof NAV_CUR!=='undefined') navGo(NAV_CUR); });
+function actBoardRender(){ const el = document.getElementById('actSheet'); if(el) el.innerHTML = actBoardHtml('FAC1'); }
 
 function qrMeasureHtml(week){ return qrMeasureHtmlOf(qrMeasureAgg(week), qrWkLabel(week)); }
 function qrMeasureHtmlOf(a, basisLabel){
@@ -6851,7 +7132,7 @@ function renderPQAll(){
    ========================================================================= */
 Object.assign(I18N.ko, {
   'nav.cat.status':'현황', 'nav.cat.defect':'불량 분석', 'nav.cat.equip':'설비 관리',
-  'nav.cat.mgmt':'경영관리 (보고서 서식)', 'nav.cat.report':'보고서', 'nav.cat.sq':'SQ', 'nav.sq':'Summary (감사 결과)',
+  'nav.cat.mgmt':'경영관리 (보고서 서식)', 'nav.cat.report':'보고서', 'nav.cat.sq':'SQ', 'nav.sq':'Summary (감사 결과)', 'nav.act':'워스트 원인 · 조치',
   'nav.all':'전체 보기', 'nav.weekly':'주간 OEE 분석', 'nav.sigma':'Six Sigma 요약',
   'nav.month':'월별 품질 추이', 'nav.defect5':'불량유형 WORST-5', 'nav.trend':'Worst-5 트렌드',
   'nav.model':'모델별 품질', 'nav.eq':'설비별 상세', 'nav.warm':'웜샷 구조로스',
@@ -6862,7 +7143,7 @@ Object.assign(I18N.ko, {
 });
 Object.assign(I18N.th, {
   'nav.cat.status':'ภาพรวม', 'nav.cat.defect':'วิเคราะห์ของเสีย', 'nav.cat.equip':'จัดการเครื่องจักร',
-  'nav.cat.mgmt':'การจัดการเชิงบริหาร', 'nav.cat.report':'รายงาน', 'nav.cat.sq':'SQ', 'nav.sq':'Summary (ผลการตรวจ)',
+  'nav.cat.mgmt':'การจัดการเชิงบริหาร', 'nav.cat.report':'รายงาน', 'nav.cat.sq':'SQ', 'nav.sq':'Summary (ผลการตรวจ)', 'nav.act':'สาเหตุ · การแก้ไข',
   'nav.all':'ดูทั้งหมด', 'nav.weekly':'วิเคราะห์ OEE รายสัปดาห์', 'nav.sigma':'สรุป Six Sigma',
   'nav.month':'แนวโน้มคุณภาพรายเดือน', 'nav.defect5':'ประเภทของเสีย WORST-5', 'nav.trend':'แนวโน้ม Worst-5',
   'nav.model':'คุณภาพรายโมเดล', 'nav.eq':'รายละเอียดรายเครื่อง', 'nav.warm':'ความสูญเสีย Warm shot',
@@ -6873,7 +7154,7 @@ Object.assign(I18N.th, {
 });
 Object.assign(I18N.en, {
   'nav.cat.status':'Overview', 'nav.cat.defect':'Defect analysis', 'nav.cat.equip':'Equipment',
-  'nav.cat.mgmt':'Management (report format)', 'nav.cat.report':'Report', 'nav.cat.sq':'SQ', 'nav.sq':'Summary (audit result)',
+  'nav.cat.mgmt':'Management (report format)', 'nav.cat.report':'Report', 'nav.cat.sq':'SQ', 'nav.sq':'Summary (audit result)', 'nav.act':'Worst causes & actions',
   'nav.all':'Show all', 'nav.weekly':'Weekly OEE analysis', 'nav.sigma':'Six Sigma summary',
   'nav.month':'Monthly quality trend', 'nav.defect5':'WORST-5 defect types', 'nav.trend':'Worst-5 trend',
   'nav.model':'Quality by model', 'nav.eq':'Equipment detail', 'nav.warm':'Warm-shot structural loss',
@@ -6903,7 +7184,8 @@ const NAV_MARKERS = [
   ['monthly',  '#mqSheet'],
   ['report',   '#qrSheet'],
   ['report2',  '#qr2Sheet'],
-  ['sq',       '#sqSheet']
+  ['sq',       '#sqSheet'],
+  ['act',      '#actSheet']
 ];
 const NAV_SECTIONS = [
   { cat:'nav.cat.status', items:[
@@ -6923,7 +7205,8 @@ const NAV_SECTIONS = [
       { id:'pqmatrix', icon:'📊', key:'nav.pqmatrix' },
       { id:'pqcost',   icon:'💰', key:'nav.pqcost' },
       { id:'pqlevel',  icon:'🚀', key:'nav.pqlevel' },
-      { id:'improve',  icon:'🔄', key:'nav.improve' } ] },
+      { id:'improve',  icon:'🔄', key:'nav.improve' },
+      { id:'act',      icon:'🛠️', key:'nav.act' } ] },
   { cat:'nav.cat.report', items:[
       { id:'daily',    icon:'🗓️', key:'nav.daily' },
       { id:'report',   icon:'📄', key:'nav.report2' },
@@ -6977,14 +7260,15 @@ function navGo(id, skipRender){
   const isDaily   = (id === 'daily');
   const isMonthly = (id === 'monthly');
   const isSQ      = (id === 'sq');
+  const isAct     = (id === 'act');
   QR_VIEW = isReport ? 'report' : 'dash';
   /* 보고서 화면들은 표를 나란히 놓아야 해서 본문 폭을 넓게 준다 */
-  try{ document.body.classList.toggle('qr-view', isReport || isReport2 || isDaily || isMonthly || isSQ); }catch(e){}
+  try{ document.body.classList.toggle('qr-view', isReport || isReport2 || isDaily || isMonthly || isSQ || isAct); }catch(e){}
 
   document.querySelectorAll('#mainArea > [data-nav]').forEach(el => {
     const sec = el.getAttribute('data-nav');
-    const show = (id === 'all') ? (sec !== 'report' && sec !== 'monthly' && sec !== 'sq') : (sec === id);
-    const forceBlock = (el.id === 'qrWrap' || el.id === 'qr2Wrap' || el.id === 'dqWrap' || el.id === 'mqWrap' || el.id === 'sqWrap');
+    const show = (id === 'all') ? (sec !== 'report' && sec !== 'monthly' && sec !== 'sq' && sec !== 'act') : (sec === id);
+    const forceBlock = (el.id === 'qrWrap' || el.id === 'qr2Wrap' || el.id === 'dqWrap' || el.id === 'mqWrap' || el.id === 'sqWrap' || el.id === 'actWrap');
     el.style.display = show ? (forceBlock ? 'block' : (el.getAttribute('data-disp') || '')) : 'none';
   });
   document.querySelectorAll('#sideNav button').forEach(b =>
@@ -6995,6 +7279,7 @@ function navGo(id, skipRender){
     tEl.innerHTML = `<span>${item.icon}</span><span data-i18n="${item.key}">${t(item.key)}</span>`;
   }
   if (isSQ){ if (typeof sqShow === 'function') sqShow(); return; }
+  if (isAct){ actBoardRender(); return; }
   if (skipRender) return;
   if (typeof RAW_Q !== 'undefined' && RAW_Q && RAW_Q.length){
     /* 숨겨져 있던 캔버스는 폭이 0이라, 표시 후 다시 그려야 정확히 맞는다 */
@@ -9593,7 +9878,7 @@ function renderDaily(){
       '</div>' +
       '<div class="qr-measure">' +
         qrMeasureHtmlOf(qrMeasureAggBetween(span.from, span.to, sc), rlabel) +
-        '<div class="gt-f1">' + f1GroupTrend('f1d', span.from, span.to, sc, renderDaily) + '</div></div>' +
+        '<div class="gt-f1">' + f1GroupTrend('f1d', span.from, span.to, sc, renderDaily) + actWorstHtml('f1d','FAC1','f1') + '</div></div>' +
       '<div class="qr-worst">' + qrWorstHtml(a, prevA, { b:rlabel, a: prevA ? plabel : '–' }) + '</div>' +
       '<div class="qr-comment">' + qrCommentHtml(a, prevA) + '</div>' +
       '<div class="qr-foot"><span>' + dqt('who') + ' ' +
@@ -9812,7 +10097,7 @@ function renderMonthly(){
         tbl(dqt('tblTOT'), 'totalNg', a.totalNg, false, '') +
       '</div>' +
       '<div class="qr-measure">' + qrMeasureHtmlOf(qrMeasureAggBetween(R.from, R.to, sc), mqYm(ym)) +
-        '<div class="gt-f1">' + f1GroupTrend('f1m', R.from, R.to, sc, renderMonthly) + '</div></div>' +
+        '<div class="gt-f1">' + f1GroupTrend('f1m', R.from, R.to, sc, renderMonthly) + actWorstHtml('f1m','FAC1','f1') + '</div></div>' +
       '<div class="qr-worst">' + qrWorstHtml(a, prevA, { b:mqYm(ym), a: prevA ? mqYm(pym) : '–' }) + '</div>' +
       '<div class="qr-comment">' + qrCommentHtml(a, prevA) + '</div>' +
       '<div class="dq-iqc-top">' + iqcDailySection(R.from, R.to) + '</div>' +
