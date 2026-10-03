@@ -250,12 +250,15 @@
   .mt-cover .per{display:inline-block;font-size:16px;font-weight:800;background:rgba(255,255,255,.14);
     border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:4px 12px;}
   .mt-cover .per span{font-weight:500;opacity:.85;margin-left:8px;font-size:14px;}
+  .mt-cover .wk{flex:0 0 auto;align-self:center;text-align:center;line-height:1;padding:6px 26px;border-left:1px solid rgba(255,255,255,.25);border-right:1px solid rgba(255,255,255,.25);}
+  .mt-cover .wk span{display:block;font-size:12px;font-weight:800;letter-spacing:.3em;opacity:.75;margin-bottom:4px;}
+  .mt-cover .wk b{font-size:64px;font-weight:900;letter-spacing:-.01em;color:#fde68a;}
   .mt-cover .side{text-align:right;font-size:13px;line-height:1.75;opacity:.95;white-space:nowrap;}
   .mt-cover .side b{font-size:16px;font-weight:900;letter-spacing:.02em;}
   .mt-cover .side .dp{display:inline-block;background:#f59e0b;color:#1f2937;font-weight:800;font-size:11.5px;border-radius:10px;padding:0 9px;}
   @media screen and (max-width:900px){ .mt-cover{flex-direction:column;align-items:flex-start;}
     .mt-cover .side{text-align:left;white-space:normal;} .mt-cover h1{font-size:26px;} }
-  @media print{ .mt-cover{padding:14px 20px 12px;} .mt-cover h1{font-size:26px;} }
+  @media print{ .mt-cover{padding:14px 20px 12px;} .mt-cover h1{font-size:26px;} .mt-cover .wk b{font-size:48px;} }
   .wk-hd{display:flex; justify-content:space-between; align-items:flex-end;
     border-bottom:2px solid #1f3864; padding-bottom:7px; margin-bottom:10px;}
   .wk-hd h3{margin:0; font-size:17px; color:#1f3864; font-weight:800;}
@@ -7225,7 +7228,10 @@ function mtCoverHtml(kind, period, note, who, dept, seq){
       '<div class="kicker">Maintenance Report</div>' +
       '<h1>' + T[0] + '<small>' + T[1] + (seq ? ' · ' + e(seq) : '') + '</small></h1>' +
       '<div class="per">' + e(period) + (note ? '<span>' + e(note) + '</span>' : '') + '</div>' +
-    '</div><div class="side"><b>STC Co., Ltd.</b><br>다이캐스팅 DC1~DC23 · 공무팀<br>' +
+    '</div>' +
+    /* 주간 보고서 — 가운데에 주차를 크게 (W40) */
+    (kind === 'weekly' && /W\d+/.test(String(period)) ? '<div class="wk"><span>WEEK</span><b>' + e(String(period).match(/W\d+/)[0]) + '</b></div>' : '') +
+    '<div class="side"><b>STC Co., Ltd.</b><br>다이캐스팅 DC1~DC23 · 공무팀<br>' +
       (dept && dept !== 'ALL' ? '<span class="dp">' + e(dept) + ' 계통</span><br>' : '') +
       (who ? '작성 ' + e(who) + ' · ' : '') + '발행 ' + today + '</div></div>';
 }
