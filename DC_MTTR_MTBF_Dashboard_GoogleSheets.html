@@ -7789,6 +7789,9 @@ loadData();
 .kw table.kw-g td.gty .gt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#64748b;}
 .kw table.kw-g td.gty .gt.hit{color:#b91c1c;} .kw table.kw-g td.gty .gt span{font-size:10px;color:#2563eb;font-weight:700;}
 .kw table.kw-g select[data-kwpmd]{font-size:10.5px;}
+.kw .kw-pmr{display:inline-flex;align-items:center;gap:5px;background:#eef4fd;border:1px solid #c7d7ee;border-radius:6px;padding:3px 8px;}
+.kw .kw-pmr b{color:#1f3864;font-size:12px;} .kw .kw-pmr input{font:inherit;font-size:12px;padding:2px 5px;border:1px solid #b9c7da;border-radius:4px;}
+.kw .kw-pmr button{font:inherit;font-size:11.5px;padding:2px 8px;border:1px solid #b9c7da;border-radius:4px;background:#fff;cursor:pointer;} .kw .kw-pmr button:disabled{opacity:.45;cursor:default;}
 .kw table.kw-g th.gj{font-size:10.5px;} .kw table.kw-g tfoot td.gj{font-size:9.5px;line-height:1.3;}
 @media print{ .kw table.kw-g td.gc{cursor:default;} .kw table.kw-g select[data-kwpmd]{text-align:center;} }
 /* 1번 지표 요약 · 2번 워스트 유형표 — 화면에서 행 높이·글자 크게, 진하게 */
@@ -7949,7 +7952,13 @@ loadData();
       const end = S.days[S.days.length-1];
       let st = addDays(end, 1);
       if (opt.mode === 'week'){ for (let i=0;i<7 && new Date(st+'T00:00:00Z').getUTCDay()!==3;i++) st = addDays(st,1); }
-      const slots = []; for (let i=0;i<7;i++){ const d = addDays(st,i); if (new Date(d+'T00:00:00Z').getUTCDay()!==0) slots.push(d); }
+      /* PM 기간 — 기본 = 다음 주 수~화 7일 · 사용자가 정한 기간(_pmr)이 있으면 그것 (최대 31일) */
+      const pr = notes._pmr || null;
+      let pFrom = st, pTo = addDays(st, 6);
+      if (pr && pr.from && pr.to && pr.from <= pr.to){ pFrom = pr.from; pTo = pr.to; }
+      const pmCustom = !!(pr && pr.from && pr.to);
+      const slots = []; for (let d=pFrom, i=0; d<=pTo && i<31; d=addDays(d,1), i++){ if (new Date(d+'T00:00:00Z').getUTCDay()!==0) slots.push(d); }
+      if (!slots.length) slots.push(pFrom);
       const hitN = m => SEL.reduce((a,o)=>a+(o.by[m]?o.by[m].n:0),0);
       /* 설비 선택 — 기본 = 워스트 제외 전 설비 · 사용자가 켜고 끈 값(_pmsel)이 우선 */
       const psel = notes._pmsel || {};
@@ -7968,17 +7977,19 @@ loadData();
       const ML = PL.slice().sort((a,b)=>pmOf(a).localeCompare(pmOf(b)) || a-b);
       /* --- 간트 차트: 행 = 설비, 열 = 날짜, 막대 = PM 기간 (칸 클릭 = 시작일 이동) --- */
       const pmd = notes._pmd || {};
-      const durOf = m => Math.max(1, Math.min(3, +pmd[DC(m)] || 1));
+      const durOf = m => Math.max(1, Math.min(7, +pmd[DC(m)] || 1));
       const endOf = m => addDays(pmOf(m), durOf(m)-1);
-      let g0 = slots[0], g1 = addDays(st, 6);
+      let g0 = pFrom, g1 = pTo;
       ML.forEach(m=>{ if (pmOf(m) < g0) g0 = pmOf(m); if (endOf(m) > g1) g1 = endOf(m); });
-      const GD = []; for (let d=g0; d<=g1 && GD.length<21; d=addDays(d,1)) GD.push(d);
+      const GD = []; for (let d=g0; d<=g1 && GD.length<35; d=addDays(d,1)) GD.push(d);
       const today = new Date(Date.now()+7*3600000).toISOString().slice(0,10);   // 태국 시간
       const perDay = GD.map(d=>ML.filter(m=>pmOf(m)<=d && endOf(m)>=d).length);
       const JV = [['','미점검'],['OK','OK'],['NG','NG'],['DONE','조치완료']];
       const jc = v => v==='OK'?'v-ok':v==='NG'?'v-ng':v==='DONE'?'v-done':'';
       const gw = (40/GD.length).toFixed(2), jw = (14/SEL.length).toFixed(2);
       h += `<div class="kw-gbar kw-noprint"><span><i class="lg hit"></i>이번 기간 고장 발생 설비 <i class="lg"></i>예방 점검 <i class="lg idle"></i>가동 없음</span>`
+         + `<span class="kw-pmr"><b>PM 기간</b> <input type="date" data-kwpmr="from" value="${pFrom}"> ~ <input type="date" data-kwpmr="to" value="${pTo}">`
+         + `<button type="button" data-kwpmrdef="1" title="다음 주 수~화 7일로 되돌립니다"${pmCustom?'':' disabled'}>기본 (다음 주)</button></span>`
          + `<span>날짜 칸을 누르면 PM 시작일 이동 · 일수 = PM 기간</span>`
          + `<button type="button" data-kwpmreset="1" title="직접 바꾼 PM 일정·일수를 지우고 기본 배정으로 되돌립니다">↺ 일정 자동 배정</button></div>`;
       /* 고정 폭(px) — 조치 내용 칸이 남는 폭을 모두 쓴다 · 좁으면 가로 스크롤 */
@@ -7997,7 +8008,7 @@ loadData();
         const run = x.planned||x.active, hit = hitN(m) > 0;
         const tyList = SEL.map(o=>{ const t = o.by[m]; return t ? `<div class="gt hit">${esc(o.c)} <b>${f1(t.h)}h · ${t.n}건</b></div>` : `<div class="gt">${esc(o.c)} <span>예방</span></div>`; }).join('');
         h += `<tr class="${run?'':'idle'}"><td class="mc"><label class="pk"><input type="checkbox" checked data-kwpmsel="${nk}" title="체크 해제 = PM 플랜에서 제외">${nk}</label>${wm[m]?'<span class="tg">워스트</span>':''}${run?'':'<span class="sm">가동 없음</span>'}</td><td class="gty">${tyList}</td>`
-           + `<td class="c"><select data-kwpmd="${nk}">${[1,2,3].map(k=>`<option value="${k}"${k===durOf(m)?' selected':''}>${k}일</option>`).join('')}</select></td>`;
+           + `<td class="c"><select data-kwpmd="${nk}">${[1,2,3,4,5,6,7].map(k=>`<option value="${k}"${k===durOf(m)?' selected':''}>${k}일</option>`).join('')}</select></td>`;
         GD.forEach(d=>{ const w = new Date(d+'T00:00:00Z').getUTCDay(), on = d>=d0 && d<=d1;
           const cls = on ? ('bar' + (hit?' hit':'') + (run?'':' idle') + (d===d0?' b0':'') + (d===d1?' b1':'')) : '';
           h += `<td class="gc${w===0?' sun':''}${d===today?' today':''}" data-kwgd="${nk}|${d}" title="${nk} PM → ${d} (${dow(d)})">`
@@ -8078,6 +8089,19 @@ loadData();
         save(o=>{ o._pmd = o._pmd || {}; if (el.value > 1) o._pmd[el.dataset.kwpmd] = +el.value; else delete o._pmd[el.dataset.kwpmd]; });
         redraw();
       });
+    });
+    /* 3번 PM 기간 — 시작일·종료일 (바꾸면 일정 자동 배정을 새 기간으로 다시) */
+    host.querySelectorAll('input[data-kwpmr]').forEach(el=>{
+      el.addEventListener('change', ()=>{
+        const f = host.querySelector('input[data-kwpmr="from"]').value, t = host.querySelector('input[data-kwpmr="to"]').value;
+        if (!f || !t) return;
+        const a = f <= t ? f : t, b = f <= t ? t : f;
+        save(o=>{ o._pmr = { from:a, to:b }; delete o._pm; });
+        redraw();
+      });
+    });
+    host.querySelectorAll('[data-kwpmrdef]').forEach(el=>{
+      el.addEventListener('click', ()=>{ save(o=>{ delete o._pmr; delete o._pm; }); redraw(); });
     });
     host.querySelectorAll('[data-kwpmreset]').forEach(el=>{
       el.addEventListener('click', ()=>{ save(o=>{ delete o._pm; delete o._pmd; }); redraw(); });
