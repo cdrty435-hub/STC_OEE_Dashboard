@@ -229,6 +229,21 @@ body.embed{background:transparent}body.embed .wrap{padding:0 0 20px;max-width:no
 .fl-p{display:block;font-size:11.5px;color:var(--text-faint)}
 .fl .tag{font-size:10.5px;padding:0 5px}
 @media print{.fl-jump{display:none}.fl{border:0;padding:0}.fl-t th{position:static;-webkit-print-color-adjust:exact;print-color-adjust:exact}.fl-t tr{break-inside:avoid}.fl-t td{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+.fl{background:none;border:0;padding:0}
+.fl-top{background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.fl-ord{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-faint);font-weight:700;margin-bottom:8px}
+.fl-jump a i{font-style:normal;font-family:var(--mono);font-size:10.5px;color:#fff;background:#8796a8;border-radius:7px;padding:0 5px;margin-right:4px}
+.fl-card{background:#fff;border:1px solid var(--border);border-left:5px solid #8fa3b8;border-radius:10px;margin-bottom:12px;overflow:hidden;scroll-margin-top:8px}
+.fl-card.top{border-left-color:var(--red)}
+.fl-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 14px;background:#f3f6fa;border-bottom:1px solid var(--border-soft)}
+.fl-h>b{font-size:16px;font-weight:900;color:#1f3864}
+.fl-rk{font-family:var(--mono);font-weight:900;font-size:13px;background:#1f3864;color:#fff;border-radius:6px;padding:1px 8px}
+.fl-card.top .fl-rk{background:var(--red)}
+.fl-s{font-size:13px;color:var(--text-dim)}.fl-s b{font-family:var(--mono);font-size:15px}
+.fl-card .fl-t th{position:static;background:#fff;color:var(--text-faint);border-bottom:1px solid var(--border);font-size:11.5px;padding:5px 7px}
+.fl-card .fl-t tbody{border-top:0}
+.fl-card .fl-t tr:last-child td{border-bottom:0}
+@media print{.fl-top{display:none}.fl-card{break-inside:auto;border-left-width:3px}.fl-h{break-after:avoid}}
 @media (max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
 @media (max-width:640px){.wrap{padding:14px 16px 40px}.kpis{grid-template-columns:repeat(2,1fr)}input[type=search]{width:100%}}
 @media print{.filters,.sync .btn,.cfg,.more{display:none!important}.tbl-wrap{max-height:none;overflow:visible}body{background:#fff}}
@@ -313,7 +328,7 @@ const ls = {get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.p
 let ROWS = [], LOADED_AT = null, SRC_NOTE = '';
 const UI = Object.assign({grp:'all',pre:'d30',from:'',to:'',cause:'all',src:'all',mc:'',q:'',orig:false,dir:-1,view:'list',lim:150,month:''}, ls.get(K_UI,{}));
 UI.lim = 150; UI.month = '';
-const saveUI = ()=>ls.set(K_UI,{grp:UI.grp,pre:UI.pre,from:UI.from,to:UI.to,cause:UI.cause,src:UI.src,orig:UI.orig,dir:UI.dir,view:UI.view});
+const saveUI = ()=>ls.set(K_UI,{grp:UI.grp,pre:UI.pre,from:UI.from,to:UI.to,cause:UI.cause,src:UI.src,orig:UI.orig,dir:UI.dir,view:UI.view,ord:UI.ord});
 
 /* ---------------- CSV ---------------- */
 function parseCSV(t){
@@ -476,6 +491,7 @@ function render(){
     show.forEach(c=>LAST_T.push(...sortRs(by.get(c)||[])));
     $('#list').innerHTML=fullList(show,by,sortRs);
     $('#list').querySelectorAll('[data-jump]').forEach(el=>el.onclick=()=>{const t=document.getElementById('fl-'+el.dataset.jump);if(t)t.scrollIntoView({behavior:'smooth',block:'start'})});
+    $('#list').querySelectorAll('#fOrd button').forEach(b=>b.onclick=()=>{UI.ord=b.dataset.v;saveUI();render()});
     return;
   }
   if(UI.view!=='card'&&UI.view!=='report'){
@@ -507,25 +523,31 @@ function render(){
 const DOW=['일','월','화','수','목','금','토'];
 /* ===== 전체 목록 : 설비별로 묶은 한 장짜리 표 (기간 내 모든 내용 표시) ===== */
 function fullList(codes,by,sortRs){
-  const has=codes.filter(c=>(by.get(c)||[]).length), none=codes.filter(c=>!(by.get(c)||[]).length);
   const nm=c=>c.startsWith('DC')?(+c.slice(2))+'호기':c;
-  const P=[];has.forEach(c=>P.push(...by.get(c)));
+  const st=c=>{const rs=by.get(c)||[];return {n:rs.length,m:rs.reduce((a,r)=>a+(r.min||0),0),e:rs.filter(r=>r.cause==='전기로').length}};
+  const ord=UI.ord||'n';
+  const has=codes.filter(c=>(by.get(c)||[]).length).sort((a,b)=>{const A=st(a),B=st(b);
+    return ord==='m'?(B.m-A.m||B.n-A.n):ord==='c'?(a<b?-1:1):(B.n-A.n||B.m-A.m)});
+  const none=codes.filter(c=>!(by.get(c)||[]).length);
   const o=UI.orig;
   const tx=(r,k,ko)=>{const v=clean(r[k]||r[ko]);return v?esc(v)+(o&&r[ko]&&r[ko]!==r[k]?`<span class="orig">${esc(r[ko])}</span>`:''):''};
-  let h=`<div class="fl"><div class="fl-jump">${has.map(c=>`<a data-jump="${c}">${nm(c)}<b>${by.get(c).length}</b></a>`).join('')}</div>
-   <table class="fl-t"><thead><tr><th style="width:74px">설비</th><th style="width:76px">날짜</th><th style="width:58px">구분</th><th style="width:27%">증상</th><th style="width:19%">원인</th><th>조치</th><th style="width:96px">수리시간</th><th style="width:110px">작업자</th></tr></thead>`;
-  has.forEach((c,gi)=>{
-    const rs=sortRs(by.get(c)), m=rs.reduce((a,r)=>a+(r.min||0),0);
-    h+=`<tbody class="${gi%2?'g2':'g1'}" id="fl-${c}">`+rs.map((r,j)=>{const part=/^(-|ไม่มี)$/.test(r.part)?'':r.part;
-      return `<tr class="${r.cause==='전기로'?'ef':''}">`+(j===0?`<td class="fl-mc" rowspan="${rs.length}"><b>${nm(c)}</b><span>${rs.length}건${m?'<br>'+fmtH(m)+'h':''}</span></td>`:'')+
-      `<td class="mono">${r.date.slice(5).replace('-','/')}<small>(${dow(r.date)})</small></td>
+  const cols=`<colgroup><col style="width:84px"><col style="width:62px"><col style="width:29%"><col style="width:20%"><col><col style="width:100px"><col style="width:120px"></colgroup>`;
+  let h=`<div class="fl"><div class="fl-top"><span class="fl-ord">순서 <span class="seg" id="fOrd"><button data-v="n" aria-pressed="${ord==='n'}">건수 워스트</button><button data-v="m" aria-pressed="${ord==='m'}">수리시간 워스트</button><button data-v="c" aria-pressed="${ord==='c'}">호기순</button></span></span>
+     <div class="fl-jump">${has.map((c,i)=>`<a data-jump="${c}">${ord!=='c'?`<i>${i+1}</i>`:''}${nm(c)}<b>${by.get(c).length}</b></a>`).join('')}</div></div>`;
+  has.forEach((c,i)=>{
+    const rs=sortRs(by.get(c)), S=st(c), lv=ord==='c'?'':i<3?' top':'';
+    h+=`<section class="fl-card${lv}" id="fl-${c}"><div class="fl-h">${ord!=='c'?`<span class="fl-rk">${i+1}</span>`:''}<b>${mcName(c)}</b>
+        <span class="fl-s"><b>${S.n}</b>건</span>${S.m?`<span class="fl-s">수리시간 <b>${fmtH(S.m)}</b>h</span>`:''}${S.e?`<span class="fl-s" style="color:var(--ef)">전기로 <b>${S.e}</b>건</span>`:''}${rs.some(r=>r.prog)?`<span class="tag prog">진행 중 ${rs.filter(r=>r.prog).length}</span>`:''}</div>
+      <table class="fl-t">${cols}${i===0||true?`<thead><tr><th>날짜</th><th>구분</th><th>증상</th><th>원인</th><th>조치</th><th>수리시간</th><th>작업자</th></tr></thead>`:''}<tbody>`+
+      rs.map(r=>{const part=/^(-|ไม่มี)$/.test(r.part)?'':r.part;
+      return `<tr class="${r.cause==='전기로'?'ef':''}"><td class="mono">${r.date.slice(5).replace('-','/')}<small>(${dow(r.date)})</small></td>
        <td>${r.cause==='전기로'?`<span class="tag ef">전기로${r.ef?' '+r.ef:''}</span>`:'<span class="fl-b">본체</span>'}</td>
        <td>${tx(r,'sym','symO')}</td><td>${tx(r,'prob','probO')}</td>
        <td>${tx(r,'act','actO')}${r.prog?' <span class="tag prog">진행 중</span>':''}${part?`<span class="fl-p">PART: ${esc(part)}</span>`:''}</td>
-       <td class="mono">${r.st?r.st+'–'+(r.en||'?'):''}${r.min!=null?`${r.st?'<br>':''}<small>${r.min}분</small>`:''}</td><td>${esc(r.who)}</td></tr>`}).join('')+`</tbody>`;
+       <td class="mono">${r.st?r.st+'–'+(r.en||'?'):''}${r.min!=null?`${r.st?'<br>':''}<small>${r.min}분</small>`:''}</td><td>${esc(r.who)}</td></tr>`}).join('')+`</tbody></table></section>`;
   });
-  if(!has.length) h+=`<tbody><tr><td colspan="8" class="empty">선택한 기간에 수리 이력이 없습니다</td></tr></tbody>`;
-  h+=`</table>`+(none.length?`<div class="mx2-none"><b>수리 없음 ${none.length}대</b> · ${none.map(nm).join(', ')}</div>`:'')+`</div>`;
+  if(!has.length) h+=`<div class="empty">선택한 기간에 수리 이력이 없습니다</div>`;
+  h+=(none.length?`<div class="mx2-none"><b>수리 없음 ${none.length}대</b> · ${none.map(nm).join(', ')}</div>`:'')+`</div>`;
   return h;
 }
 /* ===== 한눈에 : 설비(행) × 날짜(열) 매트릭스 ===== */
