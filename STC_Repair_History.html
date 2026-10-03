@@ -123,6 +123,29 @@ table.h td.txt{min-width:180px;max-width:340px}
 .ms table.h td{line-height:1.45}
 @media print{.idx{display:none}.ms{break-inside:auto;box-shadow:none}.ms-h{break-after:avoid}table.h tr{break-inside:avoid}}
 body.embed{background:transparent}body.embed .wrap{padding:0 0 20px;max-width:none}body.embed .eyebrow{display:none}body.embed h1{font-size:20px}
+.gl{columns:4 330px;column-gap:12px}
+.gl-c{break-inside:avoid;background:#fff;border:1px solid var(--border);border-radius:10px;margin:0 0 12px;overflow:hidden;display:inline-block;width:100%}
+.gl-c.z{background:#f7f9fb}.gl-c.z .gl-h{cursor:default;opacity:.55}
+.gl-h{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f3f6f9;border-bottom:1px solid var(--border-soft);cursor:pointer}
+.gl-c.z .gl-h{border-bottom:0;background:none}
+.gl-h b{font-size:15px;font-weight:900}
+.gl-n{font-family:var(--mono);font-size:12px;font-weight:800;background:#1a2230;color:#fff;border-radius:9px;padding:0 7px}
+.gl-c.z .gl-n{background:#c3ccd6}
+.gl-m{margin-left:auto;font-size:12px;color:var(--text-faint);font-family:var(--mono)}
+.gl ul{list-style:none;margin:0;padding:4px 0}
+.gl-i{display:flex;gap:8px;padding:5px 12px;font-size:13px;line-height:1.4;cursor:pointer;border-top:1px dashed var(--border-soft)}
+.gl-i:first-child{border-top:0}
+.gl-i:hover{background:#f4f8fc}
+.gl-i.ef{background:var(--ef-soft)}
+.gl-d{font-family:var(--mono);font-size:12px;color:var(--text-faint);flex:0 0 38px;padding-top:1px}
+.gl-t{flex:1;min-width:0}
+.gl-s,.gl-a{display:block}
+.gl-a{color:var(--teal);font-size:12.5px}
+.gl-x{display:none;margin-top:4px;font-size:12px;color:var(--text-dim);background:#fff;border:1px solid var(--border-soft);border-radius:6px;padding:5px 8px}
+.gl-x b{color:var(--text-faint);font-weight:700;margin-right:3px}
+.gl-i.open .gl-x{display:block}
+.gl .tag{font-size:10.5px;padding:0 5px}
+@media print{.gl{columns:3}.gl-x{display:none!important}}
 @media (max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
 @media (max-width:640px){.wrap{padding:14px 16px 40px}.kpis{grid-template-columns:repeat(2,1fr)}input[type=search]{width:100%}}
 @media print{.filters,.sync .btn,.cfg,.more{display:none!important}.tbl-wrap{max-height:none;overflow:visible}body{background:#fff}}
@@ -205,9 +228,9 @@ const ls = {get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.p
             set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
 let ROWS = [], LOADED_AT = null, SRC_NOTE = '';
-const UI = Object.assign({grp:'all',pre:'d30',from:'',to:'',cause:'all',src:'all',mc:'',q:'',orig:false,dir:-1,lim:150,month:''}, ls.get(K_UI,{}));
+const UI = Object.assign({grp:'all',pre:'d30',from:'',to:'',cause:'all',src:'all',mc:'',q:'',orig:false,dir:-1,view:'card',lim:150,month:''}, ls.get(K_UI,{}));
 UI.lim = 150; UI.month = '';
-const saveUI = ()=>ls.set(K_UI,{grp:UI.grp,pre:UI.pre,from:UI.from,to:UI.to,cause:UI.cause,src:UI.src,orig:UI.orig,dir:UI.dir});
+const saveUI = ()=>ls.set(K_UI,{grp:UI.grp,pre:UI.pre,from:UI.from,to:UI.to,cause:UI.cause,src:UI.src,orig:UI.orig,dir:UI.dir,view:UI.view});
 
 /* ---------------- CSV ---------------- */
 function parseCSV(t){
@@ -362,23 +385,46 @@ function render(){
   const by=new Map(); for(const r of P){(by.get(r.code)||by.set(r.code,[]).get(r.code)).push(r)}
   const codes=allCodes().filter(c=>UI.grp==='all'||c.startsWith(UI.grp));
   renderIdx(codes,by,P);
-  const show=codes.filter(c=>(by.get(c)||[]).length&&(!UI.mc||UI.mc===c));
   LAST_T=[];
-  if(!show.length){ $('#list').innerHTML=`<div class="card empty">${ROWS.length?'선택한 기간·조건에 해당하는 수리 내용이 없습니다':'데이터를 불러오지 못했습니다 — ⚙ 연결을 확인하세요'}</div>`; return; }
-  $('#list').innerHTML=show.map(c=>{
-    const rs=by.get(c).slice().sort((a,b)=>(a.date<b.date?-1:a.date>b.date?1:(a.st||'').localeCompare(b.st||''))*UI.dir);
-    LAST_T.push(...rs); return mcSection(c,rs);
-  }).join('');
+  const sortRs=rs=>rs.slice().sort((a,b)=>(a.date<b.date?-1:a.date>b.date?1:(a.st||'').localeCompare(b.st||''))*UI.dir);
+  if(!ROWS.length){ $('#list').innerHTML='<div class="card empty">데이터를 불러오지 못했습니다 — ⚙ 연결을 확인하세요</div>'; return; }
+  if(UI.view==='card'&&!UI.mc){
+    /* 한눈에 보기: 모든 설비를 카드로 — 기간 내 수리 내용을 한 줄씩 */
+    const list=codes.map(c=>{const rs=sortRs(by.get(c)||[]);LAST_T.push(...rs);return glance(c,rs)}).join('');
+    $('#list').innerHTML=`<div class="gl">${list}</div>`;
+    $('#list').querySelectorAll('.gl-h[data-mc]').forEach(h=>h.onclick=()=>{UI.mc=h.dataset.mc;render();window.scrollTo({top:$('#idx').offsetTop-8})});
+    $('#list').querySelectorAll('.gl-i').forEach(li=>li.onclick=()=>li.classList.toggle('open'));
+    return;
+  }
+  const show=codes.filter(c=>(by.get(c)||[]).length&&(!UI.mc||UI.mc===c));
+  if(!show.length){ $('#list').innerHTML='<div class="card empty">선택한 기간·조건에 해당하는 수리 내용이 없습니다</div>'; return; }
+  $('#list').innerHTML=show.map(c=>{const rs=sortRs(by.get(c));LAST_T.push(...rs);return mcSection(c,rs)}).join('');
+}
+function glance(c,rs){
+  const ef=rs.filter(r=>r.cause==='전기로').length, pg=rs.filter(r=>r.prog).length, tm=rs.reduce((s,r)=>s+(r.min||0),0);
+  const nm=c.startsWith('DC')?(+c.slice(2))+'호기':c;
+  const o=UI.orig;
+  const line=r=>{
+    const act=r.act||r.actO, prob=r.prob||r.probO, part=/^(-|ไม่มี)$/.test(r.part)?'':r.part;
+    return `<li class="gl-i${r.cause==='전기로'?' ef':''}"><span class="gl-d">${r.date.slice(5).replace('-','/')}</span>
+      <span class="gl-t"><span class="gl-s">${r.cause==='전기로'?`<span class="tag ef">전기로${r.ef?' '+r.ef:''}</span> `:''}${r.prog?'<span class="tag prog">진행</span> ':''}${esc(r.sym||r.symO)}</span>
+      ${act?`<span class="gl-a">→ ${esc(act)}</span>`:''}
+      <span class="gl-x">${prob?`<b>원인</b> ${esc(prob)}<br>`:''}${o&&r.symO&&r.symO!==r.sym?`<b>원문</b> ${esc(r.symO)}<br>`:''}${part?`<b>PART</b> ${esc(part)}<br>`:''}${r.st?`<b>시간</b> ${r.st}–${r.en||'?'}${r.min!=null?' ('+r.min+'분)':''}<br>`:''}${r.who?`<b>작업자</b> ${esc(r.who)}<br>`:''}<b>출처</b> ${esc(r.src)}${r.cat?' · '+esc(r.cat):''}</span></span></li>`;};
+  return `<div class="gl-c${rs.length?'':' z'}"><div class="gl-h" ${rs.length?`data-mc="${c}" title="${nm} 상세 표로 보기"`:''}>
+      <b>${nm}</b><span class="gl-n">${rs.length}</span>
+      <span class="gl-m">${rs.length?`${tm?fmtH(tm)+'h':''}${ef?` · <span style="color:var(--ef)">전기로 ${ef}</span>`:''}${pg?` · <span style="color:var(--red)">진행 ${pg}</span>`:''}`:'수리 없음'}</span></div>
+    ${rs.length?`<ul>${rs.map(line).join('')}</ul>`:''}</div>`;
 }
 function renderIdx(codes,by,P){
   const n=P.length, mcN=new Set(P.map(r=>r.code)).size;
   const chip=c=>{const k=(by.get(c)||[]).length;return `<button class="ix${k?'':' z'}${UI.mc===c?' on':''}" data-mc="${c}" ${k?'':'disabled'}>${c.startsWith('DC')?(+c.slice(2))+'호기':c}<b>${k}</b></button>`};
   const dc=codes.filter(c=>c.startsWith('DC')), tp=codes.filter(c=>c.startsWith('TP'));
   $('#idx').innerHTML=`<div class="ix-h"><b>${UI.from} ~ ${UI.to}</b> · ${mcN}개 설비 · ${n}건
-      <span class="ix-r">정렬 <span class="seg" id="fDir"><button data-v="-1" aria-pressed="${UI.dir<0}">최신순</button><button data-v="1" aria-pressed="${UI.dir>0}">과거순</button></span>
-      ${UI.mc?'<button class="btn" id="ixAll">전체 설비 보기</button>':''}</span></div>`+
+      <span class="ix-r">보기 <span class="seg" id="fView"><button data-v="card" aria-pressed="${UI.view==='card'&&!UI.mc}">한눈에</button><button data-v="table" aria-pressed="${UI.view==='table'||!!UI.mc}">상세 표</button></span> 정렬 <span class="seg" id="fDir"><button data-v="-1" aria-pressed="${UI.dir<0}">최신순</button><button data-v="1" aria-pressed="${UI.dir>0}">과거순</button></span>
+      ${UI.mc?'<button class="btn" id="ixAll">← 전체 설비 보기</button>':''}</span></div>`+(UI.view==='card'&&!UI.mc?'':(
     (dc.length?`<div class="ix-row"><span class="ix-g">DC</span>${dc.map(chip).join('')}</div>`:'')+
-    (tp.length?`<div class="ix-row"><span class="ix-g">TP</span>${tp.map(chip).join('')}</div>`:'');
+    (tp.length?`<div class="ix-row"><span class="ix-g">TP</span>${tp.map(chip).join('')}</div>`:'')));
+  $('#idx').querySelectorAll('#fView button').forEach(b=>b.onclick=()=>{UI.view=b.dataset.v;UI.mc='';saveUI();render()});
   $('#idx').querySelectorAll('.ix[data-mc]').forEach(b=>b.onclick=()=>{UI.mc=UI.mc===b.dataset.mc?'':b.dataset.mc;render();window.scrollTo({top:$('#idx').offsetTop-8,behavior:'smooth'})});
   $('#idx').querySelectorAll('#fDir button').forEach(b=>b.onclick=()=>{UI.dir=+b.dataset.v;saveUI();render()});
   const ia=$('#ixAll'); if(ia) ia.onclick=()=>{UI.mc='';render()};
