@@ -2188,6 +2188,16 @@ function clearHighlight(chart, baseColors){
 
 let RUN = [];
 let LOSS = [];
+/* 10번 수리이력(iframe)에서 기간별 설비 가동률을 가져가는 창구 — 가동률 = 가동 ÷ (가동 + 전체 로스) */
+window.stcAvailBy = function(from, to){
+  if(!RUN.length) return null;
+  const run={}, loss={};
+  RUN.forEach(r=>{ if(r.d>=from && r.d<=to){ run[r.m]=(run[r.m]||0)+(r.r||0); } });
+  LOSS.forEach(r=>{ if(r.d>=from && r.d<=to){ loss[r.m]=(loss[r.m]||0)+(r.l||0); } });
+  const out={};
+  Object.keys(run).forEach(m=>{ const a=run[m], b=loss[m]||0; if(a+b>0) out['DC'+String(m).padStart(2,'0')]={a:a/(a+b), run:a, loss:b}; });
+  return out;
+};
 let dcMttrChart, dcMtbfChart, paretoChart, heroMttrChart, heroMtbfChart;
 let heroMttrBaseColors = [], heroMtbfBaseColors = [];
 let dcMttrBaseColors = [], dcMtbfBaseColors = [];

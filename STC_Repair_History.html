@@ -244,6 +244,11 @@ body.embed{background:transparent}body.embed .wrap{padding:0 0 20px;max-width:no
 .fl-card .fl-t tbody{border-top:0}
 .fl-card .fl-t tr:last-child td{border-bottom:0}
 @media print{.fl-top{display:none}.fl-card{break-inside:auto;border-left-width:3px}.fl-h{break-after:avoid}}
+.fl-av{font-size:13px;font-weight:700;padding:2px 9px;border-radius:7px}
+.fl-av b{font-family:var(--mono);font-size:15px}
+.fl-av.bad{background:var(--red-soft);color:var(--red)}.fl-av.mid{background:#c9791a1a;color:var(--amber)}.fl-av.ok{background:var(--teal-soft);color:var(--teal)}
+.fl-avnote{font-weight:500;color:var(--text-faint);font-size:11.5px}
+.fl-jump a em{font-style:normal;font-family:var(--mono);font-size:10.5px;color:var(--red);margin-left:4px}
 @media (max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
 @media (max-width:640px){.wrap{padding:14px 16px 40px}.kpis{grid-template-columns:repeat(2,1fr)}input[type=search]{width:100%}}
 @media print{.filters,.sync .btn,.cfg,.more{display:none!important}.tbl-wrap{max-height:none;overflow:visible}body{background:#fff}}
@@ -314,7 +319,7 @@ const SHEET_TAB = '통합원장';
 /* 웹에 게시(파일→공유→웹에 게시) 주소의 2PACX 키 — 통합원장은 첫 번째 탭 */
 const PUB_KEY = '2PACX-1vTs6rMmIQPFhfM8USiME_AvKs_7NxA14d9CEEHizjMdwyU-nMwdmRHtzAAHZbehOzk8ZTCvNGMsRKEH';
 const REFRESH_MS = 5*60*1000;
-const K_URL = 'stc_rh_url_v1', K_CACHE = 'stc_rh_cache_v1', K_UI = 'stc_rh_ui_v5';
+const K_URL = 'stc_rh_url_v1', K_CACHE = 'stc_rh_cache_v1', K_UI = 'stc_rh_ui_v6';
 /* 시트 탭과 같은 설비 목록 (데이터에 새 코드가 생기면 자동 추가) */
 const DC_LIST = ['01','02','03','04','05','06','07','08','09','10','11','12','13','15','16','17','18','19','20','21','22','23'].map(n=>'DC'+n);
 const TP_LIST = ['01','02','03','04','05','06','07','08','09','11','12','13','14'].map(n=>'TP'+n);
@@ -522,21 +527,33 @@ function render(){
 }
 const DOW=['일','월','화','수','목','금','토'];
 /* ===== 전체 목록 : 설비별로 묶은 한 장짜리 표 (기간 내 모든 내용 표시) ===== */
+let AV_TRY=0;
+function availMap(){
+  try{ if(window.parent!==window && typeof window.parent.stcAvailBy==='function'){ const m=window.parent.stcAvailBy(UI.from,UI.to); if(m) return m; } }catch(e){}
+  /* 부모(MTTR 화면)의 데이터가 아직 로딩 중이면 잠시 뒤 다시 그린다 */
+  if(window.parent!==window && AV_TRY<30){ AV_TRY++; setTimeout(()=>{ if(UI.view==='list') render(); },2000); }
+  return null;
+}
+
 function fullList(codes,by,sortRs){
   const nm=c=>c.startsWith('DC')?(+c.slice(2))+'호기':c;
   const st=c=>{const rs=by.get(c)||[];return {n:rs.length,m:rs.reduce((a,r)=>a+(r.min||0),0),e:rs.filter(r=>r.cause==='전기로').length}};
-  const ord=UI.ord||'n';
+  const AV=availMap();
+  const ord=UI.ord||'a';
+  const av=c=>AV&&AV[c]?AV[c].a:null;
   const has=codes.filter(c=>(by.get(c)||[]).length).sort((a,b)=>{const A=st(a),B=st(b);
+    if(ord==='a'){ const x=av(a),y=av(b); if(x!=null&&y!=null) return x-y||B.n-A.n; if(x!=null) return -1; if(y!=null) return 1; return B.n-A.n||B.m-A.m; }
     return ord==='m'?(B.m-A.m||B.n-A.n):ord==='c'?(a<b?-1:1):(B.n-A.n||B.m-A.m)});
+  const avTag=c=>{const v=av(c);if(v==null)return '';const p=v*100;return `<span class="fl-av ${p<80?'bad':p<90?'mid':'ok'}">가동률 <b>${p.toFixed(1)}</b>%</span>`};
   const none=codes.filter(c=>!(by.get(c)||[]).length);
   const o=UI.orig;
   const tx=(r,k,ko)=>{const v=clean(r[k]||r[ko]);return v?esc(v)+(o&&r[ko]&&r[ko]!==r[k]?`<span class="orig">${esc(r[ko])}</span>`:''):''};
   const cols=`<colgroup><col style="width:84px"><col style="width:62px"><col style="width:29%"><col style="width:20%"><col><col style="width:100px"><col style="width:120px"></colgroup>`;
-  let h=`<div class="fl"><div class="fl-top"><span class="fl-ord">순서 <span class="seg" id="fOrd"><button data-v="n" aria-pressed="${ord==='n'}">건수 워스트</button><button data-v="m" aria-pressed="${ord==='m'}">수리시간 워스트</button><button data-v="c" aria-pressed="${ord==='c'}">호기순</button></span></span>
-     <div class="fl-jump">${has.map((c,i)=>`<a data-jump="${c}">${ord!=='c'?`<i>${i+1}</i>`:''}${nm(c)}<b>${by.get(c).length}</b></a>`).join('')}</div></div>`;
+  let h=`<div class="fl"><div class="fl-top"><span class="fl-ord">순서 <span class="seg" id="fOrd"><button data-v="a" aria-pressed="${ord==='a'}">가동률 저조</button><button data-v="n" aria-pressed="${ord==='n'}">건수 워스트</button><button data-v="m" aria-pressed="${ord==='m'}">수리시간 워스트</button><button data-v="c" aria-pressed="${ord==='c'}">호기순</button></span>${ord==='a'&&!AV?'<span class="fl-avnote">가동률은 MTTR/MTBF 화면(10번)에서 열면 표시됩니다 · 지금은 건수 순</span>':ord==='a'?'<span class="fl-avnote">가동률 = 가동 ÷ (가동 + 전체 로스) · 같은 기간 · TP는 가동 데이터가 없어 뒤에 건수 순</span>':''}</span>
+     <div class="fl-jump">${has.map((c,i)=>`<a data-jump="${c}">${ord!=='c'?`<i>${i+1}</i>`:''}${nm(c)}${ord==='a'&&av(c)!=null?`<em>${(av(c)*100).toFixed(0)}%</em>`:''}<b>${by.get(c).length}</b></a>`).join('')}</div></div>`;
   has.forEach((c,i)=>{
     const rs=sortRs(by.get(c)), S=st(c), lv=ord==='c'?'':i<3?' top':'';
-    h+=`<section class="fl-card${lv}" id="fl-${c}"><div class="fl-h">${ord!=='c'?`<span class="fl-rk">${i+1}</span>`:''}<b>${mcName(c)}</b>
+    h+=`<section class="fl-card${lv}" id="fl-${c}"><div class="fl-h">${ord!=='c'?`<span class="fl-rk">${i+1}</span>`:''}<b>${mcName(c)}</b>${avTag(c)}
         <span class="fl-s"><b>${S.n}</b>건</span>${S.m?`<span class="fl-s">수리시간 <b>${fmtH(S.m)}</b>h</span>`:''}${S.e?`<span class="fl-s" style="color:var(--ef)">전기로 <b>${S.e}</b>건</span>`:''}${rs.some(r=>r.prog)?`<span class="tag prog">진행 중 ${rs.filter(r=>r.prog).length}</span>`:''}</div>
       <table class="fl-t">${cols}${i===0||true?`<thead><tr><th>날짜</th><th>구분</th><th>증상</th><th>원인</th><th>조치</th><th>수리시간</th><th>작업자</th></tr></thead>`:''}<tbody>`+
       rs.map(r=>{const part=/^(-|ไม่มี)$/.test(r.part)?'':r.part;
