@@ -1040,6 +1040,7 @@
     <button class="tabbtn" data-tab="tab-cost"><span class="no">7</span><span class="tx">로스 비용 (F-COST)</span></button>
     <button class="tabbtn" data-tab="tab-pareto"><span class="no">8</span><span class="tx">로스 파레토</span></button>
     <button class="tabbtn" data-tab="tab-history"><span class="no">9</span><span class="tx">설비 히스토리</span></button>
+    <button class="tabbtn" data-tab="tab-repair"><span class="no">10</span><span class="tx">DC·TP 수리이력</span></button>
   </nav>
 
   <div class="panes">
@@ -1890,6 +1891,11 @@
       </div>
       <div class="hist-note" id="histNote"></div>
     </div>
+  </section>
+  <!-- ===== 10. DC·TP 수리이력 (설비수리이력_MASTER_2026 「통합원장」 연동) ===== -->
+  <section id="tab-repair" class="tabpane">
+    <iframe id="repairFrame" title="DC·TP 수리이력" data-src="STC_Repair_History.html?embed=1"
+      style="display:block;width:100%;height:900px;border:0;background:transparent"></iframe>
   </section>
   </div><!-- /panes -->
   </div><!-- /layout -->
@@ -5845,6 +5851,7 @@ function renderWeekly(){
 
 /* ---------- 탭 전환 ---------- */
 function showTab(id){
+  if(id==='tab-repair'){ const f=document.getElementById('repairFrame'); if(f && !f.getAttribute('src')) f.setAttribute('src', f.dataset.src+'&v='+Date.now().toString(36)); }
   document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('show', p.id===id));
   document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab===id));
   try{ localStorage.setItem('stc_tab', id); }catch(e){}
@@ -5858,6 +5865,11 @@ function showTab(id){
 }
 document.querySelectorAll('.tabbtn').forEach(b=>{
   b.addEventListener('click', ()=>showTab(b.dataset.tab));
+});
+/* 10번 수리이력 iframe 높이 맞춤 */
+window.addEventListener('message', e=>{
+  const d=e.data; if(!d || !d.stcRH) return;
+  const f=document.getElementById('repairFrame'); if(f && d.h) f.style.height=Math.max(400, Math.ceil(d.h))+'px';
 });
 (function initTab(){
   var t='tab-hero'; try{ t = localStorage.getItem('stc_tab') || 'tab-hero'; }catch(e){}

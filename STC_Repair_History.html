@@ -122,6 +122,7 @@ table.h td.txt{min-width:180px;max-width:340px}
 .ms table.h th{position:static;cursor:default}
 .ms table.h td{line-height:1.45}
 @media print{.idx{display:none}.ms{break-inside:auto;box-shadow:none}.ms-h{break-after:avoid}table.h tr{break-inside:avoid}}
+body.embed{background:transparent}body.embed .wrap{padding:0 0 20px;max-width:none}body.embed .eyebrow{display:none}body.embed h1{font-size:20px}
 @media (max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
 @media (max-width:640px){.wrap{padding:14px 16px 40px}.kpis{grid-template-columns:repeat(2,1fr)}input[type=search]{width:100%}}
 @media print{.filters,.sync .btn,.cfg,.more{display:none!important}.tbl-wrap{max-height:none;overflow:visible}body{background:#fff}}
@@ -441,6 +442,13 @@ $('#btnCsv').onclick=()=>{
 setInterval(()=>{if(!document.hidden)load()},REFRESH_MS);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&LOADED_AT&&Date.now()-LOADED_AT>60000)load()});
 
+/* 다른 대시보드 안(iframe)에 들어갈 때: 여백 줄이고 높이를 부모에 알림 */
+if(/[?&]embed=1/.test(location.search)){
+  document.body.classList.add('embed');
+  const post=()=>{try{parent.postMessage({stcRH:1,h:document.documentElement.scrollHeight},'*')}catch(e){}};
+  try{ new ResizeObserver(post).observe(document.body); }catch(e){ setInterval(post,1000); }
+  window.addEventListener('load',post);
+}
 /* 저장본 먼저 그리고, 바로 최신으로 갱신 */
 (function boot(){const c=ls.get(K_CACHE,null);if(c&&c.csv){try{ROWS=toRows(parseCSV(c.csv));LOADED_AT=new Date(c.at);SRC_NOTE='저장본';render();}catch(e){}}load();})();
 })();
