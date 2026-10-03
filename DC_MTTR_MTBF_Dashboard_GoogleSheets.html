@@ -273,6 +273,7 @@
   .wk-ord{float:right;display:inline-flex;gap:3px;margin-left:8px;}
   .wk-ord button{appearance:none;border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:4px;width:24px;height:20px;padding:0;font-size:10px;line-height:18px;cursor:pointer;}
   .wk-ord button:hover{background:#1e3c72;color:#fff;border-color:#1e3c72;}
+  .wk-ord button.cp{width:28px;font-size:11px;}
   .wk-ordreset{appearance:none;border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:6px;padding:5px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-right:6px;}
   @media print{ .wk-ord, .wk-ordreset{display:none !important;} }
   .wk-blk > h4{margin:0 0 6px; font-size:12.5px; font-weight:800; color:#1f3864;
@@ -8268,8 +8269,11 @@ loadData();
   function ctl(h, id){
     if(h.querySelector(':scope > .wk-ord')) return;
     const c = document.createElement('span'); c.className = 'wk-ord';
-    c.innerHTML = `<button type="button" title="위로" data-mv="-1">▲</button><button type="button" title="아래로" data-mv="1">▼</button>`;
-    c.addEventListener('click', e=>{ const b = e.target.closest('button'); if(!b) return; e.preventDefault(); e.stopPropagation(); move(id, +b.dataset.mv); });
+    c.innerHTML = `<button type="button" class="cp" title="이 항목 복사 → 다른 대시보드(내 보고판)에 살아있는 항목으로 붙여넣기" data-cp="1">📋</button><button type="button" title="위로" data-mv="-1">▲</button><button type="button" title="아래로" data-mv="1">▼</button>`;
+    c.addEventListener('click', e=>{ const b = e.target.closest('button'); if(!b) return; e.preventDefault(); e.stopPropagation();
+      if(b.dataset.cp){ const tt = [...h.childNodes].filter(n=>n.nodeType===3).map(n=>n.nodeValue).join('').trim() || id;
+        if(window.stcClipCopy) stcClipCopy({ page:'DC_MTTR_MTBF_Dashboard_GoogleSheets.html', unit:id, title:tt, from:'MTTR 주간보고' }); return; }
+      move(id, +b.dataset.mv); });
     h.appendChild(c);
   }
   /* 섹션 목록 (정적 블록 + 공통 블록 조각) */
@@ -8330,6 +8334,49 @@ loadData();
   const pb = document.getElementById('wkPrint');
   if(pb && !document.getElementById('wkOrdReset')){ const b = document.createElement('button'); b.type = 'button'; b.id = 'wkOrdReset'; b.className = 'wk-ordreset';
     b.textContent = '↺ 표 순서 처음대로'; b.title = '▲▼ 로 바꾼 표 순서를 원래대로 되돌립니다'; b.onclick = ()=>window.wkOrderReset(); pb.parentNode.insertBefore(b, pb); }
+})();
+
+/* ===== 항목 복사 · 살아있는 항목으로 다른 대시보드에 넣기 =====
+   · 📋 복사 → 브라우저 공용 클립보드(stc_clip_v1)에 「어느 페이지 · 어느 항목」 저장
+   · 통합 대시보드 「내 보고판」 등에서 붙여넣으면 이 페이지를 ?embed=항목 으로 불러와 그 항목만 보여 준다
+     (데이터 · 계산은 이 페이지 그대로 → 시트가 바뀌면 같이 바뀜) */
+window.stcClipCopy = function(item){
+  try{ localStorage.setItem('stc_clip_v1', JSON.stringify(Object.assign({ ts:Date.now() }, item))); }catch(e){}
+  let t = document.getElementById('stcClipToast');
+  if(!t){ t = document.createElement('div'); t.id = 'stcClipToast'; t.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#1e3c72;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;z-index:99999;box-shadow:0 6px 20px rgba(0,0,0,.25);transition:opacity .3s'; document.body.appendChild(t); }
+  t.textContent = '📋 「' + item.title + '」 복사했습니다 — 통합 대시보드 「내 보고판」에서 📥 붙여넣기'; t.style.opacity = '1';
+  clearTimeout(t._h); t._h = setTimeout(()=>{ t.style.opacity = '0'; }, 3200);
+};
+(function(){
+  const q = new URLSearchParams(location.search), emb = q.get('embed');
+  if(!emb) return;
+  document.documentElement.classList.add('stc-embed');
+  const st = document.createElement('style');
+  st.textContent = `html.stc-embed, html.stc-embed body{background:#fff !important;margin:0 !important;padding:0 !important;overflow-x:hidden;}
+    html.stc-embed body > *:not(#stcEmbedRoot):not(#stcClipToast){display:none !important;}
+    #stcEmbedRoot{padding:6px 8px;}
+    #stcEmbedRoot #wkCover, #stcEmbedRoot .wk-hd, #stcEmbedRoot .wk-ord{display:none !important;}
+    #stcEmbedRoot .wk-sheet{border:0 !important;padding:0 !important;box-shadow:none !important;}
+    #stcEmbedRoot #wkSheet [data-unit]:not([data-unit="${emb.replace(/[^\w-]/g,'')}"]){display:none !important;}
+    #stcEmbedRoot #wkSheet [data-unit="${emb.replace(/[^\w-]/g,'')}"]{margin-top:0 !important;}
+    #stcEmbedRoot .kw-noprint{display:none !important;}
+    #stcEmbedRoot #wkSheet > :not([data-unit]):not(#wkKW){display:none !important;}
+    #stcEmbedRoot .wk-no{display:none !important;}`;
+  document.head.appendChild(st);
+  const go = () => {
+    const sh = document.getElementById('wkSheet'); if(!sh){ setTimeout(go, 200); return; }
+    let root = document.getElementById('stcEmbedRoot');
+    if(!root){ root = document.createElement('div'); root.id = 'stcEmbedRoot'; document.body.insertBefore(root, document.body.firstChild); root.appendChild(sh); }
+    /* 주차 지정 (?wk=W40) — 없으면 최신 주차 */
+    const wk = q.get('wk');
+    if(wk){ let n = 0; const setWk = () => { const s = document.getElementById('wkSheet') && document.getElementById('wkWeek');
+        if(s && [...s.options].some(o=>o.value===wk)){ if(s.value!==wk){ s.value = wk; try{ renderWeekly(); }catch(e){} } } else if(n++ < 60) setTimeout(setWk, 500); }; setWk(); }
+    /* 높이를 받는 쪽에 알려 준다 */
+    let last = 0;
+    setInterval(()=>{ const h = Math.ceil(root.getBoundingClientRect().height) + 14;
+      if(Math.abs(h - last) > 4){ last = h; try{ parent.postMessage({ stcEmbed:true, k:q.get('k')||'', h }, '*'); }catch(e){} } }, 700);
+  };
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();
 </script>
 </body>

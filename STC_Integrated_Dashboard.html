@@ -114,6 +114,20 @@ main{flex:1 1 auto;position:relative;overflow:hidden;}
 #panel-overview{overflow-y:auto;padding:18px 20px 30px;}
 #panel-f2ov{overflow-y:auto;overflow-x:hidden;}   /* FAC1 품질 6σ 와 같이 페이지 전체가 스크롤 · 왼쪽 메뉴는 고정 */
 #panel-focus{overflow-y:auto;padding:16px 20px 40px;background:#f4f6fa;}
+#panel-myboard{overflow-y:auto;padding:16px 20px 40px;background:#f4f6fa;}
+.mb-head{max-width:1780px;margin:0 auto 14px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+.mb-head h2{margin:0;font-size:20px;font-weight:900;color:#1e3c72;} .mb-sub{font-size:12px;color:#64748b;margin-top:3px;}
+.mb-clip{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #dbe3ee;border-radius:8px;padding:8px 12px;font-size:12.5px;}
+.mb-clip small{color:#64748b;} .mb-noclip{color:#94a3b8;}
+.mb-paste{appearance:none;border:0;background:#1e3c72;color:#fff;border-radius:6px;padding:6px 14px;font:inherit;font-weight:800;cursor:pointer;}
+.mb-list{max-width:1780px;margin:0 auto;display:flex;flex-direction:column;gap:14px;}
+.mb-card{background:#fff;border:1px solid #dbe3ee;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden;}
+.mb-ch{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #eef2f7;background:#f8fafc;}
+.mb-ch b{font-size:14px;color:#1e3c72;} .mb-ch small{color:#94a3b8;font-size:11.5px;}
+.mb-btn{margin-left:auto;display:flex;gap:4px;} .mb-btn button{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:5px;padding:3px 9px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;color:#475569;}
+.mb-btn button:disabled{opacity:.35;cursor:default;} .mb-btn button.x{color:#c62828;border-color:#fecaca;}
+.mb-card iframe{display:block;width:100%;border:0;}
+.mb-empty{max-width:1780px;margin:40px auto;text-align:center;color:#94a3b8;font-size:14px;border:2px dashed #cbd5e1;border-radius:12px;padding:40px;}
 .fc-wrap{max-width:1700px;margin:0 auto;color:#111827;}
 .fc-top-bar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
 .fc-top-bar h2{margin:0;font-size:22px;color:#1e3c72;font-weight:900;} .fc-top-bar .sub{font-size:12.5px;color:#475569;margin-top:3px;}
@@ -601,6 +615,7 @@ const GROUPS = ['all','fac1','fac2'];      /* 1. 종합(FAC1·FAC2)  2. FAC1 다
 const TABS = [
   { id:'overview', g:'all',  src:null },
   { id:'focus',    g:'all',  src:null },
+  { id:'myboard',  g:'all',  src:null },
   { id:'weekly',   g:'fac1', src:'STC_OEE_Dashboard_Weekly.html' },
   { id:'quality',  g:'fac1', src:'STC_OEE_Quality_SixSigma.html' },
   { id:'mttr',     g:'fac1', src:'DC_MTTR_MTBF_Dashboard_GoogleSheets.html' },
@@ -643,7 +658,7 @@ ko:{
  'f2.r.title.daily':'FAC2 MCT 일일 품질보고','f2.r.title.week':'FAC2 MCT 주간 품질보고','f2.r.title.month':'FAC2 MCT 월간 품질보고',
  'f2.r.s1':'지표 요약','f2.r.kpi':'지표','f2.r.prev':'비교기간','f2.r.cur':'금기간','f2.r.delta':'증감','f2.r.note':'특이사항 · 조치','f2.r.noteph':'원인 · 조치 · 담당 · 완료일 (이 브라우저에 기간별로 저장)',
  'grp.all':'종합 (FAC1·FAC2)','grp.fac1':'FAC1 다이캐스팅','grp.fac2':'FAC2 (MCT·OQC)',
- 'tab.moldsig':'금형 6σ','tab.lossdash':'로스 대시보드','tab.monthly':'월별 가동률','tab.kpi':'설비 KPI','tab.f2ov':'FAC2 현황','tab.focus':'중점관리 품번',
+ 'tab.moldsig':'금형 6σ','tab.lossdash':'로스 대시보드','tab.monthly':'월별 가동률','tab.kpi':'설비 KPI','tab.f2ov':'FAC2 현황','tab.focus':'중점관리 품번','tab.myboard':'🧩 내 보고판',
  'f2.loading':'FAC2 데이터를 불러오는 중…','f2.none':'구글시트에서 FAC2 탭(F2_MCT_일별)을 찾지 못했습니다.',
  'f2.how':'① 「FAC2 변환기」로 CSV를 만들어 ② 구글시트에 탭 이름 <b>F2_MCT_일별 · F2_불량상세</b> 그대로 추가하고 ③ 시트 게시가 「전체 문서」인지 확인하세요. 자동으로 못 찾으면 각 탭 주소의 <b>gid=숫자</b>를 아래에 넣으세요.',
  'f2.retry':'저장 후 다시 불러오기','f2.noWeek':'{w} 주차 FAC2 데이터가 없습니다.','f2.have':'FAC2 데이터 범위: {a} ~ {b}',
@@ -729,7 +744,7 @@ en:{
  'f2.r.title.daily':'FAC2 MCT Daily Quality Report','f2.r.title.week':'FAC2 MCT Weekly Quality Report','f2.r.title.month':'FAC2 MCT Monthly Quality Report',
  'f2.r.s1':'KPI summary','f2.r.kpi':'KPI','f2.r.prev':'Previous','f2.r.cur':'Current','f2.r.delta':'Change','f2.r.note':'Remarks · actions','f2.r.noteph':'Cause · action · owner · due (saved in this browser per period)',
  'grp.all':'Overview (FAC1·FAC2)','grp.fac1':'FAC1 Die-casting','grp.fac2':'FAC2 (MCT·OQC)',
- 'tab.moldsig':'Mold 6σ','tab.lossdash':'Loss dashboard','tab.monthly':'Monthly availability','tab.kpi':'Equipment KPI','tab.f2ov':'FAC2 status','tab.focus':'Focus parts',
+ 'tab.moldsig':'Mold 6σ','tab.lossdash':'Loss dashboard','tab.monthly':'Monthly availability','tab.kpi':'Equipment KPI','tab.f2ov':'FAC2 status','tab.focus':'Focus parts','tab.myboard':'🧩 My board',
  'f2.loading':'Loading FAC2 data…','f2.none':'FAC2 tab (F2_MCT_일별) not found in the Google Sheet.',
  'f2.how':'① Make the CSVs with the FAC2 converter ② add them to the sheet as tabs named <b>F2_MCT_일별 · F2_불량상세</b> ③ make sure the whole document is published. If still not found, enter each tab\'s <b>gid</b> below.',
  'f2.retry':'Save & reload','f2.noWeek':'No FAC2 data for {w}.','f2.have':'FAC2 data range: {a} ~ {b}',
@@ -813,7 +828,7 @@ th:{
  'f2.r.title.daily':'รายงานคุณภาพรายวัน FAC2 MCT','f2.r.title.week':'รายงานคุณภาพรายสัปดาห์ FAC2 MCT','f2.r.title.month':'รายงานคุณภาพรายเดือน FAC2 MCT',
  'f2.r.print':'พิมพ์ / PDF','f2.r.note':'หมายเหตุ · การแก้ไข',
  'grp.all':'ภาพรวม (FAC1·FAC2)','grp.fac1':'FAC1 ไดคาสติ้ง','grp.fac2':'FAC2 (MCT·OQC)',
- 'tab.moldsig':'แม่พิมพ์ 6σ','tab.lossdash':'แดชบอร์ดความสูญเสีย','tab.monthly':'อัตราเดินเครื่องรายเดือน','tab.kpi':'KPI เครื่องจักร','tab.f2ov':'สถานะ FAC2','tab.focus':'ชิ้นงานควบคุมพิเศษ',
+ 'tab.moldsig':'แม่พิมพ์ 6σ','tab.lossdash':'แดชบอร์ดความสูญเสีย','tab.monthly':'อัตราเดินเครื่องรายเดือน','tab.kpi':'KPI เครื่องจักร','tab.f2ov':'สถานะ FAC2','tab.focus':'ชิ้นงานควบคุมพิเศษ','tab.myboard':'🧩 บอร์ดของฉัน',
  'f2.loading':'กำลังโหลดข้อมูล FAC2…','f2.none':'ไม่พบแท็บ FAC2 (F2_MCT_일별) ใน Google Sheet',
  'f2.prod':'ยอดผลิต','f2.good':'ของดี','f2.rate':'อัตราของเสีย','f2.rMc':'ของเสียจากงานกลึง (FAC2)','f2.rDc':'ของเสียจากงานหล่อ (FAC1)',
  'f2.yld':'อัตราผลผลิตจริง (เฉลี่ย)','f2.mat':'Mat\'l NG','f2.prev':'สัปดาห์ก่อน','f2.byMc':'ตามเครื่องจักร','f2.top':'ประเภทของเสีย TOP 8 (MCT)','f2.trend':'แนวโน้มรายสัปดาห์ (8 สัปดาห์)',
@@ -3398,6 +3413,62 @@ function showGroup(g){
   document.querySelectorAll('#tabBar > *').forEach(el=>el.classList.toggle('hid', el.dataset.g!==g));
 }
 /* 묶음을 누르면 그 묶음에서 마지막으로 보던 탭(없으면 첫 탭)을 연다 */
+/* =========================================================================
+   내 보고판 — 각 대시보드에서 📋 복사한 항목을 살아있는 상태로 모아 보기
+   · 항목 = 원래 페이지를 ?embed=항목 으로 불러온 칸 (데이터 · 계산은 원래 페이지 그대로)
+   · 구성(어떤 항목 · 순서 · 높이)은 이 브라우저에 저장
+   ========================================================================= */
+const MB_KEY = 'stc_myboard_v1';
+const mbList = () => { try{ return JSON.parse(localStorage.getItem(MB_KEY)||'[]'); }catch(e){ return []; } };
+const mbSave = L => { try{ localStorage.setItem(MB_KEY, JSON.stringify(L)); }catch(e){} };
+const mbClip = () => { try{ return JSON.parse(localStorage.getItem('stc_clip_v1')||'null'); }catch(e){ return null; } };
+const MB_TX = { ko:{ title:'내 보고판', sub:'각 대시보드 항목 제목 옆 📋 을 눌러 복사한 뒤 여기서 📥 붙여넣기 — 원래 화면과 같은 데이터로 살아 움직입니다',
+                     clip:'복사된 항목', none:'복사된 항목이 없습니다 — MTTR 주간보고 등에서 항목 제목 옆 📋 를 누르세요', paste:'📥 붙여넣기', empty:'아직 넣은 항목이 없습니다',
+                     reload:'새로고침', del:'빼기', delQ:'이 항목을 보고판에서 뺄까요?', open:'원래 화면', loading:'불러오는 중…', dup:'이미 들어 있는 항목입니다 — 한 번 더 넣을까요?' },
+               en:{ title:'My board', sub:'Click 📋 next to a section title on any dashboard, then 📥 Paste here — items stay live',
+                     clip:'Copied item', none:'Nothing copied yet — click 📋 next to a section title', paste:'📥 Paste', empty:'No items yet',
+                     reload:'Reload', del:'Remove', delQ:'Remove this item?', open:'Source', loading:'Loading…', dup:'Already on the board — add again?' } };
+const mbT = k => (MB_TX[LANG]||MB_TX[LANG==='th'?'en':'ko']||MB_TX.ko)[k];
+function mbSrc(it){ return it.page + (it.page.indexOf('?')>=0?'&':'?') + 'embed=' + encodeURIComponent(it.unit) + '&k=' + encodeURIComponent(it.id) + (it.wk ? '&wk=' + encodeURIComponent(it.wk) : '') + '&v=' + PORTAL_BUILD; }
+function renderMyBoard(){
+  const host = document.getElementById('panel-myboard'); if(!host) return;
+  const L = mbList(), c = mbClip();
+  /* 이미 그려진 칸은 그대로 두고(다시 불러오면 느림) 목록이 바뀔 때만 다시 만든다 */
+  const sig = JSON.stringify(L.map(x=>x.id)) + '|' + (c ? c.ts : '') + '|' + LANG;
+  const keep = host._mbSig === sig;
+  const head = `<div class="mb-head"><div><h2>🧩 ${mbT('title')}</h2><div class="mb-sub">${mbT('sub')}</div></div>
+    <div class="mb-clip">${c ? `<span>${mbT('clip')}: <b>${esc2(c.title)}</b> <small>(${esc2(c.from||c.page)})</small></span><button class="mb-paste" onclick="mbPaste()">${mbT('paste')}</button>` : `<span class="mb-noclip">${mbT('none')}</span>`}</div></div>`;
+  if(keep){ const h = host.querySelector('.mb-head'); if(h) h.outerHTML = head; return; }
+  host._mbSig = sig;
+  host.innerHTML = head + (L.length ? `<div class="mb-list">${L.map((it,i)=>`<div class="mb-card" data-mb="${esc2(it.id)}">
+      <div class="mb-ch"><b>${esc2(it.title)}</b><small>${esc2(it.from||'')}</small>
+        <span class="mb-btn"><button onclick="mbMove('${esc2(it.id)}',-1)" ${i===0?'disabled':''}>▲</button><button onclick="mbMove('${esc2(it.id)}',1)" ${i===L.length-1?'disabled':''}>▼</button>
+        <button onclick="mbReload('${esc2(it.id)}')">↻ ${mbT('reload')}</button><button class="x" onclick="mbDel('${esc2(it.id)}')">✕ ${mbT('del')}</button></span></div>
+      <iframe src="${esc2(mbSrc(it))}" style="height:${Math.max(200, it.h||520)}px" loading="lazy" title="${esc2(it.title)}"></iframe></div>`).join('')}</div>`
+    : `<div class="mb-empty">${mbT('empty')}</div>`);
+}
+function mbPaste(){
+  const c = mbClip(); if(!c) return;
+  const L = mbList();
+  if(L.some(x=>x.page===c.page && x.unit===c.unit) && !confirm(mbT('dup'))) return;
+  L.push({ id:'m'+Date.now().toString(36), page:c.page, unit:c.unit, title:c.title, from:c.from||'', wk:c.wk||'', h:520 });
+  mbSave(L); renderMyBoard();
+  setTimeout(()=>{ const el = document.querySelector('#panel-myboard .mb-card:last-child'); if(el) el.scrollIntoView({ behavior:'smooth', block:'start' }); }, 50);
+}
+function mbMove(id, d){ const L = mbList(), i = L.findIndex(x=>x.id===id), j = i + d; if(i<0 || j<0 || j>=L.length) return; [L[i], L[j]] = [L[j], L[i]]; mbSave(L); renderMyBoard(); }
+function mbDel(id){ if(!confirm(mbT('delQ'))) return; mbSave(mbList().filter(x=>x.id!==id)); renderMyBoard(); }
+function mbReload(id){ const f = document.querySelector(`#panel-myboard .mb-card[data-mb="${id}"] iframe`); if(f){ const it = mbList().find(x=>x.id===id); if(it) f.src = mbSrc(it).replace(/v=[^&]*$/, 'v=' + Date.now().toString(36)); } }
+/* 항목 페이지가 알려 주는 높이로 칸을 맞춘다 */
+window.addEventListener('message', e=>{
+  const d = e.data; if(!d || !d.stcEmbed || !d.k) return;
+  const f = document.querySelector(`#panel-myboard .mb-card[data-mb="${d.k}"] iframe`); if(!f) return;
+  const h = Math.max(160, Math.min(4000, +d.h || 0)); f.style.height = h + 'px';
+  const L = mbList(), it = L.find(x=>x.id===d.k); if(it && Math.abs((it.h||0) - h) > 20){ it.h = h; mbSave(L); }
+});
+/* 다른 화면에서 복사하면 머리줄(붙여넣기 버튼)을 바로 바꾼다 */
+window.addEventListener('storage', e=>{ if(e.key==='stc_clip_v1' && activeTab==='myboard') renderMyBoard(); });
+setInterval(()=>{ if(activeTab==='myboard'){ const c = mbClip(), h = document.getElementById('panel-myboard'); if(h && h._mbSig && !h._mbSig.includes('|' + (c ? c.ts : '') + '|')) renderMyBoard(); } }, 1500);
+
 function selectGroup(g){
   let last=null; try{ last=(JSON.parse(localStorage.getItem('stc_portal_gtab')||'{}'))[g]; }catch(e){}
   const t = TABS.find(x=>x.id===last && x.g===g) || TABS.find(x=>x.g===g && !x.sep);
@@ -3415,6 +3486,7 @@ function selectTab(id){
   if(t && t.src) ensureFrame(t);
   if(id==='f2ov') renderF2();
   if(id==='focus') renderFocus();
+  if(id==='myboard') renderMyBoard();
 }
 
 function ensureFrame(t){
