@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ko" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google" content="notranslate">
+<title>DC·TP 설비 수리이력</title>
+<style>
+:root{
+  --bg:#f4f6f9; --panel:#fff; --panel-2:#eef1f5; --border:#dde3ea; --border-soft:#e8ecf1;
+  --text:#1a2230; --text-dim:#3d4a59; --text-faint:#5f6c7b;
+  --body:#2f6fb5; --body-soft:#2f6fb51a; --ef:#d9731a; --ef-soft:#d9731a1f;
+  --red:#d13a30; --red-soft:#d13a301a; --teal:#0f9d68; --teal-soft:#0f9d681a; --amber:#c9791a;
+  --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1780px;margin:0 auto;padding:22px 26px 60px}
+button,input,select{font:inherit;color:inherit}
+.hd{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--amber);text-transform:uppercase;font-weight:700;margin-bottom:6px}
+h1{margin:0;font-size:26px;font-weight:900;letter-spacing:-.02em}
+.sub{color:var(--text-faint);font-size:13px;margin-top:4px}
+.sync{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:12px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text-dim)}
+.chip.ok{border-color:#0f9d6855;color:var(--teal);background:var(--teal-soft)}
+.chip.err{border-color:#d13a3055;color:var(--red);background:var(--red-soft)}
+.chip.warn{border-color:#c9791a55;color:var(--amber);background:#c9791a14}
+.btn{border:1px solid var(--border);background:var(--panel);border-radius:7px;padding:6px 12px;cursor:pointer;font-size:13px}
+.btn:hover{border-color:#9fb0c3}
+.btn.pri{background:#1a2230;color:#fff;border-color:#1a2230}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:0 1px 2px #0000000a}
+.filters{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:14px}
+.fg{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.fg>label{font-size:12px;color:var(--text-faint);font-weight:700}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:none;padding:5px 11px;cursor:pointer;font-size:13px;border-right:1px solid var(--border-soft)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:#1a2230;color:#fff}
+input[type=date],input[type=search],select{border:1px solid var(--border);border-radius:7px;padding:5px 8px;background:#fff;font-size:13px}
+input[type=search]{width:240px}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.kpi .l{font-size:12px;color:var(--text-faint);font-weight:700}
+.kpi .v{font-family:var(--mono);font-size:26px;font-weight:800;margin-top:6px;letter-spacing:-.02em}
+.kpi .d{font-size:12px;color:var(--text-faint);margin-top:3px}
+.grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:14px}
+.sec-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
+.sec-h h2{margin:0;font-size:17px;font-weight:900}
+.sec-h .note{font-size:12px;color:var(--text-faint)}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--text-dim);align-items:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+svg text{font-family:var(--sans)}
+.mcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.mc{border:1px solid var(--border);border-radius:9px;padding:9px 10px;cursor:pointer;background:#fff;position:relative;transition:border-color .12s}
+.mc:hover{border-color:#7f93aa}
+.mc.sel{outline:2px solid #1a2230;outline-offset:-1px}
+.mc.zero{opacity:.5}
+.mc .n{font-weight:900;font-size:15px}
+.mc .s{font-family:var(--mono);font-size:12px;color:var(--text-dim);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:4px}
+.mc .last{font-size:11.5px;color:var(--text-faint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc .bar{height:5px;border-radius:3px;background:var(--panel-2);margin-top:6px;overflow:hidden;display:flex}
+.mc .bar b{display:block;height:100%}
+.mc .heat{position:absolute;top:8px;right:9px;font-family:var(--mono);font-size:11px;padding:1px 6px;border-radius:9px}
+.grp-t{font-size:12px;font-weight:800;color:var(--text-faint);margin:12px 0 6px;letter-spacing:.04em}
+.grp-t:first-child{margin-top:0}
+table{border-collapse:collapse;width:100%}
+.tbl-wrap{overflow:auto;max-height:720px;border:1px solid var(--border-soft);border-radius:8px}
+table.h th{position:sticky;top:0;background:#f7f9fb;z-index:1;font-size:12px;color:var(--text-dim);text-align:left;padding:7px 8px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+table.h td{padding:7px 8px;border-bottom:1px solid var(--border-soft);vertical-align:top;font-size:13px}
+table.h tr.ef td{background:var(--ef-soft)}
+table.h tr:hover td{background:#eef4fb}
+table.h td.num{font-family:var(--mono);text-align:right;white-space:nowrap}
+table.h td.dt{font-family:var(--mono);white-space:nowrap}
+table.h td.txt{min-width:180px;max-width:340px}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:9px;white-space:nowrap}
+.tag.body{background:var(--body-soft);color:var(--body)}
+.tag.ef{background:var(--ef-soft);color:var(--ef)}
+.tag.src{background:var(--panel-2);color:var(--text-dim);font-weight:600}
+.tag.prog{background:var(--red-soft);color:var(--red)}
+.tag.cat{background:#6b4fbb17;color:#5b3fa8}
+.orig{display:block;color:var(--text-faint);font-size:12px;margin-top:2px}
+.muted{color:var(--text-faint)}
+.mx td,.mx th{font-size:12px;padding:4px 6px;text-align:center;border:1px solid var(--border-soft);white-space:nowrap}
+.mx th{background:#f7f9fb;position:sticky;top:0}
+.mx td.m{font-weight:800;text-align:left;background:#fafbfc;position:sticky;left:0;cursor:pointer}
+.mx td.c{font-family:var(--mono);cursor:pointer}
+.more{text-align:center;margin-top:10px}
+/* 설비 상세 */
+.dt-panel{margin-bottom:14px;border-color:#1a2230}
+.dt-top{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;justify-content:space-between}
+.dt-top h2{margin:0;font-size:22px;font-weight:900}
+.dt-k{display:flex;gap:22px;flex-wrap:wrap;margin-top:8px}
+.dt-k div{font-size:12px;color:var(--text-faint)} .dt-k b{display:block;font-family:var(--mono);font-size:19px;color:var(--text)}
+.tl{max-height:640px;overflow-y:auto;padding-right:6px;margin-top:14px;border-left:2px solid var(--border);padding-left:16px;display:flex;flex-direction:column;gap:10px}
+.tl .it{position:relative;background:#fafbfc;border:1px solid var(--border-soft);border-radius:9px;padding:9px 12px}
+.tl .it.ef{background:var(--ef-soft);border-color:#d9731a40}
+.tl .it::before{content:"";position:absolute;left:-23px;top:13px;width:10px;height:10px;border-radius:50%;background:var(--body);border:2px solid #fff;box-shadow:0 0 0 1px var(--border)}
+.tl .it.ef::before{background:var(--ef)}
+.tl .h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.tl .h .d{font-family:var(--mono);font-weight:800}
+.tl .row{display:grid;grid-template-columns:62px 1fr;gap:4px 8px;margin-top:6px;font-size:13px}
+.tl .row .k{color:var(--text-faint);font-size:12px;font-weight:700}
+.empty{padding:40px;text-align:center;color:var(--text-faint)}
+.cfg{display:none;margin-bottom:14px}
+.cfg.on{display:block}
+.cfg input[type=text]{width:100%;border:1px solid var(--border);border-radius:7px;padding:7px 9px;font-family:var(--mono);font-size:12.5px}
+.cfg ol{margin:8px 0 0 18px;padding:0;font-size:13px;color:var(--text-dim);line-height:1.7}
+.idx{margin-bottom:14px;padding:12px 16px}
+.ix-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;margin-bottom:8px}
+.ix-r{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:12px;color:var(--text-faint)}
+.ix-row{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:5px}
+.ix-g{font-size:11.5px;font-weight:800;color:var(--text-faint);width:24px}
+.ix{border:1px solid var(--border);background:#fff;border-radius:7px;padding:4px 9px;cursor:pointer;font-size:13px;font-weight:700;display:inline-flex;gap:6px;align-items:center}
+.ix b{font-family:var(--mono);font-size:11.5px;background:var(--body-soft);color:var(--body);padding:0 6px;border-radius:8px}
+.ix.z{opacity:.4;cursor:default}.ix.z b{background:var(--panel-2);color:var(--text-faint)}
+.ix.on{background:#1a2230;color:#fff;border-color:#1a2230}.ix.on b{background:#fff;color:#1a2230}
+.ms{margin-bottom:14px;padding:14px 16px}
+.ms-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.ms-h h2{margin:0;font-size:18px;font-weight:900}
+.ms-h .muted{font-size:13px}
+.ms table.h th{position:static;cursor:default}
+.ms table.h td{line-height:1.45}
+@media print{.idx{display:none}.ms{break-inside:auto;box-shadow:none}.ms-h{break-after:avoid}table.h tr{break-inside:avoid}}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
+@media (max-width:640px){.wrap{padding:14px 16px 40px}.kpis{grid-template-columns:repeat(2,1fr)}input[type=search]{width:100%}}
+@media print{.filters,.sync .btn,.cfg,.more{display:none!important}.tbl-wrap{max-height:none;overflow:visible}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <div>
+      <div class="eyebrow">STC · Repair History</div>
+      <h1>DC·TP 설비 수리이력</h1>
+      <div class="sub">설비수리이력_MASTER_2026 「통합원장」 실시간 연동 · 다이캐스팅(본체+전기로) · 트리밍 프레스</div>
+    </div>
+    <div class="sync">
+      <span class="chip" id="syncChip">불러오는 중…</span>
+      <button class="btn" id="btnReload" title="구글시트에서 다시 불러오기">⟳ 새로고침</button>
+      <a class="btn" id="btnSheet" target="_blank" rel="noopener" href="#">시트 열기 ↗</a>
+      <button class="btn" id="btnCfg">⚙ 연결</button>
+      <button class="btn" id="btnCsv" title="현재 필터 결과를 CSV로 저장">⬇ CSV</button>
+    </div>
+  </div>
+
+  <div class="card cfg" id="cfg">
+    <div class="sec-h"><h2>구글시트 연결</h2><span class="note">기본: 시트 ID로 「통합원장」 탭을 직접 읽습니다</span></div>
+    <div style="display:grid;gap:8px">
+      <label style="font-size:12px;font-weight:700;color:var(--text-faint)">웹 게시 CSV 주소 (선택 · 넣으면 이 주소를 먼저 사용)</label>
+      <input type="text" id="cfgUrl" placeholder="https://docs.google.com/spreadsheets/d/e/2PACX-…/pub?gid=…&single=true&output=csv">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn pri" id="cfgSave">저장 후 불러오기</button>
+        <button class="btn" id="cfgClear">기본값으로</button>
+        <label class="btn" style="cursor:pointer">CSV 파일로 열기<input type="file" id="cfgFile" accept=".csv,text/csv" hidden></label>
+      </div>
+      <ol>
+        <li>구글시트 우측 위 <b>공유</b> → 일반 액세스를 <b>“링크가 있는 모든 사용자 · 뷰어”</b>로 바꾸면 바로 연동됩니다.</li>
+        <li>또는 <b>파일 → 공유 → 웹에 게시</b> → 「통합원장」 · CSV 선택 → 게시 → 나온 주소를 위 칸에 붙여넣기.</li>
+        <li>시트에 행이 추가되면 이 화면은 5분마다(또는 ⟳ 새로고침 시) 자동 반영됩니다.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="filters card" style="padding:12px 16px">
+    <div class="fg"><label>설비군</label>
+      <div class="seg" id="fGrp"><button data-v="all">전체</button><button data-v="DC">DC 다이캐스팅</button><button data-v="TP">TP 트리밍</button></div></div>
+    <div class="fg"><label>기간</label>
+      <input type="date" id="fFrom"> ~ <input type="date" id="fTo">
+      <div class="seg" id="fPre"><button data-v="wk">이번 주</button><button data-v="m0">이번 달</button><button data-v="d30">30일</button><button data-v="d90">90일</button><button data-v="all">전체</button></div></div>
+    <div class="fg"><label>구분</label>
+      <div class="seg" id="fCause"><button data-v="all">전체</button><button data-v="본체">본체</button><button data-v="전기로">전기로</button></div></div>
+    <div class="fg"><label>출처</label>
+      <div class="seg" id="fSrc"><button data-v="all">전체</button><button data-v="FM2">FM2</button><button data-v="회의록">회의록</button></div></div>
+    <div class="fg"><label>설비</label><select id="fMc"><option value="">전체 설비</option></select></div>
+    <div class="fg"><label>검색</label><input type="search" id="fQ" placeholder="증상·원인·조치·PART·작업자"></div>
+    <div class="fg"><label><input type="checkbox" id="fOrig"> 원문(태국어) 같이 보기</label></div>
+  </div>
+
+  <div class="card idx" id="idx"></div>
+  <div id="list"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+/* ------------------------------------------------------------------
+   설정 — 시트 ID와 탭 이름. 시트에 행을 추가하면 자동으로 반영된다.
+   ------------------------------------------------------------------ */
+const SHEET_ID  = '1FHNk3JS8SIwNNtfh2Gl-k0UTEH2A9AKehFjO5kdyXBU';
+const SHEET_TAB = '통합원장';
+const REFRESH_MS = 5*60*1000;
+const K_URL = 'stc_rh_url_v1', K_CACHE = 'stc_rh_cache_v1', K_UI = 'stc_rh_ui_v2';
+/* 시트 탭과 같은 설비 목록 (데이터에 새 코드가 생기면 자동 추가) */
+const DC_LIST = ['01','02','03','04','05','06','07','08','09','10','11','12','13','15','16','17','18','19','20','21','22','23'].map(n=>'DC'+n);
+const TP_LIST = ['01','02','03','04','05','06','07','08','09','11','12','13','14'].map(n=>'TP'+n);
+const CAT_SET = ['기계','유압','전기','금형','용해로','진공','센서','관리','품질'];
+
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ls = {get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+            set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+let ROWS = [], LOADED_AT = null, SRC_NOTE = '';
+const UI = Object.assign({grp:'all',pre:'d30',from:'',to:'',cause:'all',src:'all',mc:'',q:'',orig:false,dir:-1,lim:150,month:''}, ls.get(K_UI,{}));
+UI.lim = 150; UI.month = '';
+const saveUI = ()=>ls.set(K_UI,{grp:UI.grp,pre:UI.pre,from:UI.from,to:UI.to,cause:UI.cause,src:UI.src,orig:UI.orig,dir:UI.dir});
+
+/* ---------------- CSV ---------------- */
+function parseCSV(t){
+  const out=[]; let row=[], f='', q=false;
+  for(let i=0;i<t.length;i++){
+    const c=t[i];
+    if(q){ if(c==='"'){ if(t[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){ row.push(f); f=''; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&t[i+1]==='\n') i++; row.push(f); out.push(row); row=[]; f=''; }
+    else f+=c;
+  }
+  if(f!==''||row.length){ row.push(f); out.push(row); }
+  return out;
+}
+function pad(n){return String(n).padStart(2,'0')}
+function normDate(v){
+  v=String(v||'').trim(); if(!v) return '';
+  let m=v.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+  let y,mo,d;
+  if(m){y=+m[1];mo=+m[2];d=+m[3];}
+  else if((m=v.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/))){ y=+m[3]; const a=+m[1],b=+m[2]; if(a>12){d=a;mo=b}else{mo=a;d=b} }
+  else if((m=v.match(/^Date\((\d+),(\d+),(\d+)/))){y=+m[1];mo=+m[2]+1;d=+m[3];}
+  else return '';
+  if(y>2400) y-=543;
+  return y+'-'+pad(mo)+'-'+pad(d);
+}
+function normTime(v){
+  v=String(v||'').trim(); if(!v) return '';
+  const m=v.match(/(\d{1,2})[:.](\d{2})(?::\d{2})?\s*(AM|PM|am|pm)?/); if(!m) return '';
+  let h=+m[1]; const ap=(m[3]||'').toUpperCase();
+  if(ap==='PM'&&h<12) h+=12; if(ap==='AM'&&h===12) h=0;
+  return pad(h)+':'+m[2];
+}
+function mins(t){const m=t.match(/^(\d\d):(\d\d)$/);return m?(+m[1])*60+(+m[2]):null}
+
+const COLS = {id:['ID'],src:['출처'],date:['Date','날짜'],code:['설비코드'],serial:['Serial Number','Serial'],type:['TYPE'],fac:['FAC'],line:['LINE'],model:['MODEL'],
+  work:['작업구분'],symO:['Before 증상'],sym:['증상(KR)'],probO:['Before 문제점'],prob:['문제점(KR)'],actO:['After 수리완료'],act:['조치(KR)'],part:['PART'],
+  st:['수리시작'],en:['수리종료'],min:['총시간(분)','총시간'],who:['작업자'],cause:['고장원인구분'],note:['비고']};
+
+function toRows(tab){
+  const hi = tab.findIndex(r=>r.some(c=>c.trim()==='설비코드') && r.some(c=>/^(Date|날짜)$/.test(c.trim())));
+  if(hi<0) throw new Error('헤더(Date·설비코드)를 찾지 못했습니다');
+  const H = tab[hi].map(c=>c.trim()), ix={};
+  for(const k in COLS){ ix[k]=H.findIndex(h=>COLS[k].includes(h)); }
+  const g=(r,k)=>ix[k]<0?'':String(r[ix[k]]==null?'':r[ix[k]]).trim();
+  const out=[];
+  for(let i=hi+1;i<tab.length;i++){
+    const r=tab[i]; if(!r||r.every(c=>!String(c).trim())) continue;
+    let code=g(r,'code').toUpperCase().replace(/\s+/g,'');
+    let mm=code.match(/^(DC|TP)-?(\d{1,2})$/); if(!mm) continue;
+    code=mm[1]+pad(+mm[2]);
+    const date=normDate(g(r,'date')); if(!date) continue;
+    const st=normTime(g(r,'st')), en=normTime(g(r,'en'));
+    let mn=parseFloat(String(g(r,'min')).replace(/,/g,''));
+    if(!isFinite(mn)){ const a=mins(st),b=mins(en); mn=(a!=null&&b!=null)?((b-a+1440)%1440):null; }
+    const serial=g(r,'serial'), type=g(r,'type');
+    let cause=g(r,'cause'); if(!cause) cause=/electric|AL-EF/i.test(type+' '+serial)?'전기로':'본체';
+    const efm=serial.match(/AL-EF-?([A-Z])/i);
+    const note=g(r,'note');
+    let cat=''; const cm=note.match(/구분\s*:\s*([^)\s]+)/); if(cm) cat=cm[1]; else if(CAT_SET.includes(note)) cat=note;
+    const actK=g(r,'act'), actO=g(r,'actO');
+    const prog = /진행\s*중|อยู่ระหว่าง|ระหว่างดำเนินการ/.test(actK+' '+actO) || (st && !en);
+    out.push({id:g(r,'id'),src:g(r,'src')||'-',date,code,grp:mm[1],serial,type,fac:g(r,'fac'),line:g(r,'line'),model:g(r,'model'),
+      work:g(r,'work'),sym:g(r,'sym')||g(r,'symO'),symO:g(r,'symO'),prob:g(r,'prob'),probO:g(r,'probO'),act:actK,actO,
+      part:g(r,'part'),st,en,min:mn,who:g(r,'who'),cause:cause==='전기로'?'전기로':'본체',ef:efm?efm[1].toUpperCase():'',note,cat,prog});
+  }
+  return out;
+}
+
+/* ---------------- 불러오기 ---------------- */
+function urls(){
+  const u=[]; const cu=ls.get(K_URL,'');
+  if(cu) u.push({u:cu,n:'웹 게시 CSV'});
+  u.push({u:'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&headers=1&sheet='+encodeURIComponent(SHEET_TAB),n:'구글시트(gviz)'});
+  return u;
+}
+async function load(manual){
+  const chip=$('#syncChip'); chip.className='chip'; chip.textContent='동기화 중…';
+  let lastErr='';
+  for(const s of urls()){
+    try{
+      const sep=s.u.includes('?')?'&':'?';
+      const res=await fetch(s.u+sep+'_='+Date.now(),{cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const txt=await res.text();
+      if(/^\s*<(!doctype|html)/i.test(txt)) throw new Error('공유 권한 없음(로그인 페이지 응답)');
+      const rows=toRows(parseCSV(txt));
+      if(!rows.length) throw new Error('DC/TP 행이 없습니다');
+      ROWS=rows; LOADED_AT=new Date(); SRC_NOTE=s.n;
+      ls.set(K_CACHE,{at:LOADED_AT.toISOString(),src:s.n,csv:txt.length<4e6?txt:''});
+      setChip(); render(); return;
+    }catch(e){ lastErr=s.n+': '+e.message; }
+  }
+  /* 실패 → 마지막으로 받은 데이터라도 보여 준다 */
+  const c=ls.get(K_CACHE,null);
+  if(c&&c.csv&&!ROWS.length){ try{ ROWS=toRows(parseCSV(c.csv)); LOADED_AT=new Date(c.at); SRC_NOTE='저장본'; render(); }catch(e){} }
+  chip.className='chip err';
+  chip.textContent=(ROWS.length?'⚠ 연결 실패 · '+fmtAt(LOADED_AT)+' 저장본 표시':'⚠ 시트 연결 실패')+'';
+  chip.title=lastErr+'\n→ ⚙ 연결에서 공유 설정을 확인하세요';
+  if(!ROWS.length){ $('#cfg').classList.add('on'); render(); }
+}
+function fmtAt(d){return d?(pad(d.getMonth()+1)+'/'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes())):'-'}
+function setChip(){
+  const chip=$('#syncChip'); chip.className='chip ok';
+  chip.textContent='● 연동됨 · '+ROWS.length+'건 · '+fmtAt(LOADED_AT);
+  chip.title='출처: '+SRC_NOTE+' · '+REFRESH_MS/60000+'분마다 자동 갱신';
+}
+
+/* ---------------- 날짜 / 주차 ---------------- */
+const D0=Date.UTC(2026,8,16); /* 회사 주차: 수~화, W39 = 9/16 */
+const dU=s=>{const[a,b,c]=s.split('-').map(Number);return Date.UTC(a,b-1,c)};
+const ds=t=>{const d=new Date(t);return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate())};
+const wkIdx=s=>Math.floor((dU(s)-D0)/864e5/7);
+const wkLabel=i=>{ const st=D0+i*7*864e5; const y=new Date(st).getUTCFullYear(); let w=39+i;
+  /* 연도 경계는 단순 연장 (W53 이상은 다음 해 W1부터) */
+  if(y>2026){ const j=Math.floor((st-Date.UTC(2026,11,30))/864e5/7); w=1+j; }
+  return 'W'+w; };
+const wkStart=i=>ds(D0+i*7*864e5);
+function today(){const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function preset(p){
+  const t=today(), tu=dU(t);
+  if(p==='wk'){ return [wkStart(wkIdx(t)),t]; }
+  if(p==='m0'){ return [t.slice(0,8)+'01',t]; }
+  if(p==='d30'){ return [ds(tu-29*864e5),t]; }
+  if(p==='d90'){ return [ds(tu-89*864e5),t]; }
+  const ds_=ROWS.map(r=>r.date).sort(); return [ds_[0]||t, ds_[ds_.length-1]>t?ds_[ds_.length-1]:t];
+}
+
+/* ---------------- 필터 ---------------- */
+function base(){ /* 기간 제외 필터 */
+  const q=UI.q.trim().toLowerCase();
+  return ROWS.filter(r=>{
+    if(UI.grp!=='all'&&r.grp!==UI.grp) return false;
+    if(UI.cause!=='all'&&r.cause!==UI.cause) return false;
+    if(UI.src!=='all'&&r.src!==UI.src) return false;
+    if(q){ const h=[r.id,r.code,r.sym,r.symO,r.prob,r.probO,r.act,r.actO,r.part,r.who,r.note,r.model,r.serial].join(' ').toLowerCase(); if(!q.split(/\s+/).every(w=>h.includes(w))) return false; }
+    return true;
+  });
+}
+function inRange(r){return r.date>=UI.from&&r.date<=UI.to}
+
+/* ---------------- 렌더 : 설비별 내용 정리 ---------------- */
+function render(){
+  if(!UI.from||!UI.to||UI.pre!=='custom'){ const[a,b]=preset(UI.pre); UI.from=a; UI.to=b; }
+  $('#fFrom').value=UI.from; $('#fTo').value=UI.to;
+  syncSegs(); fillMcSelect();
+  const P=base().filter(inRange);
+  const by=new Map(); for(const r of P){(by.get(r.code)||by.set(r.code,[]).get(r.code)).push(r)}
+  const codes=allCodes().filter(c=>UI.grp==='all'||c.startsWith(UI.grp));
+  renderIdx(codes,by,P);
+  const show=codes.filter(c=>(by.get(c)||[]).length&&(!UI.mc||UI.mc===c));
+  LAST_T=[];
+  if(!show.length){ $('#list').innerHTML=`<div class="card empty">${ROWS.length?'선택한 기간·조건에 해당하는 수리 내용이 없습니다':'데이터를 불러오지 못했습니다 — ⚙ 연결을 확인하세요'}</div>`; return; }
+  $('#list').innerHTML=show.map(c=>{
+    const rs=by.get(c).slice().sort((a,b)=>(a.date<b.date?-1:a.date>b.date?1:(a.st||'').localeCompare(b.st||''))*UI.dir);
+    LAST_T.push(...rs); return mcSection(c,rs);
+  }).join('');
+}
+function renderIdx(codes,by,P){
+  const n=P.length, mcN=new Set(P.map(r=>r.code)).size;
+  const chip=c=>{const k=(by.get(c)||[]).length;return `<button class="ix${k?'':' z'}${UI.mc===c?' on':''}" data-mc="${c}" ${k?'':'disabled'}>${c.startsWith('DC')?(+c.slice(2))+'호기':c}<b>${k}</b></button>`};
+  const dc=codes.filter(c=>c.startsWith('DC')), tp=codes.filter(c=>c.startsWith('TP'));
+  $('#idx').innerHTML=`<div class="ix-h"><b>${UI.from} ~ ${UI.to}</b> · ${mcN}개 설비 · ${n}건
+      <span class="ix-r">정렬 <span class="seg" id="fDir"><button data-v="-1" aria-pressed="${UI.dir<0}">최신순</button><button data-v="1" aria-pressed="${UI.dir>0}">과거순</button></span>
+      ${UI.mc?'<button class="btn" id="ixAll">전체 설비 보기</button>':''}</span></div>`+
+    (dc.length?`<div class="ix-row"><span class="ix-g">DC</span>${dc.map(chip).join('')}</div>`:'')+
+    (tp.length?`<div class="ix-row"><span class="ix-g">TP</span>${tp.map(chip).join('')}</div>`:'');
+  $('#idx').querySelectorAll('.ix[data-mc]').forEach(b=>b.onclick=()=>{UI.mc=UI.mc===b.dataset.mc?'':b.dataset.mc;render();window.scrollTo({top:$('#idx').offsetTop-8,behavior:'smooth'})});
+  $('#idx').querySelectorAll('#fDir button').forEach(b=>b.onclick=()=>{UI.dir=+b.dataset.v;saveUI();render()});
+  const ia=$('#ixAll'); if(ia) ia.onclick=()=>{UI.mc='';render()};
+}
+function mcSection(c,rs){
+  const o=UI.orig, ef=rs.filter(r=>r.cause==='전기로').length;
+  const tm=rs.reduce((s,r)=>s+(r.min||0),0);
+  const ms=[...new Set(rs.map(r=>r.model).filter(Boolean))].join(', ');
+  const cell=(v,orig)=>`${esc(v||orig||'')}${o&&orig&&orig!==v?`<span class="orig">${esc(orig)}</span>`:''}`;
+  return `<section class="card ms" id="ms-${c}"><div class="ms-h"><h2>${mcName(c)}</h2>
+      <span class="muted">${rs.length}건${ef?` · <span style="color:var(--ef)">전기로 ${ef}건</span>`:''}${tm?` · 수리시간 ${fmtH(tm)}h`:''}${ms?` · ${esc(ms)}`:''}</span></div>
+    <table class="h"><thead><tr><th style="width:92px">날짜</th><th style="width:78px">구분</th><th>증상</th><th>원인</th><th>조치</th><th style="width:130px">PART</th><th style="width:112px">수리시간</th><th style="width:110px">작업자</th><th style="width:60px">출처</th></tr></thead><tbody>`+
+    rs.map(r=>`<tr class="${r.cause==='전기로'?'ef':''}"><td class="dt">${r.date}</td>
+      <td><span class="tag ${r.cause==='전기로'?'ef':'body'}">${r.cause}${r.ef?' '+r.ef:''}</span>${r.cat?`<br><span class="tag cat" style="margin-top:3px">${esc(r.cat)}</span>`:''}</td>
+      <td>${cell(r.sym,r.symO)}</td><td>${cell(r.prob,r.probO)}</td><td>${cell(r.act,r.actO)}${r.prog?' <span class="tag prog">진행 중</span>':''}</td>
+      <td>${esc(/^(-|ไม่มี)$/.test(r.part)?'':r.part)}</td>
+      <td class="dt">${r.st?r.st+'–'+(r.en||'?'):''}${r.min!=null?`<br><span class="muted">${r.min}분</span>`:'<span class="muted">-</span>'}</td>
+      <td>${esc(r.who)}</td><td><span class="tag src">${esc(r.src)}</span></td></tr>`).join('')+`</tbody></table></section>`;
+}
+const fmtH=m=>m==null?'-':(m/60>=10?(m/60).toFixed(0):(m/60).toFixed(1));
+function syncSegs(){
+  const map={fGrp:UI.grp,fPre:UI.pre,fCause:UI.cause,fSrc:UI.src};
+  for(const id in map) document.querySelectorAll('#'+id+' button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===map[id]?'true':'false'));
+  $('#fOrig').checked=!!UI.orig;
+}
+function allCodes(){
+  const s=new Set([...DC_LIST,...TP_LIST]); ROWS.forEach(r=>s.add(r.code));
+  return [...s].sort((a,b)=>a.slice(0,2)===b.slice(0,2)?a.localeCompare(b):(a<b?-1:1));
+}
+function fillMcSelect(){
+  const sel=$('#fMc'); const codes=allCodes().filter(c=>UI.grp==='all'||c.startsWith(UI.grp));
+  const h='<option value="">전체 설비</option>'+codes.map(c=>`<option value="${c}">${mcName(c)}</option>`).join('');
+  if(sel.dataset.h!==h){sel.innerHTML=h;sel.dataset.h=h;}
+  sel.value=UI.mc;
+}
+function mcName(c){return c.startsWith('DC')?(+c.slice(2))+'호기 ('+c+')':c+' 트리밍 프레스'}
+let LAST_T=[];
+
+/* ---------------- 이벤트 ---------------- */
+function seg(id,key,after){document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{UI[key]=b.dataset.v;UI.lim=150;if(after)after();saveUI();render()})}
+seg('fGrp','grp',()=>{if(UI.mc&&UI.grp!=='all'&&!UI.mc.startsWith(UI.grp))UI.mc=''});
+seg('fPre','pre',()=>{UI.month=''});
+seg('fCause','cause'); seg('fSrc','src');
+$('#fFrom').onchange=e=>{UI.from=e.target.value;UI.pre='custom';if(UI.to<UI.from)UI.to=UI.from;saveUI();render()};
+$('#fTo').onchange=e=>{UI.to=e.target.value;UI.pre='custom';if(UI.to<UI.from)UI.from=UI.to;saveUI();render()};
+$('#fMc').onchange=e=>{UI.mc=e.target.value;UI.month='';render()};
+let qT; $('#fQ').oninput=e=>{clearTimeout(qT);qT=setTimeout(()=>{UI.q=e.target.value;UI.lim=150;render()},200)};
+$('#fOrig').onchange=e=>{UI.orig=e.target.checked;saveUI();render()};
+$('#btnReload').onclick=()=>load(true);
+$('#btnSheet').href='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/edit';
+$('#btnCfg').onclick=()=>{$('#cfg').classList.toggle('on');$('#cfgUrl').value=ls.get(K_URL,'')};
+$('#cfgSave').onclick=()=>{ls.set(K_URL,$('#cfgUrl').value.trim());load(true)};
+$('#cfgClear').onclick=()=>{ls.set(K_URL,'');$('#cfgUrl').value='';load(true)};
+$('#cfgFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{ROWS=toRows(parseCSV(String(rd.result)));LOADED_AT=new Date();SRC_NOTE='파일 '+f.name;setChip();$('#syncChip').className='chip warn';$('#syncChip').textContent='📄 파일 · '+ROWS.length+'건';render()}catch(err){alert(err.message)}};rd.readAsText(f,'utf-8')};
+$('#btnCsv').onclick=()=>{
+  const H=['ID','출처','Date','설비코드','고장원인구분','전기로','구분','작업구분','증상(KR)','문제점(KR)','조치(KR)','PART','수리시작','수리종료','총시간(분)','작업자','Before 증상','Before 문제점','After 수리완료'];
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const lines=[H.map(q).join(',')].concat(LAST_T.map(r=>[r.id,r.src,r.date,r.code,r.cause,r.ef,r.cat,r.work,r.sym,r.prob,r.act,r.part,r.st,r.en,r.min,r.who,r.symO,r.probO,r.actO].map(q).join(',')));
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv'}));a.download='수리이력_'+UI.from+'_'+UI.to+(UI.mc?'_'+UI.mc:'')+'.csv';a.click();
+};
+setInterval(()=>{if(!document.hidden)load()},REFRESH_MS);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&LOADED_AT&&Date.now()-LOADED_AT>60000)load()});
+
+/* 저장본 먼저 그리고, 바로 최신으로 갱신 */
+(function boot(){const c=ls.get(K_CACHE,null);if(c&&c.csv){try{ROWS=toRows(parseCSV(c.csv));LOADED_AT=new Date(c.at);SRC_NOTE='저장본';render();}catch(e){}}load();})();
+})();
+</script>
+</body>
+</html>
