@@ -322,6 +322,7 @@
     /* A4 가로 1장에 맞추기 위한 압축 */
     .wk-blk{margin-top:6px;}
     .wk-blk > h4{font-size:11px; margin-bottom:4px;}
+    #wkSheet .wk-blk h4, #wkSheet .kw h4.kw-h{font-family:var(--sans) !important;font-size:14px !important;font-weight:900 !important;color:#14284b !important;}
     .wk-hd{padding-bottom:5px; margin-bottom:6px;}
     .wk-hd h3{font-size:15px;}
     .wk-k{padding:5px 8px;}
@@ -915,6 +916,12 @@
     #wkSheet .wk-hd h3{font-size:19px;} #wkSheet .wk-hd .meta{font-size:12.5px;}
     #wkSheet .wk-blk{margin-top:18px;}
     #wkSheet .wk-blk > h4{font-size:16px;margin-bottom:9px;padding-left:9px;}
+    /* 표 제목 — 모든 섹션(주간 요약 · 지표 요약 · 워스트 · 액션 · ②…⑬) 같은 글꼴·크기·굵기 */
+    #wkSheet .wk-blk h4, #wkSheet .kw h4.kw-h{font-family:var(--sans) !important;font-size:19px !important;font-weight:900 !important;
+      color:#14284b !important;letter-spacing:-.01em;line-height:1.35;border-left:5px solid #e8a33d;padding-left:10px;margin:0 0 10px !important;}
+    #wkSheet .kw h4.kw-h{margin-top:18px !important;}
+    #wkSheet .wk-blk h4 .wk-no, #wkSheet .kw h4.kw-h .wk-no{font-weight:900;}
+    #wkSheet .wk-blk h4 .wk-catbar, #wkSheet .wk-blk h4 .wk-tgt, #wkSheet .kw h4.kw-h small{font-family:var(--sans);font-size:12.5px !important;font-weight:600 !important;letter-spacing:0;}
     #wkSheet .wk-tgt, #wkSheet .wk-catbar{font-size:12px;}
     #wkSheet .wk-catbar select{font-size:12.5px;}
     #wkSheet .wk-kpi{gap:10px;}
