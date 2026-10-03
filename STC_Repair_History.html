@@ -184,6 +184,31 @@ body.embed{background:transparent}body.embed .wrap{padding:0 0 20px;max-width:no
   .rp tr{break-inside:avoid}.rp-sec h4{break-after:avoid}
 }
 @media (max-width:760px){.rp{padding:18px 14px}.rp-t2 th:nth-child(5),.rp-t2 td:nth-child(5),.rp-t2 th:nth-child(8),.rp-t2 td:nth-child(8){display:none}}
+.mx2{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.mx2-sum{display:flex;gap:16px;align-items:baseline;flex-wrap:wrap;font-size:13px;color:var(--text-dim);margin-bottom:8px}
+.mx2-sum b{font-family:var(--mono);font-size:17px;color:var(--text)}
+.mx2-lg{margin-left:auto;font-size:11.5px;color:var(--text-faint)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:-1px;margin:0 3px 0 6px}.dot.b{background:var(--body)}.dot.e{background:var(--ef)}
+.mx2-wrap{overflow-x:auto}
+.mx2-t{border-collapse:collapse;width:100%;table-layout:auto}
+.mx2-t th{font-size:11px;color:var(--text-faint);font-weight:700;padding:3px 2px;border-bottom:2px solid #1f3864;white-space:nowrap;line-height:1.15}
+.mx2-t th small{font-weight:500;font-size:10px}
+.mx2-t td{border-bottom:1px solid var(--border-soft);padding:0 2px;height:26px;font-size:12.5px;white-space:nowrap}
+.mx2-t th.mc,.mx2-t td.mc{text-align:left;padding-left:6px;width:62px}
+.mx2-t .n{text-align:right;font-family:var(--mono);width:30px;padding-right:6px;color:var(--text-dim)}
+.mx2-t .d{text-align:center;min-width:24px;width:26px;border-left:1px solid #f0f3f6}
+.mx2-t .we{background:#f7f9fb}
+.mx2-t th.last,.mx2-t td.last{text-align:left;padding-left:10px;max-width:420px;overflow:hidden;text-overflow:ellipsis;width:32%}
+.mx2-r{cursor:pointer}.mx2-r:hover td{background:#eef4fb}.mx2-r.open td{background:#e3edf8;font-weight:600}
+.pill{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:var(--body);color:#fff;font-family:var(--mono);font-size:11px;font-weight:800;padding:0 4px}
+.pill.e{background:var(--ef)}.pill.be{background:linear-gradient(90deg,var(--body) 50%,var(--ef) 50%)}
+.mx2-dt>td{background:#f6f9fc;padding:6px 10px 10px 30px!important;height:auto;white-space:normal}
+.mx2-d{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border-soft)}
+.mx2-d td{padding:6px 8px;border-bottom:1px solid var(--border-soft);font-size:12.5px;vertical-align:top;white-space:normal;line-height:1.45}
+.mx2-d tr.ef td{background:var(--ef-soft)}
+.mx2-d .sub{display:block;color:var(--text-dim);font-size:12px}.mx2-d .sub.ok{color:var(--teal)}
+.mx2-none{margin-top:8px;font-size:12px;color:var(--text-faint)}
+@media print{.mx2-t td.last{max-width:none}}
 @media (max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
 @media (max-width:640px){.wrap{padding:14px 16px 40px}.kpis{grid-template-columns:repeat(2,1fr)}input[type=search]{width:100%}}
 @media print{.filters,.sync .btn,.cfg,.more{display:none!important}.tbl-wrap{max-height:none;overflow:visible}body{background:#fff}}
@@ -254,7 +279,7 @@ const SHEET_TAB = '통합원장';
 /* 웹에 게시(파일→공유→웹에 게시) 주소의 2PACX 키 — 통합원장은 첫 번째 탭 */
 const PUB_KEY = '2PACX-1vTs6rMmIQPFhfM8USiME_AvKs_7NxA14d9CEEHizjMdwyU-nMwdmRHtzAAHZbehOzk8ZTCvNGMsRKEH';
 const REFRESH_MS = 5*60*1000;
-const K_URL = 'stc_rh_url_v1', K_CACHE = 'stc_rh_cache_v1', K_UI = 'stc_rh_ui_v3';
+const K_URL = 'stc_rh_url_v1', K_CACHE = 'stc_rh_cache_v1', K_UI = 'stc_rh_ui_v4';
 /* 시트 탭과 같은 설비 목록 (데이터에 새 코드가 생기면 자동 추가) */
 const DC_LIST = ['01','02','03','04','05','06','07','08','09','10','11','12','13','15','16','17','18','19','20','21','22','23'].map(n=>'DC'+n);
 const TP_LIST = ['01','02','03','04','05','06','07','08','09','11','12','13','14'].map(n=>'TP'+n);
@@ -266,7 +291,7 @@ const ls = {get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.p
             set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
 let ROWS = [], LOADED_AT = null, SRC_NOTE = '';
-const UI = Object.assign({grp:'all',pre:'d30',from:'',to:'',cause:'all',src:'all',mc:'',q:'',orig:false,dir:-1,view:'report',lim:150,month:''}, ls.get(K_UI,{}));
+const UI = Object.assign({grp:'all',pre:'d30',from:'',to:'',cause:'all',src:'all',mc:'',q:'',orig:false,dir:-1,view:'glance',lim:150,month:''}, ls.get(K_UI,{}));
 UI.lim = 150; UI.month = '';
 const saveUI = ()=>ls.set(K_UI,{grp:UI.grp,pre:UI.pre,from:UI.from,to:UI.to,cause:UI.cause,src:UI.src,orig:UI.orig,dir:UI.dir,view:UI.view});
 
@@ -426,6 +451,13 @@ function render(){
   LAST_T=[];
   const sortRs=rs=>rs.slice().sort((a,b)=>(a.date<b.date?-1:a.date>b.date?1:(a.st||'').localeCompare(b.st||''))*UI.dir);
   if(!ROWS.length){ $('#list').innerHTML='<div class="card empty">데이터를 불러오지 못했습니다 — ⚙ 연결을 확인하세요</div>'; return; }
+  if(UI.view!=='card'&&UI.view!=='report'){
+    const show=codes.filter(c=>!UI.mc||UI.mc===c);
+    show.forEach(c=>LAST_T.push(...sortRs(by.get(c)||[])));
+    $('#list').innerHTML=matrix(show,by,sortRs);
+    bindMatrix(by,sortRs);
+    return;
+  }
   if(UI.view!=='card'){
     const show=codes.filter(c=>!UI.mc||UI.mc===c);
     show.forEach(c=>LAST_T.push(...sortRs(by.get(c)||[])));
@@ -446,6 +478,53 @@ function render(){
   $('#list').innerHTML=show.map(c=>{const rs=sortRs(by.get(c));LAST_T.push(...rs);return mcSection(c,rs)}).join('');
 }
 const DOW=['일','월','화','수','목','금','토'];
+/* ===== 한눈에 : 설비(행) × 날짜(열) 매트릭스 ===== */
+let MX_OPEN='';
+function buckets(){
+  const days=(dU(UI.to)-dU(UI.from))/864e5+1, out=[];
+  if(days<=35){ for(let t=dU(UI.from);t<=dU(UI.to);t+=864e5){const d=ds(t);out.push({k:d,a:d,b:d,l:(+d.slice(8))+'',s:DOW[new Date(t).getUTCDay()],w:[0,6].includes(new Date(t).getUTCDay())})} return {u:'d',out}; }
+  if(days<=200){ for(let i=wkIdx(UI.from);i<=wkIdx(UI.to);i++){const a=wkStart(i),b=ds(dU(a)+6*864e5);out.push({k:'w'+i,a,b,l:wkLabel(i),s:a.slice(5).replace('-','/')})} return {u:'w',out}; }
+  let y=+UI.from.slice(0,4),m=+UI.from.slice(5,7);
+  while(true){const a=y+'-'+pad(m)+'-01';if(a>UI.to)break;const b=ds(Date.UTC(y,m,0));out.push({k:'m'+a.slice(0,7),a,b,l:m+'월',s:String(y).slice(2)});if(++m>12){m=1;y++}}
+  return {u:'m',out};
+}
+function matrix(codes,by,sortRs){
+  const B=buckets(), cols=B.out;
+  const has=codes.filter(c=>(by.get(c)||[]).length), none=codes.filter(c=>!(by.get(c)||[]).length);
+  const P=[];has.forEach(c=>P.push(...by.get(c)));
+  const ef=P.filter(r=>r.cause==='전기로').length, pg=P.filter(r=>r.prog).length, tm=P.reduce((a,r)=>a+(r.min||0),0);
+  const nm=c=>c.startsWith('DC')?(+c.slice(2))+'호기':c;
+  const unit={d:'일',w:'주',m:'월'}[B.u];
+  let h=`<div class="mx2"><div class="mx2-sum"><span><b>${P.length}</b>건</span><span><b>${has.length}</b>/${codes.length}대</span><span>수리시간 <b>${fmtH(tm)}</b>h</span><span style="color:var(--ef)">전기로 <b>${ef}</b></span>${pg?`<span style="color:var(--red)">진행 중 <b>${pg}</b></span>`:''}
+     <span class="mx2-lg"><i class="dot b"></i>본체 <i class="dot e"></i>전기로 · 칸=${unit}별 건수 · 칸에 마우스를 올리면 내용, 줄을 누르면 상세</span></div>
+   <div class="mx2-wrap"><table class="mx2-t"><thead><tr><th class="mc">설비</th><th class="n">건</th><th class="n">h</th>`+
+   cols.map(c=>`<th class="d${c.w?' we':''}" title="${c.a}${c.a!==c.b?' ~ '+c.b:''}">${c.l}<br><small>${c.s}</small></th>`).join('')+`<th class="last">최근 내용</th></tr></thead><tbody>`;
+  for(const c of has){
+    const rs=sortRs(by.get(c)), m=rs.reduce((a,r)=>a+(r.min||0),0);
+    const latest=rs.slice().sort((a,b)=>a.date<b.date?1:-1)[0];
+    h+=`<tr class="mx2-r${MX_OPEN===c?' open':''}" data-mc="${c}"><td class="mc"><b>${nm(c)}</b></td><td class="n"><b>${rs.length}</b></td><td class="n">${m?fmtH(m):''}</td>`+
+      cols.map(col=>{const it=rs.filter(r=>r.date>=col.a&&r.date<=col.b);if(!it.length)return `<td class="d${col.w?' we':''}"></td>`;
+        const e=it.filter(r=>r.cause==='전기로').length;
+        const tip=it.map(r=>`${r.date.slice(5)} ${r.cause==='전기로'?'[전기로] ':''}${clean(r.sym||r.symO)}${(r.act||r.actO)?' → '+clean(r.act||r.actO):''}`).join('\n');
+        return `<td class="d${col.w?' we':''}" title="${esc(tip)}"><span class="pill${e===it.length?' e':e?' be':''}">${it.length}</span></td>`}).join('')+
+      `<td class="last" title="${esc(clean(latest.sym||latest.symO))}"><span class="muted mono">${latest.date.slice(5).replace('-','/')}</span> ${latest.cause==='전기로'?'<span class="tag ef">전기로</span> ':''}${esc(clean(latest.sym||latest.symO))}</td></tr>`;
+    if(MX_OPEN===c) h+=`<tr class="mx2-dt"><td colspan="${cols.length+4}">${mxDetail(rs)}</td></tr>`;
+  }
+  if(!has.length) h+=`<tr><td colspan="${cols.length+4}" class="empty">선택한 기간에 수리 이력이 없습니다</td></tr>`;
+  h+=`</tbody></table></div>`+(none.length?`<div class="mx2-none"><b>수리 없음 ${none.length}대</b> · ${none.map(nm).join(', ')}</div>`:'')+`</div>`;
+  return h;
+}
+function mxDetail(rs){
+  return `<table class="mx2-d"><tbody>`+rs.map(r=>{const part=/^(-|ไม่มี)$/.test(r.part)?'':r.part;const act=clean(r.act||r.actO),prob=clean(r.prob||r.probO);
+    return `<tr class="${r.cause==='전기로'?'ef':''}"><td class="mono" style="width:88px">${r.date.slice(5).replace('-','/')} (${dow(r.date)})</td>
+      <td style="width:74px"><span class="tag ${r.cause==='전기로'?'ef':'body'}">${r.cause}${r.ef?' '+r.ef:''}</span></td>
+      <td><b>${esc(clean(r.sym||r.symO))}</b>${prob?`<span class="sub">원인 · ${esc(prob)}</span>`:''}${act?`<span class="sub ok">조치 · ${esc(act)}</span>`:''}${part?`<span class="sub">PART · ${esc(part)}</span>`:''}${r.prog?' <span class="tag prog">진행 중</span>':''}</td>
+      <td class="mono" style="width:150px;text-align:right;white-space:nowrap">${r.st?r.st+'–'+(r.en||'?'):''}${r.min!=null?' · '+r.min+'분':''}</td><td style="width:120px">${esc(r.who)}</td></tr>`}).join('')+`</tbody></table>`;
+}
+function bindMatrix(){
+  $('#list').querySelectorAll('.mx2-r').forEach(tr=>tr.onclick=()=>{MX_OPEN=MX_OPEN===tr.dataset.mc?'':tr.dataset.mc;render()});
+}
+
 const dow=d=>DOW[new Date(dU(d)).getUTCDay()];
 const clean=t=>String(t||'').replace(/^\s*(\d{1,2}\s*호기|DC\s*\d{1,2})\s*[:：]\s*/i,'');
 function report(codes,by,sortRs){
@@ -506,7 +585,7 @@ function renderIdx(codes,by,P){
   const chip=c=>{const k=(by.get(c)||[]).length;return `<button class="ix${k?'':' z'}${UI.mc===c?' on':''}" data-mc="${c}" ${k?'':'disabled'}>${c.startsWith('DC')?(+c.slice(2))+'호기':c}<b>${k}</b></button>`};
   const dc=codes.filter(c=>c.startsWith('DC')), tp=codes.filter(c=>c.startsWith('TP'));
   $('#idx').innerHTML=`<div class="ix-h"><b>${UI.from} ~ ${UI.to}</b> · ${mcN}개 설비 · ${n}건
-      <span class="ix-r">보기 <span class="seg" id="fView"><button data-v="report" aria-pressed="${UI.view!=='card'}">보고서</button><button data-v="card" aria-pressed="${UI.view==='card'}">카드</button></span> 정렬 <span class="seg" id="fDir"><button data-v="-1" aria-pressed="${UI.dir<0}">최신순</button><button data-v="1" aria-pressed="${UI.dir>0}">과거순</button></span>
+      <span class="ix-r">보기 <span class="seg" id="fView"><button data-v="glance" aria-pressed="${UI.view!=='report'&&UI.view!=='card'}">한눈에</button><button data-v="report" aria-pressed="${UI.view==='report'}">보고서</button><button data-v="card" aria-pressed="${UI.view==='card'}">카드</button></span> 정렬 <span class="seg" id="fDir"><button data-v="-1" aria-pressed="${UI.dir<0}">최신순</button><button data-v="1" aria-pressed="${UI.dir>0}">과거순</button></span>
       ${UI.mc?'<button class="btn" id="ixAll">← 전체 설비 보기</button>':''}<button class="btn" id="ixPrint">🖨 인쇄</button></span></div>`+(true?'':(
     (dc.length?`<div class="ix-row"><span class="ix-g">DC</span>${dc.map(chip).join('')}</div>`:'')+
     (tp.length?`<div class="ix-row"><span class="ix-g">TP</span>${tp.map(chip).join('')}</div>`:'')));
