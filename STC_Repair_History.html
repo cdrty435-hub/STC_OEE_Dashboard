@@ -145,7 +145,7 @@ table.h td.txt{min-width:180px;max-width:340px}
   </div>
 
   <div class="card cfg" id="cfg">
-    <div class="sec-h"><h2>구글시트 연결</h2><span class="note">기본: 시트 ID로 「통합원장」 탭을 직접 읽습니다</span></div>
+    <div class="sec-h"><h2>구글시트 연결</h2><span class="note">기본: 웹에 게시된 시트의 「통합원장」 탭을 읽습니다</span></div>
     <div style="display:grid;gap:8px">
       <label style="font-size:12px;font-weight:700;color:var(--text-faint)">웹 게시 CSV 주소 (선택 · 넣으면 이 주소를 먼저 사용)</label>
       <input type="text" id="cfgUrl" placeholder="https://docs.google.com/spreadsheets/d/e/2PACX-…/pub?gid=…&single=true&output=csv">
@@ -189,6 +189,8 @@ table.h td.txt{min-width:180px;max-width:340px}
    ------------------------------------------------------------------ */
 const SHEET_ID  = '1FHNk3JS8SIwNNtfh2Gl-k0UTEH2A9AKehFjO5kdyXBU';
 const SHEET_TAB = '통합원장';
+/* 웹에 게시(파일→공유→웹에 게시) 주소의 2PACX 키 — 통합원장은 첫 번째 탭 */
+const PUB_KEY = '2PACX-1vTs6rMmIQPFhfM8USiME_AvKs_7NxA14d9CEEHizjMdwyU-nMwdmRHtzAAHZbehOzk8ZTCvNGMsRKEH';
 const REFRESH_MS = 5*60*1000;
 const K_URL = 'stc_rh_url_v1', K_CACHE = 'stc_rh_cache_v1', K_UI = 'stc_rh_ui_v2';
 /* 시트 탭과 같은 설비 목록 (데이터에 새 코드가 생기면 자동 추가) */
@@ -279,6 +281,9 @@ function toRows(tab){
 function urls(){
   const u=[]; const cu=ls.get(K_URL,'');
   if(cu) u.push({u:cu,n:'웹 게시 CSV'});
+  const pub='https://docs.google.com/spreadsheets/d/e/'+PUB_KEY+'/pub?output=csv';
+  u.push({u:pub+'&sheet='+encodeURIComponent(SHEET_TAB),n:'웹 게시 CSV'});
+  u.push({u:pub,n:'웹 게시 CSV(첫 탭)'});
   u.push({u:'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&headers=1&sheet='+encodeURIComponent(SHEET_TAB),n:'구글시트(gviz)'});
   return u;
 }
