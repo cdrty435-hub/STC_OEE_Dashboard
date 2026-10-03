@@ -146,6 +146,44 @@ body.embed{background:transparent}body.embed .wrap{padding:0 0 20px;max-width:no
 .gl-i.open .gl-x{display:block}
 .gl .tag{font-size:10.5px;padding:0 5px}
 @media print{.gl{columns:3}.gl-x{display:none!important}}
+.rp{background:#fff;border:1px solid var(--border);border-radius:12px;max-width:1280px;margin:0 auto;padding:30px 38px 40px;box-shadow:0 1px 3px #0000000d}
+.rp-hd{text-align:center;border-bottom:3px double #1a2230;padding-bottom:16px;margin-bottom:8px}
+.rp-ey{font-family:var(--mono);font-size:12px;letter-spacing:.18em;color:var(--amber);font-weight:700}
+.rp-t{font-size:26px;font-weight:900;margin-top:6px;letter-spacing:-.02em}
+.rp-p{font-size:18px;font-weight:700;margin-top:8px;font-family:var(--mono)}
+.rp-s{font-size:12px;color:var(--text-faint);margin-top:6px}
+.rp-h{font-size:19px;font-weight:900;margin:26px 0 10px;padding-left:10px;border-left:5px solid #1f3864}
+.rp-h small{font-size:12px;font-weight:500;color:var(--text-faint);margin-left:8px}
+.rp table{width:100%;border-collapse:collapse}
+.rp th{background:#1f3864;color:#fff;font-size:12.5px;font-weight:700;padding:7px 8px;border:1px solid #1f3864;text-align:center}
+.rp td{border:1px solid #d5dce4;padding:7px 9px;font-size:13.5px;vertical-align:top;line-height:1.5}
+.rp tbody tr:nth-child(even) td{background:#f8fafc}
+.rp tr.ef td{background:#fdf1e6!important}
+.rp td.c{text-align:center}
+.rp .mono{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+.rp-t2{table-layout:fixed}.rp-t2 td{word-break:break-word}
+.rp-k td{text-align:center;font-size:14px;padding:10px}.rp-k td b{font-size:22px;font-family:var(--mono)}
+.rp-t1 a{font-weight:900;color:#1f3864;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.rp-cd{font-family:var(--mono);font-size:11px;color:var(--text-faint)}
+.rp-ul{margin:0;padding:0;list-style:none}.rp-ul li{padding:1px 0}
+.rp-d{font-family:var(--mono);font-size:12px;color:var(--text-faint);margin-right:8px}
+.rp-more{font-size:12px;cursor:pointer}
+.rp-none{margin:10px 0 0;padding:9px 12px;background:#f3f6f9;border-radius:8px;font-size:13px;color:var(--text-dim)}
+.rp-sec{margin-top:18px;break-inside:auto}
+.rp-sec h4{margin:0 0 6px;font-size:16px;font-weight:900;scroll-margin-top:10px}
+.rp-sec h4 small{font-size:12.5px;font-weight:500;color:var(--text-faint);margin-left:6px}
+.rp-cat{font-size:11px;color:#5b3fa8;margin-top:3px}
+.rp-part{font-size:12px;color:var(--text-faint);margin-top:3px}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  .hd,.filters,.cfg,.idx{display:none!important}
+  .wrap{padding:0;max-width:none}
+  .rp{border:0;box-shadow:none;padding:0;max-width:none}
+  .rp th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .rp tr.ef td,.rp tbody tr:nth-child(even) td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .rp tr{break-inside:avoid}.rp-sec h4{break-after:avoid}
+}
+@media (max-width:760px){.rp{padding:18px 14px}.rp-t2 th:nth-child(5),.rp-t2 td:nth-child(5),.rp-t2 th:nth-child(8),.rp-t2 td:nth-child(8){display:none}}
 @media (max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
 @media (max-width:640px){.wrap{padding:14px 16px 40px}.kpis{grid-template-columns:repeat(2,1fr)}input[type=search]{width:100%}}
 @media print{.filters,.sync .btn,.cfg,.more{display:none!important}.tbl-wrap{max-height:none;overflow:visible}body{background:#fff}}
@@ -216,7 +254,7 @@ const SHEET_TAB = '통합원장';
 /* 웹에 게시(파일→공유→웹에 게시) 주소의 2PACX 키 — 통합원장은 첫 번째 탭 */
 const PUB_KEY = '2PACX-1vTs6rMmIQPFhfM8USiME_AvKs_7NxA14d9CEEHizjMdwyU-nMwdmRHtzAAHZbehOzk8ZTCvNGMsRKEH';
 const REFRESH_MS = 5*60*1000;
-const K_URL = 'stc_rh_url_v1', K_CACHE = 'stc_rh_cache_v1', K_UI = 'stc_rh_ui_v2';
+const K_URL = 'stc_rh_url_v1', K_CACHE = 'stc_rh_cache_v1', K_UI = 'stc_rh_ui_v3';
 /* 시트 탭과 같은 설비 목록 (데이터에 새 코드가 생기면 자동 추가) */
 const DC_LIST = ['01','02','03','04','05','06','07','08','09','10','11','12','13','15','16','17','18','19','20','21','22','23'].map(n=>'DC'+n);
 const TP_LIST = ['01','02','03','04','05','06','07','08','09','11','12','13','14'].map(n=>'TP'+n);
@@ -228,7 +266,7 @@ const ls = {get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.p
             set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 
 let ROWS = [], LOADED_AT = null, SRC_NOTE = '';
-const UI = Object.assign({grp:'all',pre:'d30',from:'',to:'',cause:'all',src:'all',mc:'',q:'',orig:false,dir:-1,view:'card',lim:150,month:''}, ls.get(K_UI,{}));
+const UI = Object.assign({grp:'all',pre:'d30',from:'',to:'',cause:'all',src:'all',mc:'',q:'',orig:false,dir:-1,view:'report',lim:150,month:''}, ls.get(K_UI,{}));
 UI.lim = 150; UI.month = '';
 const saveUI = ()=>ls.set(K_UI,{grp:UI.grp,pre:UI.pre,from:UI.from,to:UI.to,cause:UI.cause,src:UI.src,orig:UI.orig,dir:UI.dir,view:UI.view});
 
@@ -388,6 +426,13 @@ function render(){
   LAST_T=[];
   const sortRs=rs=>rs.slice().sort((a,b)=>(a.date<b.date?-1:a.date>b.date?1:(a.st||'').localeCompare(b.st||''))*UI.dir);
   if(!ROWS.length){ $('#list').innerHTML='<div class="card empty">데이터를 불러오지 못했습니다 — ⚙ 연결을 확인하세요</div>'; return; }
+  if(UI.view!=='card'){
+    const show=codes.filter(c=>!UI.mc||UI.mc===c);
+    show.forEach(c=>LAST_T.push(...sortRs(by.get(c)||[])));
+    $('#list').innerHTML=report(show,by,sortRs);
+    $('#list').querySelectorAll('[data-jump]').forEach(el=>el.onclick=()=>{const t=document.getElementById('rp-'+el.dataset.jump);if(t)t.scrollIntoView({behavior:'smooth',block:'start'})});
+    return;
+  }
   if(UI.view==='card'&&!UI.mc){
     /* 한눈에 보기: 모든 설비를 카드로 — 기간 내 수리 내용을 한 줄씩 */
     const list=codes.map(c=>{const rs=sortRs(by.get(c)||[]);LAST_T.push(...rs);return glance(c,rs)}).join('');
@@ -399,6 +444,47 @@ function render(){
   const show=codes.filter(c=>(by.get(c)||[]).length&&(!UI.mc||UI.mc===c));
   if(!show.length){ $('#list').innerHTML='<div class="card empty">선택한 기간·조건에 해당하는 수리 내용이 없습니다</div>'; return; }
   $('#list').innerHTML=show.map(c=>{const rs=sortRs(by.get(c));LAST_T.push(...rs);return mcSection(c,rs)}).join('');
+}
+const DOW=['일','월','화','수','목','금','토'];
+const dow=d=>DOW[new Date(dU(d)).getUTCDay()];
+const clean=t=>String(t||'').replace(/^\s*(\d{1,2}\s*호기|DC\s*\d{1,2})\s*[:：]\s*/i,'');
+function report(codes,by,sortRs){
+  const P=[]; codes.forEach(c=>P.push(...(by.get(c)||[])));
+  const has=codes.filter(c=>(by.get(c)||[]).length), none=codes.filter(c=>!(by.get(c)||[]).length);
+  const n=P.length, ef=P.filter(r=>r.cause==='전기로').length, pg=P.filter(r=>r.prog).length;
+  const tk=P.filter(r=>r.min!=null), tm=tk.reduce((a,r)=>a+r.min,0);
+  const isWk=(dU(UI.to)-dU(UI.from))/864e5===6&&new Date(dU(UI.from)).getUTCDay()===3;
+  const nm=c=>c.startsWith('DC')?(+c.slice(2))+'호기':c;
+  const cond=[UI.grp==='all'?'DC·TP 전체':UI.grp==='DC'?'DC 다이캐스팅':'TP 트리밍',UI.cause==='all'?'본체+전기로':UI.cause,UI.src==='all'?'출처 전체':UI.src].concat(UI.q?['검색 “'+UI.q+'”']:[]).join(' · ');
+  const now=new Date();
+  let h=`<div class="rp">
+   <div class="rp-hd"><div class="rp-ey">STC · 공무팀</div><div class="rp-t">DC·TP 설비 수리이력 보고</div>
+     <div class="rp-p">${UI.from} (${dow(UI.from)}) ~ ${UI.to} (${dow(UI.to)})${isWk?` · <b>${wkLabel(wkIdx(UI.from))}</b>`:''}</div>
+     <div class="rp-s">${esc(cond)} · 작성 ${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())} · 원장: 설비수리이력_MASTER_2026</div></div>
+   <h3 class="rp-h">1. 요약</h3>
+   <table class="rp-k"><tr><th>수리 건수</th><th>수리 설비</th><th>수리시간</th><th>전기로</th><th>진행 중</th><th>시간 미기재</th></tr>
+     <tr><td><b>${n}</b> 건</td><td><b>${has.length}</b> / ${codes.length} 대</td><td><b>${fmtH(tm)}</b> h <small>(${tk.length}건 기록)</small></td><td><b style="color:var(--ef)">${ef}</b> 건</td><td><b style="color:${pg?'var(--red)':'inherit'}">${pg}</b> 건</td><td><b>${n-tk.length}</b> 건</td></tr></table>`;
+  if(!n){ return h+`<p class="rp-none">선택한 기간에 수리 이력이 없습니다.</p></div>`; }
+  h+=`<h3 class="rp-h">2. 설비별 요약 <small>호기를 누르면 상세로 이동</small></h3>
+   <table class="rp-t1"><thead><tr><th style="width:44px">No</th><th style="width:110px">설비</th><th style="width:60px">건수</th><th style="width:66px">전기로</th><th style="width:84px">수리시간</th><th>주요 내용</th></tr></thead><tbody>`+
+   has.map((c,i)=>{const rs=sortRs(by.get(c)),e=rs.filter(r=>r.cause==='전기로').length,m=rs.reduce((a,r)=>a+(r.min||0),0);
+     const top=rs.slice(0,3).map(r=>`<li><span class="rp-d">${r.date.slice(5).replace('-','/')}</span>${r.cause==='전기로'?'<span class="tag ef">전기로</span> ':''}${esc(clean(r.sym||r.symO))}</li>`).join('');
+     return `<tr><td class="c">${i+1}</td><td><a data-jump="${c}">${nm(c)}</a><div class="rp-cd">${c}</div></td><td class="c"><b>${rs.length}</b></td><td class="c">${e||'-'}</td><td class="c">${m?fmtH(m)+'h':'-'}</td><td><ul class="rp-ul">${top}</ul>${rs.length>3?`<span class="muted rp-more" data-jump="${c}">외 ${rs.length-3}건 →</span>`:''}</td></tr>`}).join('')+
+   `</tbody></table>`+
+   (none.length?`<p class="rp-none"><b>수리 없음 (${none.length}대)</b> · ${none.map(nm).join(', ')}</p>`:'');
+  h+=`<h3 class="rp-h">3. 설비별 상세</h3>`+has.map((c,i)=>{
+     const rs=sortRs(by.get(c)),e=rs.filter(r=>r.cause==='전기로').length,m=rs.reduce((a,r)=>a+(r.min||0),0);
+     const ms=[...new Set(rs.map(r=>r.model).filter(Boolean))].join(', ');
+     return `<div class="rp-sec" id="rp-${c}"><h4>3-${i+1}. ${mcName(c)} <small>${rs.length}건${e?` · 전기로 ${e}건`:''}${m?` · 수리시간 ${fmtH(m)}h`:''}${ms?` · ${esc(ms)}`:''}</small></h4>
+      <table class="rp-t2"><thead><tr><th style="width:34px">#</th><th style="width:84px">날짜</th><th style="width:70px">구분</th><th style="width:28%">증상</th><th style="width:20%">원인</th><th>조치</th><th style="width:96px">수리시간</th><th style="width:100px">작업자</th></tr></thead><tbody>`+
+      rs.map((r,j)=>{const part=/^(-|ไม่มี)$/.test(r.part)?'':r.part, o=UI.orig;
+        const tx=(k,ko)=>`${esc(clean(r[k]||r[ko]))}${o&&r[ko]&&r[ko]!==r[k]?`<span class="orig">${esc(r[ko])}</span>`:''}`;
+        return `<tr class="${r.cause==='전기로'?'ef':''}"><td class="c">${j+1}</td><td class="mono">${r.date.slice(5).replace('-','/')} (${dow(r.date)})</td>
+        <td class="c"><span class="tag ${r.cause==='전기로'?'ef':'body'}">${r.cause}${r.ef?' '+r.ef:''}</span>${r.cat?`<div class="rp-cat">${esc(r.cat)}</div>`:''}</td>
+        <td>${tx('sym','symO')}</td><td>${tx('prob','probO')||'<span class="muted">-</span>'}</td>
+        <td>${tx('act','actO')||'<span class="muted">-</span>'}${r.prog?' <span class="tag prog">진행 중</span>':''}${part?`<div class="rp-part">PART · ${esc(part)}</div>`:''}</td>
+        <td class="mono c">${r.st?r.st+'–'+(r.en||'?'):''}${r.min!=null?`<div>${r.min}분</div>`:'<span class="muted">미기재</span>'}</td><td>${esc(r.who)||'<span class="muted">-</span>'}</td></tr>`}).join('')+`</tbody></table></div>`}).join('');
+  return h+`</div>`;
 }
 function glance(c,rs){
   const ef=rs.filter(r=>r.cause==='전기로').length, pg=rs.filter(r=>r.prog).length, tm=rs.reduce((s,r)=>s+(r.min||0),0);
@@ -420,14 +506,15 @@ function renderIdx(codes,by,P){
   const chip=c=>{const k=(by.get(c)||[]).length;return `<button class="ix${k?'':' z'}${UI.mc===c?' on':''}" data-mc="${c}" ${k?'':'disabled'}>${c.startsWith('DC')?(+c.slice(2))+'호기':c}<b>${k}</b></button>`};
   const dc=codes.filter(c=>c.startsWith('DC')), tp=codes.filter(c=>c.startsWith('TP'));
   $('#idx').innerHTML=`<div class="ix-h"><b>${UI.from} ~ ${UI.to}</b> · ${mcN}개 설비 · ${n}건
-      <span class="ix-r">보기 <span class="seg" id="fView"><button data-v="card" aria-pressed="${UI.view==='card'&&!UI.mc}">한눈에</button><button data-v="table" aria-pressed="${UI.view==='table'||!!UI.mc}">상세 표</button></span> 정렬 <span class="seg" id="fDir"><button data-v="-1" aria-pressed="${UI.dir<0}">최신순</button><button data-v="1" aria-pressed="${UI.dir>0}">과거순</button></span>
-      ${UI.mc?'<button class="btn" id="ixAll">← 전체 설비 보기</button>':''}</span></div>`+(UI.view==='card'&&!UI.mc?'':(
+      <span class="ix-r">보기 <span class="seg" id="fView"><button data-v="report" aria-pressed="${UI.view!=='card'}">보고서</button><button data-v="card" aria-pressed="${UI.view==='card'}">카드</button></span> 정렬 <span class="seg" id="fDir"><button data-v="-1" aria-pressed="${UI.dir<0}">최신순</button><button data-v="1" aria-pressed="${UI.dir>0}">과거순</button></span>
+      ${UI.mc?'<button class="btn" id="ixAll">← 전체 설비 보기</button>':''}<button class="btn" id="ixPrint">🖨 인쇄</button></span></div>`+(true?'':(
     (dc.length?`<div class="ix-row"><span class="ix-g">DC</span>${dc.map(chip).join('')}</div>`:'')+
     (tp.length?`<div class="ix-row"><span class="ix-g">TP</span>${tp.map(chip).join('')}</div>`:'')));
   $('#idx').querySelectorAll('#fView button').forEach(b=>b.onclick=()=>{UI.view=b.dataset.v;UI.mc='';saveUI();render()});
   $('#idx').querySelectorAll('.ix[data-mc]').forEach(b=>b.onclick=()=>{UI.mc=UI.mc===b.dataset.mc?'':b.dataset.mc;render();window.scrollTo({top:$('#idx').offsetTop-8,behavior:'smooth'})});
   $('#idx').querySelectorAll('#fDir button').forEach(b=>b.onclick=()=>{UI.dir=+b.dataset.v;saveUI();render()});
   const ia=$('#ixAll'); if(ia) ia.onclick=()=>{UI.mc='';render()};
+  $('#ixPrint').onclick=()=>window.print();
 }
 function mcSection(c,rs){
   const o=UI.orig, ef=rs.filter(r=>r.cause==='전기로').length;
