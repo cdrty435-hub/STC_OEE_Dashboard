@@ -264,6 +264,17 @@
   .wk-hd h3{margin:0; font-size:17px; color:#1f3864; font-weight:800;}
   .wk-hd .meta{font-size:11.5px; color:#5a6674; text-align:right; line-height:1.5;}
   .wk-blk{margin-top:11px; break-inside:avoid;}
+  /* 표 순서 바꾸기 — 시트를 세로 flex 로 두고 섹션마다 order 를 준다 */
+  .wk-sheet.wk-ordered{display:flex;flex-direction:column;}
+  .wk-sheet.wk-ordered > #wkCover, .wk-sheet.wk-ordered > .wk-hd{order:0;}
+  .wk-sheet.wk-ordered > #wkKW, .wk-sheet.wk-ordered .kw.kw-split{display:contents;}
+  .wk-sheet .kw.kw-sec{margin:11px 0 0;}
+  .wk-no{font-weight:inherit;}
+  .wk-ord{float:right;display:inline-flex;gap:3px;margin-left:8px;}
+  .wk-ord button{appearance:none;border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:4px;width:24px;height:20px;padding:0;font-size:10px;line-height:18px;cursor:pointer;}
+  .wk-ord button:hover{background:#1e3c72;color:#fff;border-color:#1e3c72;}
+  .wk-ordreset{appearance:none;border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:6px;padding:5px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-right:6px;}
+  @media print{ .wk-ord, .wk-ordreset{display:none !important;} }
   .wk-blk > h4{margin:0 0 6px; font-size:12.5px; font-weight:800; color:#1f3864;
     border-left:4px solid #e8a33d; padding-left:7px;}
   .wk-kpi{display:grid; grid-template-columns:repeat(5,1fr); gap:8px;}
@@ -8199,6 +8210,95 @@ loadData();
     document.body.classList.toggle('kw-print-monthly', !!(m && m.classList.contains('show')));
   });
   window.addEventListener('afterprint', ()=>document.body.classList.remove('kw-print-daily','kw-print-monthly'));
+})();
+
+/* ===== 주간 보고서 — 표(섹션) 순서 바꾸기 · 제목 번호 자동 =====
+   · 섹션마다 제목 오른쪽 ▲▼ 로 위아래 이동 → 순서는 이 브라우저에 저장 (인쇄에도 그 순서)
+   · 제목 번호는 보이는 순서대로 1. 2. 3. … 으로 다시 매긴다 (①② 원래 번호는 숨김)
+   · 「1. 지표 요약 · 2. 워스트 설비 · 3. 액션」(공통 블록)도 각각 따로 움직인다
+   · 순서 키: 정적 블록 b0~bN (원래 화면 순서) · 공통 블록 k0~k2 */
+(function(){
+  const KEY = 'stc_wk_order_v1', NUMRE = /^\s*(?:[①-⑳]|\d+(?:-\d+)?\.)\s*/;
+  /* 태국어 사전 — 번호를 뗀 제목도 번역되게 */
+  try{
+    const add = []; TH_UI.forEach(([k,v])=>{ if(NUMRE.test(k)) add.push([k.replace(NUMRE,''), v.replace(NUMRE,'')]); });
+    add.forEach(x=>TH_UI.push(x)); TH_UI.sort((a,b)=>b[0].length - a[0].length);
+  }catch(e){}
+  const sheet = () => document.getElementById('wkSheet');
+  function getOrder(){ try{ return JSON.parse(localStorage.getItem(KEY)||'null') || []; }catch(e){ return []; } }
+  function setOrder(L){ try{ localStorage.setItem(KEY, JSON.stringify(L)); }catch(e){} }
+  /* 제목 앞 번호를 span.wk-no 로 떼어 둔다 (한 번만) */
+  function numSpan(h){
+    let sp = h.querySelector(':scope > .wk-no'); if(sp) return sp;
+    const tn = [...h.childNodes].find(n=>n.nodeType===3 && n.nodeValue.trim());
+    if(tn) tn.nodeValue = tn.nodeValue.replace(NUMRE, '');
+    sp = document.createElement('span'); sp.className = 'wk-no'; h.insertBefore(sp, h.firstChild); return sp;
+  }
+  function ctl(h, id){
+    if(h.querySelector(':scope > .wk-ord')) return;
+    const c = document.createElement('span'); c.className = 'wk-ord';
+    c.innerHTML = `<button type="button" title="위로" data-mv="-1">▲</button><button type="button" title="아래로" data-mv="1">▼</button>`;
+    c.addEventListener('click', e=>{ const b = e.target.closest('button'); if(!b) return; e.preventDefault(); e.stopPropagation(); move(id, +b.dataset.mv); });
+    h.appendChild(c);
+  }
+  /* 섹션 목록 (정적 블록 + 공통 블록 조각) */
+  function units(){
+    const sh = sheet(); if(!sh) return [];
+    sh.classList.add('wk-ordered');
+    [...sh.children].filter(el=>el.classList.contains('wk-blk')).forEach((el,i)=>{ if(!el.dataset.unit) el.dataset.unit = 'b'+i; });
+    /* 공통 블록 — h4.kw-h 마다 div.kw-sec 으로 묶는다 (다시 그려질 때마다) */
+    const kwh = document.getElementById('wkKW');
+    if(kwh){ const kw = kwh.querySelector(':scope > .kw');
+      if(kw && kw.querySelector(':scope > h4.kw-h')){
+        const kids = [...kw.childNodes]; let cur = null, k = 0;
+        kids.forEach(n=>{ if(n.nodeType===1 && n.matches('h4.kw-h')){ cur = document.createElement('div'); cur.className = 'kw kw-sec'; cur.dataset.unit = 'k'+(k++); kw.appendChild(cur); }
+          if(cur) cur.appendChild(n); });
+        kw.classList.add('kw-split'); } }
+    return [...sh.querySelectorAll('[data-unit]')];
+  }
+  function visible(el){ return el.style.display !== 'none' && getComputedStyle(el).display !== 'none'; }
+  function apply(){
+    const U = units(); if(!U.length) return;
+    const saved = getOrder(), ids = U.map(u=>u.dataset.unit);
+    /* 저장된 순서 + 새로 생긴 섹션은 원래 위치 뒤에 */
+    const def = ['b0','k0','k1','k2'].concat(ids.filter(x=>x!=='b0' && !/^k/.test(x)));
+    let order = saved.filter(x=>ids.includes(x)); def.forEach(x=>{ if(ids.includes(x) && !order.includes(x)){ const i = def.indexOf(x), prev = def.slice(0,i).reverse().find(p=>order.includes(p)); order.splice(prev ? order.indexOf(prev)+1 : 0, 0, x); } });
+    let n = 0;
+    order.forEach((id, i)=>{ const el = U.find(u=>u.dataset.unit===id); if(!el) return;
+      el.style.order = String(10 + i);
+      const hs = el.classList.contains('kw-sec') ? [...el.querySelectorAll(':scope > h4.kw-h')] : [...el.querySelectorAll('h4')].filter(h=>!h.closest('.kw'));
+      const on = visible(el);
+      hs.forEach((h, j)=>{ numSpan(h).textContent = on ? (++n) + '. ' : ''; if(j===0) ctl(h, id); });
+    });
+    window.__wkOrder = order;
+    /* 본문이 다른 섹션 번호를 가리키는 문구도 바뀐 번호로 (예: 「④ 항목에서 원인·조치」 · 「1번 MTTR…」) */
+    const N = {}; U.forEach(u=>{ const sp = u.querySelector('.wk-no'); const v = sp && parseInt(sp.textContent,10); if(v) N[u.dataset.unit] = v; });
+    const vd = document.getElementById('wkVerdict');
+    if(vd && N.b3) vd.innerHTML = vd.innerHTML.replace(/(?:[\u2460-\u2473]|\d+번) 항목에서/g, N.b3 + '번 항목에서');
+    const an = document.getElementById('wkAvailNote');
+    if(an && N.k0) an.innerHTML = an.innerHTML.replace(/\d+번 지표 요약/g, N.k0 + '번 지표 요약');
+    U.filter(u=>u.classList.contains('kw-sec')).forEach(u=>u.querySelectorAll('h4.kw-h small').forEach(sm=>{
+      if(sm.dataset.o == null) sm.dataset.o = sm.innerHTML;
+      sm.innerHTML = sm.dataset.o.replace(/([123])번/g, (m, d)=> (N['k'+(d-1)] || d) + '번'); }));
+  }
+  function move(id, d){
+    const order = (window.__wkOrder||[]).slice(); const U = units();
+    const vis = order.filter(x=>{ const el = U.find(u=>u.dataset.unit===x); return el && visible(el); });
+    const i = vis.indexOf(id), j = i + d; if(i<0 || j<0 || j>=vis.length) return;
+    const a = order.indexOf(vis[i]), b = order.indexOf(vis[j]); [order[a], order[b]] = [order[b], order[a]];
+    setOrder(order); apply();
+    const el = U.find(u=>u.dataset.unit===id); if(el) el.scrollIntoView({ block:'nearest', behavior:'smooth' });
+  }
+  window.wkOrderReset = function(){ setOrder([]); apply(); };
+  window.wkOrderApply = apply;
+  /* 다시 그릴 때마다 · 공통 블록이 늦게 그려질 때마다 */
+  if(typeof renderWeekly === 'function'){ const _r = renderWeekly; renderWeekly = function(){ const r = _r.apply(this, arguments); try{ apply(); }catch(e){ console.error(e); } return r; }; }
+  const kwh = document.getElementById('wkKW');
+  if(kwh && window.MutationObserver) new MutationObserver(()=>{ try{ apply(); }catch(e){} }).observe(kwh, { childList:true });
+  try{ apply(); }catch(e){}
+  const pb = document.getElementById('wkPrint');
+  if(pb && !document.getElementById('wkOrdReset')){ const b = document.createElement('button'); b.type = 'button'; b.id = 'wkOrdReset'; b.className = 'wk-ordreset';
+    b.textContent = '↺ 표 순서 처음대로'; b.title = '▲▼ 로 바꾼 표 순서를 원래대로 되돌립니다'; b.onclick = ()=>window.wkOrderReset(); pb.parentNode.insertBefore(b, pb); }
 })();
 </script>
 </body>
