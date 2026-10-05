@@ -339,7 +339,11 @@ function loadTargets(){
 }
 function saveTargetsToStorage(obj){ localStorage.setItem('stc_kpi_targets', JSON.stringify(obj)); }
 
+/* 설비명 표기 통일 — 원본이 'DC2' / 'DC02' 두 가지로 들어와 같은 설비가 둘로 갈라지던 문제 (9/2 부터 'DC02') */
+function normDC(v){ const t = String(v||'').trim(), m = t.match(/^DC\s*-?\s*0*(\d{1,2})$/i); return m ? 'DC' + parseInt(m[1],10) : t; }
+function normRowsDC(rows){ (rows||[]).forEach(r=>{ if(r && r['설비명']) r['설비명'] = normDC(r['설비명']); }); }
 function render(){
+  [RAW_A, RAW_P, RAW_Q, RAW_MODEL].forEach(normRowsDC);
   const {from,to}=getDateRange();
   const isCustom = document.getElementById('periodSelect').value==='custom';
   document.getElementById('dateFrom').style.display=isCustom?'inline-block':'none';
