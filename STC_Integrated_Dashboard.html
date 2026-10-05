@@ -226,10 +226,17 @@ table.fc-t .tot{background:#eef2f7;font-weight:800;}
 .note-ft{padding:8px 16px 12px;text-align:right;} .note-ft button{border:0;background:none;color:#64748b;cursor:pointer;font-size:12px;}
 .note-rep{padding:6px 16px;} .note-rep .note-ph img{width:180px;height:135px;}
 @media print{.note-bg{display:none!important;} .qt-ndel{display:none;} .note-rep .note-ph img{width:150px;height:112px;}}
+.gt-fac{display:inline-block;font-style:normal;font-size:9.5px;font-weight:800;line-height:1;padding:2px 4px;border-radius:3px;margin-left:4px;color:#fff;vertical-align:1px;}
+.gt-fac.fac1{background:#c2410c;} .gt-fac.fac2{background:#7c3aed;}
+.gt-facs{display:inline-flex;align-items:center;gap:4px;margin-left:10px;font-size:12px;} .gt-facs b{margin-left:2px;} .gt-facs small{color:#64748b;margin-right:8px;}
+.f2g-t tr.fr td{font-size:11px;} .f2g-t tr.fr.fac1 td.lb{color:#c2410c;font-weight:700;} .f2g-t tr.fr.fac2 td.lb{color:#7c3aed;font-weight:700;}
 .f2-fac{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:0 0 8px 12px;font-size:12px;}
 .f2-fac .lb{font-weight:800;color:#334155;margin-right:2px;}
-.f2-fac button{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:14px;padding:3px 11px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;color:#334155;}
-.f2-fac button.on.a{background:#1e3c72;border-color:#1e3c72;color:#fff;} .f2-fac button.on.f1{background:#b45309;border-color:#b45309;color:#fff;} .f2-fac button.on.f2{background:#7c3aed;border-color:#7c3aed;color:#fff;}
+.f2-fac label.ck{display:inline-flex;align-items:center;gap:6px;border:1px solid #cbd5e1;background:#fff;border-radius:14px;padding:3px 11px 3px 8px;font-size:11.5px;font-weight:700;cursor:pointer;color:#64748b;user-select:none;}
+.f2-fac label.ck input{display:none;} .f2-fac label.ck i{width:14px;height:14px;border-radius:3px;border:2px solid currentColor;display:inline-block;box-sizing:border-box;}
+.f2-fac label.ck.a{color:#2a78d6;} .f2-fac label.ck.f1{color:#c2410c;} .f2-fac label.ck.f2{color:#7c3aed;}
+.f2-fac label.ck.on{background:#f8fafc;border-color:currentColor;} .f2-fac label.ck.on i{background:currentColor;box-shadow:inset 0 0 0 2px #fff;}
+.f2-fac label.ck:not(.on){opacity:.65;} .f2-fac .hp{color:#64748b;cursor:help;font-size:13px;} .f2-fac-map .hl{margin:4px 0 2px;color:#334155;}
 .f2-fac-map{flex-basis:100%;font-size:11.5px;color:#475569;margin-top:2px;} .f2-fac-map summary{cursor:pointer;color:#64748b;}
 .f2-fac-map div{margin:4px 0;line-height:1.9;} .f2-fac-map b{display:inline-block;min-width:38px;padding:0 6px;border-radius:4px;color:#fff;margin-right:6px;text-align:center;} .f2-fac-map b.fac1{background:#b45309;} .f2-fac-map b.fac2{background:#7c3aed;}
 .f2-fac-map span{display:inline-block;border:1px solid #e2e8f0;border-radius:10px;padding:0 8px;margin:0 3px 3px 0;background:#f8fafc;} .f2-fac-map span.g{border-style:dashed;color:#92400e;}
@@ -1896,14 +1903,16 @@ function f2pTrend(dFrom, dTo){
   if(!days.length) return `<div class="qt-box"><div class="qt-h"><b>${X.tNg}</b></div>${R.ctl}<div style="padding:14px;color:#6b7280;font-size:12px">${X.noData}</div></div>`;
   const sub = X.tSub.replace('{n}', days.length).replace('{a}', days[0]).replace('{b}', days[days.length-1]);
   const r3 = v => v==null ? null : +v.toFixed(3);
-  const sel = f2FacSel(), FC = f2pFacCols(), selR = a => a && a.t ? f2pSelN(a, FC, sel)/a.t*100 : null;
-  const ser = [ { name: sel==='all' ? X.ng : `%NG — ${f2FacLbl(sel)}`, color: sel==='FAC1' ? '#b45309' : sel==='FAC2' ? '#7c3aed' : '#2a78d6', vals:days.map(d=>r3(selR(S.day[d]))), main:true } ];
-  if(sel!=='FAC2') ser.push({ name:X.mat, color:'#1baf7a', vals:days.map(d=>r3(f2pMR(S.day[d]))) });
-  const c1 = qtTrendHtml({ id:'qtF2p', title: X.tNg + (sel==='all' ? '' : ` · ${f2FacLbl(sel)}`), sub, dates:days,
+  const sel = f2FacSel(), FC = f2pFacCols(), ON = f2FacList();
+  const rateOf = (a, g) => a && a.t ? f2pSelN(a, FC, g)/a.t*100 : null;
+  const COL = { all:'#2a78d6', FAC1:'#c2410c', FAC2:'#7c3aed' };
+  const ser = ['all','FAC1','FAC2'].filter(g=>ON.includes(g)).map((g,i)=>({ name: f2FacLbl(g), color:COL[g], vals:days.map(d=>r3(rateOf(S.day[d], g))), main:i===0 }));
+  if(!ser.length) ser.push({ name:X.ng, color:COL.all, vals:days.map(d=>r3(rateOf(S.day[d], 'all'))), main:true });
+  const c1 = qtTrendHtml({ id:'qtF2p', title: X.tNg, sub, dates:days,
     series:ser,
     ctl:f2FacCtl(FC) + R.ctl, noteScope:'FAC2', noteTag:'', target:f2Target(), tLabel:X.tg, maxLbl:12, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
     bars:{ name:X.prod, vals:days.map(d=>S.day[d].t || null) },
-    extra:i => { const a = S.day[days[i]]; return `${X.prod} ${a.t.toLocaleString()} · NG ${a.n.toLocaleString()}${sel==='all'?'':` (${sel} ${f2pSelN(a, FC, sel).toLocaleString()})`} · ${a.mcs.size} M/C`; } });
+    extra:i => { const a = S.day[days[i]]; return `${X.prod} ${a.t.toLocaleString()} · NG ${a.n.toLocaleString()} (FAC1 ${f2pSelN(a, FC, 'FAC1').toLocaleString()} · FAC2 ${f2pSelN(a, FC, 'FAC2').toLocaleString()} · Mat'l ${(a.mb+a.ma).toLocaleString()}) · ${a.mcs.size} M/C`; } });
   /* 일별 가동률 · OEE 차트는 빼기로 함 (2026-10-02) */
   return c1 + `<div class="legend f2-noprint" style="margin:-8px 0 14px"><span>📝 ${X.clickNote}</span></div>`;
 }
@@ -2036,19 +2045,27 @@ function f2FacOf(name, code){
   if(best) return { fac:C.byName[best], guess:false };
   return { fac: f2pGrp(name)==='다캐불량' ? 'FAC1' : 'FAC2', guess:true };
 }
-function f2FacSel(){ try{ const v = localStorage.getItem('stc_f2_fac'); return v==='FAC1'||v==='FAC2' ? v : 'all'; }catch(e){ return 'all'; } }
-function f2FacSet(v){ try{ localStorage.setItem('stc_f2_fac', v); }catch(e){} setTimeout(renderF2, 0); }
-const F2_FAC_TX = { ko:{ lb:'불량 구분', all:'전체 불량', f1:'FAC1 불량 (다캐·소재)', f2:'FAC2 불량 (가공)', src:'기준: 구글시트 F2_불량코드', guess:'추정 (시트에 없는 이름)', list:'분류 보기' },
-  en:{ lb:'Defects', all:'All', f1:'FAC1 defects (casting · material)', f2:'FAC2 defects (machining)', src:'Source: sheet F2_불량코드', guess:'guessed (not in sheet)', list:'Show mapping' },
-  th:{ lb:'ประเภทของเสีย', all:'ทั้งหมด', f1:'FAC1 (ไดคาสติ้ง · วัตถุดิบ)', f2:'FAC2 (แมชชีนนิ่ง)', src:'อ้างอิง: ชีต F2_불량코드', guess:'ประมาณ (ไม่มีในชีต)', list:'ดูการจัดกลุ่ม' } };
+/* 표시 선택 (여러 개 동시에) — 'all' 전체 · 'FAC1' 다이캐스팅 원인 · 'FAC2' MCT 가공 원인 */
+function f2FacList(){ try{ const v = JSON.parse(localStorage.getItem('stc_f2_facs')||'null'); if(Array.isArray(v)) return v.filter(x=>['all','FAC1','FAC2'].includes(x)); }catch(e){} return ['all','FAC1','FAC2']; }
+/* 표·상위3 처럼 한 가지 기준만 쓰는 곳 — 전체가 켜져 있거나 FAC1·FAC2 둘 다면 전체, 하나만이면 그것 */
+function f2FacSel(){ const L = f2FacList(); if(!L.length || L.includes('all') || (L.includes('FAC1') && L.includes('FAC2'))) return 'all'; return L[0]; }
+function f2FacSet(v){ const L = f2FacList(), i = L.indexOf(v); if(i>=0) L.splice(i,1); else L.push(v);
+  try{ localStorage.setItem('stc_f2_facs', JSON.stringify(L)); }catch(e){} setTimeout(renderF2, 0); }
+const F2_FAC_TX = { ko:{ lb:'불량 원인 표시', all:'전체 불량', f1:'FAC1 원인 (다이캐스팅)', f2:'FAC2 원인 (MCT 가공)', src:'기준: 구글시트 F2_불량코드 D열', guess:'추정 (시트에 없는 이름)', list:'어떤 불량이 어디에 들어가나?',
+       help:'전체 불량 = FAC1 원인 + FAC2 원인 · FAC1 원인 = 주조(다이캐스팅) 때 생긴 불량이 가공 중에 드러난 것 (기포·박리 등 + 소재 불량 Mat\'l) · FAC2 원인 = MCT 가공 중에 생긴 불량 (스크래치·치수 등) · 여러 개를 같이 켤 수 있음' },
+  en:{ lb:'Show', all:'All defects', f1:'FAC1 cause (die casting)', f2:'FAC2 cause (MCT machining)', src:'Source: sheet F2_불량코드 col D', guess:'guessed (not in sheet)', list:'Which defect goes where?',
+       help:"All = FAC1 + FAC2 · FAC1 = casting defects found during machining (porosity, peel off … + material NG) · FAC2 = defects made by machining · several can be on at once" },
+  th:{ lb:'แสดง', all:'ของเสียทั้งหมด', f1:'สาเหตุ FAC1 (ไดคาสติ้ง)', f2:'สาเหตุ FAC2 (แมชชีนนิ่ง)', src:'อ้างอิง: ชีต F2_불량코드', guess:'ประมาณ (ไม่มีในชีต)', list:'ประเภทไหนอยู่กลุ่มไหน',
+       help:'ทั้งหมด = FAC1 + FAC2 · เลือกได้หลายอัน' } };
 const f2FacTx = () => F2_FAC_TX[F2_FAC_TX[LANG] ? LANG : 'ko'];
 const f2FacLbl = v => { const X = f2FacTx(); return v==='FAC1' ? X.f1 : v==='FAC2' ? X.f2 : X.all; };
 /* types = [{ t:표시이름, fac, guess }] — 분류 목록(접기) 함께 */
 function f2FacCtl(types){
   const X = f2FacTx(), cur = f2FacSel();
-  const b = (v, l, c) => `<button type="button" class="${cur===v?'on':''} ${c}" onclick="f2FacSet('${v}')">${l}</button>`;
-  const lst = (types||[]).length ? `<details class="f2-fac-map"><summary>${X.list}</summary>${['FAC1','FAC2'].map(f=>`<div><b class="${f.toLowerCase()}">${f}</b> ${types.filter(t=>t.fac===f).map(t=>`<span${t.guess?` class="g" title="${X.guess}"`:''}>${esc2(t.t)}${t.guess?'*':''}</span>`).join('')}</div>`).join('')}<small>* ${X.guess} · ${X.src}${F2.code.n?` (${F2.code.n})`:' — 시트를 못 읽음'}</small></details>` : '';
-  return `<div class="f2-fac f2-noprint"><span class="lb">${X.lb}</span>${b('all',X.all,'a')}${b('FAC1',X.f1,'f1')}${b('FAC2',X.f2,'f2')}${lst}</div>`;
+  const on = f2FacList();
+  const b = (v, l, c) => `<label class="ck ${c}${on.includes(v)?' on':''}"><input type="checkbox" ${on.includes(v)?'checked':''} onchange="f2FacSet('${v}')"><i></i>${l}</label>`;
+  const lst = (types||[]).length ? `<details class="f2-fac-map"><summary>${X.list}</summary><div class="hl">${esc2(X.help)}</div>${['FAC1','FAC2'].map(f=>`<div><b class="${f.toLowerCase()}">${f}</b> ${types.filter(t=>t.fac===f).map(t=>`<span${t.guess?` class="g" title="${X.guess}"`:''}>${esc2(t.t)}${t.guess?'*':''}</span>`).join('')}</div>`).join('')}<small>* ${X.guess} · ${X.src}${F2.code.n?` (${F2.code.n})`:' — 시트를 못 읽음'}</small></details>` : '';
+  return `<div class="f2-fac f2-noprint"><span class="lb">${X.lb}</span>${b('all',X.all,'a')}${b('FAC1',X.f1,'f1')}${b('FAC2',X.f2,'f2')}<span class="hp" title="${esc2(X.help)}">ⓘ</span>${lst}</div>`;
 }
 /* F2_생산실적 행(또는 합계)의 열 분류 — 불량유형 + Mat'l Before/After + Setting */
 function f2pFacCols(){
@@ -2288,8 +2305,13 @@ function gtHtml(cfg){
   const noteOn = typeof cfg.noteTag==='function' && typeof noteFor==='function';
   const notesOf = (d, g) => noteOn ? noteFor(d, cfg.noteTag(g.mc)) : [];
   const nOpen = (d, g) => noteOn ? `gtNote('${id}','${d}','${gtEsc(cfg.noteTag(g.mc))}')` : '';
+  /* FAC1 / FAC2 불량 구분 (types 에 fac 가 있을 때만) */
+  const hasFac = TY.some(y=>y.fac);
+  const facB = y => y && y.fac ? `<em class="gt-fac ${y.fac.toLowerCase()}">${y.fac}</em>` : '';
+  const facSum = (o, f) => o ? TY.reduce((a,y,j)=>a + (y.fac===f ? (o.ty[j]||0) : 0), 0) : 0;
+  const facHead = g => !hasFac ? '' : `<span class="gt-facs">${['FAC1','FAC2'].map(f=>{ const v = facSum(g.P, f); return `${facB({fac:f})}<b>${gtFmt(v)}</b><small>${g.P.t?(v/g.P.t*100).toFixed(2):'0.00'}%</small>`; }).join('')}</span>`;
   const head = (g, i, jump) => { const rP = pc(g.P.n, g.P.t);
-    return `<div class="f2g-h"><span class="f2g-rk${i<3?' t':''}">${i+1}</span><b>${gtEsc(g.mc)}</b><span class="nm">${gtEsc(g.name)}</span>${g.sub?`<small>${gtEsc(g.sub)}</small>`:''}
+    return `<div class="f2g-h"><span class="f2g-rk${i<3?' t':''}">${i+1}</span><b>${gtEsc(g.mc)}</b><span class="nm">${gtEsc(g.name)}</span>${g.sub?`<small>${gtEsc(g.sub)}</small>`:''}${facHead(g)}
       <span class="kp gt-kp"><span class="gt-kd">📅 <b>${pFrom===pTo ? pTo.slice(5).replace('-','/') : pFrom.slice(5).replace('-','/')+' ~ '+pTo.slice(5).replace('-','/')}</b></span><span>Total <b>${gtFmt(g.P.t)}</b></span><span>NG <b>${gtFmt(g.P.n)}</b></span><span>%NG <b style="color:${rc(rP)}">${rP==null?'–':rP.toFixed(2)+'%'}</b></span></span>${jump?`<a href="#" class="gt-jump" onclick="gtJump('${id}',${i});return false;">${TX.tbl}</a>`:'<span class="gt-jsp"></span>'}</div>`; };
   const tyOf = g => { const L = TY.map((y,j)=>j).filter(j=>g.P.ty[j]>0 || days.some(d=>g.D[d] && g.D[d].ty[j]>0)).sort((a,b)=>g.P.ty[b]-g.P.ty[a]);
     window.__gtDef[id+'|'+g.key] = L.slice(cfg.topN || 5).map(j=>TY[j].k); return L; };
@@ -2297,7 +2319,7 @@ function gtHtml(cfg){
   const chart = (g, tyIdx) => {
     const W = 1000, H = 262, Lx = 46, Rx = 150, T = 28, B = 26, PH = H-T-B, n = days.length, cw = (W-Lx-Rx)/Math.max(1,n);
     const hid = gtHidden(id, g.key);
-    const serAll = tyIdx.map((j,k)=>({ name:TY[j].t, key:TY[j].k, c:GT_COL[k % GT_COL.length], v:days.map(d=>{ const o = g.D[d]; return o && o.t ? o.ty[j]/o.t*100 : null; }) }));
+    const serAll = tyIdx.map((j,k)=>({ name:TY[j].t, key:TY[j].k, fac:TY[j].fac, c:GT_COL[k % GT_COL.length], v:days.map(d=>{ const o = g.D[d]; return o && o.t ? o.ty[j]/o.t*100 : null; }) }));
     const ser = serAll.filter(sr=>!hid.includes(sr.key));
     const tot = { name:TX.rateName, key:'__tot', c:'#c62828', tot:true, v:days.map(d=>{ const o = g.D[d]; return o && o.t ? o.n/o.t*100 : null; }) };
     const showTot = !hid.includes('__tot');
@@ -2341,7 +2363,7 @@ function gtHtml(cfg){
     ends.forEach(e=>{ const y = Math.max(e.y+4, last+12); if(y > H-B+2 && !e.sr.tot) return; last = y;
       s += `<text x="${W-Rx+8}" y="${y.toFixed(1)}" font-size="10.5" font-weight="${e.sr.tot?800:600}" fill="${e.sr.c}">● ${gtEsc(e.sr.name)} ${e.v.toFixed(2)}%</text>`; });
     const ek = gtEnc(g.key), names = gtEnc(JSON.stringify(serAll.map(sr=>sr.key)));
-    const chip = (sr, on) => `<button class="f2g-chip${on?' on':''}" onclick="gtTog('${id}','${ek}','${gtEnc(sr.key)}')" style="--c:${sr.c}"><i></i>${gtEsc(sr.name)}</button>`;
+    const chip = (sr, on) => `<button class="f2g-chip${on?' on':''}" onclick="gtTog('${id}','${ek}','${gtEnc(sr.key)}')" style="--c:${sr.c}"><i></i>${gtEsc(sr.name)}${facB(sr)}</button>`;
     const lg = `<span class="f2g-sel">${TX.sel}</span>` + chip(tot, showTot) + serAll.map(sr=>chip(sr, !hid.includes(sr.key))).join('')
       + `<button class="f2g-all" onclick="gtSetAll('${id}','${ek}', null)">${TX.all}</button><button class="f2g-all" onclick="gtSetAll('${id}','${ek}','${names}')">${TX.none2}</button>`
       + `<span class="f2g-tgl"><b class="gt-pbar"></b>${TX.prodLg}${tg!=null?` <i></i>${TX.tg} ${tg}%`:''}</span>`;
@@ -2353,11 +2375,11 @@ function gtHtml(cfg){
   /* ② 순위표 */
   const sum = `<div class="gt-card"><div class="gt-scroll"><table class="gt-sumt">
     <thead><tr><th>${TX.rank}</th><th class="l">${TX.grp}</th><th>Total</th><th>NG</th><th>% NG</th><th class="l">${TX.top}</th></tr></thead>
-    <tbody>${list.map((g,i)=>{ const r = pc(g.P.n,g.P.t), top = TY.map((y,j)=>({ t:y.t, v:g.P.ty[j] })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,3);
+    <tbody>${list.map((g,i)=>{ const r = pc(g.P.n,g.P.t), top = TY.map((y,j)=>({ t:y.t, fac:y.fac, v:g.P.ty[j] })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,3);
       return `<tr><td><a href="#" onclick="gtJump('${id}',${i});return false;" class="f2g-rk${i<3?' t':''}">${i+1}</a></td>
         <td class="l"><b>${gtEsc(g.mc)}</b> · ${gtEsc(g.name)} ${g.sub?`<small>${gtEsc(g.sub)}</small>`:''}</td>
         <td>${gtFmt(g.P.t)}</td><td><b>${gtFmt(g.P.n)}</b></td><td style="color:${rc(r)};font-weight:800">${r==null?'–':r.toFixed(2)+'%'}</td>
-        <td class="l" style="font-size:11.5px">${top.map(x=>`${gtEsc(x.t)} <b>${gtFmt(x.v)}</b> (${(x.v/g.P.t*100).toFixed(2)}%)`).join(' · ') || '–'}</td></tr>`; }).join('')}</tbody></table></div></div>`;
+        <td class="l" style="font-size:11.5px">${top.map(x=>`${gtEsc(x.t)}${facB(x)} <b>${gtFmt(x.v)}</b> (${(x.v/g.P.t*100).toFixed(2)}%)`).join(' · ') || '–'}</td></tr>`; }).join('')}</tbody></table></div></div>`;
   /* ③ 묶음별 그래프 + 표 */
   const cards = list.map((g,i)=>{
     const P = g.P, rP = pc(P.n,P.t), tyIdx = tyOf(g), hid = gtHidden(id, g.key);
@@ -2376,8 +2398,8 @@ function gtHtml(cfg){
       mRow + `<tr class="q"><td class="lb">${TX.prod}</td>${days.map(d=>cell(d,o=>gtFmt(o.t))).join('')}<td class="pt">${gtFmt(P.t)}</td></tr>`,
       `<tr class="q"><td class="lb">${TX.def}</td>${days.map(d=>cell(d,o=>o.n?gtFmt(o.n):'0')).join('')}<td class="pt">${gtFmt(P.n)}</td></tr>`,
       `<tr class="r${hid.includes('__tot')?' off':' sel'}" style="--c:#c62828"><td class="lb">${TX.rate}</td>${days.map(d=>{ const o = g.D[d], v = o && o.t ? o.n/o.t*100 : null; return `<td class="${inP(d)?'in':''}"${rcol(v)}>${v==null?'<span class="nil">·</span>':v.toFixed(2)}</td>`; }).join('')}<td class="pt"${rcol(rP)}>${rP==null?'–':rP.toFixed(2)+'%'}</td></tr>`
-    ].concat(tyIdx.map((j,k)=>{ const on = !hid.includes(TY[j].k), col = GT_COL[k % GT_COL.length];
-      return `<tr class="ty${on?' sel':' off'}" style="--c:${col}"><td class="lb"><i class="sw"></i>${gtEsc(TY[j].t)} %</td>${days.map(d=>{ const o = g.D[d];
+    ].concat(hasFac ? ['FAC1','FAC2'].map(f=>`<tr class="fr ${f.toLowerCase()}"><td class="lb">${facB({fac:f})} ${f==='FAC1'?(L==='ko'?'다이캐스팅 원인':'die casting'):(L==='ko'?'MCT 가공 원인':'machining')} %</td>${days.map(d=>{ const o = g.D[d]; if(!o || !o.t) return `<td class="${inP(d)?'in':''}"><span class="nil">·</span></td>`; const v = facSum(o,f); return `<td class="${inP(d)?'in':''}">${v?(v/o.t*100).toFixed(2):'<span class="nil">0</span>'}</td>`; }).join('')}<td class="pt">${P.t?(facSum(P,f)/P.t*100).toFixed(2)+'%':'–'} <small>(${gtFmt(facSum(P,f))})</small></td></tr>`) : []).concat(tyIdx.map((j,k)=>{ const on = !hid.includes(TY[j].k), col = GT_COL[k % GT_COL.length];
+      return `<tr class="ty${on?' sel':' off'}" style="--c:${col}"><td class="lb"><i class="sw"></i>${gtEsc(TY[j].t)} %${facB(TY[j])}</td>${days.map(d=>{ const o = g.D[d];
           if(!o || !o.t || !o.ty[j]) return `<td class="${inP(d)?'in':''}"><span class="nil">·</span></td>`;
           return `<td class="${inP(d)?'in':''}" title="${gtEsc(TY[j].t)} ${gtFmt(o.ty[j])} / ${gtFmt(o.t)}">${(o.ty[j]/o.t*100).toFixed(2)}</td>`; }).join('')}
         <td class="pt">${P.ty[j]?(P.ty[j]/P.t*100).toFixed(2)+'%':'–'} <small>(${gtFmt(P.ty[j])})</small></td></tr>`; }));
@@ -2395,7 +2417,7 @@ function f2pRowsTypes(){
   const FA = TY.map(y=>f2FacOf(y.k)), sel = f2FacSel(), keep = TY.map((y,i)=>sel==='all' || FA[i].fac===sel);
   const rows = F2.pm.map(r=>{ const ty = TY.map(y=>y.get(r)).filter((v,i)=>keep[i]);
     return { d:r.d, key:r.mc+'|'+r.pn+'|'+r.op, mc:r.mc, name:short(r.pn, r.name), sub:`${r.pn} · OP${r.op}`, t:r.t, n: sel==='all' ? r.n : ty.reduce((a,v)=>a+(v||0),0), ty }; });
-  return { rows, types:TY.map(y=>({ k:y.k, t:y.t })).filter((y,i)=>keep[i]), fac:TY.map((y,i)=>({ t:y.t, ...FA[i] })) };
+  return { rows, types:TY.map((y,i)=>({ k:y.k, t:y.t, fac:FA[i].fac })).filter((y,i)=>keep[i]), fac:TY.map((y,i)=>({ t:y.t, ...FA[i] })) };
 }
 function f2pGroupTrend(pred, pFrom, dTo){
   const D = f2pRowsTypes();
@@ -2413,7 +2435,7 @@ function f2qRowsTypes(){
     const ty = cK.map(k=>f2n(r[k]));
     return { d, key:r['설비명']+'|'+pn+'|'+op, mc:r['설비명'], name:r['Part name']||pn, sub:`${pn}${op?' · '+op:''}`, t:f2n(r['생산수량']), n: sel==='all' ? f2n(r['불량수량']) : ty.reduce((a,v)=>a+v,0), ty }; })
     .filter(r=>r.d && r.mc && r.t>0);
-  return { rows, types:types0.filter((y,i)=>keep[i]).map(y=>({ k:y.k, t:y.t })), fac:types0 };
+  return { rows, types:types0.filter((y,i)=>keep[i]).map(y=>({ k:y.k, t:y.t, fac:y.fac })), fac:types0 };
 }
 function f2qGroupTrend(pFrom, pTo){
   if(!F2.mq.length) return `<div class="card empty" style="padding:14px">${T('f2.noMq')}</div>`;
@@ -3001,6 +3023,17 @@ function f2Dash(week){
 /* ---- 일일 / 주간 / 월간 품질보고 ---- */
 /* ---------- 일일 불량률 추이 (보고서 맨 앞) — SVG 선 차트 · 목표선 · 보고 기간 음영 · 마우스 툴팁 ---------- */
 window.__qt = window.__qt || {};
+function qtSmooth(P){   /* 단조 3차 곡선 (Fritsch–Carlson) — 값보다 튀어나가지 않는 부드러운 선 */
+  const n = P.length; if(!n) return ''; if(n < 3) return P.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const dx = [], sl = [], m = [];
+  for(let i=0;i<n-1;i++){ dx[i] = P[i+1][0]-P[i][0]; sl[i] = (P[i+1][1]-P[i][1]) / (dx[i]||1); }
+  m[0] = sl[0]; m[n-1] = sl[n-2];
+  for(let i=1;i<n-1;i++) m[i] = (sl[i-1]*sl[i] <= 0) ? 0 : 3*(dx[i-1]+dx[i]) / ((2*dx[i]+dx[i-1])/sl[i-1] + (dx[i]+2*dx[i-1])/sl[i]);
+  let d = 'M'+P[0][0].toFixed(1)+' '+P[0][1].toFixed(1);
+  for(let i=0;i<n-1;i++){ const h = dx[i]/3;
+    d += ` C${(P[i][0]+h).toFixed(1)} ${(P[i][1]+m[i]*h).toFixed(1)} ${(P[i+1][0]-h).toFixed(1)} ${(P[i+1][1]-m[i+1]*h).toFixed(1)} ${P[i+1][0].toFixed(1)} ${P[i+1][1].toFixed(1)}`; }
+  return d;
+}
 function qtTrendHtml(o){
   /* o = { id, title, sub, dates:[YYYY-MM-DD], series:[{name,color,vals:[n|null],main}], target, tLabel, hiFrom, hiTo } */
   /* 개선 조치 표시 — 메모 첫 줄(조치 제목) + 사진 썸네일을 날짜 위에, 그 날짜에 세로 점선 (조치 전·후 비교)
@@ -3058,8 +3091,8 @@ function qtTrendHtml(o){
   /* 선 · 점 */
   const ends = [];
   o.series.forEach(s=>{
-    let d = '', pen = false;
-    s.vals.forEach((v,i)=>{ if (v==null) return;   /* 생산 없는 날은 건너뛰고 앞뒤 점을 이어서 그림 */ d += (pen?'L':'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1) + ' '; pen = true; });
+    /* 부드러운 곡선 (값을 넘지 않는 단조 3차) · 생산 없는 날은 건너뛰고 앞뒤 점을 이음 */
+    const d = qtSmooth(s.vals.map((v,i)=>v==null ? null : [X(i), Y(v)]).filter(Boolean));
     g += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.main?2.5:2}" stroke-linejoin="round" stroke-linecap="round"${s.main?'':' opacity=".9"'}/>`;
     s.vals.forEach((v,i)=>{ if (v==null) return; const h = o.dates[i]>=o.hiFrom && o.dates[i]<=o.hiTo;
       g += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${h?4.5:3}" fill="${s.color}" stroke="#fff" stroke-width="1.5"/>`;
