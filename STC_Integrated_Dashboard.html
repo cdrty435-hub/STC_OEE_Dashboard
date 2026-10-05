@@ -258,6 +258,25 @@ table.fc-t .tot{background:#eef2f7;font-weight:800;}
 .lk-st{display:flex;align-items:center;justify-content:space-between;gap:8px;} .lk-mv{display:inline-flex;gap:4px;flex:none;}
 .lk-mv button{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:6px;width:28px;height:24px;font-size:11px;cursor:pointer;color:#334155;} .lk-mv button:hover:not(:disabled){background:#eef3fb;border-color:#1e3c72;} .lk-mv button:disabled{opacity:.3;cursor:default;}
 .lk-mv button.rs{width:auto;padding:0 8px;font-weight:700;}
+.lka-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:12px;}
+.lka-pill{display:inline-block;padding:3px 10px;border-radius:12px;margin-right:4px;font-size:12px;} .s0{background:#e2e8f0;color:#334155;} .s1{background:#dbeafe;color:#1d4ed8;} .s2{background:#dcfce7;color:#15803d;} .s3{background:#fef3c7;color:#b45309;}
+.lka-save{color:#475569;} .lka-save em{font-style:normal;color:#15803d;font-weight:700;opacity:0;transition:opacity .3s;margin-left:6px;} .lka-save em.on{opacity:1;}
+table.lka{table-layout:fixed;width:100%;} table.lka td{vertical-align:top;font-size:12.5px;padding:6px 5px;} table.lka th{font-size:12px;}
+table.lka textarea{width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:4px;padding:4px 6px;font:inherit;font-size:12.5px;resize:vertical;background:#fff;}
+.lka-in{width:100%;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:4px;padding:4px 5px;font:inherit;font-size:12px;background:#fff;} .lka-in.b{font-weight:800;} .lka-in.late{border-color:#dc2626;color:#dc2626;}
+select.lka-st{font-weight:800;} textarea:focus,.lka-in:focus{outline:2px solid #93c5fd;border-color:#3b82f6;}
+.lka-hint{font-size:11px;color:#64748b;margin-top:2px;} .lka-out{display:inline-block;font-size:10.5px;color:#64748b;background:#f1f5f9;border-radius:3px;padding:0 4px;margin-right:4px;}
+.lka-ty b.lk-wr{margin-right:5px;} .lka-eff{font-size:12px;}
+tr.lka-gh td{background:#f8fafc;border-top:2px solid #1e3c72;padding:8px 6px;font-size:13px;} tr.lka-gh.fac1 td{background:#fff7ed;} tr.lka-gh.fac2 td{background:#f5f3ff;}
+.lka-com{display:inline-block;background:#1e3c72;color:#fff;border-radius:3px;padding:1px 7px;font-size:11px;margin-right:4px;}
+.lka-add{float:right;border:1px dashed #64748b;background:#fff;border-radius:4px;padding:2px 10px;font-size:12px;cursor:pointer;} .lka-add:hover{background:#eef2ff;}
+.lka-x{border:none;background:none;color:#94a3b8;cursor:pointer;font-size:14px;padding:2px 4px;} .lka-x:hover{color:#dc2626;}
+tr.lka-logr td{border-top:none!important;padding-top:0;padding-bottom:10px;}
+.lka-log{border-left:3px solid #cbd5e1;padding:4px 0 2px 10px;background:#fafafa;border-radius:0 4px 4px 0;}
+.lka-logh{display:block;font-size:11.5px;font-weight:800;color:#475569;margin-bottom:3px;} .lka-logh small{font-weight:600;color:#94a3b8;}
+.lka-li{display:flex;gap:6px;align-items:center;margin:3px 0;} .lka-li .lka-in{width:auto;} .lka-li input[type=date]{width:132px;flex:none;} .lka-lt{flex:1;} .lka-lw{width:110px;flex:none;}
+.lka-add2{border:1px dashed #94a3b8;background:#fff;border-radius:4px;padding:2px 10px;font-size:11.5px;cursor:pointer;color:#334155;margin-top:2px;} .lka-add2:hover{background:#f1f5f9;}
+@media print{ table.lka textarea,.lka-in{border:none;resize:none;background:transparent;padding:0;} }
 .lk-cshare{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;font-size:12.5px;} .lk-cshare b{padding:3px 10px;border-radius:4px;color:#fff;font-weight:800;} .lk-cshare b.a{background:#c2410c;} .lk-cshare b.b{background:#7c3aed;} .lk-cshare span{opacity:.85;}
 .lk-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;margin:6px 0 10px;padding-bottom:8px;border-bottom:3px solid #1e3c72;} .lk-head h2{margin:0;font-size:20px;color:#1e3c72;} .lk-head div{font-size:13px;}
 .lk-tiles{margin-bottom:10px;} .lk-q{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:12px;padding:3px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-left:2px;}
@@ -3020,7 +3039,7 @@ function lkSet(from, to){ const r = lkRange(); if(from) r.from = from; if(to) r.
 function lkQuick(n){ const ds = f2pDates(); const last = ds[ds.length-1]; if(!last) return;
   const from = n==='mo' ? last.slice(0,8)+'01' : f2AddDays(last, -(n-1)); lkSet(from, last); }
 /* 섹션 위아래 순서 바꾸기 (▲▼ · 이 브라우저에 저장 · 「처음대로」) */
-const LK_DEF_ORDER = ['foc','main','ty','trend','f1'];
+const LK_DEF_ORDER = ['foc','main','ty','trend','act','f1'];
 function lkOrder(){ try{ const v = JSON.parse(localStorage.getItem('stc_f2_lk_order')||'null'); if(Array.isArray(v)){ const o = v.filter(k=>LK_DEF_ORDER.includes(k)); LK_DEF_ORDER.forEach((k,j)=>{ if(!o.includes(k)){ const p = j ? o.indexOf(LK_DEF_ORDER[j-1]) : -1; o.splice(p+1, 0, k); } }); return o; } }catch(e){} return LK_DEF_ORDER.slice(); }
 function lkMove(k, d){ const o = lkOrder(), i = o.indexOf(k), j = i + d; if(i<0 || j<0 || j>=o.length) return; [o[i], o[j]] = [o[j], o[i]];
   try{ localStorage.setItem('stc_f2_lk_order', JSON.stringify(o)); }catch(e){} setTimeout(()=>{ renderF2(); const el = document.getElementById('lk-sec-'+k); if(el) el.scrollIntoView({ block:'start' }); }, 0); }
@@ -3076,6 +3095,12 @@ function lkaSet(id, f, v, re){ const o = lkaRow(id); o[f] = v; lkaPut(o); if(re)
 function lkaAdd(grp){ const id = 'u' + Date.now().toString(36); lkaPut({ id, grp, custom:true, title:'', ty:'', cause:'', act:'', owner:'', start:'', due:'', st:'계획' }); renderF2();
   setTimeout(()=>{ const el = document.querySelector(`[data-lka="${id}"] textarea`); if(el) el.focus(); }, 50); }
 function lkaDel(id){ const o = lkaRow(id); if(!confirm(`'${o.title||o.ty||'이 대책'}' 줄을 삭제할까요?`)) return; o.del = true; lkaPut(o); renderF2(); }
+const lkaToday = () => new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+function lkaLogAdd(id){ const o = lkaRow(id); o.log = [...(o.log||[]), { d:lkaToday(), txt:'', who:o.owner||'' }]; lkaPut(o); renderF2();
+  setTimeout(()=>{ const L = document.querySelectorAll(`[data-lkalog="${id}"] .lka-lt`); if(L.length) L[L.length-1].focus(); }, 50); }
+function lkaLogSet(id, k, f, v){ const o = lkaRow(id); o.log = (o.log||[]).map(x=>({...x})); if(!o.log[k]) return; o.log[k][f] = v;
+  if(f==='d') o.log.sort((a,b)=>String(a.d).localeCompare(String(b.d))); lkaPut(o); if(f==='d') renderF2(); }
+function lkaLogDel(id, k){ const o = lkaRow(id); if(!confirm('이 진행 내용을 삭제할까요?')) return; o.log = (o.log||[]).filter((_,j)=>j!==k); lkaPut(o); renderF2(); }
 function lkaReset(id){ const d = LKA_DEF.find(x=>x.id===id); if(!d || !confirm('대책 · 추정 원인 문구를 기본값으로 되돌릴까요? (담당 · 날짜 · 상태는 그대로)')) return; const o = lkaRow(id); o.cause = d.cause; o.act = d.act; lkaPut(o); renderF2(); }
 function f2LinkView(){
   if(!F2.pm.length) return `<div class="card empty" style="padding:16px">F2_생산실적 데이터가 없습니다</div>`;
@@ -3170,6 +3195,63 @@ function f2LinkView(){
       vals: trD.map(d=>trIn[d] ? +((trTy[d]||[])[i]/trIn[d]*100).toFixed(3) : null) }; }));
   const trTbl = trD.length && trSeries.length ? `<div class="card">${qtTrendHtml({ id:'lk-trend', title:'유형별 불량 추이현황', sub:`${esc2(perLbl)} · 일별 유형 불량 ÷ 그날 FAC2 투입 · 실선 = FAC1 원인 · 점선 = FAC2 원인`,
       dates:trD, series:trSeries, rx:190, bars:{ name:'투입', vals:trD.map(d=>trIn[d]||0) } })}</div>` : '';
+  /* ---- Worst 3 개선 대책 ---- */
+  if(!LKA.loaded && !LKA.loading) lkaLoad().then(()=>{ if(F2_VIEW==='link') renderF2(); });
+  const FO = {}; F2.pm.forEach(r=>{ const op = String(r.op||''); if(FO[r.pn]==null || op.localeCompare(FO[r.pn], undefined, {numeric:true}) < 0) FO[r.pn] = op; });
+  const lastD = ds[ds.length-1];
+  const rateOf = (i, d0, d1) => { let a = 0, b = 0; F2.pm.forEach(r=>{ if(r.d<d0 || r.d>d1) return; if(String(r.op||'')===FO[r.pn]) b += r.t;
+      a += i==null ? r.n : (typeof FC[i].i==='number' ? (r.df[FC[i].i]||0) : (r[FC[i].i]||0)); }); return b ? a/b*100 : null; };
+  const effOf = (i, st) => { if(!st) return `<span class="lka-hint">시작일 입력 시 자동</span>`;
+    const pv = rateOf(i, f2AddDays(st,-14), f2AddDays(st,-1)), av = st <= lastD ? rateOf(i, st, lastD) : null;
+    if(pv==null) return '<span class="lka-hint">시작 전 데이터 없음</span>';
+    if(av==null) return `<span class="lka-hint">전 ${pv.toFixed(2)}% · 시작 후 데이터 대기</span>`;
+    const dd = pv ? (av-pv)/pv*100 : 0, good = av < pv;
+    return `<b>${pv.toFixed(2)}%</b> → <b style="color:${good?'#15803d':'#dc2626'}">${av.toFixed(2)}%</b><div class="lka-hint" style="color:${good?'#15803d':'#dc2626'}">${good?'▼':'▲'} ${Math.abs(dd).toFixed(0)}% <small>(전 14일 vs 시작 후)</small></div>`; };
+  const tyIdx = t => FC.findIndex(c=>f2Nm(c.t)===f2Nm(t));
+  const saved = Object.values(LKA.map).filter(o=>!o.del);
+  const grpList = g => {
+    if(g==='COM') return LKA_DEF.filter(d=>d.grp==='COM').map(d=>d.id).concat(saved.filter(o=>o.grp==='COM' && o.custom).map(o=>o.id));
+    const ids = [], seen = new Set();
+    w3(g).forEach(x=>{ const d = LKA_DEF.find(d=>d.grp===g && f2Nm(d.ty)===f2Nm(x.t)) || saved.find(o=>o.grp===g && !o.custom && f2Nm(o.ty)===f2Nm(x.t)); const id = d ? d.id : 'w_'+g+'_'+f2Nm(x.t);
+      if(!d && !LKA.map[id]) LKA.map[id] = { id, grp:g, ty:x.t, cause:'', act:'', _k:'' }; ids.push(id); seen.add(id); });
+    LKA_DEF.filter(d=>d.grp===g && !seen.has(d.id)).forEach(d=>{ ids.push(d.id); seen.add(d.id); });
+    saved.filter(o=>o.grp===g && !seen.has(o.id)).forEach(o=>{ ids.push(o.id); seen.add(o.id); });
+    return ids; };
+  const owners = [...new Set(saved.map(o=>o.owner).filter(Boolean))].sort();
+  const lkaTr = (id, g) => { const o = lkaRow(id); if(o.del) return '';
+    const i = o.ty ? tyIdx(o.ty) : -1, cur = g==='COM' ? (T2.in ? T2.n/T2.in*100 : null) : (i>=0 && T2.in ? rows.reduce((s,x)=>s+x.f2.ty[i],0)/T2.in*100 : null);
+    const wk = g==='COM' ? -1 : w3(g).findIndex(x=>f2Nm(x.t)===f2Nm(o.ty));
+    const late = o.due && o.st!=='완료' && o.due < new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+    const ta = (f, ph) => `<textarea rows="2" placeholder="${ph}" onchange="lkaSet('${id}','${f}',this.value)">${esc2(o[f]||'')}</textarea>`;
+    return `<tr data-lka="${id}" class="st-${LKA_ST.indexOf(o.st)}">
+      <td class="l lka-ty">${g==='COM'||o.custom ? `<input class="lka-in b" value="${esc2(o.title||o.ty||'')}" placeholder="항목 이름" onchange="lkaSet('${id}','${g==='COM'?'title':'ty'}',this.value,true)">`
+        : `${wk>=0?`<b class="lk-wr ${g.toLowerCase()}">${wk+1}</b>`:'<small class="lka-out">Worst 밖</small>'}<b>${esc2(o.ty)}</b>`}</td>
+      <td>${cur==null?'–':`<b>${cur.toFixed(2)}%</b>`}<div class="lka-hint">${g==='COM'?'전체 %NG':'투입 대비'}</div></td>
+      <td class="l">${ta('cause','추정 원인')}</td><td class="l">${ta('act','개선 대책')}</td>
+      <td><input class="lka-in" list="lkaOwners" value="${esc2(o.owner||'')}" placeholder="담당자" onchange="lkaSet('${id}','owner',this.value,true)"></td>
+      <td><input type="date" class="lka-in" value="${esc2(o.start||'')}" onchange="lkaSet('${id}','start',this.value,true)"></td>
+      <td><input type="date" class="lka-in${late?' late':''}" value="${esc2(o.due||'')}" onchange="lkaSet('${id}','due',this.value,true)">${late?'<div class="lka-hint" style="color:#dc2626">기한 지남</div>':''}</td>
+      <td><select class="lka-in lka-st s${LKA_ST.indexOf(o.st)}" onchange="lkaSet('${id}','st',this.value,true)">${LKA_ST.map(s=>`<option${s===o.st?' selected':''}>${s}</option>`).join('')}</select></td>
+      <td class="lka-eff">${effOf(g==='COM'?null:(i>=0?i:undefined), o.start)}</td>
+      <td class="f2-noprint">${o.custom?`<button class="lka-x" title="삭제" onclick="lkaDel('${id}')">✕</button>`:LKA_DEF.some(d=>d.id===id)?`<button class="lka-x" title="문구 기본값으로" onclick="lkaReset('${id}')">↺</button>`:''}</td></tr>
+      <tr class="lka-logr" data-lkalog="${id}"><td></td><td colspan="9" class="l"><div class="lka-log">
+        <span class="lka-logh">진행 내용 <small>${(o.log||[]).length}건</small></span>
+        ${(o.log||[]).map((x,k)=>`<div class="lka-li"><input type="date" class="lka-in" value="${esc2(x.d||'')}" onchange="lkaLogSet('${id}',${k},'d',this.value)">
+          <input class="lka-in lka-lt" value="${esc2(x.txt||'')}" placeholder="진행 내용 (예: 1차 교육 실시 12명)" onchange="lkaLogSet('${id}',${k},'txt',this.value)">
+          <input class="lka-in lka-lw" list="lkaOwners" value="${esc2(x.who||'')}" placeholder="담당" onchange="lkaLogSet('${id}',${k},'who',this.value)">
+          <button class="lka-x f2-noprint" title="이 진행 내용 삭제" onclick="lkaLogDel('${id}',${k})">✕</button></div>`).join('')}
+        <button class="lka-add2 f2-noprint" onclick="lkaLogAdd('${id}')">+ 진행 내용 추가</button></div></td></tr>`; };
+  const lkaGrp = (g, lbl, sub) => { const L = grpList(g).map(id=>lkaTr(id,g)).filter(Boolean);
+    return `<tr class="lka-gh ${g.toLowerCase()}"><td colspan="10">${g==='COM'?'<b class="lka-com">공통</b>':fb(g)} <b>${lbl}</b> <small>${sub}</small><button class="lka-add f2-noprint" onclick="lkaAdd('${g}')">+ 대책 추가</button></td></tr>${L.join('')}`; };
+  const stCnt = LKA_ST.map(s=>[...grpList('COM'),...grpList('FAC1'),...grpList('FAC2')].filter(id=>!lkaRow(id).del && lkaRow(id).st===s).length);
+  const actTbl = `<div class="card"><div class="lka-top"><span>${LKA_ST.map((s,k)=>`<b class="lka-pill s${k}">${s} ${stCnt[k]}</b>`).join('')}</span>
+      <span class="lka-save">${LKA.loading?'불러오는 중…':LKA.err?`<b style="color:#dc2626">불러오기 실패: ${esc2(LKA.err)}</b>`:''} 저장 위치: ${noteApi()?'<b>구글시트 (공유)</b>':'<b>이 PC 브라우저</b> <a href="javascript:void 0" onclick="noteSetApi()">공유 설정</a>'} <em id="lkaMsg"></em></span></div>
+    <datalist id="lkaOwners">${owners.map(n=>`<option value="${esc2(n)}">`).join('')}</datalist>
+    <div class="tblwrap"><table class="eq lka">
+    <colgroup><col style="width:14%"><col style="width:7%"><col style="width:20%"><col style="width:24%"><col style="width:9%"><col style="width:8.5%"><col style="width:8.5%"><col style="width:6%"><col style="width:11%"><col style="width:3%"></colgroup>
+    <thead><tr><th class="l">항목 / 불량유형</th><th>현재 %<br><small>${esc2(perLbl)}</small></th><th class="l">추정 원인</th><th class="l">개선 대책</th><th>담당</th><th>시작일</th><th>기한</th><th>상태</th><th>효과<br><small>전 → 후</small></th><th class="f2-noprint"></th></tr></thead>
+    <tbody>${lkaGrp('COM','공통 대책','두 공장 함께')}${lkaGrp('FAC1','1공장 (다이캐스팅) 원인','Worst 3 · '+esc2(perLbl))}${lkaGrp('FAC2','2공장 (MCT 가공) 원인','Worst 3 · '+esc2(perLbl))}</tbody></table></div>
+    <div class="legend" style="margin-top:6px"><span>※ 칸을 고치고 다른 곳을 누르면 바로 저장 · 담당자는 직접 입력 (한 번 넣은 이름은 목록에 뜸) · 효과 = 시작일 전 14일 vs 시작일 ~ 최근 (FAC2 투입 대비, 공통 = 전체 %NG) · 기간이 바뀌어 Worst 3 가 달라지면 새 유형 줄이 생기고 기존 줄은 'Worst 밖' 으로 남음 · ↺ = 문구 기본값</span></div></div>`;
   /* ---- FAC1 자체 불량유형 (연결된 모델) ---- */
   const lk1 = rows.map(x=>x.f1).filter(Boolean);
   const t1 = F1.types.map((k,i)=>({ k, v:lk1.reduce((s,o)=>s+o.ty[i],0) })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
@@ -3236,6 +3318,7 @@ function f2LinkView(){
       ['main', `모델 · 품번별 FAC1 / FAC2 실적 <small>(FAC1 원인 불량이 많은 순)</small>`, main],
       ['ty',   `FAC2 불량유형 — 원인 공장별 (FAC1 / FAC2) · Worst 3 · <b style="color:#1e3c72">${esc2(perLbl)}</b> <small>(전체 불량 대비 % · 품번별 수량과 투입 대비 %)</small>`, tyTbl],
       ['trend', `유형별 불량 추이 — FAC1 / FAC2 원인 Worst 3 · <b style="color:#1e3c72">${esc2(perLbl)}</b> <small>(일별 · FAC2 투입 대비 %)</small>`, trTbl],
+      ['act',  `Worst 3 개선 대책 — 공통 · 1공장 · 2공장 <small>(담당 · 시작일 · 기한 · 상태 입력 · 효과 자동)</small>`, actTbl],
       ['f1',   `FAC1 자체 불량유형 — 연결된 모델 <small>(Q_Model상세 · 생산 대비 %)</small>`, f1Tbl]
     ])}
     ${F1M.err && !F1M.rows.length ? `<div class="card empty" style="padding:12px">FAC1 Q_Model상세를 읽지 못했습니다: ${esc2(F1M.err)}</div>` : ''}`;
