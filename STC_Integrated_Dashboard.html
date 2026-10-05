@@ -1906,7 +1906,7 @@ function f2pTrend(dFrom, dTo){
   const sel = f2FacSel(), FC = f2pFacCols(), ON = f2FacList();
   const rateOf = (a, g) => a && a.t ? f2pSelN(a, FC, g)/a.t*100 : null;
   const COL = { all:'#2a78d6', FAC1:'#c2410c', FAC2:'#7c3aed' };
-  const ser = ['all','FAC1','FAC2'].filter(g=>ON.includes(g)).map((g,i)=>({ name: f2FacLbl(g), color:COL[g], vals:days.map(d=>r3(rateOf(S.day[d], g))), main:i===0 }));
+  const ser = ['all','FAC1','FAC2'].filter(g=>ON.includes(g)).map((g,i)=>({ name: f2FacLbl(g), tag: g==='all' ? (LANG==='ko'?'전체':'All') : g, color:COL[g], vals:days.map(d=>r3(rateOf(S.day[d], g))), main:i===0 }));
   if(!ser.length) ser.push({ name:X.ng, color:COL.all, vals:days.map(d=>r3(rateOf(S.day[d], 'all'))), main:true });
   const c1 = qtTrendHtml({ id:'qtF2p', title: X.tNg, sub, dates:days,
     series:ser,
@@ -3105,7 +3105,7 @@ function qtTrendHtml(o){
   ends.sort((a,b)=>a.y-b.y); let last = -99;
   ends.forEach(e=>{ const y = Math.max(e.y+4, last+13); last = y;
     g += e.tg ? `<text x="${W-R+6}" y="${y.toFixed(1)}" font-size="11" font-weight="700" fill="#b91c1c">${o.tLabel||'목표'} ${o.target}%</text>`
-              : `<text x="${W-R+6}" y="${y.toFixed(1)}" font-size="11" font-weight="700" fill="#374151"><tspan fill="${e.s.color}">●</tspan> ${e.v.toFixed(2)}%</text>`; });
+              : `<text x="${W-R+6}" y="${y.toFixed(1)}" font-size="11" font-weight="700" fill="#374151"><tspan fill="${e.s.color}">●</tspan>${e.s.tag?` <tspan fill="${e.s.color}" font-weight="800">${e.s.tag}</tspan>`:''} ${e.v.toFixed(2)}%</text>`; });
   g += `<line id="${o.id}-x" x1="0" x2="0" y1="${T}" y2="${H-B}" stroke="#94a3b8" stroke-width="1" visibility="hidden"/>`;
   /* 메모 있는 날짜 표시 (📝 개수) */
   if (false) o.dates.forEach((d,i)=>{ const c = 0; if(!c) return;
