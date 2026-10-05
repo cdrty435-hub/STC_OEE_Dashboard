@@ -226,6 +226,13 @@ table.fc-t .tot{background:#eef2f7;font-weight:800;}
 .note-ft{padding:8px 16px 12px;text-align:right;} .note-ft button{border:0;background:none;color:#64748b;cursor:pointer;font-size:12px;}
 .note-rep{padding:6px 16px;} .note-rep .note-ph img{width:180px;height:135px;}
 @media print{.note-bg{display:none!important;} .qt-ndel{display:none;} .note-rep .note-ph img{width:150px;height:112px;}}
+.f2-fac{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:0 0 8px 12px;font-size:12px;}
+.f2-fac .lb{font-weight:800;color:#334155;margin-right:2px;}
+.f2-fac button{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:14px;padding:3px 11px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;color:#334155;}
+.f2-fac button.on.a{background:#1e3c72;border-color:#1e3c72;color:#fff;} .f2-fac button.on.f1{background:#b45309;border-color:#b45309;color:#fff;} .f2-fac button.on.f2{background:#7c3aed;border-color:#7c3aed;color:#fff;}
+.f2-fac-map{flex-basis:100%;font-size:11.5px;color:#475569;margin-top:2px;} .f2-fac-map summary{cursor:pointer;color:#64748b;}
+.f2-fac-map div{margin:4px 0;line-height:1.9;} .f2-fac-map b{display:inline-block;min-width:38px;padding:0 6px;border-radius:4px;color:#fff;margin-right:6px;text-align:center;} .f2-fac-map b.fac1{background:#b45309;} .f2-fac-map b.fac2{background:#7c3aed;}
+.f2-fac-map span{display:inline-block;border:1px solid #e2e8f0;border-radius:10px;padding:0 8px;margin:0 3px 3px 0;background:#f8fafc;} .f2-fac-map span.g{border-style:dashed;color:#92400e;}
 .qt-rng{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:11.5px;color:#475569;margin:0 0 4px 12px;}
 .qt-rng button{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:12px;padding:2px 9px;font:inherit;font-size:11px;font-weight:600;cursor:pointer;color:#334155;}
 .qt-rng button:hover{background:#eef3fb;} .qt-rng button.on{background:#1e3c72;border-color:#1e3c72;color:#fff;}
@@ -1174,9 +1181,9 @@ function renderOverview(){
         · 읽는 경로(순서대로): ① 저장한 gid → ② 게시 CSV(sheet=탭이름) → ③ gviz(sheet=탭이름)
    ========================================================================= */
 const F2_SHEET_ID = '1m-b3Ur5VhewDhM0cbv39q8cuMm9Y0asyH1NyV0coDD4';
-const F2_TAB  = { pd:'F2_품번일별', det:'F2_불량상세', mq:'F2_MCT_Q', pm:'F2_생산실적', pmd:'F2_설비일별' };
-const F2_GID_DEF = { pm:'1950067484', pmd:'1796486014' };   /* OEE_RawData_APQ 탭 gid (FAC2 Raw Data → 변환기 출력) */
-const F2_NEED = { pm:['일자','설비','OP','품번(QC)','Total','FG','NG'], pmd:['일자','설비','Total','FG','NG','계획(h)'], mq:['일자','주차','설비명','Part no.','생산수량','양품','불량수량'], pd:['일자','주차','공정','Part no.',"Total Q'ty","FG Q'ty","NG Q'ty"], det:['주차','공정','구분','Part no.','불량유형','계통','수량'] };
+const F2_TAB  = { pd:'F2_품번일별', det:'F2_불량상세', mq:'F2_MCT_Q', pm:'F2_생산실적', pmd:'F2_설비일별', code:'F2_불량코드' };
+const F2_GID_DEF = { pm:'1950067484', pmd:'1796486014', code:'2002569652' };   /* OEE_RawData_APQ 탭 gid (FAC2 Raw Data → 변환기 출력) */
+const F2_NEED = { code:['코드','불량유형'], pm:['일자','설비','OP','품번(QC)','Total','FG','NG'], pmd:['일자','설비','Total','FG','NG','계획(h)'], mq:['일자','주차','설비명','Part no.','생산수량','양품','불량수량'], pd:['일자','주차','공정','Part no.',"Total Q'ty","FG Q'ty","NG Q'ty"], det:['주차','공정','구분','Part no.','불량유형','계통','수량'] };
 const F2_PROCS = ['MCT','OQC'];
 let F2 = { pd:[], det:[], mq:[], pm:[], pmd:[], loaded:false, err:null, loading:false };
 const f2n = v => { const s=String(v==null?'':v).replace(/,/g,'').trim(); if(!s) return 0;
@@ -1234,7 +1241,8 @@ const f2PartLbl = r => { const n = r['Part name'], k = String(r['Part no.']||'')
 async function loadF2(){
   F2.loading = true; F2.err = null; renderF2();
   /* 전 설비 생산실적(F2_생산실적 · F2_설비일별) — 품질 탭과 따로 읽는다 (한쪽이 없어도 다른 쪽은 뜬다) */
-  const pmJob = Promise.allSettled([f2Fetch('pm'), f2Fetch('pmd')]).then(([a,b])=>{
+  const codeJob = f2Fetch('code').then(f2CodeLoad).catch(()=>{ F2.code.err = true; });
+  const pmJob = Promise.allSettled([f2Fetch('pm'), f2Fetch('pmd'), codeJob]).then(([a,b])=>{
     F2.pm  = a.status==='fulfilled' ? f2pNorm(a.value)  : []; F2.pmErr = a.status==='fulfilled' ? '' : (a.reason && a.reason.message || String(a.reason));
     F2.pmd = b.status==='fulfilled' ? f2pNormD(b.value) : []; });
   try{
@@ -1888,12 +1896,14 @@ function f2pTrend(dFrom, dTo){
   if(!days.length) return `<div class="qt-box"><div class="qt-h"><b>${X.tNg}</b></div>${R.ctl}<div style="padding:14px;color:#6b7280;font-size:12px">${X.noData}</div></div>`;
   const sub = X.tSub.replace('{n}', days.length).replace('{a}', days[0]).replace('{b}', days[days.length-1]);
   const r3 = v => v==null ? null : +v.toFixed(3);
-  const c1 = qtTrendHtml({ id:'qtF2p', title:X.tNg, sub, dates:days,
-    series:[ { name:X.ng, color:'#2a78d6', vals:days.map(d=>r3(f2pNG(S.day[d]))), main:true },
-             { name:X.mat, color:'#1baf7a', vals:days.map(d=>r3(f2pMR(S.day[d]))) } ],
-    ctl:R.ctl, noteScope:'FAC2', noteTag:'', target:f2Target(), tLabel:X.tg, maxLbl:12, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
+  const sel = f2FacSel(), FC = f2pFacCols(), selR = a => a && a.t ? f2pSelN(a, FC, sel)/a.t*100 : null;
+  const ser = [ { name: sel==='all' ? X.ng : `%NG — ${f2FacLbl(sel)}`, color: sel==='FAC1' ? '#b45309' : sel==='FAC2' ? '#7c3aed' : '#2a78d6', vals:days.map(d=>r3(selR(S.day[d]))), main:true } ];
+  if(sel!=='FAC2') ser.push({ name:X.mat, color:'#1baf7a', vals:days.map(d=>r3(f2pMR(S.day[d]))) });
+  const c1 = qtTrendHtml({ id:'qtF2p', title: X.tNg + (sel==='all' ? '' : ` · ${f2FacLbl(sel)}`), sub, dates:days,
+    series:ser,
+    ctl:f2FacCtl(FC) + R.ctl, noteScope:'FAC2', noteTag:'', target:f2Target(), tLabel:X.tg, maxLbl:12, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
     bars:{ name:X.prod, vals:days.map(d=>S.day[d].t || null) },
-    extra:i => { const a = S.day[days[i]]; return `${X.prod} ${a.t.toLocaleString()} · NG ${a.n.toLocaleString()} · ${a.mcs.size} M/C`; } });
+    extra:i => { const a = S.day[days[i]]; return `${X.prod} ${a.t.toLocaleString()} · NG ${a.n.toLocaleString()}${sel==='all'?'':` (${sel} ${f2pSelN(a, FC, sel).toLocaleString()})`} · ${a.mcs.size} M/C`; } });
   /* 일별 가동률 · OEE 차트는 빼기로 함 (2026-10-02) */
   return c1 + `<div class="legend f2-noprint" style="margin:-8px 0 14px"><span>📝 ${X.clickNote}</span></div>`;
 }
@@ -1970,16 +1980,18 @@ function f2pDayMatrix(pred, S, pFrom, dTo){
   const X = f2pTx(), tg = f2Target(), CAP = 31;
   /* 보고 기간이 7일보다 짧으면(일일) 앞 7일을 함께 보여 흐름을 본다 — 보고 기간 열은 굵은 테두리 */
   const dFrom = f2DayDiff(pFrom, dTo) < 6 ? f2AddDays(dTo, -6) : pFrom;
-  const src = F2.pmd.length ? F2.pmd : F2.pm;
+  const sel = f2FacSel(), FC = f2pFacCols();
+  /* 구분(FAC1/FAC2)을 고르면 유형별 수량이 있는 F2_생산실적으로 계산 */
+  const src = sel==='all' && F2.pmd.length ? F2.pmd : F2.pm;
   const M = {}; src.forEach(r=>{ if(r.d < dFrom || r.d > dTo) return; const o = (M[r.mc] || (M[r.mc] = {}))[r.d] || (M[r.mc][r.d] = { t:0, n:0, p:0, a:0 });
-    o.t += r.t; o.n += r.n; o.p += r.p; o.a += r.a; });
+    o.t += r.t; o.n += (sel==='all' ? r.n : f2pSelN(r, FC, sel)); o.p += r.p; o.a += r.a; });
   let days = [...new Set(src.filter(r=>r.d>=dFrom && r.d<=dTo).map(r=>r.d))].sort();
   const cut = days.length > CAP; if(cut) days = days.slice(-CAP);
   const mcs = [...new Set([...S.mcList, ...Object.keys(M)])].sort((a,b)=>(parseInt(a.replace(/\D/g,''),10)||0)-(parseInt(b.replace(/\D/g,''),10)||0));
   if(!days.length) return '';
   const bg = r => r==null ? '' : r<=tg*0.5 ? '#dcfce7' : r<=tg ? '#fef9c3' : r<=tg*2 ? '#fed7aa' : '#fecaca';
   const kf = v => v>=10000 ? Math.round(v/1000)+'k' : v>=1000 ? (v/1000).toFixed(1)+'k' : String(Math.round(v));
-  return `<div class="card"><div style="font-size:11.5px;color:var(--ink-muted);margin-bottom:6px">${X.mxNote.replace('{t}', tg)}${cut?` · ${X.mxCap.replace('{n}',CAP)}`:''}</div>
+  return `<div class="card">${f2FacCtl()}<div style="font-size:11.5px;color:var(--ink-muted);margin-bottom:6px">${sel==='all'?'':`<b style="color:${sel==='FAC1'?'#b45309':'#7c3aed'}">%NG = ${esc2(f2FacLbl(sel))}</b> · `}${X.mxNote.replace('{t}', tg)}${cut?` · ${X.mxCap.replace('{n}',CAP)}`:''}</div>
     <div class="tblwrap"><table class="eq f2p-dm"><thead><tr><th>${X.h.mc}</th>${days.map(d=>{ const w = new Date(d+'T00:00:00Z').getUTCDay(); return `<th class="${d>=pFrom?'in':''}"${w===0?' style="color:#dc2626"':''}>${d.slice(5).replace('-','/')}</th>`; }).join('')}</tr></thead>
     <tbody>${mcs.map(mc=>`<tr><td class="name">${esc2(mc)}</td>${days.map(d=>{ const o = (M[mc]||{})[d]; if(!o || !o.t) return `<td class="nil">·</td>`;
         const r = o.n/o.t*100, av = o.p ? o.a/o.p*100 : null;
@@ -1992,6 +2004,61 @@ function f2pGrp(name){
   if(/mat'?l|porosity|peel|crack|squash|stain|short|swell|broken|bend|deform|dirty|소재|기포|박리|크랙|틀어짐|얼룩/.test(k)) return '다캐불량';
   if(/^other|^기타/.test(k)) return '기타';
   return '가공불량';
+}
+/* ===== 불량 구분 — FAC1 불량(다캐·소재) / FAC2 불량(가공) · 기준 = 구글시트 F2_불량코드 (A 코드 · B 불량유형 · D FAC1/FAC2) =====
+   · 코드가 있는 원천(F2_MCT_Q '01 기포' …) → 코드로 찾음
+   · 이름만 있는 원천(F2_생산실적 In-Out 'Peel off' …) → 시트 B열 이름(한글·영어 부분 모두)과 맞춰 찾음
+   · 시트에 없는 이름 → 추정(다캐 계열 이름이면 FAC1, 나머지 FAC2) 후 '추정' 표시 — 시트에 그 이름을 한 줄 넣으면 그대로 따름 */
+F2.code = { byCode:{}, byName:{}, n:0, err:false };
+const f2Nm = v => String(v||'').toLowerCase().replace(/[\s()·,.'’_\-\/]/g,'');
+function f2CodeLoad(rows){
+  const C = { byCode:{}, byName:{}, n:0, err:false };
+  (rows||[]).forEach(r=>{
+    const vals = Object.values(r).map(v=>String(v||'').trim());
+    const fv = vals.find(v=>/^fac\s*[12]$/i.test(v)); if(!fv) return;
+    const fac = 'FAC' + fv.replace(/\D/g,'');
+    const c = parseInt(r['코드'],10), name = String(r['불량유형']||'').trim();
+    if(c) C.byCode[c] = fac;
+    if(name){ C.byName[f2Nm(name)] = fac;
+      (name.match(/[가-힣]+(?:\s*[가-힣]+)*/g)||[]).concat(name.match(/[A-Za-z][A-Za-z' ]*[A-Za-z]/g)||[]).forEach(t=>{ const k = f2Nm(t); if(k.length>=2 && !C.byName[k]) C.byName[k] = fac; }); }
+    C.n++;
+  });
+  F2.code = C;
+}
+/* 이름 또는 코드 → { fac:'FAC1'|'FAC2', guess:bool } */
+function f2FacOf(name, code){
+  const C = F2.code, c = parseInt(code,10);
+  if(c){ if(C.byCode[c]) return { fac:C.byCode[c], guess:false }; return { fac: c<=16 ? 'FAC1' : 'FAC2', guess:true }; }
+  for(const v of [name, f2pLoc ? F2P_KO[String(name).trim().toLowerCase()] : '']){ const k = f2Nm(v); if(k && C.byName[k]) return { fac:C.byName[k], guess:false }; }
+  /* 시트 이름 안에 들어 있는 경우 (예: 'Black Stain 오염' ⊃ 'stain') */
+  const k0 = [f2Nm(name), f2Nm(F2P_KO[String(name).trim().toLowerCase()]||'')].filter(x=>x.length>=2);
+  let best = null; for(const nk in C.byName){ if(k0.some(k=>(k.length>=3 || /[가-힣]/.test(k)) && (nk.includes(k) || k.includes(nk) && nk.length>=3)) && (!best || nk.length>best.length)) best = nk; }
+  if(best) return { fac:C.byName[best], guess:false };
+  return { fac: f2pGrp(name)==='다캐불량' ? 'FAC1' : 'FAC2', guess:true };
+}
+function f2FacSel(){ try{ const v = localStorage.getItem('stc_f2_fac'); return v==='FAC1'||v==='FAC2' ? v : 'all'; }catch(e){ return 'all'; } }
+function f2FacSet(v){ try{ localStorage.setItem('stc_f2_fac', v); }catch(e){} setTimeout(renderF2, 0); }
+const F2_FAC_TX = { ko:{ lb:'불량 구분', all:'전체 불량', f1:'FAC1 불량 (다캐·소재)', f2:'FAC2 불량 (가공)', src:'기준: 구글시트 F2_불량코드', guess:'추정 (시트에 없는 이름)', list:'분류 보기' },
+  en:{ lb:'Defects', all:'All', f1:'FAC1 defects (casting · material)', f2:'FAC2 defects (machining)', src:'Source: sheet F2_불량코드', guess:'guessed (not in sheet)', list:'Show mapping' },
+  th:{ lb:'ประเภทของเสีย', all:'ทั้งหมด', f1:'FAC1 (ไดคาสติ้ง · วัตถุดิบ)', f2:'FAC2 (แมชชีนนิ่ง)', src:'อ้างอิง: ชีต F2_불량코드', guess:'ประมาณ (ไม่มีในชีต)', list:'ดูการจัดกลุ่ม' } };
+const f2FacTx = () => F2_FAC_TX[F2_FAC_TX[LANG] ? LANG : 'ko'];
+const f2FacLbl = v => { const X = f2FacTx(); return v==='FAC1' ? X.f1 : v==='FAC2' ? X.f2 : X.all; };
+/* types = [{ t:표시이름, fac, guess }] — 분류 목록(접기) 함께 */
+function f2FacCtl(types){
+  const X = f2FacTx(), cur = f2FacSel();
+  const b = (v, l, c) => `<button type="button" class="${cur===v?'on':''} ${c}" onclick="f2FacSet('${v}')">${l}</button>`;
+  const lst = (types||[]).length ? `<details class="f2-fac-map"><summary>${X.list}</summary>${['FAC1','FAC2'].map(f=>`<div><b class="${f.toLowerCase()}">${f}</b> ${types.filter(t=>t.fac===f).map(t=>`<span${t.guess?` class="g" title="${X.guess}"`:''}>${esc2(t.t)}${t.guess?'*':''}</span>`).join('')}</div>`).join('')}<small>* ${X.guess} · ${X.src}${F2.code.n?` (${F2.code.n})`:' — 시트를 못 읽음'}</small></details>` : '';
+  return `<div class="f2-fac f2-noprint"><span class="lb">${X.lb}</span>${b('all',X.all,'a')}${b('FAC1',X.f1,'f1')}${b('FAC2',X.f2,'f2')}${lst}</div>`;
+}
+/* F2_생산실적 행(또는 합계)의 열 분류 — 불량유형 + Mat'l Before/After + Setting */
+function f2pFacCols(){
+  return F2P.defs.map((k,i)=>({ i, t:f2pDefName(k), ...f2FacOf(f2pRaw(k)) }))
+    .concat([{ i:'mb', t:f2pLoc("Mat'l Before"), ...f2FacOf("Mat'l Before") }, { i:'ma', t:f2pLoc("Mat'l After"), ...f2FacOf("Mat'l After") }, { i:'set', t:f2pLoc('Setting'), ...f2FacOf('Setting') }]);
+}
+/* 선택한 구분의 NG 수량 (전체면 NG 그대로) */
+function f2pSelN(a, cols, sel){
+  if(!a) return 0; sel = sel || f2FacSel(); if(sel==='all') return a.n;
+  return (cols || f2pFacCols()).reduce((s,c)=> c.fac===sel ? s + (typeof c.i==='number' ? (a.df[c.i]||0) : (a[c.i]||0)) : s, 0);
 }
 /* 품번 짧은 이름 — 품질 쪽(F2_품번일별) 이름이 있으면 그것(예: CT Support), 없으면 원본 이름에서 'HSG-' 를 뺀다 */
 function f2pShort(pn, name){
@@ -2325,28 +2392,34 @@ function gtHtml(cfg){
 function f2pRowsTypes(){
   const TY = F2P.defs.map((k,i)=>({ k:f2pRaw(k), get:r=>r.df[i] })).concat([{ k:"Mat'l Before", get:r=>r.mb }, { k:"Mat'l After", get:r=>r.ma }, { k:'Setting', get:r=>r.set }]).map(y=>({ ...y, t:f2pLoc(y.k) }));
   const nm = {}; const short = (pn, name) => nm[pn] || (nm[pn] = f2pShort(pn, name));
-  const rows = F2.pm.map(r=>({ d:r.d, key:r.mc+'|'+r.pn+'|'+r.op, mc:r.mc, name:short(r.pn, r.name), sub:`${r.pn} · OP${r.op}`, t:r.t, n:r.n, ty:TY.map(y=>y.get(r)) }));
-  return { rows, types:TY.map(y=>({ k:y.k, t:y.t })) };
+  const FA = TY.map(y=>f2FacOf(y.k)), sel = f2FacSel(), keep = TY.map((y,i)=>sel==='all' || FA[i].fac===sel);
+  const rows = F2.pm.map(r=>{ const ty = TY.map(y=>y.get(r)).filter((v,i)=>keep[i]);
+    return { d:r.d, key:r.mc+'|'+r.pn+'|'+r.op, mc:r.mc, name:short(r.pn, r.name), sub:`${r.pn} · OP${r.op}`, t:r.t, n: sel==='all' ? r.n : ty.reduce((a,v)=>a+(v||0),0), ty }; });
+  return { rows, types:TY.map(y=>({ k:y.k, t:y.t })).filter((y,i)=>keep[i]), fac:TY.map((y,i)=>({ t:y.t, ...FA[i] })) };
 }
 function f2pGroupTrend(pred, pFrom, dTo){
   const D = f2pRowsTypes();
-  return gtHtml({ id:'f2p', rows:D.rows, types:D.types, pFrom, pTo:dTo, tg:f2Target(), lang:LANG, rerender:renderF2, noteTag:mc=>mc });
+  const fs = f2FacSel();
+  return f2FacCtl(D.fac) + gtHtml({ lbl: fs==='all' ? {} : { rateName: f2FacLbl(fs).replace(/ \(.*\)$/,'') + ' %NG' }, id:'f2p', rows:D.rows, types:D.types, pFrom, pTo:dTo, tg:f2Target(), lang:LANG, rerender:renderF2, noteTag:mc=>mc });
 }
 /* FAC2 품질보고 (F2_MCT_Q · MCT 최종 가공 설비 · 불량코드 01~50) → 공용 부품 */
 function f2qRowsTypes(){
   if(!F2.mq.length) return { rows:[], types:[] };
   const cols = Object.keys(F2.mq[0]).filter(k=>/^\d{2}\s/.test(k));
   const orig = {}; F2.det.forEach(r=>{ const c = parseInt(r['코드'],10); if(c && !orig[c]) orig[c] = r._orig || r['불량유형']; });
-  const types = cols.map(k=>{ const c = parseInt(k,10); return { k, t:f2DefName(c, orig[c] || k.replace(/^\d{2}\s*/,'')) }; });
+  const types0 = cols.map(k=>{ const c = parseInt(k,10); return { k, t:f2DefName(c, orig[c] || k.replace(/^\d{2}\s*/,'')), ...f2FacOf('', c) }; });
+  const sel = f2FacSel(), keep = types0.map(y=>sel==='all' || y.fac===sel), cK = cols.filter((k,i)=>keep[i]);
   const rows = F2.mq.map(r=>{ const d = String(r['일자']||'').slice(0,10); const pn = String(r['Part no.']||'').trim(), op = String(r['OP']||'').trim();
-    return { d, key:r['설비명']+'|'+pn+'|'+op, mc:r['설비명'], name:r['Part name']||pn, sub:`${pn}${op?' · '+op:''}`, t:f2n(r['생산수량']), n:f2n(r['불량수량']), ty:cols.map(k=>f2n(r[k])) }; })
+    const ty = cK.map(k=>f2n(r[k]));
+    return { d, key:r['설비명']+'|'+pn+'|'+op, mc:r['설비명'], name:r['Part name']||pn, sub:`${pn}${op?' · '+op:''}`, t:f2n(r['생산수량']), n: sel==='all' ? f2n(r['불량수량']) : ty.reduce((a,v)=>a+v,0), ty }; })
     .filter(r=>r.d && r.mc && r.t>0);
-  return { rows, types };
+  return { rows, types:types0.filter((y,i)=>keep[i]).map(y=>({ k:y.k, t:y.t })), fac:types0 };
 }
 function f2qGroupTrend(pFrom, pTo){
   if(!F2.mq.length) return `<div class="card empty" style="padding:14px">${T('f2.noMq')}</div>`;
   const D = f2qRowsTypes();
-  return gtHtml({ id:'f2q', rows:D.rows, types:D.types, pFrom, pTo, tg:f2Target(), lang:LANG, rerender:renderF2, noteTag:mc=>mc });
+  const fs = f2FacSel();
+  return f2FacCtl(D.fac) + gtHtml({ lbl: fs==='all' ? {} : { rateName: f2FacLbl(fs).replace(/ \(.*\)$/,'') + ' %NG' }, id:'f2q', rows:D.rows, types:D.types, pFrom, pTo, tg:f2Target(), lang:LANG, rerender:renderF2, noteTag:mc=>mc });
 }
 /* =========================================================================
    워스트 설비 원인 · 조치 (PDCA) — FAC1 · FAC2 공용
