@@ -54,7 +54,12 @@
   /* FAC cards */
   .fac-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
   .fac-card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(16,26,51,.1);}
-  .fac-head{padding:12px 16px;color:#fff;font-weight:800;font-size:16px;}
+  .fac-head{padding:10px 16px;color:#fff;font-weight:800;font-size:16px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;}
+  .fac-head .fh-av{display:flex;flex-direction:column;align-items:center;line-height:1.05;background:rgba(255,255,255,.18);border-radius:10px;padding:4px 14px;}
+  .fac-head .fh-av small{font-size:10.5px;font-weight:700;opacity:.9;letter-spacing:.5px;}
+  .fac-head .fh-av b{font-size:28px;font-weight:900;} .fac-head .fh-av i{font-style:normal;font-size:15px;margin-left:1px;}
+  .fac-head .fh-rk{justify-self:end;font-size:14px;font-weight:900;background:rgba(0,0,0,.18);border-radius:14px;padding:3px 10px;}
+  .fac-head .fh-rk small{font-size:11px;opacity:.8;margin-left:1px;} .fac-head .fh-rk.top{background:#fff;color:#1e293b;}
   .fac-body{padding:4px 16px 14px;}
   .fac-row{padding:10px 0;border-bottom:1px solid #f0f1f6;}
   .fac-row:last-child{border-bottom:none;}
@@ -96,6 +101,27 @@
   #loadingBanner{max-width:1340px;margin:0 auto 16px;padding:12px 18px;border-radius:10px;background:#fff7e6;border:1px solid #ffe0a3;color:#8a5a00;font-size:13px;}
   #errorBanner{max-width:1340px;margin:0 auto 16px;padding:12px 18px;border-radius:10px;background:#fde8e8;border:1px solid #f5b5b5;color:#8a1f1f;font-size:13px;display:none;}
   @media(max-width:1000px){ .kpi-row,.kpi-row2{grid-template-columns:repeat(2,1fr);} .grid2, .analysis-grid{grid-template-columns:1fr;} }
+
+  /* ===== 게시용 크게 (버튼 · 인쇄) ===== */
+  body.big .topline h1{font-size:34px;} body.big .topline p{font-size:17px;color:#d6dcf0;}
+  body.big .kpi .lbl{font-size:17px;color:#d6dcf0;} body.big .kpi .val{font-size:44px;} body.big .kpi .sub{font-size:15px;}
+  body.big .kpi2 .lbl{font-size:15px;color:#c9d1ea;} body.big .kpi2 .val{font-size:30px;}
+  body.big .section-title h2{font-size:25px;} body.big .section-title .desc{font-size:16px;}
+  body.big .fac-head{font-size:24px;padding:14px 18px;}
+  body.big .fac-head .fh-av small{font-size:14px;} body.big .fac-head .fh-av b{font-size:46px;} body.big .fac-head .fh-av i{font-size:22px;}
+  body.big .fac-head .fh-rk{font-size:20px;padding:5px 14px;} body.big .fac-head .fh-rk small{font-size:15px;}
+  body.big .fac-row{padding:13px 0;} body.big .fac-row .flbl{font-size:16px;color:#3b4560;font-weight:600;} body.big .fac-row .fval{font-size:32px;}
+  body.big table{font-size:16px;} body.big th{font-size:14px;} body.big td{padding:10px 8px;} body.big .pill{font-size:14px;}
+  body.big .analysis-card h3{font-size:19px;} body.big .analysis-card ul{font-size:16.5px;}
+  body.big .note, body.big footer{font-size:14px;} body.big .achieve{font-size:15px;}
+  body.big .target-form{font-size:15px;}
+  #bigBtn.on{background:#16a34a !important;}
+  @media print{
+    @page{size:A4 landscape;margin:8mm;}
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .controls button, .controls select, .controls input, .target-form{display:none !important;}
+    .fac-card, .card, section{break-inside:avoid;}
+  }
 </style>
 </head>
 <body>
@@ -125,6 +151,8 @@
       <span style="display:none;color:#aab4d4;font-size:12px;" id="dateSep">~</span>
       <input type="date" id="dateTo" style="display:none;">
       <button class="btn-refresh" id="refreshBtn">🔄 새로고침</button>
+      <button class="btn-refresh" id="bigBtn" type="button" style="background:#f39c12" onclick="toggleBig()" title="게시판에 붙일 수 있게 글씨를 크게 (인쇄도 크게)">🔠 게시용 크게</button>
+      <button class="btn-refresh" type="button" style="background:#475569" onclick="document.body.classList.add('big');window.print()">🖨 인쇄</button>
       <span class="status" id="statusText">불러오는 중...</span>
     </div>
 
@@ -348,6 +376,15 @@ function saveTargetsToStorage(obj){ localStorage.setItem('stc_kpi_targets', JSON
 /* 설비명 표기 통일 — 원본이 'DC2' / 'DC02' 두 가지로 들어와 같은 설비가 둘로 갈라지던 문제 (9/2 부터 'DC02') */
 function normDC(v){ const t = String(v||'').trim(), m = t.match(/^DC\s*-?\s*0*(\d{1,2})$/i); return m ? 'DC' + parseInt(m[1],10) : t; }
 function normRowsDC(rows){ (rows||[]).forEach(r=>{ if(r && r['설비명']) r['설비명'] = normDC(r['설비명']); }); }
+function toggleBig(on){
+  const b = on===undefined ? !document.body.classList.contains('big') : on;
+  document.body.classList.toggle('big', b);
+  const btn = document.getElementById('bigBtn'); if(btn){ btn.classList.toggle('on', b); btn.textContent = b ? '🔠 게시용 크게 ✓' : '🔠 게시용 크게'; }
+  try{ localStorage.setItem('stc_kpi_big', b?'1':''); }catch(e){}
+  try{ if(window.Chart){ Chart.defaults.font.size = b?15:12; } if(RAW_A && RAW_A.length) render(); }catch(e){}
+}
+document.addEventListener('DOMContentLoaded', ()=>{ try{ if(localStorage.getItem('stc_kpi_big')) toggleBig(true); }catch(e){} });
+window.addEventListener('afterprint', ()=>{ try{ if(!localStorage.getItem('stc_kpi_big')) toggleBig(false); }catch(e){} });
 function render(){
   [RAW_A, RAW_P, RAW_Q, RAW_MODEL].forEach(normRowsDC);
   const {from,to}=getDateRange();
@@ -449,12 +486,18 @@ function render(){
   /* ---- FAC 카드 ---- */
   const facGrid=document.getElementById('facGrid');
   facGrid.innerHTML='';
+  /* 가용률 순위 (높을수록 1위) */
+  const facRank={}; [...facArr].sort((a,b)=>b.a-a.a).forEach((g,i)=>facRank[g.fac]=i+1);
   facArr.forEach(g=>{
-    const color=FAC_COLORS[g.fac]||'#7F8C8D';
+    const color=FAC_COLORS[g.fac]||'#7F8C8D', rk=facRank[g.fac], medal=['🥇','🥈','🥉'][rk-1]||'';
     const div=document.createElement('div');
     div.className='fac-card';
     div.innerHTML=`
-      <div class="fac-head" style="background:${color};">FAC-${g.fac}</div>
+      <div class="fac-head" style="background:${color};">
+        <span class="fh-name">FAC-${g.fac}</span>
+        <span class="fh-av" title="가용률 = 가동 ÷ (가동 + 고장)"><small>가용률</small><b>${g.a.toFixed(1)}<i>%</i></b></span>
+        <span class="fh-rk${rk===1?' top':''}">${medal} ${rk}위<small>/${facArr.length}</small></span>
+      </div>
       <div class="fac-body">
         <div class="fac-row"><div class="flbl">고장횟수 (회)</div><div class="fval" style="color:${color};">${g.brkCount}</div></div>
         <div class="fac-row"><div class="flbl">고장시간 (Hr)</div><div class="fval" style="color:${color};">${(g.brkMin/60).toFixed(1)}</div></div>
