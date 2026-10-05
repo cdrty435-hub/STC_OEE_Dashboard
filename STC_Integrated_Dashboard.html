@@ -230,6 +230,11 @@ table.fc-t .tot{background:#eef2f7;font-weight:800;}
 .gt-fac.fac1{background:#c2410c;} u.gt-fac{text-decoration:none;margin:0;text-align:center;padding:2px 3px;} .f2-m3l > i{justify-self:center;} .gt-fac.fac2{background:#7c3aed;}
 .gt-facs{display:inline-flex;align-items:center;gap:4px;margin-left:10px;font-size:12px;} .gt-facs b{margin-left:2px;} .gt-facs small{color:#64748b;margin-right:8px;}
 .f2g-t tr.fr td{font-size:11px;} .f2g-t tr.fr.fac1 td.lb{color:#c2410c;font-weight:700;} .f2g-t tr.fr.fac2 td.lb{color:#7c3aed;font-weight:700;}
+.lk-t th.ga{background:#c2410c;color:#fff;font-size:14px;} .lk-t th.gb{background:#7c3aed;color:#fff;font-size:14px;} .lk-t th.ga .gt-fac, .lk-t th.gb .gt-fac{background:#fff;color:#111;}
+.lk-t th.foc1{background:#ffedd5;color:#9a3412;font-size:13.5px;} .lk-t th.foc2{background:#ede9fe;color:#5b21b6;font-size:13.5px;}
+.lk-t th.sh1, .lk-t td.sh1{background:#fff7ed;} .lk-t th.sh2, .lk-t td.sh2{background:#f5f3ff;}
+.lk-foc thead th{text-align:center;} .lk-foc thead th.l{text-align:left;}
+.lk-t tr.lk-sep td{background:#f1f5f9;color:#475569;font-weight:800;font-size:12px;text-align:left;} .lk-t tr.only1 td{color:#475569;} .lk-t .nf{color:#cbd5e1;}
 .lk-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;margin:6px 0 10px;padding-bottom:8px;border-bottom:3px solid #1e3c72;} .lk-head h2{margin:0;font-size:20px;color:#1e3c72;} .lk-head div{font-size:13px;}
 .lk-tiles{margin-bottom:10px;} .lk-q{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:12px;padding:3px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-left:2px;}
 .lk-t th, .lk-t td, .lk-ty th, .lk-ty td{text-align:right;vertical-align:top;} .lk-t .l, .lk-ty .l{text-align:left;}
@@ -3049,16 +3054,43 @@ function f2LinkView(){
     <thead><tr><th class="l">FAC1 불량유형</th><th>수량</th><th>FAC1 불량 중 %</th><th class="l" style="min-width:160px">비중</th><th>생산 대비 %</th>${lk1.map(o=>`<th>${esc2(o.model)}</th>`).join('')}</tr></thead>
     <tbody>${t1.map(x=>{ const i = F1.types.indexOf(x.k); return `<tr><td class="l"><b>${esc2(x.k)}</b></td><td><b>${fmt(x.v)}</b></td><td><b>${(x.v/s1*100).toFixed(1)}%</b></td><td class="l"><span class="lk-one fac1" style="width:${(x.v/t1[0].v*100).toFixed(1)}%"></span></td><td>${pc(x.v,tt1)}</td>
       ${lk1.map(o=>`<td>${o.ty[i]?`${fmt(o.ty[i])} <small>(${pc(o.ty[i],o.t,1)})</small>`:'<span style="color:#cbd5e1">·</span>'}</td>`).join('')}</tr>`; }).join('')}</tbody></table></div></div>` : '';
-  /* ---- 핵심 FAC1 원인 불량 (박리 · 기포) — FAC1 자체 vs FAC2 에서 발견 ---- */
+  /* ---- 1. 중점 불량 — 1공장(FAC1) 중점 = 박리 · 기포 / 2공장(FAC2) 중점 = 기간 중 FAC2 원인 상위 2종 · 전체 모델 ---- */
   const fIdx2 = k => FC.findIndex(c=>c.t===k || f2Nm(c.t)===f2Nm(k)), fIdx1 = k => F1.types.findIndex(t=>f2Nm(t)===f2Nm(k));
+  const F2FOC = FC.map((c,i)=>({ t:c.t, fac:c.fac, v:rows.reduce((s,x)=>s+x.f2.ty[i],0) })).filter(x=>x.fac==='FAC2' && x.v>0).sort((a,b)=>b.v-a.v).slice(0,2).map(x=>x.t);
+  /* 전체 모델 = FAC2 품번(연결된 FAC1 모델 포함) + FAC2 로 안 가는 FAC1 모델 */
+  const usedK = new Set(rows.filter(x=>x.f1).map(x=>x.f1.key)), usedM = new Set(rows.filter(x=>x.f1).map(x=>x.f1.model.toUpperCase()));
+  /* FAC1 전용 모델 — 같은 모델 이름(품번 여러 개)은 한 줄로 묶음 · 연결된 모델과 같은 이름은 제외 */
+  const OM = {};
+  Object.values(M1).forEach(o=>{ if(usedK.has(o.key) || usedM.has(o.model.toUpperCase())) return; const k = o.model.toUpperCase() || o.key;
+    const g = OM[k] || (OM[k] = { key:k, model:o.model || o.key, pns:new Set(), mcs:new Set(), t:0, ng:0, w:0, ty:F1.types.map(()=>0) });
+    g.t += o.t; g.ng += o.ng; g.w += o.w; o.pns.forEach(v=>g.pns.add(v)); o.mcs.forEach(v=>g.mcs.add(v)); o.ty.forEach((v,i)=>g.ty[i]+=v); });
+  const only1 = Object.values(OM).map(o=>({ f1:o, f2:null }));
+  const f1v = (a,k) => { const i = fIdx1(k); return a && i>=0 ? a.ty[i] : null; };
+  const f2v = (b,k) => { const i = fIdx2(k); return b && i>=0 ? b.ty[i] : null; };
+  const focSum1 = x => LK_FOCUS.reduce((s,k)=>s+(f1v(x.f1,k)||0)+(f2v(x.f2,k)||0),0);
+  only1.sort((a,b)=>focSum1(b)-focSum1(a) || b.f1.t-a.f1.t);
+  const fr = [...rows].sort((a,b)=>focSum1(b)-focSum1(a)).concat(only1);
+  const cnum = (v, base, dp) => v==null ? '<span class="nf">–</span>' : `<b>${fmt(v)}</b> <small>${pc(v,base,dp)}</small>`;
+  const FT = { t1:0, in:0, n:0 }; LK_FOCUS.forEach(k=>{ FT['a'+k]=0; FT['b'+k]=0; }); F2FOC.forEach(k=>{ FT['c'+k]=0; });
+  const focRow = (x, sep) => { const a = x.f1, b = x.f2;
+    if(a) FT.t1 += a.t; if(b){ FT.in += b.in; FT.n += b.n; }
+    let s1 = 0, s2 = 0;
+    const c1 = LK_FOCUS.map(k=>{ const v1 = f1v(a,k), v2 = f2v(b,k); if(v1) FT['a'+k]+=v1; if(v2){ FT['b'+k]+=v2; s1+=v2; }
+      return `<td class="g1">${a?cnum(v1, a.t):'<span class="nf">–</span>'}</td><td class="g2">${b?cnum(v2, b.in):'<span class="nf">–</span>'}</td><td class="sh1">${b&&b.n?pc(v2||0,b.n,1):'–'}</td>`; }).join('');
+    const c2 = F2FOC.map(k=>{ const v = f2v(b,k); if(v){ FT['c'+k]+=v; s2+=v; }
+      return `<td class="g2">${b?cnum(v, b.in):'<span class="nf">–</span>'}</td><td class="sh2">${b&&b.n?pc(v||0,b.n,1):'–'}</td>`; }).join('');
+    const nm = b ? `<b>${esc2(b.name)}</b>${a?`<br><small>FAC1 ${esc2(a.model)}</small>`:'<br><small class="nf">FAC1 연결 없음</small>'}` : `<b>${esc2(a.model)}</b><br><small>FAC1 전용 · ${esc2([...a.mcs].sort().join(', '))}</small>`;
+    return (sep ? `<tr class="lk-sep"><td colspan="${1+LK_FOCUS.length*3+F2FOC.length*2+2}">FAC1 전용 모델 — FAC2 가공 실적 없음 (FAC1 자체 검사만)</td></tr>` : '')
+      + `<tr${b?'':' class="only1"'}><td class="l">${nm}</td>${c1}${c2}<td class="sh1"><b>${b&&b.n?pc(s1,b.n,1):'–'}</b></td><td class="sh2"><b>${b&&b.n?pc(s2,b.n,1):'–'}</b></td></tr>`; };
+  const focBody = fr.map((x,i)=>focRow(x, !x.f2 && (i===0 || fr[i-1].f2))).join('');
+  const sA = LK_FOCUS.reduce((s,k)=>s+FT['b'+k],0), sB = F2FOC.reduce((s,k)=>s+FT['c'+k],0);
+  const focTot = `<tr class="tot"><td class="l">합계 (전체 모델)</td>${LK_FOCUS.map(k=>`<td class="g1">${cnum(FT['a'+k], FT.t1)}</td><td class="g2">${cnum(FT['b'+k], FT.in)}</td><td class="sh1">${pc(FT['b'+k],FT.n,1)}</td>`).join('')}${F2FOC.map(k=>`<td class="g2">${cnum(FT['c'+k], FT.in)}</td><td class="sh2">${pc(FT['c'+k],FT.n,1)}</td>`).join('')}<td class="sh1"><b>${pc(sA,FT.n,1)}</b></td><td class="sh2"><b>${pc(sB,FT.n,1)}</b></td></tr>`;
   const focTbl = `<div class="card"><div class="tblwrap"><table class="eq lk-t lk-foc">
-    <thead><tr><th rowspan="2" class="l">모델 · 품번</th>${LK_FOCUS.map(k=>`<th colspan="3" class="foc">${esc2(k)}</th>`).join('')}<th rowspan="2">FAC2 불량 중<br>${esc2(LK_FOCUS.join('+'))} 비중</th></tr>
-      <tr>${LK_FOCUS.map(()=>`<th class="g1">FAC1 자체<br><small>생산 대비</small></th><th class="g2">FAC2 발견<br><small>투입 대비</small></th><th>FAC2 불량 중</th>`).join('')}</tr></thead>
-    <tbody>${rows.map(x=>{ const a = x.f1, b = x.f2; let fsum = 0;
-      const cells = LK_FOCUS.map(k=>{ const i1 = fIdx1(k), i2 = fIdx2(k), v1 = a && i1>=0 ? a.ty[i1] : null, v2 = i2>=0 ? b.ty[i2] : 0; fsum += v2;
-        return `<td class="g1">${v1==null?'–':`<b>${fmt(v1)}</b> <small>${pc(v1,a.t)}</small>`}</td><td class="g2"><b>${fmt(v2)}</b> <small>${pc(v2,b.in)}</small></td><td>${pc(v2,b.n,1)}</td>`; }).join('');
-      return `<tr><td class="l"><b>${esc2(b.name)}</b>${a?`<br><small>FAC1 ${esc2(a.model)}</small>`:''}</td>${cells}<td><b>${pc(fsum,b.n,1)}</b></td></tr>`; }).join('')}</tbody></table></div>
-    <div class="legend" style="margin-top:6px"><span>※ FAC1 자체 = 다이캐스팅 공장 검사에서 걸린 수량 · FAC2 발견 = 가공 중(MCT)에 드러난 수량 — FAC2 발견이 크면 FAC1 검사에서 못 거르고 넘어온 것</span></div></div>`;
+    <thead><tr><th rowspan="3" class="l">모델 · 품번 <small>(전체 모델)</small></th><th colspan="${LK_FOCUS.length*3}" class="ga">${fb('FAC1')} 1공장 중점 불량 <small>(다이캐스팅 원인)</small></th><th colspan="${F2FOC.length*2}" class="gb">${fb('FAC2')} 2공장 중점 불량 <small>(MCT 가공 원인 · 기간 상위 ${F2FOC.length})</small></th><th colspan="2" rowspan="2">FAC2 불량 중<br>중점 불량 비중</th></tr>
+      <tr>${LK_FOCUS.map(k=>`<th colspan="3" class="foc1">${esc2(k)}</th>`).join('')}${F2FOC.map(k=>`<th colspan="2" class="foc2">${esc2(k)}</th>`).join('')}</tr>
+      <tr>${LK_FOCUS.map(()=>`<th class="g1">FAC1 자체<br><small>생산 대비</small></th><th class="g2">FAC2 발견<br><small>투입 대비</small></th><th>FAC2 불량 중</th>`).join('')}${F2FOC.map(()=>`<th class="g2">FAC2 발생<br><small>투입 대비</small></th><th>FAC2 불량 중</th>`).join('')}<th class="sh1">1공장 중점</th><th class="sh2">2공장 중점</th></tr></thead>
+    <tbody>${focBody}${focTot}</tbody></table></div>
+    <div class="legend" style="margin-top:6px"><span>※ 1공장 중점(${esc2(LK_FOCUS.join('·'))}) — FAC1 자체 = 다이캐스팅 검사에서 걸린 수량 · FAC2 발견 = 가공 중 드러난 수량 (크면 FAC1 에서 못 거르고 넘어온 것) · 2공장 중점 = 기간 중 FAC2(가공) 원인 상위 ${F2FOC.length}종 · 전체 모델 = FAC2 품번 + FAC1 전용 모델</span></div></div>`;
   const q = [['7','최근 7일'],['14','14일'],['30','30일'],['mo','이번 달']].map(([k,l])=>`<button class="lk-q" onclick="lkQuick(${k==='mo'?"'mo'":k})">${l}</button>`).join('');
   const share = T2.n ? Math.round(T2.f1/T2.n*100) : 0;
   return `<div class="f2-rbar f2-noprint"><label>기간 <input type="date" class="f2-date" value="${from}" max="${last}" onchange="lkSet(this.value,null)"></label><span>~</span><input type="date" class="f2-date" value="${to}" max="${last}" onchange="lkSet(null,this.value)"> ${q}
@@ -3070,7 +3102,7 @@ function f2LinkView(){
       ${f2tile('FAC2 원인 %NG', T2.in?(T2.f2/T2.in*100).toFixed(2):'–', '%', `${fmt(T2.f2)}개 · FAC2 불량의 ${100-share}%`, '#7c3aed')}
       ${f2tile('FAC1 자체 %NG (연결 모델)', T2.t1?(T2.ng1/T2.t1*100).toFixed(2):'–', '%', `생산 ${fmt(T2.t1)} · 불량 ${fmt(T2.ng1)} · 웜샷 ${fmt(T2.w1)}`)}
     </div>
-    <div class="sec-title">1. 핵심 FAC1 원인 불량 — ${esc2(LK_FOCUS.join(' · '))} <small>(FAC1 자체 검사 vs FAC2 가공 중 발견)</small></div>${focTbl}
+    <div class="sec-title">1. 중점 불량 — 1공장 ${esc2(LK_FOCUS.join(' · '))} / 2공장 ${esc2(F2FOC.join(' · '))} <small>(전체 모델)</small></div>${focTbl}
     <div class="sec-title">2. 모델 · 품번별 FAC1 / FAC2 실적 <small>(FAC1 원인 불량이 많은 순)</small></div>${main}
     <div class="sec-title">3. FAC2 불량유형 — 전체 불량 대비 % <small>(원인 FAC1 / FAC2 · 품번별 수량과 투입 대비 %)</small></div>${tyTbl}
     ${f1Tbl ? `<div class="sec-title">4. FAC1 자체 불량유형 — 연결된 모델 <small>(Q_Model상세 · 생산 대비 %)</small></div>${f1Tbl}` : ''}
