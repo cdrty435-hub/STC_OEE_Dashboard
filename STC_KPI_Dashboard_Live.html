@@ -108,7 +108,7 @@
     <div class="topline">
       <div>
         <h1>🔧 설비 KPI 대시보드</h1>
-        <p id="periodLabel">고장횟수 · 고장시간 · MTBF · MTTR · 가동률 종합 현황</p>
+        <p id="periodLabel">고장횟수 · 고장시간 · MTBF · MTTR · 가용률 종합 현황</p>
       </div>
       <div class="badge">STC CO., LTD.</div>
     </div>
@@ -132,12 +132,12 @@
       <div class="kpi c-red"><div class="lbl">총 고장횟수</div><div class="val" id="kpiBrkCount">–</div><div class="sub">Total Breakdowns</div></div>
       <div class="kpi c-blue"><div class="lbl">총 고장시간</div><div class="val" id="kpiBrkHours">–</div><div class="sub">Total Downtime</div></div>
       <div class="kpi c-green"><div class="lbl">최고 MTBF FAC</div><div class="val" id="kpiBestFac">–</div><div class="sub" id="kpiBestFacSub">–</div></div>
-      <div class="kpi c-orange"><div class="lbl">가동률 미달 설비</div><div class="val" id="kpiLowA">–</div><div class="sub" id="kpiLowASub">&lt; 95% Avail.</div></div>
+      <div class="kpi c-orange"><div class="lbl">가용률 미달 설비</div><div class="val" id="kpiLowA">–</div><div class="sub" id="kpiLowASub">&lt; 95% Avail.</div></div>
     </div>
 
     <div class="kpi-row2">
       <div class="kpi2"><div class="lbl">종합 OEE</div><div class="val" id="kpiOEE">–</div></div>
-      <div class="kpi2"><div class="lbl">가동률(A)</div><div class="val" id="kpiA">–</div></div>
+      <div class="kpi2"><div class="lbl" title="가동 ÷ (가동 + 고장) — MTTR/MTBF 주간보고와 같은 기준">가용률</div><div class="val" id="kpiA">–</div></div>
       <div class="kpi2"><div class="lbl">성능(P)</div><div class="val" id="kpiP">–</div></div>
       <div class="kpi2"><div class="lbl">품질(Q)</div><div class="val" id="kpiQ">–</div></div>
       <div class="kpi2"><div class="lbl">총 생산수량</div><div class="val" id="kpiQty">–</div></div>
@@ -150,7 +150,7 @@
   <section>
     <div class="section-title">
       <h2>📊 FAC별 종합 성과</h2>
-      <span class="desc">FAC 별 고장횟수, 고장시간, MTBF, MTTR, 가동률 종합 현황</span>
+      <span class="desc">FAC 별 고장횟수, 고장시간, MTBF, MTTR, 가용률 종합 현황</span>
       <span class="pill-stc">STC</span>
     </div>
     <div class="fac-grid" id="facGrid"></div>
@@ -201,20 +201,20 @@
 
   <section>
     <div class="section-title">
-      <h2>📉 가동률 현황</h2>
-      <span class="desc">라인별 가동률 현황</span>
+      <h2>📉 가용률 현황</h2>
+      <span class="desc">라인별 가용률 현황 — 가용률 = 가동 ÷ (가동 + 고장) · 고장 = 로스 칸 10분 이상</span>
       <span class="pill-stc">STC</span>
     </div>
     <div class="target-form">
-      <div class="tf-grp"><label>목표 가동률(%)</label><input type="number" id="aTargetInput" value="95" step="0.5"></div>
+      <div class="tf-grp"><label>목표 가용률(%)</label><input type="number" id="aTargetInput" value="95" step="0.5"></div>
       <button id="saveATarget">저장</button>
     </div>
     <div class="grid2">
       <div class="card"><div class="chart-box tall"><canvas id="availChart"></canvas></div></div>
       <div class="card">
-        <h3 style="margin:0 0 12px;font-size:14px;">가동률 현황 요약</h3>
+        <h3 style="margin:0 0 12px;font-size:14px;">가용률 현황 요약</h3>
         <div class="fac-row"><div class="flbl">목표 미만 라인</div><div class="fval" id="lowCountVal">–</div></div>
-        <div class="fac-row"><div class="flbl">최저 가동률</div><div class="fval" id="minAVal">–</div><div class="sub" id="minAEquip"></div></div>
+        <div class="fac-row"><div class="flbl">최저 가용률</div><div class="fval" id="minAVal">–</div><div class="sub" id="minAEquip"></div></div>
         <div class="fac-row"><div class="flbl">목표 이상 라인</div><div class="fval" id="highCountVal">–</div></div>
       </div>
     </div>
@@ -266,6 +266,12 @@ const EQUIP_FAC_MAP = {
 const FAC_COLORS = { C:'#2980B9', D:'#E67E22', E:'#27AE60', '기타':'#7F8C8D' };
 function facOf(name){ return EQUIP_FAC_MAP[name] || '기타'; }
 
+/* 고장 = MTTR/MTBF 주간보고와 같은 기준 — 로스코드 31종 각 칸이 10분 이상이면 1건 (전체 로스 방식)
+   가용률 = 가동시간 ÷ (가동시간 + 고장시간) = MTBF ÷ (MTBF + MTTR) */
+const LOSS_CODES = ['금형수리','금형파손','핀파손','설비수리','전기로수리','취출기수리','스프레이수리','슬라이드코어수리','팁교체','노즐막힘','플런저오일막힘','래들수리',
+  '조건변경','탈산처리','스크랩용해','전기로회전','금형교체','휴식, 설비교대','청소','미팅/정전','금형냉각라인','제품소착','컨베이어수리','설비냉각수','스프레이조정',
+  '바가지교체','히터수리','펌프이상','로트마크, 사상','진공설비','기타'];
+const MIN_STOP = 10;
 const BREAKDOWN_REASONS = [
   '금형수리','금형파손','핀파손','설비수리','전기로수리','취출기수리','스프레이수리',
   '슬라이드코어수리','팁교체','노즐막힘','플런저오일막힘','래들수리','컨베이어수리',
@@ -356,7 +362,7 @@ function render(){
   const dates=A.map(r=>parseDate(r['일자'])).filter(Boolean);
   const minD=new Date(Math.min(...dates)), maxD=new Date(Math.max(...dates));
   const fmt=d=>d.toISOString().slice(0,10);
-  document.getElementById('periodLabel').textContent=`고장횟수 · 고장시간 · MTBF · MTTR · 가동률 종합 현황 | ${fmt(minD)} ~ ${fmt(maxD)}`;
+  document.getElementById('periodLabel').textContent=`고장횟수 · 고장시간 · MTBF · MTTR · 가용률 종합 현황 | ${fmt(minD)} ~ ${fmt(maxD)}`;
 
   /* ---- 전체 A/P/Q/OEE ---- */
   const sumPlan=A.reduce((s,r)=>s+toNum(r['계획시간_분']),0);
@@ -376,7 +382,7 @@ function render(){
   const OEE=(Apct*Ppct*Qpct)/10000;
 
   document.getElementById('kpiOEE').textContent=OEE.toFixed(1)+'%';
-  document.getElementById('kpiA').textContent=Apct.toFixed(1)+'%';
+
   document.getElementById('kpiP').textContent=Ppct.toFixed(1)+'%';
   document.getElementById('kpiQ').textContent=Qpct.toFixed(1)+'%';
   document.getElementById('kpiQty').textContent=Math.round(sumQtyTotal).toLocaleString();
@@ -389,7 +395,7 @@ function render(){
     if(!byEquip[name]) byEquip[name]={name, fac:facOf(name), plan:0, run:0, brkMin:0, brkCount:0, qtyTotal:0, qtyGood:0};
     const e=byEquip[name];
     e.plan+=toNum(r['계획시간_분']); e.run+=toNum(r['가동시간_분']);
-    BREAKDOWN_REASONS.forEach(col=>{ const v=toNum(r[col]); if(v>0){ e.brkMin+=v; e.brkCount+=1; } });
+    LOSS_CODES.forEach(col=>{ const v=toNum(r[col]); if(v>=MIN_STOP){ e.brkMin+=v; e.brkCount+=1; } });
   });
   Q.forEach(r=>{
     const name=r['설비명']; if(!name) return;
@@ -398,7 +404,7 @@ function render(){
     e.qtyTotal+=toNum(r['Qty_Total']); e.qtyGood+=toNum(r['Qty_Good']);
   });
   const equipArr=Object.values(byEquip).map(e=>{
-    e.a=e.plan>0?(e.run/e.plan*100):0;
+    e.a=(e.run+e.brkMin)>0?(e.run/(e.run+e.brkMin)*100):0;   /* 가용률 */
     e.q=e.qtyTotal>0?(e.qtyGood/e.qtyTotal*100):0;
     e.mtbf=e.brkCount>0?(e.run/60)/e.brkCount:null;
     e.mttr=e.brkCount>0?(e.brkMin/60)/e.brkCount:null;
@@ -415,7 +421,7 @@ function render(){
     g.qtyTotal+=e.qtyTotal; g.qtyGood+=e.qtyGood;
   });
   const facArr=Object.values(byFac).map(g=>{
-    g.a=g.plan>0?(g.run/g.plan*100):0;
+    g.a=(g.run+g.brkMin)>0?(g.run/(g.run+g.brkMin)*100):0;   /* 가용률 */
     g.q=g.qtyTotal>0?(g.qtyGood/g.qtyTotal*100):0;
     g.mtbf=g.brkCount>0?(g.run/60)/g.brkCount:null;
     g.mttr=g.brkCount>0?(g.brkMin/60)/g.brkCount:null;
@@ -425,6 +431,9 @@ function render(){
   /* ---- Hero KPI (고장횟수/고장시간/최고MTBF FAC/가동률 미달설비) ---- */
   const totalBrkCount=equipArr.reduce((s,e)=>s+e.brkCount,0);
   const totalBrkHr=equipArr.reduce((s,e)=>s+e.brkMin,0)/60;
+  const totRunMin=equipArr.reduce((s,e)=>s+e.run,0), totBrkMin=totalBrkHr*60;
+  const Avail=(totRunMin+totBrkMin)>0 ? totRunMin/(totRunMin+totBrkMin)*100 : 0;
+  document.getElementById('kpiA').textContent=Avail.toFixed(1)+'%';
   document.getElementById('kpiBrkCount').textContent=totalBrkCount.toLocaleString()+'회';
   document.getElementById('kpiBrkHours').textContent=totalBrkHr.toFixed(1)+'h';
   const facWithMtbf=facArr.filter(g=>g.mtbf!=null).sort((a,b)=>b.mtbf-a.mtbf);
@@ -451,7 +460,7 @@ function render(){
         <div class="fac-row"><div class="flbl">고장시간 (Hr)</div><div class="fval" style="color:${color};">${(g.brkMin/60).toFixed(1)}</div></div>
         <div class="fac-row"><div class="flbl">MTBF (Hr)</div><div class="fval" style="color:${color};">${g.mtbf!=null?g.mtbf.toFixed(1):'-'}</div></div>
         <div class="fac-row"><div class="flbl">MTTR (Hr)</div><div class="fval" style="color:${color};">${g.mttr!=null?g.mttr.toFixed(1):'-'}</div></div>
-        <div class="fac-row"><div class="flbl">가동률 (%)</div><div class="fval" style="color:${color};">${g.a.toFixed(1)}</div></div>
+        <div class="fac-row"><div class="flbl">가용률 (%)</div><div class="fval" style="color:${color};">${g.a.toFixed(1)}</div></div>
       </div>`;
     facGrid.appendChild(div);
   });
@@ -501,7 +510,7 @@ function render(){
 
   /* ---- 가동률 현황 ---- */
   const availArr = equipArr.filter(e=>e.plan>0).sort((a,b)=>a.a-b.a);
-  renderFacBarChart('availChart', availArr, e=>e.a, '가동률(%)', {max:100});
+  renderFacBarChart('availChart', availArr, e=>e.a, '가용률(%)', {max:100});
   const lowCount = availArr.filter(e=>e.a<aTarget);
   const highCount = availArr.filter(e=>e.a>=aTarget);
   document.getElementById('lowCountVal').textContent = lowCount.length+'개';
@@ -546,7 +555,7 @@ function render(){
   }).sort((a,b)=>b.rate-a.rate).slice(0,10);
   renderModelTable(modelArr);
 
-  renderAnalysis({Apct,Ppct,Qpct,OEE,sumBad,lossSum,lossArr,defectArr,unclassified,unclassPct,equipArr,modelArr,facArr});
+  renderAnalysis({Avail,Apct,Ppct,Qpct,OEE,sumBad,lossSum,lossArr,defectArr,unclassified,unclassPct,equipArr,modelArr,facArr});
 
   document.getElementById('facMapNote').textContent =
     'FAC 매핑: FAC-C = DC1~DC10, FAC-E = DC11~DC13,DC15~DC19, FAC-D = DC20~DC23 (STC 설비 마스터 기준). ' +
@@ -645,12 +654,12 @@ function renderAnalysis(d){
   const sortedByA=[...d.equipArr].filter(e=>e.plan>0).sort((a,b)=>a.a-b.a);
   const worst3=sortedByA.slice(0,3);
   document.getElementById('sumList').innerHTML=`
-    <li>선택 기간 종합 OEE는 <b>${d.OEE.toFixed(1)}%</b>(가동률 ${d.Apct.toFixed(1)}% × 성능 ${d.Ppct.toFixed(1)}% × 품질 ${d.Qpct.toFixed(1)}%)입니다.</li>
-    <li>가동률 손실 ${Math.round(d.lossSum).toLocaleString()}분 중 상위 원인은 <b>${d.lossArr[0]?.r}(${Math.round(d.lossArr[0]?.v).toLocaleString()}분)</b>, <b>${d.lossArr[1]?.r}(${Math.round(d.lossArr[1]?.v).toLocaleString()}분)</b>입니다.</li>
+    <li>선택 기간 종합 OEE는 <b>${d.OEE.toFixed(1)}%</b>(시간가동률 ${d.Apct.toFixed(1)}% × 성능 ${d.Ppct.toFixed(1)}% × 품질 ${d.Qpct.toFixed(1)}%)입니다.</li>
+    <li>로스 시간 ${Math.round(d.lossSum).toLocaleString()}분 중 상위 원인은 <b>${d.lossArr[0]?.r}(${Math.round(d.lossArr[0]?.v).toLocaleString()}분)</b>, <b>${d.lossArr[1]?.r}(${Math.round(d.lossArr[1]?.v).toLocaleString()}분)</b>입니다.</li>
     <li>품질 불량 ${Math.round(d.sumBad).toLocaleString()}건 중 <b>${d.unclassPct.toFixed(1)}%(${Math.round(d.unclassified).toLocaleString()}건)</b>가 세부 사유 미기재 상태입니다.</li>`;
   document.getElementById('issueList').innerHTML = worst3.map(e=>
-    `<li><b>${e.name} (FAC-${e.fac}, 가동률 ${e.a.toFixed(1)}%)</b>${e.mtbf!=null?` — MTBF ${e.mtbf.toFixed(1)}h / MTTR ${e.mttr.toFixed(2)}h`:''}</li>`
-  ).join('') + `<li>하위 3개 설비가 전체 평균 가동률(${d.Apct.toFixed(1)}%)을 끌어내리는 주요 구간입니다.</li>`;
+    `<li><b>${e.name} (FAC-${e.fac}, 가용률 ${e.a.toFixed(1)}%)</b>${e.mtbf!=null?` — MTBF ${e.mtbf.toFixed(1)}h / MTTR ${e.mttr.toFixed(2)}h`:''}</li>`
+  ).join('') + `<li>하위 3개 설비가 전체 가용률(${d.Avail.toFixed(1)}%)을 끌어내리는 주요 구간입니다.</li>`;
   const top2=(d.lossArr[0]?.v||0)+(d.lossArr[1]?.v||0);
   const top2Pct=d.lossSum>0?(top2/d.lossSum*100):0;
   document.getElementById('lossList').innerHTML=`
