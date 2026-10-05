@@ -255,6 +255,9 @@ table.fc-t .tot{background:#eef2f7;font-weight:800;}
 .lk-main .lk-bar{width:100%;max-width:130px;display:flex;margin:4px 0 2px;} .lk-main td:has(.lk-bar){min-width:0;white-space:normal;} .lk-main td:has(.lk-bar) small{display:block;font-size:10.5px;}
 .lk-main thead tr:first-child th{text-align:center;} .lk-main thead th.l{text-align:left !important;} .lk-main tr.lk-r2 td{background:#fcfcfd;}
 @media(max-width:1100px){.lk-tops{grid-template-columns:1fr;}}
+.lk-st{display:flex;align-items:center;justify-content:space-between;gap:8px;} .lk-mv{display:inline-flex;gap:4px;flex:none;}
+.lk-mv button{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:6px;width:28px;height:24px;font-size:11px;cursor:pointer;color:#334155;} .lk-mv button:hover:not(:disabled){background:#eef3fb;border-color:#1e3c72;} .lk-mv button:disabled{opacity:.3;cursor:default;}
+.lk-mv button.rs{width:auto;padding:0 8px;font-weight:700;}
 .lk-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;margin:6px 0 10px;padding-bottom:8px;border-bottom:3px solid #1e3c72;} .lk-head h2{margin:0;font-size:20px;color:#1e3c72;} .lk-head div{font-size:13px;}
 .lk-tiles{margin-bottom:10px;} .lk-q{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:12px;padding:3px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-left:2px;}
 .lk-t th, .lk-t td, .lk-ty th, .lk-ty td{text-align:right;vertical-align:top;} .lk-t .l, .lk-ty .l{text-align:left;}
@@ -3015,6 +3018,18 @@ function lkRange(){ try{ return JSON.parse(localStorage.getItem('stc_f2_lk_rng')
 function lkSet(from, to){ const r = lkRange(); if(from) r.from = from; if(to) r.to = to; try{ localStorage.setItem('stc_f2_lk_rng', JSON.stringify(r)); }catch(e){} setTimeout(renderF2, 0); }
 function lkQuick(n){ const ds = f2pDates(); const last = ds[ds.length-1]; if(!last) return;
   const from = n==='mo' ? last.slice(0,8)+'01' : f2AddDays(last, -(n-1)); lkSet(from, last); }
+/* 섹션 위아래 순서 바꾸기 (▲▼ · 이 브라우저에 저장 · 「처음대로」) */
+const LK_DEF_ORDER = ['foc','main','ty','f1'];
+function lkOrder(){ try{ const v = JSON.parse(localStorage.getItem('stc_f2_lk_order')||'null'); if(Array.isArray(v)){ const o = v.filter(k=>LK_DEF_ORDER.includes(k)); LK_DEF_ORDER.forEach(k=>{ if(!o.includes(k)) o.push(k); }); return o; } }catch(e){} return LK_DEF_ORDER.slice(); }
+function lkMove(k, d){ const o = lkOrder(), i = o.indexOf(k), j = i + d; if(i<0 || j<0 || j>=o.length) return; [o[i], o[j]] = [o[j], o[i]];
+  try{ localStorage.setItem('stc_f2_lk_order', JSON.stringify(o)); }catch(e){} setTimeout(()=>{ renderF2(); const el = document.getElementById('lk-sec-'+k); if(el) el.scrollIntoView({ block:'start' }); }, 0); }
+function lkReset(){ try{ localStorage.removeItem('stc_f2_lk_order'); }catch(e){} setTimeout(renderF2, 0); }
+function lkSections(list){
+  const M = {}; list.forEach(([k,t,h])=>{ if(h) M[k] = [t,h]; });
+  const o = lkOrder().filter(k=>M[k]), changed = o.join() !== LK_DEF_ORDER.filter(k=>M[k]).join();
+  return o.map((k,i)=>`<div class="lk-sec" id="lk-sec-${k}"><div class="sec-title lk-st"><span>${i+1}. ${M[k][0]}</span>
+      <span class="lk-mv f2-noprint"><button type="button" title="위로" ${i===0?'disabled':''} onclick="lkMove('${k}',-1)">▲</button><button type="button" title="아래로" ${i===o.length-1?'disabled':''} onclick="lkMove('${k}',1)">▼</button>${i===0&&changed?`<button type="button" class="rs" onclick="lkReset()">↺ 처음 순서</button>`:''}</span></div>${M[k][1]}</div>`).join('');
+}
 function f2LinkView(){
   if(!F2.pm.length) return `<div class="card empty" style="padding:16px">F2_생산실적 데이터가 없습니다</div>`;
   if(F1M.rows===null){ f1mLoad(); return `<div class="card empty" style="padding:16px">FAC1 모델별 품질(Q_Model상세) 불러오는 중…</div>`; }
@@ -3151,10 +3166,12 @@ function f2LinkView(){
       ${f2tile('FAC2 원인 %NG', T2.in?(T2.f2/T2.in*100).toFixed(2):'–', '%', `${fmt(T2.f2)}개 · FAC2 불량의 ${100-share}%`, '#7c3aed')}
       ${f2tile('FAC1 자체 %NG (연결 모델)', T2.t1?(T2.ng1/T2.t1*100).toFixed(2):'–', '%', `생산 ${fmt(T2.t1)} · 불량 ${fmt(T2.ng1)} · 웜샷 ${fmt(T2.w1)}`)}
     </div>
-    <div class="sec-title">1. 중점 불량 — 1공장 ${esc2(LK_FOCUS.join(' · '))} / 2공장 ${esc2(F2FOC.join(' · '))} <small>(전체 모델)</small></div>${focTbl}
-    <div class="sec-title">2. 모델 · 품번별 FAC1 / FAC2 실적 <small>(FAC1 원인 불량이 많은 순)</small></div>${main}
-    <div class="sec-title">3. FAC2 불량유형 — 원인 공장별 (FAC1 / FAC2) · Worst 3 · <b style="color:#1e3c72">${esc2(perLbl)}</b> <small>(전체 불량 대비 % · 품번별 수량과 투입 대비 %)</small></div>${tyTbl}
-    ${f1Tbl ? `<div class="sec-title">4. FAC1 자체 불량유형 — 연결된 모델 <small>(Q_Model상세 · 생산 대비 %)</small></div>${f1Tbl}` : ''}
+    ${lkSections([
+      ['foc',  `중점 불량 — 1공장 ${esc2(LK_FOCUS.join(' · '))} / 2공장 ${esc2(F2FOC.join(' · '))} <small>(전체 모델)</small>`, focTbl],
+      ['main', `모델 · 품번별 FAC1 / FAC2 실적 <small>(FAC1 원인 불량이 많은 순)</small>`, main],
+      ['ty',   `FAC2 불량유형 — 원인 공장별 (FAC1 / FAC2) · Worst 3 · <b style="color:#1e3c72">${esc2(perLbl)}</b> <small>(전체 불량 대비 % · 품번별 수량과 투입 대비 %)</small>`, tyTbl],
+      ['f1',   `FAC1 자체 불량유형 — 연결된 모델 <small>(Q_Model상세 · 생산 대비 %)</small>`, f1Tbl]
+    ])}
     ${F1M.err && !F1M.rows.length ? `<div class="card empty" style="padding:12px">FAC1 Q_Model상세를 읽지 못했습니다: ${esc2(F1M.err)}</div>` : ''}`;
 }
 function renderF2(){
