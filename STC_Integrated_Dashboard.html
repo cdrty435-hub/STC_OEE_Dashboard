@@ -300,6 +300,24 @@ td.lkp-gc{padding:6px 0!important;} .lkp-g{position:relative;height:22px;backgro
 .lkm-li{display:flex;gap:6px;align-items:center;margin:4px 0;} .lkm-li input[data-l=d]{width:140px;flex:none;} .lkm-li input[data-l=who]{width:110px;flex:none;}
 .lkm-ft{display:flex;gap:8px;margin-top:14px;border-top:1px solid #e2e8f0;padding-top:12px;} .lkm-b{border:1px solid #cbd5e1;background:#fff;border-radius:6px;padding:7px 16px;font-weight:700;cursor:pointer;} .lkm-b.ok{background:#1e3c72;color:#fff;border-color:#1e3c72;} .lkm-b.del{color:#dc2626;border-color:#fecaca;}
 @media print{ .lkp-g{-webkit-print-color-adjust:exact;print-color-adjust:exact;} .lkp-bar,.lkp-dot,.lkp-today{-webkit-print-color-adjust:exact;print-color-adjust:exact;} }
+.lkp-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.lkp-tabs{display:flex;gap:4px;flex-wrap:wrap;} .lkp-tab{border:1px solid #cbd5e1;background:#fff;border-radius:16px;padding:4px 12px;font-size:12.5px;font-weight:700;cursor:pointer;color:#334155;} .lkp-tab.on{background:#1e3c72;color:#fff;border-color:#1e3c72;} .lkp-tab.add{border-style:dashed;color:#64748b;} .lkp-tab:disabled{opacity:.5;cursor:default;}
+.lkp-badn{display:inline-block;background:#dc2626;color:#fff;border-radius:8px;padding:0 6px;font-size:11px;margin-left:3px;}
+.lkp-flow{display:flex;align-items:flex-start;overflow-x:auto;padding:6px 2px 10px;gap:0;}
+.lkp-st{flex:none;width:150px;display:flex;flex-direction:column;gap:6px;}
+.lkp-box{position:relative;height:74px;border:2px solid #1e3c72;border-radius:8px;background:#eef2ff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px 6px;box-sizing:border-box;cursor:pointer;transition:all .15s;}
+.lkp-box:hover{box-shadow:0 0 0 3px #bfdbfe;} .lkp-box small{font-size:10px;font-weight:800;color:#64748b;letter-spacing:.5px;} .lkp-box b{font-size:13.5px;color:#0f172a;line-height:1.25;}
+.lkp-st.bad .lkp-box{border-color:#dc2626;background:#dc2626;box-shadow:0 0 0 3px #fecaca;} .lkp-st.bad .lkp-box b,.lkp-st.bad .lkp-box small{color:#fff;}
+.lkp-flag{position:absolute;top:-10px;right:-6px;background:#fff;color:#dc2626;border:1.5px solid #dc2626;border-radius:10px;font-style:normal;font-size:10px;font-weight:900;padding:0 6px;}
+.lkp-desc{font-size:12px;color:#334155;line-height:1.45;border-top:3px solid #1e3c72;padding-top:5px;white-space:pre-wrap;} .lkp-st.bad .lkp-desc{border-top-color:#dc2626;}
+.lkp-prob{font-size:12px;color:#b91c1c;font-weight:700;background:#fef2f2;border-radius:4px;padding:4px 6px;white-space:pre-wrap;}
+.lkp-ar{flex:none;width:40px;height:74px;display:flex;align-items:center;justify-content:center;} .lkp-ar.ed{flex-direction:column;width:44px;gap:4px;} .lkp-ar.ed .lkp-ar{height:auto;}
+.lkp-plus{border:1px dashed #64748b;background:#fff;border-radius:50%;width:26px;height:26px;cursor:pointer;font-weight:900;color:#1e3c72;padding:0;} .lkp-plus:hover{background:#eef2ff;}
+.lkp-box.ed{cursor:default;gap:3px;} .lkp-box.ed input{width:100%;box-sizing:border-box;border:1px solid #94a3b8;border-radius:4px;padding:3px 4px;font:inherit;font-size:12.5px;font-weight:800;text-align:center;}
+.lkp-tools{display:flex;gap:2px;} .lkp-tools button{border:1px solid #cbd5e1;background:#fff;border-radius:3px;font-size:10px;padding:1px 5px;cursor:pointer;} .lkp-tools button.on{background:#dc2626;color:#fff;border-color:#dc2626;} .lkp-tools button.x{color:#dc2626;}
+.lkp-st textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:4px;padding:4px 5px;font:inherit;font-size:12px;resize:vertical;} .lkp-st textarea.pr{border-color:#fecaca;background:#fef2f2;}
+.lkp-sum{margin-top:6px;padding:8px 10px;background:#fef2f2;border-left:4px solid #dc2626;border-radius:4px;font-size:12.5px;display:flex;flex-wrap:wrap;gap:4px 14px;} .lkp-sum b{color:#b91c1c;}
+@media print{ .lkp-box,.lkp-st.bad .lkp-box,.lkp-prob,.lkp-sum{-webkit-print-color-adjust:exact;print-color-adjust:exact;} .lkp-flow{flex-wrap:wrap;row-gap:12px;overflow:visible;} }
 .lk-cshare{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;font-size:12.5px;} .lk-cshare b{padding:3px 10px;border-radius:4px;color:#fff;font-weight:800;} .lk-cshare b.a{background:#c2410c;} .lk-cshare b.b{background:#7c3aed;} .lk-cshare span{opacity:.85;}
 .lk-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;margin:6px 0 10px;padding-bottom:8px;border-bottom:3px solid #1e3c72;} .lk-head h2{margin:0;font-size:20px;color:#1e3c72;} .lk-head div{font-size:13px;}
 .lk-tiles{margin-bottom:10px;} .lk-q{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:12px;padding:3px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-left:2px;}
@@ -3062,7 +3080,7 @@ function lkSet(from, to){ const r = lkRange(); if(from) r.from = from; if(to) r.
 function lkQuick(n){ const ds = f2pDates(); const last = ds[ds.length-1]; if(!last) return;
   const from = n==='mo' ? last.slice(0,8)+'01' : f2AddDays(last, -(n-1)); lkSet(from, last); }
 /* 섹션 위아래 순서 바꾸기 (▲▼ · 이 브라우저에 저장 · 「처음대로」) */
-const LK_DEF_ORDER = ['foc','main','ty','trend','act','f1'];
+const LK_DEF_ORDER = ['foc','main','ty','trend','act','proc','f1'];
 function lkOrder(){ try{ const v = JSON.parse(localStorage.getItem('stc_f2_lk_order')||'null'); if(Array.isArray(v)){ const o = v.filter(k=>LK_DEF_ORDER.includes(k)); LK_DEF_ORDER.forEach((k,j)=>{ if(!o.includes(k)){ const p = j ? o.indexOf(LK_DEF_ORDER[j-1]) : -1; o.splice(p+1, 0, k); } }); return o; } }catch(e){} return LK_DEF_ORDER.slice(); }
 function lkMove(k, d){ const o = lkOrder(), i = o.indexOf(k), j = i + d; if(i<0 || j<0 || j>=o.length) return; [o[i], o[j]] = [o[j], o[i]];
   try{ localStorage.setItem('stc_f2_lk_order', JSON.stringify(o)); }catch(e){} setTimeout(()=>{ renderF2(); const el = document.getElementById('lk-sec-'+k); if(el) el.scrollIntoView({ block:'start' }); }, 0); }
@@ -3153,6 +3171,62 @@ function lkaModal(){
       ${o.log.map((x,k)=>`<div class="lkm-li"><input data-l="d" type="date" value="${esc2(x.d||'')}"><input data-l="txt" value="${esc2(x.txt||'')}" placeholder="진행 내용 (예: 1차 교육 실시 12명)"><input data-l="who" list="lkaOwners" value="${esc2(x.who||'')}" placeholder="담당"><button class="lka-x" title="삭제" onclick="lkaEdLog(${k})">✕</button></div>`).join('') || '<div class="lka-hint" style="padding:4px 0">아직 없음 — [+ 진행 내용 추가]</div>'}</div>
     <div class="lkm-ft">${o.custom && !LKA_ED.isNew?'<button class="lkm-b del" onclick="lkaEdDel()">삭제</button>':''}${LKA_DEF.some(d=>d.id===o.id)?'<button class="lkm-b" onclick="lkaEdReset()">↺ 문구 기본값</button>':''}<span style="flex:1"></span>
       <button class="lkm-b" onclick="lkaClose()">취소</button><button class="lkm-b ok" onclick="lkaEdSave()">저장</button></div></div>`;
+}
+/* ===== 공정 흐름도 — 스텝을 왼쪽 → 오른쪽으로, 칸 사이 화살표 · 아래 공정 설명 · 문제 공정 클릭 = 적색 강조
+   저장 = 개선 계획과 같은 곳 (scope LKACT, grp 'PROC') */
+const LKP_DEF = { id:'p_def', grp:'PROC', title:'FAC1 → FAC2 전체 공정', steps:[
+  { name:'용해', desc:'알루미늄 잉곳 용해 · 용탕 온도 관리' },
+  { name:'다이캐스팅', desc:'TOYO / 도시바 · 웜샷 후 양산 · 진공' },
+  { name:'트리밍', desc:'게이트 · 오버플로 제거 (트리밍 프레스)' },
+  { name:'FAC1 외관 검사', desc:'박리 · 기포 · 크랙 육안 검사 · 한도견본' },
+  { name:'운송 (FAC1→FAC2)', desc:'운반 상자 · 꼬리표 (날짜 · 호기 · 금형)' },
+  { name:'MCT 가공', desc:'OP10 / OP20 · 지그 셋팅 · 공구 보정' },
+  { name:'세척 · 검사', desc:'치수 측정 · 외관 · 스크래치' },
+  { name:'OQC · 포장', desc:'출하 전 검사 · 포장' } ] };
+const LKP_UI = { cur:null, edit:false, draft:null };
+function lkpFlows(){ const L = Object.values(LKA.map).filter(o=>o.grp==='PROC' && !o.del).sort((a,b)=>String(a.id).localeCompare(String(b.id)));
+  return L.some(o=>o.id==='p_def') || (LKA.map.p_def && LKA.map.p_def.del) ? L : [JSON.parse(JSON.stringify(LKP_DEF)), ...L]; }
+function lkpCur(){ const L = lkpFlows(); return L.find(o=>o.id===LKP_UI.cur) || L[0] || null; }
+function lkpPick(id){ LKP_UI.cur = id; LKP_UI.edit = false; LKP_UI.draft = null; renderF2(); }
+function lkpToggle(k){ const f = lkpCur(); if(!f || LKP_UI.edit) return; const o = JSON.parse(JSON.stringify(f)); delete o._k; o.steps[k].bad = !o.steps[k].bad; lkaPut(o); renderF2(); }
+function lkpEdit(){ const f = lkpCur(); LKP_UI.edit = true; LKP_UI.draft = JSON.parse(JSON.stringify(f || { id:'p'+Date.now().toString(36), grp:'PROC', title:'새 공정', steps:[] })); delete LKP_UI.draft._k; renderF2(); }
+function lkpNew(){ const t = prompt('새 공정 흐름 이름 (예: CT Support 가공 공정)', ''); if(!t) return;
+  LKP_UI.cur = 'p'+Date.now().toString(36); LKP_UI.edit = true; LKP_UI.draft = { id:LKP_UI.cur, grp:'PROC', title:t.trim(), steps:[{ name:'', desc:'' }] }; renderF2(); }
+function lkpSync(){ const d = LKP_UI.draft, box = document.getElementById('lkpFlow'); if(!d || !box) return;
+  const t = document.getElementById('lkpTitle'); if(t) d.title = t.value.trim();
+  box.querySelectorAll('.lkp-st').forEach((el,k)=>{ const s = d.steps[k]; if(!s) return; s.name = el.querySelector('[data-p=name]').value.trim(); s.desc = el.querySelector('[data-p=desc]').value.trim(); s.prob = el.querySelector('[data-p=prob]').value.trim(); }); }
+function lkpOp(op, k){ lkpSync(); const S = LKP_UI.draft.steps;
+  if(op==='add') S.splice(k+1, 0, { name:'', desc:'' });
+  else if(op==='del'){ if(!confirm(`STEP ${k+1} '${S[k].name||''}' 을 삭제할까요?`)) return; S.splice(k,1); }
+  else if(op==='l' && k>0) [S[k-1],S[k]] = [S[k],S[k-1]];
+  else if(op==='r' && k<S.length-1) [S[k+1],S[k]] = [S[k],S[k+1]];
+  else if(op==='bad') S[k].bad = !S[k].bad;
+  renderF2(); if(op==='add') setTimeout(()=>{ const el = document.querySelectorAll('#lkpFlow [data-p=name]')[k+1]; if(el) el.focus(); }, 30); }
+async function lkpSave(){ lkpSync(); const d = LKP_UI.draft; if(!d.title){ alert('공정 흐름 이름을 넣어 주세요'); return; }
+  d.steps = d.steps.filter(s=>s.name || s.desc); LKP_UI.cur = d.id; LKP_UI.edit = false; LKP_UI.draft = null; await lkaPut(d); renderF2(); }
+function lkpCancel(){ LKP_UI.edit = false; LKP_UI.draft = null; renderF2(); }
+function lkpDelFlow(){ const d = LKP_UI.draft; if(!d || !confirm(`'${d.title}' 공정 흐름을 삭제할까요?`)) return; d.del = true; lkaPut(d); LKP_UI.edit = false; LKP_UI.draft = null; LKP_UI.cur = null; renderF2(); }
+function lkpHtml(){
+  const L = lkpFlows(), ed = LKP_UI.edit && LKP_UI.draft, f = ed ? LKP_UI.draft : lkpCur();
+  const tabs = L.map(o=>`<button class="lkp-tab${f && o.id===f.id?' on':''}" onclick="lkpPick('${o.id}')" ${ed?'disabled':''}>${esc2(o.title||'(이름 없음)')}${(o.steps||[]).some(s=>s.bad)?` <b class="lkp-badn">${o.steps.filter(s=>s.bad).length}</b>`:''}</button>`).join('');
+  const arrow = `<div class="lkp-ar"><svg viewBox="0 0 40 24" width="40" height="24"><path d="M2 12H30" stroke="#64748b" stroke-width="3" fill="none"/><path d="M28 4L38 12L28 20Z" fill="#64748b"/></svg></div>`;
+  const steps = f ? (f.steps||[]) : [];
+  const stepV = (s,k) => `<div class="lkp-st${s.bad?' bad':''}"><div class="lkp-box" onclick="lkpToggle(${k})" title="눌러서 문제 공정 표시 / 해제"><small>STEP ${k+1}</small><b>${esc2(s.name||'')}</b>${s.bad?'<i class="lkp-flag">문제 공정</i>':''}</div>
+      <div class="lkp-desc">${esc2(s.desc||'')||'<span class="lka-hint">설명 없음</span>'}</div>${s.bad && s.prob?`<div class="lkp-prob">⚠ ${esc2(s.prob)}</div>`:''}</div>`;
+  const stepE = (s,k) => `<div class="lkp-st${s.bad?' bad':''}"><div class="lkp-box ed"><small>STEP ${k+1}</small><input data-p="name" value="${esc2(s.name||'')}" placeholder="공정 이름">
+        <div class="lkp-tools"><button onclick="lkpOp('l',${k})" title="왼쪽으로">◀</button><button onclick="lkpOp('bad',${k})" class="${s.bad?'on':''}" title="문제 공정 표시">⚠</button><button onclick="lkpOp('r',${k})" title="오른쪽으로">▶</button><button onclick="lkpOp('del',${k})" title="삭제" class="x">✕</button></div></div>
+      <textarea data-p="desc" rows="3" placeholder="공정 설명">${esc2(s.desc||'')}</textarea>
+      <textarea data-p="prob" rows="2" placeholder="문제 내용 (적색 공정일 때 표시)" class="pr">${esc2(s.prob||'')}</textarea></div>`;
+  const addB = k => `<button class="lkp-plus" onclick="lkpOp('add',${k})" title="여기에 스텝 추가">＋</button>`;
+  const flow = ed ? (steps.length ? steps.map((s,k)=>stepE(s,k) + `<div class="lkp-ar ed">${arrow}${addB(k)}</div>`).join('') : addB(-1))
+                  : steps.map((s,k)=>(k?arrow:'') + stepV(s,k)).join('');
+  const badL = steps.map((s,k)=>({ s, k })).filter(x=>x.s.bad);
+  return `<div class="card lkp-card"><div class="lkp-top"><div class="lkp-tabs">${tabs}<button class="lkp-tab add" onclick="lkpNew()" ${ed?'disabled':''}>+ 공정 흐름 추가</button></div>
+      <div>${ed ? `<button class="lkm-b" onclick="lkpCancel()">취소</button>${L.some(o=>o.id===f.id)?' <button class="lkm-b del" onclick="lkpDelFlow()">흐름 삭제</button>':''} <button class="lkm-b ok" onclick="lkpSave()">저장</button>` : `<button class="lkm-b" onclick="lkpEdit()">✎ 스텝 편집</button>`}</div></div>
+    ${ed ? `<label class="lkm-f" style="max-width:420px"><span>공정 흐름 이름</span><input id="lkpTitle" value="${esc2(f.title||'')}"></label>` : ''}
+    <div class="lkp-flow" id="lkpFlow">${flow || '<span class="lka-hint">스텝이 없습니다 — [✎ 스텝 편집]</span>'}</div>
+    ${!ed && badL.length ? `<div class="lkp-sum"><b>문제 공정 ${badL.length}곳</b>${badL.map(x=>`<span>STEP ${x.k+1} ${esc2(x.s.name)}${x.s.prob?` — ${esc2(x.s.prob)}`:''}</span>`).join('')}</div>` : ''}
+    <div class="legend" style="margin-top:6px"><span>※ ${ed ? '◀ ▶ = 순서 이동 · ⚠ = 문제 공정 · ✕ = 삭제 · 화살표 아래 ＋ = 그 자리에 스텝 추가 · [저장] 을 눌러야 반영' : '공정 상자를 누르면 문제 공정 (적색) 표시 / 해제 · 스텝 이름 · 설명 · 문제 내용은 [✎ 스텝 편집]'}</span></div></div>`;
 }
 function f2LinkView(){
   if(!F2.pm.length) return `<div class="card empty" style="padding:16px">F2_생산실적 데이터가 없습니다</div>`;
@@ -3386,6 +3460,7 @@ function f2LinkView(){
       ['ty',   `FAC2 불량유형 — 원인 공장별 (FAC1 / FAC2) · Worst 3 · <b style="color:#1e3c72">${esc2(perLbl)}</b> <small>(전체 불량 대비 % · 품번별 수량과 투입 대비 %)</small>`, tyTbl],
       ['trend', `유형별 불량 추이 — FAC1 / FAC2 원인 Worst 3 · <b style="color:#1e3c72">${esc2(perLbl)}</b> <small>(일별 · FAC2 투입 대비 %)</small>`, trTbl],
       ['act',  `Worst 3 개선 계획 — 공통 · 1공장 · 2공장 <small>(줄을 누르면 담당 · 일정 · 진행 내용 등록)</small>`, actTbl],
+      ['proc', `공정 흐름도 — 문제 공정 표시 <small>(공정 상자를 누르면 적색 강조)</small>`, lkpHtml()],
       ['f1',   `FAC1 자체 불량유형 — 연결된 모델 <small>(Q_Model상세 · 생산 대비 %)</small>`, f1Tbl]
     ])}
     ${F1M.err && !F1M.rows.length ? `<div class="card empty" style="padding:12px">FAC1 Q_Model상세를 읽지 못했습니다: ${esc2(F1M.err)}</div>` : ''}`;
