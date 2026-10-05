@@ -244,6 +244,17 @@ table.fc-t .tot{background:#eef2f7;font-weight:800;}
 .lk-w3 .h{font-weight:800;margin-bottom:6px;} .lk-w3 .r{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:4px 6px;padding:5px 0;border-bottom:1px dashed #e5e7eb;} .lk-w3 .r:last-child{border-bottom:0;}
 .lk-w3 .r span{font-weight:800;font-size:15px;} .lk-w3 .r em{font-style:normal;font-weight:900;font-size:16px;} .lk-w3 .r small{grid-column:2/4;color:#64748b;font-size:11.5px;}
 @media(max-width:900px){.lk-w3s{grid-template-columns:1fr;}}
+.lk-main{table-layout:fixed;width:100%;} .lk-main td, .lk-main th{white-space:normal;word-break:keep-all;overflow-wrap:anywhere;padding:7px 6px;}
+.lk-main .lk-sub{font-size:10.5px;color:#64748b;line-height:1.35;} .lk-main .nf2{color:#dc2626;}
+.lk-main tr.lk-r1 td{border-bottom:0;padding-top:10px;} .lk-main tr.lk-r2 td{padding:2px 6px 10px;border-bottom:1px solid #e2e8f0;text-align:left;}
+.lk-tops{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;} .lk-tops > div{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:11.5px;}
+.lk-tops .lb{font-weight:800;font-size:11px;margin-right:2px;white-space:nowrap;} .lk-tops .lb.g1{color:#9a3412;} .lk-tops .lb.a{color:#c2410c;} .lk-tops .lb.b{color:#7c3aed;}
+.lk-chip{display:inline-flex;align-items:baseline;gap:3px;border-radius:10px;padding:1px 8px;background:#f8fafc;border:1px solid #e2e8f0;white-space:nowrap;}
+.lk-chip b{font-size:10px;color:#fff;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;align-self:center;}
+.lk-chip.c1 b{background:#9a3412;} .lk-chip.ca b{background:#c2410c;} .lk-chip.cb b{background:#7c3aed;} .lk-chip em{font-style:normal;font-weight:800;} .lk-chip small{color:#64748b;font-size:10px;}
+.lk-main .lk-bar{width:100%;max-width:130px;display:flex;margin:4px 0 2px;} .lk-main td:has(.lk-bar){min-width:0;white-space:normal;} .lk-main td:has(.lk-bar) small{display:block;font-size:10.5px;}
+.lk-main thead tr:first-child th{text-align:center;} .lk-main thead th.l{text-align:left !important;} .lk-main tr.lk-r2 td{background:#fcfcfd;}
+@media(max-width:1100px){.lk-tops{grid-template-columns:1fr;}}
 .lk-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;margin:6px 0 10px;padding-bottom:8px;border-bottom:3px solid #1e3c72;} .lk-head h2{margin:0;font-size:20px;color:#1e3c72;} .lk-head div{font-size:13px;}
 .lk-tiles{margin-bottom:10px;} .lk-q{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:12px;padding:3px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-left:2px;}
 .lk-t th, .lk-t td, .lk-ty th, .lk-ty td{text-align:right;vertical-align:top;} .lk-t .l, .lk-ty .l{text-align:left;}
@@ -3033,19 +3044,28 @@ function f2LinkView(){
   const rc = v => v==null ? '' : `color:${f2St(v).c};font-weight:800`;
   const T2 = rows.reduce((a,x)=>{ a.in+=x.f2.in; a.n+=x.f2.n; a.f1+=x.f2.f1; a.f2+=x.f2.f2; if(x.f1){ a.t1+=x.f1.t; a.ng1+=x.f1.ng; a.w1+=x.f1.w; } return a; }, { in:0, n:0, f1:0, f2:0, t1:0, ng1:0, w1:0 });
   const bar = (f1, f2) => { const s = f1+f2 || 1; return `<span class="lk-bar"><i class="a" style="width:${(f1/s*100).toFixed(1)}%"></i><i class="b" style="width:${(f2/s*100).toFixed(1)}%"></i></span><small>FAC1 ${Math.round(f1/s*100)}% · FAC2 ${Math.round(f2/s*100)}%</small>`; };
-  const main = `<div class="card"><div class="tblwrap"><table class="eq lk-t">
-    <thead><tr><th rowspan="2" class="l">모델 · 품번</th><th colspan="5" class="g1">FAC1 다이캐스팅 (같은 모델 · 같은 기간)</th><th colspan="8" class="g2">FAC2 MCT 가공</th></tr>
-      <tr><th class="g1">생산</th><th class="g1">불량 NG</th><th class="g1">%NG</th><th class="g1">웜샷</th><th class="g1 l">FAC1 주요 불량 TOP3</th>
-        <th class="g2">투입</th><th class="g2">불량</th><th class="g2">%NG</th><th class="g2">${fb('FAC1')}원인</th><th class="g2">${fb('FAC2')}원인</th><th class="g2 l">원인 비중</th><th class="g2 l">${fb('FAC1')}원인 TOP3</th><th class="g2 l">${fb('FAC2')}원인 TOP3</th></tr></thead>
+  /* 숫자 표 (한 줄) + 그 아래 주요 불량 TOP3 (한 줄에 세 묶음) — 가로 스크롤 없이 */
+  const chips = (L, cls) => L.length ? L.map((x,k)=>`<span class="lk-chip ${cls}"><b>${k+1}</b>${esc2(x.t)} <em>${fmt(x.v)}</em><small>${x.p}</small></span>`).join('') : '<span class="nf">–</span>';
+  const t1L = o => !o ? [] : F1.types.map((k,i)=>({ t:k, v:o.ty[i] })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,3).map(x=>({ ...x, p:pc(x.v,o.t) }));
+  const t2L = (o, f) => FC.map((c,i)=>({ t:c.t, fac:c.fac, v:o.ty[i] })).filter(x=>x.v>0 && x.fac===f).sort((a,b)=>b.v-a.v).slice(0,3).map(x=>({ ...x, p:pc(x.v,o.in) }));
+  const main = `<div class="card"><table class="eq lk-t lk-main">
+    <colgroup><col style="width:22%"><col span="4" style="width:6.5%"><col span="5" style="width:6.5%"><col style="width:13%"></colgroup>
+    <thead><tr><th rowspan="2" class="l">모델 · 품번</th><th colspan="4" class="g1">FAC1 다이캐스팅 (같은 모델 · 같은 기간)</th><th colspan="6" class="g2">FAC2 MCT 가공</th></tr>
+      <tr><th class="g1">생산</th><th class="g1">불량 NG</th><th class="g1">%NG</th><th class="g1">웜샷</th>
+        <th class="g2">투입</th><th class="g2">불량</th><th class="g2">%NG</th><th class="g2">${fb('FAC1')}원인</th><th class="g2">${fb('FAC2')}원인</th><th class="g2 l">원인 비중</th></tr></thead>
     <tbody>${rows.map(x=>{ const a = x.f1, b = x.f2;
-      return `<tr><td class="l"><b>${esc2(b.name)}</b><br><small>FAC2 ${esc2(b.pn)} · OP ${esc2(b.opList.join('/'))} · ${[...b.mcs].sort().join(', ')}</small>${a?`<br><small>FAC1 ${esc2(a.model)} · ${esc2([...a.pns].join(', '))} · ${[...a.mcs].sort().join(', ')}</small>`:'<br><small class="nf">FAC1 모델 연결 없음</small>'}</td>
-        <td class="g1">${a?fmt(a.t):'–'}</td><td class="g1">${a?fmt(a.ng):'–'}</td><td class="g1" style="${a?rc(a.ng/a.t*100):''}">${a?pc(a.ng,a.t):'–'}</td><td class="g1">${a?fmt(a.w):'–'}</td><td class="g1 l t5">${top1(a)}</td>
+      return `<tr class="lk-r1"><td class="l"><b>${esc2(b.name)}</b><div class="lk-sub">FAC2 ${esc2(b.pn)} · OP ${esc2(b.opList.join('/'))} · ${[...b.mcs].sort().join(', ')}</div><div class="lk-sub">${a?`FAC1 ${esc2(a.model)} · ${esc2([...a.pns].join(', '))} · ${[...a.mcs].sort().join(', ')}`:'<span class="nf2">FAC1 모델 연결 없음</span>'}</div></td>
+        <td class="g1">${a?fmt(a.t):'–'}</td><td class="g1">${a?fmt(a.ng):'–'}</td><td class="g1" style="${a?rc(a.ng/a.t*100):''}">${a?pc(a.ng,a.t):'–'}</td><td class="g1">${a?fmt(a.w):'–'}</td>
         <td class="g2">${fmt(b.in)}</td><td class="g2">${fmt(b.n)}</td><td class="g2" style="${rc(b.in?b.n/b.in*100:null)}">${pc(b.n,b.in)}</td>
-        <td class="g2"><b style="color:#c2410c">${fmt(b.f1)}</b><br><small>${pc(b.f1,b.in)}</small></td><td class="g2"><b style="color:#7c3aed">${fmt(b.f2)}</b><br><small>${pc(b.f2,b.in)}</small></td>
-        <td class="g2 l">${bar(b.f1,b.f2)}</td><td class="g2 l t5">${top2(b,'FAC1')}</td><td class="g2 l t5">${top2(b,'FAC2')}</td></tr>`; }).join('')}
-      <tr class="tot"><td class="l">합계</td><td class="g1">${fmt(T2.t1)}</td><td class="g1">${fmt(T2.ng1)}</td><td class="g1">${pc(T2.ng1,T2.t1)}</td><td class="g1">${fmt(T2.w1)}</td><td class="g1"></td>
-        <td class="g2">${fmt(T2.in)}</td><td class="g2">${fmt(T2.n)}</td><td class="g2">${pc(T2.n,T2.in)}</td><td class="g2"><b style="color:#c2410c">${fmt(T2.f1)}</b><br><small>${pc(T2.f1,T2.in)}</small></td><td class="g2"><b style="color:#7c3aed">${fmt(T2.f2)}</b><br><small>${pc(T2.f2,T2.in)}</small></td><td class="g2 l">${bar(T2.f1,T2.f2)}</td><td class="g2"></td><td class="g2"></td></tr></tbody></table></div>
-    <div class="legend" style="margin-top:6px"><span>※ FAC1 = Q_Model상세 같은 기간 (생산 = 투입 샷 · 불량 = NG · 웜샷 별도) · FAC2 = F2_생산실적 (투입 = 첫 OP Total · 불량 = 모든 OP NG 합 · 원인 = F2_불량코드 D열) · 괄호 % = 그 공장 투입 대비</span></div></div>`;
+        <td class="g2"><b style="color:#c2410c">${fmt(b.f1)}</b><div class="lk-sub">${pc(b.f1,b.in)}</div></td><td class="g2"><b style="color:#7c3aed">${fmt(b.f2)}</b><div class="lk-sub">${pc(b.f2,b.in)}</div></td>
+        <td class="g2 l">${bar(b.f1,b.f2)}</td></tr>
+      <tr class="lk-r2"><td colspan="11"><div class="lk-tops">
+        <div><span class="lb g1">FAC1 자체 TOP3</span>${chips(t1L(a),'c1')}</div>
+        <div><span class="lb a">${fb('FAC1')}원인 TOP3 (FAC2 발견)</span>${chips(t2L(b,'FAC1'),'ca')}</div>
+        <div><span class="lb b">${fb('FAC2')}원인 TOP3</span>${chips(t2L(b,'FAC2'),'cb')}</div></div></td></tr>`; }).join('')}
+      <tr class="tot"><td class="l">합계</td><td class="g1">${fmt(T2.t1)}</td><td class="g1">${fmt(T2.ng1)}</td><td class="g1">${pc(T2.ng1,T2.t1)}</td><td class="g1">${fmt(T2.w1)}</td>
+        <td class="g2">${fmt(T2.in)}</td><td class="g2">${fmt(T2.n)}</td><td class="g2">${pc(T2.n,T2.in)}</td><td class="g2"><b style="color:#c2410c">${fmt(T2.f1)}</b><div class="lk-sub">${pc(T2.f1,T2.in)}</div></td><td class="g2"><b style="color:#7c3aed">${fmt(T2.f2)}</b><div class="lk-sub">${pc(T2.f2,T2.in)}</div></td><td class="g2 l">${bar(T2.f1,T2.f2)}</td></tr></tbody></table>
+    <div class="legend" style="margin-top:6px"><span>※ FAC1 = Q_Model상세 같은 기간 (생산 = 투입 샷 · 불량 = NG · 웜샷 별도) · FAC2 = F2_생산실적 (투입 = 첫 OP Total · 불량 = 모든 OP NG 합 · 원인 = F2_불량코드 D열) · % = 그 공장 투입 대비</span></div></div>`;
   /* ---- 불량유형 전체 % (FAC2 에서 나온 불량 · 유형별) ---- */
   const allTy = FC.map((c,i)=>({ t:c.t, fac:c.fac, guess:c.guess, v:rows.reduce((s,x)=>s+x.f2.ty[i],0) })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
   const sumTy = allTy.reduce((s,x)=>s+x.v,0) || 1;
