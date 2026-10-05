@@ -230,6 +230,14 @@ table.fc-t .tot{background:#eef2f7;font-weight:800;}
 .gt-fac.fac1{background:#c2410c;} u.gt-fac{text-decoration:none;margin:0;text-align:center;padding:2px 3px;} .f2-m3l > i{justify-self:center;} .gt-fac.fac2{background:#7c3aed;}
 .gt-facs{display:inline-flex;align-items:center;gap:4px;margin-left:10px;font-size:12px;} .gt-facs b{margin-left:2px;} .gt-facs small{color:#64748b;margin-right:8px;}
 .f2g-t tr.fr td{font-size:11px;} .f2g-t tr.fr.fac1 td.lb{color:#c2410c;font-weight:700;} .f2g-t tr.fr.fac2 td.lb{color:#7c3aed;font-weight:700;}
+.lk-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;margin:6px 0 10px;padding-bottom:8px;border-bottom:3px solid #1e3c72;} .lk-head h2{margin:0;font-size:20px;color:#1e3c72;} .lk-head div{font-size:13px;}
+.lk-tiles{margin-bottom:10px;} .lk-q{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:12px;padding:3px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-left:2px;}
+.lk-t th, .lk-t td, .lk-ty th, .lk-ty td{text-align:right;vertical-align:top;} .lk-t .l, .lk-ty .l{text-align:left;}
+.lk-t th.g1{background:#fff7ed;color:#9a3412;} .lk-t th.g2{background:#f5f3ff;color:#5b21b6;} .lk-t th.foc{background:#fee2e2;color:#991b1b;font-size:14px;}
+.lk-t td.g1{background:#fffbf7;} .lk-t td.g2{background:#fbfaff;} .lk-t td small, .lk-ty td small{color:#64748b;} .lk-t small.nf{color:#dc2626;}
+.lk-t td.t5{font-size:11.5px;line-height:1.5;white-space:nowrap;}
+.lk-t td:has(.lk-bar){white-space:nowrap;min-width:230px;} .lk-bar{display:inline-flex;width:90px;height:10px;border-radius:5px;overflow:hidden;background:#e5e7eb;vertical-align:middle;margin-right:6px;} .lk-bar i{display:block;height:100%;} .lk-bar i.a{background:#c2410c;} .lk-bar i.b{background:#7c3aed;}
+.lk-one{display:inline-block;height:10px;border-radius:5px;} .lk-one.fac1{background:#c2410c;} .lk-one.fac2{background:#7c3aed;}
 .f2-facnow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0 8px 12px;font-size:12px;}
 .f2-facnow .lb{font-weight:800;color:#334155;}
 .f2-facnow .it{display:inline-flex;align-items:baseline;gap:6px;border:1px solid #e2e8f0;border-radius:10px;padding:4px 12px;background:#f8fafc;color:#94a3b8;}
@@ -1256,7 +1264,7 @@ const f2PartLbl = r => { const n = r['Part name'], k = String(r['Part no.']||'')
 async function loadF2(){
   F2.loading = true; F2.err = null; renderF2();
   /* 전 설비 생산실적(F2_생산실적 · F2_설비일별) — 품질 탭과 따로 읽는다 (한쪽이 없어도 다른 쪽은 뜬다) */
-  const codeJob = f2Fetch('code').then(f2CodeLoad).catch(()=>{ F2.code.err = true; });
+  const codeJob = f2CodeFetch().then(f2CodeLoad).catch(()=>{ F2.code.err = true; });
   const pmJob = Promise.allSettled([f2Fetch('pm'), f2Fetch('pmd'), codeJob]).then(([a,b])=>{
     F2.pm  = a.status==='fulfilled' ? f2pNorm(a.value)  : []; F2.pmErr = a.status==='fulfilled' ? '' : (a.reason && a.reason.message || String(a.reason));
     F2.pmd = b.status==='fulfilled' ? f2pNormD(b.value) : []; });
@@ -1695,9 +1703,9 @@ function f2OverviewBlock(week){
         · 지표: Total · FG · NG · %NG · Mat'l(Before+After) · 가동률(실가동 ÷ 계획) · OEE(계획시간 가중) · 로스시간
         · 구글시트가 OP '10-20' · '10-30' 을 날짜(10월 20일)로 바꿔 넣는 경우가 있어 읽을 때 되돌린다
    ========================================================================= */
-Object.assign(I18N.ko, { 'f2.sec.act':'개선관리', 'f2.v.act':'워스트 원인 · 조치' });
-Object.assign(I18N.en, { 'f2.sec.act':'Improvement', 'f2.v.act':'Worst causes & actions' });
-Object.assign(I18N.th, { 'f2.sec.act':'การปรับปรุง', 'f2.v.act':'สาเหตุ · การแก้ไข' });
+Object.assign(I18N.ko, { 'f2.sec.act':'개선관리', 'f2.v.act':'워스트 원인 · 조치', 'f2.v.link':'FAC1↔FAC2 불량 연계' });
+Object.assign(I18N.en, { 'f2.sec.act':'Improvement', 'f2.v.act':'Worst causes & actions', 'f2.v.link':'FAC1↔FAC2 defect link' });
+Object.assign(I18N.th, { 'f2.sec.act':'การปรับปรุง', 'f2.v.act':'สาเหตุ · การแก้ไข', 'f2.v.link':'เชื่อมของเสีย FAC1↔FAC2' });
 Object.assign(I18N.ko, { 'f2.gt':'설비 · 모델별 일일 불량 추이 (불량 많은 순)' });
 Object.assign(I18N.en, { 'f2.gt':'Daily defect trend by machine · model (worst first)' });
 Object.assign(I18N.th, { 'f2.gt':'แนวโน้มของเสียรายวันตามเครื่อง · รุ่น' });
@@ -2040,12 +2048,29 @@ function f2pGrp(name){
    · 시트에 없는 이름 → 추정(다캐 계열 이름이면 FAC1, 나머지 FAC2) 후 '추정' 표시 — 시트에 그 이름을 한 줄 넣으면 그대로 따름 */
 F2.code = { byCode:{}, byName:{}, n:0, err:false };
 const f2Nm = v => String(v||'').toLowerCase().replace(/[\s()·,.'’_\-\/]/g,'');
+/* F2_불량코드 — D열(FAC1/FAC2)은 머리글이 비어 있어 일반 CSV 읽기로는 빠지므로 행을 배열로 읽는다 */
+async function f2CodeFetch(){
+  let last = null;
+  for(const u of f2Urls('code')){
+    try{ const r = await fetch(u + (u.indexOf('?')>=0?'&':'?') + '_=' + Date.now(), {cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status);
+      const text = await r.text(), A = []; let row = [], f = '', q = false;
+      for(let i=0;i<text.length;i++){ const c = text[i];
+        if(q){ if(c==='"'){ if(text[i+1]==='"'){ f+='"'; i++; } else q = false; } else f += c; }
+        else if(c==='"') q = true; else if(c===','){ row.push(f); f=''; } else if(c==='\r'){} else if(c==='\n'){ row.push(f); A.push(row); row=[]; f=''; } else f += c; }
+      if(f.length || row.length){ row.push(f); A.push(row); }
+      if(A.length > 1 && String(A[0][0]).trim()==='코드') return A.slice(1).map(v=>({ '코드':v[0], '불량유형':v[1], '계통':v[2], '_d':v[3] }));
+      last = new Error('F2_불량코드 머리글 아님');
+    }catch(e){ last = e; }
+  }
+  throw last || new Error('F2_불량코드 없음');
+}
 function f2CodeLoad(rows){
   const C = { byCode:{}, byName:{}, n:0, err:false };
   (rows||[]).forEach(r=>{
-    const vals = Object.values(r).map(v=>String(v||'').trim());
-    const fv = vals.find(v=>/^fac\s*[12]$/i.test(v)); if(!fv) return;
-    const fac = 'FAC' + fv.replace(/\D/g,'');
+    const d = String(r['_d']||'').trim(), g = String(r['계통']||'').trim();
+    /* D열 FAC1 → FAC1 · FAC2/VOC(협력사·고객) → FAC2 쪽 (FAC1 다이캐스팅 원인이 아닌 것) · D열이 비면 계통으로 */
+    const fac = /^fac\s*1$/i.test(d) ? 'FAC1' : d ? 'FAC2' : (g==='다캐불량' ? 'FAC1' : g ? 'FAC2' : '');
+    if(!fac) return;
     const c = parseInt(r['코드'],10), name = String(r['불량유형']||'').trim();
     if(c) C.byCode[c] = fac;
     if(name){ C.byName[f2Nm(name)] = fac;
@@ -2879,6 +2904,7 @@ const F2_VIEWS = [
   { id:'pdaily', icon:'🏭', sec:'f2.sec.prod' },
   { id:'pweek',  icon:'⚙️', sec:'f2.sec.prod' },
   { id:'pmonth', icon:'📦', sec:'f2.sec.prod' },
+  { id:'link',   icon:'🔗', sec:'f2.sec.act' },
   { id:'act',    icon:'🛠️', sec:'f2.sec.act' }
 ];
 let F2_VIEW = (()=>{ try{ return localStorage.getItem('stc_f2_view') || 'dash'; }catch(e){ return 'dash'; } })();
@@ -2926,6 +2952,130 @@ function f2SyncBar(){
   }
   return `<div class="f2-sync f2-noprint"><button class="f2-rbtn" onclick="loadF2()" ${F2.loading?'disabled':''}>🔄 ${T('f2.sync.btn')}</button><div class="f2-sst">${st}</div></div>`;
 }
+/* =========================================================================
+   FAC1 ↔ FAC2 불량 연계 (모델·품번별) — FAC2 에서 나온 불량을 원인 공장별로 나누고
+   같은 모델의 FAC1(다이캐스팅) 실적과 나란히 본다.
+   · FAC1 : 구글시트 Q_Model상세 (모델별 · 생산 Qty_Total · 불량 NG · 웜샷 Warm STD/Excess · 불량유형 열)
+   · FAC2 : F2_생산실적 (In-Out Data) — 투입 = 첫 OP Total, 불량 = 모든 OP NG 합 · 원인 FAC1/FAC2 = F2_불량코드 D열
+   · 연결 : 품번의 핵심부(앞 영문자·끝 리비전 숫자 제외) — CR623L3LAA ↔ CF623L3LAA03 · 안 맞으면 아래 F2_LINK_MAP 에 추가
+   ========================================================================= */
+const LK_FOCUS = ['박리','기포'];   /* FAC2 에서 많이 나오는 FAC1 원인 불량 — 맨 위에서 따로 비교 */
+const F2_LINK_MAP = { /* 'FAC2 품번' : 'FAC1 품번' (자동 연결이 안 될 때만) */ };
+const F1M = { rows:null, loading:false, err:'' };
+const F1M_GID = '635880711';
+const lkCore = v => { let s = String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,''); s = s.replace(/^[A-Z]{1,2}(?=\d)/,''); return s.replace(/(?<=[A-Z])\d{2}$/,''); };
+async function f1mLoad(){
+  if(F1M.loading) return; F1M.loading = true; F1M.err = '';
+  const urls = [sheetCsvUrl(F1M_GID), `https://docs.google.com/spreadsheets/d/e/${SHEET_PUB_KEY}/pub?output=csv&sheet=${encodeURIComponent('Q_Model상세')}`];
+  for(const u of urls){
+    try{ const r = await fetch(u + (u.includes('?')?'&':'?') + '_=' + Date.now(), { cache:'no-store' }); if(!r.ok) throw new Error('HTTP '+r.status);
+      const rows = parseCSV(await r.text()); if(rows.length && hasCol(rows,'Model') && hasCol(rows,'Qty_Total')){ F1M.rows = rows; break; } }catch(e){ F1M.err = e.message || String(e); }
+  }
+  if(!F1M.rows){ F1M.rows = []; F1M.err = F1M.err || 'Q_Model상세 없음'; }
+  F1M.loading = false; renderF2();
+}
+/* FAC1 행 정규화 — 9/8 이전은 NG·Warm 칸이 비어 있고 불량수량 = 유형합 + 웜샷 */
+function f1mNorm(rows){
+  if(!rows.length) return { list:[], types:[] };
+  const keys = Object.keys(rows[0]), a = keys.indexOf('미성형'), b = keys.indexOf('기타');
+  const types = a>=0 && b>=a ? keys.slice(a, b+1) : [];
+  const list = rows.map(r=>{ const d = String(r['일자']||'').slice(0,10); if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) return null;
+    const t = f2n(r['Qty_Total']), ty = types.map(k=>f2n(r[k])), st = ty.reduce((x,y)=>x+y,0);
+    let ng = f2n(r['NG']), w = f2n(r['Warm(STD)']) + f2n(r['Warm(Excess)']);
+    if(!ng && !w){ ng = st; w = Math.max(0, f2n(r['불량수량']) - st); }
+    return { d, model:String(r['Model']||'').trim(), pn:String(r['Part no.']||'').trim(), mc:String(r['설비명']||'').trim(), t, ng, w, ty }; }).filter(o=>o && o.t>0);
+  return { list, types };
+}
+function lkRange(){ try{ return JSON.parse(localStorage.getItem('stc_f2_lk_rng')||'null') || {}; }catch(e){ return {}; } }
+function lkSet(from, to){ const r = lkRange(); if(from) r.from = from; if(to) r.to = to; try{ localStorage.setItem('stc_f2_lk_rng', JSON.stringify(r)); }catch(e){} setTimeout(renderF2, 0); }
+function lkQuick(n){ const ds = f2pDates(); const last = ds[ds.length-1]; if(!last) return;
+  const from = n==='mo' ? last.slice(0,8)+'01' : f2AddDays(last, -(n-1)); lkSet(from, last); }
+function f2LinkView(){
+  if(!F2.pm.length) return `<div class="card empty" style="padding:16px">F2_생산실적 데이터가 없습니다</div>`;
+  if(F1M.rows===null){ f1mLoad(); return `<div class="card empty" style="padding:16px">FAC1 모델별 품질(Q_Model상세) 불러오는 중…</div>`; }
+  const ds = f2pDates(), last = ds[ds.length-1], R = lkRange();
+  const to = R.to && R.to <= last ? R.to : last, from = R.from && R.from <= to ? R.from : f2AddDays(to, -6);
+  const inR = d => d >= from && d <= to;
+  const FC = f2pFacCols();
+  /* ---- FAC2 품번별 ---- */
+  const P2 = {};
+  F2.pm.forEach(r=>{ if(!inR(r.d)) return; const k = r.pn; const o = P2[k] || (P2[k] = { pn:k, name:f2pShort(r.pn, r.name), ops:{}, n:0, f1:0, f2:0, ty:FC.map(()=>0), mcs:new Set() });
+    const op = String(r.op||''); o.ops[op] = (o.ops[op]||0) + r.t; o.n += r.n; o.f1 += f2pSelN(r, FC, 'FAC1'); o.f2 += f2pSelN(r, FC, 'FAC2'); o.mcs.add(r.mc);
+    FC.forEach((c,i)=>{ o.ty[i] += typeof c.i==='number' ? (r.df[c.i]||0) : (r[c.i]||0); }); });
+  Object.values(P2).forEach(o=>{ const ops = Object.keys(o.ops).sort((a,b)=>String(a).localeCompare(String(b), undefined, {numeric:true})); o.in = ops.length ? o.ops[ops[0]] : 0; o.firstOp = ops[0]||''; o.opList = ops; });
+  /* ---- FAC1 모델별 ---- */
+  const F1 = f1mNorm(F1M.rows), M1 = {};
+  F1.list.forEach(r=>{ if(!inR(r.d)) return; const k = lkCore(r.pn) || r.model; const o = M1[k] || (M1[k] = { key:k, model:r.model, pns:new Set(), mcs:new Set(), t:0, ng:0, w:0, ty:F1.types.map(()=>0) });
+    o.t += r.t; o.ng += r.ng; o.w += r.w; o.pns.add(r.pn); o.mcs.add(r.mc); r.ty.forEach((v,i)=>o.ty[i]+=v); });
+  /* ---- 연결 ---- */
+  const rows = Object.values(P2).filter(o=>o.in>0 || o.n>0).map(o=>{ const key = F2_LINK_MAP[o.pn] ? lkCore(F2_LINK_MAP[o.pn]) : lkCore(o.pn); return { f2:o, f1:M1[key] || null, key }; })
+    .sort((a,b)=> b.f2.f1 - a.f2.f1);
+  const pc = (a,b,dp) => b ? (a/b*100).toFixed(dp==null?2:dp)+'%' : '–';
+  const fb = f => `<span class="gt-fac ${f.toLowerCase()}" style="margin:0 3px 0 0">${f}</span>`;
+  const top1 = o => !o ? '–' : F1.types.map((k,i)=>({ k, v:o.ty[i] })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,3).map(x=>`${esc2(x.k)} <b>${fmt(x.v)}</b> <small>(${pc(x.v,o.t)})</small>`).join('<br>') || '–';
+  const top2 = (o, f) => FC.map((c,i)=>({ t:c.t, fac:c.fac, v:o.ty[i] })).filter(x=>x.v>0 && x.fac===f).sort((a,b)=>b.v-a.v).slice(0,3).map(x=>`${esc2(x.t)} <b>${fmt(x.v)}</b> <small>(${pc(x.v,o.in)})</small>`).join('<br>') || '–';
+  const rc = v => v==null ? '' : `color:${f2St(v).c};font-weight:800`;
+  const T2 = rows.reduce((a,x)=>{ a.in+=x.f2.in; a.n+=x.f2.n; a.f1+=x.f2.f1; a.f2+=x.f2.f2; if(x.f1){ a.t1+=x.f1.t; a.ng1+=x.f1.ng; a.w1+=x.f1.w; } return a; }, { in:0, n:0, f1:0, f2:0, t1:0, ng1:0, w1:0 });
+  const bar = (f1, f2) => { const s = f1+f2 || 1; return `<span class="lk-bar"><i class="a" style="width:${(f1/s*100).toFixed(1)}%"></i><i class="b" style="width:${(f2/s*100).toFixed(1)}%"></i></span><small>FAC1 ${Math.round(f1/s*100)}% · FAC2 ${Math.round(f2/s*100)}%</small>`; };
+  const main = `<div class="card"><div class="tblwrap"><table class="eq lk-t">
+    <thead><tr><th rowspan="2" class="l">모델 · 품번</th><th colspan="5" class="g1">FAC1 다이캐스팅 (같은 모델 · 같은 기간)</th><th colspan="8" class="g2">FAC2 MCT 가공</th></tr>
+      <tr><th class="g1">생산</th><th class="g1">불량 NG</th><th class="g1">%NG</th><th class="g1">웜샷</th><th class="g1 l">FAC1 주요 불량 TOP3</th>
+        <th class="g2">투입</th><th class="g2">불량</th><th class="g2">%NG</th><th class="g2">${fb('FAC1')}원인</th><th class="g2">${fb('FAC2')}원인</th><th class="g2 l">원인 비중</th><th class="g2 l">${fb('FAC1')}원인 TOP3</th><th class="g2 l">${fb('FAC2')}원인 TOP3</th></tr></thead>
+    <tbody>${rows.map(x=>{ const a = x.f1, b = x.f2;
+      return `<tr><td class="l"><b>${esc2(b.name)}</b><br><small>FAC2 ${esc2(b.pn)} · OP ${esc2(b.opList.join('/'))} · ${[...b.mcs].sort().join(', ')}</small>${a?`<br><small>FAC1 ${esc2(a.model)} · ${esc2([...a.pns].join(', '))} · ${[...a.mcs].sort().join(', ')}</small>`:'<br><small class="nf">FAC1 모델 연결 없음</small>'}</td>
+        <td class="g1">${a?fmt(a.t):'–'}</td><td class="g1">${a?fmt(a.ng):'–'}</td><td class="g1" style="${a?rc(a.ng/a.t*100):''}">${a?pc(a.ng,a.t):'–'}</td><td class="g1">${a?fmt(a.w):'–'}</td><td class="g1 l t5">${top1(a)}</td>
+        <td class="g2">${fmt(b.in)}</td><td class="g2">${fmt(b.n)}</td><td class="g2" style="${rc(b.in?b.n/b.in*100:null)}">${pc(b.n,b.in)}</td>
+        <td class="g2"><b style="color:#c2410c">${fmt(b.f1)}</b><br><small>${pc(b.f1,b.in)}</small></td><td class="g2"><b style="color:#7c3aed">${fmt(b.f2)}</b><br><small>${pc(b.f2,b.in)}</small></td>
+        <td class="g2 l">${bar(b.f1,b.f2)}</td><td class="g2 l t5">${top2(b,'FAC1')}</td><td class="g2 l t5">${top2(b,'FAC2')}</td></tr>`; }).join('')}
+      <tr class="tot"><td class="l">합계</td><td class="g1">${fmt(T2.t1)}</td><td class="g1">${fmt(T2.ng1)}</td><td class="g1">${pc(T2.ng1,T2.t1)}</td><td class="g1">${fmt(T2.w1)}</td><td class="g1"></td>
+        <td class="g2">${fmt(T2.in)}</td><td class="g2">${fmt(T2.n)}</td><td class="g2">${pc(T2.n,T2.in)}</td><td class="g2"><b style="color:#c2410c">${fmt(T2.f1)}</b><br><small>${pc(T2.f1,T2.in)}</small></td><td class="g2"><b style="color:#7c3aed">${fmt(T2.f2)}</b><br><small>${pc(T2.f2,T2.in)}</small></td><td class="g2 l">${bar(T2.f1,T2.f2)}</td><td class="g2"></td><td class="g2"></td></tr></tbody></table></div>
+    <div class="legend" style="margin-top:6px"><span>※ FAC1 = Q_Model상세 같은 기간 (생산 = 투입 샷 · 불량 = NG · 웜샷 별도) · FAC2 = F2_생산실적 (투입 = 첫 OP Total · 불량 = 모든 OP NG 합 · 원인 = F2_불량코드 D열) · 괄호 % = 그 공장 투입 대비</span></div></div>`;
+  /* ---- 불량유형 전체 % (FAC2 에서 나온 불량 · 유형별) ---- */
+  const allTy = FC.map((c,i)=>({ t:c.t, fac:c.fac, guess:c.guess, v:rows.reduce((s,x)=>s+x.f2.ty[i],0) })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  const sumTy = allTy.reduce((s,x)=>s+x.v,0) || 1;
+  const parts = rows.map(x=>x.f2);
+  const tyTbl = `<div class="card"><div class="tblwrap"><table class="eq lk-ty">
+    <thead><tr><th class="l">불량유형</th><th>원인</th><th>수량</th><th>전체 불량 중 %</th><th class="l" style="min-width:160px">비중</th><th>투입 대비 %</th>${parts.map(p=>`<th title="${esc2(p.pn)}">${esc2(p.name)}</th>`).join('')}</tr></thead>
+    <tbody>${allTy.map(x=>{ const i = FC.findIndex(c=>c.t===x.t); return `<tr><td class="l"><b>${esc2(x.t)}</b>${x.guess?' <small title="시트에 없는 이름 — 추정">*</small>':''}</td><td>${fb(x.fac)}</td><td><b>${fmt(x.v)}</b></td><td><b>${(x.v/sumTy*100).toFixed(1)}%</b></td>
+        <td class="l"><span class="lk-one ${x.fac.toLowerCase()}" style="width:${(x.v/allTy[0].v*100).toFixed(1)}%"></span></td><td>${pc(x.v,T2.in)}</td>
+        ${parts.map(p=>`<td>${p.ty[i]?`${fmt(p.ty[i])} <small>(${pc(p.ty[i],p.in,1)})</small>`:'<span style="color:#cbd5e1">·</span>'}</td>`).join('')}</tr>`; }).join('')}
+      <tr class="tot"><td class="l">FAC1 원인 합</td><td>${fb('FAC1')}</td><td>${fmt(T2.f1)}</td><td>${(T2.f1/sumTy*100).toFixed(1)}%</td><td></td><td>${pc(T2.f1,T2.in)}</td>${parts.map(p=>`<td>${fmt(p.f1)}</td>`).join('')}</tr>
+      <tr class="tot"><td class="l">FAC2 원인 합</td><td>${fb('FAC2')}</td><td>${fmt(T2.f2)}</td><td>${(T2.f2/sumTy*100).toFixed(1)}%</td><td></td><td>${pc(T2.f2,T2.in)}</td>${parts.map(p=>`<td>${fmt(p.f2)}</td>`).join('')}</tr></tbody></table></div></div>`;
+  /* ---- FAC1 자체 불량유형 (연결된 모델) ---- */
+  const lk1 = rows.map(x=>x.f1).filter(Boolean);
+  const t1 = F1.types.map((k,i)=>({ k, v:lk1.reduce((s,o)=>s+o.ty[i],0) })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  const s1 = t1.reduce((s,x)=>s+x.v,0) || 1, tt1 = lk1.reduce((s,o)=>s+o.t,0);
+  const f1Tbl = lk1.length ? `<div class="card"><div class="tblwrap"><table class="eq lk-ty">
+    <thead><tr><th class="l">FAC1 불량유형</th><th>수량</th><th>FAC1 불량 중 %</th><th class="l" style="min-width:160px">비중</th><th>생산 대비 %</th>${lk1.map(o=>`<th>${esc2(o.model)}</th>`).join('')}</tr></thead>
+    <tbody>${t1.map(x=>{ const i = F1.types.indexOf(x.k); return `<tr><td class="l"><b>${esc2(x.k)}</b></td><td><b>${fmt(x.v)}</b></td><td><b>${(x.v/s1*100).toFixed(1)}%</b></td><td class="l"><span class="lk-one fac1" style="width:${(x.v/t1[0].v*100).toFixed(1)}%"></span></td><td>${pc(x.v,tt1)}</td>
+      ${lk1.map(o=>`<td>${o.ty[i]?`${fmt(o.ty[i])} <small>(${pc(o.ty[i],o.t,1)})</small>`:'<span style="color:#cbd5e1">·</span>'}</td>`).join('')}</tr>`; }).join('')}</tbody></table></div></div>` : '';
+  /* ---- 핵심 FAC1 원인 불량 (박리 · 기포) — FAC1 자체 vs FAC2 에서 발견 ---- */
+  const fIdx2 = k => FC.findIndex(c=>c.t===k || f2Nm(c.t)===f2Nm(k)), fIdx1 = k => F1.types.findIndex(t=>f2Nm(t)===f2Nm(k));
+  const focTbl = `<div class="card"><div class="tblwrap"><table class="eq lk-t lk-foc">
+    <thead><tr><th rowspan="2" class="l">모델 · 품번</th>${LK_FOCUS.map(k=>`<th colspan="3" class="foc">${esc2(k)}</th>`).join('')}<th rowspan="2">FAC2 불량 중<br>${esc2(LK_FOCUS.join('+'))} 비중</th></tr>
+      <tr>${LK_FOCUS.map(()=>`<th class="g1">FAC1 자체<br><small>생산 대비</small></th><th class="g2">FAC2 발견<br><small>투입 대비</small></th><th>FAC2 불량 중</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(x=>{ const a = x.f1, b = x.f2; let fsum = 0;
+      const cells = LK_FOCUS.map(k=>{ const i1 = fIdx1(k), i2 = fIdx2(k), v1 = a && i1>=0 ? a.ty[i1] : null, v2 = i2>=0 ? b.ty[i2] : 0; fsum += v2;
+        return `<td class="g1">${v1==null?'–':`<b>${fmt(v1)}</b> <small>${pc(v1,a.t)}</small>`}</td><td class="g2"><b>${fmt(v2)}</b> <small>${pc(v2,b.in)}</small></td><td>${pc(v2,b.n,1)}</td>`; }).join('');
+      return `<tr><td class="l"><b>${esc2(b.name)}</b>${a?`<br><small>FAC1 ${esc2(a.model)}</small>`:''}</td>${cells}<td><b>${pc(fsum,b.n,1)}</b></td></tr>`; }).join('')}</tbody></table></div>
+    <div class="legend" style="margin-top:6px"><span>※ FAC1 자체 = 다이캐스팅 공장 검사에서 걸린 수량 · FAC2 발견 = 가공 중(MCT)에 드러난 수량 — FAC2 발견이 크면 FAC1 검사에서 못 거르고 넘어온 것</span></div></div>`;
+  const q = [['7','최근 7일'],['14','14일'],['30','30일'],['mo','이번 달']].map(([k,l])=>`<button class="lk-q" onclick="lkQuick(${k==='mo'?"'mo'":k})">${l}</button>`).join('');
+  const share = T2.n ? Math.round(T2.f1/T2.n*100) : 0;
+  return `<div class="f2-rbar f2-noprint"><label>기간 <input type="date" class="f2-date" value="${from}" max="${last}" onchange="lkSet(this.value,null)"></label><span>~</span><input type="date" class="f2-date" value="${to}" max="${last}" onchange="lkSet(null,this.value)"> ${q}
+      <button class="btn-f2" onclick="window.print()">인쇄 / PDF</button></div>
+    <div class="lk-head"><h2>FAC1 ↔ FAC2 불량 연계 — 모델 · 품번별</h2><div>${from} ~ ${to} · FAC2 불량 ${fmt(T2.n)}개 중 <b style="color:#c2410c">FAC1 원인 ${fmt(T2.f1)}개 (${share}%)</b> · <b style="color:#7c3aed">FAC2 원인 ${fmt(T2.f2)}개 (${100-share}%)</b></div></div>
+    <div class="tiles lk-tiles">
+      ${f2tile('FAC2 투입', fmt(T2.in), '', `불량 ${fmt(T2.n)} · %NG ${pc(T2.n,T2.in)}`)}
+      ${f2tile('FAC1 원인 %NG', T2.in?(T2.f1/T2.in*100).toFixed(2):'–', '%', `${fmt(T2.f1)}개 · FAC2 불량의 ${share}%`, '#c2410c')}
+      ${f2tile('FAC2 원인 %NG', T2.in?(T2.f2/T2.in*100).toFixed(2):'–', '%', `${fmt(T2.f2)}개 · FAC2 불량의 ${100-share}%`, '#7c3aed')}
+      ${f2tile('FAC1 자체 %NG (연결 모델)', T2.t1?(T2.ng1/T2.t1*100).toFixed(2):'–', '%', `생산 ${fmt(T2.t1)} · 불량 ${fmt(T2.ng1)} · 웜샷 ${fmt(T2.w1)}`)}
+    </div>
+    <div class="sec-title">1. 핵심 FAC1 원인 불량 — ${esc2(LK_FOCUS.join(' · '))} <small>(FAC1 자체 검사 vs FAC2 가공 중 발견)</small></div>${focTbl}
+    <div class="sec-title">2. 모델 · 품번별 FAC1 / FAC2 실적 <small>(FAC1 원인 불량이 많은 순)</small></div>${main}
+    <div class="sec-title">3. FAC2 불량유형 — 전체 불량 대비 % <small>(원인 FAC1 / FAC2 · 품번별 수량과 투입 대비 %)</small></div>${tyTbl}
+    ${f1Tbl ? `<div class="sec-title">4. FAC1 자체 불량유형 — 연결된 모델 <small>(Q_Model상세 · 생산 대비 %)</small></div>${f1Tbl}` : ''}
+    ${F1M.err && !F1M.rows.length ? `<div class="card empty" style="padding:12px">FAC1 Q_Model상세를 읽지 못했습니다: ${esc2(F1M.err)}</div>` : ''}`;
+}
 function renderF2(){
   const host = document.getElementById('panel-f2ov'); if(!host) return;
   const week = document.getElementById('weekSel').value;
@@ -2939,6 +3089,7 @@ function renderF2(){
   let body;
   NOTE.cur = F2_VIEW[0]==='p' ? 'FAC2P' : 'FAC2';
   if(F2_VIEW==='act') body = actBoardHtml('FAC2');
+  else if(F2_VIEW==='link') body = (F2.loading && !F2.pm.length) ? `<div class="empty">${T('f2.loading')}</div>` : f2LinkView();
   else if(F2_VIEW==='qty') body = (F2.loading && !F2.pd.length && !F2.pm.length) ? `<div class="empty">${T('f2.loading')}</div>` : f2Qty(week);
   else if(F2_VIEW[0]==='p') body = f2pStatus() || f2pReport(F2_VIEW.slice(1), week);
   else if(st) body = `<div class="sec-title">${T('grp.fac2')} · ${week||''}</div>${st}`;
