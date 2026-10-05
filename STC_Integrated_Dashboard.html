@@ -235,6 +235,7 @@ table.fc-t .tot{background:#eef2f7;font-weight:800;}
 .lk-t th.sh1, .lk-t td.sh1{background:#fff7ed;} .lk-t th.sh2, .lk-t td.sh2{background:#f5f3ff;}
 .lk-foc thead th{text-align:center;} .lk-foc thead th.l{text-align:left;}
 .lk-t tr.lk-sep td{background:#f1f5f9;color:#475569;font-weight:800;font-size:12px;text-align:left;} .lk-t tr.only1 td{color:#475569;} .lk-t .nf{color:#cbd5e1;}
+.lk-ty tr.lk-sum td{background:#f8fafc;} .lk-ty tr.lk-sum:nth-child(4) td{border-bottom:3px solid #334155;} .lk-ty td.lk-grp.sum{background:#1e3c72;color:#fff;} .lk-ty td.lk-grp.sum small{color:#cbd5e1;font-size:11px;}
 .lk-ty td.lk-grp{text-align:center;vertical-align:middle;font-weight:800;font-size:12px;line-height:1.5;border-right:2px solid #e2e8f0;min-width:84px;}
 .lk-ty td.lk-grp.fac1{background:#fff7ed;color:#9a3412;} .lk-ty td.lk-grp.fac2{background:#f5f3ff;color:#5b21b6;} .lk-ty td.lk-grp b{font-size:18px;display:block;} .lk-ty td.lk-grp small{color:inherit;}
 .lk-ty tr.wst td{background:#fffbeb;} .lk-ty tr.tot.all td{border-top:2px solid #334155;font-weight:900;}
@@ -3009,6 +3010,8 @@ function f2LinkView(){
   const ds = f2pDates(), last = ds[ds.length-1], R = lkRange();
   const to = R.to && R.to <= last ? R.to : last, from = R.from && R.from <= to ? R.from : f2AddDays(to, -6);
   const inR = d => d >= from && d <= to;
+  const lastDay = ym => { const [y,m] = ym.split('-').map(Number); return new Date(Date.UTC(y, m, 0)).toISOString().slice(0,10); };
+  const perLbl = (from.slice(8)==='01' && to===lastDay(from.slice(0,7))) ? `${+from.slice(5,7)}월 한 달` : `${from.slice(5).replace('-','/')} ~ ${to.slice(5).replace('-','/')}`;
   const FC = f2pFacCols();
   /* ---- FAC2 품번별 ---- */
   const P2 = {};
@@ -3056,12 +3059,20 @@ function f2LinkView(){
         <td class="l"><span class="lk-one ${f.toLowerCase()}" style="width:${(x.v/allTy[0].v*100).toFixed(1)}%"></span></td><td>${pc(x.v,T2.in)}</td>
         ${parts.map(p=>`<td>${p.ty[i]?`${fmt(p.ty[i])} <small>(${pc(p.ty[i],p.in,1)})</small>`:'<span style="color:#cbd5e1">·</span>'}</td>`).join('')}</tr>`; }).join('')
       + `<tr class="tot"><td class="l">${f} 원인 합</td><td>${fmt(gs)}</td><td>${(gs/sumTy*100).toFixed(1)}%</td><td>100%</td><td></td><td>${pc(gs,T2.in)}</td>${parts.map(p=>`<td>${fmt(f==='FAC1'?p.f1:p.f2)}</td>`).join('')}</tr>`; };
+  /* 맨 위 — 모델(품번)별 총생산 · 총불량 · FAC1 / FAC2 원인 */
+  const tN = T2.f1 + T2.f2;
+  const sumRows = [
+      ['총 생산 (투입)', p=>`<b>${fmt(p.in)}</b>`, `<b>${fmt(T2.in)}</b>`, '', ''],
+      ['총 불량', p=>`<b>${fmt(p.f1+p.f2)}</b> <small>(${pc(p.f1+p.f2,p.in,2)})</small>`, `<b>${fmt(tN)}</b>`, '100%', pc(tN,T2.in)],
+      ['FAC1 원인', p=>`<b style="color:#c2410c">${fmt(p.f1)}</b> <small>(${pc(p.f1,p.in,2)})</small>`, `<b style="color:#c2410c">${fmt(T2.f1)}</b>`, `${(T2.f1/(tN||1)*100).toFixed(1)}%`, pc(T2.f1,T2.in), 'fac1'],
+      ['FAC2 원인', p=>`<b style="color:#7c3aed">${fmt(p.f2)}</b> <small>(${pc(p.f2,p.in,2)})</small>`, `<b style="color:#7c3aed">${fmt(T2.f2)}</b>`, `${(T2.f2/(tN||1)*100).toFixed(1)}%`, pc(T2.f2,T2.in), 'fac2']
+    ].map((r,k)=>`<tr class="lk-sum${r[5]?' '+r[5]:''}">${k===0?`<td class="lk-grp sum" rowspan="4">모델별<br>합계<br><small>${esc2(perLbl)}</small></td>`:''}<td class="l"><b>${r[0]}</b></td><td>${r[2]}</td><td>${r[3]}</td><td></td><td class="l">${k>=2?`<span class="lk-one ${r[5]}" style="width:${((k===2?T2.f1:T2.f2)/(tN||1)*100).toFixed(1)}%"></span>`:''}</td><td>${r[4]}</td>${parts.map(p=>`<td>${r[1](p)}</td>`).join('')}</tr>`).join('');
   const w3 = f => allTy.filter(x=>x.fac===f).slice(0,3);
   const w3box = f => `<div class="lk-w3 ${f.toLowerCase()}"><div class="h">${fb(f)} ${f==='FAC1'?'1공장 (다이캐스팅) 원인':'2공장 (MCT 가공) 원인'} — Worst 3</div>${w3(f).map((x,k)=>`<div class="r"><b class="lk-wr ${f.toLowerCase()}">${k+1}</b><span>${esc2(x.t)}</span><em>${fmt(x.v)}개</em><small>전체 불량의 ${(x.v/sumTy*100).toFixed(1)}% · 투입 대비 ${pc(x.v,T2.in)}</small></div>`).join('') || '<div class="r">–</div>'}</div>`;
   const tyTbl = `<div class="lk-w3s">${w3box('FAC1')}${w3box('FAC2')}</div>
     <div class="card"><div class="tblwrap"><table class="eq lk-ty">
     <thead><tr><th>원인</th><th class="l">불량유형</th><th>수량</th><th>전체 불량 중 %</th><th>원인 안 %</th><th class="l" style="min-width:150px">비중</th><th>투입 대비 %</th>${parts.map(p=>`<th title="${esc2(p.pn)}">${esc2(p.name)}</th>`).join('')}</tr></thead>
-    <tbody>${grpRows('FAC1')}${grpRows('FAC2')}
+    <tbody>${sumRows}${grpRows('FAC1')}${grpRows('FAC2')}
       <tr class="tot all"><td></td><td class="l">전체 불량</td><td>${fmt(T2.f1+T2.f2)}</td><td>100%</td><td></td><td></td><td>${pc(T2.f1+T2.f2,T2.in)}</td>${parts.map(p=>`<td>${fmt(p.f1+p.f2)}</td>`).join('')}</tr></tbody></table></div>
     <div class="legend" style="margin-top:6px"><span>※ 원인 = F2_불량코드 D열 · 번호 ①②③ = 원인별 Worst 3 · 원인 안 % = 그 원인 불량 합계 대비 · * = 시트에 이름이 없어 추정한 분류</span></div></div>`;
   /* ---- FAC1 자체 불량유형 (연결된 모델) ---- */
@@ -3113,7 +3124,7 @@ function f2LinkView(){
   const share = T2.n ? Math.round(T2.f1/T2.n*100) : 0;
   return `<div class="f2-rbar f2-noprint"><label>기간 <input type="date" class="f2-date" value="${from}" max="${last}" onchange="lkSet(this.value,null)"></label><span>~</span><input type="date" class="f2-date" value="${to}" max="${last}" onchange="lkSet(null,this.value)"> ${q}
       <button class="btn-f2" onclick="window.print()">인쇄 / PDF</button></div>
-    <div class="lk-head"><h2>FAC1 ↔ FAC2 불량 연계 — 모델 · 품번별</h2><div>${from} ~ ${to} · FAC2 불량 ${fmt(T2.n)}개 중 <b style="color:#c2410c">FAC1 원인 ${fmt(T2.f1)}개 (${share}%)</b> · <b style="color:#7c3aed">FAC2 원인 ${fmt(T2.f2)}개 (${100-share}%)</b></div></div>
+    <div class="lk-head"><h2>FAC1 ↔ FAC2 불량 연계 — 모델 · 품번별 <small style="font-size:14px;color:#475569">(${esc2(perLbl)})</small></h2><div>${from} ~ ${to} · FAC2 불량 ${fmt(T2.n)}개 중 <b style="color:#c2410c">FAC1 원인 ${fmt(T2.f1)}개 (${share}%)</b> · <b style="color:#7c3aed">FAC2 원인 ${fmt(T2.f2)}개 (${100-share}%)</b></div></div>
     <div class="tiles lk-tiles">
       ${f2tile('FAC2 투입', fmt(T2.in), '', `불량 ${fmt(T2.n)} · %NG ${pc(T2.n,T2.in)}`)}
       ${f2tile('FAC1 원인 %NG', T2.in?(T2.f1/T2.in*100).toFixed(2):'–', '%', `${fmt(T2.f1)}개 · FAC2 불량의 ${share}%`, '#c2410c')}
@@ -3122,7 +3133,7 @@ function f2LinkView(){
     </div>
     <div class="sec-title">1. 중점 불량 — 1공장 ${esc2(LK_FOCUS.join(' · '))} / 2공장 ${esc2(F2FOC.join(' · '))} <small>(전체 모델)</small></div>${focTbl}
     <div class="sec-title">2. 모델 · 품번별 FAC1 / FAC2 실적 <small>(FAC1 원인 불량이 많은 순)</small></div>${main}
-    <div class="sec-title">3. FAC2 불량유형 — 원인 공장별 (FAC1 / FAC2) · Worst 3 <small>(전체 불량 대비 % · 품번별 수량과 투입 대비 %)</small></div>${tyTbl}
+    <div class="sec-title">3. FAC2 불량유형 — 원인 공장별 (FAC1 / FAC2) · Worst 3 · <b style="color:#1e3c72">${esc2(perLbl)}</b> <small>(전체 불량 대비 % · 품번별 수량과 투입 대비 %)</small></div>${tyTbl}
     ${f1Tbl ? `<div class="sec-title">4. FAC1 자체 불량유형 — 연결된 모델 <small>(Q_Model상세 · 생산 대비 %)</small></div>${f1Tbl}` : ''}
     ${F1M.err && !F1M.rows.length ? `<div class="card empty" style="padding:12px">FAC1 Q_Model상세를 읽지 못했습니다: ${esc2(F1M.err)}</div>` : ''}`;
 }
