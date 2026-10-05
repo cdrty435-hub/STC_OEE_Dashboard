@@ -5511,11 +5511,11 @@ function gtHtml(cfg){
   if(cfg.rerender) window.__gtRe[id] = cfg.rerender;
   const TX = Object.assign({ ko:{ none:'선택한 기간에 데이터가 없습니다', rank:'우선순위', grp:'설비 · 모델', top:'주요 불량유형', per:'기간 합계', prod:'PRODUCTION QTY', def:'DEFECT QTY', rate:'DEFECT RATE (%)',
                     typ:'유형별 불량률 (생산 대비 %)', rateName:'전체 불량률', sel:'유형 선택', all:'전체', none2:'해제', tg:'목표', top3:'불량 상위 3개 설비 · 모델 — 유형별 불량률 추이', tbl:'표 보기 ↓',
-                    note:'※ 순서 = 보고 기간 불량 수량이 많은 순 · 노란 칸 = 보고 기간 · 유형별 % = 그 유형 수량 ÷ 생산 · 유형 칩을 누르면 그래프 선과 표 행이 같이 바뀝니다', memo:'클릭 → 메모·사진', memoN:'메모 {n}건', prodLg:'생산수량',
+                    note:'※ 순서 = 보고 기간 불량률(%NG) 높은 순 (생산 '+(cfg.minQty!=null?cfg.minQty:50)+'개 미만은 뒤로) · 노란 칸 = 보고 기간 · 유형별 % = 그 유형 수량 ÷ 생산 · 유형 칩을 누르면 그래프 선과 표 행이 같이 바뀝니다', memo:'클릭 → 메모·사진', memoN:'메모 {n}건', prodLg:'생산수량',
                     mode:'묶음 기준', mMc:'설비', mPair:'설비 + 모델', mMcN:'설비 하나에 한 달 흐름 — 모델이 바뀐 날은 그래프 점선 · 표 「모델」 행에 표시', mPairN:'같은 설비라도 모델마다 따로 — 그 모델을 만든 날만 보입니다', mdl:'모델', mdlN:'개' },
                en:{ none:'No data in the selected period', rank:'Priority', grp:'Machine · model', top:'Top defect types', per:'Period total', prod:'PRODUCTION QTY', def:'DEFECT QTY', rate:'DEFECT RATE (%)',
                     typ:'Defect rate by type (% of output)', rateName:'Total %NG', sel:'Types', all:'All', none2:'None', tg:'Target', top3:'Top 3 machine · model — defect rate by type', tbl:'Table ↓',
-                    note:'※ Order = defect qty in the report period (largest first) · yellow = report period · type % = type qty ÷ output', memo:'click → notes · photos', memoN:'{n} notes', prodLg:'Output',
+                    note:'※ Order = defect rate (%NG) in the report period, highest first (output < '+(cfg.minQty!=null?cfg.minQty:50)+' placed last) · yellow = report period · type % = type qty ÷ output', memo:'click → notes · photos', memoN:'{n} notes', prodLg:'Output',
                     mode:'Group by', mMc:'Machine', mPair:'Machine + model', mMcN:'one month per machine — model changes marked', mPairN:'separate per model — only days that model ran', mdl:'Model', mdlN:'' },
                th:{ none:'ไม่มีข้อมูล', rank:'ลำดับ', grp:'เครื่อง · รุ่น', top:'ของเสียหลัก', per:'รวมช่วง', prod:'PRODUCTION QTY', def:'DEFECT QTY', rate:'DEFECT RATE (%)',
                     typ:'อัตราของเสียตามประเภท (% ของผลิต)', rateName:'%NG รวม', sel:'ประเภท', all:'ทั้งหมด', none2:'ล้าง', tg:'เป้าหมาย', top3:'3 อันดับแรก — อัตราของเสียตามประเภท', tbl:'ตาราง ↓',
@@ -5541,7 +5541,9 @@ function gtHtml(cfg){
   const mainOf = o => { if(!o || !o.m) return ''; let b = '', v = -1; for(const k in o.m){ if(o.m[k] > v){ v = o.m[k]; b = k; } } return b; };
   if(byMc) Object.values(G).forEach(g=>{ const ms = Object.entries(g.M).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
     g.name = ms[0] || mainOf(g.D[Object.keys(g.D).sort().pop()]); g.sub = ms.length > 1 ? '+ ' + ms.slice(1).join(' / ') : ''; });
-  const list = Object.values(G).filter(g=>g.P.t>0).sort((a,b)=> b.P.n-a.P.n || (b.P.n/b.P.t)-(a.P.n/a.P.t));
+  /* 워스트 순서 = 보고 기간 불량률(%NG) 높은 순 — Measure 와 같은 기준. 생산이 너무 적은 묶음(minQty 미만)은 비율이 튀므로 뒤로 */
+  const MQ = cfg.minQty != null ? cfg.minQty : 50;
+  const list = Object.values(G).filter(g=>g.P.t>0).sort((a,b)=> ((b.P.t>=MQ)-(a.P.t>=MQ)) || (b.P.n/b.P.t)-(a.P.n/a.P.t) || b.P.n-a.P.n);
   /* 워스트 원인·조치 카드가 같은 순위를 쓰도록 저장 */
   window.__gtList = window.__gtList || {};
   window.__gtList[id] = { list:list.slice(0,3).map(g=>({ mc:g.mc, name:g.name, sub:g.sub, t:g.P.t, n:g.P.n,
