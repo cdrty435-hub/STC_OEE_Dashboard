@@ -235,6 +235,14 @@ table.fc-t .tot{background:#eef2f7;font-weight:800;}
 .lk-t th.sh1, .lk-t td.sh1{background:#fff7ed;} .lk-t th.sh2, .lk-t td.sh2{background:#f5f3ff;}
 .lk-foc thead th{text-align:center;} .lk-foc thead th.l{text-align:left;}
 .lk-t tr.lk-sep td{background:#f1f5f9;color:#475569;font-weight:800;font-size:12px;text-align:left;} .lk-t tr.only1 td{color:#475569;} .lk-t .nf{color:#cbd5e1;}
+.lk-ty td.lk-grp{text-align:center;vertical-align:middle;font-weight:800;font-size:12px;line-height:1.5;border-right:2px solid #e2e8f0;min-width:84px;}
+.lk-ty td.lk-grp.fac1{background:#fff7ed;color:#9a3412;} .lk-ty td.lk-grp.fac2{background:#f5f3ff;color:#5b21b6;} .lk-ty td.lk-grp b{font-size:18px;display:block;} .lk-ty td.lk-grp small{color:inherit;}
+.lk-ty tr.wst td{background:#fffbeb;} .lk-ty tr.tot.all td{border-top:2px solid #334155;font-weight:900;}
+.lk-wr{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;color:#fff;font-size:11px;font-weight:900;margin-right:6px;} .lk-wr.fac1{background:#c2410c;} .lk-wr.fac2{background:#7c3aed;}
+.lk-w3s{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;} .lk-w3{background:#fff;border-radius:10px;padding:10px 14px;border-top:4px solid;box-shadow:0 1px 3px rgba(0,0,0,.08);} .lk-w3.fac1{border-color:#c2410c;} .lk-w3.fac2{border-color:#7c3aed;}
+.lk-w3 .h{font-weight:800;margin-bottom:6px;} .lk-w3 .r{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:4px 6px;padding:5px 0;border-bottom:1px dashed #e5e7eb;} .lk-w3 .r:last-child{border-bottom:0;}
+.lk-w3 .r span{font-weight:800;font-size:15px;} .lk-w3 .r em{font-style:normal;font-weight:900;font-size:16px;} .lk-w3 .r small{grid-column:2/4;color:#64748b;font-size:11.5px;}
+@media(max-width:900px){.lk-w3s{grid-template-columns:1fr;}}
 .lk-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;margin:6px 0 10px;padding-bottom:8px;border-bottom:3px solid #1e3c72;} .lk-head h2{margin:0;font-size:20px;color:#1e3c72;} .lk-head div{font-size:13px;}
 .lk-tiles{margin-bottom:10px;} .lk-q{appearance:none;border:1px solid #cbd5e1;background:#fff;border-radius:12px;padding:3px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-left:2px;}
 .lk-t th, .lk-t td, .lk-ty th, .lk-ty td{text-align:right;vertical-align:top;} .lk-t .l, .lk-ty .l{text-align:left;}
@@ -3039,13 +3047,23 @@ function f2LinkView(){
   const allTy = FC.map((c,i)=>({ t:c.t, fac:c.fac, guess:c.guess, v:rows.reduce((s,x)=>s+x.f2.ty[i],0) })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
   const sumTy = allTy.reduce((s,x)=>s+x.v,0) || 1;
   const parts = rows.map(x=>x.f2);
-  const tyTbl = `<div class="card"><div class="tblwrap"><table class="eq lk-ty">
-    <thead><tr><th class="l">불량유형</th><th>원인</th><th>수량</th><th>전체 불량 중 %</th><th class="l" style="min-width:160px">비중</th><th>투입 대비 %</th>${parts.map(p=>`<th title="${esc2(p.pn)}">${esc2(p.name)}</th>`).join('')}</tr></thead>
-    <tbody>${allTy.map(x=>{ const i = FC.findIndex(c=>c.t===x.t); return `<tr><td class="l"><b>${esc2(x.t)}</b>${x.guess?' <small title="시트에 없는 이름 — 추정">*</small>':''}</td><td>${fb(x.fac)}</td><td><b>${fmt(x.v)}</b></td><td><b>${(x.v/sumTy*100).toFixed(1)}%</b></td>
-        <td class="l"><span class="lk-one ${x.fac.toLowerCase()}" style="width:${(x.v/allTy[0].v*100).toFixed(1)}%"></span></td><td>${pc(x.v,T2.in)}</td>
-        ${parts.map(p=>`<td>${p.ty[i]?`${fmt(p.ty[i])} <small>(${pc(p.ty[i],p.in,1)})</small>`:'<span style="color:#cbd5e1">·</span>'}</td>`).join('')}</tr>`; }).join('')}
-      <tr class="tot"><td class="l">FAC1 원인 합</td><td>${fb('FAC1')}</td><td>${fmt(T2.f1)}</td><td>${(T2.f1/sumTy*100).toFixed(1)}%</td><td></td><td>${pc(T2.f1,T2.in)}</td>${parts.map(p=>`<td>${fmt(p.f1)}</td>`).join('')}</tr>
-      <tr class="tot"><td class="l">FAC2 원인 합</td><td>${fb('FAC2')}</td><td>${fmt(T2.f2)}</td><td>${(T2.f2/sumTy*100).toFixed(1)}%</td><td></td><td>${pc(T2.f2,T2.in)}</td>${parts.map(p=>`<td>${fmt(p.f2)}</td>`).join('')}</tr></tbody></table></div></div>`;
+  /* 원인 공장별로 나눠서 (왼쪽 FAC1 / FAC2 묶음) · 묶음 안에서 많은 순 · Worst 3 표시 */
+  const cols = parts.length;
+  const grpRows = f => { const L = allTy.filter(x=>x.fac===f); const gs = L.reduce((a,x)=>a+x.v,0);
+    return L.map((x,k)=>{ const i = FC.findIndex(c=>c.t===x.t), wr = k<3 ? `<b class="lk-wr ${f.toLowerCase()}">${k+1}</b>` : '';
+      return `<tr class="${k<3?'wst':''}">${k===0?`<td class="lk-grp ${f.toLowerCase()}" rowspan="${L.length+1}">${fb(f)}<br>${f==='FAC1'?'다이캐스팅<br>원인':'MCT 가공<br>원인'}<br><b>${fmt(gs)}</b><small>${(gs/sumTy*100).toFixed(1)}%</small></td>`:''}
+        <td class="l">${wr}<b>${esc2(x.t)}</b>${x.guess?' <small title="시트에 없는 이름 — 추정">*</small>':''}</td><td><b>${fmt(x.v)}</b></td><td><b>${(x.v/sumTy*100).toFixed(1)}%</b></td><td>${(x.v/gs*100).toFixed(1)}%</td>
+        <td class="l"><span class="lk-one ${f.toLowerCase()}" style="width:${(x.v/allTy[0].v*100).toFixed(1)}%"></span></td><td>${pc(x.v,T2.in)}</td>
+        ${parts.map(p=>`<td>${p.ty[i]?`${fmt(p.ty[i])} <small>(${pc(p.ty[i],p.in,1)})</small>`:'<span style="color:#cbd5e1">·</span>'}</td>`).join('')}</tr>`; }).join('')
+      + `<tr class="tot"><td class="l">${f} 원인 합</td><td>${fmt(gs)}</td><td>${(gs/sumTy*100).toFixed(1)}%</td><td>100%</td><td></td><td>${pc(gs,T2.in)}</td>${parts.map(p=>`<td>${fmt(f==='FAC1'?p.f1:p.f2)}</td>`).join('')}</tr>`; };
+  const w3 = f => allTy.filter(x=>x.fac===f).slice(0,3);
+  const w3box = f => `<div class="lk-w3 ${f.toLowerCase()}"><div class="h">${fb(f)} ${f==='FAC1'?'1공장 (다이캐스팅) 원인':'2공장 (MCT 가공) 원인'} — Worst 3</div>${w3(f).map((x,k)=>`<div class="r"><b class="lk-wr ${f.toLowerCase()}">${k+1}</b><span>${esc2(x.t)}</span><em>${fmt(x.v)}개</em><small>전체 불량의 ${(x.v/sumTy*100).toFixed(1)}% · 투입 대비 ${pc(x.v,T2.in)}</small></div>`).join('') || '<div class="r">–</div>'}</div>`;
+  const tyTbl = `<div class="lk-w3s">${w3box('FAC1')}${w3box('FAC2')}</div>
+    <div class="card"><div class="tblwrap"><table class="eq lk-ty">
+    <thead><tr><th>원인</th><th class="l">불량유형</th><th>수량</th><th>전체 불량 중 %</th><th>원인 안 %</th><th class="l" style="min-width:150px">비중</th><th>투입 대비 %</th>${parts.map(p=>`<th title="${esc2(p.pn)}">${esc2(p.name)}</th>`).join('')}</tr></thead>
+    <tbody>${grpRows('FAC1')}${grpRows('FAC2')}
+      <tr class="tot all"><td></td><td class="l">전체 불량</td><td>${fmt(T2.f1+T2.f2)}</td><td>100%</td><td></td><td></td><td>${pc(T2.f1+T2.f2,T2.in)}</td>${parts.map(p=>`<td>${fmt(p.f1+p.f2)}</td>`).join('')}</tr></tbody></table></div>
+    <div class="legend" style="margin-top:6px"><span>※ 원인 = F2_불량코드 D열 · 번호 ①②③ = 원인별 Worst 3 · 원인 안 % = 그 원인 불량 합계 대비 · * = 시트에 이름이 없어 추정한 분류</span></div></div>`;
   /* ---- FAC1 자체 불량유형 (연결된 모델) ---- */
   const lk1 = rows.map(x=>x.f1).filter(Boolean);
   const t1 = F1.types.map((k,i)=>({ k, v:lk1.reduce((s,o)=>s+o.ty[i],0) })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
@@ -3104,7 +3122,7 @@ function f2LinkView(){
     </div>
     <div class="sec-title">1. 중점 불량 — 1공장 ${esc2(LK_FOCUS.join(' · '))} / 2공장 ${esc2(F2FOC.join(' · '))} <small>(전체 모델)</small></div>${focTbl}
     <div class="sec-title">2. 모델 · 품번별 FAC1 / FAC2 실적 <small>(FAC1 원인 불량이 많은 순)</small></div>${main}
-    <div class="sec-title">3. FAC2 불량유형 — 전체 불량 대비 % <small>(원인 FAC1 / FAC2 · 품번별 수량과 투입 대비 %)</small></div>${tyTbl}
+    <div class="sec-title">3. FAC2 불량유형 — 원인 공장별 (FAC1 / FAC2) · Worst 3 <small>(전체 불량 대비 % · 품번별 수량과 투입 대비 %)</small></div>${tyTbl}
     ${f1Tbl ? `<div class="sec-title">4. FAC1 자체 불량유형 — 연결된 모델 <small>(Q_Model상세 · 생산 대비 %)</small></div>${f1Tbl}` : ''}
     ${F1M.err && !F1M.rows.length ? `<div class="card empty" style="padding:12px">FAC1 Q_Model상세를 읽지 못했습니다: ${esc2(F1M.err)}</div>` : ''}`;
 }
