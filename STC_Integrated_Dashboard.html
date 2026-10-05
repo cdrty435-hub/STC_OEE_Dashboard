@@ -2317,7 +2317,7 @@ function gtHtml(cfg){
     window.__gtDef[id+'|'+g.key] = L.slice(cfg.topN || 5).map(j=>TY[j].k); return L; };
   /* 그래프 — 선 하나 = 불량유형 하나 · 빨간 점선 = 전체 불량률 */
   const chart = (g, tyIdx) => {
-    const W = 1000, H = 262, Lx = 46, Rx = 150, T = 28, B = 26, PH = H-T-B, n = days.length, cw = (W-Lx-Rx)/Math.max(1,n);
+    const W = 1000, H = 262, Lx = 46, Rx = 178, T = 28, B = 26, PH = H-T-B, n = days.length, cw = (W-Lx-Rx)/Math.max(1,n);
     const hid = gtHidden(id, g.key);
     const serAll = tyIdx.map((j,k)=>({ name:TY[j].t, key:TY[j].k, fac:TY[j].fac, c:GT_COL[k % GT_COL.length], v:days.map(d=>{ const o = g.D[d]; return o && o.t ? o.ty[j]/o.t*100 : null; }) }));
     const ser = serAll.filter(sr=>!hid.includes(sr.key));
@@ -2361,7 +2361,7 @@ function gtHtml(cfg){
     });
     ends.sort((a,b)=>a.y-b.y); let last = -99;
     ends.forEach(e=>{ const y = Math.max(e.y+4, last+12); if(y > H-B+2 && !e.sr.tot) return; last = y;
-      s += `<text x="${W-Rx+8}" y="${y.toFixed(1)}" font-size="10.5" font-weight="${e.sr.tot?800:600}" fill="${e.sr.c}">● ${gtEsc(e.sr.name)} ${e.v.toFixed(2)}%</text>`; });
+      s += `<text x="${W-Rx+8}" y="${y.toFixed(1)}" font-size="10.5" font-weight="${e.sr.tot?800:600}" fill="${e.sr.c}">● ${gtEsc(e.sr.name)}${e.sr.fac?` <tspan font-size="9" font-weight="800" fill="${e.sr.fac==='FAC1'?'#c2410c':'#7c3aed'}">[${e.sr.fac}]</tspan>`:''} ${e.v.toFixed(2)}%</text>`; });
     const ek = gtEnc(g.key), names = gtEnc(JSON.stringify(serAll.map(sr=>sr.key)));
     const chip = (sr, on) => `<button class="f2g-chip${on?' on':''}" onclick="gtTog('${id}','${ek}','${gtEnc(sr.key)}')" style="--c:${sr.c}"><i></i>${gtEsc(sr.name)}${facB(sr)}</button>`;
     const lg = `<span class="f2g-sel">${TX.sel}</span>` + chip(tot, showTot) + serAll.map(sr=>chip(sr, !hid.includes(sr.key))).join('')

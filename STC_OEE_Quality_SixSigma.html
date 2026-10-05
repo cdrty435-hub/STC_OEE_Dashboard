@@ -9445,6 +9445,17 @@ function dqSeries(span, sc){
 
 /* ---------- 일일 불량률 추이 (보고서 맨 앞) — SVG 선 차트 · 목표선 · 보고 기간 음영 · 마우스 툴팁 ---------- */
 window.__qt = window.__qt || {};
+function qtSmooth(P){   /* 단조 3차 곡선 (Fritsch–Carlson) — 값보다 튀어나가지 않는 부드러운 선 */
+  const n = P.length; if(!n) return ''; if(n < 3) return P.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const dx = [], sl = [], m = [];
+  for(let i=0;i<n-1;i++){ dx[i] = P[i+1][0]-P[i][0]; sl[i] = (P[i+1][1]-P[i][1]) / (dx[i]||1); }
+  m[0] = sl[0]; m[n-1] = sl[n-2];
+  for(let i=1;i<n-1;i++) m[i] = (sl[i-1]*sl[i] <= 0) ? 0 : 3*(dx[i-1]+dx[i]) / ((2*dx[i]+dx[i-1])/sl[i-1] + (dx[i]+2*dx[i-1])/sl[i]);
+  let d = 'M'+P[0][0].toFixed(1)+' '+P[0][1].toFixed(1);
+  for(let i=0;i<n-1;i++){ const h = dx[i]/3;
+    d += ` C${(P[i][0]+h).toFixed(1)} ${(P[i][1]+m[i]*h).toFixed(1)} ${(P[i+1][0]-h).toFixed(1)} ${(P[i+1][1]-m[i+1]*h).toFixed(1)} ${P[i+1][0].toFixed(1)} ${P[i+1][1].toFixed(1)}`; }
+  return d;
+}
 function qtTrendHtml(o){
   /* o = { id, title, sub, dates:[YYYY-MM-DD], series:[{name,color,vals:[n|null],main}], target, tLabel, hiFrom, hiTo } */
   /* 개선 조치 표시 — 메모 첫 줄(조치 제목) + 사진 썸네일을 날짜 위에, 그 날짜에 세로 점선 (조치 전·후 비교)
@@ -9502,8 +9513,8 @@ function qtTrendHtml(o){
   /* 선 · 점 */
   const ends = [];
   o.series.forEach(s=>{
-    let d = '', pen = false;
-    s.vals.forEach((v,i)=>{ if (v==null) return;   /* 생산 없는 날은 건너뛰고 앞뒤 점을 이어서 그림 */ d += (pen?'L':'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1) + ' '; pen = true; });
+    /* 부드러운 곡선 (값을 넘지 않는 단조 3차) · 생산 없는 날은 건너뛰고 앞뒤 점을 이음 */
+    const d = qtSmooth(s.vals.map((v,i)=>v==null ? null : [X(i), Y(v)]).filter(Boolean));
     g += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.main?2.5:2}" stroke-linejoin="round" stroke-linecap="round"${s.main?'':' opacity=".9"'}/>`;
     s.vals.forEach((v,i)=>{ if (v==null) return; const h = o.dates[i]>=o.hiFrom && o.dates[i]<=o.hiTo;
       g += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${h?4.5:3}" fill="${s.color}" stroke="#fff" stroke-width="1.5"/>`;
