@@ -235,6 +235,7 @@ table.fc-t .tot{background:#eef2f7;font-weight:800;}
 .f2-facnow .it{display:inline-flex;align-items:baseline;gap:6px;border:1px solid #e2e8f0;border-radius:10px;padding:4px 12px;background:#f8fafc;color:#94a3b8;}
 .f2-facnow .it em{font-style:normal;font-weight:800;font-size:12px;} .f2-facnow .it b{font-size:20px;font-weight:900;} .f2-facnow .it small{font-size:10.5px;}
 .f2-facnow .it.on.all{color:#2a78d6;border-color:#2a78d6;background:#eff6ff;} .f2-facnow .it.on.fac1{color:#c2410c;border-color:#c2410c;background:#fff7ed;} .f2-facnow .it.on.fac2{color:#7c3aed;border-color:#7c3aed;background:#f5f3ff;}
+.f2-facnow .it em i{font-style:normal;font-size:10.5px;font-weight:700;opacity:.8;margin-left:2px;}
 .f2-facnow .sh{color:#64748b;font-size:11.5px;} .f2-facnow .sh b{color:#334155;}
 .f2-covfac{display:inline-block;margin-top:8px;padding:4px 12px;border-radius:14px;font-size:13px;font-weight:800;background:rgba(255,255,255,.92);} .f2-covfac.fac1{color:#c2410c;} .f2-covfac.fac2{color:#7c3aed;}
 .f2-fac{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:0 0 8px 12px;font-size:12px;}
@@ -1918,13 +1919,14 @@ function f2pTrend(dFrom, dTo){
   const sel = f2FacSel(), FC = f2pFacCols(), ON = f2FacList();
   const rateOf = (a, g) => a && a.t ? f2pSelN(a, FC, g)/a.t*100 : null;
   const COL = { all:'#2a78d6', FAC1:'#c2410c', FAC2:'#7c3aed' };
-  const ser = ['all','FAC1','FAC2'].filter(g=>ON.includes(g)).map((g,i)=>({ name: f2FacLbl(g), tag: g==='all' ? (LANG==='ko'?'전체':'All') : g, color:COL[g], vals:days.map(d=>r3(rateOf(S.day[d], g))), main:i===0 }));
-  if(!ser.length) ser.push({ name:X.ng, color:COL.all, vals:days.map(d=>r3(rateOf(S.day[d], 'all'))), main:true });
+  const sel0 = f2FacSel(), totLbl = sel0==='all' ? '전체 (FAC1+FAC2)' : `전체 = ${sel0}만`;
+  const ser = [{ name:`${f2FacTx().all} ${sel0==='all'?'(FAC1+FAC2)':'('+sel0+'만)'}`, tag:'전체', color:COL.all, vals:days.map(d=>r3(rateOf(S.day[d], sel0))), main:true }]
+    .concat(sel0==='all' ? ['FAC1','FAC2'].map(g=>({ name:f2FacLbl(g), tag:g, color:COL[g], vals:days.map(d=>r3(rateOf(S.day[d], g))) })) : []);
   /* 보고 기간 %NG — 전체 / FAC1 / FAC2 (고른 것만 강조) */
   const PA = f2pSum(r => r.d >= dFrom && r.d <= dTo).all, sel1 = f2FacSel();
-  const now = `<div class="f2-facnow"><span class="lb">보고 기간 %NG</span>${['all','FAC1','FAC2'].map(g=>{ const v = PA.t ? f2pSelN(PA, FC, g)/PA.t*100 : null;
-      const on = sel1==='all' ? ON.includes(g) : g===sel1;
-      return `<span class="it ${g.toLowerCase()}${on?' on':''}"><em>${g==='all'?'전체':g}</em><b>${v==null?'–':v.toFixed(2)+'%'}</b><small>${fmt(f2pSelN(PA, FC, g))}/${fmt(PA.t)}</small></span>`; }).join('')}
+  const now = `<div class="f2-facnow"><span class="lb">보고 기간 %NG</span>${['all','FAC1','FAC2'].map(g=>{ const gg = g==='all' ? sel1 : g, v = PA.t ? f2pSelN(PA, FC, gg)/PA.t*100 : null;
+      const on = g==='all' || ON.includes(g);
+      return `<span class="it ${g.toLowerCase()}${on?' on':''}"><em>${g==='all'?`전체 <i>${sel1==='all'?'FAC1+FAC2':sel1+'만'}</i>`:g}</em><b>${v==null?'–':v.toFixed(2)+'%'}</b><small>${fmt(f2pSelN(PA, FC, gg))}/${fmt(PA.t)}</small></span>`; }).join('')}
     ${PA.t ? `<span class="sh">FAC1 비중 <b>${(f2pSelN(PA, FC, 'FAC1')/Math.max(1,PA.n)*100).toFixed(0)}%</b> · FAC2 비중 <b>${(f2pSelN(PA, FC, 'FAC2')/Math.max(1,PA.n)*100).toFixed(0)}%</b></span>` : ''}</div>`;
   const c1 = qtTrendHtml({ id:'qtF2p', title: X.tNg + (sel1==='all' ? '' : ` — ${f2FacLbl(sel1)} 불량률`), sub, dates:days,
     series:ser,
@@ -2064,10 +2066,11 @@ function f2FacOf(name, code){
   return { fac: f2pGrp(name)==='다캐불량' ? 'FAC1' : 'FAC2', guess:true };
 }
 /* 표시 선택 (여러 개 동시에) — 'all' 전체 · 'FAC1' 다이캐스팅 원인 · 'FAC2' MCT 가공 원인 */
-function f2FacList(){ try{ const v = JSON.parse(localStorage.getItem('stc_f2_facs')||'null'); if(Array.isArray(v)) return v.filter(x=>['all','FAC1','FAC2'].includes(x)); }catch(e){} return ['all','FAC1','FAC2']; }
+/* 체크 = FAC1 원인 · FAC2 원인 (둘 다 켜면 전체). 「전체 불량률」 = 켠 원인의 합 */
+function f2FacList(){ try{ const v = JSON.parse(localStorage.getItem('stc_f2_facs')||'null'); if(Array.isArray(v)){ const L = v.filter(x=>['FAC1','FAC2'].includes(x)); return L.length ? L : ['FAC1','FAC2']; } }catch(e){} return ['FAC1','FAC2']; }
 /* 표·상위3 처럼 한 가지 기준만 쓰는 곳 — 전체가 켜져 있거나 FAC1·FAC2 둘 다면 전체, 하나만이면 그것 */
-function f2FacSel(){ const L = f2FacList(); if(!L.length || L.includes('all') || (L.includes('FAC1') && L.includes('FAC2'))) return 'all'; return L[0]; }
-function f2FacSet(v){ const L = f2FacList(), i = L.indexOf(v); if(i>=0) L.splice(i,1); else L.push(v);
+function f2FacSel(){ const L = f2FacList(); return (L.includes('FAC1') && L.includes('FAC2')) ? 'all' : L[0]; }
+function f2FacSet(v){ const L = f2FacList(), i = L.indexOf(v); if(i>=0){ if(L.length===1) return; L.splice(i,1); } else L.push(v);   /* 하나는 항상 켜 둠 */
   try{ localStorage.setItem('stc_f2_facs', JSON.stringify(L)); }catch(e){} setTimeout(renderF2, 0); }
 const F2_FAC_TX = { ko:{ lb:'불량 원인 표시', all:'전체 불량', f1:'FAC1 원인 (다이캐스팅)', f2:'FAC2 원인 (MCT 가공)', src:'기준: 구글시트 F2_불량코드 D열', guess:'추정 (시트에 없는 이름)', list:'어떤 불량이 어디에 들어가나?',
        help:'전체 불량 = FAC1 원인 + FAC2 원인 · FAC1 원인 = 주조(다이캐스팅) 때 생긴 불량이 가공 중에 드러난 것 (기포·박리 등 + 소재 불량 Mat\'l) · FAC2 원인 = MCT 가공 중에 생긴 불량 (스크래치·치수 등) · 여러 개를 같이 켤 수 있음' },
@@ -2083,7 +2086,7 @@ function f2FacCtl(types){
   const on = f2FacList();
   const b = (v, l, c) => `<label class="ck ${c}${on.includes(v)?' on':''}"><input type="checkbox" ${on.includes(v)?'checked':''} onchange="f2FacSet('${v}')"><i></i>${l}</label>`;
   const lst = (types||[]).length ? `<details class="f2-fac-map"><summary>${X.list}</summary><div class="hl">${esc2(X.help)}</div>${['FAC1','FAC2'].map(f=>`<div><b class="${f.toLowerCase()}">${f}</b> ${types.filter(t=>t.fac===f).map(t=>`<span${t.guess?` class="g" title="${X.guess}"`:''}>${esc2(t.t)}${t.guess?'*':''}</span>`).join('')}</div>`).join('')}<small>* ${X.guess} · ${X.src}${F2.code.n?` (${F2.code.n})`:' — 시트를 못 읽음'}</small></details>` : '';
-  return `<div class="f2-fac f2-noprint"><span class="lb">${X.lb}</span>${b('all',X.all,'a')}${b('FAC1',X.f1,'f1')}${b('FAC2',X.f2,'f2')}<span class="hp" title="${esc2(X.help)}">ⓘ</span>${lst}</div>`;
+  return `<div class="f2-fac f2-noprint"><span class="lb">${X.lb}</span>${b('FAC1',X.f1,'f1')}${b('FAC2',X.f2,'f2')}<span class="hp" title="${esc2(X.help)}">ⓘ</span>${lst}</div>`;
 }
 /* F2_생산실적 행(또는 합계)의 열 분류 — 불량유형 + Mat'l Before/After + Setting */
 function f2pFacCols(){
