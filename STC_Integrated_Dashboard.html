@@ -230,6 +230,13 @@ table.fc-t .tot{background:#eef2f7;font-weight:800;}
 .gt-fac.fac1{background:#c2410c;} u.gt-fac{text-decoration:none;margin:0;text-align:center;padding:2px 3px;} .f2-m3l > i{justify-self:center;} .gt-fac.fac2{background:#7c3aed;}
 .gt-facs{display:inline-flex;align-items:center;gap:4px;margin-left:10px;font-size:12px;} .gt-facs b{margin-left:2px;} .gt-facs small{color:#64748b;margin-right:8px;}
 .f2g-t tr.fr td{font-size:11px;} .f2g-t tr.fr.fac1 td.lb{color:#c2410c;font-weight:700;} .f2g-t tr.fr.fac2 td.lb{color:#7c3aed;font-weight:700;}
+.f2-facnow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0 8px 12px;font-size:12px;}
+.f2-facnow .lb{font-weight:800;color:#334155;}
+.f2-facnow .it{display:inline-flex;align-items:baseline;gap:6px;border:1px solid #e2e8f0;border-radius:10px;padding:4px 12px;background:#f8fafc;color:#94a3b8;}
+.f2-facnow .it em{font-style:normal;font-weight:800;font-size:12px;} .f2-facnow .it b{font-size:20px;font-weight:900;} .f2-facnow .it small{font-size:10.5px;}
+.f2-facnow .it.on.all{color:#2a78d6;border-color:#2a78d6;background:#eff6ff;} .f2-facnow .it.on.fac1{color:#c2410c;border-color:#c2410c;background:#fff7ed;} .f2-facnow .it.on.fac2{color:#7c3aed;border-color:#7c3aed;background:#f5f3ff;}
+.f2-facnow .sh{color:#64748b;font-size:11.5px;} .f2-facnow .sh b{color:#334155;}
+.f2-covfac{display:inline-block;margin-top:8px;padding:4px 12px;border-radius:14px;font-size:13px;font-weight:800;background:rgba(255,255,255,.92);} .f2-covfac.fac1{color:#c2410c;} .f2-covfac.fac2{color:#7c3aed;}
 .f2-fac{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:0 0 8px 12px;font-size:12px;}
 .f2-fac .lb{font-weight:800;color:#334155;margin-right:2px;}
 .f2-fac label.ck{display:inline-flex;align-items:center;gap:6px;border:1px solid #cbd5e1;background:#fff;border-radius:14px;padding:3px 11px 3px 8px;font-size:11.5px;font-weight:700;cursor:pointer;color:#64748b;user-select:none;}
@@ -1816,7 +1823,11 @@ function f2pAdd(A, r){
   A.days.add(r.d); A.rows++; if(r.dup){ A.dup++; A.dupQ+=r.t; } if(r.guess){ A.guess++; A.guessQ+=r.t; }
   if(r.op) A.ops.add(r.op); if(r.pn) A.pns.add(r.pn); A.mcs.add(r.mc);
 }
-const f2pNG  = A => A && A.t ? A.n/A.t*100 : null;
+/* %NG — 「불량 원인 표시」에서 하나만 고르면 그 원인 불량만으로 계산 (전체 / FAC1 원인 / FAC2 원인) */
+let F2P_FCC = null, F2P_FCK = '';
+function f2pFacColsC(){ const k = F2P.defs.join('|') + '#' + (F2.code ? F2.code.n : 0); if(k !== F2P_FCK){ F2P_FCK = k; F2P_FCC = f2pFacCols(); } return F2P_FCC; }
+const f2pNGn = A => A ? f2pSelN(A, f2pFacColsC()) : 0;
+const f2pNG  = A => A && A.t ? f2pNGn(A)/A.t*100 : null;
 const f2pMR  = A => A && A.t ? (A.mb+A.ma)/A.t*100 : null;
 const f2pAv  = A => A && A.p ? A.a/A.p*100 : null;
 const f2pOEE = A => A && A.op ? A.ow/A.op*100 : null;
@@ -1877,6 +1888,7 @@ function f2pCover(kind, period, note, prevKey, mcs){
       <div class="kicker">${X.kicker}</div>
       <h1>${X.cov[kind]}${X.sub[kind]?`<small>${X.sub[kind]}</small>`:''}</h1>
       <div class="per">${esc2(period)}${note?`<span>${esc2(note)}</span>`:''}</div>
+      ${f2FacSel()==='all' ? '' : `<div class="f2-covfac ${f2FacSel().toLowerCase()}">불량률 기준 · ${esc2(f2FacLbl(f2FacSel()))}</div>`}
     </div><div class="side"><b>STC Co., Ltd.</b><br>${X.line.replace('{m}', mr)}<br>${prevKey?`${X.vs} ${esc2(prevKey)}<br>`:''}${X.issued} ${today}</div></div>`;
 }
 /* 핵심 지표 타일 (비교 기간 증감) */
@@ -1886,7 +1898,7 @@ function f2pTiles(A, P){
   const d = (c,p,dp,u,gd) => P && P.rows ? f2d(c,p,dp,u,gd) : '';
   return `<div class="tiles f2p-tiles">
     ${f2tile(X.k.t, fmt(A.t), '', `FG ${fmt(A.f)}${d(A.t, P&&P.t, 0, '', false)}`)}
-    ${f2tile(X.k.n, fmt(A.n), '', `%NG <b style="color:${f2St(ng).c}">${f2pPc(ng)}</b>${d(ng, P&&f2pNG(P), 2, '%p', true)}`)}
+    ${f2tile(f2FacSel()==='all' ? X.k.n : `${X.k.n} · ${f2FacSel()}`, fmt(f2pNGn(A)), '', `%NG <b style="color:${f2St(ng).c}">${f2pPc(ng)}</b>${d(ng, P&&f2pNG(P), 2, '%p', true)}${f2FacSel()==='all'?'':` <small>(전체 NG ${fmt(A.n)})</small>`}`)}
     ${f2tile(X.k.m, fmt(A.mb+A.ma), '', `${X.ksub.m.replace('{b}',fmt(A.mb)).replace('{a}',fmt(A.ma))} · ${f2pPc(f2pMR(A))}`)}
     ${f2tile(X.k.a, av==null?'–':av.toFixed(1), '%', `${X.ksub.a}${d(av, P&&f2pAv(P), 1, '%p', false)}`, f2pAvC(av))}
     ${f2tile(X.k.o, oe==null?'–':oe.toFixed(1), '%', `${X.ksub.o}${d(oe, P&&f2pOEE(P), 1, '%p', false)}`, f2pAvC(oe))}
@@ -1908,9 +1920,15 @@ function f2pTrend(dFrom, dTo){
   const COL = { all:'#2a78d6', FAC1:'#c2410c', FAC2:'#7c3aed' };
   const ser = ['all','FAC1','FAC2'].filter(g=>ON.includes(g)).map((g,i)=>({ name: f2FacLbl(g), tag: g==='all' ? (LANG==='ko'?'전체':'All') : g, color:COL[g], vals:days.map(d=>r3(rateOf(S.day[d], g))), main:i===0 }));
   if(!ser.length) ser.push({ name:X.ng, color:COL.all, vals:days.map(d=>r3(rateOf(S.day[d], 'all'))), main:true });
-  const c1 = qtTrendHtml({ id:'qtF2p', title: X.tNg, sub, dates:days,
+  /* 보고 기간 %NG — 전체 / FAC1 / FAC2 (고른 것만 강조) */
+  const PA = f2pSum(r => r.d >= dFrom && r.d <= dTo).all, sel1 = f2FacSel();
+  const now = `<div class="f2-facnow"><span class="lb">보고 기간 %NG</span>${['all','FAC1','FAC2'].map(g=>{ const v = PA.t ? f2pSelN(PA, FC, g)/PA.t*100 : null;
+      const on = sel1==='all' ? ON.includes(g) : g===sel1;
+      return `<span class="it ${g.toLowerCase()}${on?' on':''}"><em>${g==='all'?'전체':g}</em><b>${v==null?'–':v.toFixed(2)+'%'}</b><small>${fmt(f2pSelN(PA, FC, g))}/${fmt(PA.t)}</small></span>`; }).join('')}
+    ${PA.t ? `<span class="sh">FAC1 비중 <b>${(f2pSelN(PA, FC, 'FAC1')/Math.max(1,PA.n)*100).toFixed(0)}%</b> · FAC2 비중 <b>${(f2pSelN(PA, FC, 'FAC2')/Math.max(1,PA.n)*100).toFixed(0)}%</b></span>` : ''}</div>`;
+  const c1 = qtTrendHtml({ id:'qtF2p', title: X.tNg + (sel1==='all' ? '' : ` — ${f2FacLbl(sel1)} 불량률`), sub, dates:days,
     series:ser,
-    ctl:f2FacCtl(FC) + R.ctl, noteScope:'FAC2', noteTag:'', target:f2Target(), tLabel:X.tg, maxLbl:12, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
+    ctl:now + f2FacCtl(FC) + R.ctl, noteScope:'FAC2', noteTag:'', target:f2Target(), tLabel:X.tg, maxLbl:12, hiLabel:X.hi, hiFrom:dFrom, hiTo:dTo,
     bars:{ name:X.prod, vals:days.map(d=>S.day[d].t || null) },
     extra:i => { const a = S.day[days[i]]; return `${X.prod} ${a.t.toLocaleString()} · NG ${a.n.toLocaleString()} (FAC1 ${f2pSelN(a, FC, 'FAC1').toLocaleString()} · FAC2 ${f2pSelN(a, FC, 'FAC2').toLocaleString()} · Mat'l ${(a.mb+a.ma).toLocaleString()}) · ${a.mcs.size} M/C`; } });
   /* 일별 가동률 · OEE 차트는 빼기로 함 (2026-10-02) */
