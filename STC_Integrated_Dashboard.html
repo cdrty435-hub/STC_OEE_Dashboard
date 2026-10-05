@@ -3031,6 +3031,52 @@ function lkSections(list){
   return o.map((k,i)=>`<div class="lk-sec" id="lk-sec-${k}"><div class="sec-title lk-st"><span>${i+1}. ${M[k][0]}</span>
       <span class="lk-mv f2-noprint"><button type="button" title="위로" ${i===0?'disabled':''} onclick="lkMove('${k}',-1)">▲</button><button type="button" title="아래로" ${i===o.length-1?'disabled':''} onclick="lkMove('${k}',1)">▼</button>${i===0&&changed?`<button type="button" class="rs" onclick="lkReset()">↺ 처음 순서</button>`:''}</span></div>${M[k][1]}</div>`).join('');
 }
+/* ===== Worst 3 개선 대책 표 — 기본 대책 + 담당·시작일·기한·상태는 화면에서 입력
+   저장 = 메모와 같은 곳 (Apps Script 웹앱 URL 이 있으면 시트 공유, 없으면 이 PC 브라우저) · scope 'LKACT' · 같은 항목은 마지막 저장이 우선 */
+const LKA_ST = ['계획','진행','완료','보류'];
+const LKA_DEF = [
+  { id:'c1', grp:'COM', title:'FAC1·FAC2 합동 품질회의', cause:'FAC2 불량의 큰 몫이 FAC1 원인인데 두 공장이 함께 보는 자리가 없음', act:'매주 1회 30분 · 이 화면으로 Worst 3 추이와 대책 진행 점검 · 회의 결과는 추이 그래프 메모로 남김' },
+  { id:'c2', grp:'COM', title:'Q-POINT 교육', cause:'공정별 품질 포인트가 작업자에게 전달되지 않음', act:'공정별 품질 포인트 1장 (사진 · 한국어/태국어) 작성 → 작업자 교육 · 서명 · 간단 테스트 (월 1회 + 신규 투입 시)' },
+  { id:'c3', grp:'COM', title:'한도견본 통일', cause:'FAC1 자체 검사의 박리·기포는 거의 0인데 FAC2 에서 다수 발견 → 두 공장 판정 기준이 다름', act:'박리 · 기포 · 소재 불량 합격/불합격 실물 샘플을 두 공장 공통으로 제작 · 분기마다 갱신' },
+  { id:'c4', grp:'COM', title:'불량 피드백 (24시간)', cause:'FAC2 에서 찾은 FAC1 원인 불량이 FAC1 에 늦게 / 안 전달됨', act:'FAC2 발견 FAC1 원인 불량에 꼬리표 (날짜 · 호기 · 금형) → 24시간 안에 FAC1 반송 · 반송 수량 기록' },
+  { id:'c5', grp:'COM', title:'효과 확인', cause:'대책 후 효과를 숫자로 확인하지 않음', act:'대책 실행일에 추이 그래프에 메모 · 사진 등록 → 이 표 \'효과\' 칸에서 개선 전 · 후 % 비교 (시작일 입력 시 자동)' },
+  { id:'f1a', grp:'FAC1', ty:'소재 불량 (가공 전)', cause:'특정 날짜에 급증 (로트성) · CT Cover 집중', act:'급증한 날의 호기 · 금형 · 로트 추적 · FAC1 출하 전 외관 검사 강화 · 의심 로트 격리' },
+  { id:'f1b', grp:'FAC1', ty:'박리', cause:'금형 온도 부족 (금형온조기 없음 · 웜샷 의존) · 이형제 과다', act:'웜샷 수 기준화 · 가동 시작 / 정지 후 첫 N샷 별도 보관 · 이형제 분사량 표준화' },
+  { id:'f1c', grp:'FAC1', ty:'기포', cause:'금형 안 공기 · 가스 배출 부족 (진공 · 벤트) · 이형제 과다', act:'진공도 판정기준 (VC1~VC6) 준수 점검 · 벤트 청소 주기 설정 · 이형제 과다 분사 방지' },
+  { id:'f2a', grp:'FAC2', ty:'치수 불량', cause:'공구 마모 · 보정 주기 미설정', act:'공구 수명 관리 · 마모 보정 주기 설정 · 2시간마다 중간 측정' },
+  { id:'f2b', grp:'FAC2', ty:'스크래치', cause:'운반 · 지그 접촉 · 칩 끼임', act:'운반 상자 칸막이 · 지그 접촉면 보호 · 칩 제거 순서 표준화' },
+  { id:'f2c', grp:'FAC2', ty:'셋팅 불량', cause:'셋팅 확인 누락 · 지그 방향 실수', act:'셋팅 체크시트 · 초품 검사 필수 · 지그 실수 방지 (포카요케)' }
+];
+const LKA = { map:{}, loaded:false, loading:false, err:null };
+async function lkaLoad(){
+  if(LKA.loading) return; LKA.loading = true; LKA.err = null;
+  try{ const api = noteApi(); let L;
+    if(api){ const r = await fetch(api + (api.includes('?')?'&':'?') + 'action=list&scope=LKACT&_=' + Date.now()); const j = await r.json(); if(!j.ok) throw new Error(j.err||'list'); L = j.list || []; }
+    else L = (await noteIdbAll()).filter(x=>x.scope==='LKACT' && !x.del);
+    const m = {}; L.forEach(x=>{ let o; try{ o = JSON.parse(x.text||'{}'); }catch(e){ return; } if(!o.id) return;
+      const k = String(o._ts||x.ts||''); if(!m[o.id] || k > m[o.id]._k) m[o.id] = { ...o, _k:k }; });
+    LKA.map = m;
+  }catch(e){ LKA.err = e.message || String(e); }
+  LKA.loaded = true; LKA.loading = false;
+}
+function lkaRow(id){ const d = LKA_DEF.find(x=>x.id===id) || {}; return { owner:'', start:'', due:'', st:'계획', ...d, ...(LKA.map[id]||{}) }; }
+async function lkaPut(o){
+  const ts = new Date(Date.now()+7*3600e3).toISOString().replace('Z','');
+  const row = { ...o, _ts:ts }; delete row._k;
+  LKA.map[o.id] = { ...row, _k:ts };
+  const en = { id:'A'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), scope:'LKACT', date:ts.slice(0,10), tag:o.id, author:o.owner||'', text:JSON.stringify(row), ts:ts.slice(0,19) };
+  try{ const api = noteApi();
+    if(api){ const r = await fetch(api, { method:'POST', body:JSON.stringify({ action:'add', entry:{ ...en, photos:[] } }) }); const j = await r.json(); if(!j.ok) throw new Error(j.err||'save'); }
+    else await noteIdbPut({ ...en, photos:[] });
+    lkaFlash('저장됨');
+  }catch(e){ alert('저장 실패: ' + (e.message||e)); }
+}
+function lkaFlash(t){ const el = document.getElementById('lkaMsg'); if(!el) return; el.textContent = '✔ ' + t + ' ' + new Date().toTimeString().slice(0,5); el.classList.add('on'); clearTimeout(lkaFlash.h); lkaFlash.h = setTimeout(()=>el.classList.remove('on'), 2500); }
+function lkaSet(id, f, v, re){ const o = lkaRow(id); o[f] = v; lkaPut(o); if(re) renderF2(); }
+function lkaAdd(grp){ const id = 'u' + Date.now().toString(36); lkaPut({ id, grp, custom:true, title:'', ty:'', cause:'', act:'', owner:'', start:'', due:'', st:'계획' }); renderF2();
+  setTimeout(()=>{ const el = document.querySelector(`[data-lka="${id}"] textarea`); if(el) el.focus(); }, 50); }
+function lkaDel(id){ const o = lkaRow(id); if(!confirm(`'${o.title||o.ty||'이 대책'}' 줄을 삭제할까요?`)) return; o.del = true; lkaPut(o); renderF2(); }
+function lkaReset(id){ const d = LKA_DEF.find(x=>x.id===id); if(!d || !confirm('대책 · 추정 원인 문구를 기본값으로 되돌릴까요? (담당 · 날짜 · 상태는 그대로)')) return; const o = lkaRow(id); o.cause = d.cause; o.act = d.act; lkaPut(o); renderF2(); }
 function f2LinkView(){
   if(!F2.pm.length) return `<div class="card empty" style="padding:16px">F2_생산실적 데이터가 없습니다</div>`;
   if(F1M.rows===null){ f1mLoad(); return `<div class="card empty" style="padding:16px">FAC1 모델별 품질(Q_Model상세) 불러오는 중…</div>`; }
