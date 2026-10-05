@@ -227,7 +227,7 @@ table.fc-t .tot{background:#eef2f7;font-weight:800;}
 .note-rep{padding:6px 16px;} .note-rep .note-ph img{width:180px;height:135px;}
 @media print{.note-bg{display:none!important;} .qt-ndel{display:none;} .note-rep .note-ph img{width:150px;height:112px;}}
 .gt-fac{display:inline-block;font-style:normal;font-size:9.5px;font-weight:800;line-height:1;padding:2px 4px;border-radius:3px;margin-left:4px;color:#fff;vertical-align:1px;}
-.gt-fac.fac1{background:#c2410c;} .gt-fac.fac2{background:#7c3aed;}
+.gt-fac.fac1{background:#c2410c;} u.gt-fac{text-decoration:none;margin:0;text-align:center;padding:2px 3px;} .f2-m3l > i{justify-self:center;} .gt-fac.fac2{background:#7c3aed;}
 .gt-facs{display:inline-flex;align-items:center;gap:4px;margin-left:10px;font-size:12px;} .gt-facs b{margin-left:2px;} .gt-facs small{color:#64748b;margin-right:8px;}
 .f2g-t tr.fr td{font-size:11px;} .f2g-t tr.fr.fac1 td.lb{color:#c2410c;font-weight:700;} .f2g-t tr.fr.fac2 td.lb{color:#7c3aed;font-weight:700;}
 .f2-fac{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:0 0 8px 12px;font-size:12px;}
@@ -492,7 +492,7 @@ table.f2-ms tr.n td:not(.l):not(.tt){background:#fff5f5;} table.f2-ms tr.m td:no
 .f2-m3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
 @media (max-width:1250px){.f2-m3{grid-template-columns:1fr;}}
 .f2-m3h{text-align:center;margin-bottom:6px;} .f2-m3h b{display:block;font-size:17px;color:#1e3c72;} .f2-m3h small{font-size:11.5px;color:var(--ink-2);}
-.f2-m3l{display:grid;grid-template-columns:18px 11px 1fr auto;gap:6px;align-items:center;font-size:12px;padding:2px 4px;border-radius:4px;}
+.f2-m3l{display:grid;grid-template-columns:18px 34px 1fr auto;gap:6px;align-items:center;font-size:12px;padding:2px 4px;border-radius:4px;}
 .f2-m3l.top{background:#fdecec;font-weight:700;} .f2-m3l i{width:10px;height:10px;border-radius:2px;}
 .f2-m3l .rk{display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;border-radius:3px;background:#c62828;color:#fff;font-size:10.5px;}
 .f2-m3l .rk.o{background:none;} .f2-m3l em{font-style:normal;color:var(--ink-2);font-variant-numeric:tabular-nums;}
@@ -712,7 +712,7 @@ ko:{
  'f2.sync.stale':'시트의 마지막 데이터가 {n}일 전입니다 — 새 원본 엑셀을 FAC2 변환기로 변환해 F2 탭에 붙여넣어야 반영됩니다',
  'f2.m.sec':'FAC2 Measure — 설비·품번별 불량 구성','f2.m.t1':'설비별 %NG','f2.m.t1s':'= NG ÷ Total · 막대 안 = FAC1 원인(다이캐스팅·주황) / FAC2 원인(MCT 가공·보라) NG 수량 · 아래 회색 = 누적 NG 비중 · 빨간 테두리 = Worst 3 (생산 {n}개 이상)',
  'f2.m.t2':'설비별 가공 품번 · 수량','f2.m.t2s':'FAC1 Measure 표와 같은 가로형 — 설비·품번을 가로로 깔고 Total·FG·NG·Mat\'l 을 행으로','f2.m.t2n':'PROD EA 생산 · OK EA 양품 · NG EA MCT 불량 · Mat\'l NG 가공 전 소재 불량 · 각 행의 최대값은 빨강',
- 'f2.m.t3':'Worst 3 설비 불량 구성','f2.m.t3s':'불량유형을 100%로 나눠 본 것 · 색 = 원인 계통','f2.m.cause':'원인 계통 — 가공(FAC2) / 다캐(소재) / 기타(협력사·고객)',
+ 'f2.m.t3':'Worst 3 설비 불량 구성','f2.m.t3s':'불량유형을 100%로 나눠 본 것 · 색 = 원인 계통','f2.m.cause':'원인 — FAC1 (다이캐스팅) / FAC2 (MCT 가공)',
  'f2.m.가공불량':'FAC2 원인 (MCT 가공)','f2.m.다캐불량':'FAC1 원인 (다이캐스팅)','f2.m.기타':'기타','f2.m.ea':'개','f2.m.idle':'가동 없음',
  'f2.k.minq':'순위 기준: 생산','f2.k.pcs':'개 이상','f2.k.excl':'소량 생산({n}개 미만)으로 순위 제외',
  'f2.is.perf':'실적','f2.is.def':'주요 불량 TOP3 (MCT)','f2.is.prob':'문제점 (원인)','f2.is.act':'조치 · 담당 · 완료일',
@@ -798,7 +798,7 @@ en:{
  'f2.sync.stale':'Latest data in the sheet is {n} days old — convert the new source file with the FAC2 converter and paste it into the F2 tabs',
  'f2.m.sec':'FAC2 Measure — defects by machine · part','f2.m.t1':'%NG by machine','f2.m.t1s':'= NG ÷ Total · segments = FAC1 (die casting, orange) / FAC2 (machining, purple) NG · grey = cumulative NG share · red box = Worst 3 (output ≥ {n})',
  'f2.m.t2':'Parts and quantities by machine','f2.m.t2s':'same layout as the FAC1 Measure table','f2.m.t2n':'PROD EA production · OK EA good · NG EA MCT defects · Mat\'l NG material NG before machining · max of each row in red',
- 'f2.m.t3':'Worst 3 machines — defect mix','f2.m.t3s':'defect types as 100% · colour = cause','f2.m.cause':'Cause — machining (FAC2) / casting (material) / other',
+ 'f2.m.t3':'Worst 3 machines — defect mix','f2.m.t3s':'defect types as 100% · colour = cause','f2.m.cause':'Cause — FAC1 (die casting) / FAC2 (MCT machining)',
  'f2.m.가공불량':'FAC2 cause (machining)','f2.m.다캐불량':'FAC1 cause (die casting)','f2.m.기타':'Other','f2.m.ea':' pcs','f2.m.idle':'no run',
  'f2.k.minq':'Rank only for output ≥','f2.k.pcs':'pcs','f2.k.excl':'Excluded (output < {n})',
  'f2.is.perf':'Output','f2.is.def':'Top 3 defects (MCT)','f2.is.prob':'Problem (cause)','f2.is.act':'Action · owner · due',
@@ -1635,7 +1635,7 @@ function f2Measure(pred, src){
       const o = L.find(x=>x.mc===mc), defs = SRC.top(mc), sum = defs.reduce((a,x)=>a+x.v,0);
       const items = defs.slice(0,3).map(x=>({ label:x.t, v:x.v, c:F2_GC[x.g]||F2_GC['기타'], g:x.g }));
       const rest = defs.slice(3); if(rest.length) items.push({ label:`${T('f2.d.other')} ${rest.length}${T('f2.d.kinds')}`, v:rest.reduce((a,x)=>a+x.v,0), c:F2_WOTHER });
-      const leg = items.map((x,j)=>`<div class="f2-m3l${j<3?' top':''}">${j<3?`<b class="rk">${j+1}</b>`:'<b class="rk o"></b>'}<i style="background:${x.c}"></i><span>${esc2(x.label)}</span><em>${fmt(x.v)} (${sum?Math.round(x.v/sum*100):0}%)</em></div>`).join('');
+      const leg = items.map((x,j)=>`<div class="f2-m3l${j<3?' top':''}">${j<3?`<b class="rk">${j+1}</b>`:'<b class="rk o"></b>'}${x.g==='다캐불량'?'<u class="gt-fac fac1">FAC1</u>':x.g==='가공불량'?'<u class="gt-fac fac2">FAC2</u>':`<i style="background:${x.c}"></i>`}<span>${esc2(x.label)}</span><em>${fmt(x.v)} (${sum?Math.round(x.v/sum*100):0}%)</em></div>`).join('');
       const g = { '가공불량':o.mcN, '다캐불량':o.dc, '기타':Math.max(0,o.n-o.mcN-o.dc) };
       const bar = Object.entries(g).filter(e=>e[1]>0).map(([k,v])=>`<span style="width:${o.n?v/o.n*100:0}%;background:${F2_GC[k]}" title="${T('f2.m.'+k)} ${fmt(v)}"></span>`).join('');
       const tags = Object.entries(g).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).map(([k,v],j)=>`<span class="${j?'':'lead'}"><i style="background:${F2_GC[k]}"></i>${T('f2.m.'+k)} ${o.n?Math.round(v/o.n*100):0}% (${fmt(v)})</span>`).join('');
@@ -2130,7 +2130,7 @@ function f2pMeasureSrc(S, pred){
       return Object.entries(m).map(([k,x])=>({ part:k, ...x })); } };
 }
 /* 설비 KPI 요약 — 일일 품질보고 「1. 설비 KPI」 와 같은 틀 (전기간 · 이번 · 증감 · Worst 1~3 · 세부) */
-const f2pTopDef  = (A, n) => F2P.defs.map((k,i)=>({ t:f2pDefName(k), v:A.df[i] })).concat([{ t:f2pLoc("Mat'l"), v:A.mb+A.ma }, { t:f2pLoc('Setting'), v:A.set }]).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,n);
+const f2pTopDef  = (A, n) => F2P.defs.map((k,i)=>({ t:f2pDefName(k), fac:f2FacOf(f2pRaw(k)).fac, v:A.df[i] })).concat([{ t:f2pLoc("Mat'l"), fac:f2FacOf("Mat'l Before").fac, v:A.mb+A.ma }, { t:f2pLoc('Setting'), fac:f2FacOf('Setting').fac, v:A.set }]).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,n);
 const f2pTopLoss = (A, n) => F2P.loss.map((k,i)=>({ t:f2pLossName(k), v:A.ls[i]/60 })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,n);
 function f2pWorst(S){
   const mq = f2MinQty(), L = S.mcList.map(mc=>Object.assign({ mc }, S.mc[mc])), ok = o => o.t >= mq;
@@ -2192,10 +2192,11 @@ function f2pIssues(S, noteKey){
     <thead><tr><th>${T('t.eq')}</th><th>${X.is.perf}</th><th>${X.is.def}</th><th class="dt">${T('f2.is.prob')}</th><th class="dt">${T('f2.is.act')}</th></tr></thead>
     <tbody>${mcs.map(mc=>{ const o = S.mc[mc], ng = f2pNG(o);
       let p='', a=''; try{ p = localStorage.getItem('stc_f2_note_'+nk(mc)+'_p')||''; a = localStorage.getItem('stc_f2_note_'+nk(mc)+'_a')||''; }catch(e){}
-      const td = f2pTopDef(o,3), tl = f2pTopLoss(o,3);
+      const td = f2pTopDef(o,3), tl = f2pTopLoss(o,3), FC = f2pFacCols(), n1 = f2pSelN(o, FC, 'FAC1'), n2 = f2pSelN(o, FC, 'FAC2');
+      const fb = f => `<span class="gt-fac ${f.toLowerCase()}" style="margin:0 3px 0 0">${f}</span>`;
       return `<tr><td class="mc">${esc2(mc)}<small>${esc2(tags[mc].join(' · '))}</small></td>
-        <td style="text-align:left;font-size:11.5px;line-height:1.55">${esc2([...o.pns].map(pn=>S.names[pn]||pn).join(', '))} · OP ${esc2([...o.ops].join(', '))}<br>Total ${fmt(o.t)} · NG ${fmt(o.n)} (<b style="color:${f2St(ng).c}">${f2pPc(ng)}</b>)<br>${X.av} <b style="color:${f2pAvC(f2pAv(o))}">${f2pPc(f2pAv(o),1)}</b> · OEE ${f2pPc(f2pOEE(o),1)} · Loss ${f2pH(o.tl)}h</td>
-        <td style="text-align:left;font-size:11.5px;line-height:1.55">${td.length?td.map((x,j)=>`${'①②③'[j]} <i class="pill" style="background:#dc2626"></i>${esc2(x.t)} ${fmt(x.v)} (${o.n?(x.v/o.n*100).toFixed(0):0}%)`).join('<br>'):'NG –'}
+        <td style="text-align:left;font-size:11.5px;line-height:1.55">${esc2([...o.pns].map(pn=>S.names[pn]||pn).join(', '))} · OP ${esc2([...o.ops].join(', '))}<br>Total ${fmt(o.t)} · NG ${fmt(o.n)} (<b style="color:${f2St(ng).c}">${f2pPc(ng)}</b>)<br>${fb('FAC1')}${fmt(n1)} <small>(${o.t?(n1/o.t*100).toFixed(2):'0.00'}%)</small> · ${fb('FAC2')}${fmt(n2)} <small>(${o.t?(n2/o.t*100).toFixed(2):'0.00'}%)</small><br>${X.av} <b style="color:${f2pAvC(f2pAv(o))}">${f2pPc(f2pAv(o),1)}</b> · OEE ${f2pPc(f2pOEE(o),1)} · Loss ${f2pH(o.tl)}h</td>
+        <td style="text-align:left;font-size:11.5px;line-height:1.55">${td.length?td.map((x,j)=>`${'①②③'[j]} <i class="pill" style="background:#dc2626"></i>${esc2(x.t)}${x.fac?`<span class="gt-fac ${x.fac.toLowerCase()}">${x.fac}</span>`:''} ${fmt(x.v)} (${o.n?(x.v/o.n*100).toFixed(0):0}%)`).join('<br>'):'NG –'}
           ${tl.length?'<br>'+tl.map((x,j)=>`${'①②③'[j]} <i class="pill" style="background:#eb6834"></i>${esc2(x.t)} ${fmt(x.v,1)}h`).join('<br>'):''}</td>
         <td><textarea class="f2-note" data-f2note="${esc2(nk(mc))}_p" placeholder="${T('f2.is.probPh')}">${esc2(p)}</textarea></td>
         <td><textarea class="f2-note" data-f2note="${esc2(nk(mc))}_a" placeholder="${T('f2.is.actPh')}">${esc2(a)}</textarea></td></tr>`; }).join('')}</tbody>
