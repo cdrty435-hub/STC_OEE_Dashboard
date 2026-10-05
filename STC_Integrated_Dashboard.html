@@ -710,10 +710,10 @@ ko:{
  'f2.sync.btn':'구글시트 새로고침','f2.sync.loading':'구글시트에서 FAC2 데이터를 불러오는 중…','f2.sync.fail':'불러오기 실패 — 아래 안내를 확인하세요',
  'f2.sync.ok':'동기화 완료 — {a} ~ {b} (데이터 있는 날 {n}일)','f2.sync.last':'마지막','f2.sync.rows':'품번일별 {pd} · 불량상세 {det} · 설비실적 {mq}행','f2.sync.at':'기준',
  'f2.sync.stale':'시트의 마지막 데이터가 {n}일 전입니다 — 새 원본 엑셀을 FAC2 변환기로 변환해 F2 탭에 붙여넣어야 반영됩니다',
- 'f2.m.sec':'FAC2 Measure — 설비·품번별 불량 구성','f2.m.t1':'설비별 %NG','f2.m.t1s':'= NG ÷ Total · 막대 안 = 가공(FAC2)/다캐(소재)/기타 NG 수량 · 아래 회색 = 누적 NG 비중 · 빨간 테두리 = Worst 3 (생산 {n}개 이상)',
+ 'f2.m.sec':'FAC2 Measure — 설비·품번별 불량 구성','f2.m.t1':'설비별 %NG','f2.m.t1s':'= NG ÷ Total · 막대 안 = FAC1 원인(다이캐스팅·주황) / FAC2 원인(MCT 가공·보라) NG 수량 · 아래 회색 = 누적 NG 비중 · 빨간 테두리 = Worst 3 (생산 {n}개 이상)',
  'f2.m.t2':'설비별 가공 품번 · 수량','f2.m.t2s':'FAC1 Measure 표와 같은 가로형 — 설비·품번을 가로로 깔고 Total·FG·NG·Mat\'l 을 행으로','f2.m.t2n':'PROD EA 생산 · OK EA 양품 · NG EA MCT 불량 · Mat\'l NG 가공 전 소재 불량 · 각 행의 최대값은 빨강',
  'f2.m.t3':'Worst 3 설비 불량 구성','f2.m.t3s':'불량유형을 100%로 나눠 본 것 · 색 = 원인 계통','f2.m.cause':'원인 계통 — 가공(FAC2) / 다캐(소재) / 기타(협력사·고객)',
- 'f2.m.가공불량':'가공(FAC2)','f2.m.다캐불량':'다캐(소재)','f2.m.기타':'기타','f2.m.ea':'개','f2.m.idle':'가동 없음',
+ 'f2.m.가공불량':'FAC2 원인 (MCT 가공)','f2.m.다캐불량':'FAC1 원인 (다이캐스팅)','f2.m.기타':'기타','f2.m.ea':'개','f2.m.idle':'가동 없음',
  'f2.k.minq':'순위 기준: 생산','f2.k.pcs':'개 이상','f2.k.excl':'소량 생산({n}개 미만)으로 순위 제외',
  'f2.is.perf':'실적','f2.is.def':'주요 불량 TOP3 (MCT)','f2.is.prob':'문제점 (원인)','f2.is.act':'조치 · 담당 · 완료일',
  'f2.is.probPh':'문제점 · 원인 입력','f2.is.actPh':'조치 / 담당 / 완료일','f2.is.note':'※ 대상 = %NG · 가공 불량률 · 다캐 불량률 · UPD 달성률 Worst 3에 든 설비 (중복 제거) · 입력은 이 브라우저에 기간별로 저장 · 색 점: 파랑 = 가공(FAC2), 빨강 = 다캐(소재)',
@@ -796,10 +796,10 @@ en:{
  'f2.sync.btn':'Refresh from Google Sheet','f2.sync.loading':'Loading FAC2 data…','f2.sync.fail':'Load failed — see below',
  'f2.sync.ok':'Synced — {a} ~ {b} ({n} days with data)','f2.sync.last':'last','f2.sync.rows':'{pd} part-day · {det} defect · {mq} machine rows','f2.sync.at':'',
  'f2.sync.stale':'Latest data in the sheet is {n} days old — convert the new source file with the FAC2 converter and paste it into the F2 tabs',
- 'f2.m.sec':'FAC2 Measure — defects by machine · part','f2.m.t1':'%NG by machine','f2.m.t1s':'= NG ÷ Total · segments = machining / casting / other NG · grey = cumulative NG share · red box = Worst 3 (output ≥ {n})',
+ 'f2.m.sec':'FAC2 Measure — defects by machine · part','f2.m.t1':'%NG by machine','f2.m.t1s':'= NG ÷ Total · segments = FAC1 (die casting, orange) / FAC2 (machining, purple) NG · grey = cumulative NG share · red box = Worst 3 (output ≥ {n})',
  'f2.m.t2':'Parts and quantities by machine','f2.m.t2s':'same layout as the FAC1 Measure table','f2.m.t2n':'PROD EA production · OK EA good · NG EA MCT defects · Mat\'l NG material NG before machining · max of each row in red',
  'f2.m.t3':'Worst 3 machines — defect mix','f2.m.t3s':'defect types as 100% · colour = cause','f2.m.cause':'Cause — machining (FAC2) / casting (material) / other',
- 'f2.m.가공불량':'Machining','f2.m.다캐불량':'Casting','f2.m.기타':'Other','f2.m.ea':' pcs','f2.m.idle':'no run',
+ 'f2.m.가공불량':'FAC2 cause (machining)','f2.m.다캐불량':'FAC1 cause (die casting)','f2.m.기타':'Other','f2.m.ea':' pcs','f2.m.idle':'no run',
  'f2.k.minq':'Rank only for output ≥','f2.k.pcs':'pcs','f2.k.excl':'Excluded (output < {n})',
  'f2.is.perf':'Output','f2.is.def':'Top 3 defects (MCT)','f2.is.prob':'Problem (cause)','f2.is.act':'Action · owner · due',
  'f2.is.probPh':'Problem / cause','f2.is.actPh':'Action / owner / due','f2.is.note':'※ Machines in Worst 3 of %NG · machining · casting · UPD achievement (deduplicated) · saved in this browser per period',
@@ -849,7 +849,7 @@ th:{
  'f2.g.가공불량':'งานกลึง (FAC2)','f2.g.다캐불량':'งานหล่อ (FAC1)','f2.g.협력사':'ซัพพลายเออร์','f2.g.고객':'ลูกค้า',
  'f2.p.MCT':'MCT (ผลิต)','f2.date':'วันที่','f2.daySub':'รวมรายวัน','f2.daysU':' วัน','f2.p.OQC':'OQC ตรวจก่อนส่งออก','f2.target':'เป้าหมาย','f2.parts':'ตามชิ้นงาน (PART NAME)','f2.top5r':'ของเสีย TOP5 ตามชิ้นงาน','f2.trend12':'แนวโน้ม NG (12 สัปดาห์)',
  'f2.g.다캐불량':'ของเสียงานหล่อ','f2.g.가공불량':'ของเสียงานกลึง MCT',
- 'f2.k.mcS':'กลึง','f2.k.dcS':'หล่อ','f2.k.etcS':'อื่นๆ','f2.m.가공불량':'งานกลึง (FAC2)','f2.m.다캐불량':'งานหล่อ (วัตถุดิบ)','f2.m.기타':'อื่นๆ',
+ 'f2.k.mcS':'กลึง','f2.k.dcS':'หล่อ','f2.k.etcS':'อื่นๆ','f2.m.가공불량':'สาเหตุ FAC2 (แมชชีนนิ่ง)','f2.m.다캐불량':'สาเหตุ FAC1 (ไดคาสติ้ง)','f2.m.기타':'อื่นๆ',
  'f2.r.title.daily':'รายงานคุณภาพรายวัน FAC2 (MCT · OQC)','f2.r.title.week':'รายงานคุณภาพรายสัปดาห์ FAC2 (MCT · OQC)','f2.r.title.month':'รายงานคุณภาพรายเดือน FAC2 (MCT · OQC)',
  'st.loading':'กำลังโหลดข้อมูล…','st.weeks':'{n} สัปดาห์','st.rows':'A {a} / P {p} / Q {q} แถว',
  'st.asof':'ข้อมูล ณ {t}','st.failed':'โหลดไม่สำเร็จ','st.frameLoading':'กำลังโหลด {name}…',
@@ -1568,7 +1568,7 @@ function f2McIssues(pred, noteKey){
    ② 설비별 생산 품번·수량 : 설비·품번을 가로로 깔고 Total·FG·NG·Mat'l 을 행으로
    ③ Worst 3 설비 불량 구성 : 불량유형 100% 도넛 + 원인 계통 막대
    ========================================================================= */
-const F2_GC = { '가공불량':'#3a66b8', '다캐불량':'#e0701f', '기타':'#9aa0a6' };
+const F2_GC = { '가공불량':'#7c3aed', '다캐불량':'#c2410c', '기타':'#9aa0a6' };   /* FAC2 보라 · FAC1 주황 (추이 그래프와 같은 색) */
 /* 설비 목록 = 생산 기록(F2_MCT_Q)에 한 번이라도 나온 MCT — OQC 는 수출 전 출하 검사라 설비 기준에 쓰지 않는다.
    선택 기간에 쉰 설비는 '가동 없음' 칸으로 남고, 새 설비가 기록되면 자동으로 늘어난다. */
 const F2_MC_ALL = ['MC02','MC03','MC04','MC05','MC06','MC07','MC08','MC11','MC12','MC13','MC14','MC15','MC16','MC17','MC18'];   /* FAC2 보유 MCT 전체 (원본 설비 목록) — 기록이 없어도 칸을 둔다 */
@@ -1580,7 +1580,7 @@ function f2Measure(pred, src){
   const SRC = src || { stats:()=>f2McStats(pred), all:f2AllMcs, top:mc=>f2McTopDef(pred, mc, 99),
     parts:mc=>{ const pm = {};
       F2.mq.forEach(r=>{ if(r['설비명']!==mc || !pred(r)) return; const k = r['Part name']||r['Part no.'];
-        const x = pm[k] || (pm[k] = {t:0,f:0,n:0,m:0}); x.t+=f2n(r['생산수량']); x.f+=f2n(r['양품']); x.n+=f2n(r['불량수량']); x.m+=f2n(r["Mat'l NG"]); });
+        const x = pm[k] || (pm[k] = {t:0,f:0,n:0,m:0,f1:0,f2:0}); x.t+=f2n(r['생산수량']); x.f+=f2n(r['양품']); x.n+=f2n(r['불량수량']); x.m+=f2n(r["Mat'l NG"]); x.f1+=f2n(r['다캐불량']); x.f2+=f2n(r['가공불량']); });
       return Object.entries(pm).map(([k,x])=>({ part:k, ...x })); } };
   const L = SRC.stats().filter(o=>o.t>0);
   if(!L.length) return `<div class="card empty" style="padding:14px">${T('st.noData')}</div>`;
@@ -1611,7 +1611,7 @@ function f2Measure(pred, src){
             <text x="${cx}" y="${base+32}" text-anchor="middle" font-size="10.5" fill="#898781">${o.t<mq?`(${fmt(o.t)}${T('f2.m.ea')}) `:''}${totNg?Math.round(cum/totNg*100):0}%</text>`;
   });
   svg += `<line x1="0" x2="${W}" y1="${top+ph}" y2="${top+ph}" stroke="#c9ccd1"/>`;
-  const legend = ['가공불량','다캐불량','기타'].map(g=>`<span><i class="pill" style="background:${F2_GC[g]}"></i>${T('f2.m.'+g)}</span>`).join('');
+  const legend = ['다캐불량','가공불량'].concat(L.some(o=>o.n-o.mcN-o.dc>0)?['기타']:[]).map(g=>`<span><i class="pill" style="background:${F2_GC[g]}"></i>${T('f2.m.'+g)}</span>`).join('');
   const c1 = `<div class="card"><div class="f2-mt">① ${T('f2.m.t1')} <small>${T('f2.m.t1s',{n:mq})}</small><span class="legend" style="margin:0 0 0 auto">${legend}</span></div>
     <div class="tblwrap"><svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:720px;display:block" role="img" aria-label="${T('f2.m.t1')}">${svg}</svg></div></div>`;
   /* ② 설비 × 품번 가로표 */
@@ -1621,13 +1621,13 @@ function f2Measure(pred, src){
     SRC.parts(o.mc).forEach(x=>cols.push({ mc:o.mc, ...x }));
   });
   const mcSpan = {}; cols.forEach(c=>mcSpan[c.mc]=(mcSpan[c.mc]||0)+1);
-  const R2 = [['PROD EA','t'],['OK EA','f'],['NG EA','n'],["Mat'l NG",'m']];
-  const mx = k => Math.max(...cols.map(c=>c[k]));
-  const tot = k => cols.reduce((a,c)=>a+c[k],0);
+  const R2 = [['PROD EA','t'],['OK EA','f'],['NG EA','n']].concat(cols.some(c=>c.f1!==undefined) ? [['<span class="gt-fac fac1" style="margin:0 4px 0 0">FAC1</span>NG','f1'],['<span class="gt-fac fac2" style="margin:0 4px 0 0">FAC2</span>NG','f2']] : []).concat([["Mat'l NG",'m']]);
+  const mx = k => Math.max(...cols.map(c=>c[k]||0));
+  const tot = k => cols.reduce((a,c)=>a+(c[k]||0),0);
   const c2 = `<div class="card"><div class="f2-mt">② ${T('f2.m.t2')} <small>${T('f2.m.t2s')}</small></div><div class="tblwrap"><table class="f2-ms">
     <thead><tr><th class="h">MCT</th>${Object.keys(mcSpan).map(m=>`<th class="h" colspan="${mcSpan[m]}">${esc2(m)}</th>`).join('')}<th class="h tt" rowspan="2">TOTAL</th></tr>
       <tr><th class="h">PART NAME</th>${cols.map(c=>`<th class="v${c.idle?' idle':''}"><span>${c.idle?T('f2.m.idle'):esc2(c.part)}</span></th>`).join('')}</tr></thead>
-    <tbody>${R2.map(([lab,k])=>{ const m = mx(k); return `<tr class="${k}"><td class="l">${lab}</td>${cols.map(c=>c.idle?'<td class="idle">–</td>':`<td${c[k]===m&&m>0?' class="mx"':''}>${fmt(c[k])}</td>`).join('')}<td class="tt">${fmt(tot(k))}</td></tr>`; }).join('')}
+    <tbody>${R2.map(([lab,k])=>{ const m = mx(k); return `<tr class="${k}"><td class="l">${lab}</td>${cols.map(c=>c.idle?'<td class="idle">–</td>':`<td${c[k]===m&&m>0?' class="mx"':''}>${fmt(c[k]||0)}</td>`).join('')}<td class="tt">${fmt(tot(k))}</td></tr>`; }).join('')}
       <tr class="r"><td class="l">% NG</td>${cols.map(c=>c.idle?'<td class="idle">–</td>':`<td style="color:${f2St(c.t?c.n/c.t*100:null).c};font-weight:700">${c.t?(c.n/c.t*100).toFixed(2)+'%':'–'}</td>`).join('')}<td class="tt">${tot('t')?(tot('n')/tot('t')*100).toFixed(2)+'%':'–'}</td></tr></tbody>
   </table></div><div class="f2-mn">${T('f2.m.t2n')}</div></div>`;
   /* ③ Worst 3 설비 불량 구성 */
@@ -2116,7 +2116,7 @@ function f2pMcDayTable(pred){
 }
 function f2pMeasureSrc(S, pred){
   const defs = A => F2P.defs.map((k,i)=>({ t:f2pDefName(k), raw:f2pRaw(k), v:A.df[i] })).concat([{ t:"Mat'l Before", v:A.mb }, { t:"Mat'l After", v:A.ma }, { t:'Setting', v:A.set }].map(x=>({ ...x, t:f2pLoc(x.t), raw:x.t })))
-    .filter(x=>x.v>0).map(x=>({ ...x, g:f2pGrp(x.raw || x.t) })).sort((a,b)=>b.v-a.v);
+    .filter(x=>x.v>0).map(x=>({ ...x, g: f2FacOf(x.raw || x.t).fac==='FAC1' ? '다캐불량' : '가공불량' })).sort((a,b)=>b.v-a.v);   /* F2_불량코드 D열: FAC1 = 다캐 · FAC2 = 가공 */
   const sum = (L, g) => L.filter(x=>x.g===g).reduce((a,x)=>a+x.v,0);
   return {
     stats:()=>S.mcList.map(mc=>{ const A = S.mc[mc], d = defs(A);
@@ -2124,8 +2124,9 @@ function f2pMeasureSrc(S, pred){
     all:()=>[...new Set([...F2_MC_ALL, ...S.mcList])].sort((a,b)=>f2McNo(a)-f2McNo(b)),
     top:mc=>defs(S.mc[mc]),
     parts:mc=>{ const m = {};
+      const FC = f2pFacCols();
       F2.pm.forEach(r=>{ if(r.mc!==mc || !pred(r)) return; const k = `${f2pShort(r.pn, S.names[r.pn])} OP${r.op}`;
-        const x = m[k] || (m[k] = { t:0, f:0, n:0, m:0 }); x.t+=r.t; x.f+=r.f; x.n+=r.n; x.m+=r.mb+r.ma; });
+        const x = m[k] || (m[k] = { t:0, f:0, n:0, m:0, f1:0, f2:0 }); x.t+=r.t; x.f+=r.f; x.n+=r.n; x.m+=r.mb+r.ma; x.f1+=f2pSelN(r, FC, 'FAC1'); x.f2+=f2pSelN(r, FC, 'FAC2'); });
       return Object.entries(m).map(([k,x])=>({ part:k, ...x })); } };
 }
 /* 설비 KPI 요약 — 일일 품질보고 「1. 설비 KPI」 와 같은 틀 (전기간 · 이번 · 증감 · Worst 1~3 · 세부) */
