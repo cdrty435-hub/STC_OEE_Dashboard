@@ -3020,7 +3020,7 @@ function lkQuick(n){ const ds = f2pDates(); const last = ds[ds.length-1]; if(!la
   const from = n==='mo' ? last.slice(0,8)+'01' : f2AddDays(last, -(n-1)); lkSet(from, last); }
 /* 섹션 위아래 순서 바꾸기 (▲▼ · 이 브라우저에 저장 · 「처음대로」) */
 const LK_DEF_ORDER = ['foc','main','ty','trend','f1'];
-function lkOrder(){ try{ const v = JSON.parse(localStorage.getItem('stc_f2_lk_order')||'null'); if(Array.isArray(v)){ const o = v.filter(k=>LK_DEF_ORDER.includes(k)); LK_DEF_ORDER.forEach(k=>{ if(!o.includes(k)) o.push(k); }); return o; } }catch(e){} return LK_DEF_ORDER.slice(); }
+function lkOrder(){ try{ const v = JSON.parse(localStorage.getItem('stc_f2_lk_order')||'null'); if(Array.isArray(v)){ const o = v.filter(k=>LK_DEF_ORDER.includes(k)); LK_DEF_ORDER.forEach((k,j)=>{ if(!o.includes(k)){ const p = j ? o.indexOf(LK_DEF_ORDER[j-1]) : -1; o.splice(p+1, 0, k); } }); return o; } }catch(e){} return LK_DEF_ORDER.slice(); }
 function lkMove(k, d){ const o = lkOrder(), i = o.indexOf(k), j = i + d; if(i<0 || j<0 || j>=o.length) return; [o[i], o[j]] = [o[j], o[i]];
   try{ localStorage.setItem('stc_f2_lk_order', JSON.stringify(o)); }catch(e){} setTimeout(()=>{ renderF2(); const el = document.getElementById('lk-sec-'+k); if(el) el.scrollIntoView({ block:'start' }); }, 0); }
 function lkReset(){ try{ localStorage.removeItem('stc_f2_lk_order'); }catch(e){} setTimeout(renderF2, 0); }
@@ -3110,6 +3110,19 @@ function f2LinkView(){
     <tbody>${sumRows}${grpRows('FAC1')}${grpRows('FAC2')}
       <tr class="tot all"><td></td><td class="l">전체 불량</td><td>${fmt(T2.f1+T2.f2)}</td><td>100%</td><td></td><td></td><td>${pc(T2.f1+T2.f2,T2.in)}</td>${parts.map(p=>`<td>${fmt(p.f1+p.f2)}</td>`).join('')}</tr></tbody></table></div>
     <div class="legend" style="margin-top:6px"><span>※ 원인 = F2_불량코드 D열 · 번호 ①②③ = 원인별 Worst 3 · 원인 안 % = 그 원인 불량 합계 대비 · * = 시트에 이름이 없어 추정한 분류</span></div></div>`;
+  /* ---- 유형별 불량 추이 (일별 · FAC2 투입 대비 %) — FAC1 원인 Worst 3 (실선) + FAC2 원인 Worst 3 (점선) ---- */
+  const trD = [...new Set(F2.pm.filter(r=>inR(r.d)).map(r=>r.d))].sort();
+  const trIn = {}, trTy = {};
+  F2.pm.forEach(r=>{ if(!inR(r.d)) return; const p = P2[r.pn]; if(!p) return;
+    if(String(r.op||'') === p.firstOp) trIn[r.d] = (trIn[r.d]||0) + r.t;
+    const a = trTy[r.d] || (trTy[r.d] = FC.map(()=>0));
+    FC.forEach((c,i)=>{ a[i] += typeof c.i==='number' ? (r.df[c.i]||0) : (r[c.i]||0); }); });
+  const TR_COL = { FAC1:['#c2410c','#dc2626','#ca8a04'], FAC2:['#7c3aed','#2563eb','#0891b2'] };
+  const trSeries = ['FAC1','FAC2'].flatMap(f=>w3(f).map((x,k)=>{ const i = FC.findIndex(c=>c.t===x.t);
+    return { name:`${esc2(x.t)} (${f})`, tag:esc2(x.t.replace(/\s*\(.*?\)\s*/g,'').trim() || x.t), suf:f, sufColor:f==='FAC1'?'#c2410c':'#7c3aed', dash:f==='FAC2', color:TR_COL[f][k], main:k===0,
+      vals: trD.map(d=>trIn[d] ? +((trTy[d]||[])[i]/trIn[d]*100).toFixed(3) : null) }; }));
+  const trTbl = trD.length && trSeries.length ? `<div class="card">${qtTrendHtml({ id:'lk-trend', title:'유형별 불량 추이현황', sub:`${esc2(perLbl)} · 일별 유형 불량 ÷ 그날 FAC2 투입 · 실선 = FAC1 원인 · 점선 = FAC2 원인`,
+      dates:trD, series:trSeries, rx:190, bars:{ name:'투입', vals:trD.map(d=>trIn[d]||0) } })}</div>` : '';
   /* ---- FAC1 자체 불량유형 (연결된 모델) ---- */
   const lk1 = rows.map(x=>x.f1).filter(Boolean);
   const t1 = F1.types.map((k,i)=>({ k, v:lk1.reduce((s,o)=>s+o.ty[i],0) })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
@@ -3314,7 +3327,7 @@ function qtTrendHtml(o){
   /* 개선 조치 표시 — 메모 첫 줄(조치 제목) + 사진 썸네일을 날짜 위에, 그 날짜에 세로 점선 (조치 전·후 비교)
      겹치면 아래 줄로 (최대 3줄), 그래도 겹치면 세로선·건수만 */
   const TW = 84, TH = 50, CAP = 15, TG = 5;
-  const Lx = 46, Rx = 92, nn = o.dates.length, xw0 = (1000-Lx-Rx) / Math.max(1, nn-1);
+  const Lx = 46, Rx = o.rx || 92, nn = o.dates.length, xw0 = (1000-Lx-Rx) / Math.max(1, nn-1);
   const X0 = i => nn===1 ? (Lx+(1000-Lx-Rx)/2) : Lx + i*xw0;
   const thumbs = []; let rowsUsed = 0;
   if (o.noteScope){ const lastX = [-1e9, -1e9, -1e9];
@@ -3368,7 +3381,7 @@ function qtTrendHtml(o){
   o.series.forEach(s=>{
     /* 부드러운 곡선 (값을 넘지 않는 단조 3차) · 생산 없는 날은 건너뛰고 앞뒤 점을 이음 */
     const d = qtSmooth(s.vals.map((v,i)=>v==null ? null : [X(i), Y(v)]).filter(Boolean));
-    g += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.main?2.5:2}" stroke-linejoin="round" stroke-linecap="round"${s.main?'':' opacity=".9"'}/>`;
+    g += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.main?2.5:2}" stroke-linejoin="round" stroke-linecap="round"${s.dash?' stroke-dasharray="7 4"':''}${s.main?'':' opacity=".9"'}/>`;
     s.vals.forEach((v,i)=>{ if (v==null) return; const h = o.dates[i]>=o.hiFrom && o.dates[i]<=o.hiTo;
       g += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${h?4.5:3}" fill="${s.color}" stroke="#fff" stroke-width="1.5"/>`;
       if (h && s.main && !(o.maxLbl && hi.length > o.maxLbl)) g += `<text x="${X(i).toFixed(1)}" y="${(Y(v)-9).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="800" fill="#111827">${v.toFixed(2)}</text>`; });
@@ -3380,7 +3393,7 @@ function qtTrendHtml(o){
   ends.sort((a,b)=>a.y-b.y); let last = -99;
   ends.forEach(e=>{ const y = Math.max(e.y+4, last+13); last = y;
     g += e.tg ? `<text x="${W-R+6}" y="${y.toFixed(1)}" font-size="11" font-weight="700" fill="#b91c1c">${o.tLabel||'목표'} ${o.target}%</text>`
-              : `<text x="${W-R+6}" y="${y.toFixed(1)}" font-size="11" font-weight="700" fill="#374151"><tspan fill="${e.s.color}">●</tspan>${e.s.tag?` <tspan fill="${e.s.color}" font-weight="800">${e.s.tag}</tspan>`:''} ${e.v.toFixed(2)}%</text>`; });
+              : `<text x="${W-R+6}" y="${y.toFixed(1)}" font-size="11" font-weight="700" fill="#374151"><tspan fill="${e.s.color}">●</tspan>${e.s.tag?` <tspan fill="${e.s.color}" font-weight="800">${e.s.tag}</tspan>`:''} ${e.v.toFixed(2)}%${e.s.suf?` <tspan fill="${e.s.sufColor||e.s.color}" font-weight="900">${e.s.suf}</tspan>`:''}</text>`; });
   g += `<line id="${o.id}-x" x1="0" x2="0" y1="${T}" y2="${H-B}" stroke="#94a3b8" stroke-width="1" visibility="hidden"/>`;
   /* 메모 있는 날짜 표시 (📝 개수) */
   if (false) o.dates.forEach((d,i)=>{ const c = 0; if(!c) return;
