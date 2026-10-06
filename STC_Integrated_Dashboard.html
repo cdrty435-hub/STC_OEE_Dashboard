@@ -3380,7 +3380,7 @@ function f2LinkView(){
     const lg = (o.log||[]).filter(x=>x.txt), ll = lg[lg.length-1];
     return `<tr class="lkp-r" onclick="lkaEdit('${id}')" title="눌러서 수정 · 진행 내용 등록">
       <td class="lkp-no">${no}</td>
-      <td class="l lkp-it">${wk>=0?`<b class="lk-wr ${g.toLowerCase()}">${wk+1}</b>`:g!=='COM'?'<small class="lka-out">Worst 밖</small>':''}<b>${esc2(g==='COM'||o.custom ? (o.title||o.ty||'(이름 없음)') : o.ty)}</b>${cur!=null?`<div class="lka-hint">현재 ${cur.toFixed(2)}%</div>`:''}</td>
+      <td class="l lkp-it">${wk>=0 && !o.custom?`<b class="lk-wr ${g.toLowerCase()}">${wk+1}</b>`:''}<b>${esc2(g==='COM'||o.custom ? (o.title||o.ty||'(이름 없음)') : o.ty)}</b>${cur!=null?`<div class="lka-hint">현재 ${cur.toFixed(2)}%</div>`:''}</td>
       <td class="l lkp-act"><div class="t">${esc2(o.act||'')||'<span class="lka-hint">대책 입력</span>'}</div>${ll?`<div class="lg">▸ ${md(ll.d)} ${esc2(ll.txt)}${lg.length>1?` <small>외 ${lg.length-1}건</small>`:''}</div>`:''}</td>
       <td class="lkp-ow">${o.owner?esc2(o.owner):'<span class="lka-hint">미지정</span>'}</td>
       <td class="lkp-dt">${o.start||o.due?`${md(o.start)||'?'} ~ ${md(o.due)||'?'}`:'<span class="lka-hint">미정</span>'}${late?'<div class="late">기한 지남</div>':''}</td>
