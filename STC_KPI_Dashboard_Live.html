@@ -52,6 +52,20 @@
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 
   /* FAC cards */
+  .bt-wrap{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(16,26,51,.06);padding:12px 14px;overflow-x:auto;}
+  table.bt{width:100%;border-collapse:collapse;font-size:13px;}
+  table.bt th{color:#fff;background:#334155;padding:8px 6px;font-size:12.5px;text-align:center;} table.bt th.l{text-align:left;background:#101a33;} table.bt th.tt{background:#101a33;}
+  table.bt td{padding:5px 8px;border-bottom:1px solid #eef1f6;text-align:center;white-space:nowrap;} table.bt td.l{text-align:left;}
+  table.bt td b{font-size:14px;} table.bt td small{display:block;font-size:10.5px;color:#64748b;} table.bt td.z{color:#cbd5e1;} table.bt td.tt{background:#f8fafc;}
+  tr.bt-sum td{background:#f8fafc;font-weight:700;} tr.bt-sum td.l i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle;}
+  tr.bt-sum.brk td{background:#fef2f2;color:#991b1b;border-top:2px solid #dc2626;border-bottom:2px solid #dc2626;} tr.bt-sum.brk td b{color:#dc2626;font-size:16px;}
+  tr.bt-sum.all td{border-bottom:2px solid #101a33;}
+  tr.bt-gh td{background:#fff;border-left:5px solid var(--c);padding-top:12px;color:var(--c);font-size:13.5px;text-align:left;} tr.bt-gh td small{color:#64748b;font-weight:600;margin-left:6px;}
+  tr.on td{background:#fff7f7;} tr.on td.l{font-weight:700;} tr.zero td{color:#94a3b8;}
+  .bt-flag{display:inline-block;background:#dc2626;color:#fff;font-size:10px;font-weight:800;border-radius:3px;padding:1px 5px;margin-right:6px;vertical-align:1px;}
+  .bt-note{font-size:11.5px;color:#5b6478;margin-top:8px;line-height:1.6;}
+  body.big table.bt{font-size:16px;} body.big table.bt td b{font-size:18px;}
+  @media print{ .bt-wrap{box-shadow:none;} table.bt th,tr.bt-sum.brk td,.bt-flag{-webkit-print-color-adjust:exact;print-color-adjust:exact;} }
   .fac-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
   .fac-card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(16,26,51,.1);}
   .fac-head{padding:10px 16px;color:#fff;font-weight:800;font-size:16px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;}
@@ -157,7 +171,7 @@
     </div>
 
     <div class="kpi-row">
-      <div class="kpi c-red"><div class="lbl">총 고장횟수</div><div class="val" id="kpiBrkCount">–</div><div class="sub">Total Breakdowns</div></div>
+      <div class="kpi c-red"><div class="lbl">총 고장횟수</div><div class="val" id="kpiBrkCount">–</div><div class="sub" id="kpiBrkSub">Total Breakdowns</div></div>
       <div class="kpi c-blue"><div class="lbl">총 고장시간</div><div class="val" id="kpiBrkHours">–</div><div class="sub">Total Downtime</div></div>
       <div class="kpi c-green"><div class="lbl">최고 MTBF FAC</div><div class="val" id="kpiBestFac">–</div><div class="sub" id="kpiBestFacSub">–</div></div>
       <div class="kpi c-orange"><div class="lbl">가용률 미달 설비</div><div class="val" id="kpiLowA">–</div><div class="sub" id="kpiLowASub">&lt; 95% Avail.</div></div>
@@ -182,6 +196,14 @@
       <span class="pill-stc">STC</span>
     </div>
     <div class="fac-grid" id="facGrid"></div>
+  </section>
+
+  <section>
+    <div class="section-title">
+      <h2>🔧 FAC별 고장유형 · 고장횟수</h2>
+      <span class="desc" id="brkTypesDesc">–</span>
+    </div>
+    <div class="bt-wrap" id="brkTypes"></div>
   </section>
 
   <section>
@@ -294,12 +316,25 @@ const EQUIP_FAC_MAP = {
 const FAC_COLORS = { C:'#2980B9', D:'#E67E22', E:'#27AE60', '기타':'#7F8C8D' };
 function facOf(name){ return EQUIP_FAC_MAP[name] || '기타'; }
 
-/* 고장 = MTTR/MTBF 주간보고와 같은 기준 — 로스코드 31종 각 칸이 10분 이상이면 1건 (전체 로스 방식)
+/* 고장 = 고장 코드(기본 설비-전기 10종 · MTTR 페이지 UDT 선택과 공유) 각 칸이 10분 이상이면 1건 · 31종은 유형 표용
    가용률 = 가동시간 ÷ (가동시간 + 고장시간) = MTBF ÷ (MTBF + MTTR) */
 const LOSS_CODES = ['금형수리','금형파손','핀파손','설비수리','전기로수리','취출기수리','스프레이수리','슬라이드코어수리','팁교체','노즐막힘','플런저오일막힘','래들수리',
   '조건변경','탈산처리','스크랩용해','전기로회전','금형교체','휴식, 설비교대','청소','미팅/정전','금형냉각라인','제품소착','컨베이어수리','설비냉각수','스프레이조정',
   '바가지교체','히터수리','펌프이상','로트마크, 사상','진공설비','기타'];
 const MIN_STOP = 10;
+/* 로스코드 4분류 (MTTR/MTBF 페이지와 같은 분류) — 고장(UDT)으로 셀 코드는 MTTR 페이지의 'UDT 코드 선택'(stc_udt_codes)을 따름
+   저장값이 없으면 설비-전기 10종 */
+const LOSS_CAT = {
+  '설비-전기':['설비수리','취출기수리','스프레이수리','전기로회전','전기로수리','래들수리','펌프이상','컨베이어수리','진공설비','히터수리'],
+  '설비-라인':['조건변경','팁교체','스크랩용해','스프레이조정','노즐막힘','플런저오일막힘','바가지교체','탈산처리','설비냉각수'],
+  '금형':['금형수리','핀파손','로트마크, 사상','제품소착','슬라이드코어수리','청소','금형파손','금형냉각라인'],
+  '관리':['휴식, 설비교대','금형교체','미팅/정전','기타']
+};
+const CAT_COLORS = { '설비-전기':'#dc2626', '설비-라인':'#2563eb', '금형':'#d97706', '관리':'#64748b' };
+const nCode = t => String(t||'').replace(/\s+/g,'');
+function brkCodes(){ let L = null; try{ const v = JSON.parse(localStorage.getItem('stc_udt_codes')||'null'); if(Array.isArray(v) && v.length) L = v; }catch(e){}
+  return new Set((L || LOSS_CAT['설비-전기']).map(nCode)); }
+function catOf(col){ const k = nCode(col); return Object.keys(LOSS_CAT).find(c=>LOSS_CAT[c].some(x=>nCode(x)===k)) || '관리'; }
 const BREAKDOWN_REASONS = [
   '금형수리','금형파손','핀파손','설비수리','전기로수리','취출기수리','스프레이수리',
   '슬라이드코어수리','팁교체','노즐막힘','플런저오일막힘','래들수리','컨베이어수리',
@@ -426,17 +461,20 @@ function render(){
   document.getElementById('footerText').textContent=`설비관리 KPI 대시보드 · ${fmt(minD)} ~ ${fmt(maxD)} · STC Co., Ltd. · Data source: Google Sheets (live CSV)`;
 
   /* ---- 설비별 집계 ---- */
+  const BRK = brkCodes();
   const byEquip={};
   A.forEach(r=>{
     const name=r['설비명']; if(!name) return;
-    if(!byEquip[name]) byEquip[name]={name, fac:facOf(name), plan:0, run:0, brkMin:0, brkCount:0, qtyTotal:0, qtyGood:0};
+    if(!byEquip[name]) byEquip[name]={name, fac:facOf(name), plan:0, run:0, brkMin:0, brkCount:0, qtyTotal:0, qtyGood:0, codes:{}};
     const e=byEquip[name];
     e.plan+=toNum(r['계획시간_분']); e.run+=toNum(r['가동시간_분']);
-    LOSS_CODES.forEach(col=>{ const v=toNum(r[col]); if(v>=MIN_STOP){ e.brkMin+=v; e.brkCount+=1; } });
+    LOSS_CODES.forEach(col=>{ const v=toNum(r[col]); if(v>=MIN_STOP){
+      const c = e.codes[col] || (e.codes[col] = { n:0, m:0 }); c.n += 1; c.m += v;
+      if(BRK.has(nCode(col))){ e.brkMin+=v; e.brkCount+=1; } } });
   });
   Q.forEach(r=>{
     const name=r['설비명']; if(!name) return;
-    if(!byEquip[name]) byEquip[name]={name, fac:facOf(name), plan:0, run:0, brkMin:0, brkCount:0, qtyTotal:0, qtyGood:0};
+    if(!byEquip[name]) byEquip[name]={name, fac:facOf(name), plan:0, run:0, brkMin:0, brkCount:0, qtyTotal:0, qtyGood:0, codes:{}};
     const e=byEquip[name];
     e.qtyTotal+=toNum(r['Qty_Total']); e.qtyGood+=toNum(r['Qty_Good']);
   });
@@ -452,8 +490,9 @@ function render(){
   const byFac={};
   equipArr.forEach(e=>{
     const f=e.fac;
-    if(!byFac[f]) byFac[f]={fac:f, plan:0, run:0, brkMin:0, brkCount:0, qtyTotal:0, qtyGood:0};
+    if(!byFac[f]) byFac[f]={fac:f, plan:0, run:0, brkMin:0, brkCount:0, qtyTotal:0, qtyGood:0, codes:{}};
     const g=byFac[f];
+    Object.entries(e.codes).forEach(([k,c])=>{ const x = g.codes[k] || (g.codes[k] = { n:0, m:0 }); x.n += c.n; x.m += c.m; });
     g.plan+=e.plan; g.run+=e.run; g.brkMin+=e.brkMin; g.brkCount+=e.brkCount;
     g.qtyTotal+=e.qtyTotal; g.qtyGood+=e.qtyGood;
   });
@@ -472,6 +511,7 @@ function render(){
   const Avail=(totRunMin+totBrkMin)>0 ? totRunMin/(totRunMin+totBrkMin)*100 : 0;
   document.getElementById('kpiA').textContent=Avail.toFixed(1)+'%';
   document.getElementById('kpiBrkCount').textContent=totalBrkCount.toLocaleString()+'회';
+  { const def = BRK.size===LOSS_CAT['설비-전기'].length && LOSS_CAT['설비-전기'].every(k=>BRK.has(nCode(k))); document.getElementById('kpiBrkSub').textContent = def ? 'Total Breakdowns · 설비-전기 10종' : `Total Breakdowns · 선택 ${BRK.size}종`; }
   document.getElementById('kpiBrkHours').textContent=totalBrkHr.toFixed(1)+'h';
   const facWithMtbf=facArr.filter(g=>g.mtbf!=null).sort((a,b)=>b.mtbf-a.mtbf);
   if(facWithMtbf.length){
@@ -507,6 +547,7 @@ function render(){
       </div>`;
     facGrid.appendChild(div);
   });
+  renderBrkTypes(facArr, BRK);
 
   /* ---- 목표(Plan) 입력 UI ---- */
   const targets=loadTargets();
@@ -693,6 +734,33 @@ function renderModelTable(arr){
   });
 }
 
+/* FAC별 고장유형 — 4분류 (설비-전기 / 설비-라인 / 금형 / 관리) · 각 코드 10분 이상 = 1건 */
+function renderBrkTypes(facArr, BRK){
+  const host = document.getElementById('brkTypes'); if(!host) return;
+  const F = facArr.filter(g=>g.fac!=='기타' || Object.keys(g.codes).length);
+  const sum = (g, cols) => cols.reduce((a,k)=>{ const c = Object.entries(g.codes).find(([x])=>nCode(x)===nCode(k)); if(c){ a.n += c[1].n; a.m += c[1].m; } return a; }, { n:0, m:0 });
+  const cell = (c, cls) => c.n ? `<td class="${cls||''}"><b>${c.n}</b><small>${(c.m/60).toFixed(1)}h</small></td>` : `<td class="z">·</td>`;
+  const tot = cols => F.reduce((a,g)=>{ const c = sum(g, cols); a.n += c.n; a.m += c.m; return a; }, { n:0, m:0 });
+  const allCols = Object.values(LOSS_CAT).flat(), allT = tot(allCols);
+  const brkCols = allCols.filter(k=>BRK.has(nCode(k)));
+  const isDef = brkCols.length===LOSS_CAT['설비-전기'].length && LOSS_CAT['설비-전기'].every(k=>BRK.has(nCode(k)));
+  /* 맨 위 요약 — 분류별 건수 */
+  let h = `<table class="bt"><thead><tr><th class="l">분류 / 고장유형</th>${F.map(g=>`<th style="background:${FAC_COLORS[g.fac]||'#7F8C8D'}">FAC-${g.fac}</th>`).join('')}<th class="tt">합계</th><th>비중</th></tr></thead><tbody>`;
+  h += `<tr class="bt-sum brk"><td class="l">⚠ 고장 집계 (${isDef?'설비-전기 10종':`선택 ${brkCols.length}종`})</td>${F.map(g=>cell(sum(g, brkCols))).join('')}${cell(tot(brkCols),'tt')}<td>${allT.n?(tot(brkCols).n/allT.n*100).toFixed(0)+'%':'–'}</td></tr>`;
+  Object.keys(LOSS_CAT).forEach(cat=>{ const t = tot(LOSS_CAT[cat]);
+    h += `<tr class="bt-sum"><td class="l"><i style="background:${CAT_COLORS[cat]}"></i>${cat}</td>${F.map(g=>cell(sum(g, LOSS_CAT[cat]))).join('')}${cell(t,'tt')}<td>${allT.n?(t.n/allT.n*100).toFixed(0)+'%':'–'}</td></tr>`; });
+  h += `<tr class="bt-sum all"><td class="l">전체 로스 (31종)</td>${F.map(g=>cell(sum(g, allCols))).join('')}${cell(allT,'tt')}<td>100%</td></tr>`;
+  /* 분류별 상세 — 많은 순 */
+  Object.keys(LOSS_CAT).forEach(cat=>{ const t = tot(LOSS_CAT[cat]);
+    const rows = LOSS_CAT[cat].map(k=>({ k, t:tot([k]) })).sort((a,b)=>b.t.n-a.t.n || b.t.m-a.t.m);
+    h += `<tr class="bt-gh" style="--c:${CAT_COLORS[cat]}"><td colspan="${F.length+3}"><b>${cat}</b> <small>${t.n}건 · ${(t.m/60).toFixed(1)}h</small></td></tr>`;
+    rows.forEach(x=>{ const on = BRK.has(nCode(x.k));
+      h += `<tr class="${on?'on':''}${x.t.n?'':' zero'}"><td class="l">${on?'<b class="bt-flag">고장</b>':''}${x.k}</td>${F.map(g=>cell(sum(g,[x.k]))).join('')}${cell(x.t,'tt')}<td>${allT.n&&x.t.n?(x.t.n/allT.n*100).toFixed(1)+'%':''}</td></tr>`; });
+  });
+  h += `</tbody></table><div class="bt-note">※ 각 로스코드 칸이 ${MIN_STOP}분 이상이면 1건 · 숫자 = 건수 / 아래 = 시간 · <b class="bt-flag">고장</b> = 고장횟수 · MTBF · MTTR · 가용률에 들어가는 코드 (MTTR/MTBF 화면의 'UDT 코드 선택'과 같은 값 · 저장값 없으면 설비-전기 10종) · 나머지는 정지 사유로만 집계</div>`;
+  host.innerHTML = h;
+  const d = document.getElementById('brkTypesDesc'); if(d) d.textContent = `고장 = ${isDef?'설비-전기 10종':brkCols.join(' · ')} · 전체 로스 ${allT.n}건 중 ${tot(brkCols).n}건`;
+}
 function renderAnalysis(d){
   const sortedByA=[...d.equipArr].filter(e=>e.plan>0).sort((a,b)=>a.a-b.a);
   const worst3=sortedByA.slice(0,3);
