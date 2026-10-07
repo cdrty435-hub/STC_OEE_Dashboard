@@ -54,6 +54,7 @@
   .btn2{border:1px solid #cbd5e1;background:#fff;border-radius:6px;padding:5px 12px;font-size:12.5px;cursor:pointer;font-weight:700;}
   .more{display:block;margin:10px auto 0;}
   .ref{color:#94a3b8;}
+  tr.mcrow td{font-size:11.5px;color:#475569;padding:3px 6px;} tr.mcrow td.l{padding-left:22px;} tr.mcrow td small{color:#94a3b8;}
   .seg{margin-left:auto;display:inline-flex;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;} .seg button{border:none;background:#fff;padding:5px 14px;font-weight:700;font-size:12.5px;cursor:pointer;color:#334155;} .seg button.on{background:var(--navy);color:#fff;}
   .dt{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px;align-items:stretch;margin-bottom:14px;}
   .dt h3{margin:0 0 4px;font-size:15px;color:var(--fs);} .dt h3 small{color:var(--sub);font-weight:600;font-size:11.5px;margin-left:8px;}
@@ -107,7 +108,7 @@
   </section>
 
   <section>
-    <div class="st"><h2>🧩 모델별 주간 금형 고장 건수</h2><span class="d">색이 진할수록 많음 · 오른쪽 = 생산수량 · 1만개당</span></div>
+    <div class="st"><h2>🧩 모델별 주간 금형 고장 건수</h2><span class="d">색이 진할수록 많음 · └ = 그 모델을 작업한 설비 (생산 교대 수) · 오른쪽 = 생산수량 · 1만개당</span><span class="seg noprint"><button id="mwOn" onclick="setMwMc(1)">설비별 보기</button><button id="mwOff" onclick="setMwMc(0)">모델만</button></span></div>
     <div class="card tw" id="tModelWeek"></div>
   </section>
 
@@ -292,12 +293,19 @@ function drawModel(W, EF, P){
     scales:{ x:{ grid:{ display:false } }, y:{ beginAtZero:true } } } });
 }
 const heat = (v, mx) => { if(!v) return 'class="z"'; const a = Math.min(1, v/mx); return `style="background:rgba(220,38,38,${(0.08+a*0.55).toFixed(2)});${a>0.6?'color:#fff;':''}font-weight:${a>0.4?800:600}"`; };
+let MW_MC = LS('mwmc')!==0;
+function setMwMc(v){ MW_MC = v; LS('mwmc', v?1:0); render(); }
 function tableModelWeek(W, EF, P){
+  document.getElementById('mwOn').className = MW_MC?'on':''; document.getElementById('mwOff').className = MW_MC?'':'on';
   const rows = ST.models.map(m=>({ m, c:W.map(w=>EF.filter(e=>e.w===w && e.model===m).length), q:P.filter(p=>p.model===m).reduce((s,p)=>s+p.qty,0) }));
   const mx = Math.max(1, ...rows.flatMap(r=>r.c));
   const col = W.map(w=>EF.filter(e=>e.w===w).length), tq = rows.reduce((s,r)=>s+r.q,0), tn = col.reduce((a,b)=>a+b,0);
   tModelWeek.innerHTML = `<table><thead><tr><th class="l">모델</th>${W.map(w=>`<th title="${D.wr[w][0]} ~ ${D.wr[w][1]}">${w}</th>`).join('')}<th>합계</th><th>생산수량</th><th>1만개당</th></tr></thead><tbody>` +
-    rows.map(r=>{ const s = r.c.reduce((a,b)=>a+b,0); return `<tr><td class="l"><span class="mdot" style="background:${mColor(r.m)}"></span><b>${esc(r.m)}</b></td>${r.c.map(v=>`<td ${heat(v,mx)}>${v||'·'}</td>`).join('')}<td class="b">${s}</td><td>${fmt(r.q)}</td><td class="${r.q && s/r.q*1e4 >= (tq? tn/tq*1e4 : 0)*1.2 ? 'r':'b'}">${r.q?(s/r.q*1e4).toFixed(1):'–'}</td></tr>`; }).join('') +
+    rows.map(r=>{ const s = r.c.reduce((a,b)=>a+b,0);
+      const mcs = {}; P.filter(p=>p.model===r.m).forEach(p=>{ const o = mcs[p.mc] || (mcs[p.mc] = { q:0, n:0 }); o.q += p.qty; o.n++; });
+      const sub = Object.entries(mcs).sort((a,b)=>b[1].n-a[1].n).map(([mc,o])=>{ const c = W.map(w=>EF.filter(e=>e.w===w && e.model===r.m && e.mc===mc).length), t = c.reduce((a,b)=>a+b,0);
+        return `<tr class="mcrow"><td class="l">└ ${mc} <small>(${o.n}교대)</small></td>${c.map(v=>`<td ${heat(v,mx)}>${v||'·'}</td>`).join('')}<td>${t}</td><td>${fmt(o.q)}</td><td>${o.q?(t/o.q*1e4).toFixed(1):'–'}</td></tr>`; }).join('');
+      return `<tr><td class="l"><span class="mdot" style="background:${mColor(r.m)}"></span><b>${esc(r.m)}</b></td>${r.c.map(v=>`<td ${heat(v,mx)}>${v||'·'}</td>`).join('')}<td class="b">${s}</td><td>${fmt(r.q)}</td><td class="${r.q && s/r.q*1e4 >= (tq? tn/tq*1e4 : 0)*1.2 ? 'r':'b'}">${r.q?(s/r.q*1e4).toFixed(1):'–'}</td></tr>${MW_MC?sub:''}`; }).join('') +
     `<tr class="tot"><td class="l">합계</td>${col.map(v=>`<td>${v}</td>`).join('')}<td>${tn}</td><td>${fmt(tq)}</td><td>${tq?(tn/tq*1e4).toFixed(1):'–'}</td></tr></tbody></table>`;
 }
 let MT_WK = LS('mtwk') ? 1 : 0;
