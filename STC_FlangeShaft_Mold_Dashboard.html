@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLANGE SHAFT 금형 고장이력</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root{ --navy:#101a33; --navy2:#16244a; --blue:#2f6fed; --red:#dc2626; --amber:#d97706; --green:#16a34a;
+         --bg:#f4f6fb; --card:#fff; --ink:#101a33; --sub:#5b6478; --line:#e5e9f2; --fs:#c2410c; }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Malgun Gothic','Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--ink);}
+  .wrap{max-width:1400px;margin:0 auto;padding:0 20px 40px;}
+  header.hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;padding:20px 20px 18px;margin-bottom:18px;}
+  header .inner{max-width:1400px;margin:0 auto;}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+  .kick{font-size:11px;letter-spacing:2px;font-weight:800;color:#fdba74;}
+  h1{margin:2px 0 4px;font-size:24px;font-weight:800;}
+  .top p{margin:0;color:#aab4d4;font-size:12.5px;}
+  .badge{background:#e8425a;color:#fff;font-weight:700;font-size:12px;padding:6px 14px;border-radius:20px;}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;}
+  .controls label{font-size:12px;color:#aab4d4;}
+  .controls select,.controls input{background:#0d1730;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:6px 8px;font-size:12.5px;}
+  .controls input[type=number]{width:60px;}
+  .btn{background:var(--blue);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-weight:700;}
+  .btn.gray{background:#475569;} .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.3);}
+  .status{margin-left:auto;font-size:12px;color:#8b96bd;} .status.ok{color:#7ee8a0;} .status.err{color:#ff8080;}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center;}
+  .chips .lb{font-size:12px;color:#aab4d4;margin-right:4px;}
+  .chip{border:1px solid rgba(255,255,255,.25);background:transparent;color:#dbe3f8;border-radius:16px;padding:4px 12px;font-size:12px;cursor:pointer;font-weight:700;}
+  .chip.on{background:#fff;color:var(--navy);} .chip i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:0;}
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:18px;}
+  .kpi{background:var(--card);border-radius:12px;padding:14px 16px;box-shadow:0 2px 8px rgba(16,26,51,.06);border-top:4px solid var(--blue);}
+  .kpi .l{font-size:12px;color:var(--sub);font-weight:700;} .kpi .v{font-size:26px;font-weight:800;margin-top:4px;} .kpi .s{font-size:11.5px;color:var(--sub);margin-top:2px;}
+  .kpi.r{border-top-color:var(--red);} .kpi.r .v{color:var(--red);} .kpi.a{border-top-color:var(--amber);} .kpi.o{border-top-color:var(--fs);}
+  section{margin-bottom:20px;}
+  .st{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+  .st h2{margin:0;font-size:17px;font-weight:800;} .st .d{font-size:12.5px;color:var(--sub);}
+  .card{background:var(--card);border-radius:12px;padding:14px 16px;box-shadow:0 2px 8px rgba(16,26,51,.06);}
+  .grid2{display:grid;grid-template-columns:3fr 2fr;gap:16px;}
+  .cw{position:relative;height:330px;}
+  .tw{overflow-x:auto;}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;}
+  th{background:var(--navy);color:#fff;padding:7px 6px;font-weight:700;white-space:nowrap;text-align:center;font-size:12px;}
+  th.l,td.l{text-align:left;}
+  td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap;}
+  tr.tot td{font-weight:800;background:#eef1f6;border-top:2px solid var(--navy);}
+  td.z{color:#cbd5e1;} td.b{font-weight:800;} td.r{color:var(--red);font-weight:800;}
+  .mdot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;}
+  .hist-ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:12.5px;}
+  .hist-ctl select,.hist-ctl input{border:1px solid #cbd5e1;border-radius:6px;padding:5px 8px;font:inherit;font-size:12.5px;}
+  .hist-ctl .cnt{margin-left:auto;color:var(--sub);}
+  .btn2{border:1px solid #cbd5e1;background:#fff;border-radius:6px;padding:5px 12px;font-size:12.5px;cursor:pointer;font-weight:700;}
+  .more{display:block;margin:10px auto 0;}
+  .ref{color:#94a3b8;}
+  .seg{margin-left:auto;display:inline-flex;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;} .seg button{border:none;background:#fff;padding:5px 14px;font-weight:700;font-size:12.5px;cursor:pointer;color:#334155;} .seg button.on{background:var(--navy);color:#fff;}
+  .wkblk{margin-bottom:16px;} .wkblk h3{margin:0 0 6px;font-size:14px;color:var(--fs);} .wkblk h3 small{color:var(--sub);font-weight:600;margin-left:6px;}
+  .chk{display:grid;grid-template-columns:220px 1fr 90px;gap:0;font-size:12.5px;}
+  .chk div{padding:7px 8px;border-bottom:1px solid var(--line);} .chk .h{background:var(--navy);color:#fff;font-weight:700;}
+  .ok{color:var(--green);font-weight:800;} .warn{color:var(--red);font-weight:800;} .info{color:var(--sub);font-weight:700;}
+  .note{font-size:11.5px;color:var(--sub);margin-top:8px;line-height:1.6;}
+  .banner{display:none;padding:12px 16px;border-radius:8px;margin-bottom:14px;font-size:13px;}
+  .banner.load{background:#e0ecff;color:#1d4ed8;} .banner.err{background:#fee2e2;color:#991b1b;}
+  @media (max-width:1100px){ .kpis{grid-template-columns:repeat(3,1fr);} .grid2{grid-template-columns:1fr;} }
+  @media (max-width:640px){ .kpis{grid-template-columns:repeat(2,1fr);} .wrap{padding:0 12px 30px;} h1{font-size:20px;} }
+  @media print{ .controls,.hist-ctl,.more,.noprint{display:none!important;} body{background:#fff;} header.hero,th,tr.tot td{-webkit-print-color-adjust:exact;print-color-adjust:exact;} .card,.kpi{box-shadow:none;border:1px solid #ddd;} section{break-inside:avoid;} }
+</style>
+</head>
+<body>
+<header class="hero"><div class="inner">
+  <div class="top">
+    <div><div class="kick">MOLD FAILURE HISTORY</div><h1>FLANGE SHAFT 금형 고장이력 — 주간</h1>
+      <p id="sub">구글 OEE_RawData_APQ · A_가동률 정지시간 × Q_Model상세 모델 (같은 일자 · 설비 · 교대) · 금형 분류 8종</p></div>
+    <span class="badge">STC</span>
+  </div>
+  <div class="controls">
+    <label>주차</label><select id="wFrom"></select><span style="color:#aab4d4">~</span><select id="wTo"></select>
+    <button class="btn ghost" type="button" onclick="quick(4)">최근 4주</button>
+    <button class="btn ghost" type="button" onclick="quick(8)">8주</button>
+    <button class="btn ghost" type="button" onclick="quick(0)">전체</button>
+    <label style="margin-left:6px">고장 기준</label><input type="number" id="minStop" value="10" min="0" step="1"><label>분 이상</label>
+    <button class="btn" type="button" onclick="loadAll()">🔄 새로고침</button>
+    <button class="btn gray" type="button" onclick="window.print()">🖨 인쇄</button>
+    <span class="status" id="status">불러오는 중...</span>
+  </div>
+  <div class="chips" id="modelChips"></div>
+  <div class="chips" id="typeChips"></div>
+</div></header>
+
+<div class="wrap">
+  <div class="banner load" id="bLoad">구글 시트에서 데이터를 불러오는 중입니다…</div>
+  <div class="banner err" id="bErr"></div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <section>
+    <div class="st"><h2>📈 주간 금형 고장 추이</h2><span class="d">막대 = 유형별 건수 (쌓기) · 선 = 1만개당 건수 (오른쪽 축)</span></div>
+    <div class="grid2">
+      <div class="card"><div class="cw"><canvas id="cWeek"></canvas></div></div>
+      <div class="card"><div class="cw"><canvas id="cModel"></canvas></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="st"><h2>🧩 모델별 주간 금형 고장 건수</h2><span class="d">색이 진할수록 많음 · 오른쪽 = 생산수량 · 1만개당</span></div>
+    <div class="card tw" id="tModelWeek"></div>
+  </section>
+
+  <section>
+    <div class="st"><h2>🔧 모델 × 금형 고장유형</h2><span class="d" id="mtDesc">선택한 주차 합계 · 건수 (아래 작은 숫자 = 시간 h)</span><span class="seg noprint"><button id="mtSum" onclick="setMt(0)">기간 합계</button><button id="mtWk" onclick="setMt(1)">주간별</button></span></div>
+    <div class="card tw" id="tModelType"></div>
+  </section>
+
+  <section>
+    <div class="st"><h2>🏭 설비 × 금형 고장유형</h2><span class="d">FLANGE SHAFT 를 생산한 교대만 · 선택한 모델 · 주차 기준</span></div>
+    <div class="card tw" id="tMcType"></div>
+  </section>
+
+  <section>
+    <div class="st"><h2>📋 금형 고장이력</h2><span class="d">한 줄 = 한 교대의 한 로스코드 (기준 분 이상) · 최근 순</span></div>
+    <div class="card">
+      <div class="hist-ctl">
+        <select id="hModel"></select><select id="hType"></select><select id="hMc"></select>
+        <input id="hQ" placeholder="검색 (날짜 · 품번 등)">
+        <button class="btn2" type="button" onclick="dlCsv()">⬇ CSV</button>
+        <span class="cnt" id="hCnt"></span>
+      </div>
+      <div class="tw" id="tHist"></div>
+      <button class="btn2 more" id="hMore" type="button" onclick="HIST.n+=200;renderHist()">더 보기</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="st"><h2>✅ 데이터 검증</h2><span class="d">불러온 구글 시트 원본 기준 · 새로고침마다 다시 점검</span></div>
+    <div class="card"><div class="chk" id="chk"></div></div>
+  </section>
+  <div class="note">※ 금형 고장 8종 = 분류마스터 '금형' 분류 (핀파손 · 금형수리 · 제품소착 · 청소 · 로트마크/사상 · 금형냉각라인 · 슬라이드코어수리 · 금형파손). 금형교체는 관리 분류라 위 칩에서 켤 때만 참고로 표시.
+    핀파손은 A_가동률 정지시간(분) 기준 — Q_Model상세의 품질불량 '핀파손' 수량과는 다른 값. 생산수량 = Q_Model상세 Qty_Total (완전히 같은 중복 행은 1번만).</div>
+</div>
+
+<script>
+
+const $ = id => document.getElementById(id), stEl = $('status');
+const bLoad = $('bLoad'), bErr = $('bErr'), kpis = $('kpis'), modelChips = $('modelChips'), typeChips = $('typeChips'), cWeek = $('cWeek'), cModel = $('cModel'), tModelWeek = $('tModelWeek'), tModelType = $('tModelType'), tMcType = $('tMcType'), hModel = $('hModel'), hType = $('hType'), hMc = $('hMc'), hQ = $('hQ'), hCnt = $('hCnt'), tHist = $('tHist'), hMore = $('hMore'), chk = $('chk');
+const SHEET_PUB_KEY = '2PACX-1vQ6U8gG0Mr3oJ-5XOOzr7Eh_oZGc-BGHFG0n1__eor4Zc8aJaMuf01NXCAHJECH6U8aUvtnQGLKD5-_';
+const A_GID = '345197688', MODEL_GID = '635880711';
+const csvUrl = gid => `https://docs.google.com/spreadsheets/d/e/${SHEET_PUB_KEY}/pub?gid=${gid}&single=true&output=csv&cachebust=${Date.now()}`;
+const MOLD = ['핀파손','금형수리','제품소착','청소','로트마크, 사상','금형냉각라인','슬라이드코어수리','금형파손'];
+const REF = '금형교체';
+const TCOL = { '핀파손':'#dc2626','금형수리':'#c2410c','제품소착':'#d97706','청소':'#65a30d','로트마크, 사상':'#0891b2','금형냉각라인':'#2563eb','슬라이드코어수리':'#7c3aed','금형파손':'#be185d','금형교체':'#94a3b8' };
+const MCOL = ['#c2410c','#2563eb','#16a34a','#7c3aed','#d97706','#0891b2','#be185d','#475569'];
+const PN = { 'FLANGE SHAFT 101A':'DC60-00101A','FLANGE SHAFT (14KG)':'DC60-00023A','FLANGE SHAFT 67D':'DC60-00067D','FLANGE SHAFT POSEIDON':'DC60-00045A','FLANGE SHAFT (3L) 122A':'DC60-00122A','FLANGE SHAFT 116B':'DC60-00116B' };
+const isFS = m => /FLANGE\s*SHAFT/i.test(m||'');
+const short = m => String(m).replace(/^FLANGE\s*SHAFT\s*/i,'') || m;
+const toNum = v => { if(v==null||v==='') return 0; const n = parseFloat(String(v).replace(/,/g,'').replace('%','')); return isNaN(n)?0:n; };
+const nm = s => { const m = String(s||'').trim().toUpperCase().match(/^DC0*(\d+)/); return m ? 'DC'+(+m[1]) : String(s||'').trim(); };
+const wn = w => parseInt(String(w).replace(/\D/g,''))||0;
+const fmt = n => Math.round(n).toLocaleString();
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LS = (k,v) => { try{ if(v===undefined) return JSON.parse(localStorage.getItem('stc_fsm_'+k)||'null'); localStorage.setItem('stc_fsm_'+k, JSON.stringify(v)); }catch(e){ return null; } };
+
+let RAW_A=[], RAW_Q=[], D=null, charts={};
+const ST = { models: LS('models') || null, types: LS('types') || MOLD.slice(), from:null, to:null };
+const HIST = { n:200 };
+
+async function fetchCsv(gid){
+  const r = await fetch(csvUrl(gid), { cache:'no-store' });
+  if(!r.ok) throw new Error(`시트 응답 오류 (gid=${gid}): ${r.status}`);
+  return Papa.parse(await r.text(), { header:true, skipEmptyLines:true }).data;
+}
+async function loadAll(){
+  bLoad.style.display='block'; bErr.style.display='none'; stEl.textContent='불러오는 중...'; stEl.className='status';
+  try{
+    const [a,q] = await Promise.all([fetchCsv(A_GID), fetchCsv(MODEL_GID)]);
+    RAW_A = a; RAW_Q = q; build();
+    bLoad.style.display='none'; stEl.textContent=`✅ 로드 완료 (A_가동률 ${a.length.toLocaleString()} · Q_Model상세 ${q.length.toLocaleString()}행)`; stEl.className='status ok';
+    render();
+  }catch(e){
+    bLoad.style.display='none'; bErr.style.display='block';
+    bErr.innerHTML = `⚠️ 데이터 로드 실패: ${esc(e.message)}<br>시트가 "웹에 게시" 상태인지 확인해 주세요.`;
+    stEl.textContent='❌ 로드 실패'; stEl.className='status err';
+  }
+}
+/* 원본 → 교대 단위 연결 */
+function build(){
+  const minStop = toNum(document.getElementById('minStop').value);
+  const qk = new Map(), seen = new Set(), prod = [];
+  RAW_Q.forEach(r=>{ const d = String(r['일자']||'').slice(0,10); if(!d) return; const k = d+'|'+nm(r['설비명'])+'|'+String(r['교대']||'').trim();
+    const m = String(r['Model']||'').trim(); (qk.get(k) || qk.set(k, []).get(k)).push(r);
+    const sig = JSON.stringify(r); if(seen.has(sig)) return; seen.add(sig);
+    if(isFS(m)) prod.push({ d, w:String(r['주차']||'').trim(), mc:nm(r['설비명']), sh:String(r['교대']||'').trim(), model:m, qty:toNum(r['Qty_Total']), good:toNum(r['Qty_Good']) }); });
+  const ev = [], wr = {}, aKeys = new Map(); let fsShift = 0, nolink = 0, nolinkMold = 0, under = 0, pnIn = 0, pnBad = [];
+  const firstQ = [...qk.keys()].map(k=>k.slice(0,10)).sort()[0] || '';
+  RAW_A.forEach(r=>{
+    const d = String(r['일자']||'').slice(0,10); if(!d) return; const w = String(r['주차']||'').trim(), mc = nm(r['설비명']), sh = String(r['교대']||'').trim();
+    if(w){ const x = wr[w] || (wr[w] = [d,d]); if(d<x[0]) x[0]=d; if(d>x[1]) x[1]=d; }
+    const k = d+'|'+mc+'|'+sh; aKeys.set(k+'|'+(r['구분']||''), (aKeys.get(k+'|'+(r['구분']||''))||0)+1);
+    const qs = qk.get(k);
+    if(!qs){ if(d>=firstQ && toNum(r['계획시간_분'])>0){ nolink++; MOLD.forEach(c=>{ if(toNum(r[c])>=minStop) nolinkMold++; }); } return; }
+    const model = String(qs[0]['Model']||'').trim(); if(!isFS(model)) return;
+    fsShift++;
+    const pn = String(r['Part no.']||'').trim(); if(pn && pn!=='None'){ pnIn++; if(PN[model] && PN[model]!==pn) pnBad.push(`${d} ${mc} ${sh}: ${model} ↔ ${pn}`); }
+    MOLD.concat([REF]).forEach(c=>{ const v = toNum(r[c]); if(v<=0) return;
+      if(v<minStop){ if(c!==REF) under++; return; }
+      ev.push({ d, w, mc, sh, gb:String(r['구분']||'').trim(), model, pn:pn==='None'?'':pn, code:c, min:v, ref:c===REF }); });
+  });
+  const dupA = [...aKeys.entries()].filter(([k,v])=>v>1).map(([k])=>k.split('|').slice(0,3).join(' '));
+  ev.sort((a,b)=> b.d.localeCompare(a.d) || a.mc.localeCompare(b.mc,undefined,{numeric:true}) || a.code.localeCompare(b.code));
+  const weeks = Object.keys(wr).filter(w=>wr[w][1]>=firstQ).sort((a,b)=>wn(a)-wn(b));
+  const modelsAll = [...new Set(prod.map(p=>p.model).concat(ev.map(e=>e.model)))];
+  const tot = m => ev.filter(e=>e.model===m && !e.ref).length;
+  modelsAll.sort((a,b)=>tot(b)-tot(a) || a.localeCompare(b));
+  D = { ev, prod, wr, weeks, models:modelsAll, firstQ, minStop, chk:{ fsShift, nolink, nolinkMold, under, pnIn, pnBad, dupA, nA:RAW_A.length, nQ:RAW_Q.length,
+        aRange:[RAW_A.map(r=>String(r['일자']||'').slice(0,10)).filter(Boolean).sort()[0], RAW_A.map(r=>String(r['일자']||'').slice(0,10)).filter(Boolean).sort().pop()] } };
+  if(!ST.models || !ST.models.length || ST.models.some(m=>!modelsAll.includes(m))) ST.models = modelsAll.slice();
+  const wf = document.getElementById('wFrom'), wt = document.getElementById('wTo');
+  const opt = weeks.map(w=>`<option value="${w}">${w} (${wr[w][0].slice(5)}~${wr[w][1].slice(5)})</option>`).join('');
+  const pf = ST.from || wf.value, pt = ST.to || wt.value; wf.innerHTML = opt; wt.innerHTML = opt;
+  wf.value = weeks.includes(pf) ? pf : weeks[0]; wt.value = weeks.includes(pt) ? pt : weeks[weeks.length-1];
+}
+function quick(n){ if(!D) return; const W = D.weeks; document.getElementById('wTo').value = W[W.length-1]; document.getElementById('wFrom').value = n ? W[Math.max(0, W.length-n)] : W[0]; render(); }
+function selWeeks(){ let a = wn(document.getElementById('wFrom').value), b = wn(document.getElementById('wTo').value); if(a>b) [a,b]=[b,a]; ST.from = document.getElementById('wFrom').value; ST.to = document.getElementById('wTo').value; return D.weeks.filter(w=>wn(w)>=a && wn(w)<=b); }
+function mColor(m){ return MCOL[D.models.indexOf(m) % MCOL.length]; }
+function chipsHtml(){
+  const all = ST.models.length===D.models.length;
+  modelChips.innerHTML = `<span class="lb">모델</span><button class="chip${all?' on':''}" onclick="setModel('*')">FLANGE SHAFT 전체 (${D.models.length}종)</button>` +
+    D.models.map(m=>`<button class="chip${!all && ST.models.includes(m)?' on':''}" onclick="setModel('${esc(m)}')"><i style="background:${mColor(m)}"></i>${esc(short(m))}</button>`).join('');
+  typeChips.innerHTML = `<span class="lb">유형</span>` + MOLD.concat([REF]).map(t=>`<button class="chip${ST.types.includes(t)?' on':''}" onclick="setType('${t}')"><i style="background:${TCOL[t]}"></i>${t}${t===REF?' (참고)':''}</button>`).join('');
+}
+function setModel(m){ if(m==='*') ST.models = D.models.slice(); else { const all = ST.models.length===D.models.length; if(all) ST.models = [m]; else { ST.models = ST.models.includes(m) ? ST.models.filter(x=>x!==m) : ST.models.concat([m]); if(!ST.models.length) ST.models = D.models.slice(); } } LS('models', ST.models); render(); }
+function setType(t){ ST.types = ST.types.includes(t) ? ST.types.filter(x=>x!==t) : ST.types.concat([t]); if(!ST.types.length) ST.types = MOLD.slice(); LS('types', ST.types); render(); }
+
+function render(){
+  if(!D) return;
+  if(toNum(document.getElementById('minStop').value)!==D.minStop){ build(); }
+  chipsHtml();
+  const W = selWeeks(), Ws = new Set(W), Ms = new Set(ST.models), Ts = ST.types.filter(t=>t!==REF);
+  const E = D.ev.filter(e=>Ws.has(e.w) && Ms.has(e.model));
+  const EF = E.filter(e=>!e.ref && Ts.includes(e.code));
+  const P = D.prod.filter(p=>Ws.has(p.w) && Ms.has(p.model));
+  const qty = P.reduce((s,p)=>s+p.qty,0), n = EF.length, h = EF.reduce((s,e)=>s+e.min,0)/60;
+  const byT = {}; EF.forEach(e=>byT[e.code]=(byT[e.code]||0)+1); const topT = Object.entries(byT).sort((a,b)=>b[1]-a[1])[0];
+  const mRate = ST.models.map(m=>{ const q = P.filter(p=>p.model===m).reduce((s,p)=>s+p.qty,0), c = EF.filter(e=>e.model===m).length; return { m, q, c, r:q?c/q*1e4:0 }; }).filter(x=>x.q>0).sort((a,b)=>b.r-a.r);
+  const refN = E.filter(e=>e.ref).length;
+  const per = `${W[0]} ~ ${W[W.length-1]} (${D.wr[W[0]][0].slice(5)} ~ ${D.wr[W[W.length-1]][1].slice(5)})`;
+  document.getElementById('sub').textContent = `${per} · ${ST.models.length===D.models.length?'FLANGE SHAFT 전체 '+D.models.length+'종':ST.models.map(short).join(' · ')} · 금형 ${Ts.length}종 · ${D.minStop}분 이상 = 1건`;
+  kpis.innerHTML = [
+    ['r','금형 고장 건수', fmt(n)+'건', `주 평균 ${(n/Math.max(1,W.length)).toFixed(1)}건`],
+    ['','고장 시간', h.toFixed(1)+'h', `건당 ${n?(h/n*60).toFixed(0):0}분`],
+    ['','생산수량', fmt(qty), `${W.length}주 · Q_Model상세`],
+    ['a','1만개당 건수', qty?(n/qty*1e4).toFixed(1):'–', '금형 고장 ÷ 생산 × 10,000'],
+    ['','최다 유형', topT?esc(topT[0]):'–', topT?`${topT[1]}건 · ${(topT[1]/n*100).toFixed(0)}%`:''],
+    ['o','1만개당 최고 모델', mRate[0]?esc(short(mRate[0].m)):'–', mRate[0]?`${mRate[0].r.toFixed(1)}건 · ${mRate[0].c}건 / ${fmt(mRate[0].q)}개`:'']
+  ].map(([c,l,v,s])=>`<div class="kpi ${c}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('') +
+  (refN && ST.types.includes(REF) ? '' : '');
+  drawWeek(W, EF, P, E); drawModel(W, EF, P);
+  tableModelWeek(W, EF, P); tableModelType(EF, E, P); tableMcType(EF);
+  histSelects(E); HIST.n = 200; renderHist(); renderChk();
+}
+function drawWeek(W, EF, P, E){
+  charts.w && charts.w.destroy();
+  const types = ST.types.filter(t=>t!==REF);
+  const ds = types.map(t=>({ type:'bar', label:t, data:W.map(w=>EF.filter(e=>e.w===w && e.code===t).length), backgroundColor:TCOL[t], stack:'s', yAxisID:'y', order:2 }));
+  if(ST.types.includes(REF)) ds.push({ type:'bar', label:'금형교체(참고)', data:W.map(w=>E.filter(e=>e.w===w && e.ref).length), backgroundColor:'rgba(148,163,184,.35)', borderColor:'#94a3b8', borderWidth:1, stack:'r', yAxisID:'y', order:3 });
+  const rate = W.map(w=>{ const q = P.filter(p=>p.w===w).reduce((s,p)=>s+p.qty,0); return q ? +(EF.filter(e=>e.w===w).length/q*1e4).toFixed(1) : null; });
+  ds.push({ type:'line', label:'1만개당 건수', data:rate, borderColor:'#101a33', backgroundColor:'#101a33', yAxisID:'y2', tension:.35, pointRadius:3, borderWidth:2.5, order:1 });
+  charts.w = new Chart(cWeek, { data:{ labels:W, datasets:ds }, options:{ maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:11 } } }, tooltip:{ callbacks:{ footer:it=>{ const s = it.filter(x=>x.dataset.stack==='s').reduce((a,x)=>a+x.parsed.y,0); return '금형 고장 합계 '+s+'건'; } } } },
+    scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, beginAtZero:true, title:{ display:true, text:'건수' } }, y2:{ position:'right', beginAtZero:true, grid:{ display:false }, title:{ display:true, text:'1만개당' } } } } });
+}
+function drawModel(W, EF, P){
+  charts.m && charts.m.destroy();
+  const ds = ST.models.map(m=>({ label:short(m), data:W.map(w=>EF.filter(e=>e.w===w && e.model===m).length), borderColor:mColor(m), backgroundColor:mColor(m), tension:.35, pointRadius:2.5, borderWidth:2 }));
+  charts.m = new Chart(cModel, { type:'line', data:{ labels:W, datasets:ds }, options:{ maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:11 } } }, title:{ display:true, text:'모델별 주간 금형 고장 건수', font:{ size:13 } } },
+    scales:{ x:{ grid:{ display:false } }, y:{ beginAtZero:true } } } });
+}
+const heat = (v, mx) => { if(!v) return 'class="z"'; const a = Math.min(1, v/mx); return `style="background:rgba(220,38,38,${(0.08+a*0.55).toFixed(2)});${a>0.6?'color:#fff;':''}font-weight:${a>0.4?800:600}"`; };
+function tableModelWeek(W, EF, P){
+  const rows = ST.models.map(m=>({ m, c:W.map(w=>EF.filter(e=>e.w===w && e.model===m).length), q:P.filter(p=>p.model===m).reduce((s,p)=>s+p.qty,0) }));
+  const mx = Math.max(1, ...rows.flatMap(r=>r.c));
+  const col = W.map(w=>EF.filter(e=>e.w===w).length), tq = rows.reduce((s,r)=>s+r.q,0), tn = col.reduce((a,b)=>a+b,0);
+  tModelWeek.innerHTML = `<table><thead><tr><th class="l">모델</th>${W.map(w=>`<th title="${D.wr[w][0]} ~ ${D.wr[w][1]}">${w}</th>`).join('')}<th>합계</th><th>생산수량</th><th>1만개당</th></tr></thead><tbody>` +
+    rows.map(r=>{ const s = r.c.reduce((a,b)=>a+b,0); return `<tr><td class="l"><span class="mdot" style="background:${mColor(r.m)}"></span><b>${esc(r.m)}</b></td>${r.c.map(v=>`<td ${heat(v,mx)}>${v||'·'}</td>`).join('')}<td class="b">${s}</td><td>${fmt(r.q)}</td><td class="${r.q && s/r.q*1e4 >= (tq? tn/tq*1e4 : 0)*1.2 ? 'r':'b'}">${r.q?(s/r.q*1e4).toFixed(1):'–'}</td></tr>`; }).join('') +
+    `<tr class="tot"><td class="l">합계</td>${col.map(v=>`<td>${v}</td>`).join('')}<td>${tn}</td><td>${fmt(tq)}</td><td>${tq?(tn/tq*1e4).toFixed(1):'–'}</td></tr></tbody></table>`;
+}
+let MT_WK = LS('mtwk') ? 1 : 0;
+function setMt(v){ MT_WK = v; LS('mtwk', v); render(); }
+function tableModelType(EF, E, P){
+  document.getElementById('mtSum').className = MT_WK ? '' : 'on'; document.getElementById('mtWk').className = MT_WK ? 'on' : '';
+  document.getElementById('mtDesc').textContent = MT_WK ? '주차마다 한 표 (최근 주가 위) · 건수 · 작은 숫자 = 시간 h · 오른쪽 = 생산 · 1만개당' : '선택한 주차 합계 · 건수 (아래 작은 숫자 = 시간 h)';
+  if(MT_WK){ const W = selWeeks().slice().reverse();
+    tModelType.innerHTML = W.map(w=>{ const EFw = EF.filter(e=>e.w===w), Ew = E.filter(e=>e.w===w), Pw = P.filter(p=>p.w===w);
+      return `<div class="wkblk"><h3>${w}<small>${D.wr[w][0]} ~ ${D.wr[w][1]} · 금형 고장 ${EFw.length}건 · ${(EFw.reduce((s,e)=>s+e.min,0)/60).toFixed(1)}h</small></h3>${mtTable(EFw, Ew, Pw)}</div>`; }).join('');
+    return; }
+  tModelType.innerHTML = mtTable(EF, E, P);
+}
+function mtTable(EF, E, P){
+  const T = ST.types.filter(t=>t!==REF), showRef = ST.types.includes(REF);
+  const cell = L => { const n = L.length, h = L.reduce((s,e)=>s+e.min,0)/60; return n ? `<b>${n}</b><div style="font-size:10.5px;color:#64748b">${h.toFixed(1)}h</div>` : '·'; };
+  const mx = Math.max(1, ...ST.models.flatMap(m=>T.map(t=>EF.filter(e=>e.model===m && e.code===t).length)));
+  return `<table><thead><tr><th class="l">모델</th>${T.map(t=>`<th><span class="mdot" style="background:${TCOL[t]}"></span>${t}</th>`).join('')}<th>합계</th>${showRef?'<th>금형교체<br>(참고)</th>':''}<th>생산수량</th><th>1만개당</th></tr></thead><tbody>` +
+    ST.models.map(m=>{ const L = EF.filter(e=>e.model===m), q = P.filter(p=>p.model===m).reduce((s,p)=>s+p.qty,0); return `<tr><td class="l"><span class="mdot" style="background:${mColor(m)}"></span><b>${esc(m)}</b></td>${T.map(t=>{ const x = L.filter(e=>e.code===t); return `<td ${heat(x.length,mx)}>${cell(x)}</td>`; }).join('')}<td class="b">${cell(L)}</td>${showRef?`<td class="ref">${cell(E.filter(e=>e.model===m && e.ref))}</td>`:''}<td>${q?fmt(q):'·'}</td><td class="b">${q?(L.length/q*1e4).toFixed(1):'–'}</td></tr>`; }).join('') +
+    `<tr class="tot"><td class="l">합계</td>${T.map(t=>`<td>${cell(EF.filter(e=>e.code===t))}</td>`).join('')}<td>${cell(EF)}</td>${showRef?`<td>${cell(E.filter(e=>e.ref))}</td>`:''}<td>${fmt(P.reduce((s,p)=>s+p.qty,0))}</td><td>${(()=>{ const q = P.reduce((s,p)=>s+p.qty,0); return q?(EF.length/q*1e4).toFixed(1):'–'; })()}</td></tr></tbody></table>`;
+}
+function tableMcType(EF){
+  const T = ST.types.filter(t=>t!==REF);
+  const mcs = [...new Set(EF.map(e=>e.mc))].sort((a,b)=>EF.filter(e=>e.mc===b).length - EF.filter(e=>e.mc===a).length);
+  const mx = Math.max(1, ...mcs.flatMap(c=>T.map(t=>EF.filter(e=>e.mc===c && e.code===t).length)));
+  tMcType.innerHTML = mcs.length ? `<table><thead><tr><th class="l">설비</th><th class="l">생산 모델 (고장 건수)</th>${T.map(t=>`<th>${t}</th>`).join('')}<th>합계</th></tr></thead><tbody>` +
+    mcs.map(c=>{ const L = EF.filter(e=>e.mc===c), ms = {}; L.forEach(e=>ms[e.model]=(ms[e.model]||0)+1);
+      return `<tr><td class="l b">${c}</td><td class="l" style="white-space:normal;font-size:11.5px">${Object.entries(ms).sort((a,b)=>b[1]-a[1]).map(([m,v])=>`<span class="mdot" style="background:${mColor(m)}"></span>${esc(short(m))} ${v}`).join(' · ')}</td>${T.map(t=>{ const v = L.filter(e=>e.code===t).length; return `<td ${heat(v,mx)}>${v||'·'}</td>`; }).join('')}<td class="b">${L.length}</td></tr>`; }).join('') + '</tbody></table>' : '<div class="note">해당 데이터 없음</div>';
+}
+function histSelects(E){
+  const keep = id => document.getElementById(id).value;
+  const set = (id, lbl, vals, f) => { const v = keep(id); document.getElementById(id).innerHTML = `<option value="">${lbl} 전체</option>` + vals.map(x=>`<option value="${esc(x)}">${esc(f?f(x):x)}</option>`).join(''); document.getElementById(id).value = vals.includes(v) ? v : ''; };
+  set('hModel','모델', ST.models, short); set('hType','유형', MOLD.concat([REF])); set('hMc','설비', [...new Set(E.map(e=>e.mc))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})));
+}
+function histRows(){
+  const W = new Set(selWeeks()), Ms = new Set(ST.models), fm = hModel.value, ft = hType.value, fc = hMc.value, q = hQ.value.trim().toLowerCase();
+  return D.ev.filter(e=>W.has(e.w) && Ms.has(e.model) && (ST.types.includes(e.code)) && (!fm||e.model===fm) && (!ft||e.code===ft) && (!fc||e.mc===fc)
+    && (!q || [e.d,e.w,e.mc,e.model,e.pn,e.code,e.sh,e.gb].join(' ').toLowerCase().includes(q)));
+}
+function renderHist(){
+  const L = histRows(), S = L.slice(0, HIST.n);
+  hCnt.textContent = `${L.length.toLocaleString()}건 · 정지 ${(L.reduce((s,e)=>s+e.min,0)/60).toFixed(1)}h`;
+  tHist.innerHTML = `<table><thead><tr><th>일자</th><th>주차</th><th>교대</th><th>구분</th><th>설비</th><th class="l">모델</th><th>Part no.</th><th class="l">로스코드</th><th>정지(분)</th></tr></thead><tbody>` +
+    S.map(e=>`<tr class="${e.ref?'ref':''}"><td>${e.d}</td><td>${e.w}</td><td>${e.sh}</td><td>${esc(e.gb)}</td><td class="b">${e.mc}</td><td class="l"><span class="mdot" style="background:${mColor(e.model)}"></span>${esc(e.model)}</td><td>${esc(e.pn)}</td><td class="l"><span class="mdot" style="background:${TCOL[e.code]}"></span>${esc(e.code)}${e.ref?' (참고)':''}</td><td class="b">${fmt(e.min)}</td></tr>`).join('') + '</tbody></table>';
+  hMore.style.display = L.length > HIST.n ? 'block' : 'none';
+}
+['hModel','hType','hMc'].forEach(id=>document.addEventListener('change', e=>{ if(e.target.id===id){ HIST.n = 200; renderHist(); } }));
+document.addEventListener('input', e=>{ if(e.target.id==='hQ'){ HIST.n = 200; renderHist(); } });
+function dlCsv(){
+  const L = histRows(), h = ['일자','주차','교대','구분','설비','모델','Part no.','로스코드','정지시간(분)'];
+  const q = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const csv = '﻿' + [h.map(q).join(',')].concat(L.map(e=>[e.d,e.w,e.sh,e.gb,e.mc,e.model,e.pn,e.code,e.min].map(q).join(','))).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' })); a.download = `FLANGE_SHAFT_금형고장이력_${selWeeks()[0]}-${selWeeks().slice(-1)[0]}.csv`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+function renderChk(){
+  const c = D.chk, mold = D.ev.filter(e=>!e.ref).length;
+  const rows = [
+    ['원본 행 수', `A_가동률 ${c.nA.toLocaleString()}행 (${c.aRange[0]} ~ ${c.aRange[1]}) · Q_Model상세 ${c.nQ.toLocaleString()}행 (${D.firstQ} 부터 → 그 이전 주차는 모델을 몰라 제외)`, '<span class="info">확인</span>'],
+    ['모델 연결', `일자 + 설비 (DC03=DC3 통일) + 교대 → FLANGE SHAFT 생산 교대 ${c.fsShift.toLocaleString()}개 · 모델 ${D.models.length}종`, '<span class="ok">정상</span>'],
+    ['Part no. 대조', `품번이 입력된 ${c.pnIn}교대 중 모델과 다른 품번 ${c.pnBad.length}건${c.pnBad.length?' — '+esc(c.pnBad.slice(0,5).join(' / ')):''}`, c.pnBad.length?'<span class="warn">확인 필요</span>':'<span class="ok">정상</span>'],
+    ['같은 교대 2줄 입력', c.dupA.length ? `A_가동률에서 같은 일자·설비·교대·구분이 2줄 이상: ${esc(c.dupA.join(' / '))} — 그대로 집계 (한 줄이 다른 날짜·교대 오기인지 시트 확인)` : '없음', c.dupA.length?'<span class="warn">확인 필요</span>':'<span class="ok">정상</span>'],
+    ['모델 연결 안 된 교대', `${D.firstQ} 이후 계획시간이 있는데 Q_Model상세에 없는 교대 ${c.nolink}개 (그 안의 금형 고장 ${c.nolinkMold}건은 모델을 몰라 제외 · 전 모델 기준)`, '<span class="info">참고</span>'],
+    ['기준 미만 정지', `FLANGE SHAFT 금형 정지 중 ${D.minStop}분 미만 ${c.under}건은 고장으로 세지 않음`, '<span class="info">참고</span>'],
+    ['합계', `전체 기간 FLANGE SHAFT 금형 고장 ${mold.toLocaleString()}건 · 금형교체(참고) ${(D.ev.length-mold).toLocaleString()}건`, '<span class="info">확인</span>']
+  ];
+  chk.innerHTML = '<div class="h">항목</div><div class="h">결과</div><div class="h">판정</div>' + rows.map(r=>r.map(x=>`<div>${x}</div>`).join('')).join('');
+}
+['wFrom','wTo','minStop'].forEach(id=>document.getElementById(id).addEventListener('change', render));
+loadAll();
+</script>
+</body>
+</html>
