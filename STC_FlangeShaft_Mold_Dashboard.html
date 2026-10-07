@@ -38,7 +38,7 @@
   .st{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
   .st h2{margin:0;font-size:17px;font-weight:800;} .st .d{font-size:12.5px;color:var(--sub);}
   .card{background:var(--card);border-radius:12px;padding:14px 16px;box-shadow:0 2px 8px rgba(16,26,51,.06);}
-  .grid2{display:grid;grid-template-columns:3fr 2fr;gap:16px;}
+  .grid2{display:grid;grid-template-columns:3fr 2fr;gap:16px;} .cw.big{height:400px;}
   .cw{position:relative;height:330px;}
   .tw{overflow-x:auto;}
   table{border-collapse:collapse;width:100%;font-size:12.5px;}
@@ -55,6 +55,10 @@
   .more{display:block;margin:10px auto 0;}
   .ref{color:#94a3b8;}
   .seg{margin-left:auto;display:inline-flex;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;} .seg button{border:none;background:#fff;padding:5px 14px;font-weight:700;font-size:12.5px;cursor:pointer;color:#334155;} .seg button.on{background:var(--navy);color:#fff;}
+  .dt{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px;align-items:stretch;margin-bottom:14px;}
+  .dt h3{margin:0 0 4px;font-size:15px;color:var(--fs);} .dt h3 small{color:var(--sub);font-weight:600;font-size:11.5px;margin-left:8px;}
+  .dt table td,.dt table th{padding:4px 4px;font-size:11.5px;} .dt table th{white-space:normal;line-height:1.2;} .dt .cw2{position:relative;height:100%;min-height:360px;}
+  @media (max-width:1100px){ .dt{grid-template-columns:1fr;} .dt .cw2{height:320px;min-height:0;} }
   .wkblk{margin-bottom:16px;} .wkblk h3{margin:0 0 6px;font-size:14px;color:var(--fs);} .wkblk h3 small{color:var(--sub);font-weight:600;margin-left:6px;}
   .chk{display:grid;grid-template-columns:220px 1fr 90px;gap:0;font-size:12.5px;}
   .chk div{padding:7px 8px;border-bottom:1px solid var(--line);} .chk .h{background:var(--navy);color:#fff;font-weight:700;}
@@ -95,10 +99,10 @@
   <div class="kpis" id="kpis"></div>
 
   <section>
-    <div class="st"><h2>📈 주간 금형 고장 추이</h2><span class="d">막대 = 유형별 건수 (쌓기) · 선 = 1만개당 건수 (오른쪽 축)</span></div>
+    <div class="st"><h2>📈 주간 금형 고장유형 추이</h2><span class="d">선 = 유형별 주간 건수 (오른쪽 끝 = 최근 주 값) · 점선 = 1만개당 건수 (오른쪽 축) · 범례를 누르면 선 끄기/켜기</span></div>
     <div class="grid2">
-      <div class="card"><div class="cw"><canvas id="cWeek"></canvas></div></div>
-      <div class="card"><div class="cw"><canvas id="cModel"></canvas></div></div>
+      <div class="card"><div class="cw big"><canvas id="cWeek"></canvas></div></div>
+      <div class="card"><div class="cw big"><canvas id="cModel"></canvas></div></div>
     </div>
   </section>
 
@@ -110,6 +114,11 @@
   <section>
     <div class="st"><h2>🔧 모델 × 금형 고장유형</h2><span class="d" id="mtDesc">선택한 주차 합계 · 건수 (아래 작은 숫자 = 시간 h)</span><span class="seg noprint"><button id="mtSum" onclick="setMt(0)">기간 합계</button><button id="mtWk" onclick="setMt(1)">주간별</button></span></div>
     <div class="card tw" id="tModelType"></div>
+  </section>
+
+  <section>
+    <div class="st"><h2>📑 모델별 상세 — 주차별 데이터 · 꺾은선 그래프</h2><span class="d">모델마다 주차 × 금형 고장유형 · 굵은 검은 선 = 금형 고장 건수 · 점선 = 1만개당 (오른쪽 축)</span></div>
+    <div id="tDetail"></div>
   </section>
 
   <section>
@@ -255,19 +264,23 @@ function render(){
   ].map(([c,l,v,s])=>`<div class="kpi ${c}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('') +
   (refN && ST.types.includes(REF) ? '' : '');
   drawWeek(W, EF, P, E); drawModel(W, EF, P);
-  tableModelWeek(W, EF, P); tableModelType(EF, E, P); tableMcType(EF);
+  tableModelWeek(W, EF, P); tableModelType(EF, E, P); tableDetail(W, EF, P); tableMcType(EF);
   histSelects(E); HIST.n = 200; renderHist(); renderChk();
 }
 function drawWeek(W, EF, P, E){
   charts.w && charts.w.destroy();
   const types = ST.types.filter(t=>t!==REF);
-  const ds = types.map(t=>({ type:'bar', label:t, data:W.map(w=>EF.filter(e=>e.w===w && e.code===t).length), backgroundColor:TCOL[t], stack:'s', yAxisID:'y', order:2 }));
-  if(ST.types.includes(REF)) ds.push({ type:'bar', label:'금형교체(참고)', data:W.map(w=>E.filter(e=>e.w===w && e.ref).length), backgroundColor:'rgba(148,163,184,.35)', borderColor:'#94a3b8', borderWidth:1, stack:'r', yAxisID:'y', order:3 });
-  const rate = W.map(w=>{ const q = P.filter(p=>p.w===w).reduce((s,p)=>s+p.qty,0); return q ? +(EF.filter(e=>e.w===w).length/q*1e4).toFixed(1) : null; });
-  ds.push({ type:'line', label:'1만개당 건수', data:rate, borderColor:'#101a33', backgroundColor:'#101a33', yAxisID:'y2', tension:.35, pointRadius:3, borderWidth:2.5, order:1 });
-  charts.w = new Chart(cWeek, { data:{ labels:W, datasets:ds }, options:{ maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
-    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:11 } } }, tooltip:{ callbacks:{ footer:it=>{ const s = it.filter(x=>x.dataset.stack==='s').reduce((a,x)=>a+x.parsed.y,0); return '금형 고장 합계 '+s+'건'; } } } },
-    scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, beginAtZero:true, title:{ display:true, text:'건수' } }, y2:{ position:'right', beginAtZero:true, grid:{ display:false }, title:{ display:true, text:'1만개당' } } } } });
+  const ds = types.map(t=>({ label:t, data:W.map(w=>EF.filter(e=>e.w===w && e.code===t).length), borderColor:TCOL[t], backgroundColor:TCOL[t], borderWidth:2.4, pointRadius:3.5, pointHoverRadius:6, tension:.35, yAxisID:'y' }));
+  if(ST.types.includes(REF)) ds.push({ label:'금형교체(참고)', data:W.map(w=>E.filter(e=>e.w===w && e.ref).length), borderColor:'#94a3b8', backgroundColor:'#94a3b8', borderDash:[3,3], borderWidth:1.5, pointRadius:2, tension:.35, yAxisID:'y' });
+  ds.push({ label:'1만개당 건수 (오른쪽)', data:W.map(w=>{ const q = P.filter(p=>p.w===w).reduce((s,p)=>s+p.qty,0); return q ? +(EF.filter(e=>e.w===w).length/q*1e4).toFixed(1) : null; }), borderColor:'#101a33', backgroundColor:'#101a33', borderDash:[7,4], borderWidth:2, pointRadius:2.5, tension:.35, yAxisID:'y2' });
+  /* 오른쪽 끝 값 라벨 */
+  const endLbl = { id:'endLbl', afterDatasetsDraw(c){ const { ctx } = c; const pts = [];
+    c.data.datasets.forEach((d,i)=>{ const m = c.getDatasetMeta(i); if(m.hidden || d.yAxisID==='y2') return; const el = m.data[m.data.length-1]; const v = d.data[d.data.length-1]; if(!el || v==null) return; pts.push({ y:el.y, x:el.x, v, c:d.borderColor, l:d.label }); });
+    pts.sort((a,b)=>a.y-b.y); let last = -99; ctx.save(); ctx.font = 'bold 11px sans-serif'; ctx.textBaseline = 'middle';
+    pts.forEach(p=>{ const y = Math.max(p.y, last+13); last = y; ctx.fillStyle = p.c; ctx.fillText(`${p.l} ${p.v}`, p.x+8, y); }); ctx.restore(); } };
+  charts.w = new Chart(cWeek, { type:'line', data:{ labels:W, datasets:ds }, plugins:[endLbl], options:{ maintainAspectRatio:false, interaction:{ mode:'index', intersect:false }, layout:{ padding:{ right:110 } },
+    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:11 } } }, tooltip:{ itemSort:(a,b)=>b.parsed.y-a.parsed.y, callbacks:{ footer:it=>{ const s = it.filter(x=>x.dataset.yAxisID==='y' && !/참고/.test(x.dataset.label)).reduce((a,x)=>a+x.parsed.y,0); return '금형 고장 합계 '+s+'건'; } } } },
+    scales:{ x:{ grid:{ display:false } }, y:{ beginAtZero:true, title:{ display:true, text:'건수' } }, y2:{ position:'right', beginAtZero:true, grid:{ display:false }, title:{ display:true, text:'1만개당' } } } } });
 }
 function drawModel(W, EF, P){
   charts.m && charts.m.destroy();
@@ -311,6 +324,30 @@ function tableMcType(EF){
   tMcType.innerHTML = mcs.length ? `<table><thead><tr><th class="l">설비</th><th class="l">생산 모델 (고장 건수)</th>${T.map(t=>`<th>${t}</th>`).join('')}<th>합계</th></tr></thead><tbody>` +
     mcs.map(c=>{ const L = EF.filter(e=>e.mc===c), ms = {}; L.forEach(e=>ms[e.model]=(ms[e.model]||0)+1);
       return `<tr><td class="l b">${c}</td><td class="l" style="white-space:normal;font-size:11.5px">${Object.entries(ms).sort((a,b)=>b[1]-a[1]).map(([m,v])=>`<span class="mdot" style="background:${mColor(m)}"></span>${esc(short(m))} ${v}`).join(' · ')}</td>${T.map(t=>{ const v = L.filter(e=>e.code===t).length; return `<td ${heat(v,mx)}>${v||'·'}</td>`; }).join('')}<td class="b">${L.length}</td></tr>`; }).join('') + '</tbody></table>' : '<div class="note">해당 데이터 없음</div>';
+}
+function tableDetail(W, EF, P){
+  (charts.d||[]).forEach(c=>c.destroy()); charts.d = [];
+  const T = ST.types.filter(t=>t!==REF), host = document.getElementById('tDetail');
+  host.innerHTML = ST.models.map((m,k)=>{
+    const Em = EF.filter(e=>e.model===m), Pm = P.filter(p=>p.model===m);
+    const mcs = {}; Pm.forEach(p=>mcs[p.mc]=(mcs[p.mc]||0)+1);
+    const rows = W.map(w=>{ const L = Em.filter(e=>e.w===w), q = Pm.filter(p=>p.w===w).reduce((s,p)=>s+p.qty,0); return { w, q, n:L.length, h:L.reduce((s,e)=>s+e.min,0)/60, t:T.map(t=>L.filter(e=>e.code===t).length) }; });
+    const q = rows.reduce((s,r)=>s+r.q,0), n = rows.reduce((s,r)=>s+r.n,0), h = rows.reduce((s,r)=>s+r.h,0);
+    const z = v => v ? v : '<span style="color:#cbd5e1">-</span>';
+    return `<div class="card dt"><div><h3>${esc(m)}<small>설비: ${Object.entries(mcs).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`${c}(${v})`).join(' · ')} <span style="color:#94a3b8">· 괄호 = 생산 교대 수</span></small></h3>
+      <div class="tw"><table><thead><tr><th>주차</th><th>기간</th><th>생산수량</th><th>금형 고장<br>건수</th><th>시간(h)</th><th>1만개당</th>${T.map(t=>`<th>${t.replace(', ',',<br>').replace('슬라이드코어수리','슬라이드<br>코어수리').replace('금형냉각라인','금형냉각<br>라인')}</th>`).join('')}</tr></thead><tbody>` +
+      rows.map(r=>`<tr><td class="b">${r.w}</td><td>${D.wr[r.w][0].slice(5)}~${D.wr[r.w][1].slice(5)}</td><td>${r.q?fmt(r.q):'-'}</td><td class="r">${r.n}</td><td>${r.h.toFixed(1)}</td><td>${r.q?(r.n/r.q*1e4).toFixed(1):'-'}</td>${r.t.map(z).map(v=>`<td>${v}</td>`).join('')}</tr>`).join('') +
+      `<tr class="tot"><td colspan="2">합계</td><td>${fmt(q)}</td><td style="color:var(--red)">${n}</td><td>${h.toFixed(1)}</td><td>${q?(n/q*1e4).toFixed(1):'-'}</td>${T.map((t,j)=>`<td>${rows.reduce((s,r)=>s+r.t[j],0)}</td>`).join('')}</tr></tbody></table></div></div>
+      <div class="cw2"><canvas id="dc${k}"></canvas></div></div>`; }).join('');
+  ST.models.forEach((m,k)=>{
+    const Em = EF.filter(e=>e.model===m), Pm = P.filter(p=>p.model===m);
+    const ds = [{ label:'금형 고장 건수', data:W.map(w=>Em.filter(e=>e.w===w).length), borderColor:'#111827', backgroundColor:'#111827', borderWidth:3.5, pointRadius:3.5, tension:.35, yAxisID:'y', order:0 }]
+      .concat(T.map(t=>({ label:t, data:W.map(w=>Em.filter(e=>e.w===w && e.code===t).length), borderColor:TCOL[t], backgroundColor:TCOL[t], borderWidth:1.8, pointRadius:2.5, tension:.35, yAxisID:'y' })))
+      .concat([{ label:'1만개당', data:W.map(w=>{ const q = Pm.filter(p=>p.w===w).reduce((s,p)=>s+p.qty,0); return q ? +(Em.filter(e=>e.w===w).length/q*1e4).toFixed(1) : null; }), borderColor:'#64748b', backgroundColor:'#64748b', borderDash:[6,4], borderWidth:2, pointRadius:2, tension:.35, yAxisID:'y2' }]);
+    charts.d.push(new Chart(document.getElementById('dc'+k), { type:'line', data:{ labels:W, datasets:ds }, options:{ maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      plugins:{ title:{ display:true, text:`${short(m)} — 주간 금형 고장 (건수)`, font:{ size:13 } }, legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10.5 } } } },
+      scales:{ x:{ grid:{ display:false } }, y:{ beginAtZero:true, title:{ display:true, text:'건수' } }, y2:{ position:'right', beginAtZero:true, grid:{ display:false }, title:{ display:true, text:'1만개당' } } } } }));
+  });
 }
 function histSelects(E){
   const keep = id => document.getElementById(id).value;
