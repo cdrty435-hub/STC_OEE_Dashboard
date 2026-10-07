@@ -157,8 +157,10 @@ const A_GID = '345197688', MODEL_GID = '635880711';
 const csvUrl = gid => `https://docs.google.com/spreadsheets/d/e/${SHEET_PUB_KEY}/pub?gid=${gid}&single=true&output=csv&cachebust=${Date.now()}`;
 const MOLD = ['핀파손','금형수리','제품소착','청소','로트마크, 사상','금형냉각라인','슬라이드코어수리','금형파손'];
 const REF = '금형교체';
-const TCOL = { '핀파손':'#dc2626','금형수리':'#c2410c','제품소착':'#d97706','청소':'#65a30d','로트마크, 사상':'#0891b2','금형냉각라인':'#2563eb','슬라이드코어수리':'#7c3aed','금형파손':'#be185d','금형교체':'#94a3b8' };
-const MCOL = ['#c2410c','#2563eb','#16a34a','#7c3aed','#d97706','#0891b2','#be185d','#475569'];
+const TCOL = { '핀파손':'#e41a1c','금형수리':'#1f77b4','제품소착':'#2ca02c','청소':'#9467bd','로트마크, 사상':'#ff7f00','금형냉각라인':'#8c564b','슬라이드코어수리':'#e377c2','금형파손':'#17becf','금형교체':'#94a3b8' };
+const TSTY = { '핀파손':'circle','금형수리':'rect','제품소착':'triangle','청소':'rectRot','로트마크, 사상':'circle','금형냉각라인':'rect','슬라이드코어수리':'triangle','금형파손':'rectRot' };
+const TDSH = t => ['금형냉각라인','슬라이드코어수리','금형파손'].includes(t) ? [5,4] : [];
+const MCOL = ['#e41a1c','#1f77b4','#2ca02c','#9467bd','#ff7f00','#8c564b','#e377c2','#475569'];
 const PN = { 'FLANGE SHAFT 101A':'DC60-00101A','FLANGE SHAFT (14KG)':'DC60-00023A','FLANGE SHAFT 67D':'DC60-00067D','FLANGE SHAFT POSEIDON':'DC60-00045A','FLANGE SHAFT (3L) 122A':'DC60-00122A','FLANGE SHAFT 116B':'DC60-00116B' };
 const isFS = m => /FLANGE\s*SHAFT/i.test(m||'');
 const short = m => String(m).replace(/^FLANGE\s*SHAFT\s*/i,'') || m;
@@ -270,7 +272,7 @@ function render(){
 function drawWeek(W, EF, P, E){
   charts.w && charts.w.destroy();
   const types = ST.types.filter(t=>t!==REF);
-  const ds = types.map(t=>({ label:t, data:W.map(w=>EF.filter(e=>e.w===w && e.code===t).length), borderColor:TCOL[t], backgroundColor:TCOL[t], borderWidth:2.4, pointRadius:3.5, pointHoverRadius:6, tension:.35, yAxisID:'y' }));
+  const ds = types.map(t=>({ label:t, data:W.map(w=>EF.filter(e=>e.w===w && e.code===t).length), borderColor:TCOL[t], backgroundColor:TCOL[t], borderWidth:2.4, borderDash:TDSH(t), pointStyle:TSTY[t], pointRadius:4, pointHoverRadius:6, tension:.3, yAxisID:'y' }));
   if(ST.types.includes(REF)) ds.push({ label:'금형교체(참고)', data:W.map(w=>E.filter(e=>e.w===w && e.ref).length), borderColor:'#94a3b8', backgroundColor:'#94a3b8', borderDash:[3,3], borderWidth:1.5, pointRadius:2, tension:.35, yAxisID:'y' });
   ds.push({ label:'1만개당 건수 (오른쪽)', data:W.map(w=>{ const q = P.filter(p=>p.w===w).reduce((s,p)=>s+p.qty,0); return q ? +(EF.filter(e=>e.w===w).length/q*1e4).toFixed(1) : null; }), borderColor:'#101a33', backgroundColor:'#101a33', borderDash:[7,4], borderWidth:2, pointRadius:2.5, tension:.35, yAxisID:'y2' });
   /* 오른쪽 끝 값 라벨 */
@@ -279,7 +281,7 @@ function drawWeek(W, EF, P, E){
     pts.sort((a,b)=>a.y-b.y); let last = -99; ctx.save(); ctx.font = 'bold 11px sans-serif'; ctx.textBaseline = 'middle';
     pts.forEach(p=>{ const y = Math.max(p.y, last+13); last = y; ctx.fillStyle = p.c; ctx.fillText(`${p.l} ${p.v}`, p.x+8, y); }); ctx.restore(); } };
   charts.w = new Chart(cWeek, { type:'line', data:{ labels:W, datasets:ds }, plugins:[endLbl], options:{ maintainAspectRatio:false, interaction:{ mode:'index', intersect:false }, layout:{ padding:{ right:110 } },
-    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:11 } } }, tooltip:{ itemSort:(a,b)=>b.parsed.y-a.parsed.y, callbacks:{ footer:it=>{ const s = it.filter(x=>x.dataset.yAxisID==='y' && !/참고/.test(x.dataset.label)).reduce((a,x)=>a+x.parsed.y,0); return '금형 고장 합계 '+s+'건'; } } } },
+    plugins:{ legend:{ position:'bottom', labels:{ usePointStyle:true, boxWidth:10, font:{ size:11 } } }, tooltip:{ itemSort:(a,b)=>b.parsed.y-a.parsed.y, callbacks:{ footer:it=>{ const s = it.filter(x=>x.dataset.yAxisID==='y' && !/참고/.test(x.dataset.label)).reduce((a,x)=>a+x.parsed.y,0); return '금형 고장 합계 '+s+'건'; } } } },
     scales:{ x:{ grid:{ display:false } }, y:{ beginAtZero:true, title:{ display:true, text:'건수' } }, y2:{ position:'right', beginAtZero:true, grid:{ display:false }, title:{ display:true, text:'1만개당' } } } } });
 }
 function drawModel(W, EF, P){
@@ -342,7 +344,7 @@ function tableDetail(W, EF, P){
   ST.models.forEach((m,k)=>{
     const Em = EF.filter(e=>e.model===m), Pm = P.filter(p=>p.model===m);
     const ds = [{ label:'금형 고장 건수', data:W.map(w=>Em.filter(e=>e.w===w).length), borderColor:'#111827', backgroundColor:'#111827', borderWidth:3.5, pointRadius:3.5, tension:.35, yAxisID:'y', order:0 }]
-      .concat(T.map(t=>({ label:t, data:W.map(w=>Em.filter(e=>e.w===w && e.code===t).length), borderColor:TCOL[t], backgroundColor:TCOL[t], borderWidth:1.8, pointRadius:2.5, tension:.35, yAxisID:'y' })))
+      .concat(T.map(t=>({ label:t, data:W.map(w=>Em.filter(e=>e.w===w && e.code===t).length), borderColor:TCOL[t], backgroundColor:TCOL[t], borderWidth:1.8, borderDash:TDSH(t), pointStyle:TSTY[t], pointRadius:3, tension:.3, yAxisID:'y' })))
       .concat([{ label:'1만개당', data:W.map(w=>{ const q = Pm.filter(p=>p.w===w).reduce((s,p)=>s+p.qty,0); return q ? +(Em.filter(e=>e.w===w).length/q*1e4).toFixed(1) : null; }), borderColor:'#64748b', backgroundColor:'#64748b', borderDash:[6,4], borderWidth:2, pointRadius:2, tension:.35, yAxisID:'y2' }]);
     charts.d.push(new Chart(document.getElementById('dc'+k), { type:'line', data:{ labels:W, datasets:ds }, options:{ maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
       plugins:{ title:{ display:true, text:`${short(m)} — 주간 금형 고장 (건수)`, font:{ size:13 } }, legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:10.5 } } } },
