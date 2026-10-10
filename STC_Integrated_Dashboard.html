@@ -3913,8 +3913,56 @@ function f2LayoutView(week){
   g += newTag(316,152) + newTag(1034,247);
   [[1,452,577],[2,742,577],[3,926,322],[4,1060,113],[5,1056,213],[6,812,110],[7,884,236],[8,654,236],[9,374,235],[10,572,381],[11,594,428],[12,506,428],[13,425,400]].forEach(([n,x,y])=>{ g += badge(n,x,y); });
   g += `<text x="474" y="582" font-size="13" font-weight="900" fill="#334155">IQC</text><text x="764" y="582" font-size="13" font-weight="900" fill="#334155">STOCK</text>`;
+  /* ⑧ 가공 불량 (F2_불량상세 · MCT NG) · ⑨ PQC 검사 불량 (F2_PQC_Q) — 같은 기간 기준, 원천마다 자기 마지막 날짜로 */
+  const perOf = ds0 => { const ds = [...new Set(ds0.filter(Boolean))].sort(), L = ds[ds.length-1];
+    if(per==='d1') return { ok:(d)=>d===L, lbl:L||'–' };
+    if(per==='d7'){ const k = ds.slice(-7); return { ok:(d)=>k.includes(d), lbl:k.length?`${k[0]} ~ ${k[k.length-1]}`:'–' }; }
+    const w = weeks.includes(week) ? week : weeks[weeks.length-1]; return { ok:(d,wk)=>wk===w, lbl:w||'–' }; };
+  const topOf = rows => { const m = {}; rows.forEach(r=>{ const k = r['불량유형']; const o = m[k] || (m[k] = { t:k, g:r['계통'], v:0 }); o.v += f2n(r['수량']); });
+    return Object.values(m).sort((a,b)=>b.v-a.v); };
+  const C8 = (()=>{ const P = perOf((F2.pd||[]).filter(r=>r['공정']==='MCT').map(r=>String(r['일자']).slice(0,10)));
+    const pd = (F2.pd||[]).filter(r=>r['공정']==='MCT' && P.ok(String(r['일자']).slice(0,10), r['주차']));
+    const det = (F2.det||[]).filter(r=>r['공정']==='MCT' && r['구분']==='NG' && P.ok(String(r['일자']).slice(0,10), r['주차']));
+    const t = pd.reduce((a,r)=>a+f2n(r["Total Q'ty"]),0), n = pd.reduce((a,r)=>a+f2n(r["NG Q'ty"]),0);
+    return { t, n, lbl:P.lbl, top:topOf(det), src:'F2_불량상세 · MCT NG' }; })();
+  const C9 = (()=>{ const raw = F2.pqRaw || []; const P = perOf(raw.map(r=>String(r['일자']).slice(0,10)));
+    const sel = raw.filter(r=>P.ok(String(r['일자']).slice(0,10), r['주차']));
+    const t = sel.reduce((a,r)=>a+f2n(r["Total Q'ty"]),0), n = sel.reduce((a,r)=>a+f2n(r["NG Q'ty"]),0);
+    const det = raw.length ? pqShape().det.filter(r=>P.ok(r['일자'], r['주차'])) : [];
+    const mc = {}; sel.forEach(r=>{ const k = r['설비명']; const o = mc[k] || (mc[k] = {t:0,n:0}); o.t += f2n(r["Total Q'ty"]); o.n += f2n(r["NG Q'ty"]); });
+    const wm = Object.entries(mc).filter(([,o])=>o.t).sort((a,b)=>b[1].n/b[1].t-a[1].n/a[1].t)[0];
+    return { t, n, lbl:P.lbl, top:topOf(det), src:'F2_PQC_Q', worst: wm ? `${wm[0]} ${(wm[1].n/wm[1].t*100).toFixed(1)}%` : '' }; })();
+  const GCOL = { '가공불량':'#7c3aed', '다캐불량':'#c2410c' };
+  const cut = (t,k) => { const a = [...String(t||'')]; return a.length>k ? a.slice(0,k-1).join('')+'…' : a.join(''); };
+  const callout = (x, y, w, num, title, C, ax, ay, extra) => {
+    const r = C.t ? C.n/C.t*100 : null, st = f2St(r), h = 112, ok = r!=null && r<=tg;
+    const gsum = g => C.top.filter(o=>o.g===g).reduce((a,o)=>a+o.v,0), tn = C.top.reduce((a,o)=>a+o.v,0) || 1;
+    const t3 = C.top.slice(0,3), mx = Math.max(1, ...t3.map(o=>o.v));
+    let o = `<path d="M${ax} ${y+h} V${ay-14}" stroke="${ok?'#16a34a':'#dc2626'}" stroke-width="1.3" stroke-dasharray="3 3" fill="none"/>`
+      + `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="#fff" stroke="${ok?'#86efac':'#fca5a5'}" stroke-width="1.6" filter="url(#lay-sh)"/>`
+      + `<rect x="${x}" y="${y}" width="${w}" height="26" rx="10" fill="${ok?'#f0fdf4':'#fef2f2'}"/><rect x="${x}" y="${y+16}" width="${w}" height="10" fill="${ok?'#f0fdf4':'#fef2f2'}"/>`
+      + `<circle cx="${x+15}" cy="${y+13}" r="9" fill="#f5b301"/><text x="${x+15}" y="${y+17}" text-anchor="middle" font-size="10.5" font-weight="900" fill="#1f2937">${num}</text>`
+      + `<text x="${x+30}" y="${y+17.5}" font-size="11.5" font-weight="900" fill="#0f172a">${title}</text>`
+      + `<text x="${x+w-10}" y="${y+17.5}" text-anchor="end" font-size="9" font-weight="600" fill="#64748b">${esc2(C.src)} · ${esc2(C.lbl)}</text>`;
+    if(!C.t){ return o + `<text x="${x+w/2}" y="${y+70}" text-anchor="middle" font-size="11" fill="#94a3b8">선택 기간 데이터 없음</text>`; }
+    o += `<text x="${x+12}" y="${y+50}" font-size="21" font-weight="900" fill="${st.c}">${r.toFixed(2)}%</text>`
+      + `<text x="${x+12}" y="${y+66}" font-size="10" font-weight="700" fill="#475569">NG ${fmt(C.n)} / ${fmt(C.t)}</text>`
+      + `<text x="${x+12}" y="${y+81}" font-size="9.5" font-weight="700"><tspan fill="#7c3aed">가공 ${Math.round(gsum('가공불량')/tn*100)}%</tspan><tspan fill="#94a3b8"> · </tspan><tspan fill="#c2410c">다캐 ${Math.round(gsum('다캐불량')/tn*100)}%</tspan></text>`
+      + (extra ? `<text x="${x+12}" y="${y+97}" font-size="9.5" font-weight="700" fill="#b91c1c">${esc2(extra)}</text>` : '');
+    const bx = x+112, bw = w-112-46;
+    t3.forEach((d,i)=>{ const yy = y+42+i*22;
+      o += `<text x="${bx}" y="${yy}" font-size="9.5" font-weight="700" fill="#334155">${i+1}. ${esc2(cut(d.t, Math.max(10, Math.round(bw/7))))}</text>`
+        + `<rect x="${bx}" y="${yy+4}" width="${bw}" height="6" rx="3" fill="#eef2f7"/><rect x="${bx}" y="${yy+4}" width="${(bw*d.v/mx).toFixed(1)}" height="6" rx="3" fill="${GCOL[d.g]||'#94a3b8'}"/>`
+        + `<text x="${x+w-10}" y="${yy+10}" text-anchor="end" font-size="10" font-weight="900" fill="#0f172a">${fmt(d.v)}</text>`; });
+    if(!t3.length) o += `<text x="${bx}" y="${y+60}" font-size="10" fill="#94a3b8">불량 없음</text>`;
+    return o; };
+  g = g.replace('</defs>', '<filter id="lay-sh" x="-5%" y="-5%" width="110%" height="120%"><feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#0f172a" flood-opacity=".12"/></filter></defs>');
+  g += callout(430, -42, 370, 8, 'MC·MCT 가공 불량', C8, 654, 236);
+  g += callout(120, -42, 296, 9, 'PQC 검사 불량', C9, 374, 235, C9.worst ? `Worst ${C9.worst}` : '');
+  const ring = (x,y,C) => { if(!C.t) return ''; const r = C.n/C.t*100; return `<circle cx="${x}" cy="${y}" r="17" fill="none" stroke="${r<=tg?'#16a34a':'#dc2626'}" stroke-width="2.5" opacity=".85"/>`; };
+  g += ring(654,236,C8) + ring(374,235,C9);
   const play = layPlay();
-  const svg = `<svg viewBox="0 74 1200 522" role="img" aria-label="FAC2 Layout" font-family="inherit" class="${play?'play':'stop'}">${g}</svg>`;
+  const svg = `<svg viewBox="0 -50 1200 646" role="img" aria-label="FAC2 Layout" font-family="inherit" class="${play?'play':'stop'}">${g}</svg>`;
   const legend = `<div class="lay-leg">
     ${['all','half','gen','iqc'].map(k=>`<span><i style="background:${LAY_KC[k]}"></i>${LAY_KL[k]}</span>`).join('')}
     <span><i class="ln" style="background:#22c55e"></i>소재 흐름</span><span><i class="ln" style="background:#e040a0"></i>가공 공급</span><span><i class="ln" style="background:#3b82f6"></i>가공 완료</span>
