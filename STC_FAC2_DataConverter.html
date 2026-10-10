@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="google" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FAC2 데이터 변환기 (MCT · OQC)</title>
+<title>FAC2 데이터 변환기 (MCT · PQC · OQC)</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>if(typeof XLSX==="undefined"){document.write('<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"><\/script>');}</script>
 <style>
@@ -63,8 +63,8 @@
 <body>
 <div class="container">
   <header>
-    <h1>🔄 FAC2 데이터 변환기 (MCT · OQC Packing · 설비별 생산실적)</h1>
-    <p class="sub">파일 종류를 자동으로 알아봅니다 — ① 「MCT &amp; OQC Daily CT-CN8 Report」(<b>Raw_Data MCT</b> · <b>Raw_Data OQC Packing</b>) ② 「FAC2 Raw Data」 · Productivity Manager(<b>In-Out Data</b> = 설비별 생산·불량·로스) → 구글시트 OEE_RawData_APQ 추가 탭(F2_*) 형식으로 변환</p>
+    <h1>🔄 FAC2 데이터 변환기 (MCT · PQC · OQC Packing · 설비별 생산실적)</h1>
+    <p class="sub">파일 종류를 자동으로 알아봅니다 — ① 「MCT &amp; OQC Daily CT-CN8 Report」(<b>Raw_Data MCT</b> · <b>PQC</b> · <b>Raw_Data OQC Packing</b>) ② 「FAC2 Raw Data」 · Productivity Manager(<b>In-Out Data</b> = 설비별 생산·불량·로스) → 구글시트 OEE_RawData_APQ 추가 탭(F2_*) 형식으로 변환</p>
     <div class="nav-row">
       <a href="./STC_OEE_DataConverter.html">← FAC1 다이캐스팅 변환기</a>
       <a href="./STC_Integrated_Dashboard.html">통합 대시보드</a>
@@ -105,13 +105,13 @@
   <div class="card">
     <div class="card-title">변환 기준</div>
     <div class="footnote">
-      · <b>원본 시트</b> : 「Raw_Data MCT」(MCT 가공) · 「Raw_Data OQC Packing」(출하 포장 검사) · 불량유형 「Search_Detail_MCT」.<br>
+      · <b>원본 시트</b> : 「Raw_Data MCT」(MCT 가공) · 「PQC」(공정 중 품질검사 → <b>F2_PQC_Q</b>, F2_품번일별·F2_불량상세에는 공정 'PQC'로 들어감) · 「Raw_Data OQC Packing」(출하 포장 검사) · 불량유형 「Search_Detail_MCT」.<br>
       · <b>FAC2 Raw Data (In-Out Data)</b> : 전 설비(MC02~MC18)·전 OP의 생산(TOTAL · F/G · NG) · 불량유형 11종 · Mat'l Before/After · 로스시간 · 가동률 → <b>F2_생산실적</b>(원본 1행=1행)과 <b>F2_설비일별</b>(일자 × 설비 합계). QC 리포트에 없는 OP10 계열(MC02·04·05·11·13·15)과 HS15(MC06)까지 들어갑니다. 품번은 QC 리포트와 같은 표기로 맞춘 「품번(QC)」 열을 함께 둡니다 (예: CF623L3LAA-03 → CF623L3LAA03, CF620L8FAA-01 → CR620L8FAA-01).<br>
       · <b>주차</b> = 구글시트(FAC1) 기준 수~화 주차. FAC2 원본 <code>WEEK38</code>(9/16~9/22)은 시트 기준 <code>W39</code>로 <b>한 주 차이</b>가 납니다. 원본 표기는 「원본주차」 열에 둡니다.<br>
       · <b>KPI 단위</b> (원본 KPI MCT / KPI OQC와 같음) : Total Q'ty · FG Q'ty · NG Q'ty · %NG(= NG ÷ Total, 목표 3.5%) · Mat'l NG(MCT만). 대시보드는 <b>F2_품번일별</b>(일자×공정×품번)과 <b>F2_불량상세</b>를 읽습니다.<br>
       · <b>불량 계통</b> : 1~16 다캐 불량(Die Casting Defect) · 17~46 FAC2 가공 불량(MCT Defect) · 47~49 협력사 · 50 고객.<br>
       · <b>Mat'l NG</b>(가공 전 소재 불량)와 <b>FG QC Sorting</b>(선별)은 NG에 넣지 않고 별도 열로 둡니다 (KPI MCT와 동일).<br>
-      · OQC 원본에서 <b>품번이 비어 있는 행</b>(입력 중)은 KPI OQC처럼 제외하고, 검증표에 건수를 표시합니다.<br>
+      · OQC · PQC 원본에서 <b>품번이 비어 있는 행</b>(입력 중)은 KPI OQC처럼 제외하고, 검증표에 건수를 표시합니다.<br>
       · 설비명 <code>MC3 → MC03</code> 두 자리 통일 · MCT 실제수율 = Σ생산 ÷ UPD(95%) (설비·일자·품번 단위, 원본 actual yield와 같은 식).
     </div>
   </div>
@@ -120,11 +120,12 @@
 <script>
 /* =====================================================================
    FAC2 (MCT · OQC Packing) → 구글시트 F2_* 탭 변환
-   원본: 「Raw_Data MCT」 · 「Raw_Data OQC Packing」 · 불량유형 「Search_Detail_MCT」
+   원본: 「Raw_Data MCT」 · 「PQC」 · 「Raw_Data OQC Packing」 · 불량유형 「Search_Detail_MCT」
    출력 탭
      F2_MCT_Q    : MCT 원본 1행 = 1행 (생산·양품·불량·계통합·Mat'l·선별·불량코드 1~50)
+     F2_PQC_Q    : PQC 원본 1행 = 1행 (Total·FG·NG·계통합·불량코드 1~50)
      F2_OQC_Q    : OQC Packing 원본 1행 = 1행 (Total·FG·NG·계통합·불량코드 1~50)
-     F2_품번일별  : 일자 × 공정(MCT/OQC) × 품번 집계 — KPI MCT / KPI OQC 와 같은 단위
+     F2_품번일별  : 일자 × 공정(MCT/PQC/OQC) × 품번 집계 — KPI MCT / KPI OQC 와 같은 단위
      F2_불량상세  : 롱포맷 (공정 × 구분 NG/Mat'l/선별 × 품번 × 코드 × 수량)
      F2_불량코드  : 코드 마스터
    ===================================================================== */
@@ -147,6 +148,7 @@ const CODE_DEFAULT = [
  [47,'부푸름'],[48,'도금 불량'],[49,'백녹'],[50,'고객 불량']];
 const GROUP_OF = c => c<=16 ? '다캐불량' : c<=46 ? '가공불량' : c<=49 ? '협력사' : '고객';
 const GROUPS = ['다캐불량','가공불량','협력사','고객'];
+const isPQCKey = k => k==='PQC' || k==='RAWDATAPQC';
 
 /* ---------- 주차 : 수요일 시작 · 라벨 = 그 주 화요일의 ISO 주차 (시트 W39 = 9/16~9/22) ---------- */
 function isoWeek(y,m,d){
@@ -217,18 +219,21 @@ function mapMCT(A){
   if (Object.keys(C.codeNG).length < 50) throw new Error(`MCT CODE DEFECT 번호 1~50 중 ${Object.keys(C.codeNG).length}개만 찾았습니다`);
   return C;
 }
-function mapOQC(A){
+/* OQC Packing · PQC 공용 (두 시트 모두 Total/FG/NG Q'ty + CODE DEFECT 1~50 형식) */
+function mapOQC(A, label){
+  label = label || 'OQC';
+  const sheetName = label==='PQC' ? 'PQC' : 'Raw_Data OQC Packing';
   const hr = findHeader(A, ks=>ks.includes('MCNO') && ks.includes('TOTALQTY') && ks.includes('NGQTY'));
-  if (hr < 0) throw new Error("Raw_Data OQC Packing 에서 머리글('Total Q'ty', 'NG Q'ty')을 찾지 못했습니다");
+  if (hr < 0) throw new Error(sheetName+" 에서 머리글('Total Q'ty', 'NG Q'ty')을 찾지 못했습니다");
   const H = A[hr].map(key), N = A[hr+1] || [], at = p => H.findIndex(p);
   const C = { wk: at(k=>k==='WEEK'), date: at(k=>k==='DATE'), mc: at(k=>k==='MCNO'), shift: at(k=>k==='SHIFT'), cav: at(k=>k.startsWith('CAV')),
     pname: at(k=>k==='PARTNAME'), pno: at(k=>k==='PARTNO'), lot: at(k=>k==='LOTDC'), lotmc: at(k=>k==='LOTMC'),
     tot: at(k=>k==='TOTALQTY'), fgq: at(k=>k==='FGQTY'), ng: at(k=>k==='NGQTY'), rmk: at(k=>k==='REMARK'), dlv: at(k=>k==='DELIVERY') };
   const need = ['date','tot','fgq','ng','pno'].filter(k=>C[k]<0);
-  if (need.length) throw new Error('OQC 필수 열 없음: '+need.join(', '));
+  if (need.length) throw new Error(label+' 필수 열 없음: '+need.join(', '));
   C.codeNG = codeBlock(N, C.ng+1, C.rmk>C.ng ? C.rmk : C.ng+51);
   C.first = hr+2;
-  if (Object.keys(C.codeNG).length < 50) throw new Error(`OQC CODE DEFECT 번호 1~50 중 ${Object.keys(C.codeNG).length}개만 찾았습니다`);
+  if (Object.keys(C.codeNG).length < 50) throw new Error(`${label} CODE DEFECT 번호 1~50 중 ${Object.keys(C.codeNG).length}개만 찾았습니다`);
   return C;
 }
 
@@ -236,7 +241,8 @@ function mapOQC(A){
 function convert(wb, from, to){
   const find = k => wb.SheetNames.find(n=>key(n)===k);
   const shM = find('RAWDATAMCT'), shO = find('RAWDATAOQCPACKING'), shC = find('SEARCHDETAILMCT');
-  if (!shM && !shO) throw new Error("'Raw_Data MCT' / 'Raw_Data OQC Packing' 시트가 없습니다 (시트: "+wb.SheetNames.join(', ')+')');
+  const shP = wb.SheetNames.find(n=>isPQCKey(key(n)));
+  if (!shM && !shO && !shP) throw new Error("'Raw_Data MCT' / 'PQC' / 'Raw_Data OQC Packing' 시트가 없습니다 (시트: "+wb.SheetNames.join(', ')+')');
   const codes = readCodes(shC ? wb.Sheets[shC] : null);
   const CL = codes.list, codeHead = CL.map(x=>`${pad(x.c)} ${x.n}`);
   const inRange = iso => !((from && iso < from) || (to && iso > to));
@@ -267,27 +273,31 @@ function convert(wb, from, to){
       cm.rows++;
     }
   }
-  /* OQC Packing */
-  const O = [], co = { rows:0, skipRange:0, tfg:0, ngSum:0, noPart:0, noPartQty:0 };
-  if (shO){
-    const A = XLSX.utils.sheet_to_json(wb.Sheets[shO],{header:1,raw:true,defval:''}), C = mapOQC(A);
+  /* OQC Packing · PQC — 같은 형식이라 한 함수로 읽는다 */
+  const readQC = (sh, label) => {
+    const out = [], ck = { rows:0, skipRange:0, tfg:0, ngSum:0, noPart:0, noPartQty:0 };
+    if (!sh) return [out, ck];
+    const A = XLSX.utils.sheet_to_json(wb.Sheets[sh],{header:1,raw:true,defval:''}), C = mapOQC(A, label);
     for (let r=C.first; r<A.length; r++){
       const R = A[r]; if (!R) continue;
       const iso = toISO(R[C.date]); if (!iso) continue;
       const tot = num(R[C.tot]), fgq = num(R[C.fgq]), ng = num(R[C.ng]);
-      if (!txt(R[C.pno])){ if (tot || ng){ co.noPart++; co.noPartQty += tot; } continue; }   // 품번 없는 행 = 입력 중 · KPI OQC 도 집계하지 않음
-      if (!inRange(iso)){ co.skipRange++; continue; }
+      if (!txt(R[C.pno])){ if (tot || ng){ ck.noPart++; ck.noPartQty += tot; } continue; }   // 품번 없는 행 = 입력 중 · KPI OQC 도 집계하지 않음
+      if (!inRange(iso)){ ck.skipRange++; continue; }
       const ngc = CL.map(x=>num(R[C.codeNG[x.c]]));
-      if (Math.abs(tot-fgq-ng) > 0.001) co.tfg++;
-      if (Math.abs(sum(ngc)-ng) > 0.001) co.ngSum++;
-      O.push({ iso, wk: sheetWeek(iso), owk: txt(R[C.wk]), mc: normMC(R[C.mc]), shift: txt(R[C.shift]), cav: C.cav>=0 ? txt(R[C.cav]) : '',
+      if (Math.abs(tot-fgq-ng) > 0.001) ck.tfg++;
+      if (Math.abs(sum(ngc)-ng) > 0.001) ck.ngSum++;
+      out.push({ iso, wk: sheetWeek(iso), owk: txt(R[C.wk]), mc: normMC(R[C.mc]), shift: txt(R[C.shift]), cav: C.cav>=0 ? txt(R[C.cav]) : '',
         pname: txt(R[C.pname]), pno: txt(R[C.pno]), lot: lotText(R[C.lot]), lotmc: C.lotmc>=0 ? lotText(R[C.lotmc]) : '',
         tot, fgq, ng, ngc, grp: grpOf(ngc), rmk: C.rmk>=0 ? txt(R[C.rmk]) : '', dlv: C.dlv>=0 ? lotText(R[C.dlv]) : '' });
-      co.rows++;
+      ck.rows++;
     }
-  }
+    return [out, ck];
+  };
+  const [O, co] = readQC(shO, 'OQC');
+  const [P, cp] = readQC(shP, 'PQC');
   const byDate = (a,b)=> a.iso<b.iso?-1:a.iso>b.iso?1: a.mc<b.mc?-1:a.mc>b.mc?1:0;
-  M.sort(byDate); O.sort(byDate);
+  M.sort(byDate); O.sort(byDate); P.sort(byDate);
 
   /* F2_MCT_Q (실제수율 = 설비·일자·품번 Σ생산 ÷ UPD — 원본 actual yield 와 같은 식) */
   const yk = x => x.iso+'|'+x.mc+'|'+x.pno, yd = {};
@@ -298,6 +308,9 @@ function convert(wb, from, to){
   /* F2_OQC_Q */
   const OQ_HEAD = ['일자','주차','원본주차','공장','설비명','Shift','Cav.','Part name','Part no.','Lot d/c','Lot m/c',"Total Q'ty","FG Q'ty","NG Q'ty",'%NG','다캐불량','가공불량','협력사불량','고객불량','Remark','Delivery', ...codeHead];
   const OQ = O.map(x=>[x.iso,x.wk,x.owk,'FAC2',x.mc,x.shift,x.cav,x.pname,x.pno,x.lot,x.lotmc,x.tot,x.fgq,x.ng,x.tot?r4(x.ng/x.tot):'',...x.grp,x.rmk,x.dlv,...x.ngc]);
+  /* F2_PQC_Q (PQC 원본에는 Remark · Delivery 열이 없음) */
+  const PQ_HEAD = ['일자','주차','원본주차','공장','설비명','Shift','Cav.','Part name','Part no.','Lot d/c','Lot m/c',"Total Q'ty","FG Q'ty","NG Q'ty",'%NG','다캐불량','가공불량','협력사불량','고객불량', ...codeHead];
+  const PQ = P.map(x=>[x.iso,x.wk,x.owk,'FAC2',x.mc,x.shift,x.cav,x.pname,x.pno,x.lot,x.lotmc,x.tot,x.fgq,x.ng,x.tot?r4(x.ng/x.tot):'',...x.grp,...x.ngc]);
 
   /* F2_품번일별 : 일자 × 공정 × 품번 */
   const PD_HEAD = ['일자','주차','원본주차','공장','공정','Part name','Part no.',"Total Q'ty","FG Q'ty","NG Q'ty",'%NG','다캐불량','가공불량','협력사불량','고객불량',"Mat'l NG",'FG QC Sorting','설비'];
@@ -308,6 +321,7 @@ function convert(wb, from, to){
     o.tot+=tot; o.fgq+=fgq; o.ng+=ng; x.grp.forEach((v,i)=>o.grp[i]+=v); o.mat+=mat; o.fg+=fg; if (x.mc) o.mcs.add(x.mc);
   };
   M.forEach(x=>addPD('MCT', x, x.prod, x.good, x.ng, x.mat, x.fg));
+  P.forEach(x=>addPD('PQC', x, x.tot, x.fgq, x.ng, 0, 0));
   O.forEach(x=>addPD('OQC', x, x.tot, x.fgq, x.ng, 0, 0));
   const PD = Object.values(pd).sort((a,b)=> a.iso<b.iso?-1:a.iso>b.iso?1: a.proc<b.proc?-1:a.proc>b.proc?1: a.pno<b.pno?-1:1)
     .map(o=>[o.iso,o.wk,o.owk,'FAC2',o.proc,o.pname,o.pno,o.tot,o.fgq,o.ng,o.tot?r4(o.ng/o.tot):'',...o.grp,o.proc==='MCT'?o.mat:'',o.proc==='MCT'?o.fg:'',[...o.mcs].sort().join('/')]);
@@ -320,26 +334,28 @@ function convert(wb, from, to){
     CL.forEach((c,i)=>{ if (x.matc[i]) L.push([...b,"Mat'l",c.c,c.n,c.g,x.matc[i]]); });
     const mg = r2(x.mat - sum(x.matc)); if (mg > 0) L.push([...b,"Mat'l",'','미분류','미분류',mg]);
     CL.forEach((c,i)=>{ if (x.fgc[i]) L.push([...b,'선별',c.c,c.n,c.g,x.fgc[i]]); }); });
-  O.forEach(x=>{ const b = [x.iso,x.wk,x.owk,'FAC2','OQC',x.mc,x.pname,x.pno];
-    CL.forEach((c,i)=>{ if (x.ngc[i]) L.push([...b,'NG',c.c,c.n,c.g,x.ngc[i]]); }); });
+  [['PQC',P],['OQC',O]].forEach(([proc,arr])=>arr.forEach(x=>{ const b = [x.iso,x.wk,x.owk,'FAC2',proc,x.mc,x.pname,x.pno];
+    CL.forEach((c,i)=>{ if (x.ngc[i]) L.push([...b,'NG',c.c,c.n,c.g,x.ngc[i]]); }); }));
   L.sort((a,b)=> a[0]<b[0]?-1:a[0]>b[0]?1:0);
 
   /* 주차별 대조표 (KPI MCT / KPI OQC 상단 Total·FG·NG·%NG·Mat'l) */
   const wk = {};
-  const W = (x, proc) => { const o = wk[x.wk] || (wk[x.wk] = { wk:x.wk, owk:new Set(), d0:x.iso, d1:x.iso, M:{t:0,f:0,n:0,m:0}, O:{t:0,f:0,n:0} });
+  const W = (x, proc) => { const o = wk[x.wk] || (wk[x.wk] = { wk:x.wk, owk:new Set(), d0:x.iso, d1:x.iso, M:{t:0,f:0,n:0,m:0}, P:{t:0,f:0,n:0}, O:{t:0,f:0,n:0} });
     o.owk.add(x.owk); if (x.iso<o.d0) o.d0=x.iso; if (x.iso>o.d1) o.d1=x.iso; return o[proc]; };
   M.forEach(x=>{ const a = W(x,'M'); a.t+=x.prod; a.f+=x.good; a.n+=x.ng; a.m+=x.mat; });
+  P.forEach(x=>{ const a = W(x,'P'); a.t+=x.tot; a.f+=x.fgq; a.n+=x.ng; });
   O.forEach(x=>{ const a = W(x,'O'); a.t+=x.tot; a.f+=x.fgq; a.n+=x.ng; });
 
   return {
     tabs: [
       { name:'F2_MCT_Q',   head:MQ_HEAD, rows:MQ, desc:"MCT 원본 1행 = 1행 · 생산/양품/불량 · Mat'l · 선별 · 불량코드 1~50" },
+      ...(shP ? [{ name:'F2_PQC_Q', head:PQ_HEAD, rows:PQ, desc:'PQC 원본 1행 = 1행 · Total/FG/NG · 불량코드 1~50' }] : []),
       { name:'F2_OQC_Q',   head:OQ_HEAD, rows:OQ, desc:'OQC Packing 원본 1행 = 1행 · Total/FG/NG · 불량코드 1~50' },
-      { name:'F2_품번일별', head:PD_HEAD, rows:PD, desc:'일자 × 공정(MCT/OQC) × 품번 — KPI MCT·OQC 와 같은 단위 (대시보드가 읽는 탭)' },
+      { name:'F2_품번일별', head:PD_HEAD, rows:PD, desc:'일자 × 공정(MCT/PQC/OQC) × 품번 — KPI MCT·OQC 와 같은 단위 (대시보드가 읽는 탭)' },
       { name:'F2_불량상세', head:LONG_HEAD, rows:L, desc:"공정 × 구분(NG/Mat'l/선별) × 품번 × 코드 — TOP5·추이용 (대시보드가 읽는 탭)" },
       { name:'F2_불량코드', head:['코드','불량유형','계통'], rows:CL.map(x=>[x.c,x.n,x.g]), desc:'불량코드 1~50 마스터' }
     ],
-    chk:{ M:cm, O:co }, codes, weeks: Object.values(wk).sort((a,b)=>a.wk<b.wk?-1:1), sheets:{M:shM,O:shO}
+    chk:{ M:cm, P:cp, O:co }, codes, weeks: Object.values(wk).sort((a,b)=>a.wk<b.wk?-1:1), sheets:{M:shM,P:shP,O:shO}
   };
 }
 
@@ -362,7 +378,7 @@ function render(res, from, to){
     try{ await navigator.clipboard.writeText(toTSV(t)); b.textContent='복사됨 ✓'; setTimeout(()=>b.textContent='복사',1800); }
     catch(e){ alert('클립보드 복사가 막혀 있습니다. CSV 로 받아 주세요.'); } });
 
-  const m = res.chk.M, o = res.chk.O;
+  const m = res.chk.M, o = res.chk.O, pq = res.chk.P;
   const okc = (bad, label) => `<td class="${bad?'ng':'ok'}">${bad?`${bad.toLocaleString()} 행`:'일치'}</td><td class="l">${label}</td>`;
   let h = `<table class="chk"><tr><th>공정</th><th>검증 항목</th><th>결과</th><th>설명</th></tr>
     <tr><td class="l" rowspan="${m.matOver?6:5}"><b>MCT</b></td><td class="l">변환 행수</td><td class="ok">${m.rows.toLocaleString()}</td><td class="l">「${esc(res.sheets.M||'없음')}」 · 불량코드 ${esc(res.codes.src)}${m.skipRange?` · 기간 밖 ${m.skipRange}행 제외`:''}${m.noPart?` · 품번 없는 ${m.noPart}행 제외`:''}</td></tr>
@@ -371,15 +387,19 @@ function render(res, from, to){
     <tr><td class="l">Mat'l NG 코드 미기입</td><td class="${m.matGap?'ng':'ok'}">${m.matGap?`${m.matGap} 행`:'일치'}</td><td class="l">${m.matGap?`합계만 있고 코드별 수량이 빈 행 — 차이 ${r2(m.matGapQty).toLocaleString()}개는 F2_불량상세에 '미분류'로 넣음`:'Mat\'l NG 합계와 코드별 합계'}</td></tr>
     ${m.matOver?`<tr><td class="l">Mat'l NG 코드 초과</td><td class="ng">${m.matOver} 행</td><td class="l">코드별 합이 합계보다 ${r2(m.matOverQty)}개 많음 — 원본 확인 필요</td></tr>`:''}
     <tr><td class="l">FG QC Sorting 코드</td>${okc(m.fgGap,'선별 합계와 코드별 합계')}</tr>
+    ${res.sheets.P ? `<tr><td class="l" rowspan="3"><b>PQC</b></td><td class="l">변환 행수</td><td class="ok">${pq.rows.toLocaleString()}</td><td class="l">「${esc(res.sheets.P)}」${pq.skipRange?` · 기간 밖 ${pq.skipRange}행 제외`:''}${pq.noPart?` · <b style="color:#b91c1c">품번 없는 ${pq.noPart}행(${pq.noPartQty.toLocaleString()}개) 제외</b> — 입력 중인 행`:''}</td></tr>
+    <tr><td class="l">Total = FG + NG</td>${okc(pq.tfg,"Total Q'ty · FG Q'ty · NG Q'ty")}</tr>
+    <tr><td class="l">NG = 코드 1~50 합</td>${okc(pq.ngSum,"NG Q'ty 와 CODE DEFECT 합계")}</tr>` : ''}
     <tr><td class="l" rowspan="3"><b>OQC</b></td><td class="l">변환 행수</td><td class="ok">${o.rows.toLocaleString()}</td><td class="l">「${esc(res.sheets.O||'없음')}」${o.skipRange?` · 기간 밖 ${o.skipRange}행 제외`:''}${o.noPart?` · <b style="color:#b91c1c">품번 없는 ${o.noPart}행(${o.noPartQty.toLocaleString()}개) 제외</b> — 입력 중인 행, KPI OQC 도 집계하지 않음`:''}</td></tr>
     <tr><td class="l">Total = FG + NG</td>${okc(o.tfg,"Total Q'ty · FG Q'ty · NG Q'ty")}</tr>
     <tr><td class="l">NG = 코드 1~50 합</td>${okc(o.ngSum,"NG Q'ty 와 CODE DEFECT 합계")}</tr></table>`;
   const pc = (n,t) => t ? (n/t*100).toFixed(2)+'%' : '-';
   h += `<h4 style="margin:16px 0 4px;font-size:13px">주차별 합계 — 원본 「KPI MCT」 · 「KPI OQC」 상단 값과 대조하세요</h4>
-    <table class="chk"><tr><th rowspan="2">시트 주차</th><th rowspan="2">원본 주차</th><th rowspan="2">기간</th><th colspan="5">MCT</th><th colspan="4">OQC Packing</th></tr>
-    <tr><th>Total</th><th>FG</th><th>NG</th><th>% NG</th><th>Mat'l NG</th><th>Total</th><th>FG</th><th>NG</th><th>% NG</th></tr>` +
+    <table class="chk"><tr><th rowspan="2">시트 주차</th><th rowspan="2">원본 주차</th><th rowspan="2">기간</th><th colspan="5">MCT</th>${res.sheets.P?'<th colspan="4">PQC</th>':''}<th colspan="4">OQC Packing</th></tr>
+    <tr><th>Total</th><th>FG</th><th>NG</th><th>% NG</th><th>Mat'l NG</th>${res.sheets.P?'<th>Total</th><th>FG</th><th>NG</th><th>% NG</th>':''}<th>Total</th><th>FG</th><th>NG</th><th>% NG</th></tr>` +
     res.weeks.slice().reverse().map(w=>`<tr><td class="l"><b>${w.wk}</b></td><td class="l">${[...w.owk].join(', ')}</td><td class="l">${w.d0} ~ ${w.d1}</td>
       <td>${w.M.t.toLocaleString()}</td><td>${w.M.f.toLocaleString()}</td><td>${w.M.n.toLocaleString()}</td><td>${pc(w.M.n,w.M.t)}</td><td>${w.M.m.toLocaleString()}</td>
+      ${res.sheets.P?`<td>${w.P.t.toLocaleString()}</td><td>${w.P.f.toLocaleString()}</td><td>${w.P.n.toLocaleString()}</td><td>${pc(w.P.n,w.P.t)}</td>`:''}
       <td>${w.O.t.toLocaleString()}</td><td>${w.O.f.toLocaleString()}</td><td>${w.O.n.toLocaleString()}</td><td>${pc(w.O.n,w.O.t)}</td></tr>`).join('') + `</table>`;
   $('chk').innerHTML = h;
 
@@ -517,14 +537,14 @@ $('go').addEventListener('click', async ()=>{
       setStatus(`✅ FAC2 Raw Data(In-Out Data) ${k.rows.toLocaleString()}행 · 설비 ${res.mcs.length}대 변환 완료 — 탭 ${res.tabs.length}개 준비됨${warn?' · ⚠ 검증에서 확인할 행이 있습니다 (③ 확인)':''}`, warn?'err':'ok');
       $('go').disabled = false; return;
     }
-    const want = wb0.SheetNames.filter(n=>['RAWDATAMCT','RAWDATAOQCPACKING','SEARCHDETAILMCT'].includes(key(n)));
+    const want = wb0.SheetNames.filter(n=>['RAWDATAMCT','RAWDATAOQCPACKING','SEARCHDETAILMCT'].includes(key(n)) || isPQCKey(key(n)));
     /* 날짜는 엑셀 일련번호 그대로 읽어 SSF 로 푼다 — cellDates 는 PC 시간대에 따라 하루 밀리는 경우가 있다 */
-    if (!want.length) throw new Error('알아볼 수 있는 시트가 없습니다 — Raw_Data MCT / Raw_Data OQC Packing 또는 In-Out Data 가 있어야 합니다 (시트: '+wb0.SheetNames.join(', ')+')');
+    if (!want.length) throw new Error('알아볼 수 있는 시트가 없습니다 — Raw_Data MCT / PQC / Raw_Data OQC Packing 또는 In-Out Data 가 있어야 합니다 (시트: '+wb0.SheetNames.join(', ')+')');
     const wb = XLSX.read(buf, { type:'array', cellDates:false, sheets: want });
     const res = convert(wb, from, to);
     render(res, from, to);
-    const m = res.chk.M, o = res.chk.O, warn = m.pgd || m.ngSum || o.tfg;
-    setStatus(`✅ MCT ${m.rows.toLocaleString()}행 · OQC ${o.rows.toLocaleString()}행 변환 완료 — 탭 ${res.tabs.length}개 준비됨${warn?' · ⚠ 검증에서 어긋난 행이 있습니다 (③ 확인)':''}`, warn?'err':'ok');
+    const m = res.chk.M, o = res.chk.O, pq = res.chk.P, warn = m.pgd || m.ngSum || o.tfg || pq.tfg || pq.ngSum;
+    setStatus(`✅ MCT ${m.rows.toLocaleString()}행 · ${res.sheets.P?`PQC ${pq.rows.toLocaleString()}행 · `:''}OQC ${o.rows.toLocaleString()}행 변환 완료 — 탭 ${res.tabs.length}개 준비됨${warn?' · ⚠ 검증에서 어긋난 행이 있습니다 (③ 확인)':''}`, warn?'err':'ok');
   }catch(e){ console.error(e); setStatus('⚠ '+esc(e.message||e), 'err'); }
   $('go').disabled = false;
 });
