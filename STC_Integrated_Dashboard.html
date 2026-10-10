@@ -201,6 +201,10 @@ table.fc-t .tot{background:#eef2f7;font-weight:800;}
 .qt-box{border:1px solid #dbe3ee;border-radius:6px;padding:10px 14px 6px;margin:0 0 16px;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;page-break-inside:avoid;}
 .qt-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;border-left:4px solid #f59e0b;padding-left:8px;margin-bottom:4px;}
 .qt-h b{font-size:15px;color:#1e3c72;font-weight:900;} .qt-h small{font-size:11.5px;color:#6b7280;}
+.qt-tools{margin-left:auto;display:flex;gap:6px;} .qt-tools button{padding:4px 10px;border:1px solid #cbd5e1;border-radius:14px;background:#fff;color:#1e3c72;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.qt-tools button:hover{background:#eef4fd;} .qt-tools button.on{background:#fde68a;border-color:#f59e0b;color:#7c4a03;}
+.qt-toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#111827;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,.25);}
+@media print{.qt-tools{display:none!important;}}
 .qt-lg{display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px;color:#374151;margin:2px 0 2px 12px;}
 .qt-lg i{display:inline-block;width:16px;height:4px;border-radius:2px;vertical-align:middle;margin-right:5px;}
 .qt-lg i.tg{height:0;border-top:2px dashed #dc2626;background:none;} .qt-lg i.hi{height:10px;background:#fde68a;}
@@ -3619,6 +3623,16 @@ function qtSmooth(P){   /* 단조 3차 곡선 (Fritsch–Carlson) — 값보다 
 }
 function qtTrendHtml(o){
   /* o = { id, title, sub, dates:[YYYY-MM-DD], series:[{name,color,vals:[n|null],main}], target, tLabel, hiFrom, hiTo } */
+  /* 🔍 확대 — 노란 음영(보고 기간) 날짜만 남겨 다시 그린다 (설정은 그래프마다 이 브라우저에 저장) */
+  const hiIdx0 = (o.hiFrom && o.hiTo) ? o.dates.map((d,i)=>d>=o.hiFrom && d<=o.hiTo ? i : -1).filter(i=>i>=0) : [];
+  const zoomOn = qtZoomGet(o.id) && hiIdx0.length > 0 && hiIdx0.length < o.dates.length;
+  if (zoomOn){ const o0 = o, ix = hiIdx0;
+    o = { ...o0, dates:ix.map(i=>o0.dates[i]), series:o0.series.map(s=>({ ...s, vals:ix.map(i=>s.vals[i]) })),
+          bars:o0.bars ? { ...o0.bars, vals:ix.map(i=>o0.bars.vals[i]) } : o0.bars,
+          extra:o0.extra ? (j=>o0.extra(ix[j])) : o0.extra, maxLbl:undefined }; }
+  const tools = `<span class="qt-tools">${hiIdx0.length && hiIdx0.length < o.dates.length || zoomOn
+      ? `<button type="button" class="${zoomOn?'on':''}" onclick="qtZoom('${o.id}')" title="노란 음영(보고 기간)만 크게 보기">${zoomOn?'↩ 전체 보기':'🔍 보고기간 확대'}</button>` : ''}
+    <button type="button" onclick="qtShot('${o.id}')" title="그래프를 PNG 이미지로 저장 · 클립보드 복사">📷 스크린샷</button></span>`;
   /* 개선 조치 표시 — 메모 첫 줄(조치 제목) + 사진 썸네일을 날짜 위에, 그 날짜에 세로 점선 (조치 전·후 비교)
      겹치면 아래 줄로 (최대 3줄), 그래도 겹치면 세로선·건수만 */
   const TW = 84, TH = 50, CAP = 15, TG = 5;
@@ -3730,11 +3744,57 @@ function qtTrendHtml(o){
     + (o.bars ? `<span><i style="background:#cbd5e1;height:9px;width:12px;border-radius:2px"></i>${o.bars.name} (EA)</span>` : '')
     + (o.target ? `<span><i class="tg"></i>${o.tLabel||'목표'} ${o.target}%</span>` : '')
     + (hi.length ? `<span><i class="hi"></i>${o.hiLabel||'보고 기간'}</span>` : '');
-  return `<div class="qt-box"><div class="qt-h"><b>${o.title}</b><small>${o.sub||''}</small></div>`
+  return `<div class="qt-box" data-qt="${o.id}"><div class="qt-h"><b>${o.title}</b><small>${o.sub||''}${zoomOn?` · <b style="font-size:11.5px;color:#b45309">🔍 ${o.dates[0]} ~ ${o.dates[o.dates.length-1]} 확대</b>`:''}</small>${tools}</div>`
     + `<div class="qt-lg">${lg}</div>`
     + (o.ctl || '')
     + `<div class="qt-wrap" style="position:relative"><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${o.title}" style="display:block">${g}</svg>`
     + `<div class="qt-tip" id="${o.id}-tip"></div></div></div>`;
+}
+/* ---- 🔍 확대 · 📷 스크린샷 ---- */
+function qtZoomGet(id){ try{ return localStorage.getItem('stc_qt_zoom_'+id) === '1'; }catch(e){ return false; } }
+function qtZoom(id){
+  try{ localStorage.setItem('stc_qt_zoom_'+id, qtZoomGet(id) ? '0' : '1'); }catch(e){}
+  const re = window.__qtRe || {}, f = re[id] || re[String(id).split('_')[0]];
+  if (f) f(); else if (typeof renderF2 === 'function' && document.getElementById('panel-f2ov')) renderF2();
+}
+function qtToast(msg){ const t = document.createElement('div'); t.className = 'qt-toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 2600); }
+/* 그래프 상자(제목 · 부제 · 범례 · 그래프)를 2배 해상도 PNG 로 — 파일 저장 + 클립보드 복사(되는 브라우저만) */
+async function qtShot(id){
+  const box = document.querySelector(`.qt-box[data-qt="${CSS.escape(id)}"]`), S = window.__qt[id];
+  const svg = box && box.querySelector('.qt-wrap svg'); if (!svg || !S) return;
+  const sc = 2, W = 1000, vb = svg.viewBox.baseVal, H = vb.height, PAD = 24;
+  const font = getComputedStyle(document.body).fontFamily || 'sans-serif';
+  const clone = svg.cloneNode(true);
+  clone.setAttribute('xmlns','http://www.w3.org/2000/svg'); clone.setAttribute('width', W); clone.setAttribute('height', H);
+  clone.setAttribute('style', `font-family:${font};background:#fff`);
+  clone.querySelectorAll('[visibility="hidden"], .qt-ndel').forEach(e=>e.remove());
+  const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)], { type:'image/svg+xml;charset=utf-8' }));
+  const img = new Image();
+  try{ await new Promise((ok, ng)=>{ img.onload = ok; img.onerror = ng; img.src = url; }); }
+  catch(e){ URL.revokeObjectURL(url); qtToast('스크린샷을 만들지 못했습니다'); return; }
+  const title = box.querySelector('.qt-h b').innerText, sub = box.querySelector('.qt-h small').innerText;
+  const lg = S.o.series.map(s=>({ c:s.color, t:s.name })).concat(S.o.target ? [{ c:'#dc2626', t:`${S.o.tLabel||'목표'} ${S.o.target}%`, dash:true }] : []);
+  const headH = 78, cv = document.createElement('canvas');
+  cv.width = (W + PAD*2) * sc; cv.height = (H + headH + PAD*2) * sc;
+  const c = cv.getContext('2d'); c.scale(sc, sc);
+  c.fillStyle = '#fff'; c.fillRect(0, 0, W + PAD*2, H + headH + PAD*2);
+  c.fillStyle = '#f59e0b'; c.fillRect(PAD, PAD, 4, 22);
+  c.fillStyle = '#1e3c72'; c.font = `900 18px ${font}`; c.textBaseline = 'top'; c.fillText(title, PAD + 12, PAD + 2);
+  c.fillStyle = '#6b7280'; c.font = `500 12px ${font}`; c.fillText(sub, PAD + 12, PAD + 28);
+  let x = PAD + 12; c.font = `600 12px ${font}`;
+  lg.forEach(l=>{ c.strokeStyle = l.c; c.lineWidth = 3; c.setLineDash(l.dash ? [5,3] : []); c.beginPath(); c.moveTo(x, PAD + 56); c.lineTo(x + 16, PAD + 56); c.stroke();
+    c.fillStyle = '#374151'; c.fillText(l.t, x + 21, PAD + 49); x += 21 + c.measureText(l.t).width + 18; });
+  c.setLineDash([]);
+  c.drawImage(img, PAD, PAD + headH, W, H); URL.revokeObjectURL(url);
+  const name = `${title.replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,'_').slice(0,60)}_${new Date().toISOString().slice(0,10)}.png`;
+  cv.toBlob(async blob=>{
+    if (!blob){ qtToast('스크린샷을 만들지 못했습니다'); return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    let copied = false;
+    try{ if (navigator.clipboard && window.ClipboardItem){ await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); copied = true; } }catch(e){}
+    qtToast(copied ? '📷 PNG 저장 + 클립보드 복사 완료 (카톡·메일에 Ctrl+V)' : '📷 PNG 파일로 저장했습니다');
+  }, 'image/png');
 }
 /* 추이 기간 지정 — { n:일수 } = 보고 종료일 기준 최근 N일(데이터 있는 날) · { from, to } = 직접 지정 (브라우저에 저장) */
 function qtRangeGet(id){ try{ const v = JSON.parse(localStorage.getItem('stc_qt_rng_'+id) || 'null'); if (v && (v.n || (v.from && v.to))) return v; }catch(e){} return { n:30 }; }
