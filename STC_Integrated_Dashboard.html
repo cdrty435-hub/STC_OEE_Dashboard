@@ -611,7 +611,13 @@ table.f2-ms tr.n td:not(.l):not(.tt){background:#fff5f5;} table.f2-ms tr.m td:no
 .f2-mcd td.f2-dcell{vertical-align:top;border-right:1px solid var(--line,#e5e7eb);white-space:nowrap;color:var(--accent,#1e40af)}
 .f2-mcd td.f2-dcell{text-align:left} .f2-mcd tr.f2-dsub td.name{text-align:left} .f2-mcd tr.f2-dsub td{background:#f3f6fb;font-weight:700;border-bottom:2px solid #cbd5e1}
 .f2-psec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;padding:10px 14px;border-radius:10px;color:#fff;font-size:16px;font-weight:800;}
-.f2-psec.mct{background:linear-gradient(135deg,#1e3c72,#2a5298);} .f2-psec.oqc{background:linear-gradient(135deg,#0f5132,#198754);}
+.f2-psec.mct{background:linear-gradient(135deg,#1e3c72,#2a5298);} .f2-psec.oqc{background:linear-gradient(135deg,#0f5132,#198754);} .f2-psec.pqc{background:linear-gradient(135deg,#6b3fa0,#8e5cc7);}
+.pq-bar{display:grid;grid-template-columns:minmax(120px,240px) 1fr 64px;gap:10px;align-items:center;font-size:12.5px;padding:4px 0;}
+.pq-bar .trk{height:14px;background:var(--surface-2,#eef1f5);border-radius:4px;overflow:hidden;} .pq-bar .trk i{display:block;height:100%;border-radius:4px;}
+.pq-bar .v{text-align:right;font-weight:700;} .pq-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-2);margin-bottom:6px;} .pq-lg span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--c);}
+.gs-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 14px;background:var(--surface-1);border:1px solid var(--hairline);border-radius:10px;margin-bottom:10px;font-size:12.5px;}
+.gs-bar a,.gs-bar button{padding:6px 12px;border-radius:6px;border:1px solid #1e7a46;background:#1e7a46;color:#fff;font-weight:700;text-decoration:none;font-size:12.5px;cursor:pointer;font-family:inherit;}
+.gs-bar button.alt{background:#fff;color:#1e7a46;} .gs-frame{width:100%;height:calc(100vh - 230px);min-height:520px;border:1px solid var(--hairline);border-radius:10px;background:#fff;display:block;}
 .f2-psec b{display:inline-flex;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);align-items:center;justify-content:center;}
 .f2-psec small{font-size:12px;font-weight:500;opacity:.85;margin-left:6px;}
 textarea.f2-note{width:100%;min-height:70px;border:1px dashed #c9d2dc;border-radius:6px;padding:8px;font-family:inherit;font-size:12.5px;background:#fffef5;resize:vertical;}
@@ -730,7 +736,7 @@ table.eq td.name{font-weight:700;}
       noWeek:true → 그 페이지엔 주차 선택이 없으므로 주차 동기화를 시도하지 않는다.
    ========================================================================= */
 const PORTAL_BUILD = Date.now().toString(36);   /* 열 때마다 바뀌는 캐시 무효화 표식 */
-const GROUPS = ['all','fac1','fac2'];      /* 1. 종합(FAC1·FAC2)  2. FAC1 다이캐스팅  3. FAC2 MCT */
+const GROUPS = ['all','fac1','fac2','sheet'];      /* 1. 종합(FAC1·FAC2)  2. FAC1 다이캐스팅  3. FAC2 MCT  4. 구글시트(OEE_RawData_APQ) */
 const TABS = [
   { id:'overview', g:'all',  src:null },
   { id:'focus',    g:'all',  src:null },
@@ -750,7 +756,8 @@ const TABS = [
   { sep:true,      g:'fac1' },
   { id:'conv',     g:'fac1', src:'STC_OEE_DataConverter.html', tool:true },
   { id:'f2ov',     g:'fac2', src:null },
-  { id:'conv2',    g:'fac2', src:'STC_FAC2_DataConverter.html', tool:true, noWeek:true }
+  { id:'conv2',    g:'fac2', src:'STC_FAC2_DataConverter.html', tool:true, noWeek:true },
+  { id:'gsheet',   g:'sheet', src:null }          /* 4. 원천 구글시트 OEE_RawData_APQ — renderGSheet() 가 그린다 */
 ];
 
 /* =========================================================================
@@ -1294,11 +1301,11 @@ function renderOverview(){
         · 읽는 경로(순서대로): ① 저장한 gid → ② 게시 CSV(sheet=탭이름) → ③ gviz(sheet=탭이름)
    ========================================================================= */
 const F2_SHEET_ID = '1m-b3Ur5VhewDhM0cbv39q8cuMm9Y0asyH1NyV0coDD4';
-const F2_TAB  = { pd:'F2_품번일별', det:'F2_불량상세', mq:'F2_MCT_Q', pm:'F2_생산실적', pmd:'F2_설비일별', code:'F2_불량코드' };
+const F2_TAB  = { pd:'F2_품번일별', det:'F2_불량상세', mq:'F2_MCT_Q', pm:'F2_생산실적', pmd:'F2_설비일별', code:'F2_불량코드', pq:'F2_PQC_Q' };
 const F2_GID_DEF = { pm:'1950067484', pmd:'1796486014', code:'2002569652' };   /* OEE_RawData_APQ 탭 gid (FAC2 Raw Data → 변환기 출력) */
-const F2_NEED = { code:['코드','불량유형'], pm:['일자','설비','OP','품번(QC)','Total','FG','NG'], pmd:['일자','설비','Total','FG','NG','계획(h)'], mq:['일자','주차','설비명','Part no.','생산수량','양품','불량수량'], pd:['일자','주차','공정','Part no.',"Total Q'ty","FG Q'ty","NG Q'ty"], det:['주차','공정','구분','Part no.','불량유형','계통','수량'] };
+const F2_NEED = { pq:['일자','설비명','Part no.',"Total Q'ty","FG Q'ty","NG Q'ty"], code:['코드','불량유형'], pm:['일자','설비','OP','품번(QC)','Total','FG','NG'], pmd:['일자','설비','Total','FG','NG','계획(h)'], mq:['일자','주차','설비명','Part no.','생산수량','양품','불량수량'], pd:['일자','주차','공정','Part no.',"Total Q'ty","FG Q'ty","NG Q'ty"], det:['주차','공정','구분','Part no.','불량유형','계통','수량'] };
 const F2_PROCS = ['MCT','OQC'];
-let F2 = { pd:[], det:[], mq:[], pm:[], pmd:[], loaded:false, err:null, loading:false };
+let F2 = { pd:[], det:[], mq:[], pm:[], pmd:[], pq:[], pqErr:'', loaded:false, err:null, loading:false };
 const f2n = v => { const s=String(v==null?'':v).replace(/,/g,'').trim(); if(!s) return 0;
   const p=s.endsWith('%'); const n=parseFloat(p?s.slice(0,-1):s); return isNaN(n)?0:(p?n/100:n); };
 const f2gid = k => { try{ return localStorage.getItem('stc_f2_gid_'+k) || F2_GID_DEF[k] || ''; }catch(e){ return F2_GID_DEF[k] || ''; } };
@@ -1355,6 +1362,8 @@ async function loadF2(){
   F2.loading = true; F2.err = null; renderF2();
   /* 전 설비 생산실적(F2_생산실적 · F2_설비일별) — 품질 탭과 따로 읽는다 (한쪽이 없어도 다른 쪽은 뜬다) */
   const codeJob = f2CodeFetch().then(f2CodeLoad).catch(()=>{ F2.code.err = true; });
+  /* PQC 관리현황 (F2_PQC_Q) — 따로 읽는다 (없어도 나머지는 뜬다) */
+  const pqJob = f2Fetch('pq').then(rows=>{ F2.pq = pqNorm(rows); F2.pqErr = ''; }).catch(e=>{ F2.pq = []; F2.pqErr = e && e.message || String(e); });
   const pmJob = Promise.allSettled([f2Fetch('pm'), f2Fetch('pmd'), codeJob]).then(([a,b])=>{
     F2.pm  = a.status==='fulfilled' ? f2pNorm(a.value)  : []; F2.pmErr = a.status==='fulfilled' ? '' : (a.reason && a.reason.message || String(a.reason));
     F2.pmd = b.status==='fulfilled' ? f2pNormD(b.value) : []; });
@@ -1365,7 +1374,7 @@ async function loadF2(){
     f2NormParts(F2.pd); f2NormParts(F2.det); f2NormParts(F2.mq);
     F2.loaded = true; F2.at = new Date();
   }catch(e){ F2.loaded = false; F2.err = e.message || String(e); F2.at = new Date(); }
-  await pmJob;
+  await pmJob; await pqJob;
   F2.loading = false;
   renderF2(); if(RAW.a.length) renderOverview();
   if(activeTab==='focus' && typeof renderFocus==='function') renderFocus();
@@ -2991,6 +3000,7 @@ const F2_VIEWS = [
   { id:'daily', icon:'📅', sec:'f2.sec.rep' },
   { id:'week',  icon:'📄', sec:'f2.sec.rep' },
   { id:'month', icon:'🗂️', sec:'f2.sec.rep' },
+  { id:'pqc',   icon:'🔍', sec:'f2.sec.pqc' },
   { id:'pdaily', icon:'🏭', sec:'f2.sec.prod' },
   { id:'pweek',  icon:'⚙️', sec:'f2.sec.prod' },
   { id:'pmonth', icon:'📦', sec:'f2.sec.prod' },
@@ -3482,10 +3492,11 @@ function renderF2(){
     }).join('') + `</aside>`;
   const st = f2Status();
   let body;
-  NOTE.cur = F2_VIEW[0]==='p' ? 'FAC2P' : 'FAC2';
+  NOTE.cur = (F2_VIEW[0]==='p' && F2_VIEW!=='pqc') ? 'FAC2P' : 'FAC2';
   if(F2_VIEW==='act') body = actBoardHtml('FAC2');
   else if(F2_VIEW==='link') body = (F2.loading && !F2.pm.length) ? `<div class="empty">${T('f2.loading')}</div>` : f2LinkView();
   else if(F2_VIEW==='qty') body = (F2.loading && !F2.pd.length && !F2.pm.length) ? `<div class="empty">${T('f2.loading')}</div>` : f2Qty(week);
+  else if(F2_VIEW==='pqc') body = pqReport();
   else if(F2_VIEW[0]==='p') body = f2pStatus() || f2pReport(F2_VIEW.slice(1), week);
   else if(st) body = `<div class="sec-title">${T('grp.fac2')} · ${week||''}</div>${st}`;
   else if(F2_VIEW==='dash') body = f2Dash(week);
@@ -4055,6 +4066,183 @@ function f2Report(kind, topWeek){
 }
 
 /* =========================================================================
+   FAC2 PQC 관리현황 — 구글시트 F2_PQC_Q (원본 「PQC」 시트 1행 = 1행)
+   · 구성은 「일일 품질보고」와 같다: 기간 선택(시작~종료 · 빠른 선택) → 비교(직전 같은 일수)
+     → KPI 요약 → 설비별 → 품번별 → Shift·Cav. → 불량유형 → 품번별 TOP5 → 일자별 추이 → 상세 → 특이사항
+   · 불량 계통: 1~16 다캐 · 17~46 가공 · 47~49 협력사 · 50 고객 (변환기와 같음)
+   ========================================================================= */
+const PQ_TX = {
+  ko:{ sec:'PQC 관리현황', v:'PQC 일일 관리현황', title:'FAC2 PQC 일일 관리현황', ps:'PQC 공정검사', pss:'가공 중 품질검사 — 설비 · Shift · Cav. · 불량유형',
+       s1:'PQC KPI 요약', s2:'설비별 PQC 실적 (%NG 높은 순)', s3:'품번별 실적 (PART NAME)', s4:'Shift · Cav.별 실적', s5:'불량유형 TOP 10', s6:'품번별 불량 TOP5',
+       s7:'일자별 추이', s8:'검사 상세 (원본 행)', s9:'특이사항 · 조치', mc:'설비', top:'주요 불량', shift:'Shift', cav:'Cav.', lot:'Lot d/c', lotmc:'Lot m/c',
+       none:'선택한 기간에 PQC 데이터가 없습니다.', noTab:'구글시트에서 F2_PQC_Q 탭을 찾지 못했습니다 — FAC2 변환기의 F2_PQC_Q CSV를 같은 이름의 탭으로 넣어 주세요.',
+       foot:'· 원천: 구글시트 F2_PQC_Q (FAC2 변환기 출력, 원본 「PQC」 시트). %NG = NG ÷ Total. 주차는 FAC1과 같은 수~화 기준.', more:'외 {n}행', grp:{'다캐불량':'다캐 불량','가공불량':'가공 불량','협력사':'협력사','고객':'고객'} },
+  en:{ sec:'PQC status', v:'PQC daily status', title:'FAC2 PQC Daily Status', ps:'PQC in-process inspection', pss:'In-process QC — machine · shift · cavity · defect type',
+       s1:'PQC KPI summary', s2:'By machine (highest %NG first)', s3:'By part (PART NAME)', s4:'By shift · cavity', s5:'Top 10 defect types', s6:'Top 5 defects by part',
+       s7:'Daily trend', s8:'Inspection detail (source rows)', s9:'Notes · actions', mc:'M/C', top:'Main defects', shift:'Shift', cav:'Cav.', lot:'Lot d/c', lotmc:'Lot m/c',
+       none:'No PQC data in the selected period.', noTab:'F2_PQC_Q tab not found in the Google Sheet — add the F2_PQC_Q CSV from the FAC2 converter as a tab with the same name.',
+       foot:'· Source: Google Sheet F2_PQC_Q (FAC2 converter, original "PQC" sheet). %NG = NG ÷ Total. Weeks follow the FAC1 Wed–Tue rule.', more:'+{n} more rows', grp:{'다캐불량':'Die casting','가공불량':'Machining','협력사':'Supplier','고객':'Customer'} },
+  th:{ sec:'สถานะ PQC', v:'สถานะ PQC รายวัน', title:'FAC2 PQC สถานะรายวัน', ps:'PQC ตรวจระหว่างกระบวนการ', pss:'ตรวจคุณภาพระหว่างงานกลึง — เครื่อง · กะ · Cav. · ประเภทของเสีย',
+       s1:'สรุป KPI PQC', s2:'ตามเครื่องจักร (%NG สูงสุดก่อน)', s3:'ตามชิ้นงาน (PART NAME)', s4:'ตามกะ · Cav.', s5:'ประเภทของเสีย TOP 10', s6:'ของเสีย TOP5 ตามชิ้นงาน',
+       s7:'แนวโน้มรายวัน', s8:'รายละเอียดการตรวจ (แถวต้นฉบับ)', s9:'หมายเหตุ · การแก้ไข', mc:'เครื่อง', top:'ของเสียหลัก', shift:'กะ', cav:'Cav.', lot:'Lot d/c', lotmc:'Lot m/c',
+       none:'ไม่มีข้อมูล PQC ในช่วงที่เลือก', noTab:'ไม่พบแท็บ F2_PQC_Q ใน Google Sheet — นำ CSV F2_PQC_Q จากตัวแปลง FAC2 ใส่เป็นแท็บชื่อเดียวกัน',
+       foot:'· แหล่งข้อมูล: Google Sheet F2_PQC_Q (ตัวแปลง FAC2 จากชีต "PQC") %NG = NG ÷ Total', more:'อีก {n} แถว', grp:{'다캐불량':'ไดคาสติ้ง','가공불량':'งานกลึง','협력사':'ซัพพลายเออร์','고객':'ลูกค้า'} } };
+const pqT = k => (PQ_TX[LANG]||PQ_TX.ko)[k];
+Object.assign(I18N.ko, { 'f2.sec.pqc':PQ_TX.ko.sec, 'f2.v.pqc':PQ_TX.ko.v, 'f2.p.PQC':'PQC 공정검사' });
+Object.assign(I18N.en, { 'f2.sec.pqc':PQ_TX.en.sec, 'f2.v.pqc':PQ_TX.en.v, 'f2.p.PQC':'PQC inspection' });
+Object.assign(I18N.th, { 'f2.sec.pqc':PQ_TX.th.sec, 'f2.v.pqc':PQ_TX.th.v, 'f2.p.PQC':'PQC ตรวจระหว่างกระบวนการ' });
+const PQ_GRP_OF = c => c<=16 ? '다캐불량' : c<=46 ? '가공불량' : c<=49 ? '협력사' : '고객';
+const PQ_GRP_C = { '다캐불량':'#c2410c', '가공불량':'#2a5298', '협력사':'#8e5cc7', '고객':'#6b7280' };
+/* 시트 행 → { d, wk, mc, sh, cav, name, no, lot, lotmc, t, f, n, codes:[{c,o,v}] } — 불량코드 열은 머리글 "01 Porosity ตามด" 형식 */
+function pqNorm(rows){
+  if(!rows.length) return [];
+  const codeCols = Object.keys(rows[0]).map(k=>{ const m = String(k).match(/^\s*(\d{1,2})\s+(.+)$/); return m ? { k, c:+m[1], o:m[2].trim() } : null; }).filter(x=>x && x.c>=1 && x.c<=50);
+  const out = [];
+  rows.forEach(r=>{
+    const d = String(r['일자']||'').slice(0,10); if(!/^\d{4}-\d{2}-\d{2}$/.test(d) || !String(r['Part no.']||'').trim()) return;
+    const codes = []; codeCols.forEach(x=>{ const v = f2n(r[x.k]); if(v) codes.push({ c:x.c, o:x.o, v }); });
+    out.push({ d, wk:r['주차']||'', owk:r['원본주차']||'', mc:String(r['설비명']||'').trim(), sh:String(r['Shift']||'').trim(), cav:String(r['Cav.']||'').trim(),
+      name:f2FullName(r['Part name'], r['Part no.']), no:String(r['Part no.']).trim(), lot:r['Lot d/c']||'', lotmc:r['Lot m/c']||'',
+      t:f2n(r["Total Q'ty"]), f:f2n(r["FG Q'ty"]), n:f2n(r["NG Q'ty"]), codes });
+  });
+  return out.sort((a,b)=> a.d<b.d?-1:a.d>b.d?1: a.mc<b.mc?-1:a.mc>b.mc?1:0);
+}
+const pqDates = () => [...new Set(F2.pq.map(r=>r.d))].sort();
+const pqDefName = x => f2DefName(x.c, x.o);
+/* 기간 집계 — f2Sum 과 같은 모양 (s.PQC · s.partList[].PQC) 이라 기존 표 함수(f2ProcKpiTable · f2PartTableP · f2TrendTableP)를 그대로 쓴다 */
+function pqSum(pred){
+  const o = { PQC:f2mk(), parts:{}, dates:new Set() };
+  F2.pq.forEach(r=>{ if(!pred(r)) return;
+    const add = a => { a.t+=r.t; a.f+=r.f; a.n+=r.n; };
+    add(o.PQC); o.dates.add(r.d);
+    const pt = o.parts[r.no] || (o.parts[r.no] = { no:r.no, name:r.name||r.no, PQC:f2mk() }); add(pt.PQC); });
+  o.days = [...o.dates].sort();
+  o.partList = Object.values(o.parts).sort((a,b)=>b.PQC.t-a.PQC.t);
+  return o;
+}
+function pqTop(rows, n){
+  const m = {}; rows.forEach(r=>r.codes.forEach(x=>{ const k = x.c; const e = m[k] || (m[k] = { c:k, t:pqDefName(x), g:PQ_GRP_OF(k), v:0 }); e.v += x.v; }));
+  return Object.values(m).sort((a,b)=>b.v-a.v).slice(0, n||5);
+}
+function pqRange(){ try{ return JSON.parse(localStorage.getItem('stc_f2_pqc_range')||'null') || {}; }catch(e){ return {}; } }
+function pqSetRange(from, to){
+  const r = pqRange(); const ds = pqDates(), last = ds[ds.length-1];
+  if(from) r.from = from; if(to) r.to = to;
+  if(!r.from) r.from = r.to || last; if(!r.to) r.to = r.from || last;
+  try{ localStorage.setItem('stc_f2_pqc_range', JSON.stringify(r)); }catch(e){}
+  setTimeout(renderF2,0);
+}
+function pqQuick(q){
+  const ds = pqDates(); if(!ds.length) return; const last = ds[ds.length-1];
+  let from = last;
+  if(q==='d3') from = f2AddDays(last,-2);
+  else if(q==='d7') from = f2AddDays(last,-6);
+  else if(q==='wk'){ const w = (F2.pq.find(r=>r.d===last)||{}).wk; const inW = ds.filter(d=>F2.pq.some(r=>r.d===d && r.wk===w)); from = inW[0] || last; }
+  else if(q==='mo') from = last.slice(0,8)+'01';
+  try{ localStorage.setItem('stc_f2_pqc_range', JSON.stringify({from, to:last})); }catch(e){}
+  renderF2();
+}
+function pqReport(){
+  if(F2.loading && !F2.pq.length) return `<div class="empty">${T('f2.loading')}</div>`;
+  if(!F2.pq.length) return `<div class="card empty" style="padding:16px">${pqT('noTab')}${F2.pqErr?`<br><small>${esc2(F2.pqErr)}</small>`:''}</div>`;
+  const dates = pqDates(), first = dates[0], last = dates[dates.length-1];
+  const rg = pqRange(); let dFrom = rg.from || last, dTo = rg.to || last;
+  if(dFrom < first) dFrom = first; if(dTo > last) dTo = last; if(dFrom > dTo){ const x = dFrom; dFrom = dTo; dTo = x; }
+  const n = f2DayDiff(dFrom, dTo) + 1;
+  const cur = n===1 ? dFrom : `${dFrom} ~ ${dTo}`;
+  const pred = r=>r.d>=dFrom && r.d<=dTo;
+  let prevKey, prevPred;
+  if(n===1){ const i = dates.indexOf(dFrom); prevKey = i>0 ? dates[i-1] : null; prevPred = r=>r.d===prevKey; }
+  else { const pf = f2AddDays(dFrom,-n), pt = f2AddDays(dFrom,-1); prevKey = `${pf} ~ ${pt}`; prevPred = r=>r.d>=pf && r.d<=pt; }
+  const inR = dates.filter(d=>d>=dFrom && d<=dTo);
+  const label = n===1 ? dFrom : `${dFrom} ~ ${dTo} · ${T('u.days',{n})} (${T('f2.workDays',{n:inR.length})})`;
+  const s = pqSum(pred), p = prevKey ? pqSum(prevPred) : null;
+  const R = F2.pq.filter(pred);
+  const noteKey = 'pqc_'+cur.replace(/\s/g,'');
+  let note = ''; try{ note = localStorage.getItem('stc_f2_note_'+noteKey) || ''; }catch(e){}
+  const bar = `<div class="f2-rbar f2-noprint">
+      <label>${T('f2.r.period')} <input type="date" class="f2-date" value="${dFrom}" min="${first}" max="${last}" onchange="pqSetRange(this.value, null)"></label>
+      <span>~</span><input type="date" class="f2-date" value="${dTo}" min="${first}" max="${last}" onchange="pqSetRange(null, this.value)">
+      <span class="f2-quick">${['d1','d3','d7','wk','mo'].map(q=>`<button onclick="pqQuick('${q}')">${T('f2.q.'+q)}</button>`).join('')}</span>
+      <span class="f2-cmp">${T('f2.r.vs')} <b>${prevKey||'–'}</b> · ${T('f2.target')} ${f2Target()}%</span>
+      <button class="btn-f2" onclick="window.print()">${T('f2.r.print')}</button></div>`;
+  if(!R.length) return bar + `<div class="card empty">${pqT('none')}</div>`;
+  const rateCell = a => `<td style="color:${f2St(f2Rate(a)).c};font-weight:700">${f2pc(a)}</td>`;
+  const topTxt = (rows, k) => { const L = pqTop(rows, k||3); return L.length ? L.map(x=>`${esc2(x.t)} <b>${fmt(x.v)}</b>`).join(' · ') : '–'; };
+  const card = (head, body) => `<div class="card"><div class="tblwrap"><table class="eq f2-pt"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;
+  /* 2. 설비별 */
+  const byMc = {}; R.forEach(r=>{ const o = byMc[r.mc] || (byMc[r.mc] = { k:r.mc, a:f2mk(), rows:[] }); o.a.t+=r.t; o.a.f+=r.f; o.a.n+=r.n; o.rows.push(r); });
+  const mcL = Object.values(byMc).sort((a,b)=>(f2Rate(b.a)||0)-(f2Rate(a.a)||0));
+  const mcTbl = card(`<th>${pqT('mc')}</th><th>Total</th><th>FG</th><th>NG</th><th>% NG</th><th>${pqT('top')}</th>`,
+    mcL.map(o=>`<tr><td class="name">${esc2(o.k)}</td><td>${fmt(o.a.t)}</td><td>${fmt(o.a.f)}</td><td>${fmt(o.a.n)}</td>${rateCell(o.a)}<td class="t5">${topTxt(o.rows)}</td></tr>`).join('')
+    + `<tr class="tot"><td class="name">Total</td><td>${fmt(s.PQC.t)}</td><td>${fmt(s.PQC.f)}</td><td>${fmt(s.PQC.n)}</td>${rateCell(s.PQC)}<td></td></tr>`);
+  /* 4. Shift · Cav. */
+  const bySc = {}; R.forEach(r=>{ const k = (r.sh||'-')+'|'+(r.cav||'-'); const o = bySc[k] || (bySc[k] = { sh:r.sh||'-', cav:r.cav||'-', a:f2mk(), rows:[] }); o.a.t+=r.t; o.a.f+=r.f; o.a.n+=r.n; o.rows.push(r); });
+  const scL = Object.values(bySc).sort((a,b)=> a.sh<b.sh?-1:a.sh>b.sh?1: a.cav<b.cav?-1:1);
+  const scTbl = card(`<th>${pqT('shift')}</th><th>${pqT('cav')}</th><th>Total</th><th>FG</th><th>NG</th><th>% NG</th><th>${pqT('top')}</th>`,
+    scL.map(o=>`<tr><td class="name">${esc2(o.sh)}</td><td>${esc2(o.cav)}</td><td>${fmt(o.a.t)}</td><td>${fmt(o.a.f)}</td><td>${fmt(o.a.n)}</td>${rateCell(o.a)}<td class="t5">${topTxt(o.rows)}</td></tr>`).join(''));
+  /* 5. 불량유형 TOP 10 (막대) */
+  const top10 = pqTop(R, 10), mx = Math.max(1, ...top10.map(x=>x.v)), tot = s.PQC.n || 1;
+  const grpSum = {}; R.forEach(r=>r.codes.forEach(x=>{ const g = PQ_GRP_OF(x.c); grpSum[g] = (grpSum[g]||0) + x.v; }));
+  const topHtml = `<div class="card"><div class="pq-lg">${Object.keys(PQ_GRP_C).map(g=>`<span style="--c:${PQ_GRP_C[g]}">${pqT('grp')[g]} <b>${fmt(grpSum[g]||0)}</b></span>`).join('')}</div>
+    ${top10.length ? top10.map(x=>`<div class="pq-bar"><div>${String(x.c).padStart(2,'0')} ${esc2(x.t)}</div><div class="trk"><i style="width:${(x.v/mx*100).toFixed(1)}%;background:${PQ_GRP_C[x.g]}"></i></div><div class="v">${fmt(x.v)} <small style="font-weight:500;color:var(--ink-muted)">${(x.v/tot*100).toFixed(0)}%</small></div></div>`).join('') : `<div class="empty">${T('f2.none5')}</div>`}</div>`;
+  /* 6. 품번별 TOP5 (계통별) */
+  const t5 = (no, g) => { const L = pqTop(R.filter(r=>r.no===no).map(r=>({codes:r.codes.filter(x=>PQ_GRP_OF(x.c)===g)})), 5); return L.length ? L.map(x=>`${esc2(x.t)} <b>${fmt(x.v)}</b>`).join(' · ') : '–'; };
+  const t5Tbl = `<div class="card"><div class="tblwrap"><table class="eq f2-pt f2-t5t"><thead><tr><th>PART NAME</th><th>NG</th><th>% NG</th><th>${T('f2.g.다캐불량')} TOP5</th><th>${T('f2.g.가공불량')} TOP5</th></tr></thead><tbody>`
+    + (s.partList.filter(pt=>pt.PQC.n>0).map(pt=>`<tr><td class="name">${esc2(pt.name)}</td><td>${fmt(pt.PQC.n)}</td>${rateCell(pt.PQC)}<td class="t5">${t5(pt.no,'다캐불량')}</td><td class="t5">${t5(pt.no,'가공불량')}</td></tr>`).join('') || `<tr><td colspan="5" class="empty">${T('f2.none5')}</td></tr>`)
+    + `</tbody></table></div></div>`;
+  /* 7. 일자별 추이 — 기간이 하루면 최근 7일 */
+  let trend, trendLbl;
+  if(inR.length > 1){ trendLbl = T('f2.byDay'); trend = inR.map(d=>({k:d, s:pqSum(r=>r.d===d)})); }
+  else { const i = dates.indexOf(dTo); trendLbl = T('f2.last7'); trend = dates.slice(Math.max(0,i-6), i+1).map(d=>({k:d, s:pqSum(r=>r.d===d)})); }
+  /* 8. 상세 (원본 행 · 최대 300행) */
+  const MAXR = 300;
+  const detTbl = card(`<th>${T('f2.date')}</th><th>${pqT('mc')}</th><th>${pqT('shift')}</th><th>${pqT('cav')}</th><th>PART NAME</th><th>${pqT('lot')}</th><th>${pqT('lotmc')}</th><th>Total</th><th>FG</th><th>NG</th><th>% NG</th><th>${pqT('top')}</th>`,
+    R.slice(0,MAXR).map(r=>`<tr><td class="name">${esc2(r.d)}</td><td>${esc2(r.mc)}</td><td>${esc2(r.sh)}</td><td>${esc2(r.cav)}</td><td class="name">${esc2(r.name)}</td><td>${esc2(r.lot||'-')}</td><td>${esc2(r.lotmc||'-')}</td>
+      <td>${fmt(r.t)}</td><td>${fmt(r.f)}</td><td>${fmt(r.n)}</td>${rateCell(r)}<td class="t5">${r.codes.slice().sort((a,b)=>b.v-a.v).slice(0,3).map(x=>`${esc2(pqDefName(x))} <b>${fmt(x.v)}</b>`).join(' · ')||'–'}</td></tr>`).join('')
+    + (R.length>MAXR ? `<tr><td colspan="12" class="empty">${pqT('more').replace('{n}', fmt(R.length-MAXR))}</td></tr>` : ''));
+  const ow = [...new Set(R.map(r=>r.owk).filter(Boolean))].join(', ');
+  return bar + `
+    <div class="f2-rhead"><h2>${pqT('title')}</h2>
+      <div>${esc2(label)}${ow?` (${T('f2.orig')} ${esc2(ow)})`:''} · ${T('f2.r.vs')} ${esc2(prevKey||'–')}<br><small>${T('f2.r.made',{d:new Date().toISOString().slice(0,10)}).replace(/F2_[^·]+(·\s*F2_\S+)?/,'F2_PQC_Q')}</small></div></div>
+    <div class="f2-psec pqc"><b>C</b>${pqT('ps')}<small>${pqT('pss')}</small></div>
+    <div class="sec-title">1. ${pqT('s1')} <span style="text-transform:none;font-weight:600">(${T('f2.target')} %NG ≤ ${f2Target()}%)</span></div>${f2ProcKpiTable(s, p, 'PQC', prevKey, cur)}
+    <div class="sec-title">2. ${pqT('s2')}</div>${mcTbl}
+    <div class="sec-title">3. ${pqT('s3')}</div>${f2PartTableP(s,'PQC')}
+    <div class="sec-title">4. ${pqT('s4')}</div>${scTbl}
+    <div class="sec-title">5. ${pqT('s5')}</div>${topHtml}
+    <div class="sec-title">6. ${pqT('s6')}</div>${t5Tbl}
+    <div class="sec-title">7. ${trendLbl}</div>${f2TrendTableP(trend, T('f2.date'), n===1?dFrom:null, 'PQC')}
+    <div class="sec-title">8. ${pqT('s8')}</div>${detTbl}
+    <div class="sec-title">9. ${pqT('s9')}</div>
+    <div class="card"><textarea class="f2-note" data-f2note="${esc2(noteKey)}" placeholder="${T('f2.r.noteph')}">${esc2(note)}</textarea></div>
+    <div class="foot">${pqT('foot')}<br>${T('f2.f3',{t:f2Target()})}</div>`;
+}
+
+/* =========================================================================
+   4. 구글시트 (OEE_RawData_APQ) — 원천 시트를 대시보드 안에서 바로 보고 고친다
+   · 구글 로그인 상태에 따라 안에서 편집이 막히면 「새 창에서 열기」를 쓴다
+   ========================================================================= */
+const GS_ID = '1m-b3Ur5VhewDhM0cbv39q8cuMm9Y0asyH1NyV0coDD4';
+const GS_TX = { ko:{ title:'OEE_RawData_APQ 구글시트', sub:'FAC1 · FAC2 대시보드가 읽는 원천 시트 — 변환기 CSV를 넣는 곳', open:'새 창에서 열기', reload:'새로고침', hint:'안에서 편집이 안 되면(로그인 필요) 「새 창에서 열기」를 누르세요.' },
+                en:{ title:'OEE_RawData_APQ Google Sheet', sub:'Source sheet read by the FAC1 · FAC2 dashboards — where converter CSVs go', open:'Open in new window', reload:'Reload', hint:'If editing is blocked here (sign-in needed), use “Open in new window”.' },
+                th:{ title:'Google Sheet OEE_RawData_APQ', sub:'ชีตต้นทางของแดชบอร์ด FAC1 · FAC2 — ที่ใส่ CSV จากตัวแปลง', open:'เปิดหน้าต่างใหม่', reload:'โหลดใหม่', hint:'ถ้าแก้ไขในนี้ไม่ได้ (ต้องล็อกอิน) ให้กด “เปิดหน้าต่างใหม่”' } };
+const gsT = k => (GS_TX[LANG]||GS_TX.ko)[k];
+Object.assign(I18N.ko, { 'grp.sheet':'구글시트 (원천 데이터)', 'tab.gsheet':'OEE_RawData_APQ' });
+Object.assign(I18N.en, { 'grp.sheet':'Google Sheet (source data)', 'tab.gsheet':'OEE_RawData_APQ' });
+Object.assign(I18N.th, { 'grp.sheet':'Google Sheet (ข้อมูลต้นทาง)', 'tab.gsheet':'OEE_RawData_APQ' });
+function renderGSheet(force){
+  const host = document.getElementById('panel-gsheet'); if(!host) return;
+  const url = `https://docs.google.com/spreadsheets/d/${GS_ID}/edit?usp=sharing`;
+  const old = host.querySelector('iframe');
+  if(old && !force){ const t = host.querySelector('[data-gs="t"]'); if(t){ t.textContent = gsT('title'); host.querySelector('[data-gs="s"]').textContent = gsT('sub'); } return; }
+  host.innerHTML = `<div class="ov"><div class="gs-bar"><div style="flex:1;min-width:220px"><b data-gs="t" style="font-size:14px">${gsT('title')}</b><br><small data-gs="s" style="color:var(--ink-muted)">${gsT('sub')}</small></div>
+      <button class="alt" onclick="renderGSheet(true)">🔄 ${gsT('reload')}</button><a href="${url}" target="_blank" rel="noopener">↗ ${gsT('open')}</a></div>
+    <iframe class="gs-frame" src="${url}" title="OEE_RawData_APQ" allow="clipboard-read; clipboard-write"></iframe>
+    <div class="foot" style="margin-top:6px">${gsT('hint')}</div></div>`;
+}
+
+/* =========================================================================
    6. 탭 (원본 페이지는 최초 열 때만 iframe 으로 로드)
    ========================================================================= */
 let activeTab = 'overview';
@@ -4162,6 +4350,7 @@ function selectTab(id){
   const t=TABS.find(x=>x.id===id);
   if(t && t.src) ensureFrame(t);
   if(id==='f2ov') renderF2();
+  if(id==='gsheet') renderGSheet();
   if(id==='focus') renderFocus();
   if(id==='myboard') renderMyBoard();
 }
