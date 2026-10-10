@@ -3625,13 +3625,13 @@ function qtTrendHtml(o){
   /* o = { id, title, sub, dates:[YYYY-MM-DD], series:[{name,color,vals:[n|null],main}], target, tLabel, hiFrom, hiTo } */
   /* 🔍 확대 — 노란 음영(보고 기간) 날짜만 남겨 다시 그린다 (설정은 그래프마다 이 브라우저에 저장) */
   const hiIdx0 = (o.hiFrom && o.hiTo) ? o.dates.map((d,i)=>d>=o.hiFrom && d<=o.hiTo ? i : -1).filter(i=>i>=0) : [];
-  const zoomOn = qtZoomGet(o.id) && hiIdx0.length > 0 && hiIdx0.length < o.dates.length;
+  const zoomOn = qtZoomGet(o.id) && hiIdx0.length > 0;
   if (zoomOn){ const o0 = o, ix = hiIdx0;
     o = { ...o0, dates:ix.map(i=>o0.dates[i]), series:o0.series.map(s=>({ ...s, vals:ix.map(i=>s.vals[i]) })),
           bars:o0.bars ? { ...o0.bars, vals:ix.map(i=>o0.bars.vals[i]) } : o0.bars,
           extra:o0.extra ? (j=>o0.extra(ix[j])) : o0.extra, maxLbl:undefined }; }
-  const tools = `<span class="qt-tools">${hiIdx0.length && hiIdx0.length < o.dates.length || zoomOn
-      ? `<button type="button" class="${zoomOn?'on':''}" onclick="qtZoom('${o.id}')" title="노란 음영(보고 기간)만 크게 보기">${zoomOn?'↩ 전체 보기':'🔍 보고기간 확대'}</button>` : ''}
+  const tools = `<span class="qt-tools">${hiIdx0.length || zoomOn
+      ? `<button type="button" class="${zoomOn?'on':''}" onclick="qtZoom('${o.id}')" title="노란 음영(보고 기간)만 · 세로축을 값에 맞춰 크게 보기">${zoomOn?'↩ 전체 보기':'🔍 보고기간 확대'}</button>` : ''}
     <button type="button" onclick="qtShot('${o.id}')" title="그래프를 PNG 이미지로 저장 · 클립보드 복사">📷 스크린샷</button></span>`;
   /* 개선 조치 표시 — 메모 첫 줄(조치 제목) + 사진 썸네일을 날짜 위에, 그 날짜에 세로 점선 (조치 전·후 비교)
      겹치면 아래 줄로 (최대 3줄), 그래도 겹치면 세로선·건수만 */
@@ -3651,21 +3651,26 @@ function qtTrendHtml(o){
   const SLOT = TH + CAP + TG;
   const SH = rowsUsed ? rowsUsed*SLOT + 6 : 0;
   const BH = o.bars ? 64 : 0;   /* 생산수량 막대 띠 (선 차트 아래, 같은 날짜축) */
-  const W = 1000, H = 250 + SH + BH, L = Lx, R = Rx, T = (o.noteScope ? 24 : 16) + SH, B = 34, PB = H - B - BH;
+  const W = 1000, H = (zoomOn ? 360 : 250) + SH + BH, L = Lx, R = Rx, T = (o.noteScope ? 24 : 16) + SH, B = 34, PB = H - B - BH;
   const n = o.dates.length;
   const all = o.series.flatMap(s=>s.vals).filter(v=>v!=null);
   if (!n || !all.length) return '';
   let ymax = Math.max(o.target || 0, ...all) * 1.15; ymax = ymax <= 0 ? 1 : ymax;
-  const stp = [0.5,1,2,2.5,5,10,20,25,50].find(s=>ymax/s <= 6) || 100; ymax = Math.ceil(ymax/stp)*stp;
+  let ymin = 0, stp = [0.5,1,2,2.5,5,10,20,25,50].find(s=>ymax/s <= 6) || 100; ymax = Math.ceil(ymax/stp)*stp;
+  if (zoomOn){   /* 확대: 세로축을 값 범위(목표선 포함)에 맞춘다 — 0 부터 시작하지 않음 */
+    const hiV = Math.max(...all, o.target || -Infinity), loV = Math.min(...all, o.target || Infinity), span = Math.max(hiV - loV, 0.5);
+    stp = [0.1,0.2,0.25,0.5,1,2,2.5,5,10,20,25,50].find(s=>span*1.3/s <= 7) || 100;
+    ymin = Math.max(0, Math.floor((loV - span*0.15)/stp)*stp); ymax = Math.ceil((hiV + span*0.15)/stp)*stp;
+    if (ymax <= ymin) ymax = ymin + stp; }
   const xw = (W-L-R) / Math.max(1, n-1);
-  const X = i => n===1 ? (L+(W-L-R)/2) : L + i*xw, Y = v => T + (PB-T)*(1 - v/ymax);
+  const X = i => n===1 ? (L+(W-L-R)/2) : L + i*xw, Y = v => T + (PB-T)*(1 - (v-ymin)/(ymax-ymin));
   let g = '';
   /* 보고 기간 음영 */
   const hi = o.dates.map((d,i)=>d>=o.hiFrom && d<=o.hiTo ? i : -1).filter(i=>i>=0);
   if (hi.length){ const x0 = X(hi[0]) - (n>1?xw/2:20), x1 = X(hi[hi.length-1]) + (n>1?xw/2:20);
     g += `<rect x="${Math.max(L,x0).toFixed(1)}" y="${T}" width="${(Math.min(W-R,x1)-Math.max(L,x0)).toFixed(1)}" height="${PB-T}" fill="#fde68a" opacity=".35"/>`; }
   /* 격자 · y축 */
-  for (let v=0; v<=ymax+1e-9; v+=stp){ const y = Y(v).toFixed(1);
+  for (let v=ymin; v<=ymax+1e-9; v+=stp){ const y = Y(v).toFixed(1);
     g += `<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`
        + `<text x="${L-6}" y="${(+y+4)}" text-anchor="end" font-size="11" fill="#6b7280">${+v.toFixed(2)}%</text>`; }
   /* 생산수량 막대 */
