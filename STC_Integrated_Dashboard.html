@@ -3952,7 +3952,7 @@ function f2LayoutView(week){
   g += `<path class="fl" d="M848 182 H394" stroke="#3b82f6" stroke-width="1.8" fill="none" marker-end="url(#lay-ab)"/>`;
   g += `<path d="M372 300 V318 H626 V380 H590 V457 H452" ${G} marker-end="url(#lay-ag)"/>`;
   g += `<path d="M402 446 H372" ${G} marker-end="url(#lay-ag)"/>`;
-  g += `<text x="760" y="312" text-anchor="middle" font-size="10" font-weight="700" fill="#e040a0">공급 (Flow line)</text><text x="620" y="172" text-anchor="middle" font-size="10" font-weight="700" fill="#3b82f6">가공 완료 → IN STOCK</text>`;
+  g += `<text x="760" y="312" text-anchor="middle" font-size="10" font-weight="700" fill="#e040a0">공급 (Flow line)</text><text x="620" y="167" text-anchor="middle" font-size="10" font-weight="700" fill="#3b82f6" stroke="#fff" stroke-width="3" paint-order="stroke">가공 완료 → IN STOCK</text>`;
   /* 설비 */
   LAY_MC.forEach(m=>{ g += mcBox(m); });
   /* 움직이는 제품(점) — ①IQC → … → ⑬최종검사 → STOCK 전체 경로를 화살표 방향으로 */
@@ -4009,7 +4009,7 @@ function f2LayoutView(week){
   const cut = (t,k) => { const a = [...String(t||'')]; return a.length>k ? a.slice(0,k-1).join('')+'…' : a.join(''); };
   const callout = (x, y, w, num, title, C, ax, ay, extra, opt) => {
     opt = opt || {};
-    const r = C.t ? C.n/C.t*100 : null, st = f2St(r), wide = extra && extra.length > 22, h = wide ? 124 : 112, ok = r!=null && r<=tg;
+    const r = C.t ? C.n/C.t*100 : null, st = f2St(r), wide = extra && extra.length > 22, h = wide ? 128 : 116, ok = r!=null && r<=tg;
     const gsum = g => C.top.filter(o=>o.g===g).reduce((a,o)=>a+o.v,0), tn = C.top.reduce((a,o)=>a+o.v,0) || 1;
     const t3 = C.top.slice(0,3), mx = Math.max(1, ...t3.map(o=>o.v));
     let o = `<path d="${opt.lp || (y > ay ? `M${ax} ${y} V${ay+14}` : `M${ax} ${y+h} V${ay-14}`)}" stroke="${ok?'#16a34a':'#dc2626'}" stroke-width="1.3" stroke-dasharray="3 3" fill="none"/>`
@@ -4017,35 +4017,36 @@ function f2LayoutView(week){
       + `<rect x="${x}" y="${y}" width="${w}" height="26" rx="10" fill="${ok?'#f0fdf4':'#fef2f2'}"/><rect x="${x}" y="${y+16}" width="${w}" height="10" fill="${ok?'#f0fdf4':'#fef2f2'}"/>`
       + `<circle cx="${x+15}" cy="${y+13}" r="9" fill="#f5b301"/><text x="${x+15}" y="${y+17}" text-anchor="middle" font-size="10.5" font-weight="900" fill="#1f2937">${num}</text>`
       + `<text x="${x+30}" y="${y+17.5}" font-size="11.5" font-weight="900" fill="#0f172a">${title}</text>`
-      + `<text x="${x+w-10}" y="${y+17.5}" text-anchor="end" font-size="9" font-weight="600" fill="#64748b">${esc2(C.src)} · ${esc2(C.lbl)}</text>`;
+      + `<text x="${x+w-10}" y="${y+17.5}" text-anchor="end" font-size="9" font-weight="600" fill="#64748b">${esc2(C.lbl)}</text>`
+      + `<text x="${x+12}" y="${y+h-8}" font-size="8.5" font-weight="600" fill="#94a3b8">\u0001${esc2(C.src)}\u0002</text>`;
     if(!C.t){ return o + `<text x="${x+w/2}" y="${y+70}" text-anchor="middle" font-size="11" fill="#94a3b8">선택 기간 데이터 없음</text>`; }
     o += `<text x="${x+12}" y="${y+50}" font-size="21" font-weight="900" fill="${st.c}">${r.toFixed(2)}%</text>`
       + `<text x="${x+12}" y="${y+66}" font-size="10" font-weight="700" fill="#475569">${opt.l1 || `NG ${fmt(C.n)} / ${fmt(C.t)}`}</text>`
       + (opt.l2 != null ? `<text x="${x+12}" y="${y+81}" font-size="9.5" font-weight="700" fill="#475569">${opt.l2}</text>`
-         : `<text x="${x+12}" y="${y+81}" font-size="9.5" font-weight="700"><tspan fill="#7c3aed">가공 ${Math.round(gsum('가공불량')/tn*100)}%</tspan><tspan fill="#94a3b8"> · </tspan><tspan fill="#c2410c">다캐 ${Math.round(gsum('다캐불량')/tn*100)}%</tspan></text>`)
-      + (extra ? `<text x="${x+12}" y="${wide ? y+h-9 : y+97}" font-size="9.5" font-weight="700" fill="#b91c1c">${esc2(extra)}</text>` : '');
-    const bx = x+112, bw = w-112-46;
+         : `<text x="${x+12}" y="${y+81}" font-size="9" font-weight="700"><tspan fill="#7c3aed">가공 ${Math.round(gsum('가공불량')/tn*100)}%</tspan><tspan fill="#94a3b8"> · </tspan><tspan fill="#c2410c">다캐 ${Math.round(gsum('다캐불량')/tn*100)}%</tspan></text>`)
+      + (extra ? `<text x="${x+12}" y="${wide ? y+h-21 : y+96}" font-size="9.5" font-weight="700" fill="#b91c1c">${esc2(extra)}</text>` : '');
+    const bx = x+148, bw = w-148-42;
     t3.forEach((d,i)=>{ const yy = y+42+i*22;
-      o += `<text x="${bx}" y="${yy}" font-size="9.5" font-weight="700" fill="#334155">${i+1}. ${esc2(cut(d.t, Math.max(10, Math.round(bw/7))))}</text>`
+      o += `<text x="${bx}" y="${yy}" font-size="9.5" font-weight="700" fill="#334155">${i+1}. ${esc2(cut(d.t, Math.max(10, Math.round(bw/6.2))))}</text>`
         + `<rect x="${bx}" y="${yy+4}" width="${bw}" height="6" rx="3" fill="#eef2f7"/><rect x="${bx}" y="${yy+4}" width="${(bw*d.v/mx).toFixed(1)}" height="6" rx="3" fill="${GCOL[d.g]||'#94a3b8'}"/>`
         + `<text x="${x+w-10}" y="${yy+10}" text-anchor="end" font-size="10" font-weight="900" fill="#0f172a">${fmt(d.v)}</text>`; });
     if(!t3.length) o += `<text x="${bx}" y="${y+60}" font-size="10" fill="#94a3b8">불량 없음</text>`;
     if(opt.more) o += `<text x="${x+w-10}" y="${y+h-8}" text-anchor="end" font-size="9.5" font-weight="800" fill="#1e3c72">🔍 검사 상세 →</text>`;
     return o; };
   g = g.replace('</defs>', '<filter id="lay-sh" x="-5%" y="-5%" width="110%" height="120%"><feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#0f172a" flood-opacity=".12"/></filter></defs>');
-  g += callout(430, -42, 390, 8, 'MC 설비 가공 불량', C8, 654, 236, `${C8.worst?`Worst ${C8.worst} · `:''}MCT 설비(T03~T11) 데이터 없음`);
-  g += `<g style="cursor:pointer" onclick="layPqcOpen(event)"><title>⑨ PQC 검사 상세 보기</title>${callout(120, -42, 296, 9, 'PQC 검사 불량', C9, 374, 235, C9.worst ? `Worst ${C9.worst}` : '', { more:true })}</g>`;
+  g += callout(440, -50, 400, 8, 'MC 설비 가공 불량', C8, 654, 236, `${C8.worst?`Worst ${C8.worst} · `:''}MCT 설비(T03~T11) 데이터 없음`);
+  g += `<g style="cursor:pointer" onclick="layPqcOpen(event)"><title>⑨ PQC 검사 상세 보기</title>${callout(100, -50, 320, 9, 'PQC 검사 불량', C9, 374, 235, C9.worst ? `Worst ${C9.worst}` : '', { more:true })}</g>`;
   /* 아래 카드 : ① IQC (로트) · ⑬ OQC — 배치도 아래, 점선이 위로 번호까지 */
-  g += `<g style="cursor:pointer" onclick="layInspOpen(event,'IQC')"><title>① IQC 수입검사 상세 보기</title>${callout(470, 612, 330, 1, 'IQC 수입검사 (로트)', C1, 452, 577,
+  g += `<g style="cursor:pointer" onclick="layInspOpen(event,'IQC')"><title>① IQC 수입검사 상세 보기</title>${callout(436, 612, 350, 1, 'IQC 수입검사 (로트)', C1, 452, 577,
       C1.worst ? `NG 최다 ${C1.worst}` : '', { l1:`NG 로트 ${fmt(C1.n)} / ${fmt(C1.t)}`, l2:`수량 ${fmt(C1.nq)} / ${fmt(C1.qty)} EA`, more:true })}</g>`;
-  g += `<g style="cursor:pointer" onclick="layInspOpen(event,'OQC')"><title>⑬ OQC 출하검사 상세 보기</title>${callout(120, 612, 330, 13, 'OQC 출하검사', C13, 425, 400,
-      C13.worst ? `Worst ${C13.worst}` : '', { lp:'M265 612 V512 H425 V414', more:true })}</g>`;
+  g += `<g style="cursor:pointer" onclick="layInspOpen(event,'OQC')"><title>⑬ OQC 출하검사 상세 보기</title>${callout(80, 612, 340, 13, 'OQC 출하검사', C13, 425, 400,
+      C13.worst ? `Worst ${C13.worst}` : '', { lp:'M250 612 V512 H425 V414', more:true })}</g>`;
   const ring = (x,y,C) => { if(!C.t) return ''; const r = C.n/C.t*100; return `<circle cx="${x}" cy="${y}" r="17" fill="none" stroke="${r<=tg?'#16a34a':'#dc2626'}" stroke-width="2.5" opacity=".85"/>`; };
   g += ring(654,236,C8) + ring(374,235,C9) + ring(452,577,C1) + ring(425,400,C13);
   g += `<circle cx="452" cy="577" r="18" fill="transparent" style="cursor:pointer" onclick="layInspOpen(event,'IQC')"/><circle cx="425" cy="400" r="18" fill="transparent" style="cursor:pointer" onclick="layInspOpen(event,'OQC')"/>`;
   g += `<circle cx="374" cy="235" r="18" fill="transparent" style="cursor:pointer" onclick="layPqcOpen(event)"><title>⑨ PQC 검사 상세 보기</title></circle>`;
   const play = layPlay();
-  const svg = `<svg viewBox="0 -50 1200 790" role="img" aria-label="FAC2 Layout" font-family="inherit" class="${play?'play':'stop'}">${g}</svg>`;
+  const svg = `<svg viewBox="0 -58 1200 802" role="img" aria-label="FAC2 Layout" font-family="inherit" class="${play?'play':'stop'}">${g}</svg>`;
   const legend = `<div class="lay-leg">
     ${['all','half','gen','iqc'].map(k=>`<span><i style="background:${LAY_KC[k]}"></i>${LAY_KL[k]}</span>`).join('')}
     <span><i class="ln" style="background:#22c55e"></i>소재 흐름</span><span><i class="ln" style="background:#e040a0"></i>가공 공급</span><span><i class="ln" style="background:#3b82f6"></i>가공 완료</span>
@@ -4261,7 +4262,7 @@ function layInspHtml(k){
           <td>${fmt(t)}</td><td>${fmt(f2n(r["FG Q'ty"]))}</td><td>${n?`<b style="color:#b91c1c">${fmt(n)}</b>`:'0'}</td><td>${rc({t,n})}</td>
           <td class="df">${dd.length ? dd.map(x=>`<span style="color:${x.g==='다캐불량'?'#c2410c':x.g==='가공불량'?'#7c3aed':'#475569'}">${esc2(x.t)}</span> <b>${fmt(x.v)}</b>`).join(' · ') : '–'}</td></tr>`; }).join('')
       + `<tr class="dsub"><td class="l" colspan="7">${d} 소계 (${R.length}건)</td><td>${fmt(a.t)}</td><td>${fmt(a.f)}</td><td>${fmt(a.n)}</td><td>${rc(a)}</td><td></td></tr>`; }).join('');
-  return `<div class="hd"><b>🔍 ${S.title}</b><small>${S.tab} · ${esc2(P.lbl||'')}${F?` · ${esc2(F)}만`:''}</small><button onclick="${close}" aria-label="닫기">✕</button></div>
+  return `<div class="hd"><b>🔍 ${S.title}</b><small>\u0001${S.tab}\u0002 · ${esc2(P.lbl||'')}${F?` · ${esc2(F)}만`:''}</small><button onclick="${close}" aria-label="닫기">✕</button></div>
     <div class="bd">
       ${!all.length ? `<div style="padding:10px;color:#64748b">선택 기간에 검사 기록이 없습니다.</div>` : `
       <div class="kv"><div><small>검사 건수</small><b>${fmt(rows.length)}</b></div><div><small>Total</small><b>${fmt(A.t)}</b></div><div><small>NG</small><b style="color:#b91c1c">${fmt(A.n)}</b></div><div><small>%NG</small>${rc(A)}</div></div>
@@ -4289,7 +4290,7 @@ function layIqcHtml(){
   const close = `document.getElementById('layPop-IQC').remove()`;
   const ok = r => layIqcNg(r) ? `<b style="color:#b91c1c">${esc2(r['판정']||'NG')}</b>` : `<span style="color:#16a34a;font-weight:800">${esc2(r['판정']||'OK')}</span>`;
   const list = rows.slice().sort((a,b)=>String(b['입고일자']).localeCompare(String(a['입고일자'])) || (layIqcNg(b)-layIqcNg(a))).slice(0,400);
-  return `<div class="hd"><b>🔍 ① IQC 수입검사 상세</b><small>IQC_수입검사 · ${esc2(P.lbl||'')}${F?' · NG 로트만':''}</small><button onclick="${close}" aria-label="닫기">✕</button></div>
+  return `<div class="hd"><b>🔍 ① IQC 수입검사 상세</b><small>\u0001IQC_수입검사\u0002 · ${esc2(P.lbl||'')}${F?' · NG 로트만':''}</small><button onclick="${close}" aria-label="닫기">✕</button></div>
     <div class="bd">
       ${!all.length ? `<div style="padding:10px;color:#64748b">선택 기간에 검사 기록이 없습니다.</div>` : `
       <div class="kv"><div><small>입고 로트</small><b>${fmt(all.length)}</b></div><div><small>NG 로트</small><b style="color:#b91c1c">${fmt(ng.length)}</b></div><div><small>로트 불합격률</small><b style="color:${f2St(rate).c}">${rate.toFixed(2)}%</b></div><div><small>NG 수량 / 입고</small><b style="font-size:12px">${fmt(nq)} / ${fmt(qty)}</b></div></div>
