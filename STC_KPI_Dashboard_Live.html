@@ -477,7 +477,9 @@ function render(){
   const fmt=d=>d.toISOString().slice(0,10);
   document.getElementById('periodLabel').textContent=`고장횟수 · 고장시간 · MTBF · MTTR · 가용률 종합 현황 | ${WK?WK+' · ':''}${fmt(minD)} ~ ${fmt(maxD)}`;
   /* 제목 옆 기간 표시 — 주차 선택 시 W41, 아니면 기간 이름 */
-  { const ps = document.getElementById('periodSelect'); const wl = WK || (ps.value==='all' ? '전체 기간' : ps.options[ps.selectedIndex].text);
+  { const ps = document.getElementById('periodSelect'); const ws = [...new Set(A.map(wkOf))].filter(Boolean).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
+    const span = ws.length ? (ws.length===1 ? ws[0] : `${ws[0]} ~ ${ws[ws.length-1]}`) : '';
+    const wl = WK || [span, ps.value==='all' ? '전체 기간' : ps.options[ps.selectedIndex].text].filter(Boolean).join(' · ');
     ['wkBadgeTop','wkBadgeFac','wkBadgeBt'].forEach(id=>{ const e = document.getElementById(id); if(e){ e.textContent = wl; e.classList.toggle('on', !!WK); } }); }
 
   /* ---- 전체 A/P/Q/OEE ---- */
