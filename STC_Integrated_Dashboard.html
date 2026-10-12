@@ -4062,6 +4062,10 @@ function f2LayoutView(week){
     if(per==='d1') return { ok:(d)=>d===L, lbl:L||'–' };
     if(per==='d7'){ const k = ds.slice(-7); return { ok:(d)=>k.includes(d), lbl:k.length?`${k[0]} ~ ${k[k.length-1]}`:'–' }; }
     const w = weeks.includes(week) ? week : weeks[weeks.length-1]; return { ok:(d,wk)=>wk===w, lbl:w||'–' }; };
+  /* 시트에 실제로 있는 기간 (선택 기간에 기록이 없을 때 안내용) */
+  const haveOf = (rows, dk) => { const ds = rows.map(r=>String(r[dk]||'').slice(0,10)).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+    if(!ds.length) return ''; const ws = [...new Set(rows.map(r=>String(r['주차']||'').trim()).filter(Boolean))].sort((a,b)=>wkNum(a)-wkNum(b));
+    return `${ds[0]} ~ ${ds[ds.length-1].slice(5)}${ws.length ? ' · ' + (ws.length>1 ? ws[0]+'~'+ws[ws.length-1] : ws[0]) : ''}`; };
   const topOf = rows => { const m = {}; rows.forEach(r=>{ const k = r['불량유형']; const o = m[k] || (m[k] = { t:k, g:r['계통'], v:0 }); o.v += f2n(r['수량']); });
     return Object.values(m).sort((a,b)=>b.v-a.v); };
   const C8 = (()=>{ const P = perOf((F2.pd||[]).filter(r=>r['공정']==='MCT').map(r=>String(r['일자']).slice(0,10))); LAY_CTX.mct = P;
@@ -4080,7 +4084,7 @@ function f2LayoutView(week){
     const det = raw.length ? pqShape().det.filter(r=>P.ok(r['일자'], r['주차'])) : [];
     const mc = {}; sel.forEach(r=>{ const k = r['설비명']; const o = mc[k] || (mc[k] = {t:0,n:0}); o.t += f2n(r["Total Q'ty"]); o.n += f2n(r["NG Q'ty"]); });
     const wm = Object.entries(mc).filter(([,o])=>o.t).sort((a,b)=>b[1].n/b[1].t-a[1].n/a[1].t)[0];
-    return { t, n, lbl:P.lbl, top:topOf(det), src:'F2_PQC_Q', worst: wm ? `${wm[0]} ${(wm[1].n/wm[1].t*100).toFixed(1)}%` : '' }; })();
+    return { t, n, lbl:P.lbl, have:haveOf(raw,'일자'), top:topOf(det), src:'F2_PQC_Q', worst: wm ? `${wm[0]} ${(wm[1].n/wm[1].t*100).toFixed(1)}%` : '' }; })();
   /* ⑬ OQC 출하검사 (F2_OQC_Q) */
   const C13 = (()=>{ const raw = F2.oqRaw || []; const P = perOf(raw.map(r=>String(r['일자']).slice(0,10))); LAY_CTX.oq = P;
     const sel = raw.filter(r=>P.ok(String(r['일자']).slice(0,10), r['주차']));
@@ -4088,7 +4092,7 @@ function f2LayoutView(week){
     const det = layInspDefs('OQC', sel);
     const pp = {}; sel.forEach(r=>{ const k = r['Part name']||r['Part no.']; const o = pp[k] || (pp[k] = {t:0,n:0}); o.t += f2n(r["Total Q'ty"]); o.n += f2n(r["NG Q'ty"]); });
     const wp = Object.entries(pp).filter(([,o])=>o.t>=50).sort((a,b)=>b[1].n/b[1].t-a[1].n/a[1].t)[0];
-    return { t, n, lbl:P.lbl, top:det, src:'F2_OQC_Q', worst: wp ? `${wp[0]} ${(wp[1].n/wp[1].t*100).toFixed(1)}%` : '' }; })();
+    return { t, n, lbl:P.lbl, have:haveOf(raw,'일자'), top:det, src:'F2_OQC_Q', worst: wp ? `${wp[0]} ${(wp[1].n/wp[1].t*100).toFixed(1)}%` : '' }; })();
   /* ① IQC 수입검사 (IQC_수입검사) — 로트 단위 : 판정 OK / NG반송 */
   const C1 = (()=>{ const raw = F2.iqc || []; const P = perOf(raw.map(r=>String(r['입고일자']).slice(0,10))); LAY_CTX.iq = P;
     const sel = raw.filter(r=>P.ok(String(r['입고일자']).slice(0,10), r['주차']));
@@ -4096,7 +4100,7 @@ function f2LayoutView(week){
     const m = {}; ng.forEach(r=>{ const k = layIqcType(r); m[k] = (m[k]||0) + 1; });
     const pp = {}; ng.forEach(r=>{ const k = String(r['부품명']||'').trim(); pp[k] = (pp[k]||0) + 1; });
     const wp = Object.entries(pp).sort((a,b)=>b[1]-a[1])[0];
-    return { t:sel.length, n:ng.length, qty, nq, lbl:P.lbl, src:'IQC_수입검사', top:Object.entries(m).map(([t,v])=>({t,v})).sort((a,b)=>b.v-a.v),
+    return { t:sel.length, n:ng.length, qty, nq, lbl:P.lbl, have:haveOf(raw,'입고일자'), src:'IQC_수입검사', top:Object.entries(m).map(([t,v])=>({t,v})).sort((a,b)=>b.v-a.v),
       worst: wp ? `${wp[0]} NG ${wp[1]}` : '' }; })();
   const GCOL = { '가공불량':'#7c3aed', '다캐불량':'#c2410c' };
   const cut = (t,k) => { const a = [...String(t||'')]; return a.length>k ? a.slice(0,k-1).join('')+'…' : a.join(''); };
@@ -4112,7 +4116,9 @@ function f2LayoutView(week){
       + `<text x="${x+30}" y="${y+17.5}" font-size="11.5" font-weight="900" fill="#0f172a">${title}</text>`
       + `<text x="${x+w-10}" y="${y+17.5}" text-anchor="end" font-size="9" font-weight="600" fill="#64748b">${esc2(C.lbl)}</text>`
       + `<text x="${x+12}" y="${y+h-8}" font-size="8.5" font-weight="600" fill="#94a3b8">\u0001${esc2(C.src)}\u0002</text>`;
-    if(!C.t){ return o + `<text x="${x+w/2}" y="${y+70}" text-anchor="middle" font-size="11" fill="#94a3b8">선택 기간 데이터 없음</text>`; }
+    if(!C.t){ return o + `<text x="${x+w/2}" y="${y+56}" text-anchor="middle" font-size="11.5" font-weight="800" fill="#94a3b8">선택 기간 데이터 없음</text>`
+        + (C.have ? `<text x="${x+w/2}" y="${y+74}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#64748b">시트 기록 : \u0001${esc2(C.have)}\u0002</text>`
+            + `<g style="cursor:pointer" onclick="event.stopPropagation();laySetPer('d7')"><rect x="${x+w/2-52}" y="${y+82}" width="104" height="18" rx="9" fill="#eef2ff" stroke="#1e3c72"/><text x="${x+w/2}" y="${y+94.5}" text-anchor="middle" font-size="9.5" font-weight="800" fill="#1e3c72">▶ 최근 7일로 보기</text></g>` : ''); }
     o += `<text x="${x+12}" y="${y+50}" font-size="21" font-weight="900" fill="${st.c}">${r.toFixed(2)}%</text>`
       + `<text x="${x+12}" y="${y+66}" font-size="10" font-weight="700" fill="#475569">${opt.l1 || `NG ${fmt(C.n)} / ${fmt(C.t)}`}</text>`
       + (opt.l2 != null ? `<text x="${x+12}" y="${y+81}" font-size="9.5" font-weight="700" fill="#475569">${opt.l2}</text>`
@@ -4181,15 +4187,16 @@ function f2LayoutView(week){
   const segs = [['wk','선택 주차'],['d1','최근일'],['d7','최근 7일']].map(([k,l])=>`<button class="${per===k?'on':''}" onclick="laySetPer('${k}')">${l}</button>`).join('');
   /* ---- 검사공정별 수량 타일 (KPI 방식) : Total · OK · NG · %NG ---- */
   const insRows = [
-    { n:1,  k:'iqc',  t:'IQC 수입검사', C: C1.t ? { t:C1.qty, n:C1.nq, lbl:C1.lbl } : null, u:'EA', open:"layInspOpen(event,'IQC')" },
+    { n:1,  k:'iqc',  t:'IQC 수입검사', have:C1.have, C: C1.t ? { t:C1.qty, n:C1.nq, lbl:C1.lbl } : null, u:'EA', open:"layInspOpen(event,'IQC')" },
     { n:5,  k:'all',  t:'쇼트 후 검사', C:null },
     { n:8,  k:'all',  t:'MC 가공', C: C8.t ? C8 : null, open:"f2SetView('daily')" },
-    { n:9,  k:'all',  t:'PQC 공정검사', C: C9.t ? C9 : null, open:"layPqcOpen(event)" },
+    { n:9,  k:'all',  t:'PQC 공정검사', have:C9.have, C: C9.t ? C9 : null, open:"layPqcOpen(event)" },
     { n:10, k:'half', t:'MARKING 50% 검사', C:null },
-    { n:13, k:'all',  t:'OQC 출하검사', C: C13.t ? C13 : null, open:"layInspOpen(event,'OQC')" } ];
+    { n:13, k:'all',  t:'OQC 출하검사', have:C13.have, C: C13.t ? C13 : null, open:"layInspOpen(event,'OQC')" } ];
   const ins = `<div class="lay-ins">${insRows.map(rw=>{ const C = rw.C, r = C ? C.n/C.t*100 : null, cls = !C ? 'na' : r<=tg ? 'ok' : 'ng';
     return `<div class="t ${cls}"${rw.open?` onclick="${rw.open}" title="상세 보기"`:''}><small><span class="n" style="background:${LAY_KC[rw.k]};color:${rw.k==='all'?'#1f2937':'#fff'}">${rw.n}</span>${rw.t}</small>`
       + (C ? `<b style="color:${f2St(r).c}">${r.toFixed(2)}%</b><div class="q"><span>Total<i>${fmt(C.t)}</i></span><span>OK<i style="color:#15803d">${fmt(C.t-C.n)}</i></span><span>NG<i style="color:${C.n?'#b91c1c':'#94a3b8'}">${fmt(C.n)}</i></span></div>`
+           : rw.have ? `<b class="na">–</b><div class="q"><span>기록 없음</span><span style="font-weight:600;white-space:normal">시트 기록 : \u0001${esc2(rw.have)}\u0002</span></div>`
            : `<b class="na">–</b><div class="q"><span>연결 대기</span></div>`) + `</div>`; }).join('')}</div>`;
   /* ---- 블록 순서 (▲▼ 로 위아래 이동 · 브라우저에 저장) ---- */
   const BLK = {
@@ -4556,7 +4563,7 @@ const LAY_TR = [
  ['공정 순서','Process sequence','ลำดับกระบวนการ'],
  ['원본: FAC 2 Layout 도면 (공정 번호 · 검사 구분 · NEW = 신설 검사). 설비 %NG = F2_생산실적 NG ÷ Total (전 OP 합) · 목표','Source: FAC 2 Layout drawing (step no. · inspection type · NEW = new inspection). Machine %NG = F2_생산실적 NG ÷ Total (all OPs) · target','ที่มา: แบบ FAC 2 Layout (เลขขั้นตอน · ประเภทการตรวจ · NEW = จุดตรวจใหม่) %NG เครื่อง = NG ÷ Total ของ F2_생산실적 (ทุก OP) · เป้า'],
  ['소재 흐름','Material flow','การไหลวัตถุดิบ'],['가공 공급','Machining feed','ป้อนงานกลึง'],['가공 완료','Machined','กลึงเสร็จ'],['기록 없음','No data','ไม่มีข้อมูล'],
- ['CNC 구역','CNC area','โซน CNC'],['배치도 안 불량유형 패널 보이기 / 숨기기','Show / hide defect-type panel on the layout','แสดง / ซ่อนแผงประเภทของเสียบนผัง'],['검사공정별 수량','Quantity by inspection step','จำนวนตามขั้นตอนตรวจ'],['(Total · OK · NG · %NG — ① = 수량 EA 기준)','(Total · OK · NG · %NG — ① = by qty EA)','(Total · OK · NG · %NG — ① = ตามจำนวน EA)'],['↺ 순서 초기화','↺ Reset order','↺ รีเซ็ตลำดับ'],['블록 순서를 처음 상태로','Reset block order','รีเซ็ตลำดับบล็อก'],['위로 이동','Move up','เลื่อนขึ้น'],['아래로 이동','Move down','เลื่อนลง'],['상세 보기','Details','รายละเอียด'],['공정별 수량 흐름','Quantity by process','จำนวนตามกระบวนการ'],['① = 수량(EA) 기준 · OK = Total − NG · 행 클릭 = 상세','① = by qty (EA) · OK = Total − NG · click row = detail','① = ตามจำนวน (EA) · OK = Total − NG · คลิกแถว = รายละเอียด'],['MARKING 50%','MARKING 50%','MARKING 50%'],['IQC 수입','IQC incoming','IQC รับเข้า'],['쇼트 후','After shot','หลังยิงทราย'],['PQC 공정','PQC in-process','PQC ระหว่างผลิต'],['OQC 출하','OQC outgoing','OQC ส่งออก'],['연결 대기','not linked','ยังไม่เชื่อม'],['공정명','Process','กระบวนการ'],['공급 (Flow line)','Feed (Flow line)','ป้อน (Flow line)'],["미사용 (마스터 'X')","Unused (master 'X')","ไม่ใช้ (มาสเตอร์ 'X')"],['미사용','Unused','ไม่ใช้'],
+ ['CNC 구역','CNC area','โซน CNC'],['▶ 최근 7일로 보기','▶ View last 7 days','▶ ดู 7 วันล่าสุด'],['시트 기록 :','Sheet data:','ข้อมูลในชีต:'],['기록 없음 · 시트','No data · sheet','ไม่มีข้อมูล · ชีต'],['배치도 안 불량유형 패널 보이기 / 숨기기','Show / hide defect-type panel on the layout','แสดง / ซ่อนแผงประเภทของเสียบนผัง'],['검사공정별 수량','Quantity by inspection step','จำนวนตามขั้นตอนตรวจ'],['(Total · OK · NG · %NG — ① = 수량 EA 기준)','(Total · OK · NG · %NG — ① = by qty EA)','(Total · OK · NG · %NG — ① = ตามจำนวน EA)'],['↺ 순서 초기화','↺ Reset order','↺ รีเซ็ตลำดับ'],['블록 순서를 처음 상태로','Reset block order','รีเซ็ตลำดับบล็อก'],['위로 이동','Move up','เลื่อนขึ้น'],['아래로 이동','Move down','เลื่อนลง'],['상세 보기','Details','รายละเอียด'],['공정별 수량 흐름','Quantity by process','จำนวนตามกระบวนการ'],['① = 수량(EA) 기준 · OK = Total − NG · 행 클릭 = 상세','① = by qty (EA) · OK = Total − NG · click row = detail','① = ตามจำนวน (EA) · OK = Total − NG · คลิกแถว = รายละเอียด'],['MARKING 50%','MARKING 50%','MARKING 50%'],['IQC 수입','IQC incoming','IQC รับเข้า'],['쇼트 후','After shot','หลังยิงทราย'],['PQC 공정','PQC in-process','PQC ระหว่างผลิต'],['OQC 출하','OQC outgoing','OQC ส่งออก'],['연결 대기','not linked','ยังไม่เชื่อม'],['공정명','Process','กระบวนการ'],['공급 (Flow line)','Feed (Flow line)','ป้อน (Flow line)'],["미사용 (마스터 'X')","Unused (master 'X')","ไม่ใช้ (มาสเตอร์ 'X')"],['미사용','Unused','ไม่ใช้'],
  ['선택 기간 생산 기록 없음','No output in this period','ไม่มีผลผลิตในช่วงนี้'],['클릭 = 설비 메모창','click = machine card','คลิก = การ์ดเครื่อง'],
  ['MC·MCT 가공 불량','MC·MCT machining defects','ของเสียงานกลึง MC·MCT'],['PQC 검사 불량','PQC inspection defects','ของเสียตรวจ PQC'],['선택 기간 데이터 없음','No data in this period','ไม่มีข้อมูลในช่วงนี้'],
  ['불량 없음','No defects','ไม่มีของเสีย'],['검사 상세 보기','View inspection details','ดูรายละเอียดการตรวจ'],['검사 상세 →','Details →','รายละเอียด →'],
