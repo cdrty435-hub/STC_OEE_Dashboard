@@ -913,6 +913,8 @@ const LOCALE = { ko:'ko-KR', en:'en-US', th:'th-TH' };
 const I18N = {
 ko:{
  'app.title':'STC 설비관리 통합 대시보드',
+ 'lay.title':'FAC2 공정간 품질현황',
+ 'lay.sub':'FAC2 MCT 가공 · 검사공정별 불량 (IQC → MC 가공 → PQC → OQC) · 설비 배치도',
  'app.sub':'FAC1 다이캐스팅 DC1~DC23 · FAC2 MCT · OEE · 품질 6σ · MTTR/MTBF · 금형',
  'ctl.week':'주차','ctl.scope':'범위','ctl.regular':'정규','ctl.all':'전체(특근 포함)',
  'ctl.refresh':'새로고침','ctl.sync':'각 탭에 주차 적용',
@@ -999,6 +1001,8 @@ ko:{
 },
 en:{
  'app.title':'STC Maintenance Portal',
+ 'lay.title':'FAC2 Inter-process Quality Status',
+ 'lay.sub':'FAC2 MCT machining · defects by inspection step (IQC → MC → PQC → OQC) · equipment layout',
  'app.sub':'Die casting DC1–DC23 · OEE · Quality 6σ · MTTR/MTBF · Mold',
  'ctl.week':'Week','ctl.scope':'Scope','ctl.regular':'Regular','ctl.all':'All (incl. weekend)',
  'ctl.refresh':'Refresh','ctl.sync':'Apply week to tabs',
@@ -1085,6 +1089,8 @@ en:{
 },
 th:{
  'app.title':'แดชบอร์ดรวมงานซ่อมบำรุง STC',
+ 'lay.title':'สถานะคุณภาพระหว่างกระบวนการ FAC2',
+ 'lay.sub':'FAC2 งานกลึง MCT · ของเสียตามขั้นตอนตรวจ (IQC → MC → PQC → OQC) · ผังเครื่องจักร',
  'app.sub':'ไดคาสติ้ง DC1–DC23 · OEE · คุณภาพ 6σ · MTTR/MTBF · แม่พิมพ์',
  'ctl.week':'สัปดาห์','ctl.scope':'ช่วง','ctl.regular':'ปกติ','ctl.all':'ทั้งหมด (รวมวันหยุด)',
  'ctl.refresh':'รีเฟรช','ctl.sync':'ใช้สัปดาห์กับทุกแท็บ',
@@ -5542,7 +5548,7 @@ function trShellPanels(){ const li = trLi(); ['panel-overview','panel-f2ov'].for
    ========================================================================= */
 function applyStaticI18n(){
   document.documentElement.lang = LANG;
-  document.title = T('app.title');
+  document.title = T(document.body.classList.contains('only-layout') ? 'lay.title' : 'app.title');
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent = T(el.dataset.i18n); });
   document.querySelectorAll('#langSwitch button').forEach(b=>
     b.setAttribute('aria-pressed', b.dataset.lang===LANG ? 'true':'false'));
@@ -5635,7 +5641,10 @@ try{
     F2_VIEW = 'layout'; selectTab('f2ov');
     try{ if(prev!=null) localStorage.setItem('stc_portal_tab', prev); else localStorage.removeItem('stc_portal_tab');
          if(prevV!=null) localStorage.setItem('stc_f2_view', prevV); }catch(e){}
-    document.title = 'FAC2 Layout · STC';
+    /* 전용 링크 머리글 = FAC2 공정간 품질현황 (언어 전환 따라감) */
+    const h1 = document.querySelector('header h1[data-i18n]'), hs = document.querySelector('header .hd-sub[data-i18n]');
+    if(h1) h1.dataset.i18n = 'lay.title'; if(hs) hs.dataset.i18n = 'lay.sub';
+    applyStaticI18n();
     /* &tv=1 : 배치도를 창 가득 확대해서 연다 (TV PC 브라우저 · F11 과 함께) */
     if(qp.get('tv')==='1'){ const iv = setInterval(()=>{ if(document.querySelector('#panel-f2ov [data-zoom="layout"]')){ clearInterval(iv); layZoomOpen('layout'); const z = document.getElementById('layZoom'); z.classList.add('tvmode'); layZoomSync(); } }, 500);
       setTimeout(()=>clearInterval(iv), 60000); }
