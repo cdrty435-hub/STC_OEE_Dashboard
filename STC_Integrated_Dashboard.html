@@ -710,7 +710,8 @@ table.eq td.name{font-weight:700;}
 .lay-ins b{display:block;font-size:20px;font-weight:900;margin-top:2px;font-variant-numeric:tabular-nums;} .lay-ins b.na{color:#cbd5e1;}
 .lay-ins .q{display:flex;gap:8px;flex-wrap:wrap;font-size:10.5px;color:#64748b;font-weight:700;margin-top:2px;}
 .lay-ins .q i{font-style:normal;color:#0f172a;font-weight:900;margin-left:3px;font-variant-numeric:tabular-nums;}
-.lay-ins > .lay-zbtn{top:-26px;right:0;}
+.lay-insh{font-size:12px;font-weight:800;color:#1e3c72;margin:2px 0 6px;} .lay-insh span{font-weight:600;color:#64748b;}
+.lay-card .lay-ins{margin-bottom:6px;}
 .lay-blk{position:relative;margin-top:22px;transition:background .3s;border-radius:12px;}
 .lay-mv{position:absolute;top:-20px;right:0;display:flex;gap:3px;z-index:4;opacity:.45;transition:opacity .15s;}
 .lay-blk:hover > .lay-mv{opacity:1;}
@@ -3928,7 +3929,7 @@ const LAY_MC = [   /* [이름, x, y] — MC 동 · MCT 동 (원본 도면 위치
   ['MCT04',668,188],['MCT05',701,188],['MCT06',734,188],['MCT07',767,188],['MCT09',800,188],['MCT11',833,188],
   ['MCT03',668,248],['MCT08',767,248],['MCT10',800,248]
 ];
-const LAY_ORDER_DEF = ['kpi','ins','trend','layout','model','steps'];
+const LAY_ORDER_DEF = ['kpi','trend','layout','model','steps'];
 function layOrder(){ let a = []; try{ a = JSON.parse(localStorage.getItem('stc_f2_lay_order')||'[]'); }catch(e){}
   a = (Array.isArray(a) ? a : []).filter(k=>LAY_ORDER_DEF.includes(k)); LAY_ORDER_DEF.forEach(k=>{ if(!a.includes(k)) a.splice(LAY_ORDER_DEF.indexOf(k), 0, k); }); return a; }
 function layMove(k, d){
@@ -4178,16 +4179,16 @@ function f2LayoutView(week){
     { n:9,  k:'all',  t:'PQC 공정검사', C: C9.t ? C9 : null, open:"layPqcOpen(event)" },
     { n:10, k:'half', t:'MARKING 50% 검사', C:null },
     { n:13, k:'all',  t:'OQC 출하검사', C: C13.t ? C13 : null, open:"layInspOpen(event,'OQC')" } ];
-  const ins = `<div class="lay-ins" data-zoom="ins">${insRows.map(rw=>{ const C = rw.C, r = C ? C.n/C.t*100 : null, cls = !C ? 'na' : r<=tg ? 'ok' : 'ng';
+  const ins = `<div class="lay-ins">${insRows.map(rw=>{ const C = rw.C, r = C ? C.n/C.t*100 : null, cls = !C ? 'na' : r<=tg ? 'ok' : 'ng';
     return `<div class="t ${cls}"${rw.open?` onclick="${rw.open}" title="상세 보기"`:''}><small><span class="n" style="background:${LAY_KC[rw.k]};color:${rw.k==='all'?'#1f2937':'#fff'}">${rw.n}</span>${rw.t}</small>`
       + (C ? `<b style="color:${f2St(r).c}">${r.toFixed(2)}%</b><div class="q"><span>Total<i>${fmt(C.t)}</i></span><span>OK<i style="color:#15803d">${fmt(C.t-C.n)}</i></span><span>NG<i style="color:${C.n?'#b91c1c':'#94a3b8'}">${fmt(C.n)}</i></span></div>`
            : `<b class="na">–</b><div class="q"><span>연결 대기</span></div>`) + `</div>`; }).join('')}</div>`;
   /* ---- 블록 순서 (▲▼ 로 위아래 이동 · 브라우저에 저장) ---- */
   const BLK = {
     kpi:   pm.length ? kpi : `<div class="card empty" style="padding:12px;margin-bottom:12px">F2_생산실적 데이터가 없어 설비 색은 회색으로 표시됩니다.</div>`,
-    ins:   `<div class="sec-title">검사공정별 수량 <span style="text-transform:none;font-weight:600;color:#64748b">(Total · OK · NG · %NG — ① = 수량 EA 기준)</span></div>${ins}`,
     trend: LAY_SEL ? layDefTrend(DS, C8, C9, C13, C1) : '',
     layout:`<div class="lay-card" data-zoom="layout"><h3>FAC 2 Layout <small>설비 상자 = 윗줄 색: 모델 · 설비번호 · %NG · OP — 누르면 설비 메모창</small></h3>
+      <div class="lay-insh">검사공정별 수량 <span>(Total · OK · NG · %NG — ① = 수량 EA 기준)</span></div>${ins}
       <div class="lay-svgw">${svg}</div>${legend}</div>`,
     model: `<div class="sec-title">모델별 품질현황 <span style="text-transform:none;font-weight:600;color:#64748b">(구글시트 MC · MCT 탭 기준 · ${esc2(lbl||'')})</span></div>${layModelQuality(pred)}`,
     steps: `<div class="sec-title">공정 순서 (①~⑬)</div>${steps}` };
@@ -4416,7 +4417,7 @@ function layZoomSync(){
   box.innerHTML = ''; box.appendChild(c);
   const aw = bg.querySelector('.lz-box').clientWidth - 40, ah = bg.querySelector('.lz-box').clientHeight - 70;
   const fullH = c.scrollHeight || h;
-  const z = Math.max(1, Math.min(aw / w, ah / fullH, 3));
+  const z = Math.max(0.35, Math.min(aw / w, ah / fullH, 3));   /* 화면 안에 다 들어오도록 (TV) */
   c.style.zoom = z;
 }
 function layZoomClose(){ LAY_ZOOM = null; const bg = document.getElementById('layZoom'); if(bg){ bg.style.display = 'none'; bg.classList.remove('tvmode'); }
