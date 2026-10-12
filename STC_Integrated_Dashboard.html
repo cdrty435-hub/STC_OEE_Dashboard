@@ -725,6 +725,13 @@ table.eq td.name{font-weight:700;}
 .lay-mq table{width:100%;border-collapse:collapse;font-size:11px;margin-top:4px;} .lay-mq th{font-size:10px;color:#64748b;text-align:right;font-weight:700;border-bottom:1px solid #eef2f7;padding:2px 4px;}
 .lay-mq th:first-child,.lay-mq td:first-child{text-align:left;} .lay-mq td{text-align:right;padding:3px 4px;border-bottom:1px solid #f4f6f9;font-variant-numeric:tabular-nums;}
 .lay-mq .tp{font-size:10.5px;color:#475569;margin-top:6px;line-height:1.5;} .lay-mq .nod{color:#94a3b8;font-size:11.5px;padding:6px 0;}
+.lay-pop.wide{width:760px;max-width:calc(100vw - 16px);}
+.lay-pop .pt{width:100%;border-collapse:collapse;font-size:11px;background:#fff;border:1px solid #f1e3b0;border-radius:8px;}
+.lay-pop .pt th{position:sticky;top:-10px;background:#fef3c7;font-size:10px;font-weight:800;color:#7c5a00;padding:4px 5px;text-align:right;white-space:nowrap;}
+.lay-pop .pt th.l,.lay-pop .pt td.l{text-align:left;} .lay-pop .pt td{padding:3px 5px;border-top:1px solid #f4ecd0;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.lay-pop .pt tr.dsub td{background:#fffaeb;font-weight:800;} .lay-pop .pt td.df{white-space:normal;min-width:150px;text-align:left;color:#475569;}
+.lay-pop .flt{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px;} .lay-pop .flt button{border:1px solid #e5d28f;background:#fff;border-radius:12px;padding:2px 9px;font:inherit;font-size:10.5px;font-weight:800;color:#7c5a00;cursor:pointer;}
+.lay-pop .flt button.on{background:#7c5a00;color:#fff;border-color:#7c5a00;}
 .lay-pop{position:fixed;z-index:900;width:330px;background:#fffdf3;border:1px solid #f3d36b;border-radius:12px;box-shadow:0 12px 32px rgba(15,23,42,.22);font-size:12px;color:#1f2937;display:flex;flex-direction:column;max-height:78vh;}
 .lay-pop .hd{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#fde68a;border-radius:12px 12px 0 0;cursor:move;user-select:none;}
 .lay-pop .hd b{font-size:15px;font-weight:900;color:#1e293b;} .lay-pop .hd small{font-size:10.5px;color:#7c5a00;font-weight:700;}
@@ -3861,7 +3868,7 @@ function f2LayoutView(week){
   const weeks = [...new Set(pm.map(r=>r.w))].filter(Boolean).sort((a,b)=>wkNum(a)-wkNum(b));
   let pred, lbl;
   if(per==='d1'){ pred = r=>r.d===last; lbl = last; }
-  else if(per==='d7'){ const ds = days.slice(-7); pred = r=>ds.includes(r.d); lbl = ds.length ? `${ds[0]} ~ ${ds[ds.length-1]} (작업일 ${ds.length}일)` : ''; }
+  else if(per==='d7'){ const ds = days.slice(-7); pred = r=>ds.includes(r.d); lbl = ds.length ? `${ds[0]} ~ ${ds[ds.length-1]} (${T('f2.workDays',{n:ds.length})})` : ''; }
   else { const w = weeks.includes(week) ? week : weeks[weeks.length-1]; pred = r=>r.w===w; const ds = days.filter(d=>pm.some(r=>r.d===d && r.w===w)); lbl = `${w||'–'}${ds.length?` · ${ds[0]} ~ ${ds[ds.length-1]}`:''}`; }
   LAY_CTX.pred = pred; LAY_CTX.lbl = lbl; LAY_CTX.days = days;
   const by = {}; pm.forEach(r=>{ if(!pred(r)) return; const o = by[r.mc] || (by[r.mc] = { t:0, f:0, n:0, parts:new Set() }); o.t+=r.t; o.f+=r.f; o.n+=r.n; if(r.name||r.pn) o.parts.add(r.name||r.pn); });
@@ -3964,7 +3971,7 @@ function f2LayoutView(week){
     const det = (F2.det||[]).filter(r=>r['공정']==='MCT' && r['구분']==='NG' && P.ok(String(r['일자']).slice(0,10), r['주차']));
     const t = pd.reduce((a,r)=>a+f2n(r["Total Q'ty"]),0), n = pd.reduce((a,r)=>a+f2n(r["NG Q'ty"]),0);
     return { t, n, lbl:P.lbl, top:topOf(det), src:'F2_불량상세 · MCT NG' }; })();
-  const C9 = (()=>{ const raw = F2.pqRaw || []; const P = perOf(raw.map(r=>String(r['일자']).slice(0,10)));
+  const C9 = (()=>{ const raw = F2.pqRaw || []; const P = perOf(raw.map(r=>String(r['일자']).slice(0,10))); LAY_CTX.pq = P;
     const sel = raw.filter(r=>P.ok(String(r['일자']).slice(0,10), r['주차']));
     const t = sel.reduce((a,r)=>a+f2n(r["Total Q'ty"]),0), n = sel.reduce((a,r)=>a+f2n(r["NG Q'ty"]),0);
     const det = raw.length ? pqShape().det.filter(r=>P.ok(r['일자'], r['주차'])) : [];
@@ -3997,9 +4004,11 @@ function f2LayoutView(week){
     return o; };
   g = g.replace('</defs>', '<filter id="lay-sh" x="-5%" y="-5%" width="110%" height="120%"><feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#0f172a" flood-opacity=".12"/></filter></defs>');
   g += callout(430, -42, 370, 8, 'MC·MCT 가공 불량', C8, 654, 236);
-  g += callout(120, -42, 296, 9, 'PQC 검사 불량', C9, 374, 235, C9.worst ? `Worst ${C9.worst}` : '');
+  g += `<g style="cursor:pointer" onclick="layPqcOpen(event)"><title>⑨ PQC 검사 상세 보기</title>${callout(120, -42, 296, 9, 'PQC 검사 불량', C9, 374, 235, C9.worst ? `Worst ${C9.worst}` : '')}
+    <text x="408" y="62" text-anchor="end" font-size="9.5" font-weight="800" fill="#1e3c72">🔍 검사 상세 →</text></g>`;
   const ring = (x,y,C) => { if(!C.t) return ''; const r = C.n/C.t*100; return `<circle cx="${x}" cy="${y}" r="17" fill="none" stroke="${r<=tg?'#16a34a':'#dc2626'}" stroke-width="2.5" opacity=".85"/>`; };
   g += ring(654,236,C8) + ring(374,235,C9);
+  g += `<circle cx="374" cy="235" r="18" fill="transparent" style="cursor:pointer" onclick="layPqcOpen(event)"><title>⑨ PQC 검사 상세 보기</title></circle>`;
   const play = layPlay();
   const svg = `<svg viewBox="0 -50 1200 646" role="img" aria-label="FAC2 Layout" font-family="inherit" class="${play?'play':'stop'}">${g}</svg>`;
   const legend = `<div class="lay-leg">
@@ -4013,7 +4022,7 @@ function f2LayoutView(week){
       <div><b>${esc2(st.t)}${st.isNew?'<span class="new">NEW</span>':''}</b><small>${esc2(st.d)}</small></div>
       <span class="pill" style="background:${LAY_KC[st.k]}22;color:${st.k==='all'?'#7c5a00':st.k==='half'?'#0b6aa0':'#334155'}">${LAY_KL[st.k]}</span></div>`).join('')}</div>`;
   const segs = [['wk','선택 주차'],['d1','최근일'],['d7','최근 7일']].map(([k,l])=>`<button class="${per===k?'on':''}" onclick="laySetPer('${k}')">${l}</button>`).join('');
-  return `<div class="sec-title">FAC2 Layout · 공장 배치도</div>
+  return layTr(`<div class="sec-title">FAC2 Layout · 공장 배치도</div>
     <div class="lay-top f2-noprint"><span class="seg">${segs}</span><span class="per">설비 색 기준 기간: <b>${esc2(lbl||'–')}</b> · 원천 F2_생산실적</span>
       <button class="btn-f2 alt" style="margin-left:auto" onclick="layTogglePlay()">${play?'⏸ 흐름 멈춤':'▶ 흐름 보기'}</button><button class="btn-f2" onclick="window.print()">${T('f2.r.print')}</button></div>
     ${pm.length ? kpi : `<div class="card empty" style="padding:12px;margin-bottom:12px">F2_생산실적 데이터가 없어 설비 색은 회색으로 표시됩니다.</div>`}
@@ -4021,7 +4030,7 @@ function f2LayoutView(week){
       <div class="lay-svgw">${svg}</div>${legend}</div>
     <div class="sec-title">모델별 품질현황 <span style="text-transform:none;font-weight:600;color:#64748b">(구글시트 MC · MCT 탭 기준 · ${esc2(lbl||'')})</span></div>${layModelQuality(pred)}
     <div class="sec-title">공정 순서 (①~⑬)</div>${steps}
-    <div class="foot">· 원본: FAC 2 Layout 도면 (공정 번호 · 검사 구분 · NEW = 신설 검사). 설비 %NG = F2_생산실적 NG ÷ Total (전 OP 합) · 목표 ${tg}%.</div>`;
+    <div class="foot">· 원본: FAC 2 Layout 도면 (공정 번호 · 검사 구분 · NEW = 신설 검사). 설비 %NG = F2_생산실적 NG ÷ Total (전 OP 합) · 목표 ${tg}%.</div>`, true);
 }
 
 
@@ -4089,6 +4098,119 @@ function layModelQuality(pred){
       <div class="nod">MCT 설비는 F2_생산실적(In-Out Data)에 아직 기록이 없습니다.</div></div>` : '';
   return `<div class="lay-mq">${cards}${idleCard}</div><div class="foot" style="margin-top:6px">· 모델 · OP = ${esc2(LAY_MASTER_SRC)} · 수량 = F2_생산실적 (전 OP 합 — 같은 제품이 OP마다 따로 세어짐) · 칩을 누르면 설비 메모창</div>`;
 }
+
+
+/* ---- FAC2 Layout 다국어 — 레이아웃 · 설비창 · PQC 상세창의 화면 글자를 한/영/태로 (데이터 · 메모 본문은 그대로) ---- */
+const LAY_TR = [
+ ['수입검사 (소재 입고)','Incoming inspection (material receipt)','ตรวจรับ (รับวัตถุดิบ)'],
+ ['소재 보관','Material storage','เก็บวัตถุดิบ'],['쇼트 공정으로 이동','Move to shot blast','ย้ายไปยิงทราย'],
+ ['쇼트 후 전수검사 (IN → OUT STOCK)','100% check after shot blast (IN → OUT STOCK)','ตรวจ 100% หลังยิงทราย (IN → OUT STOCK)'],
+ ['가공 후 전수검사 (IN → OUT STOCK)','100% check after machining (IN → OUT STOCK)','ตรวจ 100% หลังกลึง (IN → OUT STOCK)'],
+ ['출하 전 전수검사 → STOCK','100% check before shipping → STOCK','ตรวจ 100% ก่อนส่ง → STOCK'],
+ ['열처리 · 건조','Heat treatment · drying','อบความร้อน · ทำให้แห้ง'],['MC · MCT 라인 공급','Feeds MC · MCT lines','ป้อนไลน์ MC · MCT'],
+ ['가공 + 공정검사 (PQC)','Machining + in-process QC (PQC)','กลึง + ตรวจระหว่างกระบวนการ (PQC)'],['각인 · 50% 검사','Marking · 50% check','มาร์ก · ตรวจ 50%'],
+ ['MC · MCT 가공','MC · MCT machining','กลึง MC · MCT'],['가공 투입','Machining input','ป้อนงานกลึง'],['쇼트 1 · 2','Shot blast 1 · 2','ยิงทราย 1 · 2'],
+ ['최종 검사','Final inspection','ตรวจขั้นสุดท้าย'],['100% 검사','100% inspection','ตรวจ 100%'],['50% 검사','50% inspection','ตรวจ 50%'],['일반 공정','General process','กระบวนการทั่วไป'],
+ ['FAC2 Layout · 공장 배치도','FAC2 Layout · Plant map','FAC2 Layout · ผังโรงงาน'],['선택 주차','Selected week','สัปดาห์ที่เลือก'],['최근일','Latest day','วันล่าสุด'],['최근 7일','Last 7 days','7 วันล่าสุด'],
+ ['설비 색 기준 기간:','Machine colors for:','ช่วงเวลาสีเครื่อง:'],['원천 F2_생산실적','source F2_생산실적','แหล่ง F2_생산실적'],
+ ['흐름 멈춤','Pause flow','หยุดการไหล'],['흐름 보기','Show flow','แสดงการไหล'],
+ ['가동 설비','Machines running','เครื่องที่เดิน'],['생산 Total (전 OP 합)','Output total (all OPs)','ยอดผลิตรวม (ทุก OP)'],['불량률 %NG','Defect rate %NG','อัตราของเสีย %NG'],
+ ['Worst 설비 (%NG)','Worst machine (%NG)','เครื่องแย่สุด (%NG)'],['F2_생산실적 데이터가 없어 설비 색은 회색으로 표시됩니다.','No F2_생산실적 data — machines are shown in grey.','ไม่มีข้อมูล F2_생산실적 — เครื่องแสดงเป็นสีเทา'],
+ ['설비 상자 = 윗줄 색: 모델 · 설비번호 · %NG · OP — 누르면 설비 메모창','Machine box = top stripe: model · machine no. · %NG · OP — click to open the machine card','กล่องเครื่อง = แถบบน: รุ่น · เลขเครื่อง · %NG · OP — คลิกเพื่อเปิดการ์ดเครื่อง'],
+ ['모델별 품질현황','Quality by model','คุณภาพตามรุ่น'],['구글시트 MC · MCT 탭 기준','based on Google Sheet MC · MCT tabs','ตาม Google Sheet แท็บ MC · MCT'],['구글시트 MC · MCT 탭','Google Sheet MC · MCT tabs','Google Sheet แท็บ MC · MCT'],
+ ['구글시트 MC 탭','Google Sheet MC tab','Google Sheet แท็บ MC'],['구글시트 MCT 탭','Google Sheet MCT tab','Google Sheet แท็บ MCT'],['내장 기본값','built-in default','ค่าเริ่มต้นในระบบ'],
+ ['공정 순서','Process sequence','ลำดับกระบวนการ'],
+ ['원본: FAC 2 Layout 도면 (공정 번호 · 검사 구분 · NEW = 신설 검사). 설비 %NG = F2_생산실적 NG ÷ Total (전 OP 합) · 목표','Source: FAC 2 Layout drawing (step no. · inspection type · NEW = new inspection). Machine %NG = F2_생산실적 NG ÷ Total (all OPs) · target','ที่มา: แบบ FAC 2 Layout (เลขขั้นตอน · ประเภทการตรวจ · NEW = จุดตรวจใหม่) %NG เครื่อง = NG ÷ Total ของ F2_생산실적 (ทุก OP) · เป้า'],
+ ['소재 흐름','Material flow','การไหลวัตถุดิบ'],['가공 공급','Machining feed','ป้อนงานกลึง'],['가공 완료','Machined','กลึงเสร็จ'],['기록 없음','No data','ไม่มีข้อมูล'],
+ ['CNC 구역','CNC area','โซน CNC'],['공급 (Flow line)','Feed (Flow line)','ป้อน (Flow line)'],["미사용 (마스터 'X')","Unused (master 'X')","ไม่ใช้ (มาสเตอร์ 'X')"],['미사용','Unused','ไม่ใช้'],
+ ['선택 기간 생산 기록 없음','No output in this period','ไม่มีผลผลิตในช่วงนี้'],['클릭 = 설비 메모창','click = machine card','คลิก = การ์ดเครื่อง'],
+ ['MC·MCT 가공 불량','MC·MCT machining defects','ของเสียงานกลึง MC·MCT'],['PQC 검사 불량','PQC inspection defects','ของเสียตรวจ PQC'],['선택 기간 데이터 없음','No data in this period','ไม่มีข้อมูลในช่วงนี้'],
+ ['불량 없음','No defects','ไม่มีของเสีย'],['검사 상세 보기','View inspection details','ดูรายละเอียดการตรวจ'],['검사 상세 →','Details →','รายละเอียด →'],
+ ['생산 기록 없는 모델','Models without output','รุ่นที่ไม่มีผลผลิต'],['선택 기간','Selected period','ช่วงที่เลือก'],
+ ['MCT 설비는 F2_생산실적(In-Out Data)에 아직 기록이 없습니다.','MCT machines are not in F2_생산실적 (In-Out Data) yet.','เครื่อง MCT ยังไม่มีใน F2_생산실적 (In-Out Data)'],
+ ['설비 메모창 열기','Open machine card','เปิดการ์ดเครื่อง'],['모델 · OP =','Model · OP =','รุ่น · OP ='],
+ ['수량 = F2_생산실적 (전 OP 합 — 같은 제품이 OP마다 따로 세어짐) · 칩을 누르면 설비 메모창','Qty = F2_생산실적 (all OPs — a part is counted at each OP) · click a chip for the machine card','จำนวน = F2_생산실적 (ทุก OP — นับแยกแต่ละ OP) · คลิกชิปเพื่อเปิดการ์ดเครื่อง'],
+ ['불량 TOP3','Top 3 defects','ของเสีย TOP3'],['선택 기간에 PQC 검사 기록이 없습니다.','No PQC inspections in this period.','ไม่มีการตรวจ PQC ในช่วงนี้'],
+ ['검사 건수','Inspections','จำนวนการตรวจ'],['전체 설비','All machines','ทุกเครื่อง'],['Shift · Cav.별','By shift · cav.','ตามกะ · Cav.'],['설비별','By machine','ตามเครื่อง'],
+ ['주요 불량','Main defects','ของเสียหลัก'],['불량 내역','Defects','รายการของเสีย'],['소계','subtotal','รวมย่อย'],['PQC 일일 관리현황으로','Go to PQC daily status','ไปที่สถานะ PQC รายวัน'],
+ ['검사 상세','Inspection details','รายละเอียดการตรวจ'],['새로고침','Refresh','รีเฟรช'],['닫기','Close','ปิด'],
+ ['선택 기간에 생산 기록이 없습니다.','No output in this period.','ไม่มีผลผลิตในช่วงนี้'],['생산 품번','Parts produced','ชิ้นงานที่ผลิต'],['불량유형 TOP5','Top 5 defect types','ประเภทของเสีย TOP5'],
+ ['PQC 공정검사','PQC in-process inspection','PQC ตรวจระหว่างกระบวนการ'],['메모 · 조치 기록','Memos · actions','บันทึก · การแก้ไข'],['아직 이 설비 메모가 없습니다.','No memos for this machine yet.','ยังไม่มีบันทึกของเครื่องนี้'],
+ ['메모 쓰기','Write memo','เขียนบันทึก'],['실가동','run','เดินจริง'],['계획','plan','แผน'],['목표','target','เป้า'],['일자','Date','วันที่'],
+ ['다캐','casting','ไดคาสต์'],['가공','machining','กลึง'],['쇼트','Shot','ยิงทราย'],['수입검사','Incoming inspection','ตรวจรับ'],['이송','Transfer','ขนย้าย'],
+ ['세척','Washing','ล้าง'],['함침','Impregnation','อิมเพรก'],['설비','M/C','เครื่อง'],['검사','Inspection','ตรวจ']
+].sort((a,b)=>b[0].length-a[0].length);
+const LAY_TR_RE = [   /* 숫자가 끼는 표현 */
+ [/(\d+)\s*대 \(MC\)/g, ['$1 units (MC)','$1 เครื่อง (MC)']], [/설비 (\d+)대/g, ['$1 machines','$1 เครื่อง']], [/(\d+)대/g, ['$1 units','$1 เครื่อง']],
+ [/검사 상세 \(([\d,]+)건 · 최신 일자부터\)/g, ['Inspection rows ($1 · newest first)','รายการตรวจ ($1 · ล่าสุดก่อน)']], [/\(([\d,]+)건\)/g, ['($1 rows)','($1 แถว)']],
+ [/최근 (\d+)일 %NG 추이/g, ['Last $1 days %NG','%NG $1 วันล่าสุด']], [/· (\d+)개/g, ['· $1','· $1']], [/(MCT?\d+)만/g, ['$1 only','เฉพาะ $1']]
+];
+function layTr(html, wrap){
+  if(LANG === 'ko') return wrap ? `<div data-no-tr>${String(html).replace(/[\u0001\u0002]/g,'')}</div>` : String(html).replace(/[\u0001\u0002]/g,'');
+  const li = LANG === 'th' ? 2 : 1;
+  const out = String(html).split(/(\u0001[\s\S]*?\u0002)/).map(part=>{
+    if(part.charCodeAt(0) === 1) return part.slice(1, -1);          /* 메모 본문 · 작성자 = 그대로 */
+    LAY_TR_RE.forEach(([re, t])=>{ part = part.replace(re, t[li-1]); });
+    LAY_TR.forEach(e=>{ if(part.indexOf(e[0]) >= 0) part = part.split(e[0]).join(e[li]); });
+    return part; }).join('');
+  return wrap ? `<div data-no-tr>${out}</div>` : out;
+}
+/* ---- ⑨ PQC 검사 상세 창 — F2_PQC_Q 원본 행 (카드 ⑨ 와 같은 기간) ---- */
+const LAY_PQ_F = { mc:'' };
+function layPqcFilter(mc){ LAY_PQ_F.mc = LAY_PQ_F.mc===mc ? '' : mc; const el = document.getElementById('layPop-PQC'); if(el){ el.innerHTML = layTr(layPqcHtml()); layDrag(el); } }
+function layPqcOpen(e){
+  if(e && e.stopPropagation) e.stopPropagation();
+  const old = document.getElementById('layPop-PQC'), pos = old ? { x:old.style.left, y:old.style.top } : null; if(old) old.remove();
+  const el = document.createElement('div'); el.className = 'lay-pop wide'; el.id = 'layPop-PQC'; el.setAttribute('data-no-tr',''); el.innerHTML = layTr(layPqcHtml()); document.body.appendChild(el);
+  const W = el.offsetWidth, H = Math.min(el.offsetHeight, window.innerHeight*0.78);
+  let x = e && e.clientX!=null ? e.clientX + 16 : 140, y = e && e.clientY!=null ? e.clientY - 30 : 100;
+  if(x + W > window.innerWidth - 8) x = Math.max(8, window.innerWidth - W - 8);
+  y = Math.max(8, Math.min(y, window.innerHeight - H - 8));
+  el.style.left = pos ? pos.x : x+'px'; el.style.top = pos ? pos.y : y+'px';
+  layDrag(el);
+}
+function layPqcHtml(){
+  const P = LAY_CTX.pq || { ok:()=>true, lbl:'' }, raw = F2.pqRaw || [];
+  const all = raw.filter(r=>P.ok(String(r['일자']).slice(0,10), r['주차']));
+  const rows = all.filter(r=>!LAY_PQ_F.mc || String(r['설비명']).trim()===LAY_PQ_F.mc);
+  const code = k => { const m = String(k).match(/^\s*(\d{1,2})\s+(.+)$/); return m && +m[1]>=1 && +m[1]<=50 ? { c:+m[1], o:m[2].trim() } : null; };
+  const cols = raw.length ? Object.keys(raw[0]).map(k=>({ k, x:code(k) })).filter(e=>e.x) : [];
+  const defs = r => cols.map(({k,x})=>({ t:f2DefName(x.c, x.o), g:PQ_GRP_OF(x.c), v:f2n(r[k]) })).filter(d=>d.v>0).sort((a,b)=>b.v-a.v);
+  const sum = R => R.reduce((a,r)=>({ t:a.t+f2n(r["Total Q'ty"]), f:a.f+f2n(r["FG Q'ty"]), n:a.n+f2n(r["NG Q'ty"]) }), {t:0,f:0,n:0});
+  const rc = a => { const r = a.t ? a.n/a.t*100 : null; return `<b style="color:${f2St(r).c}">${r==null?'–':r.toFixed(2)+'%'}</b>`; };
+  const A = sum(rows);
+  const mcs = [...new Set(all.map(r=>String(r['설비명']).trim()))].sort();
+  /* 설비별 · Shift×Cav 요약 */
+  const grp = (keyf) => { const m = {}; rows.forEach(r=>{ const k = keyf(r); (m[k] = m[k] || []).push(r); }); return Object.entries(m).sort((a,b)=>a[0].localeCompare(b[0])); };
+  const byMc = grp(r=>String(r['설비명']).trim()), bySc = grp(r=>`${String(r['Shift']||'-').trim()} · ${String(r['Cav.']||'-').trim()}`);
+  const mini = (title, L) => `<table class="pt" style="margin-bottom:8px"><tr><th class="l">${title}</th><th>Total</th><th>FG</th><th>NG</th><th>%NG</th><th class="l">주요 불량</th></tr>
+    ${L.map(([k,R])=>{ const a = sum(R), d = {}; R.forEach(r=>defs(r).forEach(x=>{ d[x.t] = (d[x.t]||0) + x.v; }));
+      const top = Object.entries(d).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([t,v])=>`${esc2(t)} ${fmt(v)}`).join(' · ');
+      return `<tr><td class="l"><b>${esc2(k)}</b></td><td>${fmt(a.t)}</td><td>${fmt(a.f)}</td><td>${fmt(a.n)}</td><td>${rc(a)}</td><td class="df">${top||'–'}</td></tr>`; }).join('')}</table>`;
+  /* 상세 (일자별 소계) */
+  const dates = [...new Set(rows.map(r=>String(r['일자']).slice(0,10)))].sort().reverse();
+  const det = dates.map(d=>{ const R = rows.filter(r=>String(r['일자']).slice(0,10)===d).sort((a,b)=>String(a['설비명']).localeCompare(String(b['설비명'])) || String(a['Shift']).localeCompare(String(b['Shift'])));
+    const a = sum(R);
+    return R.map(r=>{ const t = f2n(r["Total Q'ty"]), n = f2n(r["NG Q'ty"]), dd = defs(r);
+        return `<tr><td class="l">${d.slice(5)}</td><td class="l"><b>${esc2(r['설비명'])}</b></td><td class="l">${esc2(r['Shift']||'')}</td><td class="l">${esc2(r['Cav.']||'')}</td>
+          <td class="l">${esc2(r['Part name']||r['Part no.']||'')}</td><td class="l">${esc2(lotTxt(r['Lot d/c']))}</td><td class="l">${esc2(lotTxt(r['Lot m/c']))}</td>
+          <td>${fmt(t)}</td><td>${fmt(f2n(r["FG Q'ty"]))}</td><td>${n?`<b style="color:#b91c1c">${fmt(n)}</b>`:'0'}</td><td>${rc({t,n})}</td>
+          <td class="df">${dd.length ? dd.map(x=>`<span style="color:${x.g==='다캐불량'?'#c2410c':x.g==='가공불량'?'#7c3aed':'#475569'}">${esc2(x.t)}</span> <b>${fmt(x.v)}</b>`).join(' · ') : '–'}</td></tr>`; }).join('')
+      + `<tr class="dsub"><td class="l" colspan="7">${d} 소계 (${R.length}건)</td><td>${fmt(a.t)}</td><td>${fmt(a.f)}</td><td>${fmt(a.n)}</td><td>${rc(a)}</td><td></td></tr>`; }).join('');
+  return `<div class="hd"><b>🔍 ⑨ PQC 검사 상세</b><small>F2_PQC_Q · ${esc2(P.lbl||'')}${LAY_PQ_F.mc?` · ${esc2(LAY_PQ_F.mc)}만`:''}</small><button onclick="document.getElementById('layPop-PQC').remove()" aria-label="닫기">✕</button></div>
+    <div class="bd">
+      ${!all.length ? `<div style="padding:10px;color:#64748b">선택 기간에 PQC 검사 기록이 없습니다.</div>` : `
+      <div class="kv"><div><small>검사 건수</small><b>${fmt(rows.length)}</b></div><div><small>Total</small><b>${fmt(A.t)}</b></div><div><small>NG</small><b style="color:#b91c1c">${fmt(A.n)}</b></div><div><small>%NG</small>${rc(A)}</div></div>
+      <div class="flt"><button class="${LAY_PQ_F.mc?'':'on'}" onclick="layPqcFilter('')">전체 설비</button>${mcs.map(m=>`<button class="${LAY_PQ_F.mc===m?'on':''}" onclick="layPqcFilter('${esc2(m)}')">${esc2(m)}</button>`).join('')}</div>
+      <h5>설비별</h5>${mini('설비', byMc)}
+      <h5>Shift · Cav.별</h5>${mini('Shift · Cav.', bySc)}
+      <h5>검사 상세 (${fmt(rows.length)}건 · 최신 일자부터)</h5>
+      <div style="overflow-x:auto"><table class="pt"><tr><th class="l">일자</th><th class="l">설비</th><th class="l">Shift</th><th class="l">Cav.</th><th class="l">Part name</th><th class="l">Lot d/c</th><th class="l">Lot m/c</th><th>Total</th><th>FG</th><th>NG</th><th>%NG</th><th class="l">불량 내역</th></tr>${det}</table></div>`}
+    </div>
+    <div class="ft"><button class="alt" onclick="layPopsRefresh()">🔄 새로고침</button><button onclick="F2_VIEW='pqc';try{localStorage.setItem('stc_f2_view','pqc')}catch(e){};document.getElementById('layPop-PQC').remove();renderF2()">📄 PQC 일일 관리현황으로</button></div>`;
+}
+const lotTxt = v => { const s = String(v==null?'':v).trim(); if(!s || s==='-' || /^#+$/.test(s)) return '–';
+  if(/^\d{5}(\.\d+)?$/.test(s)){ const d = new Date(Date.UTC(1899,11,30) + parseFloat(s)*86400000); return d.toISOString().slice(0,10); } return s.slice(0,10); };
 /* ---- 설비 메모창 — 배치도에서 설비를 누르면 열리는 끌어 옮길 수 있는 창 (여러 개 동시에) ---- */
 const LAY_CTX = { pred:()=>true, lbl:'', days:[] };
 function layMcClose(mc){ const el = document.getElementById('layPop-'+mc); if(el) el.remove(); }
@@ -4098,7 +4220,7 @@ function layMcOpen(e, mc){
   const old = document.getElementById('layPop-'+mc), pos = old ? { x:old.style.left, y:old.style.top } : null; if(old){ old.remove(); }
   const pops = document.querySelectorAll('.lay-pop'); if(pops.length >= 4) pops[0].remove();
   const el = document.createElement('div'); el.className = 'lay-pop'; el.id = 'layPop-'+mc;
-  el.innerHTML = layMcHtml(mc);
+  el.innerHTML = layTr(layMcHtml(mc)); el.setAttribute('data-no-tr','');
   document.body.appendChild(el);
   const W = 330, H = Math.min(el.offsetHeight, window.innerHeight*0.78);
   let x = (e && e.clientX!=null ? e.clientX + 18 : 120) + document.querySelectorAll('.lay-pop').length*8, y = (e && e.clientY!=null ? e.clientY - 40 : 120);
@@ -4117,7 +4239,7 @@ function layDrag(el){
   if(!el._front){ el._front = true; el.addEventListener('mousedown', ()=>{ if(el.nextSibling) document.body.appendChild(el); }); }
 }
 /* 메모 저장 · 데이터 새로고침 뒤 열린 설비 창 내용을 갱신 (위치 유지) */
-function layPopsRefresh(){ document.querySelectorAll('.lay-pop').forEach(el=>{ const mc = el.id.replace('layPop-',''); el.innerHTML = layMcHtml(mc); layDrag(el); }); }
+function layPopsRefresh(){ document.querySelectorAll('.lay-pop').forEach(el=>{ const mc = el.id.replace('layPop-',''); el.innerHTML = layTr(mc==='PQC' ? layPqcHtml() : layMcHtml(mc)); layDrag(el); }); }
 function layMcHtml(mc){
   const pred = LAY_CTX.pred, pm = (F2.pm||[]).filter(r=>r.mc===mc), cur = pm.filter(pred), tg = f2Target();
   const a = cur.reduce((o,r)=>{ o.t+=r.t; o.f+=r.f; o.n+=r.n; o.p+=r.p; o.ac+=r.a; if(r.oee!=null && isFinite(r.oee)){ o.oe+=r.oee*(r.p||1); o.ow+=(r.p||1); } return o; }, {t:0,f:0,n:0,p:0,ac:0,oe:0,ow:0});
@@ -4154,8 +4276,8 @@ function layMcHtml(mc){
       ${spark ? `<h5>최근 ${pts.length}일 %NG 추이</h5>${spark}` : ''}
       ${pqT ? `<h5>PQC 공정검사 (⑨)</h5><div>Total ${fmt(pqT)} · NG ${fmt(pqN)} · <b style="color:${f2St(pqN/pqT*100).c}">${(pqN/pqT*100).toFixed(2)}%</b></div>` : ''}
       <h5>📝 메모 · 조치 기록 ${memos.length?`(${memos.length})`:''}</h5>
-      ${memos.length ? memos.map(x=>`<div class="mm" data-no-tr><div class="mt"><b>${esc2(x.date)}</b> · ${esc2(x.author||'—')}${x.tag?` · ${esc2(x.tag)}`:''}</div>
-          ${x.text?`<div class="tx">${esc2(x.text)}</div>`:''}${(x.photos||[]).length?`<div>${x.photos.slice(0,4).map(p=>`<a href="${esc2(p.full||p.src)}" target="_blank" rel="noopener"><img src="${esc2(p.src)}" alt=""></a>`).join('')}</div>`:''}</div>`).join('')
+      ${memos.length ? memos.map(x=>`<div class="mm" data-no-tr><div class="mt"><b>${esc2(x.date)}</b> · \u0001${esc2(x.author||'—')}\u0002${x.tag?` · ${esc2(x.tag)}`:''}</div>
+          ${x.text?`<div class="tx">\u0001${esc2(x.text)}\u0002</div>`:''}${(x.photos||[]).length?`<div>${x.photos.slice(0,4).map(p=>`<a href="${esc2(p.full||p.src)}" target="_blank" rel="noopener"><img src="${esc2(p.src)}" alt=""></a>`).join('')}</div>`:''}</div>`).join('')
         : `<div style="color:#94a3b8;padding:4px 0">아직 이 설비 메모가 없습니다.</div>`}
     </div>
     <div class="ft"><button onclick="layMcMemo('${mc}')">📝 메모 쓰기</button><button class="alt" onclick="layPopsRefresh()">🔄 새로고침</button></div>`;
@@ -4163,6 +4285,7 @@ function layMcHtml(mc){
 Object.assign(I18N.ko, { 'f2.v.layout':'FAC2 Layout (배치도)' });
 Object.assign(I18N.en, { 'f2.v.layout':'FAC2 layout' });
 Object.assign(I18N.th, { 'f2.v.layout':'ผังโรงงาน FAC2' });
+if(!Object.prototype.hasOwnProperty.call(I18N.th,'f2.workDays')) I18N.th['f2.workDays'] = 'ทำงาน {n} วัน';
 /* ---- 🔍 확대 · 📷 스크린샷 ---- */
 function qtZoomGet(id){ try{ return localStorage.getItem('stc_qt_zoom_'+id) === '1'; }catch(e){ return false; } }
 function qtZoom(id){
