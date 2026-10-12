@@ -174,6 +174,7 @@
         <option value="4w">최근 4주</option>
         <option value="custom">직접 선택</option>
       </select>
+      <select id="weekSelect" title="주차 — 통합 대시보드 상단 주차와 맞춰짐"><option value="">주차 선택 안 함</option></select>
       <input type="date" id="dateFrom" style="display:none;">
       <span style="display:none;color:#aab4d4;font-size:12px;" id="dateSep">~</span>
       <input type="date" id="dateTo" style="display:none;">
@@ -334,9 +335,14 @@ function facOf(name){ return EQUIP_FAC_MAP[name] || '기타'; }
 const LOSS_CODES = ['금형수리','금형파손','핀파손','설비수리','전기로수리','취출기수리','스프레이수리','슬라이드코어수리','팁교체','노즐막힘','플런저오일막힘','래들수리',
   '조건변경','탈산처리','스크랩용해','전기로회전','금형교체','휴식, 설비교대','청소','미팅/정전','금형냉각라인','제품소착','컨베이어수리','설비냉각수','스프레이조정',
   '바가지교체','히터수리','펌프이상','로트마크, 사상','진공설비','기타'];
-const MIN_STOP = 10;
+/* 고장 판정 기준 = MTTR/MTBF 페이지(지표 요약 · 주간보고)와 같은 브라우저 저장값을 그대로 사용
+   · UDT 코드 : stc_udt_codes (없으면 MTTR 페이지 초기값 12종)  · stc_std_mode = '0' 이면 전체 로스
+   · 최소정지 : stc_min_stop (기본 10분)                                                          */
+let MIN_STOP = 10;
+try{ const b = localStorage.getItem('stc_min_stop'); if(b !== null) MIN_STOP = parseFloat(b) || 0; }catch(e){}
+const UDT_DEFAULT = ['설비수리','취출기수리','스프레이수리','래들수리','컨베이어수리','히터수리','펌프이상','진공설비','노즐막힘','플런저오일막힘','설비냉각수','금형수리'];
 /* 로스코드 4분류 (MTTR/MTBF 페이지와 같은 분류) — 고장(UDT)으로 셀 코드는 MTTR 페이지의 'UDT 코드 선택'(stc_udt_codes)을 따름
-   저장값이 없으면 설비-전기 10종 */
+   저장값이 없으면 MTTR 페이지 초기값 12종 */
 const LOSS_CAT = {
   '설비-전기':['설비수리','취출기수리','스프레이수리','전기로회전','전기로수리','래들수리','펌프이상','컨베이어수리','진공설비','히터수리'],
   '설비-라인':['조건변경','팁교체','스크랩용해','스프레이조정','노즐막힘','플런저오일막힘','바가지교체','탈산처리','설비냉각수'],
@@ -345,8 +351,14 @@ const LOSS_CAT = {
 };
 const CAT_COLORS = { '설비-전기':'#dc2626', '설비-라인':'#2563eb', '금형':'#d97706', '관리':'#64748b' };
 const nCode = t => String(t||'').replace(/\s+/g,'');
-function brkCodes(){ let L = null; try{ const v = JSON.parse(localStorage.getItem('stc_udt_codes')||'null'); if(Array.isArray(v) && v.length) L = v; }catch(e){}
-  return new Set((L || LOSS_CAT['설비-전기']).map(nCode)); }
+let BRK_LBL = '';
+function brkCodes(){ let L = null, std = true;
+  try{ const v = JSON.parse(localStorage.getItem('stc_udt_codes')||'null'); if(Array.isArray(v) && v.length) L = v; }catch(e){}
+  try{ std = localStorage.getItem('stc_std_mode') !== '0'; }catch(e){}
+  try{ const b = localStorage.getItem('stc_min_stop'); if(b !== null) MIN_STOP = parseFloat(b) || 0; }catch(e){}
+  if(!std){ BRK_LBL = '전체 로스'; return new Set(LOSS_CODES.map(nCode)); }
+  BRK_LBL = L ? `계획외 고장(UDT) 선택 ${L.length}종` : '계획외 고장(UDT) 기본 12종';
+  return new Set((L || UDT_DEFAULT).map(nCode)); }
 function catOf(col){ const k = nCode(col); return Object.keys(LOSS_CAT).find(c=>LOSS_CAT[c].some(x=>nCode(x)===k)) || '관리'; }
 const BREAKDOWN_REASONS = [
   '금형수리','금형파손','핀파손','설비수리','전기로수리','취출기수리','스프레이수리',
@@ -383,7 +395,7 @@ async function loadAll(){
   document.getElementById('statusText').textContent='불러오는 중...'; document.getElementById('statusText').className='status';
   try{
     const [a,p,q,m] = await Promise.all([fetchCsv(A_GID), fetchCsv(P_GID), fetchCsv(Q_GID), fetchCsv(MODEL_GID)]);
-    RAW_A=a; RAW_P=p; RAW_Q=q; RAW_MODEL=m;
+    RAW_A=a; RAW_P=p; RAW_Q=q; RAW_MODEL=m; fillWeeks();
     document.getElementById('loadingBanner').style.display='none';
     document.getElementById('statusText').textContent=`✅ 로드 완료 (A:${a.length}/P:${p.length}/Q:${q.length}/Model:${m.length}행)`;
     document.getElementById('statusText').className='status ok';
@@ -397,6 +409,16 @@ async function loadAll(){
   }
 }
 
+/* 주차 : 시트 '주차' 열 (W41 …) — 통합 대시보드 상단 주차와 동기화 */
+const wkOf = r => { const t = String(r['주차']||'').trim(); const m = t.match(/(\d+)/); return m ? 'W'+parseInt(m[1],10) : ''; };
+let WANT_WEEK = null;
+try{ const pd = window.parent && window.parent !== window ? window.parent.document : null;
+     if(pd && pd.getElementById('syncChk') && pd.getElementById('syncChk').checked) WANT_WEEK = pd.getElementById('weekSel').value || null; }catch(e){}
+function fillWeeks(){
+  const sel = document.getElementById('weekSelect'); const cur = sel.value || WANT_WEEK || '';
+  const W = [...new Set(RAW_A.map(wkOf))].filter(Boolean).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
+  sel.innerHTML = '<option value="">주차 선택 안 함</option>' + W.map(w=>`<option value="${w}">${w}</option>`).join('');
+  sel.value = W.includes(cur) ? cur : ''; WANT_WEEK = null; }
 function getDateRange(){
   const mode=document.getElementById('periodSelect').value;
   const allDates=RAW_A.map(r=>parseDate(r['일자'])).filter(Boolean);
@@ -441,13 +463,16 @@ function render(){
   document.getElementById('dateTo').style.display=isCustom?'inline-block':'none';
   document.getElementById('dateSep').style.display=isCustom?'inline-block':'none';
 
-  const A=filterRows(RAW_A,from,to), P=filterRows(RAW_P,from,to), Q=filterRows(RAW_Q,from,to), M=filterRows(RAW_MODEL,from,to);
+  const WK = document.getElementById('weekSelect').value;
+  const wkDays = WK ? new Set(RAW_A.filter(x=>wkOf(x)===WK).map(x=>String(x['일자']).slice(0,10))) : null;
+  const fW = rows => WK ? rows.filter(r=>{ const w = wkOf(r); return w ? w===WK : wkDays.has(String(r['일자']).slice(0,10)); }) : filterRows(rows,from,to);
+  const A=fW(RAW_A), P=fW(RAW_P), Q=fW(RAW_Q), M=fW(RAW_MODEL);
   if(!A.length){ document.getElementById('periodLabel').textContent='선택한 기간에 데이터가 없습니다.'; return; }
 
   const dates=A.map(r=>parseDate(r['일자'])).filter(Boolean);
   const minD=new Date(Math.min(...dates)), maxD=new Date(Math.max(...dates));
   const fmt=d=>d.toISOString().slice(0,10);
-  document.getElementById('periodLabel').textContent=`고장횟수 · 고장시간 · MTBF · MTTR · 가용률 종합 현황 | ${fmt(minD)} ~ ${fmt(maxD)}`;
+  document.getElementById('periodLabel').textContent=`고장횟수 · 고장시간 · MTBF · MTTR · 가용률 종합 현황 | ${WK?WK+' · ':''}${fmt(minD)} ~ ${fmt(maxD)}`;
 
   /* ---- 전체 A/P/Q/OEE ---- */
   const sumPlan=A.reduce((s,r)=>s+toNum(r['계획시간_분']),0);
@@ -524,7 +549,7 @@ function render(){
   const Avail=(totRunMin+totBrkMin)>0 ? totRunMin/(totRunMin+totBrkMin)*100 : 0;
   document.getElementById('kpiA').textContent=Avail.toFixed(1)+'%';
   document.getElementById('kpiBrkCount').textContent=totalBrkCount.toLocaleString()+'회';
-  { const def = BRK.size===LOSS_CAT['설비-전기'].length && LOSS_CAT['설비-전기'].every(k=>BRK.has(nCode(k))); document.getElementById('kpiBrkSub').textContent = def ? 'Total Breakdowns · 설비-전기 10종' : `Total Breakdowns · 선택 ${BRK.size}종`; }
+  document.getElementById('kpiBrkSub').textContent = `Total Breakdowns · ${BRK_LBL} · ${MIN_STOP}분 이상`;
   document.getElementById('kpiBrkHours').textContent=totalBrkHr.toFixed(1)+'h';
   const facWithMtbf=facArr.filter(g=>g.mtbf!=null).sort((a,b)=>b.mtbf-a.mtbf);
   if(facWithMtbf.length){
@@ -548,8 +573,8 @@ function render(){
     const vals = CATS.map(c=>catSum(g,c)[f]), tot = vals.reduce((a,v)=>a+v,0);
     const mx = Math.max(1, ...facArr.flatMap(h=>CATS.map(c=>catSum(h,c)[f])));
     return `<div class="fbr">${CATS.map((c,i)=>{ const v = vals[i], txt = f==='n' ? v : (v/60).toFixed(1), sh = tot ? Math.round(v/tot*100) : 0;
-      const isBrk = LOSS_CAT[c].every(k=>BRK.has(nCode(k)));
-      return `<span class="n${v?'':' z'}"><i class="dot" style="background:${CAT_COLORS[c]}"></i>${c}${isBrk?'<em title="고장횟수 · 고장시간 합계에 들어가는 분류">고장</em>':''}</span><span class="bar"><i style="width:${(v/mx*100).toFixed(1)}%;background:${CAT_COLORS[c]}"></i></span><b class="${v?'':'z'}">${v?txt:'·'}<small>${v?sh+'%':''}</small></b>`; }).join('')}</div>`; };
+      const nb = LOSS_CAT[c].filter(k=>BRK.has(nCode(k))).length, isBrk = nb===LOSS_CAT[c].length;
+      return `<span class="n${v?'':' z'}"><i class="dot" style="background:${CAT_COLORS[c]}"></i>${c}${nb?`<em title="고장횟수 · 고장시간 합계에 들어가는 코드 수">${isBrk?'고장':'고장 '+nb+'종'}</em>`:''}</span><span class="bar"><i style="width:${(v/mx*100).toFixed(1)}%;background:${CAT_COLORS[c]}"></i></span><b class="${v?'':'z'}">${v?txt:'·'}<small>${v?sh+'%':''}</small></b>`; }).join('')}</div>`; };
   facArr.forEach(g=>{
     const color=FAC_COLORS[g.fac]||'#7F8C8D', rk=facRank[g.fac], medal=['🥇','🥈','🥉'][rk-1]||'';
     const div=document.createElement('div');
@@ -769,7 +794,7 @@ function renderBrkTypes(facArr, BRK){
   const isDef = brkCols.length===LOSS_CAT['설비-전기'].length && LOSS_CAT['설비-전기'].every(k=>BRK.has(nCode(k)));
   /* 맨 위 요약 — 분류별 건수 */
   let h = `<table class="bt"><thead><tr><th class="l">분류 / 고장유형</th>${F.map(g=>`<th style="background:${FAC_COLORS[g.fac]||'#7F8C8D'}">FAC-${g.fac}</th>`).join('')}<th class="tt">합계</th><th>비중</th></tr></thead><tbody>`;
-  h += `<tr class="bt-sum brk"><td class="l">⚠ 고장 집계 (${isDef?'설비-전기 10종':`선택 ${brkCols.length}종`})</td>${F.map(g=>cell(sum(g, brkCols))).join('')}${cell(tot(brkCols),'tt')}<td>${allT.n?(tot(brkCols).n/allT.n*100).toFixed(0)+'%':'–'}</td></tr>`;
+  h += `<tr class="bt-sum brk"><td class="l">⚠ 고장 집계 (${BRK_LBL})</td>${F.map(g=>cell(sum(g, brkCols))).join('')}${cell(tot(brkCols),'tt')}<td>${allT.n?(tot(brkCols).n/allT.n*100).toFixed(0)+'%':'–'}</td></tr>`;
   Object.keys(LOSS_CAT).forEach(cat=>{ const t = tot(LOSS_CAT[cat]);
     h += `<tr class="bt-sum"><td class="l"><i style="background:${CAT_COLORS[cat]}"></i>${cat}</td>${F.map(g=>cell(sum(g, LOSS_CAT[cat]))).join('')}${cell(t,'tt')}<td>${allT.n?(t.n/allT.n*100).toFixed(0)+'%':'–'}</td></tr>`; });
   h += `<tr class="bt-sum all"><td class="l">전체 로스 (31종)</td>${F.map(g=>cell(sum(g, allCols))).join('')}${cell(allT,'tt')}<td>100%</td></tr>`;
@@ -782,7 +807,7 @@ function renderBrkTypes(facArr, BRK){
   });
   h += `</tbody></table><div class="bt-note">※ 각 로스코드 칸이 ${MIN_STOP}분 이상이면 1건 · 숫자 = 건수 / 아래 = 시간 · <b class="bt-flag">고장</b> = 고장횟수 · MTBF · MTTR · 가용률에 들어가는 코드 (MTTR/MTBF 화면의 'UDT 코드 선택'과 같은 값 · 저장값 없으면 설비-전기 10종) · 나머지는 정지 사유로만 집계</div>`;
   host.innerHTML = h;
-  const d = document.getElementById('brkTypesDesc'); if(d) d.textContent = `고장 = ${isDef?'설비-전기 10종':brkCols.join(' · ')} · 전체 로스 ${allT.n}건 중 ${tot(brkCols).n}건`;
+  const d = document.getElementById('brkTypesDesc'); if(d) d.textContent = `고장 = ${BRK_LBL} (MTTR/MTBF 지표 요약과 같은 기준 · ${MIN_STOP}분 이상) · 전체 로스 ${allT.n}건 중 ${tot(brkCols).n}건`;
 }
 function renderAnalysis(d){
   const sortedByA=[...d.equipArr].filter(e=>e.plan>0).sort((a,b)=>a.a-b.a);
@@ -804,7 +829,8 @@ function renderAnalysis(d){
     ${d.modelArr[0]?`<li><b>${d.modelArr[0].model}(${[...d.modelArr[0].eq].join(', ')})</b> 불량률 ${d.modelArr[0].rate.toFixed(1)}%로 최악 — 주원인 ${d.modelArr[0].topReason}.</li>`:''}`;
 }
 
-document.getElementById('periodSelect').addEventListener('change', render);
+document.getElementById('periodSelect').addEventListener('change', ()=>{ document.getElementById('weekSelect').value=''; render(); });
+document.getElementById('weekSelect').addEventListener('change', render);
 document.getElementById('dateFrom').addEventListener('change', render);
 document.getElementById('dateTo').addEventListener('change', render);
 document.getElementById('refreshBtn').addEventListener('click', loadAll);
