@@ -707,7 +707,7 @@ table.eq td.name{font-weight:700;}
 .lay-card{background:#fff;border:1px solid #dbe3ee;border-radius:12px;padding:14px 16px 10px;box-shadow:0 1px 3px rgba(15,23,42,.05);}
 .lay-card h3{font-size:17px;font-weight:900;color:#1e3c72;display:flex;align-items:baseline;gap:10px;margin:0 0 8px;}
 .lay-card h3 small{font-size:11.5px;font-weight:600;color:#64748b;}
-.lay-svgw{overflow-x:auto;} .lay-svgw svg{display:block;min-width:900px;width:100%;height:auto;}
+.lay-svgw{overflow-x:auto;} .lay-svgw svg{display:block;min-width:1100px;width:100%;height:auto;}
 .lay-svgw svg.play .fl{stroke-dasharray:9 6;animation:layflow .9s linear infinite;}
 .lay-svgw svg.play .fl.fs{stroke-dasharray:5 4;animation-duration:.6s;}
 .lay-svgw svg.stop .lay-dots{display:none;}
@@ -715,6 +715,8 @@ table.eq td.name{font-weight:700;}
 @media (prefers-reduced-motion:reduce){.lay-svgw svg.play .fl{animation:none;}.lay-svgw .lay-dots{display:none;}}
 @media print{.lay-svgw .lay-dots{display:none;}.lay-svgw svg .fl{animation:none!important;stroke-dasharray:none!important;}}
 .lay-svgw .mc{cursor:pointer;}
+.lay-svgw .lay-pulse{animation:laypulse 1.3s ease-in-out infinite;transform-box:fill-box;transform-origin:center;}
+@keyframes laypulse{0%,100%{opacity:.25;transform:scale(.9);}50%{opacity:.6;transform:scale(1.15);}}
 .lay-mq{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;}
 .lay-mq .mq{background:#fff;border:1px solid #e2e8f0;border-top:4px solid var(--mc);border-radius:10px;padding:10px 12px;}
 .lay-mq .mh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;} .lay-mq .mh b{font-size:14px;font-weight:900;color:#0f172a;}
@@ -3907,7 +3909,7 @@ function f2LayoutView(week){
       <text x="${x+14.5}" y="${y+15.5}" text-anchor="middle" font-size="${mct?7.6:8.6}" font-weight="800" fill="${c.tx}">${mct?m.replace('MCT','T'):m.replace('MC','')}</text>
       <text x="${x+14.5}" y="${y+27.5}" text-anchor="middle" font-size="9" font-weight="900" fill="${c.tx}">${r==null?'–':r.toFixed(1)}</text>
       <text x="${x+14.5}" y="${y+38}" text-anchor="middle" font-size="6.6" font-weight="700" fill="#475569">${ms&&ms.op?'OP'+esc2(ms.op):''}</text></g>`; };
-  const arrowDefs = `<defs>${[['g','#22c55e'],['b','#3b82f6'],['p','#e040a0']].map(([k,c])=>`<marker id="lay-a${k}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`).join('')}
+  const arrowDefs = `<defs>${[['g','#22c55e'],['b','#3b82f6'],['p','#e040a0'],['flow','#94a3b8']].map(([k,c])=>`<marker id="lay-a${k}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`).join('')}
     <pattern id="lay-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#e2e8f0" stroke-width="3"/></pattern></defs>`;
   let g = arrowDefs;
   /* 건물 · 구역 */
@@ -3971,7 +3973,7 @@ function f2LayoutView(week){
     const w = weeks.includes(week) ? week : weeks[weeks.length-1]; return { ok:(d,wk)=>wk===w, lbl:w||'–' }; };
   const topOf = rows => { const m = {}; rows.forEach(r=>{ const k = r['불량유형']; const o = m[k] || (m[k] = { t:k, g:r['계통'], v:0 }); o.v += f2n(r['수량']); });
     return Object.values(m).sort((a,b)=>b.v-a.v); };
-  const C8 = (()=>{ const P = perOf((F2.pd||[]).filter(r=>r['공정']==='MCT').map(r=>String(r['일자']).slice(0,10)));
+  const C8 = (()=>{ const P = perOf((F2.pd||[]).filter(r=>r['공정']==='MCT').map(r=>String(r['일자']).slice(0,10))); LAY_CTX.mct = P;
     const pd = (F2.pd||[]).filter(r=>r['공정']==='MCT' && P.ok(String(r['일자']).slice(0,10), r['주차']));
     const det = (F2.det||[]).filter(r=>r['공정']==='MCT' && r['구분']==='NG' && P.ok(String(r['일자']).slice(0,10), r['주차']));
     const t = pd.reduce((a,r)=>a+f2n(r["Total Q'ty"]),0), n = pd.reduce((a,r)=>a+f2n(r["NG Q'ty"]),0);
@@ -4027,6 +4029,7 @@ function f2LayoutView(week){
       + (extra ? `<text x="${x+12}" y="${wide ? y+h-21 : y+96}" font-size="9.5" font-weight="700" fill="#b91c1c">${esc2(extra)}</text>` : '');
     const bx = x+148, bw = w-148-42;
     t3.forEach((d,i)=>{ const yy = y+42+i*22;
+      if(LAY_SEL && d.t === LAY_SEL.name) o += `<rect x="${bx-4}" y="${yy-10}" width="${w-bx+x-6}" height="22" rx="4" fill="#fde68a" opacity=".75"/>`;
       o += `<text x="${bx}" y="${yy}" font-size="9.5" font-weight="700" fill="#334155">${i+1}. ${esc2(cut(d.t, Math.max(10, Math.round(bw/6.2))))}</text>`
         + `<rect x="${bx}" y="${yy+4}" width="${bw}" height="6" rx="3" fill="#eef2f7"/><rect x="${bx}" y="${yy+4}" width="${(bw*d.v/mx).toFixed(1)}" height="6" rx="3" fill="${GCOL[d.g]||'#94a3b8'}"/>`
         + `<text x="${x+w-10}" y="${yy+10}" text-anchor="end" font-size="10" font-weight="900" fill="#0f172a">${fmt(d.v)}</text>`; });
@@ -4045,8 +4048,38 @@ function f2LayoutView(week){
   g += ring(654,236,C8) + ring(374,235,C9) + ring(452,577,C1) + ring(425,400,C13);
   g += `<circle cx="452" cy="577" r="18" fill="transparent" style="cursor:pointer" onclick="layInspOpen(event,'IQC')"/><circle cx="425" cy="400" r="18" fill="transparent" style="cursor:pointer" onclick="layInspOpen(event,'OQC')"/>`;
   g += `<circle cx="374" cy="235" r="18" fill="transparent" style="cursor:pointer" onclick="layPqcOpen(event)"><title>⑨ PQC 검사 상세 보기</title></circle>`;
+
+  /* ---- 불량유형 패널 (오른쪽) — FAC1 원인 · FAC2 원인 · 기타, 클릭 = 검사공정 · 설비에 표시 ---- */
+  const DS = layDefStats(C8, C9, C13, C1);
+  if(LAY_SEL && !DS.rows.some(x=>x.c===LAY_SEL.c)) LAY_SEL = null;
+  if(LAY_SEL) LAY_SEL.name = (DS.rows.find(x=>x.c===LAY_SEL.c)||{}).n || LAY_SEL.name;
+  g += layDefPanel(DS, 944, 278, 252);
+  if(LAY_SEL){ const c = LAY_SEL.c, sel = DS.rows.find(x=>x.c===c);
+    /* 검사공정 번호 : 빛나는 고리 + 수량 · % 꼬리표 */
+    const tag = (bx, by, px, py, v, t, w) => { if(!v) return `<circle cx="${bx}" cy="${by}" r="17" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="3 3"/>`;
+      const txt = `${fmt(v)} · ${t ? (v/t*100).toFixed(2)+'%' : '–'}`, tw = w || 92;
+      return `<circle cx="${bx}" cy="${by}" r="21" fill="#fde047" opacity=".45" class="lay-pulse"/><circle cx="${bx}" cy="${by}" r="16" fill="none" stroke="#f59e0b" stroke-width="3"/>`
+        + `<path d="M${bx} ${by} L${px+tw/2} ${py+9}" stroke="#f59e0b" stroke-width="1.4"/>`
+        + `<rect x="${px}" y="${py}" width="${tw}" height="18" rx="9" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.4"/>`
+        + `<text x="${px+tw/2}" y="${py+12.5}" text-anchor="middle" font-size="10" font-weight="900" fill="#78350f">${txt}</text>`; };
+    g += tag(654, 236, 606, 310, sel.s8, C8.t) + tag(374, 235, 300, 310, sel.s9, C9.t) + tag(425, 400, 446, 372, sel.s13, C13.t, 96);
+    g += sel.iqc ? tag(452, 577, 330, 568, sel.iqcQ, C1.qty, 104) : `<circle cx="452" cy="577" r="17" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="3 3"/>`;
+    /* 설비 : 그 불량이 나온 설비에 노란 테두리 + 수량 */
+    LAY_MC.forEach(([m,x,y])=>{ const v = (DS.mc[c]||{})[m]; if(!v) return;
+      g += `<rect x="${x-3}" y="${y-3}" width="35" height="48" rx="7" fill="none" stroke="#f59e0b" stroke-width="3"/>`
+        + `<rect x="${x+2}" y="${y-13}" width="25" height="13" rx="6" fill="#f59e0b"/><text x="${x+14.5}" y="${y-3.5}" text-anchor="middle" font-size="9" font-weight="900" fill="#fff">${fmt(v)}</text>`; }); }
+
+  /* ---- 검사 흐름 (오른쪽 세로) : ① → ⑤ → ⑧ → ⑨ → ⑩ → ⑬ 순서대로 아래로 쌓기 ---- */
+  g += layFlowStack([
+    { n:1,  k:'iqc',  t:'IQC 수입검사', src:'IQC_수입검사', C:C1, lot:true, top:(C1.top[0]||{}).t, sel: LAY_SEL ? (DS.rows.find(z=>z.c===LAY_SEL.c)||{}) : null, open:"layInspOpen(event,'IQC')" },
+    { n:5,  k:'all',  t:'쇼트 후 검사', src:'', C:null },
+    { n:8,  k:'all',  t:'MC 가공 (불량상세)', src:'F2_불량상세', C:C8, top:(C8.top[0]||{}).t, sk:'s8', open:"f2SetView('daily')" },
+    { n:9,  k:'all',  t:'PQC 공정검사', src:'F2_PQC_Q', C:C9, top:(C9.top[0]||{}).t, sk:'s9', open:"layInspOpen(event,'PQC')" },
+    { n:10, k:'half', t:'MARKING 50% 검사', src:'', C:null },
+    { n:13, k:'all',  t:'OQC 출하검사', src:'F2_OQC_Q', C:C13, top:(C13.top[0]||{}).t, sk:'s13', open:"layInspOpen(event,'OQC')" }
+  ], DS, 1214, -40, 254);
   const play = layPlay();
-  const svg = `<svg viewBox="0 -58 1200 802" role="img" aria-label="FAC2 Layout" font-family="inherit" class="${play?'play':'stop'}">${g}</svg>`;
+  const svg = `<svg viewBox="0 -58 1480 802" role="img" aria-label="FAC2 Layout" font-family="inherit" class="${play?'play':'stop'}">${g}</svg>`;
   const legend = `<div class="lay-leg">
     ${['all','half','gen','iqc'].map(k=>`<span><i style="background:${LAY_KC[k]}"></i>${LAY_KL[k]}</span>`).join('')}
     <span><i class="ln" style="background:#22c55e"></i>소재 흐름</span><span><i class="ln" style="background:#e040a0"></i>가공 공급</span><span><i class="ln" style="background:#3b82f6"></i>가공 완료</span>
@@ -4070,6 +4103,98 @@ function f2LayoutView(week){
 }
 
 
+
+
+/* 검사 흐름 세로 쌓기 — 각 단계: 번호 · 이름 · %NG(IQC = 로트 불합격률) · NG/Total · 대표 불량 · (선택한 불량유형) */
+function layFlowStack(steps, DS, x, y, w){
+  const H = 98, GAP = 24, tg = f2Target();
+  let o = `<text x="${x}" y="${y-6}" font-size="12.5" font-weight="900" fill="#1e3c72">검사 흐름 (①→⑬)</text>`;
+  steps.forEach((st, i)=>{
+    const yy = y + i*(H+GAP), C = st.C, has = C && C.t, r = has ? C.n/C.t*100 : null, ok = r!=null && r<=tg;
+    const col = LAY_KC[st.k], bd = !has ? '#e2e8f0' : ok ? '#86efac' : '#fca5a5', bg = !has ? '#f8fafc' : ok ? '#f0fdf4' : '#fef2f2';
+    if(i) o += `<path d="M${x+w/2} ${yy-GAP+2} V${yy-4}" stroke="#94a3b8" stroke-width="2" marker-end="url(#lay-aflow)"/>`;
+    o += `<g${st.open?` style="cursor:pointer" onclick="${st.open}"`:''}><title>${st.n}. ${esc2(st.t)}${st.src?` · \u0001${esc2(st.src)}\u0002`:''}</title>`
+      + `<rect x="${x}" y="${yy}" width="${w}" height="${H}" rx="10" fill="#fff" stroke="${bd}" stroke-width="1.6" filter="url(#lay-sh)"/>`
+      + `<rect x="${x}" y="${yy}" width="${w}" height="24" rx="10" fill="${bg}"/><rect x="${x}" y="${yy+14}" width="${w}" height="10" fill="${bg}"/>`
+      + `<circle cx="${x+15}" cy="${yy+12}" r="9" fill="${col}"/><text x="${x+15}" y="${yy+16}" text-anchor="middle" font-size="10" font-weight="900" fill="${st.k==='all'?'#1f2937':'#fff'}">${st.n}</text>`
+      + `<text x="${x+30}" y="${yy+16.5}" font-size="11" font-weight="900" fill="#0f172a">${esc2(st.t)}</text>`
+      + `<text x="${x+w-10}" y="${yy+H-8}" text-anchor="end" font-size="8.5" font-weight="800" fill="${st.k==='all'?'#b45309':st.k==='half'?'#0b6aa0':'#64748b'}">${LAY_KL[st.k]}</text>`;
+    if(!has){
+      o += `<text x="${x+w/2}" y="${yy+52}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#94a3b8">${C ? '선택 기간 데이터 없음' : '데이터 없음 (연결 대기)'}</text>`
+        + (st.src ? '' : `<text x="${x+w/2}" y="${yy+68}" text-anchor="middle" font-size="9" fill="#cbd5e1">검사 기록 탭이 생기면 연결</text>`);
+    } else {
+      o += `<text x="${x+12}" y="${yy+50}" font-size="20" font-weight="900" fill="${f2St(r).c}">${r.toFixed(2)}%</text>`
+        + `<text x="${x+12}" y="${yy+64}" font-size="8.5" font-weight="700" fill="#64748b">${st.lot ? '로트 불합격률' : '%NG'}</text>`
+        + `<text x="${x+w-10}" y="${yy+40}" text-anchor="end" font-size="10" font-weight="800" fill="#334155">${st.lot ? `NG 로트 ${fmt(C.n)} / ${fmt(C.t)}` : `NG ${fmt(C.n)} / ${fmt(C.t)}`}</text>`
+        + (st.lot ? `<text x="${x+w-10}" y="${yy+54}" text-anchor="end" font-size="9" font-weight="700" fill="#64748b">수량 ${fmt(C.nq)} / ${fmt(C.qty)} EA</text>`
+                  : (st.top ? `<text x="${x+w-10}" y="${yy+54}" text-anchor="end" font-size="9" font-weight="700" fill="#64748b">TOP ${esc2(String(st.top).slice(0,20))}</text>` : ''))
+        + `<text x="${x+12}" y="${yy+H-8}" font-size="8" font-weight="600" fill="#94a3b8">${esc2(C.lbl||'')}</text>`;
+      /* 선택한 불량유형 */
+      if(LAY_SEL){ const sr = DS.rows.find(z=>z.c===LAY_SEL.c) || {};
+        const v = st.lot ? (sr.iqc||0) : (sr[st.sk]||0), t = st.lot ? C.t : C.t;
+        o += `<rect x="${x+120}" y="${yy+60}" width="${w-128}" height="17" rx="8" fill="${v?'#fef3c7':'#f1f5f9'}" stroke="${v?'#f59e0b':'#e2e8f0'}"/>`
+          + `<text x="${x+w-14}" y="${yy+72.5}" text-anchor="end" font-size="9.5" font-weight="900" fill="${v?'#78350f':'#94a3b8'}">▶ ${esc2(String(LAY_SEL.name).slice(0,10))} ${fmt(v)}${st.lot?' 로트':''} · ${t?(v/t*100).toFixed(2):'0.00'}%</text>`;
+        if(v) o += `<rect x="${x-2}" y="${yy-2}" width="${w+4}" height="${H+4}" rx="12" fill="none" stroke="#f59e0b" stroke-width="2.5"/>`; }
+    }
+    o += `</g>`; });
+  return o;
+}
+/* ---- 불량유형 (코드 1~50) 집계 : ⑧ MC 가공(F2_불량상세) · ⑨ PQC · ⑬ OQC · ① IQC(이름으로 코드 대응) ---- */
+let LAY_SEL = null;
+function laySelDef(c){ LAY_SEL = (LAY_SEL && LAY_SEL.c===c) ? null : { c, name:'' }; renderF2(); }
+function layDefStats(C8, C9, C13, C1){
+  const CO = layCodeOrig(), nm = c => f2DefName(c, CO[c] || F2_CODE_KO[c] || ''), R = {}, MC = {};
+  const add = (c, k, v, mc) => { if(!c || !v) return; const o = R[c] || (R[c] = { c, n:nm(c), g:PQ_GRP_OF(c), s8:0, s9:0, s13:0, iqc:0, iqcQ:0 }); o[k] += v;
+    if(mc){ const m = MC[c] || (MC[c] = {}); m[mc] = (m[mc]||0) + v; } };
+  const P8 = LAY_CTX.mct, P9 = LAY_CTX.pq, P13 = LAY_CTX.oq, P1 = LAY_CTX.iq;
+  if(P8) (F2.det||[]).forEach(r=>{ if(r['공정']!=='MCT' || r['구분']!=='NG' || !P8.ok(String(r['일자']).slice(0,10), r['주차'])) return; add(parseInt(r['코드'],10), 's8', f2n(r['수량']), String(r['설비명']||'').trim()); });
+  if(P9 && (F2.pqRaw||[]).length) pqShape().det.forEach(r=>{ if(!P9.ok(r['일자'], r['주차'])) return; add(r['코드'], 's9', f2n(r['수량']), String(r['설비명']||'').trim()); });
+  const oq = F2.oqRaw || [];
+  if(P13 && oq.length){ const cols = Object.keys(oq[0]).map(k=>{ const m = String(k).match(/^\s*(\d{1,2})\s+/); return m ? { k, c:+m[1] } : null; }).filter(x=>x && x.c>=1 && x.c<=50);
+    oq.forEach(r=>{ if(!P13.ok(String(r['일자']).slice(0,10), r['주차'])) return; cols.forEach(({k,c})=>add(c, 's13', f2n(r[k]))); }); }
+  if(P1){ const byKo = {}; F2_CODE_KO.forEach((n,i)=>{ if(i && n) byKo[n.replace(/\s*\(.*\)$/,'')] = i; });
+    (F2.iqc||[]).forEach(r=>{ if(!layIqcNg(r) || !P1.ok(String(r['입고일자']).slice(0,10), r['주차'])) return; const c = byKo[String(r['불량유형']||'').trim()]; if(c){ add(c, 'iqc', 1); add(c, 'iqcQ', f2n(r['수량'])); } }); }
+  const T = (C8.t||0) + (C9.t||0) + (C13.t||0);
+  const rows = Object.values(R).map(o=>({ ...o, sum:o.s8+o.s9+o.s13, rate: T ? (o.s8+o.s9+o.s13)/T*100 : null })).filter(o=>o.sum>0 || o.iqc>0).sort((a,b)=>b.sum-a.sum || b.iqc-a.iqc);
+  return { rows, mc:MC, T, t8:C8.t, t9:C9.t, t13:C13.t, t1:C1.qty, lots1:C1.t };
+}
+function layDefPanel(DS, x, y, w){
+  const GR = [['다캐불량','FAC1 원인 (다이캐스팅)','#c2410c',8],['가공불량','FAC2 원인 (가공)','#7c3aed',8],['기타','기타 (협력사·고객)','#64748b',3]];
+  const cut = (t,k) => { const a = [...String(t||'')]; return a.length>k ? a.slice(0,k-1).join('')+'…' : a.join(''); };
+  let o = '', yy = y + 46;
+  const mx = Math.max(1, ...DS.rows.map(r=>r.sum));
+  GR.forEach(([gk, label, col, max])=>{
+    const L = DS.rows.filter(r=>(gk==='기타' ? !['다캐불량','가공불량'].includes(r.g) : r.g===gk)).slice(0, max);
+    if(!L.length) return;
+    const gs = DS.rows.filter(r=>(gk==='기타' ? !['다캐불량','가공불량'].includes(r.g) : r.g===gk)).reduce((a,r)=>a+r.sum,0);
+    o += `<rect x="${x+8}" y="${yy-11}" width="${w-16}" height="17" rx="4" fill="${col}" opacity=".12"/><text x="${x+14}" y="${yy+1}" font-size="10.5" font-weight="900" fill="${col}">${label}</text>`
+      + `<text x="${x+w-14}" y="${yy+1}" text-anchor="end" font-size="10" font-weight="800" fill="${col}">${fmt(gs)}${DS.T?` · ${(gs/DS.T*100).toFixed(2)}%`:''}</text>`;
+    yy += 18;
+    L.forEach(r=>{ const on = LAY_SEL && LAY_SEL.c===r.c, bw = w-104-90;
+      o += `<g style="cursor:pointer" onclick="laySelDef(${r.c})"><title>${esc2(r.n)} — ⑧ ${fmt(r.s8)} · ⑨ ${fmt(r.s9)} · ⑬ ${fmt(r.s13)}${r.iqc?` · ① ${r.iqc} lot`:''} · 클릭하면 검사공정에 표시</title>`
+        + `<rect x="${x+6}" y="${yy-10}" width="${w-12}" height="16" rx="4" fill="${on?'#fde68a':'transparent'}" stroke="${on?'#f59e0b':'none'}"/>`
+        + `<text x="${x+12}" y="${yy+1.5}" font-size="9.5" font-weight="${on?900:700}" fill="#1f2937">${esc2(cut(r.n, 14))}</text>`
+        + `<rect x="${x+104}" y="${yy-4}" width="${bw}" height="5" rx="2.5" fill="#eef2f7"/><rect x="${x+104}" y="${yy-4}" width="${(bw*r.sum/mx).toFixed(1)}" height="5" rx="2.5" fill="${col}"/>`
+        + `<text x="${x+w-48}" y="${yy+1.5}" text-anchor="end" font-size="9.5" font-weight="900" fill="#0f172a">${fmt(r.sum)}</text>`
+        + `<text x="${x+w-10}" y="${yy+1.5}" text-anchor="end" font-size="9" font-weight="700" fill="#64748b">${r.rate==null?'–':r.rate.toFixed(2)+'%'}</text></g>`;
+      yy += 16; });
+    yy += 6; });
+  if(!DS.rows.length) o += `<text x="${x+w/2}" y="${yy+20}" text-anchor="middle" font-size="10.5" fill="#94a3b8">선택 기간 데이터 없음</text>`;
+  /* 선택한 불량유형 — 검사공정별 수량 · 불량률 */
+  let det = '';
+  if(LAY_SEL){ const r = DS.rows.find(z=>z.c===LAY_SEL.c);
+    if(r){ const line = (lab, v, t, i) => `<text x="${x+14}" y="${yy+30+i*15}" font-size="10" font-weight="700" fill="#334155">${lab}</text>`
+        + `<text x="${x+w-12}" y="${yy+30+i*15}" text-anchor="end" font-size="10" font-weight="900" fill="${v?'#b91c1c':'#94a3b8'}">${fmt(v)}${t?` / ${fmt(t)} · ${(v/t*100).toFixed(2)}%`:''}</text>`;
+      det = `<rect x="${x+6}" y="${yy}" width="${w-12}" height="${r.iqc?94:80}" rx="8" fill="#fffbeb" stroke="#f59e0b"/>`
+        + `<text x="${x+14}" y="${yy+15}" font-size="11" font-weight="900" fill="#78350f">▶ ${esc2(cut(r.n, 22))}</text>`
+        + `<text x="${x+w-12}" y="${yy+15}" text-anchor="end" font-size="9" font-weight="800" fill="#b45309" style="cursor:pointer" onclick="laySelDef(${r.c})">✕ 선택 해제</text>`
+        + line('⑧ MC 가공', r.s8, DS.t8, 0) + line('⑨ PQC', r.s9, DS.t9, 1) + line('⑬ OQC', r.s13, DS.t13, 2)
+        + (r.iqc ? `<text x="${x+14}" y="${yy+75}" font-size="10" font-weight="700" fill="#334155">① IQC</text><text x="${x+w-12}" y="${yy+75}" text-anchor="end" font-size="10" font-weight="900" fill="#b91c1c">${r.iqc} / ${fmt(DS.lots1)} 로트 · ${fmt(r.iqcQ)} EA</text>` : ''); } }
+  const H = Math.max(120, yy - y + (det ? (LAY_SEL && DS.rows.find(z=>z.c===LAY_SEL.c)||{}).iqc ? 104 : 90 : 4));
+  return `<g><rect x="${x}" y="${y}" width="${w}" height="${H}" rx="10" fill="#fff" stroke="#dbe3ee" stroke-width="1.4" filter="url(#lay-sh)"/>`
+    + `<text x="${x+12}" y="${y+18}" font-size="12" font-weight="900" fill="#1e3c72">불량유형 (FAC1 · FAC2)</text>`
+    + `<text x="${x+12}" y="${y+31}" font-size="8.5" font-weight="700" fill="#94a3b8">⑧+⑨+⑬ 합계 · 클릭 = 검사공정에 표시</text>` + o + det + `</g>`;
+}
 /* ---- 설비 마스터 (구글시트 MC · MCT 탭) — 설비 → Part name(모델) · OP ---- */
 const LAY_MASTER_DEF = {
   MC:[['MC 2','HOUSING REAR','10-20'],['MC 3','HOUSING REAR','30-70'],['MC 4','HOUSING REAR A,B','10-20'],['MC 5','HOUSING REAR A,B','10-20'],['MC 6','HOUSING REAR','30-70'],
@@ -4138,6 +4263,13 @@ function layModelQuality(pred){
 
 /* ---- FAC2 Layout 다국어 — 레이아웃 · 설비창 · PQC 상세창의 화면 글자를 한/영/태로 (데이터 · 메모 본문은 그대로) ---- */
 const LAY_TR = [
+ ['검사 흐름 (①→⑬)','Inspection flow (①→⑬)','ลำดับการตรวจ (①→⑬)'],['쇼트 후 검사','Inspection after shot blast','ตรวจหลังยิงทราย'],['MC 가공 (불량상세)','MC machining (defect detail)','กลึง MC (รายละเอียดของเสีย)'],
+ ['PQC 공정검사','PQC in-process inspection','PQC ตรวจระหว่างกระบวนการ'],['MARKING 50% 검사','Marking 50% inspection','ตรวจมาร์ก 50%'],['IQC 수입검사','IQC incoming inspection','IQC ตรวจรับ'],
+ ['데이터 없음 (연결 대기)','No data (not linked yet)','ไม่มีข้อมูล (ยังไม่เชื่อม)'],['검사 기록 탭이 생기면 연결','will be linked once a record tab exists','จะเชื่อมเมื่อมีแท็บบันทึก'],
+ ['불량유형 (FAC1 · FAC2)','Defect types (FAC1 · FAC2)','ประเภทของเสีย (FAC1 · FAC2)'],['FAC1 원인 (다이캐스팅)','FAC1 cause (die casting)','สาเหตุ FAC1 (ไดคาสติ้ง)'],
+ ['FAC2 원인 (가공)','FAC2 cause (machining)','สาเหตุ FAC2 (งานกลึง)'],['기타 (협력사·고객)','Other (supplier · customer)','อื่นๆ (ซัพพลายเออร์ · ลูกค้า)'],
+ ['클릭하면 검사공정에 표시','click to show on the inspection steps','คลิกเพื่อแสดงที่จุดตรวจ'],['합계 · 클릭 = 검사공정에 표시','total · click to highlight the steps','รวม · คลิกเพื่อไฮไลต์จุดตรวจ'],['선택 해제','Clear','ยกเลิก'],
+ ['MC 가공','MC machining','กลึง MC'],['로트','lots','ล็อต'],
  ['NG반송','NG – returned','NG – ส่งคืน'],['재작업','Rework','ทำซ้ำ'],['미기재','Not entered','ไม่ระบุ'],
  ['IQC 수입검사 (로트)','IQC incoming (lots)','IQC ตรวจรับ (ล็อต)'],['OQC 출하검사 상세','OQC outgoing inspection details','รายละเอียดการตรวจ OQC ก่อนส่ง'],['OQC 출하검사','OQC outgoing inspection','OQC ตรวจก่อนส่ง'],
  ['IQC 수입검사 상세','IQC incoming inspection details','รายละเอียดการตรวจรับ IQC'],['IQC 수입검사 상세 보기','View IQC details','ดูรายละเอียด IQC'],['OQC 출하검사 상세 보기','View OQC details','ดูรายละเอียด OQC'],
