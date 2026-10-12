@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 카카오톡 · 라인 · 메신저 링크 미리보기용 (JS 를 실행하지 않고 이 태그만 읽음) -->
+<title>FAC2 공정간 품질현황</title>
+<meta name="description" content="STC FAC2 MCT 가공 · 검사공정별 불량 (IQC → MC 가공 → PQC → OQC) · 설비 배치도">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="STC">
+<meta property="og:title" content="FAC2 공정간 품질현황">
+<meta property="og:description" content="FAC2 MCT 가공 · 검사공정별 불량 (IQC → MC 가공 → PQC → OQC) · 설비 배치도">
+<meta property="og:url" content="https://cdrty435-hub.github.io/STC_OEE_Dashboard/FAC2_Layout.html">
+<meta property="og:image" content="https://cdrty435-hub.github.io/STC_OEE_Dashboard/FAC2_Layout_og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta http-equiv="refresh" content="0; url=STC_Integrated_Dashboard.html?view=layout">
+<script>
+  /* 바로 배치도 전용 화면으로 이동 — 뒤에 붙인 &lang=th · &tv=1 등은 그대로 넘김 */
+  (function(){
+    var q = location.search.replace(/^\?/, '');
+    var p = new URLSearchParams(q); p.set('view', 'layout');
+    location.replace('STC_Integrated_Dashboard.html?' + p.toString() + location.hash);
+  })();
+</script>
+<style>body{font-family:system-ui,sans-serif;background:#f1f5f9;color:#1e3c72;display:grid;place-items:center;min-height:100vh;margin:0}a{color:#1e3c72}</style>
+</head>
+<body>
+<p>FAC2 공정간 품질현황으로 이동 중… <a href="STC_Integrated_Dashboard.html?view=layout">바로 열기</a></p>
+</body>
+</html>
