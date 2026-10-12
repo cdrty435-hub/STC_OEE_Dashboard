@@ -783,8 +783,15 @@ table.eq td.name{font-weight:700;}
 .lay-dtr .tl i{grid-row:1;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;font-weight:900;}
 .lay-dtr .tl.nod i{border:2px dashed;background:#fff;color:#475569;} .lay-dtr .tl em{font-style:normal;font-size:11px;font-weight:800;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .lay-dtr .tl b{grid-column:1/-1;font-size:28px;font-weight:900;color:#94a3b8;font-variant-numeric:tabular-nums;line-height:1.1;} .lay-dtr .tl b small{font-size:12px;font-weight:700;margin-left:2px;}
-.lay-dtr .tl > small{grid-column:1/-1;font-size:10.5px;color:#64748b;font-weight:700;}
+.lay-dtr .tl > small{grid-column:1/-1;font-size:10px;color:#64748b;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .lay-dtr .tl.hit{background:#fff7ed;border-color:#f59e0b;} .lay-dtr .tl.hit b{color:#b91c1c;} .lay-dtr .tl.nod{opacity:.6;}
+.lay-dtr .dl2{max-height:430px;overflow:auto;padding:8px 10px;}
+.lay-dtr .dlh{font-size:13px;font-weight:900;color:#78350f;margin:0 0 6px;} .lay-dtr .dlh small{font-size:10.5px;font-weight:700;color:#92400e;margin-left:4px;}
+.lay-dtr .dlg{display:flex;justify-content:space-between;font-size:11.5px;font-weight:900;padding:4px 8px;border-radius:6px;margin:8px 0 3px;} .lay-dtr .dlg span{font-weight:800;}
+.lay-dtr .dli{display:grid;grid-template-columns:1fr 70px 38px 44px;gap:6px;align-items:center;padding:3px 8px;border-radius:6px;cursor:pointer;font-size:11.5px;border:1px solid transparent;}
+.lay-dtr .dli:hover{background:#fef9c3;} .lay-dtr .dli.on{background:#fde68a;border-color:#f59e0b;font-weight:900;}
+.lay-dtr .dli .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1f2937;} .lay-dtr .dli .b{height:6px;background:#eef2f7;border-radius:3px;overflow:hidden;} .lay-dtr .dli .b i{display:block;height:100%;border-radius:3px;}
+.lay-dtr .dli b{text-align:right;font-variant-numeric:tabular-nums;} .lay-dtr .dli small{text-align:right;color:#64748b;font-weight:700;}
 </style>
 </head>
 <body>
@@ -4230,8 +4237,25 @@ function layDefTrend(DS, C8, C9, C13, C1){
         const v = st.lot ? (sr.iqc||0) : st.n===8 ? sr.s8 : st.n===9 ? sr.s9 : sr.s13;
         return `<div class="tl${v?' hit':''}"><i style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</i><em>${st.t}</em>
           <b>${fmt(v)}<small>${st.lot?' 로트':' EA'}</small></b><small>${st.v==null?'–':st.v.toFixed(2)+'%'} · ${esc2(st.q)}</small></div>`; }).join('<span class="ar">→</span>')}</div></div>
-    <div class="st"><div style="font-size:12px;font-weight:900;color:#78350f;margin-bottom:4px">순차 개선 점검 <small style="font-weight:600;color:#92400e">(배치도 기간 · ①→⑤→⑧→⑨→⑩→⑬)</small></div>${rows}${verdict}</div>
+    <div class="st dl2">${layDefListHtml(DS)}</div>
     <div>${chart}</div></div>`;
+}
+
+/* 추이 화면 왼쪽 — 불량유형 목록 (FAC1 · FAC2 · 기타), 누르면 그 유형으로 바뀜 */
+function laySelPick(c){ LAY_SEL = { c, name:'' }; renderF2(); }
+function layDefListHtml(DS){
+  const GR = [['다캐불량','FAC1 원인 (다이캐스팅)','#c2410c'],['가공불량','FAC2 원인 (가공)','#7c3aed'],['기타','기타 (협력사·고객)','#64748b']];
+  const mx = Math.max(1, ...DS.rows.map(r=>r.sum));
+  const inG = (r, gk) => gk==='기타' ? !['다캐불량','가공불량'].includes(r.g) : r.g===gk;
+  return `<div class="dlh">불량유형 <small>⑧+⑨+⑬ · 누르면 그 유형으로</small></div>` + GR.map(([gk,label,col])=>{
+    const L = DS.rows.filter(r=>inG(r,gk)); if(!L.length) return '';
+    const gs = L.reduce((a,r)=>a+r.sum,0);
+    return `<div class="dlg" style="color:${col};background:${col}14">${label}<span>${fmt(gs)}${DS.T?` · ${(gs/DS.T*100).toFixed(2)}%`:''}</span></div>`
+      + L.map(r=>{ const on = LAY_SEL && LAY_SEL.c===r.c;
+        return `<div class="dli${on?' on':''}" onclick="laySelPick(${r.c})" title="⑧ ${fmt(r.s8)} · ⑨ ${fmt(r.s9)} · ⑬ ${fmt(r.s13)}">
+          <span class="t">${esc2(r.n)}</span><span class="b"><i style="width:${(r.sum/mx*100).toFixed(0)}%;background:${col}"></i></span>
+          <b>${fmt(r.sum)}</b><small>${r.rate==null?'–':r.rate.toFixed(2)+'%'}</small></div>`; }).join('');
+  }).join('');
 }
 /* ---- 불량유형 (코드 1~50) 집계 : ⑧ MC 가공(F2_불량상세) · ⑨ PQC · ⑬ OQC · ① IQC(이름으로 코드 대응) ---- */
 let LAY_SEL = null;
@@ -4357,6 +4381,7 @@ function layModelQuality(pred){
 
 /* ---- FAC2 Layout 다국어 — 레이아웃 · 설비창 · PQC 상세창의 화면 글자를 한/영/태로 (데이터 · 메모 본문은 그대로) ---- */
 const LAY_TR = [
+ ['누르면 그 유형으로','click to switch','คลิกเพื่อเปลี่ยน'],['불량유형','Defect types','ประเภทของเสีย'],
  ['데이터 없음','No data','ไม่มีข้อมูล'],
  ['전체 보기 (선택 해제)','Show all (clear selection)','แสดงทั้งหมด (ยกเลิกการเลือก)'],['전체 %NG','Total %NG','%NG รวม'],
  ['데이터 없음 (연결 대기) · 비교에서 제외','No data (not linked yet) · excluded from comparison','ไม่มีข้อมูล (ยังไม่เชื่อม) · ไม่นำมาเปรียบเทียบ'],['데이터 전체 기간','whole data range','ช่วงข้อมูลทั้งหมด'],
