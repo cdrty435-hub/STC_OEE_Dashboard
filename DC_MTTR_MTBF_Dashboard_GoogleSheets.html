@@ -280,7 +280,7 @@
   @media print{ .wk-ord, .wk-ordreset{display:none !important;} }
   .wk-blk > h4{margin:0 0 6px; font-size:12.5px; font-weight:800; color:#1f3864;
     border-left:4px solid #e8a33d; padding-left:7px;}
-  .wk-kpi{display:grid; grid-template-columns:repeat(5,1fr); gap:8px;}
+  .wk-kpi{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
   .wk-k{border:1px solid #e6ebf1; border-radius:9px; padding:8px 10px; background:#fbfcfe;}
   .wk-k .l{font-size:10.5px; color:#5a6674; font-weight:700;}
   .wk-k .v{font-size:20px; font-weight:800; color:#1a2230; line-height:1.25;}
@@ -1139,7 +1139,7 @@
         <table class="wk-t mini" id="wkPptTable"></table>
         <div class="wk-ppt-note" id="wkPptNote2" style="margin-bottom:2px"></div>
         <div class="wk-ppt-note">PPT=계획생산시간 · NOT=고장정지시간 · NOF=설비고장횟수 · AOT=PPT−NOT ·
-          MTBF=실가동시간÷NOF · MTTR=NOT÷NOF · NOR=NOT÷PPT · OR=MTBF÷(MTBF+MTTR) · 실가용률=가동시간÷PPT
+          MTBF=실가동시간÷NOF · MTTR=NOT÷NOF · NOR=NOT÷PPT
           <br><b>NOF·NOT 은 계획외 고장(UDT)만 집계</b> — 금형교체·청소·휴식·조건변경 등 계획정지는 제외</div>
       </div>
 
@@ -4620,12 +4620,11 @@ function renderWeekly(){
   const K = [
     [`MTTR (평균 수리시간)${catIsAll(cats1)?'':' · '+catLabel(cats1)}`, fmt(cur.mttr,2), 'h/건', wkDelta(cur.mttr, prv&&prv.mttr, false, 2)],
     ['MTBF (평균 무고장시간)', fmt(cur.mtbf,2), 'h/건', wkDelta(cur.mtbf, prv&&prv.mtbf, true, 2)],
-    ['가용률', fmt(gaC,1), '%', wkDelta(gaC, prv ? gaP : null, true, 1, '%p')],
     ['로스시간 / 고장횟수', fmt(cur.lossH,1), 'h / '+cntTxt(cur.cnt)+'건', wkDelta(cur.lossH, prv&&prv.lossH, false, 1, 'h')],
     ['F-COST 손실비용', Math.round(cur.cost).toLocaleString(), 'THB', wkDelta(cur.cost, prv&&prv.cost, false, 0, '')]
   ];
   document.getElementById('wkKpi').innerHTML = K.map((k,i)=>
-    `<div class="wk-k${i===2?' clickable" id="wkAvailCard':''}"><div class="l">${k[0]}${i===2?'<span class="info">ⓘ 계산식</span>':''}</div>
+    `<div class="wk-k"><div class="l">${k[0]}</div>
        <div class="v">${k[1]}<span class="u">${k[2]}</span></div>${k[3]}</div>`).join('');
 
   /* 가동률 계산식 설명 — OEE 가동률과 왜 다른지 */
@@ -4701,8 +4700,7 @@ function renderWeekly(){
   if(prv){
     const dM = cur.mttr-prv.mttr, dB = cur.mtbf-prv.mtbf, dA = cur.avail-prv.avail;
     L.push(`MTTR ${fmt(prv.mttr,2)} → <b>${fmt(cur.mttr,2)}</b> h/건 (${dM>=0?'+':''}${fmt(dM,2)}${wkPct(cur.mttr,prv.mttr)}) · ` +
-           `MTBF ${fmt(prv.mtbf,2)} → <b>${fmt(cur.mtbf,2)}</b> h/건 (${dB>=0?'+':''}${fmt(dB,2)}${wkPct(cur.mtbf,prv.mtbf)}) · ` +
-           `가용률 ${fmt(gaP,1)} → <b>${fmt(gaC,1)}</b>% (${gaC-gaP>=0?'+':''}${fmt(gaC-gaP,1)}%p)`);
+           `MTBF ${fmt(prv.mtbf,2)} → <b>${fmt(cur.mtbf,2)}</b> h/건 (${dB>=0?'+':''}${fmt(dB,2)}${wkPct(cur.mtbf,prv.mtbf)})`);
     const jm = dM<0 ? '수리시간 단축' : dM>0 ? '수리시간 증가' : '수리시간 보합';
     const jb = dB>0 ? '고장 간격 개선' : dB<0 ? '고장 간격 악화' : '고장 간격 보합';
     L.push(`전주 대비 <b>${jm}</b>, <b>${jb}</b>.` +
@@ -4710,7 +4708,7 @@ function renderWeekly(){
         ? ` 주된 변동 요인은 <b>${drv.k}</b> 계통으로 로스시간이 ${drv.d>0?'+':''}${fmt(drv.d,1)}h 변동했습니다.`
         : ' 계통별 로스 변동은 크지 않습니다.'));
   }else{
-    L.push(`MTTR <b>${fmt(cur.mttr,2)}</b> h/건 · MTBF <b>${fmt(cur.mtbf,2)}</b> h/건 · 가용률 <b>${fmt(gaC,1)}</b>% (전주 데이터 없음)`);
+    L.push(`MTTR <b>${fmt(cur.mttr,2)}</b> h/건 · MTBF <b>${fmt(cur.mtbf,2)}</b> h/건 (전주 데이터 없음)`);
   }
   if(tM || tB){
     const t = [];
@@ -5094,7 +5092,7 @@ function renderWeekly(){
     if(sub) sub.textContent = `${wk} · PPT ${mdTxt} · ${catLabel(cats6)} 기준 · 계획외 고장(UDT)`;
 
     const aotHead = (md === 'run') ? 'AOT (h)<br><small>=실가동</small>' : 'AOT (h)';
-    const head = ['MC','Ton','PPT (h)','NOT (h)','NOF',aotHead,'MTBF (h)','MTTR (h)','NOR','OR','실가용률'];
+    const head = ['MC','Ton','PPT (h)','NOT (h)','NOF',aotHead,'MTBF (h)','MTTR (h)','NOR'];
     let T = {ppt:0, not:0, nof:0, run:0};
     const body = ALL_MACHINES.concat([...MISSING]).sort((a,b)=>a-b).map(mc=>{
       const R = R0.filter(x=>x.m===mc);
@@ -5120,9 +5118,7 @@ function renderWeekly(){
         <td>${nof?cntTxt(nof):'-'}</td><td>${aot?fmt(aot,1):'-'}</td>
         <td class="${nof&&tB&&mtbf<tB?'warn':''}">${nof?fmt(mtbf,2):'-'}</td>
         <td class="${nof&&tM&&mttr>tM?'warn':''}">${nof?fmt(mttr,2):'-'}</td>
-        <td>${ppt?fmt(not/ppt*100,1)+'%':'-'}</td>
-        <td>${nof?fmt(or*100,1)+'%':'-'}</td>
-        <td>${ppt?fmt(runH/ppt*100,1)+'%':'-'}</td></tr>`;
+        <td>${ppt?fmt(not/ppt*100,1)+'%':'-'}</td></tr>`;
     }).join('');
 
     const aotT  = (md === 'run') ? T.run : Math.max(T.ppt-T.not, 0);
@@ -5136,9 +5132,7 @@ function renderWeekly(){
       + `<tfoot><tr><td class="mc">TTL</td><td>—</td>
           <td>${fmt(T.ppt,1)}</td><td>${fmt(T.not,1)}</td><td>${cntTxt(T.nof)}</td>
           <td>${fmt(aotT,1)}</td><td>${fmt(mtbfT,2)}</td><td>${fmt(mttrT,2)}</td>
-          <td>${T.ppt?fmt(T.not/T.ppt*100,1)+'%':'-'}</td>
-          <td>${(mtbfT+mttrT)?fmt(mtbfT/(mtbfT+mttrT)*100,1)+'%':'-'}</td>
-          <td>${T.ppt?fmt(T.run/T.ppt*100,1)+'%':'-'}</td></tr></tfoot>`;
+          <td>${T.ppt?fmt(T.not/T.ppt*100,1)+'%':'-'}</td></tr></tfoot>`;
   }
 
   /* ---------- ⑦ 로스 비용 현황 (F-COST) ---------- */
@@ -7880,7 +7874,6 @@ loadData();
     const rows = [
       ['MTTR','mttr', v=>f1(v,2)+' h/건', false, 2, 'mttr', x=>f1(x.mttr,2)+'h'],
       ['MTBF','mtbf', v=>f1(v,2)+' h/건', true, 2, 'mtbf', x=>f1(x.mtbf,2)+'h'],
-      ['가용률','avail', v=>f1(v,1)+' %', true, 1, 'avail', x=>f1(x.avail,1)+'%'],
       ['로스시간','lossH', v=>f1(v,1)+' h', false, 1, 'loss', x=>f1(x.lossH,1)+'h'],
       ['고장건수','n', v=>f0(v)+' 건', false, 0, 'cnt', x=>x.n+'건'],
       ['F-COST','cost', v=>f0(v)+' THB', false, 0, 'cost', x=>f0(x.cost)]
@@ -7904,14 +7897,14 @@ loadData();
          + (dd.tail ? `<div class="kw-tail">${esc(dd.tail)}</div>` : '') + `</td></tr>`;
     });
     h += `</tbody></table>`;
-    h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · Worst = 대시보드 ② 설비별 차트 기준(건수 제한 없음, 가동 0h 설비 제외) · 가용률 = MTBF ÷ (MTBF + MTTR) = 가동 ÷ (가동 + ${C.std ? '고장(UDT) 로스) — 고장 정지만 반영' : '전체 로스) — 현재 전체 로스 기준이라 계획정지도 고장으로 집계'} · 가동률(전체 로스) = 가동 ÷ (가동 + 전체 로스)는 참고값</div>`;
+    h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · Worst = 대시보드 ② 설비별 차트 기준(건수 제한 없음, 가동 0h 설비 제외) · MTTR = 고장 로스시간 ÷ 고장건수 · MTBF = 실가동시간 ÷ 고장건수${C.std ? '' : ' · 현재 전체 로스 기준이라 계획정지도 고장으로 집계'}</div>`;
 
     /* --- 2. 워스트 설비 · 고장 유형 정리 ---------------------------------------
        1번 MTTR·MTBF·가용률·로스시간 Worst 3 에 나온 설비를 한 번씩만 모아
        고장(UDT) 유형 × 설비 매트릭스로 정리한다. ☑ 선택한 유형이 3번 수평전개 대상. */
     const notes = notesGet(P.cur.key);
     const part = notes._part || {}, chk = notes._chk || {};
-    const TAGS = [['mttr','MTTR'],['mtbf','MTBF'],['avail','가용률'],['loss','로스']];
+    const TAGS = [['mttr','MTTR'],['mtbf','MTBF'],['loss','로스']];
     const wm = {};
     TAGS.forEach(([k,lab])=>W[k].forEach((x,j)=>{ (wm[x.m] = wm[x.m] || []).push(lab+'①②③'[j]); }));
     const WM = Object.keys(wm).map(Number).sort((a,b)=>a-b);
@@ -7937,7 +7930,7 @@ loadData();
     const maxH = Math.max(0.0001, ...TYs.flatMap(o=>WM.map(m=>o.by[m]?o.by[m].h:0)));
     const hn = (h,n) => `${f1(h)}h / ${n}건`;
 
-    h += `<h4 class="kw-h">2. 워스트 설비 · 고장 유형 정리 (설비-전기) <small>1번 MTTR·MTBF·가용률·로스시간 Worst 설비 ${WM.length}대(중복 제거) · 설비-전기 계통 유형만(금형·설비-라인·관리 제외) · ☑ 선택한 유형 = 3번 수평전개 대상</small></h4>`;
+    h += `<h4 class="kw-h">2. 워스트 설비 · 고장 유형 정리 (설비-전기) <small>1번 MTTR·MTBF·로스시간 Worst 설비 ${WM.length}대(중복 제거) · 설비-전기 계통 유형만(금형·설비-라인·관리 제외) · ☑ 선택한 유형 = 3번 수평전개 대상</small></h4>`;
     if (!WM.length || !TYs.length){
       h += `<div class="kw-empty">해당 기간 워스트 설비의 설비-전기 고장 기록 없음</div>`;
     } else {
@@ -7945,7 +7938,7 @@ loadData();
       h += `<table class="kw-m"><colgroup><col style="width:5%"><col style="width:11%">${WM.map(()=>`<col style="width:${mw}%">`).join('')}<col style="width:9%"><col style="width:10%"><col style="width:19%"></colgroup>`;
       h += `<thead><tr><th>선택</th><th>고장 유형</th>`;
       WM.forEach(m=>{ const x = S.mc[m];
-        h += `<th class="mh" title="${esc(wm[m].join(' · '))} · 로스 ${f1(x.lossH)}h · ${x.n}건 · 가용률 ${f1(x.avail)}% · 설비-전기 ${f1(elH[m]||0)}h">${DC(m)}</th>`; });
+        h += `<th class="mh" title="${esc(wm[m].join(' · '))} · 로스 ${f1(x.lossH)}h · ${x.n}건 · 설비-전기 ${f1(elH[m]||0)}h">${DC(m)}</th>`; });
       h += `<th>워스트 합계</th><th>전체 설비</th><th class="dt">문제 부위 · 원인</th></tr></thead><tbody>`;
       TYs.forEach(o=>{
         const on = sel.includes(o.c);
