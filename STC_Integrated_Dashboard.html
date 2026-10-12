@@ -775,6 +775,16 @@ table.eq td.name{font-weight:700;}
 .lay-dtr .vd{margin-top:8px;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:800;line-height:1.5;}
 .lay-dtr .qt-box{margin:0;border-color:#fde68a;}
 @media (max-width:1100px){.lay-dtr{grid-template-columns:1fr;}}
+.lay-dtr .big{grid-column:1/-1;display:flex;gap:14px;align-items:stretch;flex-wrap:wrap;background:#fff;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;}
+.lay-dtr .big .nm{min-width:210px;display:flex;flex-direction:column;justify-content:center;font-size:26px;font-weight:900;color:#78350f;line-height:1.15;}
+.lay-dtr .big .nm small{font-size:11.5px;font-weight:800;color:#b45309;letter-spacing:.02em;} .lay-dtr .big .nm span{font-size:13px;font-weight:700;color:#92400e;margin-top:4px;} .lay-dtr .big .nm span b{font-size:16px;color:#b91c1c;}
+.lay-dtr .tiles{flex:1;display:flex;align-items:center;gap:6px;flex-wrap:wrap;} .lay-dtr .ar{color:#cbd5e1;font-weight:900;font-size:18px;}
+.lay-dtr .tl{flex:1;min-width:112px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 10px;display:grid;grid-template-columns:auto 1fr;gap:2px 7px;align-items:center;}
+.lay-dtr .tl i{grid-row:1;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;font-weight:900;}
+.lay-dtr .tl.nod i{border:2px dashed;background:#fff;color:#475569;} .lay-dtr .tl em{font-style:normal;font-size:11px;font-weight:800;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.lay-dtr .tl b{grid-column:1/-1;font-size:28px;font-weight:900;color:#94a3b8;font-variant-numeric:tabular-nums;line-height:1.1;} .lay-dtr .tl b small{font-size:12px;font-weight:700;margin-left:2px;}
+.lay-dtr .tl > small{grid-column:1/-1;font-size:10.5px;color:#64748b;font-weight:700;}
+.lay-dtr .tl.hit{background:#fff7ed;border-color:#f59e0b;} .lay-dtr .tl.hit b{color:#b91c1c;} .lay-dtr .tl.nod{opacity:.6;}
 </style>
 </head>
 <body>
@@ -4124,6 +4134,12 @@ function f2LayoutView(week){
 function layFlowStack(steps, DS, x, y, w){
   const H = 98, GAP = 24, tg = f2Target();
   let o = `<text x="${x}" y="${y-6}" font-size="12.5" font-weight="900" fill="#1e3c72">검사 흐름 (①→⑬)</text>`;
+  const SR = LAY_SEL ? (DS.rows.find(z=>z.c===LAY_SEL.c) || {}) : null;
+  /* 머리 : [전체] 버튼 (누르면 선택 해제) · 선택 중이면 그 불량유형 칩 */
+  o += `<g style="cursor:pointer" onclick="laySelDef(null)"><title>전체 보기 (선택 해제)</title><rect x="${x+w-112}" y="${y-22}" width="44" height="19" rx="9.5" fill="${LAY_SEL?'#fff':'#1e3c72'}" stroke="#1e3c72"/>
+    <text x="${x+w-90}" y="${y-9}" text-anchor="middle" font-size="10" font-weight="900" fill="${LAY_SEL?'#1e3c72':'#fff'}">전체</text></g>`;
+  if(LAY_SEL) o += `<g style="cursor:pointer" onclick="laySelDef(null)"><title>선택 해제</title><rect x="${x+w-64}" y="${y-22}" width="64" height="19" rx="9.5" fill="#fde68a" stroke="#f59e0b"/>
+    <text x="${x+w-32}" y="${y-9}" text-anchor="middle" font-size="9.5" font-weight="900" fill="#78350f">${esc2(String(LAY_SEL.name).slice(0,6))} ✕</text></g>`;
   steps.forEach((st, i)=>{
     const yy = y + i*(H+GAP), C = st.C, has = C && C.t, r = has ? C.n/C.t*100 : null, ok = r!=null && r<=tg;
     const col = LAY_KC[st.k], bd = !has ? '#e2e8f0' : ok ? '#86efac' : '#fca5a5', bg = !has ? '#f8fafc' : ok ? '#f0fdf4' : '#fef2f2';
@@ -4137,6 +4153,15 @@ function layFlowStack(steps, DS, x, y, w){
     if(!has){
       o += `<text x="${x+w/2}" y="${yy+52}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#94a3b8">${C ? '선택 기간 데이터 없음' : '데이터 없음 (연결 대기)'}</text>`
         + (st.src ? '' : `<text x="${x+w/2}" y="${yy+68}" text-anchor="middle" font-size="9" fill="#cbd5e1">검사 기록 탭이 생기면 연결</text>`);
+    } else if(SR){
+      /* 선택한 불량유형만 : 그 유형의 수량 · 불량률 */
+      const v = st.lot ? (SR.iqc||0) : (SR[st.sk]||0), t = C.t, rr = t ? v/t*100 : 0;
+      o += `<text x="${x+12}" y="${yy+50}" font-size="20" font-weight="900" fill="${v?'#b45309':'#94a3b8'}">${rr.toFixed(2)}%</text>`
+        + `<text x="${x+12}" y="${yy+64}" font-size="8.5" font-weight="700" fill="#92400e">▶ ${esc2(String(LAY_SEL.name).slice(0,18))}</text>`
+        + `<text x="${x+w-10}" y="${yy+40}" text-anchor="end" font-size="10" font-weight="800" fill="#334155">${st.lot ? `${fmt(v)} / ${fmt(t)} 로트` : `${fmt(v)} / ${fmt(t)}`}</text>`
+        + `<text x="${x+w-10}" y="${yy+54}" text-anchor="end" font-size="9" font-weight="700" fill="#94a3b8">전체 %NG ${r.toFixed(2)}%</text>`
+        + `<text x="${x+12}" y="${yy+H-8}" font-size="8" font-weight="600" fill="#94a3b8">${esc2(C.lbl||'')}</text>`;
+      if(v) o += `<rect x="${x-2}" y="${yy-2}" width="${w+4}" height="${H+4}" rx="12" fill="none" stroke="#f59e0b" stroke-width="2.5"/>`;
     } else {
       o += `<text x="${x+12}" y="${yy+50}" font-size="20" font-weight="900" fill="${f2St(r).c}">${r.toFixed(2)}%</text>`
         + `<text x="${x+12}" y="${yy+64}" font-size="8.5" font-weight="700" fill="#64748b">${st.lot ? '로트 불합격률' : '%NG'}</text>`
@@ -4144,12 +4169,7 @@ function layFlowStack(steps, DS, x, y, w){
         + (st.lot ? `<text x="${x+w-10}" y="${yy+54}" text-anchor="end" font-size="9" font-weight="700" fill="#64748b">수량 ${fmt(C.nq)} / ${fmt(C.qty)} EA</text>`
                   : (st.top ? `<text x="${x+w-10}" y="${yy+54}" text-anchor="end" font-size="9" font-weight="700" fill="#64748b">TOP ${esc2(String(st.top).slice(0,20))}</text>` : ''))
         + `<text x="${x+12}" y="${yy+H-8}" font-size="8" font-weight="600" fill="#94a3b8">${esc2(C.lbl||'')}</text>`;
-      /* 선택한 불량유형 */
-      if(LAY_SEL){ const sr = DS.rows.find(z=>z.c===LAY_SEL.c) || {};
-        const v = st.lot ? (sr.iqc||0) : (sr[st.sk]||0), t = st.lot ? C.t : C.t;
-        o += `<rect x="${x+120}" y="${yy+60}" width="${w-128}" height="17" rx="8" fill="${v?'#fef3c7':'#f1f5f9'}" stroke="${v?'#f59e0b':'#e2e8f0'}"/>`
-          + `<text x="${x+w-14}" y="${yy+72.5}" text-anchor="end" font-size="9.5" font-weight="900" fill="${v?'#78350f':'#94a3b8'}">▶ ${esc2(String(LAY_SEL.name).slice(0,10))} ${fmt(v)}${st.lot?' 로트':''} · ${t?(v/t*100).toFixed(2):'0.00'}%</text>`;
-        if(v) o += `<rect x="${x-2}" y="${yy-2}" width="${w+4}" height="${H+4}" rx="12" fill="none" stroke="#f59e0b" stroke-width="2.5"/>`; }
+
     }
     o += `</g>`; });
   return o;
@@ -4182,13 +4202,17 @@ function layDefTrend(DS, C8, C9, C13, C1){
   /* 순차 점검 (배치도 기간) */
   const steps = [
     { n:1, k:'iqc', t:'IQC 수입검사', sub:'로트', v: C1.t ? (sr.iqc||0)/C1.t*100 : null, q:`${sr.iqc||0} / ${fmt(C1.t)} 로트`, lot:true },
+    { n:5, k:'all', t:'쇼트 후 검사', nod:true },
     { n:8, k:'all', t:'MC 가공', sub:'F2_불량상세', v: C8.t ? sr.s8/C8.t*100 : null, q:`${fmt(sr.s8)} / ${fmt(C8.t)}` },
     { n:9, k:'all', t:'PQC 공정검사', sub:'F2_PQC_Q', v: C9.t ? sr.s9/C9.t*100 : null, q:`${fmt(sr.s9)} / ${fmt(C9.t)}` },
+    { n:10, k:'half', t:'MARKING 50% 검사', nod:true },
     { n:13, k:'all', t:'OQC 출하검사', sub:'F2_OQC_Q', v: C13.t ? sr.s13/C13.t*100 : null, q:`${fmt(sr.s13)} / ${fmt(C13.t)}` } ];
-  const mx = Math.max(0.01, ...steps.filter(x=>!x.lot && x.v!=null).map(x=>x.v));
-  const seq = steps.filter(x=>!x.lot && x.v!=null);
+  const mx = Math.max(0.01, ...steps.filter(x=>!x.lot && !x.nod && x.v!=null).map(x=>x.v));
+  const seq = steps.filter(x=>!x.lot && !x.nod && x.v!=null);
   let rows = '', prev = null, up = 0, down = 0;
   steps.forEach(st=>{
+    if(st.nod){ rows += `<div class="row" style="opacity:.6"><span class="n" style="background:#fff;border:2px dashed ${LAY_KC[st.k]};color:#475569">${st.n}</span>
+        <div><b>${st.t}</b><small>데이터 없음 (연결 대기) · 비교에서 제외</small></div><div class="v" style="color:#94a3b8">–</div></div>`; return; }
     if(!st.lot && prev && st.v!=null){ const d = st.v - prev.v, good = d <= 0; good ? down++ : up++;
       rows += `<div class="dl" style="color:${good?'#16a34a':'#dc2626'}">↓ ${prev.n}→${st.n} ${d>0?'+':'−'}${Math.abs(d).toFixed(2)}%p ${good?'개선':'악화'}</div>`; }
     rows += `<div class="row"><span class="n" style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</span>
@@ -4200,12 +4224,18 @@ function layDefTrend(DS, C8, C9, C13, C1){
     : `<div class="vd" style="background:#fee2e2;color:#7f1d1d">✗ 뒤 공정에서 증가 ${up}곳 — 앞 공정 검사에서 놓치거나 뒤 공정에서 새로 생깁니다. 앞 공정 검출 기준 · 공정 조건 점검 필요.</div>`;
   return `<div class="lay-dtr"><div class="hd"><b>▶ ${esc2(sr.n)} · 검사공정별 불량 추이</b><small>${esc2(PQ_GRP_OF(c)==='다캐불량'?'FAC1 원인 (다이캐스팅)':PQ_GRP_OF(c)==='가공불량'?'FAC2 원인 (가공)':'기타 (협력사·고객)')} · 코드 ${c}</small>
       <button onclick="laySelDef(${c})">✕ 선택 해제</button></div>
-    <div class="st"><div style="font-size:12px;font-weight:900;color:#78350f;margin-bottom:4px">순차 개선 점검 <small style="font-weight:600;color:#92400e">(배치도 기간 · ①→⑧→⑨→⑬)</small></div>${rows}${verdict}</div>
+    <div class="big"><div class="nm"><small>${esc2(PQ_GRP_OF(c)==='다캐불량'?'FAC1 원인 (다이캐스팅)':PQ_GRP_OF(c)==='가공불량'?'FAC2 원인 (가공)':'기타 (협력사·고객)')}</small>${esc2(sr.n)}
+        <span>⑧+⑨+⑬ <b>${fmt(sr.sum)}</b> EA · ${sr.rate==null?'–':sr.rate.toFixed(2)+'%'}</span></div>
+      <div class="tiles">${steps.map(st=>{ if(st.nod) return `<div class="tl nod"><i style="border-color:${LAY_KC[st.k]}">${st.n}</i><em>${st.t}</em><b>–</b><small>데이터 없음</small></div>`;
+        const v = st.lot ? (sr.iqc||0) : st.n===8 ? sr.s8 : st.n===9 ? sr.s9 : sr.s13;
+        return `<div class="tl${v?' hit':''}"><i style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</i><em>${st.t}</em>
+          <b>${fmt(v)}<small>${st.lot?' 로트':' EA'}</small></b><small>${st.v==null?'–':st.v.toFixed(2)+'%'} · ${esc2(st.q)}</small></div>`; }).join('<span class="ar">→</span>')}</div></div>
+    <div class="st"><div style="font-size:12px;font-weight:900;color:#78350f;margin-bottom:4px">순차 개선 점검 <small style="font-weight:600;color:#92400e">(배치도 기간 · ①→⑤→⑧→⑨→⑩→⑬)</small></div>${rows}${verdict}</div>
     <div>${chart}</div></div>`;
 }
 /* ---- 불량유형 (코드 1~50) 집계 : ⑧ MC 가공(F2_불량상세) · ⑨ PQC · ⑬ OQC · ① IQC(이름으로 코드 대응) ---- */
 let LAY_SEL = null;
-function laySelDef(c){ LAY_SEL = (LAY_SEL && LAY_SEL.c===c) ? null : { c, name:'' }; renderF2(); }
+function laySelDef(c){ LAY_SEL = (c==null || (LAY_SEL && LAY_SEL.c===c)) ? null : { c, name:'' }; renderF2(); }
 function layDefStats(C8, C9, C13, C1){
   const CO = layCodeOrig(), nm = c => f2DefName(c, CO[c] || F2_CODE_KO[c] || ''), R = {}, MC = {};
   const add = (c, k, v, mc) => { if(!c || !v) return; const o = R[c] || (R[c] = { c, n:nm(c), g:PQ_GRP_OF(c), s8:0, s9:0, s13:0, iqc:0, iqcQ:0 }); o[k] += v;
@@ -4327,6 +4357,9 @@ function layModelQuality(pred){
 
 /* ---- FAC2 Layout 다국어 — 레이아웃 · 설비창 · PQC 상세창의 화면 글자를 한/영/태로 (데이터 · 메모 본문은 그대로) ---- */
 const LAY_TR = [
+ ['데이터 없음','No data','ไม่มีข้อมูล'],
+ ['전체 보기 (선택 해제)','Show all (clear selection)','แสดงทั้งหมด (ยกเลิกการเลือก)'],['전체 %NG','Total %NG','%NG รวม'],
+ ['데이터 없음 (연결 대기) · 비교에서 제외','No data (not linked yet) · excluded from comparison','ไม่มีข้อมูล (ยังไม่เชื่อม) · ไม่นำมาเปรียบเทียบ'],['데이터 전체 기간','whole data range','ช่วงข้อมูลทั้งหมด'],
  ['검사공정별 일일 불량률','daily rate by inspection step','อัตราของเสียรายวันตามจุดตรวจ'],['검사공정별 불량 추이','defect trend by inspection step','แนวโน้มของเสียตามจุดตรวจ'],
  ['노란 음영 = 배치도 기간 · 공정마다 그 날 검사수량 대비 %','yellow = layout period · % of each step’s inspected qty that day','สีเหลือง = ช่วงผังโรงงาน · % ของจำนวนตรวจในวันนั้น'],
  ['배치도 기간','layout period','ช่วงผังโรงงาน'],['순차 개선 점검','Sequential improvement check','ตรวจการปรับปรุงตามลำดับ'],['단위 다름 (참고)','different unit (reference)','หน่วยต่างกัน (อ้างอิง)'],
@@ -4388,7 +4421,10 @@ const LAY_TR = [
  ['다캐','casting','ไดคาสต์'],['가공','machining','กลึง'],['쇼트','Shot','ยิงทราย'],['수입검사','Incoming inspection','ตรวจรับ'],['이송','Transfer','ขนย้าย'],
  ['세척','Washing','ล้าง'],['함침','Impregnation','อิมเพรก'],['설비','M/C','เครื่อง'],['검사','Inspection','ตรวจ']
 ].sort((a,b)=>b[0].length-a[0].length);
-const LAY_TR_RE = [   /* 숫자가 끼는 표현 */
+const LAY_TR_RE = [
+ [/>전체<\/text>/g, ['>All</text>','>ทั้งหมด</text>']],
+ [/>(\d+)일<\/button>/g, ['>$1d</button>','>$1 วัน</button>']], [/>전체<\/button>/g, ['>All</button>','>ทั้งหมด</button>']], [/"qt-rng">기간 /g, ['"qt-rng">Period ','"qt-rng">ช่วง ']], [/>적용<\/button>/g, ['>Apply</button>','>ใช้</button>']],
+ [/(\d+)일 · /g, ['$1 days · ','$1 วัน · ']],   /* 숫자가 끼는 표현 */
  [/(\d+)\s*대 \(MC\)/g, ['$1 units (MC)','$1 เครื่อง (MC)']], [/설비 (\d+)대/g, ['$1 machines','$1 เครื่อง']], [/(\d+)대/g, ['$1 units','$1 เครื่อง']],
  [/검사 상세 \(([\d,]+)건 · 최신 일자부터\)/g, ['Inspection rows ($1 · newest first)','รายการตรวจ ($1 · ล่าสุดก่อน)']], [/\(([\d,]+)건\)/g, ['($1 rows)','($1 แถว)']],
  [/최근 (\d+)일 %NG 추이/g, ['Last $1 days %NG','%NG $1 วันล่าสุด']], [/· (\d+)개/g, ['· $1','· $1']], [/(MCT?\d+)만/g, ['$1 only','เฉพาะ $1']]
@@ -4652,6 +4688,7 @@ function qtRangePick(id, all, end){
   const mn = all[0] || '', mx = all[all.length-1] || '';
   const ctl = '<div class="qt-rng">기간 ' +
     [7,14,30,60,90].map(n => `<button type="button" class="${r.n===n?'on':''}" onclick="qtRangeSet('${id}',{n:${n}})">${n}일</button>`).join('') +
+    `<button type="button" class="${r.n>=100000?'on':''}" onclick="qtRangeSet('${id}',{n:100000})" title="데이터 전체 기간">전체</button>` +
     `<span class="sep"></span><input type="date" id="${id}-f" value="${f0}" min="${mn}" max="${mx}">` +
     `<span>~</span><input type="date" id="${id}-t" value="${t0}" min="${mn}" max="${mx}">` +
     `<button type="button" class="ap${r.n?'':' on'}" onclick="qtRangeApply('${id}')">적용</button></div>`;
