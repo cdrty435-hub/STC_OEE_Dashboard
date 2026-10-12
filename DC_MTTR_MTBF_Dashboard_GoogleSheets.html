@@ -8449,6 +8449,11 @@ loadData();
     let order = saved.filter(x=>ids.includes(x)); def.forEach(x=>{ if(ids.includes(x) && !order.includes(x)){ const i = def.indexOf(x), prev = def.slice(0,i).reverse().find(p=>order.includes(p)); order.splice(prev ? order.indexOf(prev)+1 : 0, 0, x); } });
     /* 숨김 — 처음 한 번: 그때 화면 기준 10번 이후 항목을 모두 숨긴다 (요청: 10번부터 아래 삭제) */
     let H = getHide();
+    /* 전체 표 보이기 — 예전 자동 숨김(10번 이후) · ✕ 로 숨긴 표를 한 번 모두 되살리고, 자동 숨김은 더 이상 하지 않는다 */
+    if(!localStorage.getItem('stc_wk_unhide_all_v2')){
+      H = []; setHide(H);
+      try{ localStorage.setItem(HINIT, '1'); localStorage.setItem('stc_wk_unhide_all_v2', '1'); }catch(e){}
+    }
     if(!localStorage.getItem(HINIT) && ids.includes('k0')){
       let k = 0; order.forEach(id=>{ const el = U.find(u=>u.dataset.unit===id); if(id==='rh' || !el || !visible(el)) return;
         const hs = el.classList.contains('kw-sec') ? el.querySelectorAll(':scope > h4.kw-h').length : [...el.querySelectorAll('h4')].filter(h=>!h.closest('.kw')).length;
