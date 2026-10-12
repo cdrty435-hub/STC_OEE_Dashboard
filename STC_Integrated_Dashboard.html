@@ -714,7 +714,25 @@ table.eq td.name{font-weight:700;}
 @keyframes layflow{to{stroke-dashoffset:-15;}}
 @media (prefers-reduced-motion:reduce){.lay-svgw svg.play .fl{animation:none;}.lay-svgw .lay-dots{display:none;}}
 @media print{.lay-svgw .lay-dots{display:none;}.lay-svgw svg .fl{animation:none!important;stroke-dasharray:none!important;}}
-.lay-svgw .mc{cursor:default;} .lay-svgw .mc:hover rect{stroke:#0f172a;stroke-width:2;}
+.lay-svgw .mc{cursor:pointer;}
+.lay-pop{position:fixed;z-index:900;width:330px;background:#fffdf3;border:1px solid #f3d36b;border-radius:12px;box-shadow:0 12px 32px rgba(15,23,42,.22);font-size:12px;color:#1f2937;display:flex;flex-direction:column;max-height:78vh;}
+.lay-pop .hd{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#fde68a;border-radius:12px 12px 0 0;cursor:move;user-select:none;}
+.lay-pop .hd b{font-size:15px;font-weight:900;color:#1e293b;} .lay-pop .hd small{font-size:10.5px;color:#7c5a00;font-weight:700;}
+.lay-pop .hd button{margin-left:auto;border:0;background:rgba(0,0,0,.08);width:24px;height:24px;border-radius:50%;cursor:pointer;font-weight:900;color:#1f2937;}
+.lay-pop .bd{padding:10px 12px;overflow:auto;}
+.lay-pop .kv{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px;}
+.lay-pop .kv div{background:#fff;border:1px solid #f1e3b0;border-radius:8px;padding:5px 7px;} .lay-pop .kv small{display:block;font-size:9.5px;color:#64748b;font-weight:700;}
+.lay-pop .kv b{font-size:14px;font-weight:900;font-variant-numeric:tabular-nums;}
+.lay-pop h5{font-size:11px;font-weight:900;color:#7c5a00;margin:10px 0 4px;letter-spacing:.02em;}
+.lay-pop .df{display:grid;grid-template-columns:96px 1fr 34px;gap:6px;align-items:center;margin:2px 0;font-size:11px;}
+.lay-pop .df i{display:block;height:7px;border-radius:4px;background:#e0701f;} .lay-pop .df span:last-child{text-align:right;font-weight:800;}
+.lay-pop .mm{background:#fff;border:1px solid #f1e3b0;border-left:3px solid #f5b301;border-radius:6px;padding:6px 8px;margin:5px 0;}
+.lay-pop .mm .mt{font-size:10px;color:#64748b;margin-bottom:2px;} .lay-pop .mm .tx{white-space:pre-wrap;line-height:1.45;}
+.lay-pop .mm img{width:56px;height:42px;object-fit:cover;border-radius:4px;margin:4px 4px 0 0;}
+.lay-pop .ft{display:flex;gap:6px;padding:8px 12px;border-top:1px solid #f1e3b0;}
+.lay-pop .ft button{flex:1;padding:6px 8px;border-radius:7px;border:1px solid #1e3c72;background:#1e3c72;color:#fff;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer;}
+.lay-pop .ft button.alt{background:#fff;color:#1e3c72;}
+@media print{.lay-pop{display:none!important;}} .lay-svgw .mc:hover rect{stroke:#0f172a;stroke-width:2;}
 .lay-leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11.5px;color:#475569;margin-top:8px;padding-top:8px;border-top:1px solid #eef2f7;}
 .lay-leg span{display:inline-flex;align-items:center;gap:6px;}
 .lay-leg i{display:inline-block;width:12px;height:12px;border-radius:50%;}
@@ -3530,12 +3548,13 @@ function renderF2(){
     }).join('') + `</aside>`;
   const st = f2Status();
   let body;
-  NOTE.cur = (F2_VIEW[0]==='p' && F2_VIEW!=='pqc') ? 'FAC2P' : 'FAC2';
+  NOTE.cur = ((F2_VIEW[0]==='p' && F2_VIEW!=='pqc') || F2_VIEW==='layout') ? 'FAC2P' : 'FAC2';
+  if(F2_VIEW!=='layout') document.querySelectorAll('.lay-pop').forEach(el=>el.remove());
   if(F2_VIEW==='act') body = actBoardHtml('FAC2');
   else if(F2_VIEW==='link') body = (F2.loading && !F2.pm.length) ? `<div class="empty">${T('f2.loading')}</div>` : f2LinkView();
   else if(F2_VIEW==='qty') body = (F2.loading && !F2.pd.length && !F2.pm.length) ? `<div class="empty">${T('f2.loading')}</div>` : f2Qty(week);
   else if(F2_VIEW==='pqc') body = pqReport(week);
-  else if(F2_VIEW==='layout') body = f2LayoutView(week);
+  else if(F2_VIEW==='layout'){ body = f2LayoutView(week); setTimeout(layPopsRefresh, 0); }
   else if(F2_VIEW[0]==='p') body = f2pStatus() || f2pReport(F2_VIEW.slice(1), week);
   else if(st) body = `<div class="sec-title">${T('grp.fac2')} · ${week||''}</div>${st}`;
   else if(F2_VIEW==='dash') body = f2Dash(week);
@@ -3831,6 +3850,7 @@ function f2LayoutView(week){
   if(per==='d1'){ pred = r=>r.d===last; lbl = last; }
   else if(per==='d7'){ const ds = days.slice(-7); pred = r=>ds.includes(r.d); lbl = ds.length ? `${ds[0]} ~ ${ds[ds.length-1]} (작업일 ${ds.length}일)` : ''; }
   else { const w = weeks.includes(week) ? week : weeks[weeks.length-1]; pred = r=>r.w===w; const ds = days.filter(d=>pm.some(r=>r.d===d && r.w===w)); lbl = `${w||'–'}${ds.length?` · ${ds[0]} ~ ${ds[ds.length-1]}`:''}`; }
+  LAY_CTX.pred = pred; LAY_CTX.lbl = lbl; LAY_CTX.days = days;
   const by = {}; pm.forEach(r=>{ if(!pred(r)) return; const o = by[r.mc] || (by[r.mc] = { t:0, f:0, n:0, parts:new Set() }); o.t+=r.t; o.f+=r.f; o.n+=r.n; if(r.name||r.pn) o.parts.add(r.name||r.pn); });
   const tg = f2Target();
   const colOf = o => { if(!o || !o.t) return { f:'#eef1f5', s:'#cbd5e1', tx:'#94a3b8' }; const r = o.n/o.t*100;
@@ -3853,7 +3873,7 @@ function f2LayoutView(week){
   const newTag = (x,y) => `<g><rect x="${x}" y="${y}" width="44" height="17" rx="4" fill="#dc2626"/><text x="${x+22}" y="${y+12.5}" text-anchor="middle" font-size="10.5" font-weight="900" fill="#fff">NEW</text></g>`;
   const mcBox = ([m,x,y]) => { const o = by[m], c = colOf(o), r = o&&o.t ? o.n/o.t*100 : null, mct = m.startsWith('MCT');
     const tip = o&&o.t ? `${m} · Total ${fmt(o.t)} · NG ${fmt(o.n)} · %NG ${r.toFixed(2)}%${o.parts.size?` · ${[...o.parts].join(', ')}`:''}` : `${m} · 선택 기간 생산 기록 없음`;
-    return `<g class="mc"><title>${esc2(tip)}</title><rect x="${x}" y="${y}" width="29" height="42" rx="5" fill="${c.f}" stroke="${c.s}" stroke-width="1.4"/>
+    return `<g class="mc" onclick="layMcOpen(event,'${m}')"><title>${esc2(tip)} · 클릭 = 설비 메모창</title><rect x="${x}" y="${y}" width="29" height="42" rx="5" fill="${c.f}" stroke="${c.s}" stroke-width="1.4"/>
       <text x="${x+14.5}" y="${y+15}" text-anchor="middle" font-size="${mct?7.6:8.6}" font-weight="800" fill="${c.tx}">${mct?m.replace('MCT','T'):m.replace('MC','')}</text>
       <text x="${x+14.5}" y="${y+33}" text-anchor="middle" font-size="9" font-weight="900" fill="${c.tx}">${r==null?'–':r.toFixed(1)}</text></g>`; };
   const arrowDefs = `<defs>${[['g','#22c55e'],['b','#3b82f6'],['p','#e040a0']].map(([k,c])=>`<marker id="lay-a${k}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`).join('')}
@@ -3980,6 +4000,77 @@ function f2LayoutView(week){
       <div class="lay-svgw">${svg}</div>${legend}</div>
     <div class="sec-title">공정 순서 (①~⑬)</div>${steps}
     <div class="foot">· 원본: FAC 2 Layout 도면 (공정 번호 · 검사 구분 · NEW = 신설 검사). 설비 %NG = F2_생산실적 NG ÷ Total (전 OP 합) · 목표 ${tg}%.</div>`;
+}
+
+/* ---- 설비 메모창 — 배치도에서 설비를 누르면 열리는 끌어 옮길 수 있는 창 (여러 개 동시에) ---- */
+const LAY_CTX = { pred:()=>true, lbl:'', days:[] };
+function layMcClose(mc){ const el = document.getElementById('layPop-'+mc); if(el) el.remove(); }
+function layMcMemo(mc){ const ds = LAY_CTX.days || [], last = ds[ds.length-1] || new Date().toISOString().slice(0,10); NOTE.cur = 'FAC2P'; noteOpen(last, mc); }
+function layMcOpen(e, mc){
+  if(e && e.stopPropagation) e.stopPropagation();
+  const old = document.getElementById('layPop-'+mc), pos = old ? { x:old.style.left, y:old.style.top } : null; if(old){ old.remove(); }
+  const pops = document.querySelectorAll('.lay-pop'); if(pops.length >= 4) pops[0].remove();
+  const el = document.createElement('div'); el.className = 'lay-pop'; el.id = 'layPop-'+mc;
+  el.innerHTML = layMcHtml(mc);
+  document.body.appendChild(el);
+  const W = 330, H = Math.min(el.offsetHeight, window.innerHeight*0.78);
+  let x = (e && e.clientX!=null ? e.clientX + 18 : 120) + document.querySelectorAll('.lay-pop').length*8, y = (e && e.clientY!=null ? e.clientY - 40 : 120);
+  if(x + W > window.innerWidth - 8) x = Math.max(8, (e?e.clientX:0) - W - 18);
+  y = Math.max(8, Math.min(y, window.innerHeight - H - 8));
+  el.style.left = pos ? pos.x : x+'px'; el.style.top = pos ? pos.y : y+'px';
+  layDrag(el);
+}
+function layDrag(el){
+  const hd = el.querySelector('.hd');
+  hd.addEventListener('mousedown', ev=>{ if(ev.target.closest('button')) return; ev.preventDefault();
+    const sx = ev.clientX - el.offsetLeft, sy = ev.clientY - el.offsetTop; document.body.appendChild(el);
+    const mv = m=>{ el.style.left = Math.max(0, Math.min(window.innerWidth-60, m.clientX - sx))+'px'; el.style.top = Math.max(0, Math.min(window.innerHeight-40, m.clientY - sy))+'px'; };
+    const up = ()=>{ document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up); };
+    document.addEventListener('mousemove', mv); document.addEventListener('mouseup', up); });
+  if(!el._front){ el._front = true; el.addEventListener('mousedown', ()=>{ if(el.nextSibling) document.body.appendChild(el); }); }
+}
+/* 메모 저장 · 데이터 새로고침 뒤 열린 설비 창 내용을 갱신 (위치 유지) */
+function layPopsRefresh(){ document.querySelectorAll('.lay-pop').forEach(el=>{ const mc = el.id.replace('layPop-',''); el.innerHTML = layMcHtml(mc); layDrag(el); }); }
+function layMcHtml(mc){
+  const pred = LAY_CTX.pred, pm = (F2.pm||[]).filter(r=>r.mc===mc), cur = pm.filter(pred), tg = f2Target();
+  const a = cur.reduce((o,r)=>{ o.t+=r.t; o.f+=r.f; o.n+=r.n; o.p+=r.p; o.ac+=r.a; if(r.oee!=null && isFinite(r.oee)){ o.oe+=r.oee*(r.p||1); o.ow+=(r.p||1); } return o; }, {t:0,f:0,n:0,p:0,ac:0,oe:0,ow:0});
+  const rate = a.t ? a.n/a.t*100 : null, st = f2St(rate);
+  const parts = {}; cur.forEach(r=>{ const k = r.name || r.pn; if(!k) return; const o = parts[k] || (parts[k] = {t:0,n:0,ops:new Set()}); o.t+=r.t; o.n+=r.n; if(r.op) o.ops.add(r.op); });
+  const dsum = (F2P.defs||[]).map((k,i)=>({ t:k.replace(/^불량_/,''), v:cur.reduce((s,r)=>s+(r.df[i]||0),0) })).filter(x=>x.v>0).sort((x,y)=>y.v-x.v).slice(0,5), dmx = Math.max(1, ...dsum.map(x=>x.v));
+  /* 최근 14 작업일 %NG */
+  const days = [...new Set(pm.map(r=>r.d))].sort().slice(-14);
+  const pts = days.map(d=>{ const R = pm.filter(r=>r.d===d), t = R.reduce((s,r)=>s+r.t,0), n = R.reduce((s,r)=>s+r.n,0); return { d, r:t?n/t*100:null }; });
+  let spark = '';
+  if(pts.length){ const vmax = Math.max(tg*1.5, ...pts.map(p=>p.r||0))*1.1, Wd = 300, Hh = 64, X = i => 8 + i*(Wd-16)/Math.max(1,pts.length-1), Y = v => Hh-12 - (Hh-22)*v/vmax;
+    const line = pts.filter(p=>p.r!=null).map((p,i)=>`${i?'L':'M'}${X(pts.indexOf(p)).toFixed(1)} ${Y(p.r).toFixed(1)}`).join(' ');
+    spark = `<svg viewBox="0 0 ${Wd} ${Hh}" width="100%" style="display:block;background:#fff;border:1px solid #f1e3b0;border-radius:8px">
+      <line x1="8" x2="${Wd-8}" y1="${Y(tg).toFixed(1)}" y2="${Y(tg).toFixed(1)}" stroke="#dc2626" stroke-dasharray="4 3" stroke-width="1"/>
+      <path d="${line}" fill="none" stroke="#2a78d6" stroke-width="2"/>
+      ${pts.map((p,i)=>p.r==null?'':`<circle cx="${X(i).toFixed(1)}" cy="${Y(p.r).toFixed(1)}" r="2.6" fill="${p.r<=tg?'#16a34a':'#dc2626'}"><title>${p.d} · %NG ${p.r.toFixed(2)}%</title></circle>`).join('')}
+      <text x="8" y="${Hh-2}" font-size="9" fill="#64748b">${pts[0].d.slice(5)}</text><text x="${Wd-8}" y="${Hh-2}" text-anchor="end" font-size="9" fill="#64748b">${pts[pts.length-1].d.slice(5)}</text>
+      <text x="${Wd-8}" y="${(Y(tg)-3).toFixed(1)}" text-anchor="end" font-size="8.5" font-weight="700" fill="#dc2626">목표 ${tg}%</text></svg>`; }
+  /* PQC (이 설비) */
+  const pq = (F2.pqRaw||[]).filter(r=>String(r['설비명']).trim()===mc && pred({ d:String(r['일자']).slice(0,10), w:r['주차'] }));
+  const pqT = pq.reduce((s,r)=>s+f2n(r["Total Q'ty"]),0), pqN = pq.reduce((s,r)=>s+f2n(r["NG Q'ty"]),0);
+  /* 메모 — 이 설비 태그이거나 본문에 설비명이 있는 기록 (품질 · 생산실적 메모 모두) */
+  const re = new RegExp('\\b' + mc + '\\b', 'i');
+  const memos = (NOTE.list||[]).filter(x=>!x.del && (x.tag===mc || re.test(String(x.text||'')))).sort((x,y)=>String(y.date+y.ts).localeCompare(String(x.date+x.ts))).slice(0,6);
+  const kv = (l,v,c) => `<div><small>${l}</small><b${c?` style="color:${c}"`:''}>${v}</b></div>`;
+  return `<div class="hd"><b>⚙ ${esc2(mc)}</b><small>${esc2(LAY_CTX.lbl||'')}</small><button onclick="layMcClose('${mc}')" aria-label="닫기">✕</button></div>
+    <div class="bd">
+      ${a.t ? `<div class="kv">${kv('Total', fmt(a.t))}${kv('FG', fmt(a.f))}${kv('NG', fmt(a.n), '#b91c1c')}${kv('%NG', rate.toFixed(2)+'%', st.c)}</div>
+        <div style="font-size:11px;color:#475569">${a.ow?`OEE <b>${(a.oe/a.ow*100).toFixed(1)}%</b> · `:''}계획 ${fmt(a.p,1)}h · 실가동 ${fmt(a.ac,1)}h</div>`
+        : `<div style="padding:8px;background:#fff;border-radius:8px;color:#64748b">선택 기간에 생산 기록이 없습니다.</div>`}
+      ${Object.keys(parts).length ? `<h5>생산 품번</h5>${Object.entries(parts).map(([k,o])=>`<div style="margin:2px 0">${esc2(k)} <span style="color:#64748b">(OP ${[...o.ops].join(', ')||'-'})</span> · ${fmt(o.t)} · <b style="color:${f2St(o.t?o.n/o.t*100:null).c}">${o.t?(o.n/o.t*100).toFixed(2):'–'}%</b></div>`).join('')}` : ''}
+      ${dsum.length ? `<h5>불량유형 TOP5</h5>${dsum.map(x=>`<div class="df"><span>${esc2(x.t)}</span><i style="width:${(x.v/dmx*100).toFixed(0)}%"></i><span>${fmt(x.v)}</span></div>`).join('')}` : ''}
+      ${spark ? `<h5>최근 ${pts.length}일 %NG 추이</h5>${spark}` : ''}
+      ${pqT ? `<h5>PQC 공정검사 (⑨)</h5><div>Total ${fmt(pqT)} · NG ${fmt(pqN)} · <b style="color:${f2St(pqN/pqT*100).c}">${(pqN/pqT*100).toFixed(2)}%</b></div>` : ''}
+      <h5>📝 메모 · 조치 기록 ${memos.length?`(${memos.length})`:''}</h5>
+      ${memos.length ? memos.map(x=>`<div class="mm" data-no-tr><div class="mt"><b>${esc2(x.date)}</b> · ${esc2(x.author||'—')}${x.tag?` · ${esc2(x.tag)}`:''}</div>
+          ${x.text?`<div class="tx">${esc2(x.text)}</div>`:''}${(x.photos||[]).length?`<div>${x.photos.slice(0,4).map(p=>`<a href="${esc2(p.full||p.src)}" target="_blank" rel="noopener"><img src="${esc2(p.src)}" alt=""></a>`).join('')}</div>`:''}</div>`).join('')
+        : `<div style="color:#94a3b8;padding:4px 0">아직 이 설비 메모가 없습니다.</div>`}
+    </div>
+    <div class="ft"><button onclick="layMcMemo('${mc}')">📝 메모 쓰기</button><button class="alt" onclick="layPopsRefresh()">🔄 새로고침</button></div>`;
 }
 Object.assign(I18N.ko, { 'f2.v.layout':'FAC2 Layout (배치도)' });
 Object.assign(I18N.en, { 'f2.v.layout':'FAC2 layout' });
