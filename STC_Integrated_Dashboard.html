@@ -794,6 +794,18 @@ table.eq td.name{font-weight:700;}
 .lay-dtr .dli b{text-align:right;font-variant-numeric:tabular-nums;} .lay-dtr .dli small{text-align:right;color:#64748b;font-weight:700;}
 body.only-layout #grpBar, body.only-layout #tabBar, body.only-layout .f2-side{display:none!important;}
 body.only-layout .f2-wrap{display:block;} body.only-layout .f2-main{max-width:none;width:100%;}
+.lay-zbtn{position:absolute;top:6px;right:6px;z-index:5;border:1px solid #cbd5e1;background:rgba(255,255,255,.92);color:#1e3c72;border-radius:12px;padding:2px 9px;font:inherit;font-size:11px;font-weight:800;cursor:zoom-in;opacity:.55;transition:opacity .15s;}
+[data-zoom]:hover > .lay-zbtn{opacity:1;} .lay-zbtn:hover{background:#1e3c72;color:#fff;}
+#layZoom{position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,.62);display:none;align-items:center;justify-content:center;}
+#layZoom .lz-box{position:relative;width:96vw;height:92vh;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.35);padding:52px 20px 18px;overflow:auto;}
+#layZoom .lz-x{position:absolute;top:12px;right:14px;border:1px solid #cbd5e1;background:#fff;color:#1e3c72;border-radius:16px;padding:5px 14px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;}
+#layZoom .lz-x:hover{background:#1e3c72;color:#fff;} #layZoom .lz-in{display:flex;justify-content:center;}
+@media print{.lay-zbtn,#layZoom{display:none!important;}}
+#layZoom .lz-bar{position:absolute;top:10px;right:14px;display:flex;gap:8px;z-index:3;}
+#layZoom .lz-bar .lz-x{position:static;}
+#layZoom .lz-fs{border:1px solid #1e7a46;background:#1e7a46;color:#fff;border-radius:16px;padding:5px 14px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;}
+#layZoom.fs .lz-box,#layZoom.tvmode .lz-box{width:100vw;height:100vh;border-radius:0;padding:8px 10px;}
+#layZoom.fs,#layZoom.tvmode{background:#fff;} #layZoom.fs .lz-bar,#layZoom.tvmode .lz-bar{opacity:.25;transition:opacity .2s;} #layZoom.fs .lz-bar:hover,#layZoom.tvmode .lz-bar:hover{opacity:1;}
 </style>
 </head>
 <body>
@@ -3608,12 +3620,12 @@ function renderF2(){
   const st = f2Status();
   let body;
   NOTE.cur = ((F2_VIEW[0]==='p' && F2_VIEW!=='pqc') || F2_VIEW==='layout') ? 'FAC2P' : 'FAC2';
-  if(F2_VIEW!=='layout') document.querySelectorAll('.lay-pop').forEach(el=>el.remove());
+  if(F2_VIEW!=='layout'){ document.querySelectorAll('.lay-pop').forEach(el=>el.remove()); layZoomClose(); }
   if(F2_VIEW==='act') body = actBoardHtml('FAC2');
   else if(F2_VIEW==='link') body = (F2.loading && !F2.pm.length) ? `<div class="empty">${T('f2.loading')}</div>` : f2LinkView();
   else if(F2_VIEW==='qty') body = (F2.loading && !F2.pd.length && !F2.pm.length) ? `<div class="empty">${T('f2.loading')}</div>` : f2Qty(week);
   else if(F2_VIEW==='pqc') body = pqReport(week);
-  else if(F2_VIEW==='layout'){ body = f2LayoutView(week); setTimeout(layPopsRefresh, 0); }
+  else if(F2_VIEW==='layout'){ body = f2LayoutView(week); setTimeout(()=>{ layPopsRefresh(); layZoomDecorate(); layZoomSync(); }, 0); }
   else if(F2_VIEW[0]==='p') body = f2pStatus() || f2pReport(F2_VIEW.slice(1), week);
   else if(st) body = `<div class="sec-title">${T('grp.fac2')} · ${week||''}</div>${st}`;
   else if(F2_VIEW==='dash') body = f2Dash(week);
@@ -4120,16 +4132,16 @@ function f2LayoutView(week){
     <span style="width:100%;height:0"></span>
     <span><i class="sq" style="background:#dcfce7;border:1px solid #16a34a"></i>%NG ≤ ${tg}%</span><span><i class="sq" style="background:#fef3c7;border:1px solid #d97706"></i>≤ ${tg*2}%</span>
     <span><i class="sq" style="background:#fee2e2;border:1px solid #dc2626"></i>&gt; ${tg*2}%</span><span><i class="sq" style="background:#eef1f5;border:1px solid #cbd5e1"></i>기록 없음</span></div>`;
-  const steps = `<div class="lay-steps">${LAY_STEPS.map(st=>`<div class="lay-st"><span class="n" style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</span>
+  const steps = `<div class="lay-steps" data-zoom="steps">${LAY_STEPS.map(st=>`<div class="lay-st"><span class="n" style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</span>
       <div><b>${esc2(st.t)}${st.isNew?'<span class="new">NEW</span>':''}</b><small>${esc2(st.d)}</small></div>
       <span class="pill" style="background:${LAY_KC[st.k]}22;color:${st.k==='all'?'#7c5a00':st.k==='half'?'#0b6aa0':'#334155'}">${LAY_KL[st.k]}</span></div>`).join('')}</div>`;
   const segs = [['wk','선택 주차'],['d1','최근일'],['d7','최근 7일']].map(([k,l])=>`<button class="${per===k?'on':''}" onclick="laySetPer('${k}')">${l}</button>`).join('');
   return layTr(`<div class="sec-title">FAC2 Layout · 공장 배치도</div>
     <div class="lay-top f2-noprint"><span class="seg">${segs}</span><span class="per">설비 색 기준 기간: <b>${esc2(lbl||'–')}</b> · 원천 F2_생산실적</span>
-      <button class="btn-f2 alt" style="margin-left:auto" onclick="layTogglePlay()">${play?'⏸ 흐름 멈춤':'▶ 흐름 보기'}</button><button class="btn-f2" onclick="window.print()">${T('f2.r.print')}</button></div>
+      <button class="btn-f2 alt" style="margin-left:auto" onclick="layTvOpen('layout')" title="배치도를 화면 가득 (TV)">📺 TV</button><button class="btn-f2 alt" onclick="layTogglePlay()">${play?'⏸ 흐름 멈춤':'▶ 흐름 보기'}</button><button class="btn-f2" onclick="window.print()">${T('f2.r.print')}</button></div>
     ${pm.length ? kpi : `<div class="card empty" style="padding:12px;margin-bottom:12px">F2_생산실적 데이터가 없어 설비 색은 회색으로 표시됩니다.</div>`}
     ${LAY_SEL ? layDefTrend(DS, C8, C9, C13, C1) : ''}
-    <div class="lay-card"><h3>FAC 2 Layout <small>설비 상자 = 윗줄 색: 모델 · 설비번호 · %NG · OP — 누르면 설비 메모창</small></h3>
+    <div class="lay-card" data-zoom="layout"><h3>FAC 2 Layout <small>설비 상자 = 윗줄 색: 모델 · 설비번호 · %NG · OP — 누르면 설비 메모창</small></h3>
       <div class="lay-svgw">${svg}</div>${legend}</div>
     <div class="sec-title">모델별 품질현황 <span style="text-transform:none;font-weight:600;color:#64748b">(구글시트 MC · MCT 탭 기준 · ${esc2(lbl||'')})</span></div>${layModelQuality(pred)}
     <div class="sec-title">공정 순서 (①~⑬)</div>${steps}
@@ -4233,14 +4245,14 @@ function layDefTrend(DS, C8, C9, C13, C1){
     : `<div class="vd" style="background:#fee2e2;color:#7f1d1d">✗ 뒤 공정에서 증가 ${up}곳 — 앞 공정 검사에서 놓치거나 뒤 공정에서 새로 생깁니다. 앞 공정 검출 기준 · 공정 조건 점검 필요.</div>`;
   return `<div class="lay-dtr"><div class="hd"><b>▶ ${esc2(sr.n)} · 검사공정별 불량 추이</b><small>${esc2(PQ_GRP_OF(c)==='다캐불량'?'FAC1 원인 (다이캐스팅)':PQ_GRP_OF(c)==='가공불량'?'FAC2 원인 (가공)':'기타 (협력사·고객)')} · 코드 ${c}</small>
       <button onclick="laySelDef(${c})">✕ 선택 해제</button></div>
-    <div class="big"><div class="nm"><small>${esc2(PQ_GRP_OF(c)==='다캐불량'?'FAC1 원인 (다이캐스팅)':PQ_GRP_OF(c)==='가공불량'?'FAC2 원인 (가공)':'기타 (협력사·고객)')}</small>${esc2(sr.n)}
+    <div class="big" data-zoom="big"><div class="nm"><small>${esc2(PQ_GRP_OF(c)==='다캐불량'?'FAC1 원인 (다이캐스팅)':PQ_GRP_OF(c)==='가공불량'?'FAC2 원인 (가공)':'기타 (협력사·고객)')}</small>${esc2(sr.n)}
         <span>⑧+⑨+⑬ <b>${fmt(sr.sum)}</b> EA · ${sr.rate==null?'–':sr.rate.toFixed(2)+'%'}</span></div>
       <div class="tiles">${steps.map(st=>{ if(st.nod) return `<div class="tl nod"><i style="border-color:${LAY_KC[st.k]}">${st.n}</i><em>${st.t}</em><b>–</b><small>데이터 없음</small></div>`;
         const v = st.lot ? (sr.iqc||0) : st.n===8 ? sr.s8 : st.n===9 ? sr.s9 : sr.s13;
         return `<div class="tl${v?' hit':''}"><i style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</i><em>${st.t}</em>
           <b>${fmt(v)}<small>${st.lot?' 로트':' EA'}</small></b><small>${st.v==null?'–':st.v.toFixed(2)+'%'} · ${esc2(st.q)}</small></div>`; }).join('<span class="ar">→</span>')}</div></div>
-    <div class="st dl2">${layDefListHtml(DS)}</div>
-    <div>${chart}</div></div>`;
+    <div class="st dl2" data-zoom="list">${layDefListHtml(DS)}</div>
+    <div data-zoom="chart">${chart}</div></div>`;
 }
 
 /* 추이 화면 왼쪽 — 불량유형 목록 (FAC1 · FAC2 · 기타), 누르면 그 유형으로 바뀜 */
@@ -4315,6 +4327,59 @@ function layDefPanel(DS, x, y, w){
     + `<text x="${x+12}" y="${y+18}" font-size="12" font-weight="900" fill="#1e3c72">불량유형 (FAC1 · FAC2)</text>`
     + `<text x="${x+12}" y="${y+31}" font-size="8.5" font-weight="700" fill="#94a3b8">⑧+⑨+⑬ 합계 · 클릭 = 검사공정에 표시</text>` + o + det + `</g>`;
 }
+
+/* ---- 확대 보기 — data-zoom 블록마다 ⤢ 버튼 (또는 빈 곳 더블클릭) → 화면 가득 확대, 안에서 클릭도 그대로 동작 ---- */
+let LAY_ZOOM = null;
+const LAY_ZOOM_TX = { ko:['확대','닫기 (Esc)','더블클릭하면 크게 보기','📺 TV 전체화면','전체화면 끝내기'], en:['Zoom','Close (Esc)','double-click to enlarge','📺 TV full screen','Exit full screen'], th:['ขยาย','ปิด (Esc)','ดับเบิลคลิกเพื่อขยาย','📺 เต็มจอทีวี','ออกจากเต็มจอ'] };
+const lzT = i => (LAY_ZOOM_TX[LANG]||LAY_ZOOM_TX.ko)[i];
+function layZoomDecorate(){
+  document.querySelectorAll('#panel-f2ov [data-zoom]').forEach(el=>{
+    if(el.querySelector(':scope > .lay-zbtn')) return;
+    if(getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    const b = document.createElement('button'); b.className = 'lay-zbtn'; b.type = 'button'; b.innerHTML = '⤢ ' + lzT(0); b.title = lzT(2);
+    b.onclick = e => { e.stopPropagation(); layZoomOpen(el.dataset.zoom); }; el.appendChild(b);
+    el.addEventListener('dblclick', e => { if(e.target.closest('button,input,select,textarea,a,.dli,g[onclick],[onclick]')) return; layZoomOpen(el.dataset.zoom); });
+  });
+}
+function layZoomOpen(key){
+  LAY_ZOOM = key;
+  let bg = document.getElementById('layZoom');
+  if(!bg){ bg = document.createElement('div'); bg.id = 'layZoom'; bg.innerHTML = `<div class="lz-box"><div class="lz-bar"><button class="lz-fs" type="button"></button><button class="lz-x" type="button"></button></div><div class="lz-in"></div></div>`;
+    document.body.appendChild(bg);
+    bg.addEventListener('click', e => { if(e.target === bg) layZoomClose(); });
+    bg.querySelector('.lz-x').onclick = layZoomClose;
+    bg.querySelector('.lz-fs').onclick = layZoomTv; }
+  bg.querySelector('.lz-x').textContent = '✕ ' + lzT(1);
+  bg.querySelector('.lz-fs').textContent = document.fullscreenElement ? lzT(4) : lzT(3);
+  bg.style.display = 'flex';
+  layZoomSync();
+}
+function layZoomSync(){
+  const bg = document.getElementById('layZoom'); if(!bg || !LAY_ZOOM || bg.style.display==='none') return;
+  const src = document.querySelector(`#panel-f2ov [data-zoom="${LAY_ZOOM}"]`); const box = bg.querySelector('.lz-in');
+  if(!src){ layZoomClose(); return; }
+  const w = src.offsetWidth, h = src.offsetHeight;
+  const c = src.cloneNode(true); c.querySelectorAll('.lay-zbtn').forEach(x=>x.remove()); c.removeAttribute('data-zoom');
+  c.style.width = w + 'px'; c.style.maxHeight = 'none'; c.style.margin = '0';
+  if(c.classList.contains('dl2')) c.style.maxHeight = 'none';
+  box.innerHTML = ''; box.appendChild(c);
+  const aw = bg.querySelector('.lz-box').clientWidth - 40, ah = bg.querySelector('.lz-box').clientHeight - 70;
+  const fullH = c.scrollHeight || h;
+  const z = Math.max(1, Math.min(aw / w, ah / fullH, 3));
+  c.style.zoom = z;
+}
+function layZoomClose(){ LAY_ZOOM = null; const bg = document.getElementById('layZoom'); if(bg){ bg.style.display = 'none'; bg.classList.remove('tvmode'); }
+  if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }
+/* 📺 TV — 확대 창을 브라우저 전체화면으로 (TV · 대형 모니터) */
+function layZoomTv(){ const bg = document.getElementById('layZoom'); if(!bg) return;
+  if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  else if(bg.requestFullscreen) bg.requestFullscreen().catch(()=>{}); }
+function layTvOpen(key){ layZoomOpen(key || 'layout'); layZoomTv(); }
+document.addEventListener('fullscreenchange', () => { const bg = document.getElementById('layZoom'); if(!bg) return;
+  bg.classList.toggle('fs', !!document.fullscreenElement); const f = bg.querySelector('.lz-fs'); if(f) f.textContent = document.fullscreenElement ? lzT(4) : lzT(3);
+  setTimeout(layZoomSync, 80); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && LAY_ZOOM && !document.fullscreenElement) layZoomClose(); });
+window.addEventListener('resize', () => { if(LAY_ZOOM) layZoomSync(); });
 /* ---- 설비 마스터 (구글시트 MC · MCT 탭) — 설비 → Part name(모델) · OP ---- */
 const LAY_MASTER_DEF = {
   MC:[['MC 2','HOUSING REAR','10-20'],['MC 3','HOUSING REAR','30-70'],['MC 4','HOUSING REAR A,B','10-20'],['MC 5','HOUSING REAR A,B','10-20'],['MC 6','HOUSING REAR','30-70'],
@@ -4377,12 +4442,13 @@ function layModelQuality(pred){
       ${idle.map(({md,col})=>`<div style="display:flex;align-items:center;gap:6px;margin:5px 0;font-size:11.5px"><i style="width:10px;height:10px;border-radius:2px;background:${col};flex:0 0 10px"></i><b style="color:#334155">${esc2(md.part)}</b>
         <span class="chips" style="margin:0">${md.mcs.map(x=>`<span onclick="layMcOpen(event,'${x.mc}')">${x.mc}${x.op?` · OP${esc2(x.op)}`:''}</span>`).join('')}</span></div>`).join('')}
       <div class="nod">MCT 설비는 F2_생산실적(In-Out Data)에 아직 기록이 없습니다.</div></div>` : '';
-  return `<div class="lay-mq">${cards}${idleCard}</div><div class="foot" style="margin-top:6px">· 모델 · OP = ${esc2(LAY_MASTER_SRC)} · 수량 = F2_생산실적 (전 OP 합 — 같은 제품이 OP마다 따로 세어짐) · 칩을 누르면 설비 메모창</div>`;
+  return `<div class="lay-mq" data-zoom="model">${cards}${idleCard}</div><div class="foot" style="margin-top:6px">· 모델 · OP = ${esc2(LAY_MASTER_SRC)} · 수량 = F2_생산실적 (전 OP 합 — 같은 제품이 OP마다 따로 세어짐) · 칩을 누르면 설비 메모창</div>`;
 }
 
 
 /* ---- FAC2 Layout 다국어 — 레이아웃 · 설비창 · PQC 상세창의 화면 글자를 한/영/태로 (데이터 · 메모 본문은 그대로) ---- */
 const LAY_TR = [
+ ['배치도를 화면 가득 (TV)','Fill the screen with the layout (TV)','แสดงผังเต็มจอ (ทีวี)'],
  ['누르면 그 유형으로','click to switch','คลิกเพื่อเปลี่ยน'],['불량유형','Defect types','ประเภทของเสีย'],
  ['데이터 없음','No data','ไม่มีข้อมูล'],
  ['전체 보기 (선택 해제)','Show all (clear selection)','แสดงทั้งหมด (ยกเลิกการเลือก)'],['전체 %NG','Total %NG','%NG รวม'],
@@ -5516,6 +5582,9 @@ try{
     try{ if(prev!=null) localStorage.setItem('stc_portal_tab', prev); else localStorage.removeItem('stc_portal_tab');
          if(prevV!=null) localStorage.setItem('stc_f2_view', prevV); }catch(e){}
     document.title = 'FAC2 Layout · STC';
+    /* &tv=1 : 배치도를 창 가득 확대해서 연다 (TV PC 브라우저 · F11 과 함께) */
+    if(qp.get('tv')==='1'){ const iv = setInterval(()=>{ if(document.querySelector('#panel-f2ov [data-zoom="layout"]')){ clearInterval(iv); layZoomOpen('layout'); const z = document.getElementById('layZoom'); z.classList.add('tvmode'); layZoomSync(); } }, 500);
+      setTimeout(()=>clearInterval(iv), 60000); }
   }
   if(LANGS.includes(ql) && ql!==LANG) setLang(ql);
 }catch(e){}
