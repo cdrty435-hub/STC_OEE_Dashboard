@@ -72,13 +72,20 @@
   .fac-head .fh-av{display:flex;flex-direction:column;align-items:center;line-height:1.05;background:rgba(255,255,255,.18);border-radius:10px;padding:4px 14px;}
   .fac-head .fh-av small{font-size:10.5px;font-weight:700;opacity:.9;letter-spacing:.5px;}
   .fac-head .fh-av b{font-size:28px;font-weight:900;} .fac-head .fh-av i{font-style:normal;font-size:15px;margin-left:1px;}
-  .fac-head .fh-rk{justify-self:end;font-size:14px;font-weight:900;background:rgba(0,0,0,.18);border-radius:14px;padding:3px 10px;}
+  .fac-head .fh-rk{justify-self:end;white-space:nowrap;font-size:14px;font-weight:900;background:rgba(0,0,0,.18);border-radius:14px;padding:3px 10px;}
   .fac-head .fh-rk small{font-size:11px;opacity:.8;margin-left:1px;} .fac-head .fh-rk.top{background:#fff;color:#1e293b;}
   .fac-body{padding:4px 16px 14px;}
   .fac-row{padding:10px 0;border-bottom:1px solid #f0f1f6;}
   .fac-row:last-child{border-bottom:none;}
   .fac-row .flbl{font-size:11.5px;color:var(--sub);}
   .fac-row .fval{font-size:20px;font-weight:800;}
+  .fbr{margin-top:6px;display:grid;grid-template-columns:minmax(0,auto) 1fr auto;gap:3px 8px;align-items:center;font-size:11.5px;}
+  .fbr .n{color:#334155;white-space:nowrap;font-weight:700;}
+  .fbr .bar{height:7px;background:#eef1f6;border-radius:4px;overflow:hidden;min-width:30px;} .fbr .bar i{display:block;height:100%;border-radius:4px;opacity:.85;}
+  .fbr b{font-weight:800;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;} .fbr b small{font-size:9.5px;color:#94a3b8;font-weight:700;margin-left:4px;display:inline-block;min-width:26px;}
+  .fbr .z{color:#c4cad6;} .fbr .n .dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:0;}
+  .fbr .n em{font-style:normal;font-size:9px;font-weight:800;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;padding:0 4px;margin-left:4px;}
+  body.big .fbr{font-size:15px;gap:5px 10px;} body.big .fbr .n em{font-size:12px;} body.big .fbr .bar{height:10px;} body.big .fbr b small{font-size:12px;min-width:34px;}
 
   table{width:100%;border-collapse:collapse;font-size:12.5px;}
   th{text-align:left;font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.3px;padding:8px;border-bottom:2px solid #eef0f6;white-space:nowrap;}
@@ -528,6 +535,15 @@ function render(){
   facGrid.innerHTML='';
   /* 가용률 순위 (높을수록 1위) */
   const facRank={}; [...facArr].sort((a,b)=>b.a-a.a).forEach((g,i)=>facRank[g.fac]=i+1);
+  /* 로스 4분류별 내역 (설비-전기 · 설비-라인 · 금형 · 관리) — 세 FAC 같은 순서 · 같은 눈금 · 색 = 아래 고장유형 표와 같음 */
+  const catSum = (g, cat) => LOSS_CAT[cat].reduce((a,k)=>{ const c = Object.entries(g.codes).find(([x])=>nCode(x)===nCode(k)); if(c){ a.n += c[1].n; a.m += c[1].m; } return a; }, { n:0, m:0 });
+  const CATS = Object.keys(LOSS_CAT);
+  const brkBreak = (g, color, f) => {
+    const vals = CATS.map(c=>catSum(g,c)[f]), tot = vals.reduce((a,v)=>a+v,0);
+    const mx = Math.max(1, ...facArr.flatMap(h=>CATS.map(c=>catSum(h,c)[f])));
+    return `<div class="fbr">${CATS.map((c,i)=>{ const v = vals[i], txt = f==='n' ? v : (v/60).toFixed(1), sh = tot ? Math.round(v/tot*100) : 0;
+      const isBrk = LOSS_CAT[c].every(k=>BRK.has(nCode(k)));
+      return `<span class="n${v?'':' z'}"><i class="dot" style="background:${CAT_COLORS[c]}"></i>${c}${isBrk?'<em title="고장횟수 · 고장시간 합계에 들어가는 분류">고장</em>':''}</span><span class="bar"><i style="width:${(v/mx*100).toFixed(1)}%;background:${CAT_COLORS[c]}"></i></span><b class="${v?'':'z'}">${v?txt:'·'}<small>${v?sh+'%':''}</small></b>`; }).join('')}</div>`; };
   facArr.forEach(g=>{
     const color=FAC_COLORS[g.fac]||'#7F8C8D', rk=facRank[g.fac], medal=['🥇','🥈','🥉'][rk-1]||'';
     const div=document.createElement('div');
@@ -539,8 +555,8 @@ function render(){
         <span class="fh-rk${rk===1?' top':''}">${medal} ${rk}위<small>/${facArr.length}</small></span>
       </div>
       <div class="fac-body">
-        <div class="fac-row"><div class="flbl">고장횟수 (회)</div><div class="fval" style="color:${color};">${g.brkCount}</div></div>
-        <div class="fac-row"><div class="flbl">고장시간 (Hr)</div><div class="fval" style="color:${color};">${(g.brkMin/60).toFixed(1)}</div></div>
+        <div class="fac-row"><div class="flbl">고장횟수 (회)</div><div class="fval" style="color:${color};">${g.brkCount}</div>${brkBreak(g, color, 'n')}</div>
+        <div class="fac-row"><div class="flbl">고장시간 (Hr)</div><div class="fval" style="color:${color};">${(g.brkMin/60).toFixed(1)}</div>${brkBreak(g, color, 'm')}</div>
         <div class="fac-row"><div class="flbl">MTBF (Hr)</div><div class="fval" style="color:${color};">${g.mtbf!=null?g.mtbf.toFixed(1):'-'}</div></div>
         <div class="fac-row"><div class="flbl">MTTR (Hr)</div><div class="fval" style="color:${color};">${g.mttr!=null?g.mttr.toFixed(1):'-'}</div></div>
         <div class="fac-row"><div class="flbl">가용률 (%)</div><div class="fval" style="color:${color};">${g.a.toFixed(1)}</div></div>
