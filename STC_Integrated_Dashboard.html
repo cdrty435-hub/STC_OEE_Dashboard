@@ -4124,7 +4124,7 @@ function f2LayoutView(week){
     { n:13, k:'all',  t:'OQC 출하검사', src:'F2_OQC_Q', C:C13, top:(C13.top[0]||{}).t, sk:'s13', open:"layInspOpen(event,'OQC')" }
   ], DS, 1214, -40, 254);
   const play = layPlay();
-  const svg = `<svg viewBox="0 -58 1480 802" role="img" aria-label="FAC2 Layout" font-family="inherit" class="${play?'play':'stop'}">${g}</svg>`;
+  const svg = `<svg viewBox="0 -84 1480 828" role="img" aria-label="FAC2 Layout" font-family="inherit" class="${play?'play':'stop'}">${g}</svg>`;
   const legend = `<div class="lay-leg">
     ${['all','half','gen','iqc'].map(k=>`<span><i style="background:${LAY_KC[k]}"></i>${LAY_KL[k]}</span>`).join('')}
     <span><i class="ln" style="background:#22c55e"></i>소재 흐름</span><span><i class="ln" style="background:#e040a0"></i>가공 공급</span><span><i class="ln" style="background:#3b82f6"></i>가공 완료</span>
