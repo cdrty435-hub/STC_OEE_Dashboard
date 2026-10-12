@@ -792,6 +792,8 @@ table.eq td.name{font-weight:700;}
 .lay-dtr .dli:hover{background:#fef9c3;} .lay-dtr .dli.on{background:#fde68a;border-color:#f59e0b;font-weight:900;}
 .lay-dtr .dli .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1f2937;} .lay-dtr .dli .b{height:6px;background:#eef2f7;border-radius:3px;overflow:hidden;} .lay-dtr .dli .b i{display:block;height:100%;border-radius:3px;}
 .lay-dtr .dli b{text-align:right;font-variant-numeric:tabular-nums;} .lay-dtr .dli small{text-align:right;color:#64748b;font-weight:700;}
+body.only-layout #grpBar, body.only-layout #tabBar, body.only-layout .f2-side{display:none!important;}
+body.only-layout .f2-wrap{display:block;} body.only-layout .f2-main{max-width:none;width:100%;}
 </style>
 </head>
 <body>
@@ -5503,6 +5505,19 @@ applyStaticI18n();
 try{
   const saved=localStorage.getItem('stc_portal_tab');
   if(saved && TABS.some(t=>t.id===saved)) selectTab(saved);
+}catch(e){}
+/* 배치도 전용 링크 — ?view=layout (&lang=ko|en|th) : FAC2 Layout 만 크게, 위 탭 · 왼쪽 메뉴 숨김 (평소 저장된 탭은 건드리지 않음) */
+try{
+  const qp = new URLSearchParams(location.search), qv = (qp.get('view')||'').toLowerCase(), ql = (qp.get('lang')||'').toLowerCase();
+  if(['layout','fac2layout','fac2-layout'].includes(qv)){
+    document.body.classList.add('only-layout');
+    const prev = localStorage.getItem('stc_portal_tab'), prevV = localStorage.getItem('stc_f2_view');
+    F2_VIEW = 'layout'; selectTab('f2ov');
+    try{ if(prev!=null) localStorage.setItem('stc_portal_tab', prev); else localStorage.removeItem('stc_portal_tab');
+         if(prevV!=null) localStorage.setItem('stc_f2_view', prevV); }catch(e){}
+    document.title = 'FAC2 Layout · STC';
+  }
+  if(LANGS.includes(ql) && ql!==LANG) setLang(ql);
 }catch(e){}
 document.getElementById('weekSel').addEventListener('change', ()=>{ renderOverview(); renderF2(); syncWeekToAllFrames(); });
 document.getElementById('scopeSel').addEventListener('change', renderOverview);
