@@ -5059,15 +5059,14 @@ function renderWeekly(){
           : `판정 근거 — MTTR ${pc(pM)} · MTBF ${pc(pB)} (둘 다 ±3% 이내)`;
       }
 
+      /* 카드 본문 = 전주 대비 · 금주 최다 두 줄만 (판정 근거 · 목표 초과/미달 줄은 표시하지 않음) */
       const L = [];
-      if(why) L.push(why);
       if(mv) L.push(`전주 대비 <b>${mv.code}</b> ${sg(mv.d,1)}h ${mv.d>0?'증가':'감소'}`);
       if(top.length) L.push(`금주 최다 <b>${top[0].code}</b> ${fmt(top[0].h,1)}h/${top[0].n}건`
                             + (top[1] ? ` · ${top[1].code} ${fmt(top[1].h,1)}h/${top[1].n}건` : ''));
       const over = [];
       if(tM && cu.mttr > tM) over.push(`MTTR 목표 초과 ${sg(cu.mttr-tM,2)}`);
       if(tB && cu.mtbf < tB) over.push(`MTBF 목표 미달 ${fmt(cu.mtbf-tB,2)}`);
-      if(over.length) L.push(`<b>${over.join(' · ')}</b>`);
       if(!L.length) L.push('특이 변동 없음');
 
       return `<div class="ic" style="border-left-color:${CAT_COLOR[c]}">
@@ -7890,7 +7889,7 @@ loadData();
       const d = c-p; if (Math.abs(d) < Math.pow(10,-dp)/2) return '<span class="eq">±0</span>';
       const good = goodUp ? d>0 : d<0; return `<span class="${good?'dn':'up'}">${sgn(d,dp)}${dp===1&&goodUp?'%p':''}</span>`; };
     let h = `<div class="kw">`;
-    h += `<h4 class="kw-h">1. 지표 요약 <small>금기간 ${esc(P.cur.label)} · 비교 ${esc(pl)} · 계획외 고장(UDT) · 최소정지 ${C.minStop}분 · 목표 MTTR ≤ ${f1(C.tMttr,2)} / MTBF ≥ ${f1(C.tMtbf,2)} h/건</small></h4>`;
+    h += `<h4 class="kw-h">1. 지표 요약 <small>금기간 ${esc(P.cur.label)} · 비교 ${esc(pl)} · ${C.std ? '계획외 고장(UDT)' : '<b style="color:#dc2626">⚠ 전체 로스 기준 — 휴식·금형교체 등 계획정지 포함 (상단 [지표 산출 기준]에서 국제표준 선택 시 UDT만)</b>'} · 최소정지 ${C.minStop}분 · 목표 MTTR ≤ ${f1(C.tMttr,2)} / MTBF ≥ ${f1(C.tMtbf,2)} h/건</small></h4>`;
     h += `<table class="kw-s"><colgroup><col style="width:4%"><col style="width:8%"><col style="width:10%"><col style="width:10%"><col style="width:8%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:33%"></colgroup>`;
     h += `<thead><tr><th>NO</th><th>지표</th><th>${esc(pl)}</th><th>${esc(P.cur.label)}</th><th>증감</th><th class="w">Worst 1</th><th class="w">Worst 2</th><th class="w">Worst 3</th><th class="dt">세부사항 (Worst 원인)</th></tr></thead><tbody>`;
     rows.forEach((r,i)=>{
@@ -7905,7 +7904,7 @@ loadData();
          + (dd.tail ? `<div class="kw-tail">${esc(dd.tail)}</div>` : '') + `</td></tr>`;
     });
     h += `</tbody></table>`;
-    h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · Worst = 대시보드 ② 설비별 차트 기준(건수 제한 없음, 가동 0h 설비 제외) · 가용률 = MTBF ÷ (MTBF + MTTR) = 가동 ÷ (가동 + 고장(UDT) 로스) — 고장 정지만 반영 · 가동률(전체 로스) = 가동 ÷ (가동 + 전체 로스)는 참고값</div>`;
+    h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · Worst = 대시보드 ② 설비별 차트 기준(건수 제한 없음, 가동 0h 설비 제외) · 가용률 = MTBF ÷ (MTBF + MTTR) = 가동 ÷ (가동 + ${C.std ? '고장(UDT) 로스) — 고장 정지만 반영' : '전체 로스) — 현재 전체 로스 기준이라 계획정지도 고장으로 집계'} · 가동률(전체 로스) = 가동 ÷ (가동 + 전체 로스)는 참고값</div>`;
 
     /* --- 2. 워스트 설비 · 고장 유형 정리 ---------------------------------------
        1번 MTTR·MTBF·가용률·로스시간 Worst 3 에 나온 설비를 한 번씩만 모아
@@ -8209,7 +8208,7 @@ loadData();
     const dn = Math.round((new Date(t.value+'T00:00:00Z') - new Date(f.value+'T00:00:00Z'))/86400000) + 1;
     if ($('kwdCover')) $('kwdCover').innerHTML = mtCoverHtml('daily', f.value === t.value ? f.value : f.value+' ~ '+t.value, dn > 1 ? dn+'일' : '', who);
     $('kwdMeta').innerHTML = `<b>${f.value === t.value ? f.value : f.value+' ~ '+t.value}</b><br>`
-      + (who ? who+' · ' : '') + `작성일 ${new Date().toISOString().slice(0,10)} · 기준 계획외 고장(UDT) / 최소정지 ${MIN_STOP}분`;
+      + (who ? who+' · ' : '') + `작성일 ${new Date().toISOString().slice(0,10)} · 기준 ${STD_MODE ? '계획외 고장(UDT)' : '전체 로스'} / 최소정지 ${MIN_STOP}분`;
     STCKW.mount('kwDaily', { mode:'range', from:f.value, to:t.value });
   }
   ['kwdFrom','kwdTo','kwdWho'].forEach(id=>{ const el = $(id); if (el) el.addEventListener('change', kwDaily); });
