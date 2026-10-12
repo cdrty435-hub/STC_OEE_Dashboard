@@ -711,6 +711,9 @@ table.eq td.name{font-weight:700;}
 .lay-ins .q{display:flex;gap:8px;flex-wrap:wrap;font-size:10.5px;color:#64748b;font-weight:700;margin-top:2px;}
 .lay-ins .q i{font-style:normal;color:#0f172a;font-weight:900;margin-left:3px;font-variant-numeric:tabular-nums;}
 .lay-insh{font-size:12px;font-weight:800;color:#1e3c72;margin:2px 0 6px;} .lay-insh span{font-weight:600;color:#64748b;}
+.lay-insel{margin-left:10px;background:#fde68a;color:#78350f;border-radius:10px;padding:1px 10px;font-size:11.5px;} .lay-insel a{cursor:pointer;margin-left:6px;color:#b45309;}
+.lay-ins .t.hit{border-left-color:#f59e0b;background:#fffbeb;box-shadow:0 0 0 2px #fde68a inset;} .lay-ins .t.zero{border-left-color:#cbd5e1;background:#f8fafc;}
+.lay-ins .q .sel{color:#92400e;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 .lay-card .lay-ins{margin-bottom:10px;padding-bottom:12px;border-bottom:2px solid #c7d2e3;}
 .lay-tg{margin-left:auto;margin-right:64px;align-self:center;border:1px solid #1e3c72;background:#fff;color:#1e3c72;border-radius:14px;padding:3px 12px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer;white-space:nowrap;}
 .lay-tg.on{background:#1e3c72;color:#fff;} .lay-tg:hover{box-shadow:0 0 0 3px #dbeafe;}
@@ -4187,14 +4190,21 @@ function f2LayoutView(week){
   const segs = [['wk','선택 주차'],['d1','최근일'],['d7','최근 7일']].map(([k,l])=>`<button class="${per===k?'on':''}" onclick="laySetPer('${k}')">${l}</button>`).join('');
   /* ---- 검사공정별 수량 타일 (KPI 방식) : Total · OK · NG · %NG ---- */
   const insRows = [
-    { n:1,  k:'iqc',  t:'IQC 수입검사', have:C1.have, C: C1.t ? { t:C1.qty, n:C1.nq, lbl:C1.lbl } : null, u:'EA', open:"layInspOpen(event,'IQC')" },
+    { n:1,  k:'iqc',  t:'IQC 수입검사', sk:'iqc', lotT:C1.t, lotN:C1.n, have:C1.have, C: C1.t ? { t:C1.qty, n:C1.nq, lbl:C1.lbl } : null, u:'EA', open:"layInspOpen(event,'IQC')" },
     { n:5,  k:'all',  t:'쇼트 후 검사', C:null },
-    { n:8,  k:'all',  t:'MC 가공', C: C8.t ? C8 : null, open:"f2SetView('daily')" },
-    { n:9,  k:'all',  t:'PQC 공정검사', have:C9.have, C: C9.t ? C9 : null, open:"layPqcOpen(event)" },
+    { n:8,  k:'all',  t:'MC 가공', sk:'s8', C: C8.t ? C8 : null, open:"f2SetView('daily')" },
+    { n:9,  k:'all',  t:'PQC 공정검사', sk:'s9', have:C9.have, C: C9.t ? C9 : null, open:"layPqcOpen(event)" },
     { n:10, k:'half', t:'MARKING 50% 검사', C:null },
-    { n:13, k:'all',  t:'OQC 출하검사', have:C13.have, C: C13.t ? C13 : null, open:"layInspOpen(event,'OQC')" } ];
-  const ins = `<div class="lay-ins">${insRows.map(rw=>{ const C = rw.C, r = C ? C.n/C.t*100 : null, cls = !C ? 'na' : r<=tg ? 'ok' : 'ng';
-    return `<div class="t ${cls}"${rw.open?` onclick="${rw.open}" title="상세 보기"`:''}><small><span class="n" style="background:${LAY_KC[rw.k]};color:${rw.k==='all'?'#1f2937':'#fff'}">${rw.n}</span>${rw.t}</small>`
+    { n:13, k:'all',  t:'OQC 출하검사', sk:'s13', have:C13.have, C: C13.t ? C13 : null, open:"layInspOpen(event,'OQC')" } ];
+  /* 불량유형을 고르면 : 각 검사공정 칸 = 그 유형의 수량 · 불량률 (① IQC 는 로트 기준) */
+  const SR = LAY_SEL ? (DS.rows.find(z=>z.c===LAY_SEL.c) || {}) : null;
+  const ins = `<div class="lay-ins${SR?' sel':''}">${insRows.map(rw=>{ const C = rw.C, r = C ? C.n/C.t*100 : null;
+    const sv = SR && C && rw.sk ? (SR[rw.sk]||0) : null, st = rw.lotT || (C ? C.t : 0), sr = sv!=null && st ? sv/st*100 : null;
+    const cls = !C ? 'na' : sv!=null ? (sv ? 'hit' : 'zero') : r<=tg ? 'ok' : 'ng';
+    const head = `<div class="t ${cls}"${rw.open?` onclick="${rw.open}" title="상세 보기"`:''}><small><span class="n" style="background:${LAY_KC[rw.k]};color:${rw.k==='all'?'#1f2937':'#fff'}">${rw.n}</span>${rw.t}</small>`;
+    if(sv!=null) return head + `<b style="color:${sv?'#b45309':'#94a3b8'}">${sr.toFixed(2)}%</b>`
+        + `<div class="q"><span>NG<i style="color:${sv?'#b45309':'#94a3b8'}">${fmt(sv)}</i></span><span>/ Total<i>${fmt(st)}</i>${rw.lotT?' 로트':''}</span><span>전체 %NG<i>${(rw.lotT ? (rw.lotN||0)/rw.lotT*100 : r).toFixed(2)}%</i></span></div></div>`;
+    return head
       + (C ? `<b style="color:${f2St(r).c}">${r.toFixed(2)}%</b><div class="q"><span>Total<i>${fmt(C.t)}</i></span><span>OK<i style="color:#15803d">${fmt(C.t-C.n)}</i></span><span>NG<i style="color:${C.n?'#b91c1c':'#94a3b8'}">${fmt(C.n)}</i></span></div>`
            : rw.have ? `<b class="na">–</b><div class="q"><span>기록 없음</span><span style="font-weight:600;white-space:normal">시트 기록 : \u0001${esc2(rw.have)}\u0002</span></div>`
            : `<b class="na">–</b><div class="q"><span>연결 대기</span></div>`) + `</div>`; }).join('')}</div>`;
@@ -4203,7 +4213,7 @@ function f2LayoutView(week){
     kpi:   pm.length ? kpi : `<div class="card empty" style="padding:12px;margin-bottom:12px">F2_생산실적 데이터가 없어 설비 색은 회색으로 표시됩니다.</div>`,
     trend: LAY_SEL ? layDefTrend(DS, C8, C9, C13, C1) : '',
     layout:`<div class="lay-card" data-zoom="layout"><h3>FAC 2 Layout <small>설비 상자 = 윗줄 색: 모델 · 설비번호 · %NG · OP — 누르면 설비 메모창</small><button type="button" class="lay-tg${layDP()?' on':''}" onclick="layToggleDP()" title="배치도 안 불량유형 패널 보이기 / 숨기기">${layDP()?'☑':'☐'} 불량유형</button></h3>
-      <div class="lay-insh">검사공정별 수량 <span>(Total · OK · NG · %NG — ① = 수량 EA 기준)</span></div>${ins}
+      <div class="lay-insh">검사공정별 수량 <span>(Total · OK · NG · %NG — ① = 수량 EA 기준)</span>${LAY_SEL?`<b class="lay-insel">▶ \u0001${esc2(LAY_SEL.name)}\u0002 <a onclick="laySelDef(null)">✕ 선택 해제</a></b>`:''}</div>${ins}
       <div class="lay-svgw">${svg}</div>${legend}</div>`,
     model: `<div class="sec-title">모델별 품질현황 <span style="text-transform:none;font-weight:600;color:#64748b">(구글시트 MC · MCT 탭 기준 · ${esc2(lbl||'')})</span></div>${layModelQuality(pred)}`,
     steps: `<div class="sec-title">공정 순서 (①~⑬)</div>${steps}` };
@@ -4563,7 +4573,7 @@ const LAY_TR = [
  ['공정 순서','Process sequence','ลำดับกระบวนการ'],
  ['원본: FAC 2 Layout 도면 (공정 번호 · 검사 구분 · NEW = 신설 검사). 설비 %NG = F2_생산실적 NG ÷ Total (전 OP 합) · 목표','Source: FAC 2 Layout drawing (step no. · inspection type · NEW = new inspection). Machine %NG = F2_생산실적 NG ÷ Total (all OPs) · target','ที่มา: แบบ FAC 2 Layout (เลขขั้นตอน · ประเภทการตรวจ · NEW = จุดตรวจใหม่) %NG เครื่อง = NG ÷ Total ของ F2_생산실적 (ทุก OP) · เป้า'],
  ['소재 흐름','Material flow','การไหลวัตถุดิบ'],['가공 공급','Machining feed','ป้อนงานกลึง'],['가공 완료','Machined','กลึงเสร็จ'],['기록 없음','No data','ไม่มีข้อมูล'],
- ['CNC 구역','CNC area','โซน CNC'],['▶ 최근 7일로 보기','▶ View last 7 days','▶ ดู 7 วันล่าสุด'],['시트 기록 :','Sheet data:','ข้อมูลในชีต:'],['기록 없음 · 시트','No data · sheet','ไม่มีข้อมูล · ชีต'],['배치도 안 불량유형 패널 보이기 / 숨기기','Show / hide defect-type panel on the layout','แสดง / ซ่อนแผงประเภทของเสียบนผัง'],['검사공정별 수량','Quantity by inspection step','จำนวนตามขั้นตอนตรวจ'],['(Total · OK · NG · %NG — ① = 수량 EA 기준)','(Total · OK · NG · %NG — ① = by qty EA)','(Total · OK · NG · %NG — ① = ตามจำนวน EA)'],['↺ 순서 초기화','↺ Reset order','↺ รีเซ็ตลำดับ'],['블록 순서를 처음 상태로','Reset block order','รีเซ็ตลำดับบล็อก'],['위로 이동','Move up','เลื่อนขึ้น'],['아래로 이동','Move down','เลื่อนลง'],['상세 보기','Details','รายละเอียด'],['공정별 수량 흐름','Quantity by process','จำนวนตามกระบวนการ'],['① = 수량(EA) 기준 · OK = Total − NG · 행 클릭 = 상세','① = by qty (EA) · OK = Total − NG · click row = detail','① = ตามจำนวน (EA) · OK = Total − NG · คลิกแถว = รายละเอียด'],['MARKING 50%','MARKING 50%','MARKING 50%'],['IQC 수입','IQC incoming','IQC รับเข้า'],['쇼트 후','After shot','หลังยิงทราย'],['PQC 공정','PQC in-process','PQC ระหว่างผลิต'],['OQC 출하','OQC outgoing','OQC ส่งออก'],['연결 대기','not linked','ยังไม่เชื่อม'],['공정명','Process','กระบวนการ'],['공급 (Flow line)','Feed (Flow line)','ป้อน (Flow line)'],["미사용 (마스터 'X')","Unused (master 'X')","ไม่ใช้ (มาสเตอร์ 'X')"],['미사용','Unused','ไม่ใช้'],
+ ['CNC 구역','CNC area','โซน CNC'],['선택 해제','Clear','ยกเลิก'],['▶ 최근 7일로 보기','▶ View last 7 days','▶ ดู 7 วันล่าสุด'],['시트 기록 :','Sheet data:','ข้อมูลในชีต:'],['기록 없음 · 시트','No data · sheet','ไม่มีข้อมูล · ชีต'],['배치도 안 불량유형 패널 보이기 / 숨기기','Show / hide defect-type panel on the layout','แสดง / ซ่อนแผงประเภทของเสียบนผัง'],['검사공정별 수량','Quantity by inspection step','จำนวนตามขั้นตอนตรวจ'],['(Total · OK · NG · %NG — ① = 수량 EA 기준)','(Total · OK · NG · %NG — ① = by qty EA)','(Total · OK · NG · %NG — ① = ตามจำนวน EA)'],['↺ 순서 초기화','↺ Reset order','↺ รีเซ็ตลำดับ'],['블록 순서를 처음 상태로','Reset block order','รีเซ็ตลำดับบล็อก'],['위로 이동','Move up','เลื่อนขึ้น'],['아래로 이동','Move down','เลื่อนลง'],['상세 보기','Details','รายละเอียด'],['공정별 수량 흐름','Quantity by process','จำนวนตามกระบวนการ'],['① = 수량(EA) 기준 · OK = Total − NG · 행 클릭 = 상세','① = by qty (EA) · OK = Total − NG · click row = detail','① = ตามจำนวน (EA) · OK = Total − NG · คลิกแถว = รายละเอียด'],['MARKING 50%','MARKING 50%','MARKING 50%'],['IQC 수입','IQC incoming','IQC รับเข้า'],['쇼트 후','After shot','หลังยิงทราย'],['PQC 공정','PQC in-process','PQC ระหว่างผลิต'],['OQC 출하','OQC outgoing','OQC ส่งออก'],['연결 대기','not linked','ยังไม่เชื่อม'],['공정명','Process','กระบวนการ'],['공급 (Flow line)','Feed (Flow line)','ป้อน (Flow line)'],["미사용 (마스터 'X')","Unused (master 'X')","ไม่ใช้ (มาสเตอร์ 'X')"],['미사용','Unused','ไม่ใช้'],
  ['선택 기간 생산 기록 없음','No output in this period','ไม่มีผลผลิตในช่วงนี้'],['클릭 = 설비 메모창','click = machine card','คลิก = การ์ดเครื่อง'],
  ['MC·MCT 가공 불량','MC·MCT machining defects','ของเสียงานกลึง MC·MCT'],['PQC 검사 불량','PQC inspection defects','ของเสียตรวจ PQC'],['선택 기간 데이터 없음','No data in this period','ไม่มีข้อมูลในช่วงนี้'],
  ['불량 없음','No defects','ไม่มีของเสีย'],['검사 상세 보기','View inspection details','ดูรายละเอียดการตรวจ'],['검사 상세 →','Details →','รายละเอียด →'],
