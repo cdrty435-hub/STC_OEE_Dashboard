@@ -715,6 +715,16 @@ table.eq td.name{font-weight:700;}
 @media (prefers-reduced-motion:reduce){.lay-svgw svg.play .fl{animation:none;}.lay-svgw .lay-dots{display:none;}}
 @media print{.lay-svgw .lay-dots{display:none;}.lay-svgw svg .fl{animation:none!important;stroke-dasharray:none!important;}}
 .lay-svgw .mc{cursor:pointer;}
+.lay-mq{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;}
+.lay-mq .mq{background:#fff;border:1px solid #e2e8f0;border-top:4px solid var(--mc);border-radius:10px;padding:10px 12px;}
+.lay-mq .mh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;} .lay-mq .mh b{font-size:14px;font-weight:900;color:#0f172a;}
+.lay-mq .chips{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;} .lay-mq .chips span{font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:10px;background:#f1f5f9;color:#334155;cursor:pointer;}
+.lay-mq .chips span:hover{background:#e2e8f0;}
+.lay-mq .k{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0;} .lay-mq .k div{background:#f8fafc;border-radius:7px;padding:4px 7px;}
+.lay-mq .k small{display:block;font-size:9.5px;color:#64748b;font-weight:700;} .lay-mq .k b{font-size:14px;font-weight:900;font-variant-numeric:tabular-nums;}
+.lay-mq table{width:100%;border-collapse:collapse;font-size:11px;margin-top:4px;} .lay-mq th{font-size:10px;color:#64748b;text-align:right;font-weight:700;border-bottom:1px solid #eef2f7;padding:2px 4px;}
+.lay-mq th:first-child,.lay-mq td:first-child{text-align:left;} .lay-mq td{text-align:right;padding:3px 4px;border-bottom:1px solid #f4f6f9;font-variant-numeric:tabular-nums;}
+.lay-mq .tp{font-size:10.5px;color:#475569;margin-top:6px;line-height:1.5;} .lay-mq .nod{color:#94a3b8;font-size:11.5px;padding:6px 0;}
 .lay-pop{position:fixed;z-index:900;width:330px;background:#fffdf3;border:1px solid #f3d36b;border-radius:12px;box-shadow:0 12px 32px rgba(15,23,42,.22);font-size:12px;color:#1f2937;display:flex;flex-direction:column;max-height:78vh;}
 .lay-pop .hd{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#fde68a;border-radius:12px 12px 0 0;cursor:move;user-select:none;}
 .lay-pop .hd b{font-size:15px;font-weight:900;color:#1e293b;} .lay-pop .hd small{font-size:10.5px;color:#7c5a00;font-weight:700;}
@@ -1353,9 +1363,9 @@ function renderOverview(){
         · 읽는 경로(순서대로): ① 저장한 gid → ② 게시 CSV(sheet=탭이름) → ③ gviz(sheet=탭이름)
    ========================================================================= */
 const F2_SHEET_ID = '1m-b3Ur5VhewDhM0cbv39q8cuMm9Y0asyH1NyV0coDD4';
-const F2_TAB  = { pd:'F2_품번일별', det:'F2_불량상세', mq:'F2_MCT_Q', pm:'F2_생산실적', pmd:'F2_설비일별', code:'F2_불량코드', pq:'F2_PQC_Q' };
-const F2_GID_DEF = { pq:'436203184', pm:'1950067484', pmd:'1796486014', code:'2002569652' };   /* OEE_RawData_APQ 탭 gid (FAC2 Raw Data → 변환기 출력) */
-const F2_NEED = { pq:['일자','설비명','Part no.',"Total Q'ty","FG Q'ty","NG Q'ty"], code:['코드','불량유형'], pm:['일자','설비','OP','품번(QC)','Total','FG','NG'], pmd:['일자','설비','Total','FG','NG','계획(h)'], mq:['일자','주차','설비명','Part no.','생산수량','양품','불량수량'], pd:['일자','주차','공정','Part no.',"Total Q'ty","FG Q'ty","NG Q'ty"], det:['주차','공정','구분','Part no.','불량유형','계통','수량'] };
+const F2_TAB  = { mcm:'MC', mctm:'MCT', pd:'F2_품번일별', det:'F2_불량상세', mq:'F2_MCT_Q', pm:'F2_생산실적', pmd:'F2_설비일별', code:'F2_불량코드', pq:'F2_PQC_Q' };
+const F2_GID_DEF = { mcm:'1156816246', mctm:'1074086409', pq:'436203184', pm:'1950067484', pmd:'1796486014', code:'2002569652' };   /* OEE_RawData_APQ 탭 gid (FAC2 Raw Data → 변환기 출력) */
+const F2_NEED = { mcm:['MC','Part name'], mctm:['MC','Part name'], pq:['일자','설비명','Part no.',"Total Q'ty","FG Q'ty","NG Q'ty"], code:['코드','불량유형'], pm:['일자','설비','OP','품번(QC)','Total','FG','NG'], pmd:['일자','설비','Total','FG','NG','계획(h)'], mq:['일자','주차','설비명','Part no.','생산수량','양품','불량수량'], pd:['일자','주차','공정','Part no.',"Total Q'ty","FG Q'ty","NG Q'ty"], det:['주차','공정','구분','Part no.','불량유형','계통','수량'] };
 const F2_PROCS = ['MCT','OQC'];
 let F2 = { pd:[], det:[], mq:[], pm:[], pmd:[], pq:[], pqRaw:[], pqErr:'', loaded:false, err:null, loading:false };
 const f2n = v => { const s=String(v==null?'':v).replace(/,/g,'').trim(); if(!s) return 0;
@@ -1414,6 +1424,9 @@ async function loadF2(){
   F2.loading = true; F2.err = null; renderF2();
   /* 전 설비 생산실적(F2_생산실적 · F2_설비일별) — 품질 탭과 따로 읽는다 (한쪽이 없어도 다른 쪽은 뜬다) */
   const codeJob = f2CodeFetch().then(f2CodeLoad).catch(()=>{ F2.code.err = true; });
+  /* 설비 마스터 (구글시트 MC · MCT 탭 : 설비 → Part name · OP) — 못 읽으면 내장 기본값 */
+  const mmJob = Promise.allSettled([f2Fetch('mcm'), f2Fetch('mctm')]).then(([a,b])=>{
+    layMasterSet(a.status==='fulfilled' ? a.value : null, b.status==='fulfilled' ? b.value : null); });
   /* PQC 관리현황 (F2_PQC_Q) — 따로 읽는다 (없어도 나머지는 뜬다) */
   const pqJob = f2Fetch('pq').then(rows=>{ f2NormParts(rows); F2.pqRaw = rows.filter(r=>/^\d{4}-\d{2}-\d{2}/.test(String(r['일자']||'')) && String(r['Part no.']||'').trim()); F2.pq = F2.pqRaw; F2.pqErr = ''; }).catch(e=>{ F2.pq = []; F2.pqErr = e && e.message || String(e); });
   const pmJob = Promise.allSettled([f2Fetch('pm'), f2Fetch('pmd'), codeJob]).then(([a,b])=>{
@@ -1426,7 +1439,7 @@ async function loadF2(){
     f2NormParts(F2.pd); f2NormParts(F2.det); f2NormParts(F2.mq);
     F2.loaded = true; F2.at = new Date();
   }catch(e){ F2.loaded = false; F2.err = e.message || String(e); F2.at = new Date(); }
-  await pmJob; await pqJob;
+  await pmJob; await pqJob; await mmJob;
   F2.loading = false;
   renderF2(); if(RAW.a.length) renderOverview();
   if(activeTab==='focus' && typeof renderFocus==='function') renderFocus();
@@ -3871,11 +3884,17 @@ function f2LayoutView(week){
   const zone = (x,y,w,h,fill,stroke,label,ly,lsize) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="${fill}" stroke="${stroke}" stroke-width="1.3"/>`
     + (label ? `<text x="${x+w/2}" y="${ly||y+h/2+4}" text-anchor="middle" font-size="${lsize||12}" font-weight="800" fill="#475569" letter-spacing=".04em">${label}</text>` : '');
   const newTag = (x,y) => `<g><rect x="${x}" y="${y}" width="44" height="17" rx="4" fill="#dc2626"/><text x="${x+22}" y="${y+12.5}" text-anchor="middle" font-size="10.5" font-weight="900" fill="#fff">NEW</text></g>`;
-  const mcBox = ([m,x,y]) => { const o = by[m], c = colOf(o), r = o&&o.t ? o.n/o.t*100 : null, mct = m.startsWith('MCT');
-    const tip = o&&o.t ? `${m} · Total ${fmt(o.t)} · NG ${fmt(o.n)} · %NG ${r.toFixed(2)}%${o.parts.size?` · ${[...o.parts].join(', ')}`:''}` : `${m} · 선택 기간 생산 기록 없음`;
+  const MM = layMaster();
+  const mcBox = ([m,x,y]) => { const o = by[m], c = colOf(o), r = o&&o.t ? o.n/o.t*100 : null, mct = m.startsWith('MCT'), ms = MM[m];
+    if(ms && !ms.use) return `<g><title>${m} · 미사용 (마스터 'X')</title><rect x="${x}" y="${y}" width="29" height="42" rx="5" fill="url(#lay-hatch)" stroke="#cbd5e1"/>
+      <text x="${x+14.5}" y="${y+16}" text-anchor="middle" font-size="7.6" font-weight="800" fill="#94a3b8">${mct?m.replace('MCT','T'):m.replace('MC','')}</text><text x="${x+14.5}" y="${y+31}" text-anchor="middle" font-size="7.5" fill="#94a3b8">미사용</text></g>`;
+    const mcol = ms ? layModelColor(ms.part) : '#cbd5e1';
+    const tip = (ms ? `[${ms.part}${ms.op?' · OP '+ms.op:''}] ` : '') + (o&&o.t ? `${m} · Total ${fmt(o.t)} · NG ${fmt(o.n)} · %NG ${r.toFixed(2)}%${o.parts.size?` · ${[...o.parts].join(', ')}`:''}` : `${m} · 선택 기간 생산 기록 없음`);
     return `<g class="mc" onclick="layMcOpen(event,'${m}')"><title>${esc2(tip)} · 클릭 = 설비 메모창</title><rect x="${x}" y="${y}" width="29" height="42" rx="5" fill="${c.f}" stroke="${c.s}" stroke-width="1.4"/>
-      <text x="${x+14.5}" y="${y+15}" text-anchor="middle" font-size="${mct?7.6:8.6}" font-weight="800" fill="${c.tx}">${mct?m.replace('MCT','T'):m.replace('MC','')}</text>
-      <text x="${x+14.5}" y="${y+33}" text-anchor="middle" font-size="9" font-weight="900" fill="${c.tx}">${r==null?'–':r.toFixed(1)}</text></g>`; };
+      <path d="M${x} ${y+5} Q${x} ${y} ${x+5} ${y} H${x+24} Q${x+29} ${y} ${x+29} ${y+5} V${y+6} H${x} Z" fill="${mcol}"/>
+      <text x="${x+14.5}" y="${y+15.5}" text-anchor="middle" font-size="${mct?7.6:8.6}" font-weight="800" fill="${c.tx}">${mct?m.replace('MCT','T'):m.replace('MC','')}</text>
+      <text x="${x+14.5}" y="${y+27.5}" text-anchor="middle" font-size="9" font-weight="900" fill="${c.tx}">${r==null?'–':r.toFixed(1)}</text>
+      <text x="${x+14.5}" y="${y+38}" text-anchor="middle" font-size="6.6" font-weight="700" fill="#475569">${ms&&ms.op?'OP'+esc2(ms.op):''}</text></g>`; };
   const arrowDefs = `<defs>${[['g','#22c55e'],['b','#3b82f6'],['p','#e040a0']].map(([k,c])=>`<marker id="lay-a${k}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`).join('')}
     <pattern id="lay-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#e2e8f0" stroke-width="3"/></pattern></defs>`;
   let g = arrowDefs;
@@ -3986,7 +4005,9 @@ function f2LayoutView(week){
   const legend = `<div class="lay-leg">
     ${['all','half','gen','iqc'].map(k=>`<span><i style="background:${LAY_KC[k]}"></i>${LAY_KL[k]}</span>`).join('')}
     <span><i class="ln" style="background:#22c55e"></i>소재 흐름</span><span><i class="ln" style="background:#e040a0"></i>가공 공급</span><span><i class="ln" style="background:#3b82f6"></i>가공 완료</span>
-    <span style="margin-left:auto"><i class="sq" style="background:#dcfce7;border:1px solid #16a34a"></i>%NG ≤ ${tg}%</span><span><i class="sq" style="background:#fef3c7;border:1px solid #d97706"></i>≤ ${tg*2}%</span>
+    <span style="width:100%;height:0"></span>${layModels().map(md=>`<span><i class="sq" style="background:${layModelColor(md.part)}"></i>${esc2(md.part)} <small style="color:#94a3b8">${md.mcs.map(x=>x.mc.replace(/^MCT?0?/,md.kind==='MCT'?'T':'')).join('·')}</small></span>`).join('')}
+    <span style="width:100%;height:0"></span>
+    <span><i class="sq" style="background:#dcfce7;border:1px solid #16a34a"></i>%NG ≤ ${tg}%</span><span><i class="sq" style="background:#fef3c7;border:1px solid #d97706"></i>≤ ${tg*2}%</span>
     <span><i class="sq" style="background:#fee2e2;border:1px solid #dc2626"></i>&gt; ${tg*2}%</span><span><i class="sq" style="background:#eef1f5;border:1px solid #cbd5e1"></i>기록 없음</span></div>`;
   const steps = `<div class="lay-steps">${LAY_STEPS.map(st=>`<div class="lay-st"><span class="n" style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</span>
       <div><b>${esc2(st.t)}${st.isNew?'<span class="new">NEW</span>':''}</b><small>${esc2(st.d)}</small></div>
@@ -3996,12 +4017,78 @@ function f2LayoutView(week){
     <div class="lay-top f2-noprint"><span class="seg">${segs}</span><span class="per">설비 색 기준 기간: <b>${esc2(lbl||'–')}</b> · 원천 F2_생산실적</span>
       <button class="btn-f2 alt" style="margin-left:auto" onclick="layTogglePlay()">${play?'⏸ 흐름 멈춤':'▶ 흐름 보기'}</button><button class="btn-f2" onclick="window.print()">${T('f2.r.print')}</button></div>
     ${pm.length ? kpi : `<div class="card empty" style="padding:12px;margin-bottom:12px">F2_생산실적 데이터가 없어 설비 색은 회색으로 표시됩니다.</div>`}
-    <div class="lay-card"><h3>FAC 2 Layout <small>설비 상자 = 위: 설비번호 · 아래: %NG · 마우스를 올리면 생산·불량 수량</small></h3>
+    <div class="lay-card"><h3>FAC 2 Layout <small>설비 상자 = 윗줄 색: 모델 · 설비번호 · %NG · OP — 누르면 설비 메모창</small></h3>
       <div class="lay-svgw">${svg}</div>${legend}</div>
+    <div class="sec-title">모델별 품질현황 <span style="text-transform:none;font-weight:600;color:#64748b">(구글시트 MC · MCT 탭 기준 · ${esc2(lbl||'')})</span></div>${layModelQuality(pred)}
     <div class="sec-title">공정 순서 (①~⑬)</div>${steps}
     <div class="foot">· 원본: FAC 2 Layout 도면 (공정 번호 · 검사 구분 · NEW = 신설 검사). 설비 %NG = F2_생산실적 NG ÷ Total (전 OP 합) · 목표 ${tg}%.</div>`;
 }
 
+
+/* ---- 설비 마스터 (구글시트 MC · MCT 탭) — 설비 → Part name(모델) · OP ---- */
+const LAY_MASTER_DEF = {
+  MC:[['MC 2','HOUSING REAR','10-20'],['MC 3','HOUSING REAR','30-70'],['MC 4','HOUSING REAR A,B','10-20'],['MC 5','HOUSING REAR A,B','10-20'],['MC 6','HOUSING REAR','30-70'],
+      ['MC 7','INVERTER_COVER','10-20'],['MC 8','INVERTER_COVER','10-20'],['MC 11','INVERTER_SUPPORT','10'],['MC 12','INVERTER_SUPPORT','20'],['MC 13','INVERTER_SUPPORT','10'],
+      ['MC 14','INVERTER_SUPPORT','20'],['MC 15','INVERTER_SUPPORT','10'],['MC 16','INVERTER_SUPPORT','20']],
+  MCT:[['MCT 1','BURNET HEAD FISH G-B',''],['MCT 2','BURNER CUP B-6',''],['MCT 3','MAINFOLD SUCTION',''],['MCT 4','MAINFOLD NE NF QA',''],['MCT 5','MAINFOLD DIS-SCORPIO',''],
+       ['MCT 6','CYLINDER HS-15 F/R',''],['MCT 7','X',''],['MCT 8','BRACKET-STAND REAR',''],['MCT 9','BRACKET-STAND NECK',''],['MCT 10','LOT MARK',''],['MCT 11','X','']] };
+let LAY_MASTER = null, LAY_MASTER_SRC = '내장 기본값';
+const layMcId = v => { const m = String(v||'').toUpperCase().replace(/\s+/g,'').match(/^(MCT|MC)0*(\d{1,2})$/); return m ? m[1] + String(m[2]).padStart(2,'0') : ''; };
+const layOp = v => { let s = String(v==null?'':v).replace(/^[`'’]+/,'').trim(); const m = s.match(/^(\d{1,2})월\s*(\d{1,2})일$/); if(m) s = m[1]+'-'+m[2]; return s; };
+function layMasterBuild(rowsMC, rowsMCT){
+  const out = {};
+  const add = (rows, kind) => (rows||[]).forEach(r=>{ const id = layMcId(Array.isArray(r) ? r[0] : r['MC']); if(!id) return;
+    const part = String((Array.isArray(r) ? r[1] : r['Part name'])||'').trim(), op = layOp(Array.isArray(r) ? r[2] : r['OP']);
+    out[id] = { mc:id, kind, part: part && part.toUpperCase()!=='X' ? part : '', op, use: !!part && part.toUpperCase()!=='X' }; });
+  add(rowsMC, 'MC'); add(rowsMCT, 'MCT');
+  return out;
+}
+function layMasterSet(mcRows, mctRows){
+  /* 탭 gid 가 바뀌어 MC ↔ MCT 가 뒤바뀌어 들어와도 설비명으로 가려 쓴다 */
+  const all = [...(mcRows||[]), ...(mctRows||[])];
+  const mc = all.filter(r=>/^MC(?!T)/i.test(String(r['MC']||'').trim())), mct = all.filter(r=>/^MCT/i.test(String(r['MC']||'').trim()));
+  if(mc.length || mct.length){ LAY_MASTER = layMasterBuild(mc.length ? mc : LAY_MASTER_DEF.MC, mct.length ? mct : LAY_MASTER_DEF.MCT);
+    LAY_MASTER_SRC = `구글시트 ${mc.length?'MC':''}${mc.length&&mct.length?' · ':''}${mct.length?'MCT':''} 탭`; }
+}
+const layMaster = () => LAY_MASTER || (LAY_MASTER = layMasterBuild(LAY_MASTER_DEF.MC, LAY_MASTER_DEF.MCT));
+const LAY_MODEL_COL = ['#2563eb','#0891b2','#9333ea','#ea580c','#16a34a','#db2777','#ca8a04','#475569','#65a30d','#0f766e','#b45309','#be123c','#4f46e5','#a16207','#0369a1'];
+function layModels(){
+  const M = layMaster(), by = {};
+  Object.values(M).filter(x=>x.use).sort((a,b)=>(a.kind===b.kind?0:a.kind==='MC'?-1:1) || a.mc.localeCompare(b.mc)).forEach(x=>{
+    const o = by[x.part] || (by[x.part] = { part:x.part, kind:x.kind, mcs:[] }); o.mcs.push(x); });
+  return Object.values(by);
+}
+function layModelColor(part){ const L = layModels(), i = L.findIndex(m=>m.part===part); return i<0 ? '#cbd5e1' : LAY_MODEL_COL[i % LAY_MODEL_COL.length]; }
+/* 모델별 품질현황 — 모델(마스터 Part name)마다 설비를 묶어 F2_생산실적으로 Total · NG · %NG · OP별 · 설비별 · 불량 TOP3 */
+function layModelQuality(pred){
+  const pm = (F2.pm||[]).filter(pred), tg = f2Target();
+  const idle = [];
+  const cards = layModels().map(md=>{
+    const ids = md.mcs.map(x=>x.mc), R = pm.filter(r=>ids.includes(r.mc)), col = layModelColor(md.part);
+    const sum = rows => rows.reduce((a,r)=>({ t:a.t+r.t, f:a.f+r.f, n:a.n+r.n }), {t:0,f:0,n:0});
+    const A = sum(R), rate = A.t ? A.n/A.t*100 : null, st = f2St(rate);
+    const chips = md.mcs.map(x=>`<span onclick="layMcOpen(event,'${x.mc}')" title="설비 메모창 열기">${x.mc}${x.op?` · OP${esc2(x.op)}`:''}</span>`).join('');
+    if(!A.t){ idle.push({ md, col }); return ''; }
+    const ops = {}; R.forEach(r=>{ const k = layOp(r.op) || '-'; (ops[k] = ops[k] || []).push(r); });
+    const opRows = Object.keys(ops).sort().map(k=>{ const a = sum(ops[k]), r = a.t ? a.n/a.t*100 : null;
+      return `<tr><td>OP ${esc2(k)}</td><td>${fmt(a.t)}</td><td>${fmt(a.n)}</td><td style="color:${f2St(r).c};font-weight:800">${r==null?'–':r.toFixed(2)+'%'}</td></tr>`; }).join('');
+    const mcRows = ids.map(id=>{ const a = sum(R.filter(r=>r.mc===id)); if(!a.t) return `<tr><td>${id}</td><td colspan="3" style="color:#94a3b8">기록 없음</td></tr>`; const r = a.n/a.t*100;
+      return `<tr><td>${id}</td><td>${fmt(a.t)}</td><td>${fmt(a.n)}</td><td style="color:${f2St(r).c};font-weight:800">${r.toFixed(2)}%</td></tr>`; }).join('');
+    const df = (F2P.defs||[]).map((k,i)=>({ t:k.replace(/^불량_/,''), v:R.reduce((s,r)=>s+(r.df[i]||0),0) })).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,3);
+    return `<div class="mq" style="--mc:${col}"><div class="mh"><b>${esc2(md.part)}</b><small style="color:#64748b">${md.kind} · 설비 ${ids.length}대</small>
+        <span style="margin-left:auto;font-size:11px;font-weight:800;color:${st.c}">${st.l}</span></div>
+      <div class="chips">${chips}</div>
+      <div class="k"><div><small>Total</small><b>${fmt(A.t)}</b></div><div><small>FG</small><b>${fmt(A.f)}</b></div><div><small>NG</small><b style="color:#b91c1c">${fmt(A.n)}</b></div><div><small>%NG</small><b style="color:${st.c}">${rate.toFixed(2)}%</b></div></div>
+      <table><tr><th>OP</th><th>Total</th><th>NG</th><th>%NG</th></tr>${opRows}</table>
+      <table><tr><th>설비</th><th>Total</th><th>NG</th><th>%NG</th></tr>${mcRows}</table>
+      ${df.length?`<div class="tp">불량 TOP3 · ${df.map(x=>`${esc2(x.t)} <b>${fmt(x.v)}</b>`).join(' · ')}</div>`:''}</div>`;
+  }).join('');
+  const idleCard = idle.length ? `<div class="mq" style="--mc:#cbd5e1"><div class="mh"><b>생산 기록 없는 모델</b><small style="color:#64748b">선택 기간 · ${idle.length}개</small></div>
+      ${idle.map(({md,col})=>`<div style="display:flex;align-items:center;gap:6px;margin:5px 0;font-size:11.5px"><i style="width:10px;height:10px;border-radius:2px;background:${col};flex:0 0 10px"></i><b style="color:#334155">${esc2(md.part)}</b>
+        <span class="chips" style="margin:0">${md.mcs.map(x=>`<span onclick="layMcOpen(event,'${x.mc}')">${x.mc}${x.op?` · OP${esc2(x.op)}`:''}</span>`).join('')}</span></div>`).join('')}
+      <div class="nod">MCT 설비는 F2_생산실적(In-Out Data)에 아직 기록이 없습니다.</div></div>` : '';
+  return `<div class="lay-mq">${cards}${idleCard}</div><div class="foot" style="margin-top:6px">· 모델 · OP = ${esc2(LAY_MASTER_SRC)} · 수량 = F2_생산실적 (전 OP 합 — 같은 제품이 OP마다 따로 세어짐) · 칩을 누르면 설비 메모창</div>`;
+}
 /* ---- 설비 메모창 — 배치도에서 설비를 누르면 열리는 끌어 옮길 수 있는 창 (여러 개 동시에) ---- */
 const LAY_CTX = { pred:()=>true, lbl:'', days:[] };
 function layMcClose(mc){ const el = document.getElementById('layPop-'+mc); if(el) el.remove(); }
@@ -4056,7 +4143,8 @@ function layMcHtml(mc){
   const re = new RegExp('\\b' + mc + '\\b', 'i');
   const memos = (NOTE.list||[]).filter(x=>!x.del && (x.tag===mc || re.test(String(x.text||'')))).sort((x,y)=>String(y.date+y.ts).localeCompare(String(x.date+x.ts))).slice(0,6);
   const kv = (l,v,c) => `<div><small>${l}</small><b${c?` style="color:${c}"`:''}>${v}</b></div>`;
-  return `<div class="hd"><b>⚙ ${esc2(mc)}</b><small>${esc2(LAY_CTX.lbl||'')}</small><button onclick="layMcClose('${mc}')" aria-label="닫기">✕</button></div>
+  const ms = layMaster()[mc];
+  return `<div class="hd"><b>⚙ ${esc2(mc)}</b><small>${ms?`<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${layModelColor(ms.part)};margin-right:4px"></span>${esc2(ms.part)}${ms.op?' · OP '+esc2(ms.op):''}<br>`:''}${esc2(LAY_CTX.lbl||'')}</small><button onclick="layMcClose('${mc}')" aria-label="닫기">✕</button></div>
     <div class="bd">
       ${a.t ? `<div class="kv">${kv('Total', fmt(a.t))}${kv('FG', fmt(a.f))}${kv('NG', fmt(a.n), '#b91c1c')}${kv('%NG', rate.toFixed(2)+'%', st.c)}</div>
         <div style="font-size:11px;color:#475569">${a.ow?`OEE <b>${(a.oe/a.ow*100).toFixed(1)}%</b> · `:''}계획 ${fmt(a.p,1)}h · 실가동 ${fmt(a.ac,1)}h</div>`
