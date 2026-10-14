@@ -709,7 +709,7 @@ table.eq td.name{font-weight:700;}
 .imp-h .no{flex:none;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#1e3c72;color:#fff;font-size:11px;}
 .imp-h select{flex:1;min-width:0;border:1px solid #cbd5e1;border-radius:6px;padding:2px 4px;font:inherit;font-size:11.5px;}
 .imp-h input{flex:1;min-width:0;border:1px solid #cbd5e1;border-radius:6px;padding:1px 3px;font:inherit;font-size:11px;}
-.imp-h .per{font-weight:700;color:#1e3c72;font-size:11px;} .imp-h .tools{display:flex;gap:2px;}
+.imp-h .per{font-weight:900;color:#0f2a5c;font-size:14px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} .imp-h .tools{display:flex;gap:2px;}
 .imp-h .tools button{border:1px solid #cbd5e1;background:#fff;border-radius:5px;width:20px;height:20px;padding:0;font-size:9px;cursor:pointer;color:#1e3c72;} .imp-h .tools button.x{color:#dc2626;}
 .lay-ins.imp-t{margin:0;gap:6px;}
 .lay-ins.imp-t .t{padding:4px 8px;border-radius:8px;}
@@ -4520,6 +4520,19 @@ function impAdd(){ const a = impRows(), W = impWeeks(), last = a[a.length-1];
   a.push(o ? { f:o.f, t:o.t, w:o.w } : { f:'', t:'', w:'' }); impSave(a); }
 function impDel(i){ const a = impRows(); a.splice(i,1); impSave(a.length ? a : []); }
 function impMove(i, d){ const a = impRows(), j = i + d; if(j<0 || j>=a.length) return; [a[i], a[j]] = [a[j], a[i]]; impSave(a); }
+/* 줄 기간 표시 — 하루면 '10월 7일 (수)', 여러 날이면 '10월 7일 ~ 13일' (주차를 고른 줄은 앞에 W42) */
+function impLbl(R){
+  const L = (typeof LANG==='string' ? LANG : 'ko');
+  const dt = d => new Date(d + 'T00:00:00');
+  const dw = d => ({ ko:'일월화수목금토', en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], th:['อา','จ','อ','พ','พฤ','ศ','ส'] }[L] || '일월화수목금토')[dt(d).getDay()];
+  const MEN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const md = d => { const x = dt(d); return L==='ko' ? `${x.getMonth()+1}월 ${x.getDate()}일` : L==='th' ? `${x.getDate()}/${x.getMonth()+1}` : `${MEN[x.getMonth()]} ${x.getDate()}`; };
+  const day = d => L==='ko' ? `${dt(d).getDate()}일` : md(d);
+  const w = R.w ? R.w + ' · ' : '';
+  if(R.f === R.t) return `${w}${md(R.f)} (${dw(R.f)})`;
+  const sameM = R.f.slice(0,7) === R.t.slice(0,7);
+  return `${w}${md(R.f)} ~ ${sameM ? day(R.t) : md(R.t)}`;
+}
 function impReset(){ try{ localStorage.removeItem('stc_f2_imp_rows'); }catch(e){} renderF2(); }
 /* 기간 [f, t] 의 공정별 수량 — 배치도 검사공정 칸과 같은 원천 · 같은 계산 */
 function impStats(f, t){
@@ -4545,7 +4558,7 @@ function f2ImproveView(){
     const wsel = `<select onchange="impWeek(${i}, this.value)"><option value="">주차 선택</option>${W.slice().reverse().map(o=>`<option value="${o.w}"${o.w===R.w?' selected':''}>${o.w} (${o.f.slice(5)}~${o.t.slice(5)})</option>`).join('')}</select>`;
     const head = `<div class="imp-h"><div class="r1"><b class="no">${i+1}</b>${wsel}<span class="tools"><button onclick="impMove(${i},-1)" title="위로 이동">▲</button><button onclick="impMove(${i},1)" title="아래로 이동">▼</button><button class="x" onclick="impDel(${i})" title="이 줄 삭제">✕</button></span></div>
         <div class="r2"><input type="date" value="${R.f||''}" min="${D[0]||''}" max="${D[D.length-1]||''}" onchange="impSet(${i},'f',this.value)">~<input type="date" value="${R.t||''}" min="${D[0]||''}" max="${D[D.length-1]||''}" onchange="impSet(${i},'t',this.value)"></div>
-        <div class="per">${S ? `${R.w ? R.w+' · ' : ''}${T('f2.workDays',{n:S.days})}` : '기간을 정해 주세요'}</div></div>`;
+        <div class="per">${S ? `\u0001${impLbl(R)}\u0002` : '기간을 정해 주세요'}</div></div>`;
     const tiles = STEPS.map(st=>{
       const C = S && !st.none ? S[st.n] : null, r = C && C.t ? C.n/C.t*100 : null;
       const P = prev && !st.none ? prev[st.n] : null, pr = P && P.t ? P.n/P.t*100 : null;
