@@ -702,6 +702,16 @@ table.eq td.name{font-weight:700;}
 .lay-rng input{border:1px solid #cbd5e1;border-radius:8px;padding:4px 6px;font:inherit;font-size:12.5px;}
 .lay-rng button{border:0;background:#1e3c72;color:#fff;border-radius:8px;padding:5px 12px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;}
 .lay-top .per{font-size:12.5px;color:#475569;font-weight:600;}
+.imp-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px;color:#475569;} .imp-top > span{margin-right:auto;}
+.imp-row{background:#fff;border:1px solid #dbe3ee;border-radius:12px;padding:10px 12px 2px;margin-bottom:12px;}
+.imp-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;font-size:12.5px;color:#475569;}
+.imp-h .no{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#1e3c72;color:#fff;font-size:12px;}
+.imp-h select,.imp-h input{border:1px solid #cbd5e1;border-radius:8px;padding:4px 6px;font:inherit;font-size:12.5px;}
+.imp-h .per{font-weight:700;color:#1e3c72;} .imp-h .tools{margin-left:auto;display:flex;gap:4px;}
+.imp-h .tools button{border:1px solid #cbd5e1;background:#fff;border-radius:6px;width:26px;height:22px;cursor:pointer;color:#1e3c72;} .imp-h .tools button.x{color:#dc2626;}
+.imp-d{display:inline-block;font-size:10.5px;font-weight:900;border-radius:8px;padding:0 6px;margin-left:2px;} .imp-d.good{background:#dcfce7;color:#15803d;} .imp-d.bad{background:#fee2e2;color:#b91c1c;} .imp-d.eq{background:#f1f5f9;color:#64748b;}
+.imp-sum{width:100%;border-collapse:collapse;background:#fff;font-size:12.5px;margin-bottom:16px;} .imp-sum th,.imp-sum td{border:1px solid #e2e8f0;padding:6px 8px;text-align:center;} .imp-sum th{background:#1e3c72;color:#fff;} .imp-sum td.l{text-align:left;}
+@media print{.imp-h select,.imp-h input,.imp-h .tools{display:none;}}
 .lay-ins{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:12px;}
 @media (max-width:1100px){.lay-ins{grid-template-columns:repeat(3,minmax(0,1fr));}}
 @media (max-width:600px){.lay-ins{grid-template-columns:repeat(2,minmax(0,1fr));}}
@@ -3156,6 +3166,7 @@ function f2qToggle(k, v){ const h = new Set(f2qGet('hide','').split(',').filter(
 const F2_VIEWS = [
   { id:'dash',  icon:'📊', sec:'f2.sec.dash' },
   { id:'layout', icon:'🗺️', sec:'f2.sec.dash' },
+  { id:'improve', icon:'📈', sec:'f2.sec.dash' },
   { id:'qty',   icon:'📦', sec:'f2.sec.dash' },
   { id:'daily', icon:'📅', sec:'f2.sec.rep' },
   { id:'week',  icon:'📄', sec:'f2.sec.rep' },
@@ -3661,6 +3672,7 @@ function renderF2(){
   else if(F2_VIEW==='link') body = (F2.loading && !F2.pm.length) ? `<div class="empty">${T('f2.loading')}</div>` : f2LinkView();
   else if(F2_VIEW==='qty') body = (F2.loading && !F2.pd.length && !F2.pm.length) ? `<div class="empty">${T('f2.loading')}</div>` : f2Qty(week);
   else if(F2_VIEW==='pqc') body = pqReport(week);
+  else if(F2_VIEW==='improve') body = (F2.loading && !F2.pd.length) ? `<div class="empty">${T('f2.loading')}</div>` : f2ImproveView();
   else if(F2_VIEW==='layout'){ body = f2LayoutView(week); setTimeout(()=>{ layPopsRefresh(); layZoomDecorate(); layZoomSync(); }, 0); }
   else if(F2_VIEW[0]==='p') body = f2pStatus() || f2pReport(F2_VIEW.slice(1), week);
   else if(st) body = `<div class="sec-title">${T('grp.fac2')} · ${week||''}</div>${st}`;
@@ -4469,6 +4481,81 @@ document.addEventListener('fullscreenchange', () => { const bg = document.getEle
   setTimeout(layZoomSync, 80); });
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && LAY_ZOOM && !document.fullscreenElement) layZoomClose(); });
 window.addEventListener('resize', () => { if(LAY_ZOOM) layZoomSync(); });
+/* =====================================================================
+   개선현황 — 검사공정별 수량(①⑤⑧⑨⑩⑬)을 기간별로 한 줄씩 쌓아 비교
+   · 줄마다 기간(주차 선택 또는 날짜 직접)을 정한다 · [+ 기간 추가] 로 아래에 줄 추가
+   · 각 칸 = %NG · Total · OK · NG + 바로 윗줄 대비 증감(%p) — 개선(▼ 초록) / 악화(▲ 빨강)
+   · 설정은 브라우저에 저장 (stc_f2_imp_rows)
+   ===================================================================== */
+function impDays(){ return [...new Set((F2.pd||[]).map(r=>String(r['일자']).slice(0,10)).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)))].sort(); }
+function impWeeks(){ const m = {}; (F2.pd||[]).forEach(r=>{ const w = String(r['주차']||'').trim(), d = String(r['일자']).slice(0,10); if(!w || !/^\d{4}-/.test(d)) return;
+    const o = m[w] || (m[w] = { w, f:d, t:d }); if(d<o.f) o.f = d; if(d>o.t) o.t = d; });
+  return Object.values(m).sort((a,b)=>wkNum(a.w)-wkNum(b.w)); }
+function impRows(){ let a = null; try{ a = JSON.parse(localStorage.getItem('stc_f2_imp_rows')||'null'); }catch(e){}
+  if(Array.isArray(a) && a.length) return a;
+  const W = impWeeks(); return W.slice(-2).map(o=>({ f:o.f, t:o.t, w:o.w })); }
+function impSave(a){ try{ localStorage.setItem('stc_f2_imp_rows', JSON.stringify(a)); }catch(e){} renderF2(); }
+function impSet(i, k, v){ const a = impRows(); if(!a[i]) return; a[i][k] = v; if(k!=='w') a[i].w = ''; if(a[i].f && a[i].t && a[i].f > a[i].t){ const x = a[i].f; a[i].f = a[i].t; a[i].t = x; } impSave(a); }
+function impWeek(i, w){ const a = impRows(), o = impWeeks().find(x=>x.w===w); if(!a[i] || !o) return; a[i] = { f:o.f, t:o.t, w }; impSave(a); }
+function impAdd(){ const a = impRows(), W = impWeeks(), last = a[a.length-1];
+  const nx = last ? W.find(o=>o.f > last.t) : null, o = nx || W[W.length-1];
+  a.push(o ? { f:o.f, t:o.t, w:o.w } : { f:'', t:'', w:'' }); impSave(a); }
+function impDel(i){ const a = impRows(); a.splice(i,1); impSave(a.length ? a : []); }
+function impMove(i, d){ const a = impRows(), j = i + d; if(j<0 || j>=a.length) return; [a[i], a[j]] = [a[j], a[i]]; impSave(a); }
+function impReset(){ try{ localStorage.removeItem('stc_f2_imp_rows'); }catch(e){} renderF2(); }
+/* 기간 [f, t] 의 공정별 수량 — 배치도 검사공정 칸과 같은 원천 · 같은 계산 */
+function impStats(f, t){
+  const inR = d => { d = String(d||'').slice(0,10); return d >= f && d <= t; };
+  const sum = (rows, k) => rows.reduce((a,r)=>a+f2n(r[k]),0);
+  const iq = (F2.iqc||[]).filter(r=>inR(r['입고일자'])), iqNg = iq.filter(layIqcNg);
+  const pd = (F2.pd||[]).filter(r=>r['공정']==='MCT' && inR(r['일자']));
+  const pq = (F2.pqRaw||[]).filter(r=>inR(r['일자'])), oq = (F2.oqRaw||[]).filter(r=>inR(r['일자']));
+  const days = new Set(pd.map(r=>String(r['일자']).slice(0,10)));
+  return { days: days.size,
+    1:  iq.length ? { t:sum(iq,'수량'), n:sum(iqNg,'수량'), lots:iq.length, nl:iqNg.length } : null,
+    8:  pd.length ? { t:sum(pd,"Total Q'ty"), n:sum(pd,"NG Q'ty") } : null,
+    9:  pq.length ? { t:sum(pq,"Total Q'ty"), n:sum(pq,"NG Q'ty") } : null,
+    13: oq.length ? { t:sum(oq,"Total Q'ty"), n:sum(oq,"NG Q'ty") } : null };
+}
+function f2ImproveView(){
+  const tg = f2Target(), rows = impRows(), W = impWeeks(), D = impDays();
+  const STEPS = [ { n:1, k:'iqc', t:'IQC 수입검사' }, { n:5, k:'all', t:'쇼트 후 검사', none:true }, { n:8, k:'all', t:'MC 가공' },
+                  { n:9, k:'all', t:'PQC 공정검사' }, { n:10, k:'half', t:'MARKING 50% 검사', none:true }, { n:13, k:'all', t:'OQC 출하검사' } ];
+  let prev = null;
+  const body = rows.map((R, i)=>{
+    const S = (R.f && R.t) ? impStats(R.f, R.t) : null;
+    const wsel = `<select onchange="impWeek(${i}, this.value)"><option value="">주차 선택</option>${W.slice().reverse().map(o=>`<option value="${o.w}"${o.w===R.w?' selected':''}>${o.w} (${o.f.slice(5)}~${o.t.slice(5)})</option>`).join('')}</select>`;
+    const head = `<div class="imp-h"><b class="no">${i+1}</b>${wsel}
+        <input type="date" value="${R.f||''}" min="${D[0]||''}" max="${D[D.length-1]||''}" onchange="impSet(${i},'f',this.value)"> ~
+        <input type="date" value="${R.t||''}" min="${D[0]||''}" max="${D[D.length-1]||''}" onchange="impSet(${i},'t',this.value)">
+        <span class="per">${S ? `${R.w ? R.w+' · ' : ''}${R.f} ~ ${R.t} · ${T('f2.workDays',{n:S.days})}` : '기간을 정해 주세요'}</span>
+        <span class="tools"><button onclick="impMove(${i},-1)" title="위로 이동">▲</button><button onclick="impMove(${i},1)" title="아래로 이동">▼</button><button class="x" onclick="impDel(${i})" title="이 줄 삭제">✕</button></span></div>`;
+    const tiles = STEPS.map(st=>{
+      const C = S && !st.none ? S[st.n] : null, r = C && C.t ? C.n/C.t*100 : null;
+      const P = prev && !st.none ? prev[st.n] : null, pr = P && P.t ? P.n/P.t*100 : null;
+      const cls = st.none ? 'na' : r==null ? 'na' : r<=tg ? 'ok' : 'ng';
+      let dl = '';
+      if(r!=null && pr!=null){ const d = r - pr; dl = Math.abs(d) < 0.005 ? `<span class="imp-d eq">± 0.00%p</span>`
+        : `<span class="imp-d ${d<0?'good':'bad'}">${d<0?'▼':'▲'} ${Math.abs(d).toFixed(2)}%p</span>`; }
+      return `<div class="t ${cls}"><small><span class="n" style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</span>${st.t}</small>`
+        + (r!=null ? `<b style="color:${f2St(r).c}">${r.toFixed(2)}%</b>${dl}<div class="q"><span>Total<i>${fmt(C.t)}</i></span><span>OK<i style="color:#15803d">${fmt(C.t-C.n)}</i></span><span>NG<i style="color:${C.n?'#b91c1c':'#94a3b8'}">${fmt(C.n)}</i></span></div>`
+          + (st.n===1 ? `<div class="q"><span>로트 NG<i>${C.nl} / ${C.lots}</i></span></div>` : '')
+          : `<b class="na">–</b><div class="q"><span>${st.none ? '연결 대기' : '기록 없음'}</span></div>`) + `</div>`; }).join('');
+    prev = S;
+    return `<div class="imp-row">${head}<div class="lay-ins">${tiles}</div></div>`; }).join('');
+  /* 아래 요약표 — 줄(기간) × 공정 %NG */
+  const sumT = rows.length ? `<table class="imp-sum"><thead><tr><th>#</th><th>기간 범위</th>${STEPS.filter(s=>!s.none).map(s=>`<th>${s.n}. ${s.t}</th>`).join('')}</tr></thead><tbody>${rows.map((R,i)=>{
+      const S = (R.f && R.t) ? impStats(R.f, R.t) : null;
+      return `<tr><td>${i+1}</td><td class="l">${R.w ? R.w+' · ' : ''}${R.f||'–'} ~ ${R.t||'–'}</td>${STEPS.filter(s=>!s.none).map(s=>{ const C = S && S[s.n]; const r = C && C.t ? C.n/C.t*100 : null;
+        return `<td style="color:${r==null?'#94a3b8':f2St(r).c};font-weight:800">${r==null?'–':r.toFixed(2)+'%'}</td>`; }).join('')}</tr>`; }).join('')}</tbody></table>` : '';
+  return layTr(`<div class="sec-title">FAC2 개선현황 · 검사공정별 불량 (기간별 비교)</div>
+    <div class="imp-top f2-noprint"><span>줄마다 기간을 정하고 <b>+ 기간 추가</b>로 아래에 쌓아 가면, 각 칸에 바로 윗줄 대비 증감(▼ 개선 · ▲ 악화)이 표시됩니다.</span>
+      <button class="btn-f2" onclick="impAdd()">＋ 기간 추가</button><button class="btn-f2 alt" onclick="impReset()">↺ 처음으로</button><button class="btn-f2 alt" onclick="window.print()">인쇄 / PDF</button></div>
+    <div class="lay-insh">검사공정별 수량 <span>(Total · OK · NG · %NG — ① = 수량 EA 기준 · 목표 ${tg}%)</span></div>
+    ${body || '<div class="card empty" style="padding:14px">＋ 기간 추가 를 눌러 비교할 기간을 넣어 주세요.</div>'}
+    ${sumT ? `<div class="sec-title">기간별 %NG 요약</div>${sumT}` : ''}`, true);
+}
+
 /* ---- 설비 마스터 (구글시트 MC · MCT 탭) — 설비 → Part name(모델) · OP ---- */
 const LAY_MASTER_DEF = {
   MC:[['MC 2','HOUSING REAR','10-20'],['MC 3','HOUSING REAR','30-70'],['MC 4','HOUSING REAR A,B','10-20'],['MC 5','HOUSING REAR A,B','10-20'],['MC 6','HOUSING REAR','30-70'],
@@ -4585,7 +4672,7 @@ const LAY_TR = [
  ['공정 순서','Process sequence','ลำดับกระบวนการ'],
  ['원본: FAC 2 Layout 도면 (공정 번호 · 검사 구분 · NEW = 신설 검사). 설비 %NG = F2_생산실적 NG ÷ Total (전 OP 합) · 목표','Source: FAC 2 Layout drawing (step no. · inspection type · NEW = new inspection). Machine %NG = F2_생산실적 NG ÷ Total (all OPs) · target','ที่มา: แบบ FAC 2 Layout (เลขขั้นตอน · ประเภทการตรวจ · NEW = จุดตรวจใหม่) %NG เครื่อง = NG ÷ Total ของ F2_생산실적 (ทุก OP) · เป้า'],
  ['소재 흐름','Material flow','การไหลวัตถุดิบ'],['가공 공급','Machining feed','ป้อนงานกลึง'],['가공 완료','Machined','กลึงเสร็จ'],['기록 없음','No data','ไม่มีข้อมูล'],
- ['CNC 구역','CNC area','โซน CNC'],['기간 지정','Custom range','กำหนดช่วง'],['적용','Apply','ใช้'],['선택 해제','Clear','ยกเลิก'],['▶ 최근 7일로 보기','▶ View last 7 days','▶ ดู 7 วันล่าสุด'],['시트 기록 :','Sheet data:','ข้อมูลในชีต:'],['기록 없음 · 시트','No data · sheet','ไม่มีข้อมูล · ชีต'],['배치도 안 불량유형 패널 보이기 / 숨기기','Show / hide defect-type panel on the layout','แสดง / ซ่อนแผงประเภทของเสียบนผัง'],['검사공정별 수량','Quantity by inspection step','จำนวนตามขั้นตอนตรวจ'],['(Total · OK · NG · %NG — ① = 수량 EA 기준)','(Total · OK · NG · %NG — ① = by qty EA)','(Total · OK · NG · %NG — ① = ตามจำนวน EA)'],['↺ 순서 초기화','↺ Reset order','↺ รีเซ็ตลำดับ'],['블록 순서를 처음 상태로','Reset block order','รีเซ็ตลำดับบล็อก'],['위로 이동','Move up','เลื่อนขึ้น'],['아래로 이동','Move down','เลื่อนลง'],['상세 보기','Details','รายละเอียด'],['공정별 수량 흐름','Quantity by process','จำนวนตามกระบวนการ'],['① = 수량(EA) 기준 · OK = Total − NG · 행 클릭 = 상세','① = by qty (EA) · OK = Total − NG · click row = detail','① = ตามจำนวน (EA) · OK = Total − NG · คลิกแถว = รายละเอียด'],['MARKING 50%','MARKING 50%','MARKING 50%'],['IQC 수입','IQC incoming','IQC รับเข้า'],['쇼트 후','After shot','หลังยิงทราย'],['PQC 공정','PQC in-process','PQC ระหว่างผลิต'],['OQC 출하','OQC outgoing','OQC ส่งออก'],['연결 대기','not linked','ยังไม่เชื่อม'],['공정명','Process','กระบวนการ'],['공급 (Flow line)','Feed (Flow line)','ป้อน (Flow line)'],["미사용 (마스터 'X')","Unused (master 'X')","ไม่ใช้ (มาสเตอร์ 'X')"],['미사용','Unused','ไม่ใช้'],
+ ['CNC 구역','CNC area','โซน CNC'],['FAC2 개선현황 · 검사공정별 불량 (기간별 비교)','FAC2 improvement · defects by inspection step (period comparison)','สถานะการปรับปรุง FAC2 · ของเสียตามขั้นตอนตรวจ (เทียบช่วงเวลา)'],['줄마다 기간을 정하고','Set a period on each row,','กำหนดช่วงในแต่ละแถว'],['로 아래에 쌓아 가면, 각 칸에 바로 윗줄 대비 증감(▼ 개선 · ▲ 악화)이 표시됩니다.',' to stack rows below — each tile shows the change vs. the row above (▼ better · ▲ worse).',' เพื่อเพิ่มแถว — แต่ละช่องแสดงการเปลี่ยนแปลงเทียบแถวบน (▼ ดีขึ้น · ▲ แย่ลง)'],['＋ 기간 추가','＋ Add period','＋ เพิ่มช่วง'],['+ 기간 추가','+ Add period','+ เพิ่มช่วง'],['↺ 처음으로','↺ Reset','↺ รีเซ็ต'],['주차 선택','Pick week','เลือกสัปดาห์'],['기간을 정해 주세요','Set the period','กำหนดช่วงเวลา'],['이 줄 삭제','Delete row','ลบแถว'],['로트 NG','Lot NG','ล็อต NG'],['기간별 %NG 요약','%NG by period','สรุป %NG ตามช่วง'],['기간 범위','Period','ช่วงเวลา'],['① = 수량 EA 기준 · 목표','① = by qty EA · target','① = ตามจำนวน EA · เป้า'],['기간 지정','Custom range','กำหนดช่วง'],['적용','Apply','ใช้'],['선택 해제','Clear','ยกเลิก'],['▶ 최근 7일로 보기','▶ View last 7 days','▶ ดู 7 วันล่าสุด'],['시트 기록 :','Sheet data:','ข้อมูลในชีต:'],['기록 없음 · 시트','No data · sheet','ไม่มีข้อมูล · ชีต'],['배치도 안 불량유형 패널 보이기 / 숨기기','Show / hide defect-type panel on the layout','แสดง / ซ่อนแผงประเภทของเสียบนผัง'],['검사공정별 수량','Quantity by inspection step','จำนวนตามขั้นตอนตรวจ'],['(Total · OK · NG · %NG — ① = 수량 EA 기준)','(Total · OK · NG · %NG — ① = by qty EA)','(Total · OK · NG · %NG — ① = ตามจำนวน EA)'],['↺ 순서 초기화','↺ Reset order','↺ รีเซ็ตลำดับ'],['블록 순서를 처음 상태로','Reset block order','รีเซ็ตลำดับบล็อก'],['위로 이동','Move up','เลื่อนขึ้น'],['아래로 이동','Move down','เลื่อนลง'],['상세 보기','Details','รายละเอียด'],['공정별 수량 흐름','Quantity by process','จำนวนตามกระบวนการ'],['① = 수량(EA) 기준 · OK = Total − NG · 행 클릭 = 상세','① = by qty (EA) · OK = Total − NG · click row = detail','① = ตามจำนวน (EA) · OK = Total − NG · คลิกแถว = รายละเอียด'],['MARKING 50%','MARKING 50%','MARKING 50%'],['IQC 수입','IQC incoming','IQC รับเข้า'],['쇼트 후','After shot','หลังยิงทราย'],['PQC 공정','PQC in-process','PQC ระหว่างผลิต'],['OQC 출하','OQC outgoing','OQC ส่งออก'],['연결 대기','not linked','ยังไม่เชื่อม'],['공정명','Process','กระบวนการ'],['공급 (Flow line)','Feed (Flow line)','ป้อน (Flow line)'],["미사용 (마스터 'X')","Unused (master 'X')","ไม่ใช้ (มาสเตอร์ 'X')"],['미사용','Unused','ไม่ใช้'],
  ['선택 기간 생산 기록 없음','No output in this period','ไม่มีผลผลิตในช่วงนี้'],['클릭 = 설비 메모창','click = machine card','คลิก = การ์ดเครื่อง'],
  ['MC·MCT 가공 불량','MC·MCT machining defects','ของเสียงานกลึง MC·MCT'],['PQC 검사 불량','PQC inspection defects','ของเสียตรวจ PQC'],['선택 기간 데이터 없음','No data in this period','ไม่มีข้อมูลในช่วงนี้'],
  ['불량 없음','No defects','ไม่มีของเสีย'],['검사 상세 보기','View inspection details','ดูรายละเอียดการตรวจ'],['검사 상세 →','Details →','รายละเอียด →'],
@@ -4800,6 +4887,9 @@ function layMcHtml(mc){
     <div class="ft"><button onclick="layMcMemo('${mc}')">📝 메모 쓰기</button><button class="alt" onclick="layPopsRefresh()">🔄 새로고침</button></div>`;
 }
 Object.assign(I18N.ko, { 'f2.v.layout':'FAC2 Layout (배치도)' });
+Object.assign(I18N.ko, { 'f2.v.improve':'개선현황 (공정별 불량)' });
+Object.assign(I18N.en, { 'f2.v.improve':'Improvement status' });
+Object.assign(I18N.th, { 'f2.v.improve':'สถานะการปรับปรุง' });
 Object.assign(I18N.en, { 'f2.v.layout':'FAC2 layout' });
 Object.assign(I18N.th, { 'f2.v.layout':'ผังโรงงาน FAC2' });
 if(!Object.prototype.hasOwnProperty.call(I18N.th,'f2.workDays')) I18N.th['f2.workDays'] = 'ทำงาน {n} วัน';
