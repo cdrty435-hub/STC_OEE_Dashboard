@@ -703,14 +703,32 @@ table.eq td.name{font-weight:700;}
 .lay-rng button{border:0;background:#1e3c72;color:#fff;border-radius:8px;padding:5px 12px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;}
 .lay-top .per{font-size:12.5px;color:#475569;font-weight:600;}
 .imp-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px;color:#475569;} .imp-top > span{margin-right:auto;}
-.imp-row{background:#fff;border:1px solid #dbe3ee;border-radius:12px;padding:10px 12px 2px;margin-bottom:12px;}
-.imp-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;font-size:12.5px;color:#475569;}
-.imp-h .no{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#1e3c72;color:#fff;font-size:12px;}
-.imp-h select,.imp-h input{border:1px solid #cbd5e1;border-radius:8px;padding:4px 6px;font:inherit;font-size:12.5px;}
-.imp-h .per{font-weight:700;color:#1e3c72;} .imp-h .tools{margin-left:auto;display:flex;gap:4px;}
-.imp-h .tools button{border:1px solid #cbd5e1;background:#fff;border-radius:6px;width:26px;height:22px;cursor:pointer;color:#1e3c72;} .imp-h .tools button.x{color:#dc2626;}
-.imp-d{display:inline-block;font-size:10.5px;font-weight:900;border-radius:8px;padding:0 6px;margin-left:2px;} .imp-d.good{background:#dcfce7;color:#15803d;} .imp-d.bad{background:#fee2e2;color:#b91c1c;} .imp-d.eq{background:#f1f5f9;color:#64748b;}
-.imp-sum{width:100%;border-collapse:collapse;background:#fff;font-size:12.5px;margin-bottom:16px;} .imp-sum th,.imp-sum td{border:1px solid #e2e8f0;padding:6px 8px;text-align:center;} .imp-sum th{background:#1e3c72;color:#fff;} .imp-sum td.l{text-align:left;}
+.imp-row{display:grid;grid-template-columns:200px minmax(0,1fr);gap:8px;align-items:stretch;background:#fff;border:1px solid #dbe3ee;border-radius:10px;padding:5px 6px;margin-bottom:6px;}
+.imp-h{display:flex;flex-direction:column;justify-content:center;gap:3px;font-size:11.5px;color:#475569;}
+.imp-h .r1,.imp-h .r2{display:flex;align-items:center;gap:4px;}
+.imp-h .no{flex:none;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#1e3c72;color:#fff;font-size:11px;}
+.imp-h select{flex:1;min-width:0;border:1px solid #cbd5e1;border-radius:6px;padding:2px 4px;font:inherit;font-size:11.5px;}
+.imp-h input{flex:1;min-width:0;border:1px solid #cbd5e1;border-radius:6px;padding:1px 3px;font:inherit;font-size:11px;}
+.imp-h .per{font-weight:700;color:#1e3c72;font-size:11px;} .imp-h .tools{display:flex;gap:2px;}
+.imp-h .tools button{border:1px solid #cbd5e1;background:#fff;border-radius:5px;width:20px;height:20px;padding:0;font-size:9px;cursor:pointer;color:#1e3c72;} .imp-h .tools button.x{color:#dc2626;}
+.lay-ins.imp-t{margin:0;gap:6px;}
+.lay-ins.imp-t .t{padding:4px 8px;border-radius:8px;}
+.lay-ins.imp-t small{font-size:10.5px;} .lay-ins.imp-t small .n{width:15px;height:15px;font-size:8.5px;}
+.lay-ins.imp-t .m{display:flex;align-items:baseline;gap:4px;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;} .lay-ins.imp-t .m b{font-size:16px;margin:0;line-height:1.25;}
+.lay-ins.imp-t .q{font-size:10px;gap:5px;margin-top:0;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;} .lay-ins.imp-t .q i{margin-left:2px;}
+.lay-ins.imp-t .m .lot{font-size:9.5px;color:#64748b;font-weight:700;}
+@media (max-width:1100px){.imp-row{grid-template-columns:1fr;}}
+.imp-d{display:inline-block;font-size:10px;font-weight:900;border-radius:8px;padding:0 6px;margin-left:2px;} .imp-d.good{background:#dcfce7;color:#15803d;} .imp-d.bad{background:#fee2e2;color:#b91c1c;} .imp-d.eq{background:#f1f5f9;color:#64748b;}
+.imp-sum{background:#fff;border:1px solid #dbe3ee;border-radius:10px;padding:4px 6px;margin-bottom:16px;}
+.imp-srow{display:grid;grid-template-columns:200px minmax(0,1fr);gap:8px;align-items:center;border-bottom:1px solid #eef2f7;padding:3px 0;font-size:12px;}
+.imp-srow:last-child{border-bottom:0;} .imp-srow.hd{font-weight:800;color:#1e3c72;border-bottom:2px solid #c7d2e3;}
+.imp-srow .h{display:flex;align-items:center;gap:5px;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.imp-srow .h .no{flex:none;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#1e3c72;color:#fff;font-size:10px;}
+.imp-sc{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;}
+.imp-sc .c{text-align:center;font-weight:800;font-variant-numeric:tabular-nums;} .imp-sc .c.na{color:#cbd5e1!important;}
+.imp-srow.hd .c{font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;overflow:hidden;}
+.imp-srow.hd .c .n{flex:none;display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;font-size:8.5px;}
+@media (max-width:1100px){.imp-srow{grid-template-columns:150px minmax(0,1fr);}}
 @media print{.imp-h select,.imp-h input,.imp-h .tools{display:none;}}
 .lay-ins{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:12px;}
 @media (max-width:1100px){.lay-ins{grid-template-columns:repeat(3,minmax(0,1fr));}}
@@ -4525,11 +4543,9 @@ function f2ImproveView(){
   const body = rows.map((R, i)=>{
     const S = (R.f && R.t) ? impStats(R.f, R.t) : null;
     const wsel = `<select onchange="impWeek(${i}, this.value)"><option value="">주차 선택</option>${W.slice().reverse().map(o=>`<option value="${o.w}"${o.w===R.w?' selected':''}>${o.w} (${o.f.slice(5)}~${o.t.slice(5)})</option>`).join('')}</select>`;
-    const head = `<div class="imp-h"><b class="no">${i+1}</b>${wsel}
-        <input type="date" value="${R.f||''}" min="${D[0]||''}" max="${D[D.length-1]||''}" onchange="impSet(${i},'f',this.value)"> ~
-        <input type="date" value="${R.t||''}" min="${D[0]||''}" max="${D[D.length-1]||''}" onchange="impSet(${i},'t',this.value)">
-        <span class="per">${S ? `${R.w ? R.w+' · ' : ''}${R.f} ~ ${R.t} · ${T('f2.workDays',{n:S.days})}` : '기간을 정해 주세요'}</span>
-        <span class="tools"><button onclick="impMove(${i},-1)" title="위로 이동">▲</button><button onclick="impMove(${i},1)" title="아래로 이동">▼</button><button class="x" onclick="impDel(${i})" title="이 줄 삭제">✕</button></span></div>`;
+    const head = `<div class="imp-h"><div class="r1"><b class="no">${i+1}</b>${wsel}<span class="tools"><button onclick="impMove(${i},-1)" title="위로 이동">▲</button><button onclick="impMove(${i},1)" title="아래로 이동">▼</button><button class="x" onclick="impDel(${i})" title="이 줄 삭제">✕</button></span></div>
+        <div class="r2"><input type="date" value="${R.f||''}" min="${D[0]||''}" max="${D[D.length-1]||''}" onchange="impSet(${i},'f',this.value)">~<input type="date" value="${R.t||''}" min="${D[0]||''}" max="${D[D.length-1]||''}" onchange="impSet(${i},'t',this.value)"></div>
+        <div class="per">${S ? `${R.w ? R.w+' · ' : ''}${T('f2.workDays',{n:S.days})}` : '기간을 정해 주세요'}</div></div>`;
     const tiles = STEPS.map(st=>{
       const C = S && !st.none ? S[st.n] : null, r = C && C.t ? C.n/C.t*100 : null;
       const P = prev && !st.none ? prev[st.n] : null, pr = P && P.t ? P.n/P.t*100 : null;
@@ -4537,17 +4553,19 @@ function f2ImproveView(){
       let dl = '';
       if(r!=null && pr!=null){ const d = r - pr; dl = Math.abs(d) < 0.005 ? `<span class="imp-d eq">± 0.00%p</span>`
         : `<span class="imp-d ${d<0?'good':'bad'}">${d<0?'▼':'▲'} ${Math.abs(d).toFixed(2)}%p</span>`; }
-      return `<div class="t ${cls}"><small><span class="n" style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</span>${st.t}</small>`
-        + (r!=null ? `<b style="color:${f2St(r).c}">${r.toFixed(2)}%</b>${dl}<div class="q"><span>Total<i>${fmt(C.t)}</i></span><span>OK<i style="color:#15803d">${fmt(C.t-C.n)}</i></span><span>NG<i style="color:${C.n?'#b91c1c':'#94a3b8'}">${fmt(C.n)}</i></span></div>`
-          + (st.n===1 ? `<div class="q"><span>로트 NG<i>${C.nl} / ${C.lots}</i></span></div>` : '')
-          : `<b class="na">–</b><div class="q"><span>${st.none ? '연결 대기' : '기록 없음'}</span></div>`) + `</div>`; }).join('');
+      return `<div class="t ${cls}"${st.n===1 && C ? ` title="로트 NG ${C.nl} / ${C.lots}"` : ''}><small><span class="n" style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</span>${st.t}</small>`
+        + (r!=null ? `<div class="m"><b style="color:${f2St(r).c}">${r.toFixed(2)}%</b>${dl}</div><div class="q"><span>T<i>${fmt(C.t)}</i></span><span>OK<i style="color:#15803d">${fmt(C.t-C.n)}</i></span><span>NG<i style="color:${C.n?'#b91c1c':'#94a3b8'}">${fmt(C.n)}</i></span></div>`
+          : `<div class="m"><b class="na">–</b></div><div class="q"><span>${st.none ? '연결 대기' : '기록 없음'}</span></div>`) + `</div>`; }).join('');
     prev = S;
-    return `<div class="imp-row">${head}<div class="lay-ins">${tiles}</div></div>`; }).join('');
+    return `<div class="imp-row">${head}<div class="lay-ins imp-t">${tiles}</div></div>`; }).join('');
   /* 아래 요약표 — 줄(기간) × 공정 %NG */
-  const sumT = rows.length ? `<table class="imp-sum"><thead><tr><th>#</th><th>기간 범위</th>${STEPS.filter(s=>!s.none).map(s=>`<th>${s.n}. ${s.t}</th>`).join('')}</tr></thead><tbody>${rows.map((R,i)=>{
-      const S = (R.f && R.t) ? impStats(R.f, R.t) : null;
-      return `<tr><td>${i+1}</td><td class="l">${R.w ? R.w+' · ' : ''}${R.f||'–'} ~ ${R.t||'–'}</td>${STEPS.filter(s=>!s.none).map(s=>{ const C = S && S[s.n]; const r = C && C.t ? C.n/C.t*100 : null;
-        return `<td style="color:${r==null?'#94a3b8':f2St(r).c};font-weight:800">${r==null?'–':r.toFixed(2)+'%'}</td>`; }).join('')}</tr>`; }).join('')}</tbody></table>` : '';
+  /* 아래 요약 — 위 칸들과 같은 격자(기간 200px + 공정 6칸)로 맞춰 세로로 비교 */
+  const cell = (r, cls) => `<div class="c ${cls||''}" style="color:${r==null?'#94a3b8':f2St(r).c}">${r==null?'–':r.toFixed(2)+'%'}</div>`;
+  const sumT = rows.length ? `<div class="imp-sum">
+      <div class="imp-srow hd"><div class="h">기간 범위</div><div class="imp-sc">${STEPS.map(st=>`<div class="c"><span class="n" style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</span>${st.t}</div>`).join('')}</div></div>
+      ${rows.map((R,i)=>{ const S = (R.f && R.t) ? impStats(R.f, R.t) : null;
+        return `<div class="imp-srow"><div class="h"><b class="no">${i+1}</b>${R.w ? R.w+' · ' : ''}${(R.f||'–').slice(2)} ~ ${(R.t||'–').slice(R.f && R.t && R.f.slice(0,4)===R.t.slice(0,4) ? 5 : 2)}</div><div class="imp-sc">${STEPS.map(st=>{ const C = S && !st.none ? S[st.n] : null; return cell(C && C.t ? C.n/C.t*100 : null, st.none?'na':''); }).join('')}</div></div>`; }).join('')}
+    </div>` : '';
   return layTr(`<div class="sec-title">FAC2 개선현황 · 검사공정별 불량 (기간별 비교)</div>
     <div class="imp-top f2-noprint"><span>줄마다 기간을 정하고 <b>+ 기간 추가</b>로 아래에 쌓아 가면, 각 칸에 바로 윗줄 대비 증감(▼ 개선 · ▲ 악화)이 표시됩니다.</span>
       <button class="btn-f2" onclick="impAdd()">＋ 기간 추가</button><button class="btn-f2 alt" onclick="impReset()">↺ 처음으로</button><button class="btn-f2 alt" onclick="window.print()">인쇄 / PDF</button></div>
