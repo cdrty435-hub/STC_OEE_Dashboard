@@ -712,6 +712,12 @@ table.eq td.name{font-weight:700;}
 .imp-h .per{font-weight:900;color:#0f2a5c;font-size:14px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} .imp-h .tools{display:flex;gap:2px;}
 .imp-h .tools button{border:1px solid #cbd5e1;background:#fff;border-radius:5px;width:20px;height:20px;padding:0;font-size:9px;cursor:pointer;color:#1e3c72;} .imp-h .tools button.x{color:#dc2626;}
 .lay-ins.imp-t{margin:0;gap:6px;}
+.lay-ins.imp-t .t.has-fs{position:relative;padding-right:66px;}
+.lay-ins.imp-t .t.has-fs .q .ok{display:none;}
+.imp-t .fs{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:3px;width:58px;}
+.imp-t .fs > div{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1;border-radius:6px;padding:1px 5px;font-variant-numeric:tabular-nums;}
+.imp-t .fs span{font-size:8px;font-weight:900;letter-spacing:.02em;} .imp-t .fs b{font-size:11px;font-weight:900;}
+.imp-t .fs .f1{background:#fff1e6;color:#c2410c;} .imp-t .fs .f2{background:#f3e8ff;color:#7c3aed;}
 .lay-ins.imp-t .t{padding:4px 8px;border-radius:8px;}
 .lay-ins.imp-t small{font-size:10.5px;} .lay-ins.imp-t small .n{width:15px;height:15px;font-size:8.5px;}
 .lay-ins.imp-t .m{display:flex;align-items:baseline;gap:4px;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;} .lay-ins.imp-t .m b{font-size:16px;margin:0;line-height:1.25;}
@@ -4542,11 +4548,14 @@ function impStats(f, t){
   const pd = (F2.pd||[]).filter(r=>r['공정']==='MCT' && inR(r['일자']));
   const pq = (F2.pqRaw||[]).filter(r=>inR(r['일자'])), oq = (F2.oqRaw||[]).filter(r=>inR(r['일자']));
   const days = new Set(pd.map(r=>String(r['일자']).slice(0,10)));
+  /* FAC1(다캐 원인) / FAC2(가공 원인) 분리 — ⑧ = F2_불량상세 MCT NG 의 계통 · ⑨⑬ = 원본 '다캐불량' · '가공불량' 열 · ① = 수입 불합격은 모두 FAC1 */
+  const det = (F2.det||[]).filter(r=>r['공정']==='MCT' && r['구분']==='NG' && inR(r['일자']));
+  const dg = g => det.filter(r=>r['계통']===g).reduce((a,r)=>a+f2n(r['수량']),0);
   return { days: days.size,
-    1:  iq.length ? { t:sum(iq,'수량'), n:sum(iqNg,'수량'), lots:iq.length, nl:iqNg.length } : null,
-    8:  pd.length ? { t:sum(pd,"Total Q'ty"), n:sum(pd,"NG Q'ty") } : null,
-    9:  pq.length ? { t:sum(pq,"Total Q'ty"), n:sum(pq,"NG Q'ty") } : null,
-    13: oq.length ? { t:sum(oq,"Total Q'ty"), n:sum(oq,"NG Q'ty") } : null };
+    1:  iq.length ? { t:sum(iq,'수량'), n:sum(iqNg,'수량'), lots:iq.length, nl:iqNg.length, f1:sum(iqNg,'수량'), f2:0 } : null,
+    8:  pd.length ? { t:sum(pd,"Total Q'ty"), n:sum(pd,"NG Q'ty"), f1:dg('다캐불량'), f2:dg('가공불량') } : null,
+    9:  pq.length ? { t:sum(pq,"Total Q'ty"), n:sum(pq,"NG Q'ty"), f1:sum(pq,'다캐불량'), f2:sum(pq,'가공불량') } : null,
+    13: oq.length ? { t:sum(oq,"Total Q'ty"), n:sum(oq,"NG Q'ty"), f1:sum(oq,'다캐불량'), f2:sum(oq,'가공불량') } : null };
 }
 function f2ImproveView(){
   const tg = f2Target(), rows = impRows(), W = impWeeks(), D = impDays();
@@ -4566,8 +4575,9 @@ function f2ImproveView(){
       let dl = '';
       if(r!=null && pr!=null){ const d = r - pr; dl = Math.abs(d) < 0.005 ? `<span class="imp-d eq">± 0.00%p</span>`
         : `<span class="imp-d ${d<0?'good':'bad'}">${d<0?'▼':'▲'} ${Math.abs(d).toFixed(2)}%p</span>`; }
-      return `<div class="t ${cls}"${st.n===1 && C ? ` title="로트 NG ${C.nl} / ${C.lots}"` : ''}><small><span class="n" style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</span>${st.t}</small>`
-        + (r!=null ? `<div class="m"><b style="color:${f2St(r).c}">${r.toFixed(2)}%</b>${dl}</div><div class="q"><span>T<i>${fmt(C.t)}</i></span><span>OK<i style="color:#15803d">${fmt(C.t-C.n)}</i></span><span>NG<i style="color:${C.n?'#b91c1c':'#94a3b8'}">${fmt(C.n)}</i></span></div>`
+      const fs = (r!=null && C.f1!=null) ? `<div class="fs"><div class="f1" title="FAC1 원인 (다이캐스팅) ${fmt(C.f1)} EA"><span>FAC1</span><b>${(C.f1/C.t*100).toFixed(2)}%</b></div><div class="f2" title="FAC2 원인 (가공) ${fmt(C.f2)} EA"><span>FAC2</span><b>${(C.f2/C.t*100).toFixed(2)}%</b></div></div>` : '';
+      return `<div class="t ${cls}${fs?' has-fs':''}"${st.n===1 && C ? ` title="로트 NG ${C.nl} / ${C.lots}"` : ''}>${fs}<small><span class="n" style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</span>${st.t}</small>`
+        + (r!=null ? `<div class="m"><b style="color:${f2St(r).c}">${r.toFixed(2)}%</b>${dl}</div><div class="q"><span>T<i>${fmt(C.t)}</i></span><span class="ok">OK<i style="color:#15803d">${fmt(C.t-C.n)}</i></span><span>NG<i style="color:${C.n?'#b91c1c':'#94a3b8'}">${fmt(C.n)}</i></span></div>`
           : `<div class="m"><b class="na">–</b></div><div class="q"><span>${st.none ? '연결 대기' : '기록 없음'}</span></div>`) + `</div>`; }).join('');
     prev = S;
     return `<div class="imp-row">${head}<div class="lay-ins imp-t">${tiles}</div></div>`; }).join('');
