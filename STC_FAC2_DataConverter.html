@@ -151,7 +151,9 @@ const GROUPS = ['다캐불량','가공불량','협력사','고객'];
 /* PQC 시트 이름은 파일마다 조금씩 다르다 (PQC · Raw_Data PQC · PQC W41 · PQC Inspection …) — 'PQC' 가 들어 있으면 후보 */
 /* 2026-10 부터 원본 시트 이름이 「PQC」 → 「CTQ」 로 바뀜 — 둘 다 같은 공정검사 시트로 읽어 F2_PQC_Q 에 넣는다 */
 const isPQCKey = k => (k.includes('PQC') || k.includes('CTQ')) && !k.includes('SEARCH');
-const pqcRank = k => (k==='PQC' || k==='CTQ') ? 0 : k==='RAWDATAPQC' ? 1 : k.startsWith('PQC') || k.startsWith('RAWDATAPQC') ? 2 : 3;
+/* 'CTQ STATE 9' (검사공정 ⑨) 를 PQC 로 우선 — 'CTQ STATE 5' (⑤ 쇼트 후 검사) 같은 다른 공정 시트는 맨 뒤 */
+const pqcRank = k => { const st = k.match(/STATE(\d+)/); if (st) return st[1]==='9' ? -1 : 9; return pqcRank0(k); };
+const pqcRank0 = k => (k==='PQC' || k==='CTQ') ? 0 : k==='RAWDATAPQC' ? 1 : k.startsWith('PQC') || k.startsWith('RAWDATAPQC') ? 2 : 3;
 
 /* ---------- 주차 : 수요일 시작 · 라벨 = 그 주 화요일의 ISO 주차 (시트 W39 = 9/16~9/22) ---------- */
 function isoWeek(y,m,d){
