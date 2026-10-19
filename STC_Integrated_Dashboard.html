@@ -717,20 +717,28 @@ table.eq td.name{font-weight:700;}
 .imp-h input{flex:1;min-width:0;border:1px solid #cbd5e1;border-radius:6px;padding:1px 3px;font:inherit;font-size:11px;}
 .imp-h .per{font-weight:900;color:#0f2a5c;font-size:14px;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} .imp-h .tools{display:flex;gap:2px;}
 .imp-h .tools button{border:1px solid #cbd5e1;background:#fff;border-radius:5px;width:20px;height:20px;padding:0;font-size:9px;cursor:pointer;color:#1e3c72;} .imp-h .tools button.x{color:#dc2626;}
-.lay-ins.imp-t{margin:0;gap:6px;}
+.lay-ins.imp-t{margin:0;gap:6px;grid-template-columns:repeat(7,minmax(0,1fr));}
+/* 개선현황 — 차분한 색 (눈 피로 줄임) */
+.lay-ins.imp-t .t{background:#fff;border:1px solid #e5e7eb;border-left:3px solid #e5e7eb;}
+.lay-ins.imp-t .t.ok{border-left-color:#cbd5e1;} .lay-ins.imp-t .t.ng{border-left-color:#e7a1ad;} .lay-ins.imp-t .t.na{background:#fafafa;}
+.lay-ins.imp-t .t.tot{background:#f4f6fa;border-color:#cdd5e3;border-left-color:#1e3c72;}
+.lay-ins.imp-t small{color:#475569;} .lay-ins.imp-t small .n{background:#e5e7eb !important;color:#334155 !important;}
+.lay-ins.imp-t .t.tot small .n{background:#1e3c72 !important;color:#fff !important;} .lay-ins.imp-t .t.tot small{color:#1e3c72;font-weight:800;}
+.lay-ins.imp-t .q,.lay-ins.imp-t .q i{color:#64748b !important;}
+.imp-srow.hd .c .n{background:#e5e7eb;color:#334155;} .imp-srow.hd .c.tot .n{background:#1e3c72;color:#fff;} .imp-sc .c.tot{background:#f4f6fa;border-radius:6px;}
 .lay-ins.imp-t .t.has-fs{position:relative;padding-right:66px;}
 .lay-ins.imp-t .t.has-fs .q .ok{display:none;}
 .imp-t .fs{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:3px;width:58px;}
 .imp-t .fs > div{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1;border-radius:6px;padding:1px 5px;font-variant-numeric:tabular-nums;}
 .imp-t .fs span{font-size:8px;font-weight:900;letter-spacing:.02em;} .imp-t .fs b{font-size:11px;font-weight:900;}
-.imp-t .fs .f1{background:#fff1e6;color:#c2410c;} .imp-t .fs .f2{background:#f3e8ff;color:#7c3aed;}
+.imp-t .fs .f1,.imp-t .fs .f2{background:#f5f6f8;color:#475569;} .imp-t .fs span{color:#94a3b8;}
 .lay-ins.imp-t .t{padding:4px 8px;border-radius:8px;}
 .lay-ins.imp-t small{font-size:10.5px;} .lay-ins.imp-t small .n{width:15px;height:15px;font-size:8.5px;}
 .lay-ins.imp-t .m{display:flex;align-items:baseline;gap:4px;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;} .lay-ins.imp-t .m b{font-size:16px;margin:0;line-height:1.25;}
 .lay-ins.imp-t .q{font-size:10px;gap:5px;margin-top:0;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;} .lay-ins.imp-t .q i{margin-left:2px;}
 .lay-ins.imp-t .m .lot{font-size:9.5px;color:#64748b;font-weight:700;}
 @media (max-width:1100px){.imp-row{grid-template-columns:1fr;}}
-.imp-d{display:inline-block;font-size:10px;font-weight:900;border-radius:8px;padding:0 6px;margin-left:2px;} .imp-d.good{background:#dcfce7;color:#15803d;} .imp-d.bad{background:#fee2e2;color:#b91c1c;} .imp-d.eq{background:#f1f5f9;color:#64748b;}
+.imp-d{display:inline-block;font-size:10px;font-weight:900;border-radius:8px;padding:0 6px;margin-left:2px;} .imp-d.good{background:none;color:#3f7d58;} .imp-d.bad{background:none;color:#9f1239;} .imp-d.eq{background:none;color:#94a3b8;}
 .imp-sum{background:#fff;border:1px solid #dbe3ee;border-radius:10px;padding:4px 6px;margin-bottom:16px;}
 .ik{background:#fff;border:1px solid #dbe3ee;border-radius:12px;padding:12px 14px;margin:8px 0 12px;}
 .ik-hd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px;} .ik-hd b{font-size:15px;color:#1e3c72;} .ik-hd small{font-size:11.5px;color:#64748b;} .ik-hd button{margin-left:auto;}
@@ -749,7 +757,7 @@ table.eq td.name{font-weight:700;}
 .imp-srow:last-child{border-bottom:0;} .imp-srow.hd{font-weight:800;color:#1e3c72;border-bottom:2px solid #c7d2e3;}
 .imp-srow .h{display:flex;align-items:center;gap:5px;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .imp-srow .h .no{flex:none;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#1e3c72;color:#fff;font-size:10px;}
-.imp-sc{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;}
+.imp-sc{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;}
 .imp-sc .c{text-align:center;font-weight:800;font-variant-numeric:tabular-nums;} .imp-sc .c.na{color:#cbd5e1!important;}
 .imp-srow.hd .c{font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;overflow:hidden;}
 .imp-srow.hd .c .n{flex:none;display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;font-size:8.5px;}
@@ -4644,7 +4652,10 @@ function impStats(f, t){
     5:  sb.length ? { t:sum(sb,"Total Q'ty"), n:sum(sb,"NG Q'ty"), f1:sum(sb,'다캐불량'), f2:sum(sb,'가공불량') } : null,
     8:  pd.length ? { t:sum(pd,"Total Q'ty"), n:sum(pd,"NG Q'ty"), f1:dg('다캐불량'), f2:dg('가공불량') } : null,
     9:  pq.length ? { t:sum(pq,"Total Q'ty"), n:sum(pq,"NG Q'ty"), f1:sum(pq,'다캐불량'), f2:sum(pq,'가공불량') } : null,
-    13: oq.length ? { t:sum(oq,"Total Q'ty"), n:sum(oq,"NG Q'ty"), f1:sum(oq,'다캐불량'), f2:sum(oq,'가공불량') } : null };
+    13: oq.length ? { t:sum(oq,"Total Q'ty"), n:sum(oq,"NG Q'ty"), f1:sum(oq,'다캐불량'), f2:sum(oq,'가공불량') } : null,
+    /* 종합 불량률 = (⑤+⑧+⑨+⑬ NG) ÷ ⑧ 투입 — 같은 제품이 여러 검사를 거치므로 분모는 가공 투입 하나로 */
+    get T(){ const B = this[8]; if(!B || !B.t) return null; const L = [this[5], B, this[9], this[13]].filter(Boolean);
+      return { t:B.t, n:L.reduce((a,o)=>a+o.n,0), f1:L.reduce((a,o)=>a+(o.f1||0),0), f2:L.reduce((a,o)=>a+(o.f2||0),0), src:L.length }; } };
 }
 /* ---- 공정 지표 주간 추이 · 타겟 (개선현황 맨 위) ----
    ① 최종 유출률 = ⑬ OQC NG ÷ ⑧ 투입                      (낮을수록 좋음)
@@ -4716,8 +4727,11 @@ function impKpiView(){
 }
 function f2ImproveView(){
   const tg = f2Target(), rows = impRows(), W = impWeeks(), D = impDays();
+  /* 차분한 색 : 목표 이하 = 진한 회청 · 초과 = 짙은 적색 (형광·원색 쓰지 않음) */
+  const impCol = (r, t) => r==null ? '#94a3b8' : r <= t ? '#1e293b' : '#9f1239';
   const STEPS = [ { n:1, k:'iqc', t:'IQC 수입검사' }, { n:5, k:'all', t:'쇼트 후 검사' }, { n:8, k:'all', t:'MC 가공' },
-                  { n:9, k:'all', t:'PQC 공정검사' }, { n:10, k:'half', t:'MARKING 50% 검사', none:true }, { n:13, k:'all', t:'OQC 출하검사' } ];
+                  { n:9, k:'all', t:'PQC 공정검사' }, { n:10, k:'half', t:'MARKING 50% 검사', none:true }, { n:13, k:'all', t:'OQC 출하검사' },
+                  { n:'T', k:'tot', t:'종합 불량률', tot:true } ];
   let prev = null;
   const body = rows.map((R, i)=>{
     const S = (R.f && R.t) ? impStats(R.f, R.t) : null;
@@ -4733,26 +4747,26 @@ function f2ImproveView(){
       if(r!=null && pr!=null){ const d = r - pr; dl = Math.abs(d) < 0.005 ? `<span class="imp-d eq">± 0.00%p</span>`
         : `<span class="imp-d ${d<0?'good':'bad'}">${d<0?'▼':'▲'} ${Math.abs(d).toFixed(2)}%p</span>`; }
       const fs = (r!=null && C.f1!=null) ? `<div class="fs"><div class="f1" title="FAC1 원인 (다이캐스팅) ${fmt(C.f1)} EA"><span>FAC1</span><b>${(C.f1/C.t*100).toFixed(2)}%</b></div><div class="f2" title="FAC2 원인 (가공) ${fmt(C.f2)} EA"><span>FAC2</span><b>${(C.f2/C.t*100).toFixed(2)}%</b></div></div>` : '';
-      return `<div class="t ${cls}${fs?' has-fs':''}"${st.n===1 && C ? ` title="로트 NG ${C.nl} / ${C.lots}"` : ''}>${fs}<small><span class="n" style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</span>${st.t}</small>`
-        + (r!=null ? `<div class="m"><b style="color:${f2St(r).c}">${r.toFixed(2)}%</b>${dl}</div><div class="q"><span>T<i>${fmt(C.t)}</i></span><span class="ok">OK<i style="color:#15803d">${fmt(C.t-C.n)}</i></span><span>NG<i style="color:${C.n?'#b91c1c':'#94a3b8'}">${fmt(C.n)}</i></span></div>`
+      return `<div class="t ${cls}${st.tot?' tot':''}${fs?' has-fs':''}"${st.n===1 && C ? ` title="로트 NG ${C.nl} / ${C.lots}"` : st.tot ? ` title="(⑤+⑧+⑨+⑬ NG) ÷ ⑧ 투입"` : ''}>${fs}<small><span class="n">${st.tot?'Σ':st.n}</span>${st.t}</small>`
+        + (r!=null ? `<div class="m"><b style="color:${impCol(r, tg)}">${r.toFixed(2)}%</b>${dl}</div><div class="q"><span>T<i>${fmt(C.t)}</i></span><span class="ok">OK<i>${fmt(C.t-C.n)}</i></span><span>NG<i>${fmt(C.n)}</i></span></div>`
           : `<div class="m"><b class="na">–</b></div><div class="q"><span>${st.none ? '연결 대기' : '기록 없음'}</span></div>`) + `</div>`; }).join('');
     prev = S;
     return `<div class="imp-row">${head}<div class="lay-ins imp-t">${tiles}</div></div>`; }).join('');
   /* 아래 요약표 — 줄(기간) × 공정 %NG */
   /* 아래 요약 — 위 칸들과 같은 격자(기간 200px + 공정 6칸)로 맞춰 세로로 비교 */
-  const cell = (r, cls) => `<div class="c ${cls||''}" style="color:${r==null?'#94a3b8':f2St(r).c}">${r==null?'–':r.toFixed(2)+'%'}</div>`;
+  const cell = (r, cls) => `<div class="c ${cls||''}" style="color:${impCol(r, tg)}">${r==null?'–':r.toFixed(2)+'%'}</div>`;
   const sumT = rows.length ? `<div class="imp-sum">
-      <div class="imp-srow hd"><div class="h">기간 범위</div><div class="imp-sc">${STEPS.map(st=>`<div class="c"><span class="n" style="background:${LAY_KC[st.k]};color:${st.k==='all'?'#1f2937':'#fff'}">${st.n}</span>${st.t}</div>`).join('')}</div></div>
+      <div class="imp-srow hd"><div class="h">기간 범위</div><div class="imp-sc">${STEPS.map(st=>`<div class="c${st.tot?' tot':''}"><span class="n">${st.tot?'Σ':st.n}</span>${st.t}</div>`).join('')}</div></div>
       ${rows.map((R,i)=>{ const S = (R.f && R.t) ? impStats(R.f, R.t) : null;
-        return `<div class="imp-srow"><div class="h"><b class="no">${i+1}</b>${R.w ? R.w+' · ' : ''}${(R.f||'–').slice(2)} ~ ${(R.t||'–').slice(R.f && R.t && R.f.slice(0,4)===R.t.slice(0,4) ? 5 : 2)}</div><div class="imp-sc">${STEPS.map(st=>{ const C = S && !st.none ? S[st.n] : null; return cell(C && C.t ? C.n/C.t*100 : null, st.none?'na':''); }).join('')}</div></div>`; }).join('')}
+        return `<div class="imp-srow"><div class="h"><b class="no">${i+1}</b>${R.w ? R.w+' · ' : ''}${(R.f||'–').slice(2)} ~ ${(R.t||'–').slice(R.f && R.t && R.f.slice(0,4)===R.t.slice(0,4) ? 5 : 2)}</div><div class="imp-sc">${STEPS.map(st=>{ const C = S && !st.none ? S[st.n] : null; return cell(C && C.t ? C.n/C.t*100 : null, st.none?'na':st.tot?'tot':''); }).join('')}</div></div>`; }).join('')}
     </div>` : '';
-  const chart = rows.length ? impChart(rows, rows.map(R=>(R.f && R.t) ? impStats(R.f, R.t) : null), STEPS, tg) : '';
+  const chart = rows.length ? impChart(rows, rows.map(R=>(R.f && R.t) ? impStats(R.f, R.t) : null), STEPS.filter(x=>!x.tot), tg) : '';
   return layTr(`<div class="sec-title">FAC2 개선현황 · 검사공정별 불량 (기간별 비교)</div>
     <div class="imp-top f2-noprint"><span>줄마다 기간을 정하고 <b>+ 기간 추가</b>로 아래에 쌓아 가면, 각 칸에 바로 윗줄 대비 증감(▼ 개선 · ▲ 악화)이 표시됩니다.</span>
       <button class="btn-f2" onclick="impAdd()">＋ 기간 추가</button><button class="btn-f2 alt" onclick="impReset()">↺ 처음으로</button><button class="btn-f2 alt" onclick="window.print()">인쇄 / PDF</button></div>
     ${impKpiView()}
     ${chart}
-    <div class="lay-insh">검사공정별 수량 <span>(Total · OK · NG · %NG — ① = 수량 EA 기준 · 목표 ${tg}%)</span></div>
+    <div class="lay-insh">검사공정별 수량 <span>(Total · OK · NG · %NG — ① = 수량 EA 기준 · Σ 종합 = (⑤+⑧+⑨+⑬ NG) ÷ ⑧ 투입 · 목표 ${tg}% · 목표 초과 = 적색 글씨)</span></div>
     ${body || '<div class="card empty" style="padding:14px">＋ 기간 추가 를 눌러 비교할 기간을 넣어 주세요.</div>'}
     ${sumT ? `<div class="sec-title">기간별 %NG 요약</div>${sumT}` : ''}`, true);
 }
