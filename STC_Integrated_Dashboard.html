@@ -751,7 +751,7 @@ table.eq td.name{font-weight:700;}
 .ik-t th.cur,.ik-t td.cur{background:#fff3c4;} .ik-t th.tg{background:#fde2e2;color:#b91c1c;} .ik-t td.pt,.ik-t th.pt{color:#94a3b8;}
 .ik-t td.nm{white-space:normal;} .ik-t td.nm b{display:block;font-size:12.5px;color:#0f172a;} .ik-t td.nm small{font-size:10px;color:#64748b;}
 .ik-t td.n{text-align:right;padding-right:8px;font-size:13px;font-weight:700;color:#0f172a;}
-.ik-t td.miss{color:#c00000;} .ik-t td.hb{color:#15803d !important;font-weight:900;} .ik-t td.hw{color:#dc2626 !important;font-weight:900;}
+.ik-t td.miss{color:#c00000;} .ik-t td.inc{color:#cbd5e1 !important;font-weight:500;background:#fafafa;} .ik-t td.n small.nw{display:block;font-size:9.5px;color:#94a3b8;font-weight:500;} .ik-t td.n small.nw.few{color:#b45309;} .ik-t td.hb{color:#15803d !important;font-weight:900;} .ik-t td.hw{color:#dc2626 !important;font-weight:900;}
 .ik-t td.tg{text-align:center;background:#fff7f7;} .ik-t td.tg input{width:100%;max-width:74px;box-sizing:border-box;font:inherit;font-size:13px;font-weight:800;text-align:right;padding:2px 4px;border:1.5px solid #dc2626;border-radius:5px;color:#b91c1c;} .ik-t td.tg small{display:block;font-size:9.5px;color:#94a3b8;}
 .ik-cs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px;} .ik-c{border:1px solid #e2e8f0;border-radius:8px;padding:6px 8px;} .ik-c .h b{font-size:12.5px;color:#1e3c72;} .ik-c svg{width:100%;height:auto;display:block;}
 .ik-c .lg{display:flex;gap:10px;font-size:10.5px;color:#475569;} .ik-c .lg i{display:inline-block;width:16px;vertical-align:middle;margin-right:3px;}
@@ -4667,28 +4667,30 @@ function impStats(f, t){
    ④ 앞공정 검출력 = (⑤+⑧+⑨ NG) ÷ (⑤+⑧+⑨+⑬ NG)           (높을수록)
    주차 = 시트 '주차' (수~화) · ⑧ 투입 = F2_품번일별 MCT Total */
 const IMPK = [
-  { k:'out', t:'① 최종 유출률', d:'⑬ OQC NG ÷ ⑧ 투입', up:false, sug:a=>Math.max(0.1, Math.round(a*0.8*100)/100) },
-  { k:'mc',  t:'② 가공불량률 (FAC2 원인)', d:'⑧⑨⑬ 가공 원인 ÷ ⑧ 투입', up:false, sug:a=>Math.round(a*0.8*100)/100 },
-  { k:'dc',  t:'③ 다캐불량률 (FAC1 원인)', d:'⑤⑧⑨⑬ 다캐 원인 ÷ ⑧ 투입', up:false, sug:a=>Math.round(a*0.8*100)/100 },
-  { k:'det', t:'④ 앞공정 검출력', d:'⑤⑧⑨ NG ÷ (⑤⑧⑨⑬ NG)', up:true, sug:a=>Math.min(99.9, Math.round((a + (100-a)*0.2)*10)/10) } ];
+  { k:'out', t:'① OQC 불량률 (유출)', d:'⑬ OQC NG ÷ ⑬ 검사수량', need:['⑬'], up:false, sug:a=>Math.max(0.1, Math.round(a*0.8*100)/100) },
+  { k:'mc',  t:'② 가공불량률 (FAC2 원인)', d:'⑧⑨⑬ 가공 원인 ÷ ⑧ 투입', need:['⑧','⑨','⑬'], up:false, sug:a=>Math.round(a*0.8*100)/100 },
+  { k:'dc',  t:'③ 다캐불량률 (FAC1 원인)', d:'⑤⑧⑨⑬ 다캐 원인 ÷ ⑧ 투입', need:['⑤','⑧','⑨','⑬'], up:false, sug:a=>Math.round(a*0.8*100)/100 },
+  { k:'det', t:'④ 앞공정 검출력', d:'⑤⑧⑨ NG ÷ (⑤⑧⑨⑬ NG)', need:['⑤','⑧','⑨','⑬'], up:true, sug:a=>Math.min(99.9, Math.round((a + (100-a)*0.2)*10)/10) } ];
 const impkT = k => { try{ const v = parseFloat(localStorage.getItem('stc_f2_kpi_t_'+k)); return isFinite(v) ? v : null; }catch(e){ return null; } };
 function impkSet(k, v){ try{ const n = parseFloat(String(v).trim()); if(isFinite(n)) localStorage.setItem('stc_f2_kpi_t_'+k, String(n)); else localStorage.removeItem('stc_f2_kpi_t_'+k); }catch(e){} renderF2(); }
-function impkSug(){ const W = impkWeeks(); IMPK.forEach(m=>{ if(impkT(m.k)==null && W.avg[m.k]!=null) try{ localStorage.setItem('stc_f2_kpi_t_'+m.k, String(m.sug(W.avg[m.k]))); }catch(e){} }); renderF2(); }
+function impkSug(){ const W = impkWeeks(); IMPK.forEach(m=>{ if(impkT(m.k)==null && W.avg[m.k]!=null && W.good[m.k].length >= 4) try{ localStorage.setItem('stc_f2_kpi_t_'+m.k, String(m.sug(W.avg[m.k]))); }catch(e){} }); renderF2(); }
 function impkWeeks(){
   const wk = r => { const w = String(r['주차']||'').trim(); return /^W\d+$/i.test(w) ? 'W'+wkNum(w) : ''; };
-  const W = {}, G = w => W[w] || (W[w] = { t8:0, n5:0, n8:0, n9:0, n13:0, m:0, dcast:0, src:new Set(), days:new Set() });
+  const W = {}, G = w => W[w] || (W[w] = { t8:0, t13:0, n5:0, n8:0, n9:0, n13:0, m:0, dcast:0, src:new Set(), days:new Set() });
   (F2.pd||[]).forEach(r=>{ if(r['공정']!=='MCT') return; const w = wk(r); if(!w) return; const o = G(w); o.t8 += f2n(r["Total Q'ty"]); o.days.add(String(r['일자']).slice(0,10)); });
   (F2.det||[]).forEach(r=>{ if(r['공정']!=='MCT' || r['구분']!=='NG') return; const w = wk(r); if(!w) return; const o = G(w), v = f2n(r['수량']);
     o.n8 += v; if(r['계통']==='가공불량') o.m += v; if(r['계통']==='다캐불량') o.dcast += v; o.src.add('⑧'); });
   [['n9',F2.pqRaw,'⑨',true],['n13',F2.oqRaw,'⑬',true],['n5',F2.sbRaw,'⑤',false]].forEach(([nk,rows,lab,mcToo])=>(rows||[]).forEach(r=>{ const w = wk(r); if(!w) return; const o = G(w);
-    o[nk] += f2n(r["NG Q'ty"]); o.dcast += f2n(r['다캐불량']); if(mcToo) o.m += f2n(r['가공불량']); o.src.add(lab); }));
+    o[nk] += f2n(r["NG Q'ty"]); if(nk==='n13') o.t13 += f2n(r["Total Q'ty"]); o.dcast += f2n(r['다캐불량']); if(mcToo) o.m += f2n(r['가공불량']); o.src.add(lab); }));
   const weeks = Object.keys(W).filter(w=>W[w].t8>0).sort((a,b)=>wkNum(a)-wkNum(b)).slice(-12);
   const maxD = Math.max(1, ...weeks.map(w=>W[w].days.size));
   const rows = weeks.map(w=>{ const o = W[w], up = o.n5+o.n8+o.n9, all = up + o.n13;
-    return { w, o, part: o.days.size < Math.min(5, maxD), v:{ out: o.n13/o.t8*100, mc: o.m/o.t8*100, dc: o.dcast/o.t8*100, det: all ? up/all*100 : null } }; });
-  const full = rows.filter(r=>!r.part), avg = {};
-  IMPK.forEach(m=>{ const vs = full.map(r=>r.v[m.k]).filter(v=>v!=null); avg[m.k] = vs.length ? vs.reduce((a,b)=>a+b,0)/vs.length : null; });
-  return { rows, full, avg };
+    /* 지표마다 필요한 공정 데이터가 그 주에 다 있어야 '완전' — 평균 · 최고 · 최저 · 달성은 완전한 주만 */
+    const ok = {}; IMPK.forEach(m=>{ ok[m.k] = m.need.every(x=>o.src.has(x)); });
+    return { w, o, ok, part: o.days.size < Math.min(5, maxD), v:{ out: o.t13 ? o.n13/o.t13*100 : null, mc: o.m/o.t8*100, dc: o.dcast/o.t8*100, det: all ? up/all*100 : null } }; });
+  const full = rows.filter(r=>!r.part), avg = {}, good = {};
+  IMPK.forEach(m=>{ good[m.k] = full.filter(r=>r.ok[m.k] && r.v[m.k]!=null); const vs = good[m.k].map(r=>r.v[m.k]); avg[m.k] = vs.length ? vs.reduce((a,b)=>a+b,0)/vs.length : null; });
+  return { rows, full, avg, good };
 }
 function impKpiView(){
   const W = impkWeeks(); if(!W.rows.length) return '';
@@ -4696,14 +4698,15 @@ function impKpiView(){
   const f = v => v==null ? '–' : v.toFixed(2);
   let tb = `<table class="ik-t"><colgroup><col style="width:17%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:8%"><col style="width:5%">${R.map(()=>'<col>').join('')}</colgroup>
     <thead><tr><th>지표 (%)</th><th>평균</th><th style="color:#15803d">최고</th><th style="color:#dc2626">최저</th><th class="tg">타겟</th><th>달성</th>${R.map(r=>`<th class="${r===cur?'cur':''}${r.part?' pt':''}" title="${[...r.o.src].join(' ')} 데이터">${r.w}${r.part?'<small>부분</small>':''}</th>`).join('')}</tr></thead><tbody>`;
-  IMPK.forEach(m=>{ const vs = W.full.map(r=>r.v[m.k]).filter(v=>v!=null), tg = impkT(m.k), a = W.avg[m.k];
+  IMPK.forEach(m=>{ const GD = W.good[m.k], vs = GD.map(r=>r.v[m.k]), tg = impkT(m.k), a = W.avg[m.k], few = GD.length < 4;
     const best = vs.length ? (m.up ? Math.max(...vs) : Math.min(...vs)) : null, worst = vs.length ? (m.up ? Math.min(...vs) : Math.max(...vs)) : null;
-    const ok = tg==null ? null : W.full.filter(r=>r.v[m.k]!=null && (m.up ? r.v[m.k] >= tg : r.v[m.k] <= tg)).length;
-    tb += `<tr><td class="nm"><b>${m.t}</b><small>${m.d} · ${m.up?'높을수록 좋음':'낮을수록 좋음'}</small></td><td class="n"><b>${f(a)}</b></td><td class="n" style="color:#15803d">${f(best)}</td><td class="n" style="color:#dc2626">${f(worst)}</td>
-      <td class="tg"><input type="number" step="0.01" value="${tg==null?'':tg}" placeholder="${a==null?'':m.sug(a)}" onchange="impkSet('${m.k}', this.value)"><small>제안 ${a==null?'–':m.sug(a)}</small></td><td class="n">${ok==null?'–':`<b>${ok}</b>/${W.full.length}`}</td>`;
-    R.forEach(r=>{ const v = r.v[m.k], miss = tg!=null && v!=null && !r.part && (m.up ? v < tg : v > tg);
-      const hl = !r.part && v!=null && vs.length>1 ? (v===best ? ' hb' : v===worst ? ' hw' : '') : '';
-      tb += `<td class="n${r===cur?' cur':''}${r.part?' pt':''}${miss?' miss':''}${hl}">${f(v)}</td>`; });
+    const ok = tg==null ? null : GD.filter(r=>(m.up ? r.v[m.k] >= tg : r.v[m.k] <= tg)).length;
+    tb += `<tr><td class="nm"><b>${m.t}</b><small>${m.d} · ${m.up?'높을수록 좋음':'낮을수록 좋음'}</small></td><td class="n"><b>${f(a)}</b><small class="nw${few?' few':''}">${GD.length}주${few?' · 부족':''}</small></td><td class="n" style="color:#15803d">${f(best)}</td><td class="n" style="color:#dc2626">${f(worst)}</td>
+      <td class="tg"><input type="number" step="0.01" value="${tg==null?'':tg}" placeholder="${a==null?'':m.sug(a)}" onchange="impkSet('${m.k}', this.value)"><small>${few?'임시 ':''}제안 ${a==null?'–':m.sug(a)}</small></td><td class="n">${ok==null?'–':`<b>${ok}</b>/${GD.length}`}</td>`;
+    R.forEach(r=>{ const v = r.v[m.k], inc = !r.ok[m.k], use = !r.part && !inc, miss = use && tg!=null && v!=null && (m.up ? v < tg : v > tg);
+      const hl = use && v!=null && vs.length>1 ? (v===best ? ' hb' : v===worst ? ' hw' : '') : '';
+      const lack = inc ? m.need.filter(x=>!r.o.src.has(x)).join('') + ' 데이터 없음 — 평균에서 제외' : '';
+      tb += `<td class="n${r===cur?' cur':''}${r.part?' pt':''}${inc?' inc':''}${miss?' miss':''}${hl}"${lack?` title="${lack}"`:''}>${f(v)}</td>`; });
     tb += `</tr>`; });
   tb += `</tbody></table>`;
   /* 지표별 꺾은선 */
@@ -4718,15 +4721,15 @@ function impKpiView(){
     if(tg!=null) s += `<line x1="${L}" x2="${Wd-Rr}" y1="${y(tg)}" y2="${y(tg)}" stroke="#dc2626" stroke-dasharray="6 3" stroke-width="1.6"/>`;
     const hp = pts.filter(p=>p.v!=null);
     s += `<polyline fill="none" stroke="#1e3c72" stroke-width="2" points="${hp.map(p=>p.x.toFixed(1)+','+y(p.v).toFixed(1)).join(' ')}"/>`;
-    hp.forEach((p,i)=>{ const c = p.r===cur; s += `<circle cx="${p.x}" cy="${y(p.v)}" r="${c?5:3.5}" fill="${p.r.part?'#fff':c?'#f59e0b':'#1e3c72'}" stroke="${c?'#f59e0b':'#1e3c72'}" stroke-width="1.8"><title>${p.r.w} ${f(p.v)}%</title></circle>`;
+    hp.forEach((p,i)=>{ const c = p.r===cur, inc = !p.r.ok[m.k]; s += `<circle cx="${p.x}" cy="${y(p.v)}" r="${c?5:3.5}" fill="${p.r.part||inc?'#fff':c?'#f59e0b':'#1e3c72'}" stroke="${inc?'#cbd5e1':c?'#f59e0b':'#1e3c72'}" stroke-width="1.8"><title>${p.r.w} ${f(p.v)}%${inc?' (데이터 부족 — 평균 제외)':''}</title></circle>`;
       if(i%Math.ceil(hp.length/7)===0 || c) s += `<text x="${p.x}" y="${H-8}" text-anchor="middle" font-size="9" fill="${c?'#b45309':'#64748b'}" font-weight="${c?800:500}">${p.r.w}</text>`; });
     const lp = hp[hp.length-1]; if(lp) s += `<text x="${Math.min(lp.x, Wd-Rr)}" y="${y(lp.v)-8}" text-anchor="end" font-size="10.5" font-weight="900" fill="#0f172a">${f(lp.v)}</text>`;
     return `<div class="ik-c"><div class="h"><b>${m.t}</b></div>${s}</svg><div class="lg"><span><i style="border-top:2px dashed #64748b"></i>평균 ${f(a)}</span>${tg!=null?`<span><i style="border-top:2px dashed #dc2626"></i>타겟 ${tg}</span>`:'<span style="color:#94a3b8">타겟 미설정</span>'}</div></div>`; };
   const miss = ['⑤','⑨'].filter(s=>!R.some(r=>r.o.src.has(s)));
-  return `<div class="ik"><div class="ik-hd"><b>공정 지표 주간 추이 · 타겟</b><small>${R[0].w} ~ ${cur.w} · ${W.full.length}주 평균 (부분 주차 제외) · 타겟 칸에 값을 넣으면 그래프에 빨간 점선</small>
+  return `<div class="ik"><div class="ik-hd"><b>공정 지표 주간 추이 · 타겟</b><small>${R[0].w} ~ ${cur.w} · 평균·최고·최저·달성 = 그 지표에 필요한 공정 데이터가 다 있는 주만 (회색 칸 = 데이터 부족 · 참고) · 4주 미만이면 '임시' 제안</small>
       <button class="btn-f2 alt f2-noprint" onclick="impkSug()">제안값을 타겟으로 (빈 칸만)</button></div>
     <div class="ik-w">${tb}</div><div class="ik-cs">${IMPK.map(chart).join('')}</div>
-    <div class="foot" style="margin-top:4px">· ⑧ 투입 = F2_품번일별 MCT Total · 원인 구분 = 원본 불량코드 계통(1~16 다캐 · 17~46 가공) · ⑤ = CTQ STATE 5 · ⑨ = CTQ STATE 9 · ⑬ = F2_OQC_Q · 칸 위에 마우스 = 그 주에 들어온 데이터${miss.length?` · <b style="color:#b45309">${miss.join('·')} 데이터가 아직 없어 ②③④ 는 있는 공정만으로 계산</b>`:''} · 제안 = 평균에서 20% 개선 · 이 브라우저에 저장</div></div>`;
+    <div class="foot" style="margin-top:4px">· ⑧ 투입 = F2_품번일별 MCT Total · 원인 구분 = 원본 불량코드 계통(1~16 다캐 · 17~46 가공) · ⑤ = CTQ STATE 5 · ⑨ = CTQ STATE 9 · ⑬ = F2_OQC_Q · ① = OQC 검사수량 기준 %NG · 필요 데이터: ① ⑬ · ② ⑧⑨⑬ · ③④ ⑤⑧⑨⑬ (⑨ = W42~, ⑤ = W43~) · 타겟은 완전한 주가 4주 이상 쌓인 뒤 확정 권장 · 제안 = 평균에서 20% 개선 · 이 브라우저에 저장</div></div>`;
 }
 function f2ImproveView(){
   const tg = f2Target(), rows = impRows(), W = impWeeks(), D = impDays();
