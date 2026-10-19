@@ -7813,7 +7813,7 @@ loadData();
 @media print{ .kw table.kw-g td.gc{cursor:default;} .kw table.kw-g select[data-kwpmd]{text-align:center;} }
 .kw table.kw-tr{font-size:11.5px;table-layout:fixed;width:100%;} .kw table.kw-tr th,.kw table.kw-tr td{padding:4px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} .kw table.kw-tr th{font-size:11px;} .kw table.kw-tr td.kp{white-space:normal;font-size:11.5px;} .kw table.kw-tr .sm{font-size:9.5px;} .kw table.kw-tr th.cur,.kw table.kw-tr td.cur{background:#fff3c4;} .kw table.kw-tr th.pt,.kw table.kw-tr td.pt{color:#94a3b8;}
 .kw table.kw-tr th.av{background:#dbe5f1;} .kw table.kw-tr td.av{background:#f4f7fb;} .kw table.kw-tr th.tgh{background:#fde2e2;color:#b91c1c;}
-.kw table.kw-tr td.bad{color:#c00000;font-weight:800;} .kw table.kw-tr td.tgc{text-align:center;background:#fff7f7;}
+.kw table.kw-tr td.bad{color:#c00000;font-weight:800;} .kw table.kw-tr td.hb{background:#bbf7d0 !important;color:#14532d !important;font-weight:900;box-shadow:inset 0 0 0 2px #16a34a;} .kw table.kw-tr td.hw{background:#fecaca !important;color:#7f1d1d !important;font-weight:900;box-shadow:inset 0 0 0 2px #dc2626;} .kw table.kw-tr td.tgc{text-align:center;background:#fff7f7;}
 .kw table.kw-tr td.tgc input{width:100%;max-width:80px;box-sizing:border-box;font:inherit;font-size:13px;font-weight:800;text-align:right;padding:3px 5px;border:1.5px solid #dc2626;border-radius:5px;color:#b91c1c;}
 .kw .kw-tr-act{display:flex;gap:8px;margin:6px 0 2px;} .kw .kw-tr-act button{font:inherit;font-size:11.5px;padding:4px 10px;border:1px solid #94a3b8;border-radius:14px;background:#fff;cursor:pointer;}
 .kw .kw-tcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:8px;}
@@ -8084,7 +8084,7 @@ loadData();
         return { name,k,u,dp,up,key, vs, avg, best, worstV, q, sug, tg, ok, saved: sv!==null && sv!=='' };
       });
       h += `<h4 class="kw-h">지표 주간 추이 · 타겟 설정 <small>${esc(upto[0]||'')} ~ ${esc(opt.week)} · ${FULL.length}주 평균 (가동일이 적은 부분 주차 ${WS.length-FULL.length}주 제외) · 타겟 칸에 값을 넣으면 그래프·지표 요약에 바로 반영</small></h4>`;
-      h += `<div><table class="kw-tr"><colgroup><col style="width:5.4%"><col style="width:2.8%"><col style="width:4.6%"><col style="width:4.2%"><col style="width:4.2%"><col style="width:4.2%"><col style="width:5.8%"><col style="width:3.6%">${WS.map(()=>'<col>').join('')}</colgroup><thead><tr><th>지표</th><th>단위</th><th class="av">평균</th><th class="av">최고</th><th class="av">최저</th><th class="av" title="상위 25% (잘한 주 4개 중 1개 수준)">상위25%</th><th class="tgh">타겟</th><th class="av" title="타겟 달성 주 수">달성</th>`
+      h += `<div><table class="kw-tr"><colgroup><col style="width:5.4%"><col style="width:2.8%"><col style="width:4.6%"><col style="width:4.2%"><col style="width:4.2%"><col style="width:4.2%"><col style="width:5.8%"><col style="width:3.6%">${WS.map(()=>'<col>').join('')}</colgroup><thead><tr><th>지표</th><th>단위</th><th class="av">평균</th><th class="av" style="background:#bbf7d0">최고</th><th class="av" style="background:#fecaca">최저</th><th class="av" title="상위 25% (잘한 주 4개 중 1개 수준)">상위25%</th><th class="tgh">타겟</th><th class="av" title="타겟 달성 주 수">달성</th>`
          + WS.map(x=>`<th class="${x.w===opt.week?'cur':''}${x.part?' pt':''}">${esc(x.w)}${x.part?'<span class="sm">부분 '+x.s.days.length+'일</span>':''}</th>`).join('')
          + `</tr></thead><tbody>`;
       T.forEach(t=>{
@@ -8093,8 +8093,11 @@ loadData();
         h += `<td class="n av"><b>${fk(t.avg)}</b></td><td class="n av dn">${fk(t.best)}</td><td class="n av up">${fk(t.worstV)}</td><td class="n av">${fk(t.q)}</td>`
            + `<td class="tgc"><input type="number" step="${t.dp?Math.pow(10,-t.dp):1}" data-kwtg="${t.key}" value="${t.saved || t.tg!=null ? t.tg : ''}" placeholder="${fx(t.sug,t.dp).replace(/,/g,'')}"><span class="sm">제안 ${fx(t.sug,t.dp)}</span></td>`
            + `<td class="c">${t.ok==null?'–':`<b>${t.ok}</b>/${FULL.length}`}</td>`;
+        /* 최고(가장 잘한 주) = 초록 · 최저(가장 못한 주) = 빨강 하이라이트 — 부분 주차 제외 */
+        const bW = FULL.find(x=>x.s[t.k]===t.best), wW = FULL.find(x=>x.s[t.k]===t.worstV);
         WS.forEach(x=>{ const v = x.s[t.k], bad = t.tg!=null && !x.part && (t.up ? v < t.tg : v > t.tg);
-          h += `<td class="n${x.w===opt.week?' cur':''}${x.part?' pt':''}${bad?' bad':''}" title="${esc(x.w)} ${fx(v,t.dp)} ${t.u}">${x.s.days.length?(v>=10000?f1(v/1000,1)+'k':fx(v,t.dp)):'–'}</td>`; });
+          const hl = vs => vs.length<2 ? '' : x===bW ? ' hb' : x===wW ? ' hw' : '';
+          h += `<td class="n${x.w===opt.week?' cur':''}${x.part?' pt':''}${bad?' bad':''}${hl(t.vs)}" title="${esc(x.w)} ${fx(v,t.dp)} ${t.u}">${x.s.days.length?(v>=10000?f1(v/1000,1)+'k':fx(v,t.dp)):'–'}</td>`; });
         h += `</tr>`;
       });
       h += `</tbody></table></div>`;
