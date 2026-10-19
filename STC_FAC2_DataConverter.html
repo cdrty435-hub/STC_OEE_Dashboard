@@ -112,7 +112,7 @@
       · <b>불량 계통</b> : 1~16 다캐 불량(Die Casting Defect) · 17~46 FAC2 가공 불량(MCT Defect) · 47~49 협력사 · 50 고객.<br>
       · <b>Mat'l NG</b>(가공 전 소재 불량)와 <b>FG QC Sorting</b>(선별)은 NG에 넣지 않고 별도 열로 둡니다 (KPI MCT와 동일).<br>
       · OQC · PQC 원본에서 <b>품번이 비어 있는 행</b>(입력 중)은 KPI OQC처럼 제외하고, 검증표에 건수를 표시합니다.<br>
-      · 설비명 <code>MC3 → MC03</code> · <code>MCT6 → MCT06</code> 두 자리 통일 (MC 와 MCT 는 다른 설비) · MCT 실제수율 = Σ생산 ÷ UPD(95%) (설비·일자·품번 단위, 원본 actual yield와 같은 식).
+      · 설비명 <code>MC3 → MC03</code> · MC 두 자리 통일 · <code>MCT6</code> 은 원본 그대로 (MC 와 MCT 는 다른 설비) · MCT 실제수율 = Σ생산 ÷ UPD(95%) (설비·일자·품번 단위, 원본 actual yield와 같은 식).
     </div>
   </div>
 </div>
@@ -182,7 +182,9 @@ function toISO(v){
   return null;
 }
 const lotText = v => (v instanceof Date || (typeof v === 'number' && v > 20000 && v < 80000)) ? toISO(v) : (txt(v)==='-'?'':txt(v));
-function normMC(v){ const s = txt(v); const m = s.match(/^M\s*\/?\s*C\s*[-_ ]?0*(\d{1,2})$/i) || s.match(/^0*(\d{1,2})$/); return m ? 'MC'+pad(m[1]) : s.toUpperCase(); }
+/* 설비 이름 규칙 : MC 는 두 자리 'MC01' · MCT 는 0 없이 'MCT6' */
+function normMC(v){ const s = txt(v); const t = s.match(/^M\s*C\s*T\s*[-_ ]?0*(\d{1,2})$/i); if (t) return 'MCT'+parseInt(t[1],10);
+  const m = s.match(/^M\s*\/?\s*C\s*[-_ ]?0*(\d{1,2})$/i) || s.match(/^0*(\d{1,2})$/); return m ? 'MC'+pad(m[1]) : s.toUpperCase(); }
 
 /* ---------- 불량코드 마스터 ---------- */
 function readCodes(ws){
@@ -461,9 +463,9 @@ function convertPM(wb, from, to){
   const LOSS = []; for (let i = c.plan + 1; i < (c.tloss > 0 ? c.tloss : c.plan); i++){ if (H1[i]) LOSS.push(i); }
   /* 'Peel off\nล่อน' → 'Peel off' (태국어 빼고 영어 이름 전체) */
   const dn = i => String(A[hr][i]||'').replace(/[\u0E00-\u0E7F]+/g,' ').replace(/\s+/g,' ').trim().replace(/[\s,\/]+$/,'') || txt(H1[i]);
-  /* 설비: 'MC 6' → MC06 · 'MCT6' → MCT06 (MC 6 = HOUSING-REAR, MCT6 = HS-15 실린더 — 서로 다른 설비라 합치지 않는다)
-     빈 칸은 같은 품번이 가장 많이 돈 설비로 채우고 '설비추정'=Y (예: HS15 실린더 → MCT06) */
-  const pmMC = v => { const s = txt(v); const m = s.match(/^M\s*C\s*(T?)\s*[-_ ]?0*(\d{1,2})$/i); return m ? (m[1] ? 'MCT' : 'MC')+pad(m[2]) : ''; };
+  /* 설비: 'MC 6' → MC06 · 'MCT6' → MCT6 (원본 표기 그대로) (MC 6 = HOUSING-REAR, MCT6 = HS-15 실린더 — 서로 다른 설비라 합치지 않는다)
+     빈 칸은 같은 품번이 가장 많이 돈 설비로 채우고 '설비추정'=Y (예: HS15 실린더 → MCT6) */
+  const pmMC = v => { const s = txt(v); const m = s.match(/^M\s*C\s*(T?)\s*[-_ ]?0*(\d{1,2})$/i); return m ? (m[1] ? 'MCT'+parseInt(m[2],10) : 'MC'+pad(m[2])) : ''; };
   const MODE = {}; for (let r = hr + 1; r < A.length; r++){ const mc = pmMC(A[r][c.mc]), pk = key(A[r][c.part]); if (mc && pk){ const o = MODE[pk] || (MODE[pk] = {}); o[mc] = (o[mc]||0) + 1; } }
   const modeMC = pk => { const o = MODE[pk]; if (!o) return ''; return Object.keys(o).sort((a,b)=>o[b]-o[a])[0]; };
   const head = ['일자','주차','설비','OP','품번','품번(QC)','Part name','Cavity','Lot d/c','Total','FG','NG','%NG',"Mat'l Before","Mat'l After",'Setting',

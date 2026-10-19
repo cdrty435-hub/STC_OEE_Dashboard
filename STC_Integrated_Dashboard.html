@@ -1893,7 +1893,7 @@ function f2McIssues(pred, noteKey){
 const F2_GC = { '가공불량':'#7c3aed', '다캐불량':'#c2410c', '기타':'#9aa0a6' };   /* FAC2 보라 · FAC1 주황 (추이 그래프와 같은 색) */
 /* 설비 목록 = 생산 기록(F2_MCT_Q)에 한 번이라도 나온 MCT — OQC 는 수출 전 출하 검사라 설비 기준에 쓰지 않는다.
    선택 기간에 쉰 설비는 '가동 없음' 칸으로 남고, 새 설비가 기록되면 자동으로 늘어난다. */
-const F2_MC_ALL = ['MC02','MC03','MC04','MC05','MC06','MCT06','MC07','MC08','MC11','MC12','MC13','MC14','MC15','MC16','MC17','MC18'];   /* FAC2 보유 MCT 전체 (원본 설비 목록) — 기록이 없어도 칸을 둔다 */
+const F2_MC_ALL = ['MC02','MC03','MC04','MC05','MC06','MCT6','MC07','MC08','MC11','MC12','MC13','MC14','MC15','MC16','MC17','MC18'];   /* FAC2 보유 MCT 전체 (원본 설비 목록) — 기록이 없어도 칸을 둔다 */
 const f2McNo = m => parseInt(String(m).replace(/\D/g,''),10) || 0;
 function f2AllMcs(){ const s = new Set(F2_MC_ALL); F2.mq.forEach(r=>{ if(r['설비명'] && f2n(r['생산수량'])>0) s.add(r['설비명']); }); return [...s].sort((a,b)=>f2McNo(a)-f2McNo(b) || (a<b?-1:a>b?1:0)); }
 /* src 를 주면 다른 원천(F2_생산실적 = 전 설비)으로 같은 화면을 그린다 — { stats(), all(), parts(mc), top(mc) } */
@@ -2094,7 +2094,8 @@ function f2pOp1(v){
   return s;
 }
 const f2pOp = v => String(v==null?'':v).split(/\s+\/\s+/).map(f2pOp1).filter(Boolean).join(' / ');
-const f2pMc = v => { const s = String(v||'').trim(), m = s.match(/^M\s*C\s*T?\s*[-_ ]?0*(\d{1,2})$/i); return m ? 'MC'+f2p2(m[1]) : s; };
+/* 설비 이름 규칙 (전 화면 공통) : MC 는 두 자리 'MC01' · MCT 는 0 없이 'MCT6' — MC 와 MCT 는 다른 설비라 합치지 않음 */
+const f2pMc = v => { const s = String(v||'').trim(), m = s.match(/^M\s*C\s*(T?)\s*[-_ ]?0*(\d{1,2})$/i); return m ? (m[1] ? 'MCT'+parseInt(m[2],10) : 'MC'+f2p2(m[2])) : s; };
 const f2pFr = v => { const n = f2n(v); return n > 1.5 ? n/100 : n; };   /* 0.898 · 89.8% · 89.8 모두 → 0.898 */
 const f2pWeek = d => 'W' + f2p2(39 + Math.floor(f2DayDiff('2026-09-16', d) / 7));   /* 주차 열이 빈 경우만 (수~화, W39 = 9/16~9/22) */
 function f2pNorm(rows){
@@ -3994,8 +3995,8 @@ const LAY_KL = { all:'100% 검사', half:'50% 검사', gen:'일반 공정', iqc:
 const LAY_MC = [   /* [이름, x, y] — MC 동 · MCT 동 (원본 도면 위치) */
   ['MC15',404,188],['MC13',437,188],['MC11',470,188],['MC07',503,188],['MC05',536,188],['MC04',569,188],['MC02',602,188],
   ['MC16',404,248],['MC14',437,248],['MC12',470,248],['MC08',503,248],['MC06',536,248],['MC03',602,248],
-  ['MCT04',668,188],['MCT05',701,188],['MCT06',734,188],['MCT07',767,188],['MCT09',800,188],['MCT11',833,188],
-  ['MCT03',668,248],['MCT08',767,248],['MCT10',800,248]
+  ['MCT4',668,188],['MCT5',701,188],['MCT6',734,188],['MCT7',767,188],['MCT9',800,188],['MCT11',833,188],
+  ['MCT3',668,248],['MCT8',767,248],['MCT10',800,248]
 ];
 const LAY_ORDER_DEF = ['kpi','trend','layout','model','steps'];
 function layOrder(){ let a = []; try{ a = JSON.parse(localStorage.getItem('stc_f2_lay_order')||'[]'); }catch(e){}
@@ -4081,7 +4082,7 @@ function f2LayoutView(week){
   g += zone(190,354,200,144,'url(#lay-hatch)','#cbd5e1','STOCK');
   g += zone(396,354,250,144,'#f0fbfa','#8fd3c9','') + zone(650,354,252,144,'#f8fafc','#cbd5e1','');
   g += `<text x="776" y="490" text-anchor="middle" font-size="10.5" font-weight="700" fill="#94a3b8">CNC 구역</text>`;
-  [['CNC01',660,366],['CNC01',700,366],['CNC03',660,430],['CNC02',700,430],['MCT06',740,430],['MCT10',780,430]].forEach(([m,x,y])=>{
+  [['CNC01',660,366],['CNC01',700,366],['CNC03',660,430],['CNC02',700,430],['MCT6',740,430],['MCT10',780,430]].forEach(([m,x,y])=>{
     g += `<rect x="${x}" y="${y}" width="30" height="44" rx="5" fill="#fff" stroke="#cbd5e1"/><text x="${x+15}" y="${y+26}" text-anchor="middle" font-size="7.5" font-weight="700" fill="#94a3b8">${m}</text>`; });
   g += `<rect x="828" y="364" width="26" height="110" rx="4" fill="#f1f5f9" stroke="#cbd5e1"/><rect x="864" y="364" width="26" height="110" rx="4" fill="#f1f5f9" stroke="#cbd5e1"/>`;
   /* 후공정 (검사 · 함침 · 세척 · 마킹) */
@@ -4665,7 +4666,7 @@ const LAY_MASTER_DEF = {
   MCT:[['MCT 1','BURNET HEAD FISH G-B',''],['MCT 2','BURNER CUP B-6',''],['MCT 3','MAINFOLD SUCTION',''],['MCT 4','MAINFOLD NE NF QA',''],['MCT 5','MAINFOLD DIS-SCORPIO',''],
        ['MCT 6','CYLINDER HS-15 F/R',''],['MCT 7','X',''],['MCT 8','BRACKET-STAND REAR',''],['MCT 9','BRACKET-STAND NECK',''],['MCT 10','LOT MARK',''],['MCT 11','X','']] };
 let LAY_MASTER = null, LAY_MASTER_SRC = '내장 기본값';
-const layMcId = v => { const m = String(v||'').toUpperCase().replace(/\s+/g,'').match(/^(MCT|MC)0*(\d{1,2})$/); return m ? m[1] + String(m[2]).padStart(2,'0') : ''; };
+const layMcId = v => { const m = String(v||'').toUpperCase().replace(/\s+/g,'').match(/^(MCT|MC)0*(\d{1,2})$/); return m ? m[1] + (m[1]==='MCT' ? String(parseInt(m[2],10)) : String(m[2]).padStart(2,'0')) : ''; };
 const layOp = v => { let s = String(v==null?'':v).replace(/^[`'’]+/,'').trim(); const m = s.match(/^(\d{1,2})월\s*(\d{1,2})일$/); if(m) s = m[1]+'-'+m[2]; return s; };
 function layMasterBuild(rowsMC, rowsMCT){
   const out = {};
