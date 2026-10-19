@@ -1893,9 +1893,9 @@ function f2McIssues(pred, noteKey){
 const F2_GC = { '가공불량':'#7c3aed', '다캐불량':'#c2410c', '기타':'#9aa0a6' };   /* FAC2 보라 · FAC1 주황 (추이 그래프와 같은 색) */
 /* 설비 목록 = 생산 기록(F2_MCT_Q)에 한 번이라도 나온 MCT — OQC 는 수출 전 출하 검사라 설비 기준에 쓰지 않는다.
    선택 기간에 쉰 설비는 '가동 없음' 칸으로 남고, 새 설비가 기록되면 자동으로 늘어난다. */
-const F2_MC_ALL = ['MC02','MC03','MC04','MC05','MC06','MC07','MC08','MC11','MC12','MC13','MC14','MC15','MC16','MC17','MC18'];   /* FAC2 보유 MCT 전체 (원본 설비 목록) — 기록이 없어도 칸을 둔다 */
+const F2_MC_ALL = ['MC02','MC03','MC04','MC05','MC06','MCT06','MC07','MC08','MC11','MC12','MC13','MC14','MC15','MC16','MC17','MC18'];   /* FAC2 보유 MCT 전체 (원본 설비 목록) — 기록이 없어도 칸을 둔다 */
 const f2McNo = m => parseInt(String(m).replace(/\D/g,''),10) || 0;
-function f2AllMcs(){ const s = new Set(F2_MC_ALL); F2.mq.forEach(r=>{ if(r['설비명'] && f2n(r['생산수량'])>0) s.add(r['설비명']); }); return [...s].sort((a,b)=>f2McNo(a)-f2McNo(b)); }
+function f2AllMcs(){ const s = new Set(F2_MC_ALL); F2.mq.forEach(r=>{ if(r['설비명'] && f2n(r['생산수량'])>0) s.add(r['설비명']); }); return [...s].sort((a,b)=>f2McNo(a)-f2McNo(b) || (a<b?-1:a>b?1:0)); }
 /* src 를 주면 다른 원천(F2_생산실적 = 전 설비)으로 같은 화면을 그린다 — { stats(), all(), parts(mc), top(mc) } */
 function f2Measure(pred, src){
   if(!src && !F2.mq.length) return `<div class="card empty" style="padding:14px">${T('f2.noMq')}</div>`;
@@ -2454,7 +2454,7 @@ function f2pMcDayTable(pred){
   const D = {}, TOT = mk();
   rows.forEach(r=>{ const d = D[r.d] || (D[r.d] = { all:mk(), mc:{} }); add(d.all, r); add(d.mc[r.mc] || (d.mc[r.mc] = mk()), r); add(TOT, r); });
   const dates = Object.keys(D).sort(), multi = dates.length > 1;
-  const body = dates.map(d=>{ const mcs = Object.keys(D[d].mc).sort((a,b)=>f2McNo(a)-f2McNo(b));
+  const body = dates.map(d=>{ const mcs = Object.keys(D[d].mc).sort((a,b)=>f2McNo(a)-f2McNo(b) || (a<b?-1:a>b?1:0));
     return mcs.map((mc,i)=>{ const o = D[d].mc[mc];
       return `<tr>${i===0?`<td class="name f2-dcell" rowspan="${mcs.length+(multi?1:0)}"><a href="#" onclick="noteOpen('${d}','');return false;" style="color:inherit">${esc2(d)}</a></td>`:''}<td class="name" style="text-align:left">${esc2(mc)}</td>
         <td style="text-align:left;font-size:11.5px;white-space:normal;min-width:220px">${[...o.parts].map(esc2).join('<br>')}</td>${nums(o)}</tr>`; }).join('')
@@ -2473,7 +2473,7 @@ function f2pMeasureSrc(S, pred){
   return {
     stats:()=>S.mcList.map(mc=>{ const A = S.mc[mc], d = defs(A);
       return { mc, t:A.t, f:A.f, n:A.n, dc:sum(d,'다캐불량'), mcN:sum(d,'가공불량'), mat:A.mb+A.ma, parts:new Set([...A.pns].map(pn=>f2pShort(pn, S.names[pn]))), rate:A.t?A.n/A.t*100:null }; }),
-    all:()=>[...new Set([...F2_MC_ALL, ...S.mcList])].sort((a,b)=>f2McNo(a)-f2McNo(b)),
+    all:()=>[...new Set([...F2_MC_ALL, ...S.mcList])].sort((a,b)=>f2McNo(a)-f2McNo(b) || (a<b?-1:a>b?1:0)),
     top:mc=>defs(S.mc[mc]),
     parts:mc=>{ const m = {};
       const FC = f2pFacCols();
