@@ -7826,6 +7826,24 @@ loadData();
 .kw .kw-tc .lg i{display:inline-block;width:18px;vertical-align:middle;margin-right:4px;} .kw .kw-tc .lg i.o{width:9px;height:9px;border-radius:50%;background:#f59e0b;}
 @media (max-width:900px){ .kw .kw-tcs{grid-template-columns:repeat(2,minmax(0,1fr));} }
 @media print{ .kw .kw-tr-act{display:none;} .kw table.kw-tr td.tgc input{border:0;} }
+.kw .fk-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:6px;}
+.kw .fk-card{border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 1px 4px rgba(15,23,42,.12);break-inside:avoid;}
+.kw .fk-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;padding:9px 14px;color:#fff;font-weight:800;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.kw .fk-head .nm{font-size:17px;} .kw .fk-head .nm small{display:table;font-size:11px;margin-top:3px;padding:1px 8px;border-radius:9px;background:rgba(255,255,255,.25);}
+.kw .fk-head .av{display:flex;flex-direction:column;align-items:center;background:rgba(255,255,255,.18);border-radius:10px;padding:3px 12px;line-height:1.05;} .kw .fk-head .av small{font-size:10px;} .kw .fk-head .av b{font-size:26px;font-weight:900;} .kw .fk-head .av i{font-style:normal;font-size:14px;}
+.kw .fk-head .rk{justify-self:end;font-size:14px;font-weight:900;background:rgba(0,0,0,.18);border-radius:14px;padding:3px 10px;white-space:nowrap;} .kw .fk-head .rk.top{background:#fff;color:#1e293b;} .kw .fk-head .rk small{font-size:11px;opacity:.8;}
+.kw .fk-body{padding:4px 14px 12px;}
+.kw .fk-cum{margin:8px 0 2px;padding:7px 9px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;font-size:12.5px;}
+.kw .fk-cum > div:first-child{display:flex;justify-content:space-between;} .kw .fk-cum small{color:#64748b;font-size:11px;}
+.kw .fk-cum .c{display:flex;flex-wrap:wrap;gap:3px 10px;margin-top:4px;color:#334155;} .kw .fk-cum .c b{font-size:15px;color:#0f172a;} .kw .fk-cum .c .g1 b{color:#b45309;font-size:17px;} .kw .fk-cum .c .p{margin-left:auto;} .kw .fk-cum .c .p b{color:#15803d;}
+.kw .fk-cum .s{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;} .kw .fk-cum .s i{font-style:normal;width:17px;height:17px;line-height:17px;text-align:center;border-radius:4px;font-size:10px;font-weight:900;color:#fff;background:#94a3b8;-webkit-print-color-adjust:exact;print-color-adjust:exact;} .kw .fk-cum .s i.r1{background:#f59e0b;} .kw .fk-cum .s i.r3{background:#b87333;}
+.kw .fk-row{padding:8px 0;border-bottom:1px solid #eef2f7;} .kw .fk-row .lb,.kw .fk-tri .lb{font-size:12.5px;color:#334155;font-weight:700;} .kw .fk-row .vl{font-size:24px;font-weight:900;line-height:1.2;}
+.kw .fk-bars{display:grid;grid-template-columns:auto 1fr auto;gap:3px 8px;align-items:center;margin-top:3px;font-size:12px;}
+.kw .fk-bars .fk-n{white-space:nowrap;} .kw .fk-bars .fk-n i{display:inline-block;width:7px;height:7px;margin-right:4px;vertical-align:middle;} .kw .fk-bars em{font-style:normal;font-size:9.5px;color:#dc2626;border:1px solid #fca5a5;border-radius:4px;padding:0 3px;margin-left:3px;}
+.kw .fk-bars .fk-b{height:8px;background:#eef2f7;border-radius:4px;overflow:hidden;} .kw .fk-bars .fk-b i{display:block;height:100%;border-radius:4px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.kw .fk-bars b{text-align:right;white-space:nowrap;font-size:12.5px;} .kw .fk-bars b small{font-size:10px;color:#94a3b8;margin-left:5px;font-weight:600;}
+.kw .fk-tri{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;padding-top:8px;} .kw .fk-tri > div + div{border-left:1px solid #e2e8f0;} .kw .fk-tri .vl{font-size:24px;font-weight:900;}
+@media (max-width:900px){ .kw .fk-grid{grid-template-columns:1fr;} }
 /* 1번 지표 요약 · 2번 워스트 유형표 — 화면에서 행 높이·글자 크게, 진하게 */
 @media screen{
   .kw h4.kw-h{font-size:16.5px;margin:18px 0 8px;} .kw h4.kw-h small{font-size:12.5px;color:#334155;}
@@ -8133,6 +8151,46 @@ loadData();
       };
       h += `<div class="kw-tcs">${T.map(chart).join('')}</div>`;
       h += `<div class="kw-note">※ 각 주차는 1번 지표 요약과 같은 기준(${C.std?'계획외 고장 UDT':'전체 로스'} · 최소정지 ${C.minStop}분)으로 다시 집계 · 평균·최고·최저·상위 25%·달성 주는 부분 주차를 뺀 ${FULL.length}주 기준 · 제안 = 평균에서 10% 개선 (MTBF 는 +10%, 나머지는 −10%) · 상위 25% = 잘한 주 4개 중 1개 수준(도전 목표 참고) · 빨강 칸 = 타겟 미달 주 · MTTR/MTBF 타겟은 상단 목표값과 같은 저장값 · 이 브라우저에 저장</div>`;
+    }
+    /* --- FAC별 종합 성과 (설비 KPI 대시보드와 같은 카드) — 주간보고만 ---
+       가용률 = 가동 ÷ (가동 + 고장) · 순위 = 가용률 높은 순 · 누적 순위 = 데이터 첫 주 ~ 이번 주 주마다 매긴 순위 횟수
+       계통 막대 = 최소정지 이상 전체 로스(4분류) · '고장' 표시 = 1번 지표 요약과 같은 고장 기준에 들어가는 계통 */
+    if (opt.mode === 'week'){
+      const FMAP = {1:'C',2:'C',3:'C',4:'C',5:'C',6:'C',7:'C',8:'C',9:'C',10:'C',11:'E',12:'E',13:'E',15:'E',16:'E',17:'E',18:'E',19:'E',20:'D',21:'D',22:'D',23:'D'};
+      const FCOL = { C:'#2980B9', D:'#E67E22', E:'#27AE60' };
+      const FCAT = { '설비-전기':['설비수리','취출기수리','스프레이수리','전기로회전','전기로수리','래들수리','펌프이상','컨베이어수리','진공설비','히터수리'],
+        '설비-라인':['조건변경','팁교체','스크랩용해','스프레이조정','노즐막힘','플런저오일막힘','바가지교체','탈산처리','설비냉각수'],
+        '금형':['금형수리','핀파손','로트마크,사상','제품소착','슬라이드코어수리','청소','금형파손','금형냉각라인'],
+        '관리':['휴식,설비교대','금형교체','미팅/정전','기타'] };
+      const CCOL = { '설비-전기':'#dc2626', '설비-라인':'#2563eb', '금형':'#d97706', '관리':'#64748b' };
+      const catOf = i => { const k = norm(i); return Object.keys(FCAT).find(c=>FCAT[c].some(x=>norm(x)===k)) || '관리'; };
+      const failF = data.isFail ? data.isFail : (x => (!C.std || C.udt.has(norm(x.i))) && x.l >= C.minStop);
+      const facStat = f => { const o = {}; ['C','D','E'].forEach(k=>o[k] = { run:0, plan:0, brk:0, n:0, cat:{} });
+        data.run.filter(f).forEach(r=>{ const k = FMAP[r.m]; if(k){ o[k].run += r.r; o[k].plan += r.p; } });
+        data.loss.filter(f).forEach(x=>{ const k = FMAP[x.m]; if(!k || x.l < C.minStop) return; const c = catOf(x.i), z = o[k].cat[c] || (o[k].cat[c] = { n:0, m:0 }); z.n++; z.m += x.l;
+          if (failF(x)){ o[k].brk += x.l; o[k].n++; } });
+        Object.values(o).forEach(g=>{ g.a = (g.run+g.brk)>0 ? g.run/(g.run+g.brk)*100 : 0; g.mttr = g.n ? g.brk/60/g.n : null; g.mtbf = g.n ? g.run/60/g.n : null; });
+        return o; };
+      const FS = facStat(P.cur.f), FK = ['C','D','E'].filter(k=>FS[k].plan>0 || FS[k].run>0);
+      const rank = {}; FK.slice().sort((a,b)=>FS[b].a-FS[a].a).forEach((k,i)=>rank[k] = i+1);
+      /* 누적 순위 */
+      const WKS = [...new Set(data.run.map(r=>r.w))].filter(Boolean).sort((a,b)=>wkNo(a)-wkNo(b)).filter(w=>wkNo(w) <= wkNo(opt.week));
+      const cum = { C:[0,0,0], D:[0,0,0], E:[0,0,0] }, hist = { C:[], D:[], E:[] }; let nW = 0;
+      WKS.forEach(w=>{ const s = facStat(r=>r.w===w), L = ['C','D','E'].filter(k=>s[k].plan>0).sort((a,b)=>s[b].a-s[a].a); if (L.length < 2) return; nW++;
+        L.forEach((k,i)=>{ if(i<3) cum[k][i]++; hist[k].push({ w, r:i+1, a:s[k].a }); }); });
+      const mx = f => Math.max(1, ...FK.flatMap(k=>Object.keys(FCAT).map(c=>(FS[k].cat[c]||{})[f]||0)));
+      const brkCats = c => FCAT[c].filter(x=>!C.std || C.udt.has(norm(x))).length;
+      const bars = (g, f) => Object.keys(FCAT).map(c=>{ const v = (g.cat[c]||{})[f]||0, tot = Object.values(g.cat).reduce((a,z)=>a+(z[f]||0),0), nb = brkCats(c);
+        return `<span class="fk-n"><i style="background:${CCOL[c]}"></i>${c}${nb?`<em>${nb===FCAT[c].length?'고장':'고장 '+nb+'종'}</em>`:''}</span><span class="fk-b"><i style="width:${(v/mx(f)*100).toFixed(1)}%;background:${CCOL[c]}"></i></span><b>${v ? (f==='n' ? v : f1(v/60,1)) : '·'}<small>${v&&tot?Math.round(v/tot*100)+'%':''}</small></b>`; }).join('');
+      h += `<h4 class="kw-h">FAC별 종합 성과 <small>${esc(P.cur.label)} · FAC-C DC1~10 · FAC-D DC20~23 · FAC-E DC11~19 · 가용률 = 가동 ÷ (가동 + 고장) · 누적 순위 ${esc(WKS[0]||'')} ~ ${esc(opt.week)} ${nW}주</small></h4><div class="fk-grid">`;
+      FK.forEach(k=>{ const g = FS[k], col = FCOL[k], rk = rank[k], c3 = cum[k];
+        h += `<div class="fk-card"><div class="fk-head" style="background:${col}"><span class="nm">FAC-${k}<small>${esc(opt.week)}</small></span><span class="av"><small>가용률</small><b>${f1(g.a,1)}<i>%</i></b></span><span class="rk${rk===1?' top':''}">${['🥇','🥈','🥉'][rk-1]||''} ${rk}위<small>/${FK.length}</small></span></div>
+          <div class="fk-body"><div class="fk-cum"><div><b>누적 순위</b><small>${nW}주</small></div><div class="c"><span class="g1">🥇 1위 <b>${c3[0]}</b>회</span><span>🥈 2위 <b>${c3[1]}</b>회</span><span>🥉 3위 <b>${c3[2]}</b>회</span><span class="p">1위율 <b>${nW?Math.round(c3[0]/nW*100):0}%</b></span></div>
+            <div class="s">${hist[k].map(x=>`<i class="r${x.r}" title="${esc(x.w)} · ${x.r}위 · 가용률 ${f1(x.a,1)}%">${x.r}</i>`).join('')}</div></div>
+            <div class="fk-row"><div class="lb">고장횟수 (회)</div><div class="vl" style="color:${col}">${g.n}</div><div class="fk-bars">${bars(g,'n')}</div></div>
+            <div class="fk-row"><div class="lb">고장시간 (Hr)</div><div class="vl" style="color:${col}">${f1(g.brk/60,1)}</div><div class="fk-bars">${bars(g,'m')}</div></div>
+            <div class="fk-tri"><div><div class="lb">MTTR (Hr)</div><div class="vl" style="color:${col}">${g.mttr==null?'-':f1(g.mttr,1)}</div></div><div><div class="lb">MTBF (Hr)</div><div class="vl" style="color:${col}">${g.mtbf==null?'-':f1(g.mtbf,1)}</div></div><div><div class="lb">가용률 (%)</div><div class="vl" style="color:${col}">${f1(g.a,1)}</div></div></div></div></div>`; });
+      h += `</div><div class="kw-note">※ 고장 기준 = 1번 지표 요약과 같음 (${C.std?'계획외 고장 UDT':'전체 로스'} · 최소정지 ${C.minStop}분) · 계통 막대 = 최소정지 이상 전체 로스를 4분류 · 누적 순위 = 주마다 FAC 가용률 순위 (칸에 마우스 = 주차·가용률)</div>`;
     }
     h += `</div>`;
     return { html:h, key:P.cur.key };
@@ -8547,7 +8605,7 @@ loadData();
     const U = units(); if(!U.length) return;
     const saved = getOrder(), ids = U.map(u=>u.dataset.unit);
     /* 저장된 순서 + 새로 생긴 섹션은 원래 위치 뒤에 */
-    const def = ['b0','k0','k3','k1','k2'].concat(ids.filter(x=>x!=='b0' && !/^k/.test(x)));
+    const def = ['b0','k0','k3','k4','k1','k2'].concat(ids.filter(x=>x!=='b0' && !/^k/.test(x)));
     let order = saved.filter(x=>ids.includes(x)); def.forEach(x=>{ if(ids.includes(x) && !order.includes(x)){ const i = def.indexOf(x), prev = def.slice(0,i).reverse().find(p=>order.includes(p)); order.splice(prev ? order.indexOf(prev)+1 : 0, 0, x); } });
     /* 숨김 — 처음 한 번: 그때 화면 기준 10번 이후 항목을 모두 숨긴다 (요청: 10번부터 아래 삭제) */
     let H = getHide();
