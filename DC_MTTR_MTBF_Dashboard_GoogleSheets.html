@@ -7838,6 +7838,11 @@ loadData();
 .kw .fk-cum .c{display:flex;flex-wrap:wrap;gap:3px 10px;margin-top:4px;color:#334155;} .kw .fk-cum .c b{font-size:15px;color:#0f172a;} .kw .fk-cum .c .g1 b{color:#b45309;font-size:17px;} .kw .fk-cum .c .p{margin-left:auto;} .kw .fk-cum .c .p b{color:#15803d;}
 .kw .fk-cum .s{display:flex;flex-wrap:wrap;gap:4px;margin-top:9px;} .kw .fk-cum .s i{font-style:normal;min-width:24px;height:24px;line-height:24px;text-align:center;border-radius:6px;font-size:11px;font-weight:800;color:#94a3b8;background:#eef2f7;-webkit-print-color-adjust:exact;print-color-adjust:exact;} .kw .fk-cum .s i.r1{background:#f59e0b;color:#fff;font-weight:900;}
 .kw .fk-cum{padding:11px 11px 12px !important;margin:10px 0 4px !important;} .kw .fk-cum .c{align-items:baseline;margin-top:7px !important;} .kw .fk-cum .c .g1 b{font-size:28px !important;line-height:1;} .kw .fk-cum .c .p b{font-size:19px !important;}
+.kw .fk-vline{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;}
+.kw .fk-wst{display:flex;align-items:center;gap:4px;flex-wrap:wrap;} .kw .fk-wst .wl{font-size:10.5px;font-weight:800;color:#94a3b8;}
+.kw .fk-wst .w{display:inline-flex;align-items:center;gap:3px;padding:2px 7px 2px 3px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;font-size:12px;font-weight:800;color:#7f1d1d;white-space:nowrap;}
+.kw .fk-wst .w i{font-style:normal;width:16px;height:16px;line-height:16px;text-align:center;border-radius:50%;background:#dc2626;color:#fff;font-size:10px;font-weight:900;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.kw .fk-wst .w.w2 i{background:#f97316;} .kw .fk-wst .w.w3 i{background:#a8a29e;} .kw .fk-wst .w b{color:#dc2626;font-size:13px;}
 .kw .fk-row{padding:8px 0;border-bottom:1px solid #eef2f7;} .kw .fk-row .lb,.kw .fk-tri .lb{font-size:12.5px;color:#334155;font-weight:700;} .kw .fk-row .vl{font-size:24px;font-weight:900;line-height:1.2;}
 .kw .fk-bars{display:grid;grid-template-columns:auto 1fr auto;gap:3px 8px;align-items:center;margin-top:3px;font-size:12px;}
 .kw .fk-bars .fk-n{white-space:nowrap;} .kw .fk-bars .fk-n i{display:inline-block;width:7px;height:7px;margin-right:4px;vertical-align:middle;} .kw .fk-bars em{font-style:normal;font-size:9.5px;color:#dc2626;border:1px solid #fca5a5;border-radius:4px;padding:0 3px;margin-left:3px;}
@@ -8165,7 +8170,12 @@ loadData();
         '관리':['휴식,설비교대','금형교체','미팅/정전','기타'] };
       const CCOL = { '설비-전기':'#dc2626', '설비-라인':'#2563eb', '금형':'#d97706', '관리':'#64748b' };
       const catOf = i => { const k = norm(i); return Object.keys(FCAT).find(c=>FCAT[c].some(x=>norm(x)===k)) || '관리'; };
-      const failF = data.isFail ? data.isFail : (x => (!C.std || C.udt.has(norm(x.i))) && x.l >= C.minStop);
+      /* 설비 KPI 페이지 설정을 그대로 따른다 : 고장유형(stc_kpi_cat) · 1위 누적 기간(stc_kpi_rk) */
+      let KCAT = 'all'; try{ KCAT = LS('stc_kpi_cat') || 'all'; }catch(e){}
+      if (!FCAT[KCAT]) KCAT = 'all';
+      const failF = KCAT !== 'all' ? (x => FCAT[KCAT].some(c=>norm(c)===norm(x.i)) && x.l >= C.minStop)
+                  : data.isFail ? data.isFail : (x => (!C.std || C.udt.has(norm(x.i))) && x.l >= C.minStop);
+      const KLBL = KCAT !== 'all' ? KCAT + ' 전체' : (C.std ? '계획외 고장 UDT' : '전체 로스');
       const facStat = f => { const o = {}; ['C','D','E'].forEach(k=>o[k] = { run:0, plan:0, brk:0, n:0, cat:{} });
         data.run.filter(f).forEach(r=>{ const k = FMAP[r.m]; if(k){ o[k].run += r.r; o[k].plan += r.p; } });
         data.loss.filter(f).forEach(x=>{ const k = FMAP[x.m]; if(!k || x.l < C.minStop) return; const c = catOf(x.i), z = o[k].cat[c] || (o[k].cat[c] = { n:0, m:0 }); z.n++; z.m += x.l;
@@ -8173,25 +8183,34 @@ loadData();
         Object.values(o).forEach(g=>{ g.a = (g.run+g.brk)>0 ? g.run/(g.run+g.brk)*100 : 0; g.mttr = g.n ? g.brk/60/g.n : null; g.mtbf = g.n ? g.run/60/g.n : null; });
         return o; };
       const FS = facStat(P.cur.f), FK = ['C','D','E'].filter(k=>FS[k].plan>0 || FS[k].run>0);
+      /* 고장횟수 Worst 1·2·3 설비 (그 FAC 안, 같은 고장 기준) */
+      const MC = {}; data.loss.filter(P.cur.f).forEach(x=>{ if(!FMAP[x.m] || !failF(x)) return; const o = MC[x.m] || (MC[x.m] = { m:x.m, n:0, h:0 }); o.n++; o.h += x.l/60; });
+      const wst = k => { const L = Object.values(MC).filter(o=>FMAP[o.m]===k).sort((a,b)=>b.n-a.n || b.h-a.h).slice(0,3); if(!L.length) return '';
+        return `<div class="fk-wst"><span class="wl">Worst</span>${L.map((o,i)=>`<span class="w w${i+1}" title="DC${o.m} · 고장 ${o.n}회 · ${f1(o.h,1)}h"><i>${i+1}</i>DC${o.m}<b>${o.n}</b></span>`).join('')}</div>`; };
       const rank = {}; FK.slice().sort((a,b)=>FS[b].a-FS[a].a).forEach((k,i)=>rank[k] = i+1);
       /* 누적 순위 */
-      const WKS = [...new Set(data.run.map(r=>r.w))].filter(Boolean).sort((a,b)=>wkNo(a)-wkNo(b)).filter(w=>wkNo(w) <= wkNo(opt.week));
+      const ALLW = [...new Set(data.run.map(r=>r.w))].filter(Boolean).sort((a,b)=>wkNo(a)-wkNo(b));
+      let RKS = null; try{ RKS = JSON.parse(LS('stc_kpi_rk')||'null'); }catch(e){}
+      let wF = ALLW[0] || '', wT = opt.week;
+      if (RKS && RKS.n){ const i = ALLW.indexOf(opt.week); wF = ALLW[Math.max(0, (i<0?ALLW.length-1:i) - RKS.n + 1)] || wF; }
+      else if (RKS && RKS.f && RKS.t){ wF = RKS.f; wT = RKS.t; if (wkNo(wF) > wkNo(wT)){ const x = wF; wF = wT; wT = x; } }
+      const WKS = ALLW.filter(w=>wkNo(w) >= wkNo(wF) && wkNo(w) <= wkNo(wT));
       const cum = { C:[0,0,0], D:[0,0,0], E:[0,0,0] }, hist = { C:[], D:[], E:[] }; let nW = 0;
       WKS.forEach(w=>{ const s = facStat(r=>r.w===w), L = ['C','D','E'].filter(k=>s[k].plan>0).sort((a,b)=>s[b].a-s[a].a); if (L.length < 2) return; nW++;
         L.forEach((k,i)=>{ if(i<3) cum[k][i]++; hist[k].push({ w, r:i+1, a:s[k].a }); }); });
       const mx = f => Math.max(1, ...FK.flatMap(k=>Object.keys(FCAT).map(c=>(FS[k].cat[c]||{})[f]||0)));
-      const brkCats = c => FCAT[c].filter(x=>!C.std || C.udt.has(norm(x))).length;
+      const brkCats = c => KCAT !== 'all' ? (c===KCAT ? FCAT[c].length : 0) : FCAT[c].filter(x=>!C.std || C.udt.has(norm(x))).length;
       const bars = (g, f) => Object.keys(FCAT).map(c=>{ const v = (g.cat[c]||{})[f]||0, tot = Object.values(g.cat).reduce((a,z)=>a+(z[f]||0),0), nb = brkCats(c);
         return `<span class="fk-n"><i style="background:${CCOL[c]}"></i>${c}${nb?`<em>${nb===FCAT[c].length?'고장':'고장 '+nb+'종'}</em>`:''}</span><span class="fk-b"><i style="width:${(v/mx(f)*100).toFixed(1)}%;background:${CCOL[c]}"></i></span><b>${v ? (f==='n' ? v : f1(v/60,1)) : '·'}<small>${v&&tot?Math.round(v/tot*100)+'%':''}</small></b>`; }).join('');
-      h += `<h4 class="kw-h">FAC별 종합 성과 <small>${esc(P.cur.label)} · FAC-C DC1~10 · FAC-D DC20~23 · FAC-E DC11~19 · 가용률 = 가동 ÷ (가동 + 고장) · 누적 순위 ${esc(WKS[0]||'')} ~ ${esc(opt.week)} ${nW}주</small></h4><div class="fk-grid">`;
+      h += `<h4 class="kw-h">FAC별 종합 성과 <small>${esc(P.cur.label)} · FAC-C DC1~10 · FAC-D DC20~23 · FAC-E DC11~19 · 가용률 = 가동 ÷ (가동 + 고장) · 고장 기준 ${esc(KLBL)} · 누적 1위 ${esc(WKS[0]||'')} ~ ${esc(WKS[WKS.length-1]||'')} ${nW}주 <span style="color:#1d4ed8">(설비 KPI 설정 반영)</span></small></h4><div class="fk-grid">`;
       FK.forEach(k=>{ const g = FS[k], col = FCOL[k], rk = rank[k], c3 = cum[k];
         h += `<div class="fk-card"><div class="fk-head" style="background:${col}"><span class="nm">FAC-${k}<small>${esc(opt.week)}</small></span><span class="av"><small>가용률</small><b>${f1(g.a,1)}<i>%</i></b></span><span class="rk${rk===1?' top':''}">${['🥇','🥈','🥉'][rk-1]||''} ${rk}위<small>/${FK.length}</small></span></div>
-          <div class="fk-body"><div class="fk-cum"><div><b>🥇 누적 1위</b><small>${esc(WKS[0]||'')} ~ ${esc(opt.week)} · ${nW}주</small></div><div class="c"><span class="g1"><b>${c3[0]}</b>회</span><span class="p">1위율 <b>${nW?Math.round(c3[0]/nW*100):0}%</b></span></div>
+          <div class="fk-body"><div class="fk-cum"><div><b>🥇 누적 1위</b><small>${esc(WKS[0]||'')} ~ ${esc(WKS[WKS.length-1]||'')} · ${nW}주</small></div><div class="c"><span class="g1"><b>${c3[0]}</b>회</span><span class="p">1위율 <b>${nW?Math.round(c3[0]/nW*100):0}%</b></span></div>
             <div class="s">${hist[k].map(x=>`<i class="${x.r===1?'r1':''}" title="${esc(x.w)} · ${x.r===1?'1위':'—'} · 가용률 ${f1(x.a,1)}%">${esc(String(x.w).replace(/\D/g,''))}</i>`).join('')}</div></div>
-            <div class="fk-row"><div class="lb">고장횟수 (회)</div><div class="vl" style="color:${col}">${g.n}</div><div class="fk-bars">${bars(g,'n')}</div></div>
+            <div class="fk-row"><div class="lb">고장횟수 (회)</div><div class="fk-vline"><div class="vl" style="color:${col}">${g.n}</div>${wst(k)}</div><div class="fk-bars">${bars(g,'n')}</div></div>
             <div class="fk-row"><div class="lb">고장시간 (Hr)</div><div class="vl" style="color:${col}">${f1(g.brk/60,1)}</div><div class="fk-bars">${bars(g,'m')}</div></div>
             <div class="fk-tri"><div><div class="lb">MTTR (Hr)</div><div class="vl" style="color:${col}">${g.mttr==null?'-':f1(g.mttr,1)}</div></div><div><div class="lb">MTBF (Hr)</div><div class="vl" style="color:${col}">${g.mtbf==null?'-':f1(g.mtbf,1)}</div></div><div><div class="lb">가용률 (%)</div><div class="vl" style="color:${col}">${f1(g.a,1)}</div></div></div></div></div>`; });
-      h += `</div><div class="kw-note">※ 고장 기준 = 1번 지표 요약과 같음 (${C.std?'계획외 고장 UDT':'전체 로스'} · 최소정지 ${C.minStop}분) · 계통 막대 = 최소정지 이상 전체 로스를 4분류 · 누적 순위 = 주마다 FAC 가용률 순위 (칸에 마우스 = 주차·가용률)</div>`;
+      h += `</div><div class="kw-note">※ 고장 기준 · 누적 기간 = 설비 KPI 페이지에서 고른 값 (고장유형 ${esc(KLBL)} · 최소정지 ${C.minStop}분 · 1위 누적 기간) · 계통 막대 = 최소정지 이상 전체 로스를 4분류 · 누적 순위 = 주마다 FAC 가용률 순위 (칸에 마우스 = 주차·가용률)</div>`;
     }
     h += `</div>`;
     return { html:h, key:P.cur.key };
