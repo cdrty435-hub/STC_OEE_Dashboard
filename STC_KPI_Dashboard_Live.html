@@ -82,6 +82,13 @@
   .fac-head .fh-rk{justify-self:end;white-space:nowrap;font-size:14px;font-weight:900;background:rgba(0,0,0,.18);border-radius:14px;padding:3px 10px;}
   .fac-head .fh-rk small{font-size:11px;opacity:.8;margin-left:1px;} .fac-head .fh-rk.top{background:#fff;color:#1e293b;}
   .fac-body{padding:4px 16px 14px;}
+  .fac-cum{margin:10px 0 2px;padding:8px 10px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;}
+  .fac-cum .fc-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;} .fac-cum .fc-h b{font-size:13px;color:#1e293b;} .fac-cum .fc-h small{font-size:11px;color:#64748b;}
+  .fac-cum .fc-c{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:5px;font-size:13px;color:#334155;} .fac-cum .fc-c b{font-size:16px;color:#0f172a;} .fac-cum .fc-c .g1 b{color:#b45309;font-size:18px;}
+  .fac-cum .fc-p{margin-left:auto;} .fac-cum .fc-p b{color:#15803d;}
+  .fac-cum .fc-s{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px;} .fac-cum .fc-s i{font-style:normal;width:18px;height:18px;line-height:18px;text-align:center;border-radius:4px;font-size:10.5px;font-weight:900;color:#fff;background:#94a3b8;}
+  .fac-cum .fc-s i.r1{background:#f59e0b;} .fac-cum .fc-s i.r2{background:#94a3b8;} .fac-cum .fc-s i.r3{background:#b87333;}
+  body.big .fac-cum .fc-c{font-size:16px;} body.big .fac-cum .fc-c b{font-size:20px;}
   .fac-row{padding:10px 0;border-bottom:1px solid #f0f1f6;}
   .fac-row:last-child{border-bottom:none;}
   .fac-row .flbl{font-size:11.5px;color:var(--sub);}
@@ -180,6 +187,8 @@
         <option value="custom">직접 선택</option>
       </select>
       <select id="weekSelect" title="주차 — 통합 대시보드 상단 주차와 맞춰짐"><option value="">주차 선택 안 함</option></select>
+      <label style="margin-left:6px">고장유형</label>
+      <select id="catSelect" title="고장으로 셀 로스 계통 — 고장횟수 · 고장시간 · MTBF · MTTR · 가용률이 모두 이 기준으로 바뀜"><option value="all">전체 선택</option><option value="설비-전기">설비-전기</option><option value="설비-라인">설비-라인</option><option value="금형">금형</option><option value="관리">관리</option></select>
       <input type="date" id="dateFrom" style="display:none;">
       <span style="display:none;color:#aab4d4;font-size:12px;" id="dateSep">~</span>
       <input type="date" id="dateTo" style="display:none;">
@@ -510,7 +519,10 @@ function render(){
   document.getElementById('footerText').textContent=`설비관리 KPI 대시보드 · ${fmt(minD)} ~ ${fmt(maxD)} · STC Co., Ltd. · Data source: Google Sheets (live CSV)`;
 
   /* ---- 설비별 집계 ---- */
-  const BRK = brkCodes();
+  let BRK = brkCodes();
+  /* 고장유형 선택 — 전체 = MTTR/MTBF 페이지와 같은 기준 · 계통을 고르면 그 계통의 로스 코드 전부를 고장으로 */
+  const CAT_SEL = (document.getElementById('catSelect')||{}).value || 'all';
+  if(CAT_SEL !== 'all' && LOSS_CAT[CAT_SEL]){ BRK = new Set(LOSS_CAT[CAT_SEL].map(nCode)); BRK_LBL = CAT_SEL + ' 전체'; }
   const byEquip={};
   A.forEach(r=>{
     const name=r['설비명']; if(!name) return;
@@ -586,6 +598,23 @@ function render(){
     return `<div class="fbr">${CATS.map((c,i)=>{ const v = vals[i], txt = f==='n' ? v : (v/60).toFixed(1), sh = tot ? Math.round(v/tot*100) : 0;
       const nb = LOSS_CAT[c].filter(k=>BRK.has(nCode(k))).length, isBrk = nb===LOSS_CAT[c].length;
       return `<span class="n${v?'':' z'}"><i class="dot" style="background:${CAT_COLORS[c]}"></i>${c}${nb?`<em title="고장횟수 · 고장시간 합계에 들어가는 코드 수">${isBrk?'고장':'고장 '+nb+'종'}</em>`:''}</span><span class="bar"><i style="width:${(v/mx*100).toFixed(1)}%;background:${CAT_COLORS[c]}"></i></span><b class="${v?'':'z'}">${v?txt:'·'}<small>${v?sh+'%':''}</small></b>`; }).join('')}</div>`; };
+  /* ---- 누적 1위 현황 : 데이터 첫 주 ~ 선택 주차(없으면 기간 마지막 주)까지 주마다 가용률 순위를 매겨 센다 (같은 고장 기준) ---- */
+  const RK = (()=>{ const wn = w => parseInt(String(w).slice(1),10)||0;
+    const endW = WK || [...new Set(A.map(wkOf))].filter(Boolean).sort((a,b)=>wn(a)-wn(b)).pop() || '';
+    const W = {}; RAW_A.forEach(r=>{ const w = wkOf(r), f = facOf(r['설비명']); if(!w || !f || f==='기타' || (endW && wn(w) > wn(endW))) return;
+      const o = (W[w] = W[w] || {})[f] || (W[w][f] = { run:0, brk:0, plan:0 });
+      o.run += toNum(r['가동시간_분']); o.plan += toNum(r['계획시간_분']);
+      LOSS_CODES.forEach(col=>{ const v = toNum(r[col]); if(v>=MIN_STOP && BRK.has(nCode(col))) o.brk += v; }); });
+    const weeks = Object.keys(W).sort((a,b)=>wn(a)-wn(b)), cnt = {}, hist = {};
+    weeks.forEach(w=>{ const L = Object.entries(W[w]).filter(([,o])=>o.plan>0).map(([f,o])=>({ f, a: (o.run+o.brk)>0 ? o.run/(o.run+o.brk) : 0 })).sort((x,y)=>y.a-x.a);
+      if(L.length < 2) return;
+      L.forEach((x,i)=>{ const c = cnt[x.f] || (cnt[x.f] = [0,0,0]); if(i<3) c[i]++; (hist[x.f] = hist[x.f] || []).push({ w, r:i+1, a:x.a*100 }); }); });
+    const used = weeks.filter(w=>Object.values(W[w]).filter(o=>o.plan>0).length >= 2);
+    return { cnt, hist, n: used.length, span: used.length ? (used.length>1 ? used[0]+' ~ '+used[used.length-1] : used[0]) : '' }; })();
+  const rkStrip = f => { const c = RK.cnt[f] || [0,0,0], H = RK.hist[f] || [];
+    return `<div class="fac-cum" title="주마다 FAC 가용률 순위 — 고장 기준: ${BRK_LBL} · ${MIN_STOP}분 이상"><div class="fc-h"><b>누적 순위</b><small>${RK.span} · ${RK.n}주</small></div>
+      <div class="fc-c"><span class="g1">🥇 1위 <b>${c[0]}</b>회</span><span>🥈 2위 <b>${c[1]}</b>회</span><span>🥉 3위 <b>${c[2]}</b>회</span><span class="fc-p">1위율 <b>${RK.n?Math.round(c[0]/RK.n*100):0}%</b></span></div>
+      <div class="fc-s">${H.map(x=>`<i class="r${x.r}" title="${x.w} · ${x.r}위 · 가용률 ${x.a.toFixed(1)}%">${x.r}</i>`).join('')}</div></div>`; };
   facArr.forEach(g=>{
     const color=FAC_COLORS[g.fac]||'#7F8C8D', rk=facRank[g.fac], medal=['🥇','🥈','🥉'][rk-1]||'';
     const div=document.createElement('div');
@@ -597,6 +626,7 @@ function render(){
         <span class="fh-rk${rk===1?' top':''}">${medal} ${rk}위<small>/${facArr.length}</small></span>
       </div>
       <div class="fac-body">
+        ${rkStrip(g.fac)}
         <div class="fac-row"><div class="flbl">고장횟수 (회)</div><div class="fval" style="color:${color};">${g.brkCount}</div>${brkBreak(g, color, 'n')}</div>
         <div class="fac-row"><div class="flbl">고장시간 (Hr)</div><div class="fval" style="color:${color};">${(g.brkMin/60).toFixed(1)}</div>${brkBreak(g, color, 'm')}</div>
         <div class="fac-row fac-tri">
@@ -842,6 +872,9 @@ function renderAnalysis(d){
 
 document.getElementById('periodSelect').addEventListener('change', ()=>{ document.getElementById('weekSelect').value=''; render(); });
 document.getElementById('weekSelect').addEventListener('change', render);
+(function(){ const c = document.getElementById('catSelect'); if(!c) return;
+  try{ const v = localStorage.getItem('stc_kpi_cat'); if(v && [...c.options].some(o=>o.value===v)) c.value = v; }catch(e){}
+  c.addEventListener('change', ()=>{ try{ localStorage.setItem('stc_kpi_cat', c.value); }catch(e){} render(); }); })();
 document.getElementById('dateFrom').addEventListener('change', render);
 document.getElementById('dateTo').addEventListener('change', render);
 document.getElementById('refreshBtn').addEventListener('click', loadAll);
