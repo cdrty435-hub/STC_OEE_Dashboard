@@ -751,6 +751,10 @@ table.eq td.name{font-weight:700;}
 .ik-t th.cur,.ik-t td.cur{background:#fff3c4;} .ik-t th.tg{background:#fde2e2;color:#b91c1c;} .ik-t td.pt,.ik-t th.pt{color:#94a3b8;}
 .ik-t td.nm{white-space:normal;} .ik-t td.nm b{display:block;font-size:12.5px;color:#0f172a;} .ik-t td.nm small{font-size:10px;color:#64748b;}
 .ik-t td.n{text-align:right;padding-right:8px;font-size:13px;font-weight:700;color:#0f172a;}
+.ik-b{display:inline-flex;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;} .ik-b button{font:inherit;font-size:12px;font-weight:700;padding:3px 10px;border:0;background:#fff;color:#475569;cursor:pointer;} .ik-b button + button{border-left:1px solid #cbd5e1;} .ik-b button.on{background:#1e3c72;color:#fff;}
+.dce-t td.n.big{font-size:14.5px;} .dce-t tr.main td{background:#f4f6fa;} .dce-t tr.main td.nm b{color:#1e3c72;} .dce-t tr.ref td{color:#64748b;} .dce-t tr.ref td.nm b{color:#64748b;font-weight:700;}
+.dce-t td.g1{color:#166534;} .dce-t td.g2{color:#92400e;} .dce-t td.g3{color:#9f1239;}
+.dce .lg{display:inline-block;padding:0 6px;border-radius:8px;font-weight:700;} .dce .lg.g1{background:#ecfdf3;color:#166534;} .dce .lg.g2{background:#fffbeb;color:#92400e;} .dce .lg.g3{background:#fff1f2;color:#9f1239;}
 .ik-t td.miss{color:#c00000;} .ik-t td.inc{color:#cbd5e1 !important;font-weight:500;background:#fafafa;} .ik-t td.n small.nw{display:block;font-size:9.5px;color:#94a3b8;font-weight:500;} .ik-t td.n small.nw.few{color:#b45309;} .ik-t td.hb{color:#15803d !important;font-weight:900;} .ik-t td.hw{color:#dc2626 !important;font-weight:900;}
 .ik-t td.tg{text-align:center;background:#fff7f7;} .ik-t td.tg input{width:100%;max-width:74px;box-sizing:border-box;font:inherit;font-size:13px;font-weight:800;text-align:right;padding:2px 4px;border:1.5px solid #dc2626;border-radius:5px;color:#b91c1c;} .ik-t td.tg small{display:block;font-size:9.5px;color:#94a3b8;}
 .ik-cs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px;} .ik-c{border:1px solid #e2e8f0;border-radius:8px;padding:6px 8px;} .ik-c .h b{font-size:12.5px;color:#1e3c72;} .ik-c svg{width:100%;height:auto;display:block;}
@@ -4667,30 +4671,91 @@ function impStats(f, t){
    ④ 앞공정 검출력 = (⑤+⑧+⑨ NG) ÷ (⑤+⑧+⑨+⑬ NG)           (높을수록)
    주차 = 시트 '주차' (수~화) · ⑧ 투입 = F2_품번일별 MCT Total */
 const IMPK = [
-  { k:'out', t:'① OQC 불량률 (유출)', d:'⑬ OQC NG ÷ ⑬ 검사수량', need:['⑬'], up:false, sug:a=>Math.max(0.1, Math.round(a*0.8*100)/100) },
-  { k:'mc',  t:'② 가공불량률 (FAC2 원인)', d:'⑧⑨⑬ 가공 원인 ÷ ⑧ 투입', need:['⑧','⑨','⑬'], up:false, sug:a=>Math.round(a*0.8*100)/100 },
-  { k:'dc',  t:'③ 다캐불량률 (FAC1 원인)', d:'⑤⑧⑨⑬ 다캐 원인 ÷ ⑧ 투입', need:['⑤','⑧','⑨','⑬'], up:false, sug:a=>Math.round(a*0.8*100)/100 },
-  { k:'det', t:'④ 앞공정 검출력', d:'⑤⑧⑨ NG ÷ (⑤⑧⑨⑬ NG)', need:['⑤','⑧','⑨','⑬'], up:true, sug:a=>Math.min(99.9, Math.round((a + (100-a)*0.2)*10)/10) } ];
+  { k:'out', t:'① OQC 불량률 (유출)', up:false, sug:a=>Math.max(0.1, Math.round(a*0.8*100)/100) },
+  { k:'mc',  t:'② 가공불량률 (FAC2 원인)', dC:'⑧⑬ 가공 원인 ÷ ⑧ 투입', dF:'⑧⑨⑬ 가공 원인 ÷ ⑧ 투입', needC:['⑧','⑬'], needF:['⑧','⑨','⑬'], up:false, sug:a=>Math.round(a*0.8*100)/100 },
+  { k:'dc',  t:'③ 다캐불량률 (FAC1 원인)', dC:'⑧⑬ 다캐 원인 ÷ ⑧ 투입', dF:'⑤⑧⑨⑬ 다캐 원인 ÷ ⑧ 투입', needC:['⑧','⑬'], needF:['⑤','⑧','⑨','⑬'], up:false, sug:a=>Math.round(a*0.8*100)/100 },
+  { k:'det', t:'④ 가공 검출력', dC:'⑧ NG ÷ (⑧+⑬ NG)', dF:'⑤⑧⑨ NG ÷ (⑤⑧⑨⑬ NG)', needC:['⑧','⑬'], needF:['⑤','⑧','⑨','⑬'], up:true, sug:a=>Math.min(99.9, Math.round((a + (100-a)*0.2)*10)/10) } ];
+/* 기준 : 'C' = 전 주차 공통(⑧⑬ — 12주 내내 같은 식으로 비교) · 'F' = 전체 공정(⑤⑧⑨⑬ — ⑨ W42~ · ⑤ W43~ 부터) */
+const impkB = () => { try{ return localStorage.getItem('stc_f2_kpi_basis')==='F' ? 'F' : 'C'; }catch(e){ return 'C'; } };
+function impkSetB(b){ try{ localStorage.setItem('stc_f2_kpi_basis', b); }catch(e){} renderF2(); }
+IMPK.forEach(m=>{ Object.defineProperty(m, 'd', { get(){ return m.dC ? (impkB()==='F' ? m.dF : m.dC) : m._d; }, set(v){ m._d = v; } });
+  Object.defineProperty(m, 'need', { get(){ return m.needC ? (impkB()==='F' ? m.needF : m.needC) : m._n; }, set(v){ m._n = v; } }); });
+IMPK[0].d = '⑬ OQC NG ÷ ⑬ 검사수량'; IMPK[0].need = ['⑬'];
 const impkT = k => { try{ const v = parseFloat(localStorage.getItem('stc_f2_kpi_t_'+k)); return isFinite(v) ? v : null; }catch(e){ return null; } };
 function impkSet(k, v){ try{ const n = parseFloat(String(v).trim()); if(isFinite(n)) localStorage.setItem('stc_f2_kpi_t_'+k, String(n)); else localStorage.removeItem('stc_f2_kpi_t_'+k); }catch(e){} renderF2(); }
 function impkSug(){ const W = impkWeeks(); IMPK.forEach(m=>{ if(impkT(m.k)==null && W.avg[m.k]!=null && W.good[m.k].length >= 4) try{ localStorage.setItem('stc_f2_kpi_t_'+m.k, String(m.sug(W.avg[m.k]))); }catch(e){} }); renderF2(); }
 function impkWeeks(){
   const wk = r => { const w = String(r['주차']||'').trim(); return /^W\d+$/i.test(w) ? 'W'+wkNum(w) : ''; };
-  const W = {}, G = w => W[w] || (W[w] = { t8:0, t13:0, n5:0, n8:0, n9:0, n13:0, m:0, dcast:0, src:new Set(), days:new Set() });
+  const W = {}, G = w => W[w] || (W[w] = { t8:0, t13:0, n5:0, n8:0, n9:0, n13:0, m8:0, m9:0, m13:0, d5:0, d8:0, d9:0, d13:0, src:new Set(), days:new Set() });
   (F2.pd||[]).forEach(r=>{ if(r['공정']!=='MCT') return; const w = wk(r); if(!w) return; const o = G(w); o.t8 += f2n(r["Total Q'ty"]); o.days.add(String(r['일자']).slice(0,10)); });
   (F2.det||[]).forEach(r=>{ if(r['공정']!=='MCT' || r['구분']!=='NG') return; const w = wk(r); if(!w) return; const o = G(w), v = f2n(r['수량']);
-    o.n8 += v; if(r['계통']==='가공불량') o.m += v; if(r['계통']==='다캐불량') o.dcast += v; o.src.add('⑧'); });
+    o.n8 += v; if(r['계통']==='가공불량') o.m8 += v; if(r['계통']==='다캐불량') o.d8 += v; o.src.add('⑧'); });
   [['n9',F2.pqRaw,'⑨',true],['n13',F2.oqRaw,'⑬',true],['n5',F2.sbRaw,'⑤',false]].forEach(([nk,rows,lab,mcToo])=>(rows||[]).forEach(r=>{ const w = wk(r); if(!w) return; const o = G(w);
-    o[nk] += f2n(r["NG Q'ty"]); if(nk==='n13') o.t13 += f2n(r["Total Q'ty"]); o.dcast += f2n(r['다캐불량']); if(mcToo) o.m += f2n(r['가공불량']); o.src.add(lab); }));
+    const sx = nk.slice(1); o[nk] += f2n(r["NG Q'ty"]); if(nk==='n13') o.t13 += f2n(r["Total Q'ty"]); o['d'+sx] += f2n(r['다캐불량']); if(mcToo) o['m'+sx] += f2n(r['가공불량']); o.src.add(lab); }));
   const weeks = Object.keys(W).filter(w=>W[w].t8>0).sort((a,b)=>wkNum(a)-wkNum(b)).slice(-12);
   const maxD = Math.max(1, ...weeks.map(w=>W[w].days.size));
-  const rows = weeks.map(w=>{ const o = W[w], up = o.n5+o.n8+o.n9, all = up + o.n13;
+  const B = impkB();
+  const rows = weeks.map(w=>{ const o = W[w], up = B==='F' ? o.n5+o.n8+o.n9 : o.n8, all = up + o.n13;
+    const mcN = B==='F' ? o.m8+o.m9+o.m13 : o.m8+o.m13, dcN = B==='F' ? o.d5+o.d8+o.d9+o.d13 : o.d8+o.d13;
     /* 지표마다 필요한 공정 데이터가 그 주에 다 있어야 '완전' — 평균 · 최고 · 최저 · 달성은 완전한 주만 */
     const ok = {}; IMPK.forEach(m=>{ ok[m.k] = m.need.every(x=>o.src.has(x)); });
-    return { w, o, ok, part: o.days.size < Math.min(5, maxD), v:{ out: o.t13 ? o.n13/o.t13*100 : null, mc: o.m/o.t8*100, dc: o.dcast/o.t8*100, det: all ? up/all*100 : null } }; });
+    return { w, o, ok, part: o.days.size < Math.min(5, maxD), v:{ out: o.t13 ? o.n13/o.t13*100 : null, mc: mcN/o.t8*100, dc: dcN/o.t8*100, det: all ? up/all*100 : null } }; });
   const full = rows.filter(r=>!r.part), avg = {}, good = {};
   IMPK.forEach(m=>{ good[m.k] = full.filter(r=>r.ok[m.k] && r.v[m.k]!=null); const vs = good[m.k].map(r=>r.v[m.k]); avg[m.k] = vs.length ? vs.reduce((a,b)=>a+b,0)/vs.length : null; });
   return { rows, full, avg, good };
+}
+/* ---- 공정간 검출력 (DCE · Defect Containment Effectiveness) ----
+   근거 : 단계별 결함 봉쇄율 DCE_k = 그 단계에서 잡은 결함 ÷ (그 단계 + 뒤 단계에서 잡힌 같은 결함)  — 소프트웨어 품질의 Phase/Defect Containment Effectiveness 와 같은 정의
+   검사마다 검사 수량이 달라(PQC 는 샘플) 개수 대신 단위당 불량(DPU = NG ÷ 그 공정 검사수량)으로 바꿔 더한다 — 한 제품이 모든 검사를 거친다는 가정
+   불량 원인으로 나눈다 : 다캐(FAC1) 원인은 ⑤부터 잡을 수 있고 · 가공(FAC2) 원인은 ⑧부터 생긴다 */
+function impDceView(){
+  const wk = r => { const w = String(r['주차']||'').trim(); return /^W\d+$/i.test(w) ? 'W'+wkNum(w) : ''; };
+  const W = {}, G = w => W[w] || (W[w] = { t5:0,n5:0,d5:0, t8:0,n8:0,d8:0,m8:0, t9:0,n9:0,d9:0,m9:0, t13:0,n13:0,d13:0,m13:0, days:new Set() });
+  (F2.pd||[]).forEach(r=>{ if(r['공정']!=='MCT') return; const w = wk(r); if(!w) return; const o = G(w); o.t8 += f2n(r["Total Q'ty"]); o.days.add(String(r['일자']).slice(0,10)); });
+  (F2.det||[]).forEach(r=>{ if(r['공정']!=='MCT' || r['구분']!=='NG') return; const w = wk(r); if(!w) return; const o = G(w), v = f2n(r['수량']); o.n8 += v; if(r['계통']==='가공불량') o.m8 += v; if(r['계통']==='다캐불량') o.d8 += v; });
+  [['5',F2.sbRaw],['9',F2.pqRaw],['13',F2.oqRaw]].forEach(([k,rows])=>(rows||[]).forEach(r=>{ const w = wk(r); if(!w) return; const o = G(w);
+    o['t'+k] += f2n(r["Total Q'ty"]); o['n'+k] += f2n(r["NG Q'ty"]); o['d'+k] += f2n(r['다캐불량']); if(k!=='5') o['m'+k] += f2n(r['가공불량']); }));
+  const weeks = Object.keys(W).filter(w=>W[w].t8>0).sort((a,b)=>wkNum(a)-wkNum(b)).slice(-12);
+  if(!weeks.length) return '';
+  const maxD = Math.max(1, ...weeks.map(w=>W[w].days.size));
+  /* 지표 계산 (한 주 또는 여러 주 합) */
+  const calc = o => { const dpu = (n,t) => t>0 ? n/t : null, has = k => o['t'+k] > 0;
+    const r = { 5:dpu(o.n5,o.t5), 8:dpu(o.n8,o.t8), 9:dpu(o.n9,o.t9), 13:dpu(o.n13,o.t13) }, d = { 5:dpu(o.d5,o.t5), 8:dpu(o.d8,o.t8), 9:dpu(o.d9,o.t9), 13:dpu(o.d13,o.t13) };
+    const S = (obj, ks) => ks.filter(k=>obj[k]!=null).reduce((a,k)=>a+obj[k],0);
+    const eff = (num, ks, obj) => { const den = S(obj, ks); return den>0 && obj[num]!=null ? obj[num]/den*100 : null; };
+    return {
+      s5:  has(5) && has(13) ? eff(5, [5,8,9,13], d) : null,                      /* ⑤ 쇼트 후 — 다캐(FAC1) 원인만 */
+      s8:  has(8) && has(13) ? eff(8, [8,9,13], r) : null,                         /* ⑧ 가공 */
+      s9:  has(9) && has(13) ? eff(9, [9,13], r) : null,                           /* ⑨ PQC */
+      tot: has(8) && has(13) ? (()=>{ const up = S(r,[5,8,9]), all = up + (r[13]||0); return all>0 ? up/all*100 : null; })() : null,   /* 출하 전 종합 */
+      esc: r[13]!=null ? r[13]*100 : null,                                         /* 참고 : OQC 단계 DPU (%) */
+      have: [5,9].filter(has) };
+  };
+  const rows = weeks.map(w=>({ w, o:W[w], part: W[w].days.size < Math.min(5, maxD), c: calc(W[w]) }));
+  const full = rows.filter(r=>!r.part), last4 = full.slice(-4);
+  const pool = L => { const o = {}; Object.keys(G('__')).forEach(k=>{ if(k!=='days') o[k] = L.reduce((a,r)=>a+r.o[k],0); }); return calc(o); };
+  delete W.__;
+  const P4 = last4.length ? pool(last4) : null, PA = full.length ? pool(full) : null;
+  const ROWS = [
+    { k:'s8',  t:'⑧ 가공 검출력', d:'⑧ DPU ÷ (⑧+⑨+⑬ DPU)', need:'⑧⑬ (⑨ 있으면 포함)' },
+    { k:'s9',  t:'⑨ PQC 검출력', d:'⑨ DPU ÷ (⑨+⑬ DPU)', need:'⑨⑬ — W42~' },
+    { k:'s5',  t:'⑤ 쇼트 후 검출력 (다캐 원인)', d:'⑤ 다캐 DPU ÷ (⑤+⑧+⑨+⑬ 다캐 DPU)', need:'⑤⑬ — W43~' },
+    { k:'tot', t:'출하 전 종합 검출력', d:'(⑤+⑧+⑨ DPU) ÷ (⑤+⑧+⑨+⑬ DPU)', need:'⑧⑬ 기본', main:true },
+    { k:'esc', t:'참고 · ⑬ OQC 단계 불량 (DPU %)', d:'⑬ NG ÷ ⑬ 검사수량 — 낮을수록 좋음', need:'⑬', ref:true } ];
+  const grade = v => v==null ? '' : v >= 90 ? 'g1' : v >= 80 ? 'g2' : 'g3';
+  const f = v => v==null ? '·' : v.toFixed(1);
+  const cur = rows[rows.length-1];
+  let h = `<table class="ik-t dce-t"><colgroup><col style="width:21%"><col style="width:7%"><col style="width:7%">${rows.map(()=>'<col>').join('')}</colgroup>
+    <thead><tr><th>지표 (%)</th><th title="최근 완전한 4주를 합쳐서 계산 (주차 사이 시차를 흡수)">최근 4주</th><th>전체 ${full.length}주</th>${rows.map(r=>`<th class="${r===cur?'cur':''}${r.part?' pt':''}">${r.w}${r.part?'<small>부분</small>':''}</th>`).join('')}</tr></thead><tbody>`;
+  ROWS.forEach(R=>{ const g4 = P4 ? P4[R.k] : null;
+    h += `<tr class="${R.main?'main':''}${R.ref?' ref':''}"><td class="nm"><b>${R.t}</b><small>${R.d} · 데이터 ${R.need}</small></td>
+      <td class="n big ${R.ref?'':grade(g4)}">${f(g4)}</td><td class="n">${f(PA ? PA[R.k] : null)}</td>`
+      + rows.map(r=>{ const v = r.c[R.k]; return `<td class="n${r===cur?' cur':''}${r.part?' pt':''} ${R.ref||r.part?'':grade(v)}">${f(v)}</td>`; }).join('') + `</tr>`; });
+  h += `</tbody></table>`;
+  return `<div class="ik dce"><div class="ik-hd"><b>공정간 검출력 (DCE · 결함 봉쇄율)</b><small>그 공정에서 잡은 불량 ÷ (그 공정 + 뒤 공정에서 잡힌 불량) · 높을수록 앞에서 잡음 · 판정 <span class="lg g1">90↑ 양호</span> <span class="lg g2">80~90 보통</span> <span class="lg g3">80↓ 개선 필요</span></small></div>
+    <div class="ik-w">${h}</div>
+    <div class="foot" style="margin-top:4px">· 정의 = 단계별 결함 봉쇄율(Defect / Phase Containment Effectiveness)과 같은 방식 · 검사마다 검사수량이 달라(⑨ PQC 는 샘플) 개수 대신 <b>DPU(= NG ÷ 그 공정 검사수량)</b>로 합산 — 한 제품이 모든 검사를 거친다는 가정 ·
+      ⑤ 는 다캐(FAC1) 원인만 (가공 불량은 ⑤ 이후에 생기므로) · 주마다 공정 사이 시차가 있어 <b>최근 4주 합산</b> 값으로 판단 · 판정 구간(90/80)은 검사 유효성(MSA 계수형 Effectiveness) 판정 기준을 빌려 쓴 사내 참고값 · 고객 클레임 데이터가 들어오면 ⑬ 뒤 단계로 추가 가능</div></div>`;
 }
 function impKpiView(){
   const W = impkWeeks(); if(!W.rows.length) return '';
@@ -4726,10 +4791,11 @@ function impKpiView(){
     const lp = hp[hp.length-1]; if(lp) s += `<text x="${Math.min(lp.x, Wd-Rr)}" y="${y(lp.v)-8}" text-anchor="end" font-size="10.5" font-weight="900" fill="#0f172a">${f(lp.v)}</text>`;
     return `<div class="ik-c"><div class="h"><b>${m.t}</b></div>${s}</svg><div class="lg"><span><i style="border-top:2px dashed #64748b"></i>평균 ${f(a)}</span>${tg!=null?`<span><i style="border-top:2px dashed #dc2626"></i>타겟 ${tg}</span>`:'<span style="color:#94a3b8">타겟 미설정</span>'}</div></div>`; };
   const miss = ['⑤','⑨'].filter(s=>!R.some(r=>r.o.src.has(s)));
-  return `<div class="ik"><div class="ik-hd"><b>공정 지표 주간 추이 · 타겟</b><small>${R[0].w} ~ ${cur.w} · 평균·최고·최저·달성 = 그 지표에 필요한 공정 데이터가 다 있는 주만 (회색 칸 = 데이터 부족 · 참고) · 4주 미만이면 '임시' 제안</small>
+  return `<div class="ik"><div class="ik-hd"><b>공정 지표 주간 추이 · 타겟</b><span class="ik-b f2-noprint"><button class="${impkB()==='C'?'on':''}" onclick="impkSetB('C')" title="12주 모두 같은 식 — 추세 비교용">⑧⑬ 공통 기준</button><button class="${impkB()==='F'?'on':''}" onclick="impkSetB('F')" title="⑤ 쇼트 후 · ⑨ PQC 까지 포함 — 데이터가 있는 주만 (⑨ W42~ · ⑤ W43~)">⑤⑧⑨⑬ 전체 공정</button></span>
+      <small>${R[0].w} ~ ${cur.w} · ${impkB()==='C' ? '전 주차 같은 식(⑧ 가공 · ⑬ OQC)으로 비교' : '⑤·⑨ 포함 — 데이터 없는 주는 회색(평균 제외)'}</small>
       <button class="btn-f2 alt f2-noprint" onclick="impkSug()">제안값을 타겟으로 (빈 칸만)</button></div>
     <div class="ik-w">${tb}</div><div class="ik-cs">${IMPK.map(chart).join('')}</div>
-    <div class="foot" style="margin-top:4px">· ⑧ 투입 = F2_품번일별 MCT Total · 원인 구분 = 원본 불량코드 계통(1~16 다캐 · 17~46 가공) · ⑤ = CTQ STATE 5 · ⑨ = CTQ STATE 9 · ⑬ = F2_OQC_Q · ① = OQC 검사수량 기준 %NG · 필요 데이터: ① ⑬ · ② ⑧⑨⑬ · ③④ ⑤⑧⑨⑬ (⑨ = W42~, ⑤ = W43~) · 타겟은 완전한 주가 4주 이상 쌓인 뒤 확정 권장 · 제안 = 평균에서 20% 개선 · 이 브라우저에 저장</div></div>`;
+    <div class="foot" style="margin-top:4px">· ⑧ 투입 = F2_품번일별 MCT Total · 원인 구분 = 원본 불량코드 계통(1~16 다캐 · 17~46 가공) · ⑤ = CTQ STATE 5 · ⑨ = CTQ STATE 9 · ⑬ = F2_OQC_Q · ① = OQC 검사수량 기준 %NG · 공통 기준 = ⑧ 가공 + ⑬ OQC 만 (12주 비교 가능 — 타겟은 이 기준으로) · 전체 공정 기준 = ⑤·⑨ 포함 (⑨ W42~ · ⑤ W43~, 4주 이상 쌓이면 사용) · 제안 = 평균에서 20% 개선 · 이 브라우저에 저장</div></div>`;
 }
 function f2ImproveView(){
   const tg = f2Target(), rows = impRows(), W = impWeeks(), D = impDays();
@@ -4771,6 +4837,7 @@ function f2ImproveView(){
     <div class="imp-top f2-noprint"><span>줄마다 기간을 정하고 <b>+ 기간 추가</b>로 아래에 쌓아 가면, 각 칸에 바로 윗줄 대비 증감(▼ 개선 · ▲ 악화)이 표시됩니다.</span>
       <button class="btn-f2" onclick="impAdd()">＋ 기간 추가</button><button class="btn-f2 alt" onclick="impReset()">↺ 처음으로</button><button class="btn-f2 alt" onclick="window.print()">인쇄 / PDF</button></div>
     ${impKpiView()}
+    ${impDceView()}
     ${chart}
     <div class="lay-insh">검사공정별 수량 <span>(Total · OK · NG · %NG — ① = 수량 EA 기준 · Σ 종합 = (⑤+⑧+⑨+⑬ NG) ÷ ⑧ 투입 · 목표 ${tg}% · 목표 초과 = 적색 글씨)</span></div>
     ${body || '<div class="card empty" style="padding:14px">＋ 기간 추가 를 눌러 비교할 기간을 넣어 주세요.</div>'}
