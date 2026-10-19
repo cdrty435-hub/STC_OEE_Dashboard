@@ -7701,6 +7701,8 @@ loadData();
 .kw thead th.dt{background:#ffff00;}
 .kw table.kw-s tbody td{height:58px;box-sizing:border-box;}
 .kw table.kw-s td.dt{line-height:1.4;}
+.kw table.kw-s2 tbody td{height:auto !important;} .kw table.kw-s2 td.dt{font-size:12.5px !important;line-height:1.5 !important;padding:6px 10px !important;} .kw table.kw-s2 td.pv,.kw table.kw-s2 td.cu,.kw table.kw-s2 td.n{text-align:center !important;}
+.kw table.kw-s2 td.tgj{text-align:center;white-space:nowrap;} .kw .tg2{display:block;font-size:13px;color:#475569;font-weight:700;} .kw .jd{display:inline-block;margin-top:2px;padding:1px 10px;border-radius:10px;font-size:13px;font-weight:900;} .kw .jd.ok{background:#dcfce7;color:#15803d;} .kw .jd.ng{background:#fee2e2;color:#b91c1c;}
 .kw table.kw-d tbody td{height:76px;box-sizing:border-box;}
 .kw table.kw-d textarea{min-height:62px;}
 .kw td.c{text-align:center;} .kw td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
@@ -7896,21 +7898,21 @@ loadData();
       const good = goodUp ? d>0 : d<0; return `<span class="${good?'dn':'up'}">${sgn(d,dp)}${dp===1&&goodUp?'%p':''}</span>`; };
     let h = `<div class="kw">`;
     h += `<h4 class="kw-h">1. 지표 요약 <small>금기간 ${esc(P.cur.label)} · 비교 ${esc(pl)} · ${C.std ? '계획외 고장(UDT)' : '<b style="color:#dc2626">⚠ 전체 로스 기준 — 휴식·금형교체 등 계획정지 포함 (상단 [지표 산출 기준]에서 국제표준 선택 시 UDT만)</b>'} · 최소정지 ${C.minStop}분 · 목표 MTTR ≤ ${f1(C.tMttr,2)} / MTBF ≥ ${f1(C.tMtbf,2)} h/건</small></h4>`;
-    h += `<table class="kw-s"><colgroup><col style="width:4%"><col style="width:8%"><col style="width:10%"><col style="width:10%"><col style="width:8%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:33%"></colgroup>`;
-    h += `<thead><tr><th>NO</th><th>지표</th><th>${esc(pl)}</th><th>${esc(P.cur.label)}</th><th>증감</th><th class="w">Worst 1</th><th class="w">Worst 2</th><th class="w">Worst 3</th><th class="dt">세부사항 (Worst 원인)</th></tr></thead><tbody>`;
+    /* 간소화 : Worst 1·2·3 칸을 빼고 타겟 · 판정 칸 추가 — 주요 원인은 오른쪽 한 칸에 한 줄씩 */
+    const TG = { mttr:C.tMttr, mtbf:C.tMtbf, lossH:parseFloat(LS('stc_target_loss')), n:parseFloat(LS('stc_target_cnt')), cost:parseFloat(LS('stc_target_cost')) };
+    h += `<table class="kw-s kw-s2"><colgroup><col style="width:4%"><col style="width:10%"><col style="width:12%"><col style="width:13%"><col style="width:9%"><col style="width:12%"><col style="width:40%"></colgroup>`;
+    h += `<thead><tr><th>NO</th><th>지표</th><th>${esc(pl)}</th><th>${esc(P.cur.label)}</th><th>증감</th><th>타겟 · 판정</th><th class="dt">주요 원인 (Worst 3)</th></tr></thead><tbody>`;
     rows.forEach((r,i)=>{
-      const [name,k,fmtv,goodUp,dp,wk,wv] = r;
-      const cv = S[k], pv = Q ? Q[k] : null;
-      const ws = W[wk];
-      h += `<tr><td class="c">${i+1}</td><td class="kp">${name}</td><td class="pv">${pv===null?'–':fmtv(pv)}</td><td class="cu">${fmtv(cv)}</td><td class="n">${dl(cv,pv,goodUp,dp)}</td>`;
-      for (let j=0;j<3;j++){ const x = ws[j]; h += `<td class="w w${j+1}">${x?DC(x.m)+'&nbsp;&nbsp;'+wv(x):'–'}</td>`; }
+      const [name,k,fmtv,goodUp,dp,wk] = r;
+      const cv = S[k], pv = Q ? Q[k] : null, tg = TG[k], hasT = isFinite(tg) && tg>0;
+      const ok = hasT ? (goodUp ? cv >= tg : cv <= tg) : null;
+      const tgc = hasT ? `<span class="tg2">${goodUp?'≥':'≤'} ${dp ? f1(tg,dp) : f0(tg)}</span><span class="jd ${ok?'ok':'ng'}">${ok?'달성':'미달'}</span>` : '<span class="eq">미설정</span>';
       const dd = D[wk];
-      h += `<td class="dt">` + (dd.head ? `<div class="kw-tail" style="color:#334155">${esc(dd.head)}</div>` : '')
-         + (dd.items.length ? dd.items.map((x,i)=>`<div class="kw-li"><b>${i+1}.</b> ${esc(x)}</div>`).join('') : '<div>해당 없음</div>')
-         + (dd.tail ? `<div class="kw-tail">${esc(dd.tail)}</div>` : '') + `</td></tr>`;
+      h += `<tr><td class="c">${i+1}</td><td class="kp">${name}</td><td class="pv">${pv===null?'–':fmtv(pv)}</td><td class="cu">${fmtv(cv)}</td><td class="n">${dl(cv,pv,goodUp,dp)}</td><td class="tgj">${tgc}</td>`;
+      h += `<td class="dt">` + (dd.items.length ? dd.items.map((x,i)=>`<div class="kw-li"><b>${i+1}.</b> ${esc(x)}</div>`).join('') : '<div>해당 없음</div>') + `</td></tr>`;
     });
     h += `</tbody></table>`;
-    h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · Worst = 대시보드 ② 설비별 차트 기준(건수 제한 없음, 가동 0h 설비 제외) · MTTR = 고장 로스시간 ÷ 고장건수 · MTBF = 실가동시간 ÷ 고장건수${C.std ? '' : ' · 현재 전체 로스 기준이라 계획정지도 고장으로 집계'}</div>`;
+    h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · 타겟 = 지표 주간 추이 · 타겟 설정 값 · 주요 원인 = 설비별 Worst 3 (가동 0h 설비 제외) · MTTR = 고장 로스시간 ÷ 고장건수 · MTBF = 실가동시간 ÷ 고장건수${C.std ? '' : ' · 현재 전체 로스 기준이라 계획정지도 고장으로 집계'}</div>`;
 
     /* --- 2. 워스트 설비 · 고장 유형 정리 ---------------------------------------
        1번 MTTR·MTBF·가용률·로스시간 Worst 3 에 나온 설비를 한 번씩만 모아
