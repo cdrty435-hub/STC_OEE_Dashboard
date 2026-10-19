@@ -1555,6 +1555,12 @@ function f2FullName(name, no){
 }
 function f2NormParts(rows){ (rows||[]).forEach(r=>{ if(r._pn===undefined) r._pn = r['Part name']; r['Part name'] = f2FullName(r._pn, r['Part no.']); }); }
 const f2PartLbl = r => { const n = r['Part name'], k = String(r['Part no.']||'').trim(); return n && k && n!==k ? `${n} (${k})` : (n||k); };
+/* ⑤ CTQ STATE 5 탭을 이름으로 못 읽을 때 — 탭 주소(…#gid=숫자)의 gid 를 넣으면 그걸로 읽는다 */
+function f2SbGid(e){ if(e) e.stopPropagation();
+  const cur = f2gid('sb'), v = prompt('구글시트 「CTQ STATE 5」 탭을 연 주소 끝의 gid 숫자를 넣어 주세요 (예: …/edit#gid=123456789)\n' + (F2.sbErr ? '읽기 오류: ' + F2.sbErr : ''), cur);
+  if(v == null) return; const g = String(v).replace(/.*gid=/,'').replace(/\D.*$/,'');
+  try{ if(g) localStorage.setItem('stc_f2_gid_sb', g); else localStorage.removeItem('stc_f2_gid_sb'); }catch(err){}
+  loadF2(); }
 async function loadF2(){
   F2.loading = true; F2.err = null; renderF2();
   /* 전 설비 생산실적(F2_생산실적 · F2_설비일별) — 품질 탭과 따로 읽는다 (한쪽이 없어도 다른 쪽은 뜬다) */
@@ -1570,7 +1576,10 @@ async function loadF2(){
   /* PQC 관리현황 (CTQ STATE 9) — 따로 읽는다 (없어도 나머지는 뜬다) */
   const pqJob = f2Fetch('pq').then(rows=>{ f2NormParts(rows); F2.pqRaw = rows.filter(r=>/^\d{4}-\d{2}-\d{2}/.test(String(r['일자']||'')) && String(r['Part no.']||'').trim()); F2.pq = F2.pqRaw; F2.pqErr = ''; }).catch(e=>{ F2.pq = []; F2.pqErr = e && e.message || String(e); });
   /* ⑤ 쇼트 후 검사 (CTQ STATE 5 · 원본 「CTQ STATE 5」) — 탭이 없거나 비어 있어도 나머지는 뜬다 */
-  const sbJob = f2Fetch('sb').then(rows=>{ f2NormParts(rows); F2.sbRaw = rows.filter(r=>/^\d{4}-\d{2}-\d{2}/.test(String(r['일자']||'')) && String(r['Part no.']||'').trim()); F2.sbErr = ''; }).catch(e=>{ F2.sbRaw = []; F2.sbErr = e && e.message || String(e); });
+  const sbJob = f2Fetch('sb').then(rows=>{ f2NormParts(rows);
+    /* 새 탭은 날짜가 '2026. 10. 19' · '10/19/2026' 로 보일 수 있다 → YYYY-MM-DD 로 */
+    rows.forEach(r=>{ const d = f2pDate(String(r['일자']||'').replace(/\s+/g,'').replace(/\.$/,'')); if(d) r['일자'] = d; });
+    F2.sbRaw = rows.filter(r=>/^\d{4}-\d{2}-\d{2}/.test(String(r['일자']||'')) && String(r['Part no.']||'').trim()); F2.sbErr = ''; }).catch(e=>{ F2.sbRaw = []; F2.sbErr = e && e.message || String(e); });
   const pmJob = Promise.allSettled([f2Fetch('pm'), f2Fetch('pmd'), codeJob]).then(([a,b])=>{
     F2.pm  = a.status==='fulfilled' ? f2pNorm(a.value)  : []; F2.pmErr = a.status==='fulfilled' ? '' : (a.reason && a.reason.message || String(a.reason));
     F2.pmd = b.status==='fulfilled' ? f2pNormD(b.value) : []; });
@@ -4265,7 +4274,7 @@ function f2LayoutView(week){
   /* ---- 검사공정별 수량 타일 (KPI 방식) : Total · OK · NG · %NG ---- */
   const insRows = [
     { n:1,  k:'iqc',  t:'IQC 수입검사', sk:'iqc', lotT:C1.t, lotN:C1.n, have:C1.have, C: C1.t ? { t:C1.qty, n:C1.nq, lbl:C1.lbl } : null, u:'EA', open:"layInspOpen(event,'IQC')" },
-    { n:5,  k:'all',  t:'쇼트 후 검사', sk:'s5', have:C5.have, C: C5.t ? C5 : null, open:"layInspOpen(event,'SB')" },
+    { n:5,  k:'all',  t:'쇼트 후 검사', sk:'s5', have:C5.have, C: C5.t ? C5 : null, open: C5.have ? "layInspOpen(event,'SB')" : "f2SbGid(event)", err: (F2.sbRaw||[]).length ? '' : (F2.sbErr ? '「CTQ STATE 5」 탭을 못 읽음 — 눌러서 gid 입력' : '「CTQ STATE 5」 기록 없음') },
     { n:8,  k:'all',  t:'MC 가공', sk:'s8', C: C8.t ? C8 : null, open:"f2SetView('daily')" },
     { n:9,  k:'all',  t:'PQC 공정검사', sk:'s9', have:C9.have, C: C9.t ? C9 : null, open:"layPqcOpen(event)" },
     { n:10, k:'half', t:'MARKING 50% 검사', C:null },
@@ -4281,7 +4290,7 @@ function f2LayoutView(week){
     return head
       + (C ? `<b style="color:${f2St(r).c}">${r.toFixed(2)}%</b><div class="q"><span>Total<i>${fmt(C.t)}</i></span><span>OK<i style="color:#15803d">${fmt(C.t-C.n)}</i></span><span>NG<i style="color:${C.n?'#b91c1c':'#94a3b8'}">${fmt(C.n)}</i></span></div>`
            : rw.have ? `<b class="na">–</b><div class="q"><span>기록 없음</span><span style="font-weight:600;white-space:normal">시트 기록 : \u0001${esc2(rw.have)}\u0002</span></div>`
-           : `<b class="na">–</b><div class="q"><span>연결 대기</span></div>`) + `</div>`; }).join('')}</div>`;
+           : `<b class="na">–</b><div class="q"><span>${rw.err ? esc2(rw.err) : '연결 대기'}</span></div>`) + `</div>`; }).join('')}</div>`;
   /* ---- 블록 순서 (▲▼ 로 위아래 이동 · 브라우저에 저장) ---- */
   const BLK = {
     kpi:   pm.length ? kpi : `<div class="card empty" style="padding:12px;margin-bottom:12px">F2_생산실적 데이터가 없어 설비 색은 회색으로 표시됩니다.</div>`,
