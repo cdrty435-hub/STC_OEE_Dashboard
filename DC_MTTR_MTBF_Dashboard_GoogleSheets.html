@@ -7671,7 +7671,8 @@ loadData();
   function worst(S){
     const A = Object.values(S.mc).filter(x=>x.active);
     return {
-      mttr: A.filter(x=>x.n>0).sort((a,b)=>b.mttr-a.mttr).slice(0,3),
+      /* MTTR Worst — 고장 1~2건짜리 설비는 한 번 길게 멈춘 것만으로 MTTR 이 커져 순위를 왜곡하므로 3건 이상만 (3대가 안 되면 기준을 낮춤) */
+      mttr: (()=>{ for (const k of [3,2,1]){ const L = A.filter(x=>x.n>=k); if (L.length>=3 || k===1) return L.sort((a,b)=>b.mttr-a.mttr || b.lossH-a.lossH).slice(0,3); } })(),
       mtbf: A.filter(x=>x.n>0).sort((a,b)=>a.mtbf-b.mtbf).slice(0,3),
       avail: A.slice().sort((a,b)=>a.avail-b.avail).slice(0,3),
       loss: A.filter(x=>x.lossH>0).sort((a,b)=>b.lossH-a.lossH).slice(0,3),
@@ -7936,7 +7937,7 @@ loadData();
       h += `<td class="dt">` + (dd.items.length ? dd.items.map((x,i)=>`<div class="kw-li"><b>${i+1}.</b> ${esc(x)}</div>`).join('') : '<div>해당 없음</div>') + `</td></tr>`;
     });
     h += `</tbody></table>`;
-    h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · 타겟 = 지표 주간 추이 · 타겟 설정 값 · 주요 원인 = 설비별 Worst 3 (가동 0h 설비 제외) · MTTR = 고장 로스시간 ÷ 고장건수 · MTBF = 실가동시간 ÷ 고장건수${C.std ? '' : ' · 현재 전체 로스 기준이라 계획정지도 고장으로 집계'}</div>`;
+    h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · 타겟 = 지표 주간 추이 · 타겟 설정 값 · 주요 원인 = 설비별 Worst 3 (가동 0h 설비 제외 · MTTR 은 고장 3건 이상 설비만 — 1~2건은 한 번의 긴 정지로 MTTR 이 부풀려짐) · MTTR = 고장 로스시간 ÷ 고장건수 · MTBF = 실가동시간 ÷ 고장건수${C.std ? '' : ' · 현재 전체 로스 기준이라 계획정지도 고장으로 집계'}</div>`;
 
     /* --- 2. 워스트 설비 · 고장 유형 정리 ---------------------------------------
        1번 MTTR·MTBF·가용률·로스시간 Worst 3 에 나온 설비를 한 번씩만 모아
@@ -8639,6 +8640,11 @@ loadData();
         const hs = el.classList.contains('kw-sec') ? el.querySelectorAll(':scope > h4.kw-h').length : [...el.querySelectorAll('h4')].filter(h=>!h.closest('.kw')).length;
         if(!hs) return; const first = k + 1; k += hs; if(first>=10 && !H.includes(id) && !el.querySelector('#wkCostSub')) H.push(id); });
       setHide(H); try{ localStorage.setItem(HINIT, '1'); }catch(e){}
+    }
+    /* 새로 생긴 섹션(k3 지표 주간 추이 · k4 FAC별 종합 성과)이 예전 숨김 목록(옛 k3·k4)에 걸려 안 보이는 PC가 있어 — 한 번만 숨김 해제 */
+    if(!localStorage.getItem('stc_wk_unhide_k34_v1')){
+      const n0 = H.length; H = H.filter(x=>x!=='k3' && x!=='k4'); if(H.length !== n0) setHide(H);
+      try{ localStorage.setItem('stc_wk_unhide_k34_v1','1'); }catch(e){}
     }
     /* F-COST(로스 비용 현황) 블록은 기본으로 보이게 — 예전 자동 숨김에 들어가 있던 것을 한 번만 되살린다 */
     if(!localStorage.getItem('stc_wk_cost_show_v1')){
