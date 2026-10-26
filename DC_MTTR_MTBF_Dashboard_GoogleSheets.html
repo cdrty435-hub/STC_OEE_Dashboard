@@ -692,7 +692,11 @@
   .mx-hot{display:inline-block;margin-left:4px;font-style:normal;font-size:9.5px;font-weight:800;color:#9f1239;border:1px solid #fca5a5;border-radius:6px;padding:0 4px;vertical-align:middle;}
   table.wk-t.mx-t td.sp{padding:2px 4px;} .mx-sp{width:100%;height:24px;display:block;}
   table.wk-t.mx-t td.cz{text-align:left;font-size:11.5px;line-height:1.5;} .mx-cz{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#334155;} .mx-cz b{color:#0f172a;}
-  .mx-more{font-size:10.5px;color:#94a3b8;} .mx-czs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:3px 10px;align-items:center;}
+  .mx-more{font-size:10.5px;color:#94a3b8;} .mx-cap{font-size:13px;color:#334155;margin:12px 0 6px;padding:6px 10px;background:#f8fafc;border-left:4px solid #1e3c72;border-radius:4px;} .mx-cap > b:first-child{color:#1e3c72;} .mx-cap .mx-up small,.mx-cap .mx-dn small{display:inline;margin-left:3px;}
+  .wk-blk.wk-merged{display:none !important;}
+  .mx-c1{color:#334155;} .mx-c1 b{color:#0f172a;margin-left:4px;font-variant-numeric:tabular-nums;}
+  table.wk-t.mx-t td{font-size:13px !important;} table.wk-t.mx-t td.v.cur{font-size:14px !important;}
+  .mx-czs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:3px 10px;align-items:center;}
   .mx-czs .mx-cz{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:5px;min-width:0;}
   .mx-czs .mx-cz b{font-weight:700;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:7.5em;}
   .mx-czs .mx-cz i{display:block;height:6px;border-radius:3px;background:#cbd5e1;min-width:2px;max-width:100%;}
@@ -5361,26 +5365,21 @@ function renderWeekly(){
     const upMax = act.filter(x=>x.d>0).sort((a,b)=>b.d-a.d)[0];
     const dlt = (d, p) => Math.abs(d) < 1 ? '<span class="mx-eq">–</span>'
       : `<span class="${d>0?'mx-up':'mx-dn'}">${d>0?'▲':'▼'} ${F3(Math.abs(d))}${p>0?`<small>${d>0?'+':'−'}${Math.round(Math.abs(d)/p*100)}%</small>`:'<small>신규</small>'}</span>`;
-    const cz2 = x => x.cz.length ? `<div class="mx-czs">${x.cz.slice(0,3).map(([k,z])=>`<span class="mx-cz" title="${escH(k)} · ${z.n}건 · ${fmt(z.min/60,1)}h · ${F3(z.thb)} THB (${x.c?Math.round(z.thb/x.c*100):0}%)"><b>${escH(k)}</b><i style="width:${x.c?Math.max(4,Math.round(z.thb/x.c*100)):0}%"></i><em>${F3(z.thb)}</em></span>`).join('')}${x.cz.length>3?`<span class="mx-more">외 ${x.cz.length-3}종 ${F3(x.cz.slice(3).reduce((a,[,z])=>a+z.thb,0))}</span>`:''}</div>` : (x.c ? '' : '<span class="mx-none">금주 고장 없음</span>');
+    const cz2 = x => x.cz.length ? `<span class="mx-c1" title="${x.cz.map(([k,z])=>escH(k)+' '+F3(z.thb)+' THB · '+z.n+'건 · '+fmt(z.min/60,1)+'h').join('\n')}">${escH(x.cz[0][0])} <b>${F3(x.cz[0][1].thb)}</b></span>${x.cz.length>1?`<span class="mx-more"> 외 ${x.cz.length-1}종</span>`:''}` : (x.c ? '' : '<span class="mx-none">–</span>');
     /* 금주 손실 TOP 10 만 보이고 나머지는 한 줄로 합친다 (발표용) */
     const TOPN = 10, shown = act.slice(0, TOPN), rest = act.slice(TOPN);
     const body = shown.map((x,i)=>`<tr class="${i<3 && x.c>0?'top':''}">
-        <td class="rk">${x.c>0 ? i+1 : '–'}</td><td class="mc">DC #${x.m}${BROKEN.has(x.m)?' ⚠':''}${x===upMax?'<em class="mx-hot">최대 증가</em>':''}<small>${MC_TYPE[x.m]||'-'}T · ${(RT3[x.m]||0).toFixed(1)}</small></td>
-        <td class="v cur">${x.c?F3(x.c):'-'}</td><td class="v">${x.p?F3(x.p):'-'}</td><td class="v">${dlt(x.d, x.p)}</td>
-        <td class="v avg">${x.a4?F3(x.a4):'-'}</td><td class="sp">${spark(x.row)}</td><td class="cz">${cz2(x)}</td></tr>`).join('')
+        <td class="rk">${x.c>0 ? i+1 : '–'}</td><td class="mc">DC #${x.m}${BROKEN.has(x.m)?' ⚠':''}${x===upMax?'<em class="mx-hot">최대 증가</em>':''}</td>
+        <td class="v cur">${x.c?F3(x.c):'-'}</td><td class="v">${x.p?F3(x.p):'-'}</td><td class="v">${dlt(x.d, x.p)}</td><td class="cz">${cz2(x)}</td></tr>`).join('')
       + (rest.length ? (()=>{ const c = rest.reduce((a,x)=>a+x.c,0), p = rest.reduce((a,x)=>a+x.p,0), a4 = rest.reduce((a,x)=>a+x.a4,0);
-          return `<tr class="rest"><td class="rk">…</td><td class="mc">나머지 ${rest.length}대<small>${rest.map(x=>'DC'+x.m).join(' · ')}</small></td><td class="v cur">${F3(c)}</td><td class="v">${F3(p)}</td><td class="v">${dlt(c-p, p)}</td><td class="v avg">${F3(a4)}</td><td></td><td class="cz mx-none">전체 주차 표에서 확인</td></tr>`; })() : '');
+          return `<tr class="rest"><td class="rk">…</td><td class="mc" title="${rest.map(x=>'DC'+x.m).join(' · ')}">그 외 ${rest.length}대</td><td class="v cur">${F3(c)}</td><td class="v">${F3(p)}</td><td class="v">${dlt(c-p, p)}</td><td class="cz mx-none"></td></tr>`; })() : '');
     const sb3 = document.getElementById('wkMtxSub');
     if(sb3) sb3.textContent = `발표 주차 ${wk}${pw3?' · 전주 '+pw3+' 대비':''} · 계획외 고장(UDT) · 설비별 M/C Rate(THB/분) · 금주 손실 큰 순`;
-    let hm = `<div class="mx-sum"><div><small>금주 ${wk} 손실</small><b>${F3(tC)}</b><i>THB</i></div>
-        <div><small>전주 ${pw3||'-'}</small><b class="pv">${F3(tP)}</b><i>THB</i></div>
-        <div><small>증감</small><b>${dlt(tC-tP, tP)}</b></div>
-        <div><small>최근 ${l4.length}주 평균</small><b class="pv">${F3(tA)}</b><i>THB</i></div>
-        ${upMax?`<div class="hot"><small>최대 증가 설비</small><b>DC #${upMax.m}</b><i>▲ ${F3(upMax.d)}${upMax.cz[0]?' · '+escH(upMax.cz[0][0]):''}</i></div>`:''}</div>`;
-    hm += `<table class="wk-t mx-t"><colgroup><col style="width:4%"><col style="width:11%"><col style="width:9%"><col style="width:9%"><col style="width:11%"><col style="width:9%"><col style="width:9%"><col></colgroup>
-      <thead><tr><th>순위</th><th>설비</th><th class="cur">금주 ${wk}</th><th>전주 ${pw3||'-'}</th><th>증감 (THB)</th><th>최근 ${l4.length}주 평균</th><th>추이 ${tr8[0]||''}~${wk}</th><th class="l">금주 원인 고장별 손실금액 (THB · 큰 순 3개 · 막대 = 그 설비 손실 중 비중)</th></tr></thead>
-      <tbody>${body || '<tr><td colspan="8" class="mx-none">금주 · 전주 손실 없음</td></tr>'}</tbody>
-      <tfoot><tr><td></td><td class="mc">합계 (${act.length}대)</td><td class="v cur">${F3(tC)}</td><td class="v">${F3(tP)}</td><td class="v">${dlt(tC-tP, tP)}</td><td class="v avg">${F3(tA)}</td><td></td><td class="l mx-none">${idle.length ? `금주·전주 손실 없음 ${idle.length}대: ${idle.map(x=>'DC'+x.m).join(' · ')}` : ''}</td></tr></tfoot></table>`;
+    let hm = `<div class="mx-cap"><b>F-COST 설비별 상세</b> · 금주 ${wk} <b>${F3(tC)}</b> THB · 전주 ${pw3||'-'} ${F3(tP)} · ${dlt(tC-tP, tP)}${upMax?` · 최대 증가 <b>DC #${upMax.m}</b> ▲${F3(upMax.d)}${upMax.cz[0]?' ('+escH(upMax.cz[0][0])+')':''}`:''}</div>`;
+    hm += `<table class="wk-t mx-t"><colgroup><col style="width:6%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:16%"><col></colgroup>
+      <thead><tr><th>순위</th><th>설비</th><th class="cur">금주 ${wk}</th><th>전주 ${pw3||'-'}</th><th>증감</th><th class="l">금주 가장 큰 원인 (THB)</th></tr></thead>
+      <tbody>${body || '<tr><td colspan="6" class="mx-none">금주 · 전주 손실 없음</td></tr>'}</tbody>
+      <tfoot><tr><td></td><td class="mc">합계 (${act.length}대)</td><td class="v cur">${F3(tC)}</td><td class="v">${F3(tP)}</td><td class="v">${dlt(tC-tP, tP)}</td><td class="l mx-none">${idle.length ? `손실 없음: ${idle.map(x=>'DC'+x.m).join(' · ')}` : ''}</td></tr></tfoot></table>`;
     /* 전체 주차 표는 접어 둔다 (필요할 때만 펼쳐 보기 · 인쇄 제외) */
     hm += `<details class="mx-full"><summary>전체 주차 표 보기 (${fw3} ~ ${wk} · ${sp3.length}주)</summary><table class="wk-t mini">`
       + '<thead><tr><th>MC</th><th>Type</th><th>M/C Rate</th>' + sp3.map(w=>`<th>${w}</th>`).join('') + '<th>TTL</th></tr></thead>'
@@ -5391,6 +5390,10 @@ function renderWeekly(){
     if(!box3){ box3 = document.createElement('div'); box3.id = 'wkMtxBox'; host3.parentNode.insertBefore(box3, host3); }
     host3.style.display = 'none';
     box3.innerHTML = hm;
+    /* 지표 요약(공통 블록) 안으로 합친다 — 자리가 있으면 옮기고, 원래 ⑧ 블록은 숨김 */
+    const slot3 = document.getElementById('kwMtxSlot');
+    if(slot3 && box3.parentNode !== slot3) slot3.appendChild(box3);
+    const blk3 = host3.closest('.wk-blk'); if(blk3) blk3.classList.toggle('wk-merged', !!slot3);
   }
 
   /* ---------- ⑨ 계통별 증감 ---------- */
@@ -7995,9 +7998,11 @@ loadData();
       const tgc = hasT ? `<span class="tg2">${goodUp?'≥':'≤'} ${dp ? f1(tg,dp) : f0(tg)}</span><span class="jd ${ok?'ok':'ng'}">${ok?'달성':'미달'}</span>` : '<span class="eq">미설정</span>';
       const dd = D[wk];
       h += `<tr><td class="c">${i+1}</td><td class="kp">${name}</td><td class="pv">${pv===null?'–':fmtv(pv)}</td><td class="cu">${fmtv(cv)}</td><td class="n">${dl(cv,pv,goodUp,dp)}</td><td class="tgj">${tgc}</td>`;
-      h += `<td class="dt">` + (dd.items.length ? dd.items.map((x,i)=>`<div class="kw-li"><b>${i+1}.</b> ${esc(x)}</div>`).join('') : '<div>해당 없음</div>') + `</td></tr>`;
+      h += `<td class="dt">` + (opt.mode==='week' && k==='cost' ? `<div class="kw-tail" style="color:#1e3c72;font-weight:700">설비별 금액 · 증감 · 원인 → 아래 'F-COST 설비별 상세' 표</div>`
+           : dd.items.length ? dd.items.map((x,i)=>`<div class="kw-li"><b>${i+1}.</b> ${esc(x)}</div>`).join('') : '<div>해당 없음</div>') + `</td></tr>`;
     });
     h += `</tbody></table>`;
+    if (opt.mode === 'week') h += `<div id="kwMtxSlot"></div>`;
     h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · 타겟 = 지표 주간 추이 · 타겟 설정 값 · 주요 원인 = 설비별 Worst 3 (가동 0h 설비 제외 · MTTR 은 고장 3건 이상 설비만 — 1~2건은 한 번의 긴 정지로 MTTR 이 부풀려짐) · MTTR = 고장 로스시간 ÷ 고장건수 · MTBF = 실가동시간 ÷ 고장건수${C.std ? '' : ' · 현재 전체 로스 기준이라 계획정지도 고장으로 집계'}</div>`;
 
     /* --- 2. 워스트 설비 · 고장 유형 정리 ---------------------------------------
@@ -8386,6 +8391,9 @@ loadData();
       const r = build(opt, data);
       if (typeof r === 'string'){ host.innerHTML = r; return; }
       host.innerHTML = r.html; wire(host, r.key);
+      /* 설비별 손실금액 표(⑧)를 지표 요약 아래로 합친다 */
+      const slot = host.querySelector('#kwMtxSlot'), box = document.getElementById('wkMtxBox');
+      if (slot && box){ slot.appendChild(box); const b = document.getElementById('wkMtxTable'); const bk = b && b.closest('.wk-blk'); if (bk) bk.classList.add('wk-merged'); }
     }catch(e){
       host.innerHTML = `<div class="kw"><div class="kw-empty">⚠ 지표 요약을 불러오지 못했습니다: ${esc(e && e.message || e)}<br>OEE_RawData_APQ › A_가동률 탭이 웹에 게시되어 있는지 확인하세요.</div></div>`;
     }
