@@ -7892,7 +7892,7 @@ loadData();
 .kw .dnc > .b{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;margin-top:4px;} .kw .dnc svg.dn{width:150px;height:150px;}
 .kw .dnc table{width:100%;border-collapse:collapse;font-size:12px;table-layout:auto;} .kw .dnc th{background:#f1f5f9;border:0;border-bottom:1px solid #cbd5e1;font-size:11px;padding:3px 5px;color:#475569;font-weight:700;}
 .kw .dnc td{border:0;border-bottom:1px solid #eef2f7;padding:3px 5px;white-space:nowrap;} .kw .dnc td i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-.kw .dnc td .cz{display:block;font-size:10.5px;color:#64748b;margin-left:14px;}
+.kw .dnc td.rk{color:#64748b;font-size:11px;text-align:center;width:2.6em;} .kw .dnc td .cz{display:block;font-size:10.5px;color:#64748b;margin-left:14px;}
 .kw .dnc tbody tr{height:36px;} .kw .dnc tbody td{vertical-align:middle;} .kw .dnc thead tr{height:24px;}
 .kw .kw-dns{align-items:stretch;} .kw .dnc{display:flex;flex-direction:column;} .kw .dnc > .b{flex:1;}
 .kw .dnc td .cz{line-height:1.2;} .kw .dnc tr.etc td{color:#64748b;} .kw .dnc tr.etc td b{font-weight:600;}
@@ -8260,6 +8260,8 @@ loadData();
         const MS = MACHINES.filter(m=>(CUR.s.mc[m]&&CUR.s.mc[m].lossH) || (PREV.s.mc[m]&&PREV.s.mc[m].lossH));
         const W4 = MS.slice().sort((a,b)=>(CUR.s.mc[b]?CUR.s.mc[b].lossH:0)-(CUR.s.mc[a]?CUR.s.mc[a].lossH:0)).slice(0,4);
         const val = (S, m, k) => S.mc[m] ? S.mc[m][k] : 0;
+        const rankOf = k => { const o = {}; MACHINES.filter(m=>val(CUR.s,m,k)>0).sort((a,b)=>val(CUR.s,b,k)-val(CUR.s,a,k)).forEach((m,i)=>o[m]=i+1); return o; };
+        const RK = { lossH: rankOf('lossH'), cost: rankOf('cost') };
         const donut = (title, k, unit, dp, fmtv, withCause) => {
           const rest = MS.filter(m=>!W4.includes(m));
           const L = W4.map(m=>({ k:'DC'+m, m, c:val(CUR.s,m,k), p:val(PREV.s,m,k) }))
@@ -8273,11 +8275,15 @@ loadData();
             a0 = a1; });
           svg += `<text x="60" y="56" text-anchor="middle" font-size="9" fill="#64748b">${esc(opt.week)}</text><text x="60" y="70" text-anchor="middle" font-size="12.5" font-weight="800" fill="#0f172a">${fmtv(tc)}</text></svg>`;
           const rows = L.map((x,i)=>{ const d = x.c - x.p, top = !x.etc && CUR.s.mc[x.m] && CUR.s.mc[x.m].top[0];
-            return `<tr class="${x.etc?'etc':''}"><td><i style="background:${PAL[x.etc?4:i]}"></i><b>${esc(x.k)}</b>${withCause && top ? `<span class="cz">${esc(top.c)} ${f1(top.h,1)}h</span>` : ''}</td><td class="n">${fmtv(x.p)}</td><td class="n cv">${fmtv(x.c)}</td><td class="n ${d<0?'g':d>0?'r':''}">${Math.abs(d)<(dp?0.05:1)?'–':(d>0?'+':'−')+fmtv(Math.abs(d))}</td><td class="n s">${tc?Math.round(x.c/tc*100)+'%':''}</td></tr>`; }).join('');
+            const rk = x.etc ? '' : (RK[k][x.m] || '–'), nc = x.etc ? '' : (CUR.s.mc[x.m] ? CUR.s.mc[x.m].n : 0);
+            const nAll = withCause && x.etc ? MS.filter(m=>!W4.includes(m)).reduce((a,m)=>a+(CUR.s.mc[m]?CUR.s.mc[m].n:0),0) : nc;
+            return `<tr class="${x.etc?'etc':''}"><td class="rk">${rk ? rk+'위' : ''}</td><td><i style="background:${PAL[x.etc?4:i]}"></i><b>${esc(x.k)}</b>${withCause && top ? `<span class="cz">${esc(top.c)} ${f1(top.h,1)}h</span>` : ''}</td>${withCause?`<td class="n">${nAll}건</td>`:''}<td class="n">${fmtv(x.p)}</td><td class="n cv">${fmtv(x.c)}</td><td class="n ${d<0?'g':d>0?'r':''}">${Math.abs(d)<(dp?0.05:1)?'–':(d>0?'+':'−')+fmtv(Math.abs(d))}</td><td class="n s">${tc?Math.round(x.c/tc*100)+'%':''}</td></tr>`; }).join('');
           const dT = tc - tp;
-          return `<div class="dnc"><div class="h"><b>${title}</b><small>${esc(PREV.w)} ${fmtv(tp)}${unit} → ${esc(opt.week)} <b>${fmtv(tc)}${unit}</b> <span class="${dT<0?'g':'r'}">${dT<0?'▼':'▲'} ${fmtv(Math.abs(dT))}${unit}</span></small></div>
-            <div class="b">${svg}<table><thead><tr><th>설비${withCause?' · 금주 최대 고장':''}</th><th>${esc(PREV.w)}</th><th>${esc(opt.week)}</th><th>증감</th><th>비중</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; };
-        h += `<div class="kw-dns">${donut('Worst 설비 · 고장 로스시간 (h)', 'lossH', 'h', 1, v=>f1(v,1), true)}${donut('Worst 설비 · F-COST (THB)', 'cost', '', 0, v=>f0(v), false)}</div>`;
+          const nT = withCause ? `<b> / ${CUR.s.n}건</b> <span class="${CUR.s.n-PREV.s.n<0?'g':'r'}">(${CUR.s.n-PREV.s.n<0?'▼':'▲'} ${Math.abs(CUR.s.n-PREV.s.n)}건)</span>` : '';
+          return `<div class="dnc"><div class="h"><b>${title}</b><small>${esc(PREV.w)} ${fmtv(tp)}${unit} → ${esc(opt.week)} <b>${fmtv(tc)}${unit}</b> <span class="${dT<0?'g':'r'}">${dT<0?'▼':'▲'} ${fmtv(Math.abs(dT))}${unit}</span>${nT}</small></div>
+            <div class="b">${svg}<table><thead><tr><th title="금주 ${k==='cost'?'F-COST':'로스시간'} 순위 (전체 설비 중)">순위</th><th>설비${withCause?' · 금주 최대 고장':''}</th>${withCause?`<th>${esc(opt.week)} 건수</th>`:''}<th>${esc(PREV.w)}</th><th>${esc(opt.week)}</th><th>증감</th><th>비중</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; };
+        h += `<div class="kw-dns">${donut('Worst 설비 · 고장 로스시간 (h)', 'lossH', 'h', 1, v=>f1(v,1), true)}${donut('Worst 설비 · F-COST (THB)', 'cost', '', 0, v=>f0(v), false)}</div>`
+          + `<div class="kw-note" style="margin-top:2px">※ Worst 4 = 금주 <b>로스시간</b>이 큰 설비 4대 (양쪽 같은 설비 · 같은 색으로 비교) · 순위 = 각 표의 기준(왼쪽 로스시간 · 오른쪽 F-COST)으로 매긴 전체 설비 중 순위 — F-COST 는 설비별 M/C Rate 가 달라 로스시간 순위와 다를 수 있음 · 합계 = 1번 주간 요약과 같은 값</div>`;
       }
       h += `<div class="kw-tr-act"><button type="button" data-kwtgsug="1">제안값을 목표으로 적용 (비어 있는 칸만)</button><button type="button" data-kwtgclr="1">로스·건수·F-COST 목표 지우기</button></div>`;
 
