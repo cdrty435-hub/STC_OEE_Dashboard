@@ -7892,6 +7892,7 @@ loadData();
 .kw .dnc > .b{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;margin-top:4px;} .kw .dnc svg.dn{width:150px;height:150px;}
 .kw .dnc table{width:100%;border-collapse:collapse;font-size:12px;table-layout:auto;} .kw .dnc th{background:#f1f5f9;border:0;border-bottom:1px solid #cbd5e1;font-size:11px;padding:3px 5px;color:#475569;font-weight:700;}
 .kw .dnc td{border:0;border-bottom:1px solid #eef2f7;padding:3px 5px;white-space:nowrap;} .kw .dnc td i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.kw .dnc tfoot tr{height:30px;} .kw .dnc tfoot td{border-top:2px solid #94a3b8;border-bottom:0;background:#f1f5f9;font-weight:800;padding:3px 5px;}
 .kw .dnc td.rk{color:#64748b;font-size:11px;text-align:center;width:2.6em;} .kw .dnc td .cz{display:block;font-size:10.5px;color:#64748b;margin-left:14px;}
 .kw .dnc tbody tr{height:36px;} .kw .dnc tbody td{vertical-align:middle;} .kw .dnc thead tr{height:24px;}
 .kw .kw-dns{align-items:stretch;} .kw .dnc{display:flex;flex-direction:column;} .kw .dnc > .b{flex:1;}
@@ -8281,7 +8282,8 @@ loadData();
           const dT = tc - tp;
           const nT = withCause ? `<b> / ${CUR.s.n}건</b> <span class="${CUR.s.n-PREV.s.n<0?'g':'r'}">(${CUR.s.n-PREV.s.n<0?'▼':'▲'} ${Math.abs(CUR.s.n-PREV.s.n)}건)</span>` : '';
           return `<div class="dnc"><div class="h"><b>${title}</b><small>${esc(PREV.w)} ${fmtv(tp)}${unit} → ${esc(opt.week)} <b>${fmtv(tc)}${unit}</b> <span class="${dT<0?'g':'r'}">${dT<0?'▼':'▲'} ${fmtv(Math.abs(dT))}${unit}</span>${nT}</small></div>
-            <div class="b">${svg}<table><thead><tr><th title="금주 ${k==='cost'?'F-COST':'로스시간'} 순위 (전체 설비 중)">순위</th><th>설비${withCause?' · 금주 최대 고장':''}</th>${withCause?`<th>${esc(opt.week)} 건수</th>`:''}<th>${esc(PREV.w)}</th><th>${esc(opt.week)}</th><th>증감</th><th>비중</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; };
+            <div class="b">${svg}<table><thead><tr><th title="금주 ${k==='cost'?'F-COST':'로스시간'} 순위 (전체 설비 중)">순위</th><th>설비${withCause?' · 금주 최대 고장':''}</th>${withCause?`<th>${esc(opt.week)} 건수</th>`:''}<th>${esc(PREV.w)}</th><th>${esc(opt.week)}</th><th>증감</th><th>비중</th></tr></thead><tbody>${rows}</tbody>
+              <tfoot><tr><td></td><td><b>합계</b></td>${withCause?`<td class="n">${CUR.s.n}건</td>`:''}<td class="n">${fmtv(tp)}</td><td class="n cv">${fmtv(tc)}</td><td class="n ${dT<0?'g':dT>0?'r':''}">${(dT>0?'+':'−')+fmtv(Math.abs(dT))}</td><td class="n s">100%</td></tr></tfoot></table></div></div>`; };
         h += `<div class="kw-dns">${donut('Worst 설비 · 고장 로스시간 (h)', 'lossH', 'h', 1, v=>f1(v,1), true)}${donut('Worst 설비 · F-COST (THB)', 'cost', '', 0, v=>f0(v), false)}</div>`
           + `<div class="kw-note" style="margin-top:2px">※ Worst 4 = 금주 <b>로스시간</b>이 큰 설비 4대 (양쪽 같은 설비 · 같은 색으로 비교) · 순위 = 각 표의 기준(왼쪽 로스시간 · 오른쪽 F-COST)으로 매긴 전체 설비 중 순위 — F-COST 는 설비별 M/C Rate 가 달라 로스시간 순위와 다를 수 있음 · 합계 = 1번 주간 요약과 같은 값</div>`;
       }
