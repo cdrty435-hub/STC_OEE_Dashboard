@@ -7885,6 +7885,15 @@ loadData();
 .kw table.kw-tr th.why{background:#fff59d;} .kw table.kw-tr td.why{text-align:left;white-space:normal;font-size:11px;line-height:1.35;padding:3px 6px;}
 .kw table.kw-tr td.why .wl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1f2937;} .kw table.kw-tr td.why .wl b{color:#64748b;margin-right:2px;}
 .kw table.kw-tr td.why .wy{margin-top:2px;padding-top:2px;border-top:1px dashed #e2e8f0;color:#475569;font-weight:600;} .kw table.kw-tr td.why .wy .g{color:#15803d;} .kw table.kw-tr td.why .wy .b{color:#b91c1c;}
+.kw .kw-dns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 6px;}
+.kw .dnc{border:1px solid #d5dde8;border-radius:10px;padding:8px 12px;background:#fff;}
+.kw .dnc .h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;} .kw .dnc .h > b{font-size:13.5px;color:#1f3864;} .kw .dnc .h small{font-size:12px;color:#475569;} .kw .dnc .h small b{color:#0f172a;}
+.kw .dnc .g{color:#15803d;font-weight:800;} .kw .dnc .r{color:#b91c1c;font-weight:800;}
+.kw .dnc .b{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;margin-top:4px;} .kw .dnc svg.dn{width:150px;height:150px;}
+.kw .dnc table{width:100%;border-collapse:collapse;font-size:12px;table-layout:auto;} .kw .dnc th{background:#f1f5f9;border:0;border-bottom:1px solid #cbd5e1;font-size:11px;padding:3px 5px;color:#475569;font-weight:700;}
+.kw .dnc td{border:0;border-bottom:1px solid #eef2f7;padding:3px 5px;white-space:nowrap;} .kw .dnc td i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.kw .dnc td.n{text-align:right;font-variant-numeric:tabular-nums;} .kw .dnc td.b{font-weight:800;} .kw .dnc td.s{color:#64748b;}
+@media (max-width:900px){ .kw .kw-dns{grid-template-columns:1fr;} }
 .kw .kw-chg{margin:8px 0 4px;border:1px solid #c7d2fe;border-radius:10px;padding:8px 12px;background:#f8faff;}
 .kw .kw-chg .hd b{font-size:13.5px;color:#1e3a8a;} .kw .kw-chg .hd small{margin-left:8px;font-size:11px;color:#b45309;}
 .kw .kw-chg .chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0;} .kw .kw-chg .ch{font-size:12.5px;padding:3px 10px;border-radius:12px;background:#fff;border:1px solid #e2e8f0;color:#334155;}
@@ -8000,10 +8009,10 @@ loadData();
       const good = goodUp ? d>0 : d<0; return `<span class="${good?'dn':'up'}">${sgn(d,dp)}${dp===1&&goodUp?'%p':''}</span>`; };
     let h = `<div class="kw">`;
     h += `<h4 class="kw-h">1. 지표 요약 <small>금기간 ${esc(P.cur.label)} · 비교 ${esc(pl)} · ${C.std ? '계획외 고장(UDT)' : '<b style="color:#dc2626">⚠ 전체 로스 기준 — 휴식·금형교체 등 계획정지 포함 (상단 [지표 산출 기준]에서 국제표준 선택 시 UDT만)</b>'} · 최소정지 ${C.minStop}분 · 목표 MTTR ≤ ${f1(C.tMttr,2)} / MTBF ≥ ${f1(C.tMtbf,2)} h/건</small></h4>`;
-    /* 간소화 : Worst 1·2·3 칸을 빼고 타겟 · 판정 칸 추가 — 주요 원인은 오른쪽 한 칸에 한 줄씩 */
+    /* 간소화 : Worst 1·2·3 칸을 빼고 목표 · 판정 칸 추가 — 주요 원인은 오른쪽 한 칸에 한 줄씩 */
     const TG = { mttr:C.tMttr, mtbf:C.tMtbf, lossH:parseFloat(LS('stc_target_loss')), n:parseFloat(LS('stc_target_cnt')), cost:parseFloat(LS('stc_target_cost')) };
     h += `<table class="kw-s kw-s2"><colgroup><col style="width:4%"><col style="width:10%"><col style="width:12%"><col style="width:13%"><col style="width:9%"><col style="width:12%"><col style="width:40%"></colgroup>`;
-    h += `<thead><tr><th>NO</th><th>지표</th><th>${esc(pl)}</th><th>${esc(P.cur.label)}</th><th>증감</th><th>타겟 · 판정</th><th class="dt">주요 원인 (Worst 3)</th></tr></thead><tbody>`;
+    h += `<thead><tr><th>NO</th><th>지표</th><th>${esc(pl)}</th><th>${esc(P.cur.label)}</th><th>증감</th><th>목표 · 판정</th><th class="dt">주요 원인 (Worst 3)</th></tr></thead><tbody>`;
     rows.forEach((r,i)=>{
       const [name,k,fmtv,goodUp,dp,wk] = r;
       const cv = S[k], pv = Q ? Q[k] : null, tg = TG[k], hasT = isFinite(tg) && tg>0;
@@ -8016,7 +8025,7 @@ loadData();
     });
     h += `</tbody></table>`;
     if (opt.mode === 'week') h += `<div id="kwMtxSlot"></div>`;
-    h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · 타겟 = 지표 주간 추이 · 타겟 설정 값 · 주요 원인 = 설비별 Worst 3 (가동 0h 설비 제외 · MTTR 은 고장 3건 이상 설비만 — 1~2건은 한 번의 긴 정지로 MTTR 이 부풀려짐) · MTTR = 고장 로스시간 ÷ 고장건수 · MTBF = 실가동시간 ÷ 고장건수${C.std ? '' : ' · 현재 전체 로스 기준이라 계획정지도 고장으로 집계'}</div>`;
+    h += `<div class="kw-note">※ 증감: 빨강 = 악화, 초록 = 개선 · 목표 = 지표 주간 추이 · 목표 설정 값 · 주요 원인 = 설비별 Worst 3 (가동 0h 설비 제외 · MTTR 은 고장 3건 이상 설비만 — 1~2건은 한 번의 긴 정지로 MTTR 이 부풀려짐) · MTTR = 고장 로스시간 ÷ 고장건수 · MTBF = 실가동시간 ÷ 고장건수${C.std ? '' : ' · 현재 전체 로스 기준이라 계획정지도 고장으로 집계'}</div>`;
 
     /* --- 2. 워스트 설비 · 고장 유형 정리 ---------------------------------------
        1번 MTTR·MTBF·가용률·로스시간 Worst 3 에 나온 설비를 한 번씩만 모아
@@ -8160,9 +8169,9 @@ loadData();
       h += `<td colspan="2" style="text-align:left">'예방' = 이번 기간 발생 없음 → 예방 점검</td></tr></tfoot></table></div>`;
       h += `<div class="kw-note">※ PM 기본 일정 = ${slots[0].slice(5)} ~ ${slots[slots.length-1].slice(5)} (일요일 제외)에 발생 설비부터 고르게 배정 · 빨강 막대 = 이번 기간 고장 발생 설비 · 날짜 칸 클릭 = 시작일 이동, 일수 = PM 기간(1~3일) · 판정·조치·일정은 이 브라우저에 기간(${esc(P.cur.label)})별로 저장 · 유형 아래 문구 = 2번 '문제 부위 · 원인' (점검 항목)</div>`;
     }
-    /* --- 지표 주간 추이 · 타겟 설정 (주간보고만) ------------------------------
+    /* --- 지표 주간 추이 · 목표 설정 (주간보고만) ------------------------------
        1~5번 지표(MTTR · MTBF · 로스시간 · 고장건수 · F-COST)를 주차별로 다시 집계해
-       평균 · 최고 · 최저 · 제안 타겟을 보여주고, 타겟을 정하면 그래프에 선으로 표시한다.
+       평균 · 최고 · 최저 · 제안 목표을 보여주고, 목표을 정하면 그래프에 선으로 표시한다.
        평균은 가동일이 적은 주(부분 주차)를 빼고 낸다. */
     if (opt.mode === 'week'){
       const WKS = [...new Set(data.run.map(r=>r.w))].filter(Boolean).sort((a,b)=>wkNo(a)-wkNo(b));
@@ -8197,16 +8206,15 @@ loadData();
         const ok = tg==null ? null : FULL.filter(x=> up ? x.s[k] >= tg : x.s[k] <= tg).length;
         return { name,k,u,dp,up,key, vs, avg, best, worstV, q, sug, tg, ok, saved: sv!==null && sv!=='' };
       });
-      h += `<h4 class="kw-h">지표 주간 추이 · 타겟 설정 <small>${esc(upto[0]||'')} ~ ${esc(opt.week)} · ${FULL.length}주 평균 (가동일이 적은 부분 주차 ${WS.length-FULL.length}주 제외) · 타겟 칸에 값을 넣으면 그래프·지표 요약에 바로 반영</small></h4>`;
-      h += `<div><table class="kw-tr"><colgroup><col style="width:7%"><col style="width:3.4%"><col style="width:5.6%"><col style="width:5.2%"><col style="width:5.2%"><col style="width:5.2%"><col style="width:7%"><col style="width:4.4%">${COLS.map(()=>'<col>').join('')}<col style="width:8%"><col style="width:23%"></colgroup><thead><tr><th>지표</th><th>단위</th><th class="av">평균</th><th class="av" style="color:#15803d">최고</th><th class="av" style="color:#dc2626">최저</th><th class="av" title="상위 25% (잘한 주 4개 중 1개 수준)">상위25%</th><th class="tgh">타겟</th><th class="av" title="타겟 달성 주 수">달성</th>`
+      h += `<h4 class="kw-h">지표 주간 추이 · 목표 설정 <small>${esc(upto[0]||'')} ~ ${esc(opt.week)} · ${FULL.length}주 평균 (가동일이 적은 부분 주차 ${WS.length-FULL.length}주 제외) · 목표 칸에 값을 넣으면 그래프·지표 요약에 바로 반영</small></h4>`;
+      h += `<div><table class="kw-tr"><colgroup><col style="width:7.5%"><col style="width:3.6%"><col style="width:7.5%"><col style="width:6%">${COLS.map(()=>'<col>').join('')}<col style="width:8.5%"><col style="width:25%"></colgroup><thead><tr><th>지표</th><th>단위</th><th class="tgh">목표</th><th class="av" title="부분 주차를 뺀 주평균">평균</th>`
          + COLS.map(c=>`<th class="${c.m?'mo':''}${c.w===opt.week?' cur':''}${c.part?' pt':''}">${esc(c.lbl)}${c.m?`<span class="sm">${esc(c.sub)}</span>`:c.part?'<span class="sm">부분 '+c.s.days.length+'일</span>':''}</th>`).join('')
          + `<th class="dl">${PREV?esc(PREV.w)+' → ':''}${esc(opt.week)}<span class="sm">전주 대비</span></th><th class="why">주요 원인 (Worst 3) · 변화 이유</th></tr></thead><tbody>`;
       T.forEach(t=>{
         h += `<tr><td class="kp">${t.name}<span class="sm">${t.up?'높을수록 좋음':'낮을수록 좋음'}</span></td><td class="c">${t.u}</td>`;
         const fk = v => v>=100000 ? f0(v/1000)+'k' : v>=10000 ? f1(v/1000,1)+'k' : fx(v,t.dp);
-        h += `<td class="n av"><b>${fk(t.avg)}</b></td><td class="n av dn">${fk(t.best)}</td><td class="n av up">${fk(t.worstV)}</td><td class="n av">${fk(t.q)}</td>`
-           + `<td class="tgc"><input type="number" step="${t.dp?Math.pow(10,-t.dp):1}" data-kwtg="${t.key}" value="${t.saved || t.tg!=null ? t.tg : ''}" placeholder="${fx(t.sug,t.dp).replace(/,/g,'')}"><span class="sm">제안 ${fx(t.sug,t.dp)}</span></td>`
-           + `<td class="c">${t.ok==null?'–':`<b>${t.ok}</b>/${FULL.length}`}</td>`;
+        h += `<td class="tgc"><input type="number" step="${t.dp?Math.pow(10,-t.dp):1}" data-kwtg="${t.key}" value="${t.saved || t.tg!=null ? t.tg : ''}" placeholder="${fx(t.sug,t.dp).replace(/,/g,'')}"><span class="sm">제안 ${fx(t.sug,t.dp)}</span></td>`
+           + `<td class="n av"><b>${fk(t.avg)}</b></td>`;
         /* 최고(가장 잘한 주) = 초록 · 최저(가장 못한 주) = 빨강 하이라이트 — 부분 주차 제외 */
         const bW = FULL.find(x=>x.s[t.k]===t.best), wW = FULL.find(x=>x.s[t.k]===t.worstV);
         COLS.forEach(c=>{ const v = c.m && ['lossH','n','cost'].includes(t.k) ? c.s[t.k]/(c.nw||1) : c.s[t.k], bad = !c.m && t.tg!=null && !c.part && (t.up ? v < t.tg : v > t.tg);
@@ -8216,7 +8224,7 @@ loadData();
         { const cv = CUR ? CUR.s[t.k] : null, pv = PREV ? PREV.s[t.k] : null;
           if (cv==null || pv==null) h += `<td class="c dl">–</td>`;
           else { const d = cv - pv, good = t.up ? d > 0 : d < 0, eq = Math.abs(d) < Math.pow(10,-(t.dp||0))/2;
-            h += `<td class="c dl ${eq?'':good?'gd':'bd'}">${eq?'±0':`${d>0?'▲':'▼'} ${t.k==='cost'?f0(Math.abs(d)):fx(Math.abs(d),t.dp)}<span class="sm">${good?'개선':'악화'}${pv?' '+Math.round(Math.abs(d)/pv*100)+'%':''}</span>`}</td>`; } }
+            h += `<td class="c dl ${eq?'':good?'gd':'bd'}">${eq?'±0':`${d>0?'▲':'▼'} ${t.k==='cost'?f0(Math.abs(d)):fx(Math.abs(d),t.dp)}<span class="sm">${pv?'전주비 '+Math.round(Math.abs(d)/pv*100)+'% '+(d<0?'감소':'증가'):(d<0?'감소':'증가')}</span>`}</td>`; } }
         /* 주요 원인 (지표 요약과 같은 Worst 3) + 변화 이유 (전주 대비 무엇이 늘고 줄었나) */
         { const wk2 = { mttr:'mttr', mtbf:'mtbf', lossH:'loss', n:'cnt', cost:'cost' }[t.k], dd = D[wk2] || { items:[] };
           const top2 = (cur, prev, unit, dp) => { if(!Q) return ''; const ks = new Set(Object.keys(cur).concat(Object.keys(prev)));
@@ -8224,19 +8232,43 @@ loadData();
             return L.map(x=>`<span class="${x.d<0?'g':'b'}">${esc(x.k)} ${x.d>0?'+':'−'}${dp ? f1(Math.abs(x.d),dp) : f0(Math.abs(x.d))}${unit}</span>`).join(' · '); };
           let why = '';
           if (Q){
-            if (t.k==='mttr') why = `고장시간 ${sgn(S.lossH-Q.lossH,1)}h · 건수 ${sgn(S.n-Q.n,0)}건 → 건당 ${sgn(S.mttr-Q.mttr,2)}h`;
-            else if (t.k==='mtbf') why = `고장 ${sgn(S.n-Q.n,0)}건 · 가동 ${sgn(S.runH-Q.runH,1)}h`;
-            else if (t.k==='lossH') why = top2(S.codeH, Q.codeH, 'h', 1);
-            else if (t.k==='n') why = top2(S.codeN, Q.codeN, '건', 0);
-            else if (t.k==='cost'){ const cm = {}, pm = {}; MACHINES.forEach(m=>{ cm['DC'+m] = S.mc[m] ? S.mc[m].cost : 0; pm['DC'+m] = Q.mc[m] ? Q.mc[m].cost : 0; }); why = top2(cm, pm, '', 0); }
+            const ft = (a,b,dp,u) => `${dp?f1(a,dp):f0(a)}${u} → <b>${dp?f1(b,dp):f0(b)}${u}</b>`;
+            if (t.k==='mttr') why = `고장시간 ${ft(Q.lossH,S.lossH,1,'h')} · 건수 ${ft(Q.n,S.n,0,'건')}`;
+            else if (t.k==='mtbf') why = `가동 ${ft(Q.runH,S.runH,0,'h')} · 고장 ${ft(Q.n,S.n,0,'건')}`;
+            else if (t.k==='lossH') why = `${ft(Q.lossH,S.lossH,1,'h')} · ${top2(S.codeH, Q.codeH, 'h', 1)}`;
+            else if (t.k==='n') why = `${ft(Q.n,S.n,0,'건')} · ${top2(S.codeN, Q.codeN, '건', 0)}`;
+            else if (t.k==='cost'){ const cm = {}, pm = {}; MACHINES.forEach(m=>{ cm['DC'+m] = S.mc[m] ? S.mc[m].cost : 0; pm['DC'+m] = Q.mc[m] ? Q.mc[m].cost : 0; }); why = `${ft(Q.cost,S.cost,0,'')} · ${top2(cm, pm, '', 0)}`; }
           }
-          h += `<td class="why">${dd.items.slice(0,3).map((x,i)=>`<div class="wl"><b>${i+1}.</b> ${esc(x)}</div>`).join('') || '<div class="wl">–</div>'}${why?`<div class="wy">변화: ${why}</div>`:''}</td>`; }
+          h += `<td class="why">${dd.items.slice(0,3).map((x,i)=>`<div class="wl"><b>${i+1}.</b> ${esc(x)}</div>`).join('') || '<div class="wl">–</div>'}${why?`<div class="wy">${esc(PREV?PREV.w:'')}→${esc(opt.week)}: ${why}</div>`:''}</td>`; }
         h += `</tr>`;
       });
       h += `</tbody></table></div>`;
-      h += `<div class="kw-tr-act"><button type="button" data-kwtgsug="1">제안값을 타겟으로 적용 (비어 있는 칸만)</button><button type="button" data-kwtgclr="1">로스·건수·F-COST 타겟 지우기</button></div>`;
+      /* 전주 → 금주 무엇이 줄고 늘었나 : 고장원인별 로스시간 · 설비별 F-COST 도넛 (금주 구성) + 전주 대비 표 */
+      if (CUR && PREV){
+        const PAL = ['#1e3c72','#3b82f6','#f59e0b','#10b981','#a855f7','#cbd5e1'];
+        const donut = (title, cur, prev, unit, dp, fmtv) => {
+          const ks = new Set(Object.keys(cur).concat(Object.keys(prev)));
+          const L = [...ks].map(k=>({ k, c:cur[k]||0, p:prev[k]||0 })).filter(x=>x.c||x.p).sort((a,b)=>b.c-a.c || b.p-a.p);
+          const top = L.slice(0,5), rest = L.slice(5), tc = L.reduce((a,x)=>a+x.c,0), tp = L.reduce((a,x)=>a+x.p,0);
+          if (rest.length) top.push({ k:`기타 ${rest.length}종`, c:rest.reduce((a,x)=>a+x.c,0), p:rest.reduce((a,x)=>a+x.p,0), etc:true });
+          let a0 = -Math.PI/2, svg = `<svg viewBox="0 0 120 120" class="dn">`;
+          const R0 = 52, R1 = 32;
+          top.forEach((x,i)=>{ if(!tc || !x.c) return; const a1 = a0 + x.c/tc*Math.PI*2, big = (a1-a0) > Math.PI ? 1 : 0;
+            const P = (r,a) => `${(60+r*Math.cos(a)).toFixed(2)} ${(60+r*Math.sin(a)).toFixed(2)}`;
+            svg += x.c/tc > 0.999 ? `<circle cx="60" cy="60" r="${(R0+R1)/2}" fill="none" stroke="${PAL[i]}" stroke-width="${R0-R1}"/>`
+              : `<path d="M${P(R0,a0)} A${R0} ${R0} 0 ${big} 1 ${P(R0,a1)} L${P(R1,a1)} A${R1} ${R1} 0 ${big} 0 ${P(R1,a0)} Z" fill="${PAL[i]}" stroke="#fff" stroke-width="1.2"><title>${esc(x.k)} ${fmtv(x.c)}${unit} (${Math.round(x.c/tc*100)}%)</title></path>`;
+            a0 = a1; });
+          svg += `<text x="60" y="56" text-anchor="middle" font-size="9" fill="#64748b">${esc(opt.week)}</text><text x="60" y="70" text-anchor="middle" font-size="12.5" font-weight="800" fill="#0f172a">${fmtv(tc)}</text></svg>`;
+          const rows = top.map((x,i)=>{ const d = x.c - x.p; return `<tr><td><i style="background:${PAL[i]}"></i>${esc(x.k)}</td><td class="n">${fmtv(x.p)}</td><td class="n b">${fmtv(x.c)}</td><td class="n ${d<0?'g':d>0?'r':''}">${Math.abs(d)<(dp?0.05:1)?'–':(d>0?'+':'−')+fmtv(Math.abs(d))}</td><td class="n s">${tc?Math.round(x.c/tc*100)+'%':''}</td></tr>`; }).join('');
+          const dT = tc - tp;
+          return `<div class="dnc"><div class="h"><b>${title}</b><small>${esc(PREV.w)} ${fmtv(tp)}${unit} → ${esc(opt.week)} <b>${fmtv(tc)}${unit}</b> <span class="${dT<0?'g':'r'}">${dT<0?'▼':'▲'} ${fmtv(Math.abs(dT))}${unit}</span></small></div>
+            <div class="b">${svg}<table><thead><tr><th>${title.includes('설비')?'설비':'고장 원인'}</th><th>${esc(PREV.w)}</th><th>${esc(opt.week)}</th><th>증감</th><th>비중</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; };
+        const cm = {}, pm = {}; MACHINES.forEach(m=>{ if (CUR.s.mc[m] && CUR.s.mc[m].cost) cm['DC'+m] = CUR.s.mc[m].cost; if (PREV.s.mc[m] && PREV.s.mc[m].cost) pm['DC'+m] = PREV.s.mc[m].cost; });
+        h += `<div class="kw-dns">${donut('고장 원인별 로스시간', CUR.s.codeH, PREV.s.codeH, 'h', 1, v=>f1(v,1))}${donut('설비별 F-COST', cm, pm, '', 0, v=>f0(v))}</div>`;
+      }
+      h += `<div class="kw-tr-act"><button type="button" data-kwtgsug="1">제안값을 목표으로 적용 (비어 있는 칸만)</button><button type="button" data-kwtgclr="1">로스·건수·F-COST 목표 지우기</button></div>`;
 
-      /* 그래프 — 지표별 작은 꺾은선 (평균 = 회색 점선, 타겟 = 빨강 점선, 금주 = 주황 점) */
+      /* 그래프 — 지표별 작은 꺾은선 (평균 = 회색 점선, 목표 = 빨강 점선, 금주 = 주황 점) */
       const chart = t => {
         const W = 300, H = 172, L = 44, R = 12, TP = 22, B = 34, pw = W-L-R, ph = H-TP-B;
         const pts = WS.map((x,i)=>({ x:L + (WS.length>1 ? i*pw/(WS.length-1) : pw/2), v:x.s[t.k], w:x.w, part:x.part, has:x.s.days.length>0 }));
@@ -8260,10 +8292,10 @@ loadData();
         if (last) s += `<text x="${Math.min(last.x, W-R-2)}" y="${y(last.v)-9}" text-anchor="${last.x>W-60?'end':'middle'}" font-size="11" font-weight="800" fill="#1f2733">${fx(last.v,t.dp)}</text>`;
         s += `</svg>`;
         return `<div class="kw-tc"><div class="hd"><b>${t.name}</b> <span>${t.u} · ${t.up?'높을수록 좋음':'낮을수록 좋음'}</span></div>${s}`
-          + `<div class="lg"><span><i style="border-top:2px dashed #64748b"></i>평균 ${fx(t.avg,t.dp)}</span>${t.tg!=null?`<span><i style="border-top:2px dashed #dc2626"></i>타겟 ${fx(t.tg,t.dp)}</span>`:'<span style="color:#94a3b8">타겟 미설정</span>'}<span><i class="o"></i>금주</span></div></div>`;
+          + `<div class="lg"><span><i style="border-top:2px dashed #64748b"></i>평균 ${fx(t.avg,t.dp)}</span>${t.tg!=null?`<span><i style="border-top:2px dashed #dc2626"></i>목표 ${fx(t.tg,t.dp)}</span>`:'<span style="color:#94a3b8">목표 미설정</span>'}<span><i class="o"></i>금주</span></div></div>`;
       };
       h += `<div class="kw-tcs">${T.map(chart).join('')}</div>`;
-      h += `<div class="kw-note">※ 지난 달 = 월별 칸(MTTR·MTBF 는 그 달 전체 기준 · 로스시간·고장건수·F-COST 는 주평균) · 이번 달 = 주차별 · 변화 = 전주 대비 가장 크게 늘고 준 원인 (초록 = 감소 · 빨강 = 증가) · 각 주차는 1번 지표 요약과 같은 기준(${C.std?'계획외 고장 UDT':'전체 로스'} · 최소정지 ${C.minStop}분)으로 다시 집계 · 평균·최고·최저·상위 25%·달성 주는 부분 주차를 뺀 ${FULL.length}주 기준 · 제안 = 평균에서 10% 개선 (MTBF 는 +10%, 나머지는 −10%) · 상위 25% = 잘한 주 4개 중 1개 수준(도전 목표 참고) · 빨강 칸 = 타겟 미달 주 · MTTR/MTBF 타겟은 상단 목표값과 같은 저장값 · 이 브라우저에 저장</div>`;
+      h += `<div class="kw-note">※ 지난 달 = 월별 칸(MTTR·MTBF 는 그 달 전체 기준 · 로스시간·고장건수·F-COST 는 주평균) · 이번 달 = 주차별 · 변화 = 전주 대비 가장 크게 늘고 준 원인 (초록 = 감소 · 빨강 = 증가) · 각 주차는 1번 지표 요약과 같은 기준(${C.std?'계획외 고장 UDT':'전체 로스'} · 최소정지 ${C.minStop}분)으로 다시 집계 · 평균은 부분 주차를 뺀 ${FULL.length}주 기준 · 제안 = 평균에서 10% 개선 (MTBF 는 +10%, 나머지는 −10%) · 빨강 칸 = 목표 미달 주 · MTTR/MTBF 목표은 상단 목표값과 같은 저장값 · 이 브라우저에 저장</div>`;
     }
     /* --- FAC별 종합 성과 (설비 KPI 대시보드와 같은 카드) — 주간보고만 ---
        가용률 = 가동 ÷ (가동 + 고장) · 순위 = 가용률 높은 순 · 누적 순위 = 데이터 첫 주 ~ 이번 주 주마다 매긴 순위 횟수
@@ -8400,7 +8432,7 @@ loadData();
     host.querySelectorAll('[data-kwpmreset]').forEach(el=>{
       el.addEventListener('click', ()=>{ save(o=>{ delete o._pm; delete o._pmd; }); redraw(); });
     });
-    /* 지표 타겟 (주간 추이) */
+    /* 지표 목표 (주간 추이) */
     host.querySelectorAll('input[data-kwtg]').forEach(el=>{
       el.addEventListener('keydown', e=>{ if (e.key==='Enter'){ e.stopPropagation(); el.blur(); } });
       el.addEventListener('change', ()=>{ try{ const v = el.value.trim(); if (v==='' ) localStorage.removeItem(el.dataset.kwtg); else localStorage.setItem(el.dataset.kwtg, String(parseFloat(v))); }catch(e){} redraw(); });
