@@ -7715,8 +7715,9 @@ loadData();
                   opr:   (runH+allH)>0  ? runH/(runH+allH)*100  : 0,        // 참고: 전체 로스 기준 가동률
                   cost: F.reduce((s,x)=>s+x.l*(rate[x.m]||0),0), days:[...new Set(R.map(x=>x.d))].sort() };
     const codeH = {};
-    F.forEach(x=>{ codeH[x.i]=(codeH[x.i]||0)+x.l/60; });
-    tot.codeH = codeH;
+    const codeN = {};
+    F.forEach(x=>{ codeH[x.i]=(codeH[x.i]||0)+x.l/60; codeN[x.i]=(codeN[x.i]||0)+1; });
+    tot.codeH = codeH; tot.codeN = codeN;
     const mc = {};
     MACHINES.forEach(m=>{
       const rr = R.filter(x=>x.m===m), la = L.filter(x=>x.m===m), ff = F.filter(x=>x.m===m);
@@ -7879,6 +7880,18 @@ loadData();
 .kw table.kw-g th.gj{font-size:10.5px;} .kw table.kw-g tfoot td.gj{font-size:9.5px;line-height:1.3;}
 @media print{ .kw table.kw-g td.gc{cursor:default;} .kw table.kw-g select[data-kwpmd]{text-align:center;} }
 .kw table.kw-tr{font-size:11.5px;table-layout:fixed;width:100%;} .kw table.kw-tr th,.kw table.kw-tr td{padding:4px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} .kw table.kw-tr td.n,.kw table.kw-tr td.c{font-size:13.5px;font-weight:700;color:#0f172a;padding-right:8px;} .kw table.kw-tr td.c{padding-right:3px;} .kw table.kw-tr td.n.pt{color:#94a3b8;font-weight:600;} .kw table.kw-tr th{font-size:11px;} .kw table.kw-tr td.kp{white-space:normal;font-size:11.5px;} .kw table.kw-tr .sm{font-size:9.5px;} .kw table.kw-tr th.cur,.kw table.kw-tr td.cur{background:#fff3c4;} .kw table.kw-tr th.pt,.kw table.kw-tr td.pt{color:#94a3b8;}
+.kw table.kw-tr th.mo,.kw table.kw-tr td.mo{background:#f1f5f9;} .kw table.kw-tr th.mo{color:#334155;}
+.kw table.kw-tr th.dl{background:#e0e7ff;color:#1e3a8a;} .kw table.kw-tr td.dl{background:#f5f7ff;font-weight:800;font-size:13px;} .kw table.kw-tr td.dl.gd{color:#15803d;} .kw table.kw-tr td.dl.bd{color:#b91c1c;} .kw table.kw-tr td.dl .sm{display:block;font-size:10px;font-weight:700;}
+.kw table.kw-tr th.why{background:#fff59d;} .kw table.kw-tr td.why{text-align:left;white-space:normal;font-size:11px;line-height:1.35;padding:3px 6px;}
+.kw table.kw-tr td.why .wl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1f2937;} .kw table.kw-tr td.why .wl b{color:#64748b;margin-right:2px;}
+.kw table.kw-tr td.why .wy{margin-top:2px;padding-top:2px;border-top:1px dashed #e2e8f0;color:#475569;font-weight:600;} .kw table.kw-tr td.why .wy .g{color:#15803d;} .kw table.kw-tr td.why .wy .b{color:#b91c1c;}
+.kw .kw-chg{margin:8px 0 4px;border:1px solid #c7d2fe;border-radius:10px;padding:8px 12px;background:#f8faff;}
+.kw .kw-chg .hd b{font-size:13.5px;color:#1e3a8a;} .kw .kw-chg .hd small{margin-left:8px;font-size:11px;color:#b45309;}
+.kw .kw-chg .chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0;} .kw .kw-chg .ch{font-size:12.5px;padding:3px 10px;border-radius:12px;background:#fff;border:1px solid #e2e8f0;color:#334155;}
+.kw .kw-chg .ch.gd{border-color:#86efac;background:#f0fdf4;} .kw .kw-chg .ch.gd b:last-of-type{color:#15803d;} .kw .kw-chg .ch.bd{border-color:#fca5a5;background:#fff5f5;} .kw .kw-chg .ch.bd b:last-of-type{color:#b91c1c;}
+.kw .kw-chg .why{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12.5px;color:#334155;} .kw .kw-chg .why > div{padding:6px 10px;border-radius:8px;}
+.kw .kw-chg .why .gd{background:#f0fdf4;} .kw .kw-chg .why .bd{background:#fff5f5;} .kw .kw-chg .why > div > b:first-child{display:block;margin-bottom:2px;} .kw .kw-chg .why .gd > b:first-child{color:#15803d;} .kw .kw-chg .why .bd > b:first-child{color:#b91c1c;}
+.kw .kw-chg .why .mc{display:block;font-size:11.5px;color:#64748b;margin-top:2px;}
 .kw table.kw-tr th.av{background:#dbe5f1;} .kw table.kw-tr td.av{background:#f4f7fb;} .kw table.kw-tr th.tgh{background:#fde2e2;color:#b91c1c;}
 .kw table.kw-tr td.bad{color:#c00000;font-weight:800;} .kw table.kw-tr td.n.av.dn{color:#15803d;} .kw table.kw-tr td.n.av.up{color:#dc2626;} .kw table.kw-tr td.hb{color:#15803d !important;font-weight:900;font-size:13.5px;} .kw table.kw-tr td.hw{color:#dc2626 !important;font-weight:900;font-size:13.5px;} .kw table.kw-tr td.tgc{text-align:center;background:#fff7f7;}
 .kw table.kw-tr td.tgc input{width:100%;max-width:80px;box-sizing:border-box;font:inherit;font-size:13px;font-weight:800;text-align:right;padding:3px 5px;border:1.5px solid #dc2626;border-radius:5px;color:#b91c1c;}
@@ -8158,6 +8171,14 @@ loadData();
       const maxD = Math.max(1, ...WS.map(x=>x.s.days.length));
       WS.forEach(x=>{ x.part = x.s.days.length < Math.min(6, maxD) * 0.8; });
       const FULL = WS.filter(x=>!x.part && x.s.days.length);
+      /* 표 칸 : 이번 달은 주차별 · 그 전 달은 월별 합계 (주차의 달 = 그 주 첫날 + 3일) */
+      const wd0 = {}; data.run.forEach(r=>{ if(r.w && (!wd0[r.w] || r.d < wd0[r.w])) wd0[r.w] = r.d; });
+      const wMon = w => wd0[w] ? addDays(wd0[w], 3).slice(0,7) : '';
+      const curM = wMon(opt.week), MONS = [...new Set(WS.map(x=>wMon(x.w)))].filter(m=>m && m < curM).sort();
+      const COLS = MONS.map(m=>{ const ws = WS.filter(x=>wMon(x.w)===m).map(x=>x.w);
+          return { m:true, nw:ws.length, lbl:(+m.slice(5))+'월', sub: (ws.length>1 ? ws[0]+'~'+ws[ws.length-1] : ws[0]), s: stats(data, r=>ws.includes(r.w), C), part:false }; })
+        .concat(WS.filter(x=>wMon(x.w)===curM).map(x=>({ m:false, lbl:x.w, w:x.w, x, s:x.s, part:x.part })));
+      const iCur = WS.findIndex(x=>x.w===opt.week), PREV = iCur>0 ? WS[iCur-1] : null, CUR = WS[iCur] || null;
       const KS = [
         ['MTTR','mttr','h/건',2,false,'stc_target_mttr',1.5],
         ['MTBF','mtbf','h/건',2,true,'stc_target_mtbf',10],
@@ -8177,9 +8198,9 @@ loadData();
         return { name,k,u,dp,up,key, vs, avg, best, worstV, q, sug, tg, ok, saved: sv!==null && sv!=='' };
       });
       h += `<h4 class="kw-h">지표 주간 추이 · 타겟 설정 <small>${esc(upto[0]||'')} ~ ${esc(opt.week)} · ${FULL.length}주 평균 (가동일이 적은 부분 주차 ${WS.length-FULL.length}주 제외) · 타겟 칸에 값을 넣으면 그래프·지표 요약에 바로 반영</small></h4>`;
-      h += `<div><table class="kw-tr"><colgroup><col style="width:5.4%"><col style="width:2.8%"><col style="width:4.6%"><col style="width:4.2%"><col style="width:4.2%"><col style="width:4.2%"><col style="width:5.8%"><col style="width:3.6%">${WS.map(()=>'<col>').join('')}</colgroup><thead><tr><th>지표</th><th>단위</th><th class="av">평균</th><th class="av" style="color:#15803d">최고</th><th class="av" style="color:#dc2626">최저</th><th class="av" title="상위 25% (잘한 주 4개 중 1개 수준)">상위25%</th><th class="tgh">타겟</th><th class="av" title="타겟 달성 주 수">달성</th>`
-         + WS.map(x=>`<th class="${x.w===opt.week?'cur':''}${x.part?' pt':''}">${esc(x.w)}${x.part?'<span class="sm">부분 '+x.s.days.length+'일</span>':''}</th>`).join('')
-         + `</tr></thead><tbody>`;
+      h += `<div><table class="kw-tr"><colgroup><col style="width:7%"><col style="width:3.4%"><col style="width:5.6%"><col style="width:5.2%"><col style="width:5.2%"><col style="width:5.2%"><col style="width:7%"><col style="width:4.4%">${COLS.map(()=>'<col>').join('')}<col style="width:8%"><col style="width:23%"></colgroup><thead><tr><th>지표</th><th>단위</th><th class="av">평균</th><th class="av" style="color:#15803d">최고</th><th class="av" style="color:#dc2626">최저</th><th class="av" title="상위 25% (잘한 주 4개 중 1개 수준)">상위25%</th><th class="tgh">타겟</th><th class="av" title="타겟 달성 주 수">달성</th>`
+         + COLS.map(c=>`<th class="${c.m?'mo':''}${c.w===opt.week?' cur':''}${c.part?' pt':''}">${esc(c.lbl)}${c.m?`<span class="sm">${esc(c.sub)}</span>`:c.part?'<span class="sm">부분 '+c.s.days.length+'일</span>':''}</th>`).join('')
+         + `<th class="dl">${PREV?esc(PREV.w)+' → ':''}${esc(opt.week)}<span class="sm">전주 대비</span></th><th class="why">주요 원인 (Worst 3) · 변화 이유</th></tr></thead><tbody>`;
       T.forEach(t=>{
         h += `<tr><td class="kp">${t.name}<span class="sm">${t.up?'높을수록 좋음':'낮을수록 좋음'}</span></td><td class="c">${t.u}</td>`;
         const fk = v => v>=100000 ? f0(v/1000)+'k' : v>=10000 ? f1(v/1000,1)+'k' : fx(v,t.dp);
@@ -8188,9 +8209,28 @@ loadData();
            + `<td class="c">${t.ok==null?'–':`<b>${t.ok}</b>/${FULL.length}`}</td>`;
         /* 최고(가장 잘한 주) = 초록 · 최저(가장 못한 주) = 빨강 하이라이트 — 부분 주차 제외 */
         const bW = FULL.find(x=>x.s[t.k]===t.best), wW = FULL.find(x=>x.s[t.k]===t.worstV);
-        WS.forEach(x=>{ const v = x.s[t.k], bad = t.tg!=null && !x.part && (t.up ? v < t.tg : v > t.tg);
-          const hl = vs => vs.length<2 ? '' : x===bW ? ' hb' : x===wW ? ' hw' : '';
-          h += `<td class="n${x.w===opt.week?' cur':''}${x.part?' pt':''}${bad?' bad':''}${hl(t.vs)}" title="${esc(x.w)} ${fx(v,t.dp)} ${t.u}">${x.s.days.length?(v>=100000?f0(v/1000)+'k':v>=10000?f1(v/1000,1)+'k':fx(v,t.dp)):'–'}</td>`; });
+        COLS.forEach(c=>{ const v = c.m && ['lossH','n','cost'].includes(t.k) ? c.s[t.k]/(c.nw||1) : c.s[t.k], bad = !c.m && t.tg!=null && !c.part && (t.up ? v < t.tg : v > t.tg);
+          const hl = c.m || t.vs.length<2 ? '' : c.x===bW ? ' hb' : c.x===wW ? ' hw' : '';
+          h += `<td class="n${c.m?' mo':''}${c.w===opt.week?' cur':''}${c.part?' pt':''}${bad?' bad':''}${hl}" title="${esc(c.lbl)}${c.m?' ('+esc(c.sub)+' · 로스·건수·F-COST 는 주평균)':''} ${fx(v,t.dp)} ${t.u}">${c.s.days.length?(v>=100000?f0(v/1000)+'k':v>=10000?f1(v/1000,1)+'k':fx(v,t.dp)):'–'}</td>`; });
+        /* 전주 대비 */
+        { const cv = CUR ? CUR.s[t.k] : null, pv = PREV ? PREV.s[t.k] : null;
+          if (cv==null || pv==null) h += `<td class="c dl">–</td>`;
+          else { const d = cv - pv, good = t.up ? d > 0 : d < 0, eq = Math.abs(d) < Math.pow(10,-(t.dp||0))/2;
+            h += `<td class="c dl ${eq?'':good?'gd':'bd'}">${eq?'±0':`${d>0?'▲':'▼'} ${t.k==='cost'?f0(Math.abs(d)):fx(Math.abs(d),t.dp)}<span class="sm">${good?'개선':'악화'}${pv?' '+Math.round(Math.abs(d)/pv*100)+'%':''}</span>`}</td>`; } }
+        /* 주요 원인 (지표 요약과 같은 Worst 3) + 변화 이유 (전주 대비 무엇이 늘고 줄었나) */
+        { const wk2 = { mttr:'mttr', mtbf:'mtbf', lossH:'loss', n:'cnt', cost:'cost' }[t.k], dd = D[wk2] || { items:[] };
+          const top2 = (cur, prev, unit, dp) => { if(!Q) return ''; const ks = new Set(Object.keys(cur).concat(Object.keys(prev)));
+            const L = [...ks].map(k=>({ k, d:(cur[k]||0)-(prev[k]||0) })).filter(x=>Math.abs(x.d) >= (dp ? 0.05 : 1)).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,2);
+            return L.map(x=>`<span class="${x.d<0?'g':'b'}">${esc(x.k)} ${x.d>0?'+':'−'}${dp ? f1(Math.abs(x.d),dp) : f0(Math.abs(x.d))}${unit}</span>`).join(' · '); };
+          let why = '';
+          if (Q){
+            if (t.k==='mttr') why = `고장시간 ${sgn(S.lossH-Q.lossH,1)}h · 건수 ${sgn(S.n-Q.n,0)}건 → 건당 ${sgn(S.mttr-Q.mttr,2)}h`;
+            else if (t.k==='mtbf') why = `고장 ${sgn(S.n-Q.n,0)}건 · 가동 ${sgn(S.runH-Q.runH,1)}h`;
+            else if (t.k==='lossH') why = top2(S.codeH, Q.codeH, 'h', 1);
+            else if (t.k==='n') why = top2(S.codeN, Q.codeN, '건', 0);
+            else if (t.k==='cost'){ const cm = {}, pm = {}; MACHINES.forEach(m=>{ cm['DC'+m] = S.mc[m] ? S.mc[m].cost : 0; pm['DC'+m] = Q.mc[m] ? Q.mc[m].cost : 0; }); why = top2(cm, pm, '', 0); }
+          }
+          h += `<td class="why">${dd.items.slice(0,3).map((x,i)=>`<div class="wl"><b>${i+1}.</b> ${esc(x)}</div>`).join('') || '<div class="wl">–</div>'}${why?`<div class="wy">변화: ${why}</div>`:''}</td>`; }
         h += `</tr>`;
       });
       h += `</tbody></table></div>`;
@@ -8223,7 +8263,7 @@ loadData();
           + `<div class="lg"><span><i style="border-top:2px dashed #64748b"></i>평균 ${fx(t.avg,t.dp)}</span>${t.tg!=null?`<span><i style="border-top:2px dashed #dc2626"></i>타겟 ${fx(t.tg,t.dp)}</span>`:'<span style="color:#94a3b8">타겟 미설정</span>'}<span><i class="o"></i>금주</span></div></div>`;
       };
       h += `<div class="kw-tcs">${T.map(chart).join('')}</div>`;
-      h += `<div class="kw-note">※ 각 주차는 1번 지표 요약과 같은 기준(${C.std?'계획외 고장 UDT':'전체 로스'} · 최소정지 ${C.minStop}분)으로 다시 집계 · 평균·최고·최저·상위 25%·달성 주는 부분 주차를 뺀 ${FULL.length}주 기준 · 제안 = 평균에서 10% 개선 (MTBF 는 +10%, 나머지는 −10%) · 상위 25% = 잘한 주 4개 중 1개 수준(도전 목표 참고) · 빨강 칸 = 타겟 미달 주 · MTTR/MTBF 타겟은 상단 목표값과 같은 저장값 · 이 브라우저에 저장</div>`;
+      h += `<div class="kw-note">※ 지난 달 = 월별 칸(MTTR·MTBF 는 그 달 전체 기준 · 로스시간·고장건수·F-COST 는 주평균) · 이번 달 = 주차별 · 변화 = 전주 대비 가장 크게 늘고 준 원인 (초록 = 감소 · 빨강 = 증가) · 각 주차는 1번 지표 요약과 같은 기준(${C.std?'계획외 고장 UDT':'전체 로스'} · 최소정지 ${C.minStop}분)으로 다시 집계 · 평균·최고·최저·상위 25%·달성 주는 부분 주차를 뺀 ${FULL.length}주 기준 · 제안 = 평균에서 10% 개선 (MTBF 는 +10%, 나머지는 −10%) · 상위 25% = 잘한 주 4개 중 1개 수준(도전 목표 참고) · 빨강 칸 = 타겟 미달 주 · MTTR/MTBF 타겟은 상단 목표값과 같은 저장값 · 이 브라우저에 저장</div>`;
     }
     /* --- FAC별 종합 성과 (설비 KPI 대시보드와 같은 카드) — 주간보고만 ---
        가용률 = 가동 ÷ (가동 + 고장) · 순위 = 가용률 높은 순 · 누적 순위 = 데이터 첫 주 ~ 이번 주 주마다 매긴 순위 횟수
