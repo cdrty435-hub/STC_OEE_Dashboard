@@ -7892,6 +7892,7 @@ loadData();
 .kw .dnc .b{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;margin-top:4px;} .kw .dnc svg.dn{width:150px;height:150px;}
 .kw .dnc table{width:100%;border-collapse:collapse;font-size:12px;table-layout:auto;} .kw .dnc th{background:#f1f5f9;border:0;border-bottom:1px solid #cbd5e1;font-size:11px;padding:3px 5px;color:#475569;font-weight:700;}
 .kw .dnc td{border:0;border-bottom:1px solid #eef2f7;padding:3px 5px;white-space:nowrap;} .kw .dnc td i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.kw .dnc td .cz{display:block;font-size:10.5px;color:#64748b;margin-left:14px;} .kw .dnc tr.etc td{color:#64748b;} .kw .dnc tr.etc td b{font-weight:600;}
 .kw .dnc td.n{text-align:right;font-variant-numeric:tabular-nums;} .kw .dnc td.b{font-weight:800;} .kw .dnc td.s{color:#64748b;}
 @media (max-width:900px){ .kw .kw-dns{grid-template-columns:1fr;} }
 .kw .kw-chg{margin:8px 0 4px;border:1px solid #c7d2fe;border-radius:10px;padding:8px 12px;background:#f8faff;}
@@ -8245,26 +8246,29 @@ loadData();
       h += `</tbody></table></div>`;
       /* 전주 → 금주 무엇이 줄고 늘었나 : 고장원인별 로스시간 · 설비별 F-COST 도넛 (금주 구성) + 전주 대비 표 */
       if (CUR && PREV){
-        const PAL = ['#1e3c72','#3b82f6','#f59e0b','#10b981','#a855f7','#cbd5e1'];
-        const donut = (title, cur, prev, unit, dp, fmtv) => {
-          const ks = new Set(Object.keys(cur).concat(Object.keys(prev)));
-          const L = [...ks].map(k=>({ k, c:cur[k]||0, p:prev[k]||0 })).filter(x=>x.c||x.p).sort((a,b)=>b.c-a.c || b.p-a.p);
-          const top = L.slice(0,5), rest = L.slice(5), tc = L.reduce((a,x)=>a+x.c,0), tp = L.reduce((a,x)=>a+x.p,0);
-          if (rest.length) top.push({ k:`기타 ${rest.length}종`, c:rest.reduce((a,x)=>a+x.c,0), p:rest.reduce((a,x)=>a+x.p,0), etc:true });
-          let a0 = -Math.PI/2, svg = `<svg viewBox="0 0 120 120" class="dn">`;
-          const R0 = 52, R1 = 32;
-          top.forEach((x,i)=>{ if(!tc || !x.c) return; const a1 = a0 + x.c/tc*Math.PI*2, big = (a1-a0) > Math.PI ? 1 : 0;
+        const PAL = ['#1e3c72','#3b82f6','#f59e0b','#10b981','#cbd5e1'];
+        /* 두 도넛을 같은 설비로 맞춘다 : 금주 로스시간 Worst 4 설비 + 기타 (같은 색) — 왼쪽 = 고장(로스시간) · 오른쪽 = F-COST */
+        const MS = MACHINES.filter(m=>(CUR.s.mc[m]&&CUR.s.mc[m].lossH) || (PREV.s.mc[m]&&PREV.s.mc[m].lossH));
+        const W4 = MS.slice().sort((a,b)=>(CUR.s.mc[b]?CUR.s.mc[b].lossH:0)-(CUR.s.mc[a]?CUR.s.mc[a].lossH:0)).slice(0,4);
+        const val = (S, m, k) => S.mc[m] ? S.mc[m][k] : 0;
+        const donut = (title, k, unit, dp, fmtv, withCause) => {
+          const rest = MS.filter(m=>!W4.includes(m));
+          const L = W4.map(m=>({ k:'DC'+m, m, c:val(CUR.s,m,k), p:val(PREV.s,m,k) }))
+            .concat(rest.length ? [{ k:`기타 ${rest.length}대`, etc:true, c:rest.reduce((a,m)=>a+val(CUR.s,m,k),0), p:rest.reduce((a,m)=>a+val(PREV.s,m,k),0) }] : []);
+          const tc = L.reduce((a,x)=>a+x.c,0), tp = L.reduce((a,x)=>a+x.p,0);
+          let a0 = -Math.PI/2, svg = `<svg viewBox="0 0 120 120" class="dn">`; const R0 = 52, R1 = 32;
+          L.forEach((x,i)=>{ if(!tc || !x.c) return; const a1 = a0 + x.c/tc*Math.PI*2, big = (a1-a0) > Math.PI ? 1 : 0;
             const P = (r,a) => `${(60+r*Math.cos(a)).toFixed(2)} ${(60+r*Math.sin(a)).toFixed(2)}`;
-            svg += x.c/tc > 0.999 ? `<circle cx="60" cy="60" r="${(R0+R1)/2}" fill="none" stroke="${PAL[i]}" stroke-width="${R0-R1}"/>`
-              : `<path d="M${P(R0,a0)} A${R0} ${R0} 0 ${big} 1 ${P(R0,a1)} L${P(R1,a1)} A${R1} ${R1} 0 ${big} 0 ${P(R1,a0)} Z" fill="${PAL[i]}" stroke="#fff" stroke-width="1.2"><title>${esc(x.k)} ${fmtv(x.c)}${unit} (${Math.round(x.c/tc*100)}%)</title></path>`;
+            svg += x.c/tc > 0.999 ? `<circle cx="60" cy="60" r="${(R0+R1)/2}" fill="none" stroke="${PAL[x.etc?4:i]}" stroke-width="${R0-R1}"/>`
+              : `<path d="M${P(R0,a0)} A${R0} ${R0} 0 ${big} 1 ${P(R0,a1)} L${P(R1,a1)} A${R1} ${R1} 0 ${big} 0 ${P(R1,a0)} Z" fill="${PAL[x.etc?4:i]}" stroke="#fff" stroke-width="1.2"><title>${esc(x.k)} ${fmtv(x.c)}${unit} (${Math.round(x.c/tc*100)}%)</title></path>`;
             a0 = a1; });
           svg += `<text x="60" y="56" text-anchor="middle" font-size="9" fill="#64748b">${esc(opt.week)}</text><text x="60" y="70" text-anchor="middle" font-size="12.5" font-weight="800" fill="#0f172a">${fmtv(tc)}</text></svg>`;
-          const rows = top.map((x,i)=>{ const d = x.c - x.p; return `<tr><td><i style="background:${PAL[i]}"></i>${esc(x.k)}</td><td class="n">${fmtv(x.p)}</td><td class="n b">${fmtv(x.c)}</td><td class="n ${d<0?'g':d>0?'r':''}">${Math.abs(d)<(dp?0.05:1)?'–':(d>0?'+':'−')+fmtv(Math.abs(d))}</td><td class="n s">${tc?Math.round(x.c/tc*100)+'%':''}</td></tr>`; }).join('');
+          const rows = L.map((x,i)=>{ const d = x.c - x.p, top = !x.etc && CUR.s.mc[x.m] && CUR.s.mc[x.m].top[0];
+            return `<tr class="${x.etc?'etc':''}"><td><i style="background:${PAL[x.etc?4:i]}"></i><b>${esc(x.k)}</b>${withCause && top ? `<span class="cz">${esc(top.c)} ${f1(top.h,1)}h</span>` : ''}</td><td class="n">${fmtv(x.p)}</td><td class="n b">${fmtv(x.c)}</td><td class="n ${d<0?'g':d>0?'r':''}">${Math.abs(d)<(dp?0.05:1)?'–':(d>0?'+':'−')+fmtv(Math.abs(d))}</td><td class="n s">${tc?Math.round(x.c/tc*100)+'%':''}</td></tr>`; }).join('');
           const dT = tc - tp;
           return `<div class="dnc"><div class="h"><b>${title}</b><small>${esc(PREV.w)} ${fmtv(tp)}${unit} → ${esc(opt.week)} <b>${fmtv(tc)}${unit}</b> <span class="${dT<0?'g':'r'}">${dT<0?'▼':'▲'} ${fmtv(Math.abs(dT))}${unit}</span></small></div>
-            <div class="b">${svg}<table><thead><tr><th>${title.includes('설비')?'설비':'고장 원인'}</th><th>${esc(PREV.w)}</th><th>${esc(opt.week)}</th><th>증감</th><th>비중</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; };
-        const cm = {}, pm = {}; MACHINES.forEach(m=>{ if (CUR.s.mc[m] && CUR.s.mc[m].cost) cm['DC'+m] = CUR.s.mc[m].cost; if (PREV.s.mc[m] && PREV.s.mc[m].cost) pm['DC'+m] = PREV.s.mc[m].cost; });
-        h += `<div class="kw-dns">${donut('고장 원인별 로스시간', CUR.s.codeH, PREV.s.codeH, 'h', 1, v=>f1(v,1))}${donut('설비별 F-COST', cm, pm, '', 0, v=>f0(v))}</div>`;
+            <div class="b">${svg}<table><thead><tr><th>설비${withCause?' · 금주 최대 고장':''}</th><th>${esc(PREV.w)}</th><th>${esc(opt.week)}</th><th>증감</th><th>비중</th></tr></thead><tbody>${rows}</tbody></table></div></div>`; };
+        h += `<div class="kw-dns">${donut('Worst 설비 · 고장 로스시간 (h)', 'lossH', 'h', 1, v=>f1(v,1), true)}${donut('Worst 설비 · F-COST (THB)', 'cost', '', 0, v=>f0(v), false)}</div>`;
       }
       h += `<div class="kw-tr-act"><button type="button" data-kwtgsug="1">제안값을 목표으로 적용 (비어 있는 칸만)</button><button type="button" data-kwtgclr="1">로스·건수·F-COST 목표 지우기</button></div>`;
 
