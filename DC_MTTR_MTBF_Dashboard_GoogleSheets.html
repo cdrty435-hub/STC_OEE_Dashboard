@@ -7883,7 +7883,7 @@ loadData();
 .kw table.kw-tr th.mo,.kw table.kw-tr td.mo{background:#f1f5f9;} .kw table.kw-tr th.mo{color:#334155;}
 .kw table.kw-tr th.dl{background:#e0e7ff;color:#1e3a8a;} .kw table.kw-tr td.dl{background:#f5f7ff;font-weight:800;font-size:13px;} .kw table.kw-tr td.dl.gd{color:#15803d;} .kw table.kw-tr td.dl.bd{color:#b91c1c;} .kw table.kw-tr td.dl .sm{display:block;font-size:10px;font-weight:700;}
 .kw table.kw-tr th.why{background:#fff59d;} .kw table.kw-tr td.why{text-align:left;white-space:normal;font-size:11px;line-height:1.35;padding:3px 6px;}
-.kw table.kw-tr td.why .wl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1f2937;} .kw table.kw-tr td.why .wl b{color:#64748b;margin-right:2px;}
+.kw table.kw-tr td.why .wl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1f2937;font-size:12px;line-height:1.6;} .kw table.kw-tr td.why .wl .lb{display:inline-block;min-width:4.2em;color:#64748b;font-weight:700;} .kw table.kw-tr td.why .wl .g{color:#15803d;font-weight:700;} .kw table.kw-tr td.why .wl .b{color:#b91c1c;font-weight:700;} .kw table.kw-tr td.why .wl b{color:#64748b;margin-right:2px;}
 .kw table.kw-tr td.why .wy{margin-top:2px;padding-top:2px;border-top:1px dashed #e2e8f0;color:#475569;font-weight:600;} .kw table.kw-tr td.why .wy .g{color:#15803d;} .kw table.kw-tr td.why .wy .b{color:#b91c1c;}
 .kw .kw-dns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 6px;}
 .kw .dnc{border:1px solid #d5dde8;border-radius:10px;padding:8px 12px;background:#fff;}
@@ -8210,7 +8210,7 @@ loadData();
       h += `<h4 class="kw-h">지표 주간 추이 · 목표 설정 <small>${esc(upto[0]||'')} ~ ${esc(opt.week)} · ${FULL.length}주 평균 (가동일이 적은 부분 주차 ${WS.length-FULL.length}주 제외) · 목표 칸에 값을 넣으면 그래프·지표 요약에 바로 반영</small></h4>`;
       h += `<div><table class="kw-tr"><colgroup><col style="width:7.5%"><col style="width:3.6%"><col style="width:7.5%"><col style="width:6%">${COLS.map(()=>'<col>').join('')}<col style="width:8.5%"><col style="width:25%"></colgroup><thead><tr><th>지표</th><th>단위</th><th class="tgh">목표</th><th class="av" title="부분 주차를 뺀 주평균">평균</th>`
          + COLS.map(c=>`<th class="${c.m?'mo':''}${c.w===opt.week?' cur':''}${c.part?' pt':''}">${esc(c.lbl)}${c.m?`<span class="sm">${esc(c.sub)}</span>`:c.part?'<span class="sm">부분 '+c.s.days.length+'일</span>':''}</th>`).join('')
-         + `<th class="dl">${PREV?esc(PREV.w)+' → ':''}${esc(opt.week)}<span class="sm">전주 대비</span></th><th class="why">주요 원인 (Worst 3) · 변화 이유</th></tr></thead><tbody>`;
+         + `<th class="dl">${PREV?esc(PREV.w)+' → ':''}${esc(opt.week)}<span class="sm">전주 대비</span></th><th class="why">${PREV?esc(PREV.w)+' → ':''}${esc(opt.week)} 변화 (증감)</th></tr></thead><tbody>`;
       T.forEach(t=>{
         h += `<tr><td class="kp">${t.name}<span class="sm">${t.up?'높을수록 좋음':'낮을수록 좋음'}</span></td><td class="c">${t.u}</td>`;
         const fk = v => v>=100000 ? f0(v/1000)+'k' : v>=10000 ? f1(v/1000,1)+'k' : fx(v,t.dp);
@@ -8231,16 +8231,22 @@ loadData();
           const top2 = (cur, prev, unit, dp) => { if(!Q) return ''; const ks = new Set(Object.keys(cur).concat(Object.keys(prev)));
             const L = [...ks].map(k=>({ k, d:(cur[k]||0)-(prev[k]||0) })).filter(x=>Math.abs(x.d) >= (dp ? 0.05 : 1)).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,2);
             return L.map(x=>`<span class="${x.d<0?'g':'b'}">${esc(x.k)} ${x.d>0?'+':'−'}${dp ? f1(Math.abs(x.d),dp) : f0(Math.abs(x.d))}${unit}</span>`).join(' · '); };
-          let why = '';
+          /* 두 줄 : 「항목: 전주 → 금주 (증감)」 */
+          const ln = (lbl, a, b, dp, u, upGood) => { const d = b - a, eq = Math.abs(d) < (dp ? 0.05 : 0.5), good = upGood ? d > 0 : d < 0;
+            const f = v => dp ? f1(v,dp) : f0(v);
+            return `<div class="wl"><span class="lb">${lbl}:</span> ${f(a)}${u} → <b>${f(b)}${u}</b> <span class="${eq?'':good?'g':'b'}">(${eq?'±0':(d>0?'+':'−')+f(Math.abs(d))+u})</span></div>`; };
+          const big = (cur, prev, u, dp) => { const ks = new Set(Object.keys(cur).concat(Object.keys(prev)));
+            const L = [...ks].map(k=>({ k, d:(cur[k]||0)-(prev[k]||0) })).filter(x=>Math.abs(x.d) >= (dp ? 0.05 : 1)).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,2);
+            return L.length ? `<div class="wl"><span class="lb">원인:</span> ${L.map(x=>`${esc(x.k)} <span class="${x.d<0?'g':'b'}">${x.d>0?'+':'−'}${dp?f1(Math.abs(x.d),dp):f0(Math.abs(x.d))}${u}</span>`).join(' · ')}</div>` : ''; };
+          let cell = '–';
           if (Q){
-            const ft = (a,b,dp,u) => `${dp?f1(a,dp):f0(a)}${u} → <b>${dp?f1(b,dp):f0(b)}${u}</b>`;
-            if (t.k==='mttr') why = `고장시간 ${ft(Q.lossH,S.lossH,1,'h')} · 건수 ${ft(Q.n,S.n,0,'건')}`;
-            else if (t.k==='mtbf') why = `가동 ${ft(Q.runH,S.runH,0,'h')} · 고장 ${ft(Q.n,S.n,0,'건')}`;
-            else if (t.k==='lossH') why = `${ft(Q.lossH,S.lossH,1,'h')} · ${top2(S.codeH, Q.codeH, 'h', 1)}`;
-            else if (t.k==='n') why = `${ft(Q.n,S.n,0,'건')} · ${top2(S.codeN, Q.codeN, '건', 0)}`;
-            else if (t.k==='cost'){ const cm = {}, pm = {}; MACHINES.forEach(m=>{ cm['DC'+m] = S.mc[m] ? S.mc[m].cost : 0; pm['DC'+m] = Q.mc[m] ? Q.mc[m].cost : 0; }); why = `${ft(Q.cost,S.cost,0,'')} · ${top2(cm, pm, '', 0)}`; }
+            if (t.k==='mttr' || t.k==='lossH') cell = ln('고장시간', Q.lossH, S.lossH, 1, 'h') + (t.k==='mttr' ? ln('건수', Q.n, S.n, 0, '건') : big(S.codeH, Q.codeH, 'h', 1));
+            else if (t.k==='mtbf') cell = ln('가동시간', Q.runH, S.runH, 0, 'h', true) + ln('건수', Q.n, S.n, 0, '건');
+            else if (t.k==='n') cell = ln('건수', Q.n, S.n, 0, '건') + big(S.codeN, Q.codeN, '건', 0);
+            else if (t.k==='cost'){ const cm = {}, pm = {}; MACHINES.forEach(m=>{ cm['DC'+m] = S.mc[m] ? S.mc[m].cost : 0; pm['DC'+m] = Q.mc[m] ? Q.mc[m].cost : 0; });
+              cell = ln('금액', Q.cost, S.cost, 0, '') + big(cm, pm, '', 0).replace('원인:', '설비:'); }
           }
-          h += `<td class="why">${dd.items.slice(0,3).map((x,i)=>`<div class="wl"><b>${i+1}.</b> ${esc(x)}</div>`).join('') || '<div class="wl">–</div>'}${why?`<div class="wy">${esc(PREV?PREV.w:'')}→${esc(opt.week)}: ${why}</div>`:''}</td>`; }
+          h += `<td class="why">${cell}</td>`; }
         h += `</tr>`;
       });
       h += `</tbody></table></div>`;
