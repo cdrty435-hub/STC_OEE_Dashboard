@@ -692,7 +692,12 @@
   .mx-hot{display:inline-block;margin-left:4px;font-style:normal;font-size:9.5px;font-weight:800;color:#9f1239;border:1px solid #fca5a5;border-radius:6px;padding:0 4px;vertical-align:middle;}
   table.wk-t.mx-t td.sp{padding:2px 4px;} .mx-sp{width:100%;height:24px;display:block;}
   table.wk-t.mx-t td.cz{text-align:left;font-size:11.5px;line-height:1.5;} .mx-cz{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#334155;} .mx-cz b{color:#0f172a;}
-  .mx-more{font-size:10.5px;color:#94a3b8;} .mx-cz i{font-style:normal;color:#64748b;font-size:10.5px;}
+  .mx-more{font-size:10.5px;color:#94a3b8;} .mx-czs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:3px 10px;align-items:center;}
+  .mx-czs .mx-cz{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:5px;min-width:0;}
+  .mx-czs .mx-cz b{font-weight:700;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:7.5em;}
+  .mx-czs .mx-cz i{display:block;height:6px;border-radius:3px;background:#cbd5e1;min-width:2px;max-width:100%;}
+  .mx-czs .mx-cz:first-child i{background:#e7a1ad;} .mx-czs .mx-cz em{font-style:normal;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;}
+  .mx-czs .mx-more{white-space:nowrap;}
   table.wk-t.mx-t tr.rest td{background:#fafafa;color:#64748b;} table.wk-t.mx-t tr.rest td.mc small{white-space:normal;}
   #wkSheet table.wk-t.mx-t td{padding:4px 6px;} .mx-none{color:#94a3b8;font-size:11px;}
   table.wk-t.mx-t tfoot td{background:#f1f5f9;font-weight:800;}
@@ -5356,7 +5361,7 @@ function renderWeekly(){
     const upMax = act.filter(x=>x.d>0).sort((a,b)=>b.d-a.d)[0];
     const dlt = (d, p) => Math.abs(d) < 1 ? '<span class="mx-eq">–</span>'
       : `<span class="${d>0?'mx-up':'mx-dn'}">${d>0?'▲':'▼'} ${F3(Math.abs(d))}${p>0?`<small>${d>0?'+':'−'}${Math.round(Math.abs(d)/p*100)}%</small>`:'<small>신규</small>'}</span>`;
-    const cz2 = x => x.cz.length ? x.cz.slice(0,1).map(([k,z])=>`<span class="mx-cz"><b>${escH(k)}</b> ${z.n}건 · ${fmt(z.min/60,1)}h · ${F3(z.thb)} THB <i>(${x.c?Math.round(z.thb/x.c*100):0}%)</i>${x.cz.length>1?`<span class="mx-more"> 외 ${x.cz.length-1}종</span>`:''}</span>`).join('') : (x.c ? '' : '<span class="mx-none">금주 고장 없음</span>');
+    const cz2 = x => x.cz.length ? `<div class="mx-czs">${x.cz.slice(0,3).map(([k,z])=>`<span class="mx-cz" title="${escH(k)} · ${z.n}건 · ${fmt(z.min/60,1)}h · ${F3(z.thb)} THB (${x.c?Math.round(z.thb/x.c*100):0}%)"><b>${escH(k)}</b><i style="width:${x.c?Math.max(4,Math.round(z.thb/x.c*100)):0}%"></i><em>${F3(z.thb)}</em></span>`).join('')}${x.cz.length>3?`<span class="mx-more">외 ${x.cz.length-3}종 ${F3(x.cz.slice(3).reduce((a,[,z])=>a+z.thb,0))}</span>`:''}</div>` : (x.c ? '' : '<span class="mx-none">금주 고장 없음</span>');
     /* 금주 손실 TOP 10 만 보이고 나머지는 한 줄로 합친다 (발표용) */
     const TOPN = 10, shown = act.slice(0, TOPN), rest = act.slice(TOPN);
     const body = shown.map((x,i)=>`<tr class="${i<3 && x.c>0?'top':''}">
@@ -5373,7 +5378,7 @@ function renderWeekly(){
         <div><small>최근 ${l4.length}주 평균</small><b class="pv">${F3(tA)}</b><i>THB</i></div>
         ${upMax?`<div class="hot"><small>최대 증가 설비</small><b>DC #${upMax.m}</b><i>▲ ${F3(upMax.d)}${upMax.cz[0]?' · '+escH(upMax.cz[0][0]):''}</i></div>`:''}</div>`;
     hm += `<table class="wk-t mx-t"><colgroup><col style="width:4%"><col style="width:11%"><col style="width:9%"><col style="width:9%"><col style="width:11%"><col style="width:9%"><col style="width:9%"><col></colgroup>
-      <thead><tr><th>순위</th><th>설비</th><th class="cur">금주 ${wk}</th><th>전주 ${pw3||'-'}</th><th>증감 (THB)</th><th>최근 ${l4.length}주 평균</th><th>추이 ${tr8[0]||''}~${wk}</th><th class="l">금주 주요 원인 고장 (건수 · 시간 · THB · 그 설비 손실 중 비중)</th></tr></thead>
+      <thead><tr><th>순위</th><th>설비</th><th class="cur">금주 ${wk}</th><th>전주 ${pw3||'-'}</th><th>증감 (THB)</th><th>최근 ${l4.length}주 평균</th><th>추이 ${tr8[0]||''}~${wk}</th><th class="l">금주 원인 고장별 손실금액 (THB · 큰 순 3개 · 막대 = 그 설비 손실 중 비중)</th></tr></thead>
       <tbody>${body || '<tr><td colspan="8" class="mx-none">금주 · 전주 손실 없음</td></tr>'}</tbody>
       <tfoot><tr><td></td><td class="mc">합계 (${act.length}대)</td><td class="v cur">${F3(tC)}</td><td class="v">${F3(tP)}</td><td class="v">${dlt(tC-tP, tP)}</td><td class="v avg">${F3(tA)}</td><td></td><td class="l mx-none">${idle.length ? `금주·전주 손실 없음 ${idle.length}대: ${idle.map(x=>'DC'+x.m).join(' · ')}` : ''}</td></tr></tfoot></table>`;
     /* 전체 주차 표는 접어 둔다 (필요할 때만 펼쳐 보기 · 인쇄 제외) */
