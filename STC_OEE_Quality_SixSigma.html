@@ -1029,7 +1029,8 @@ table.act-t tr.done td{color:#64748b;}
   <div id="qrWrap">
     <div class="qr-toolbar qr-noprint">
       <div><label data-i18n="qr.week">보고 주차</label>&nbsp;
-        <select id="qrWeek" onchange="renderQReport()"></select></div>
+        <select id="qrWeekFrom" onchange="qrFromChanged()" title="시작 주차 — 끝 주차와 같으면 한 주"></select> ~
+        <select id="qrWeek" onchange="qrToChanged()" title="끝 주차"></select></div>
       <div><label data-i18n="qr.scope">집계 대상</label>&nbsp;
         <select id="qrScope" onchange="renderQReport()">
           <option value="all" data-i18n="qr.scope.all">전체 (정규+특근)</option>
@@ -3927,18 +3928,41 @@ function qrSaveWriter(){
     /* 표지의 작성자도 바로 바꾼다 */
     const a = window.__QR_LAST, cov = document.getElementById('qrCover');
     if (a && cov && a.week) cov.innerHTML = rptCoverHtml('weekly', qrWkLabel(a.week),
-      a.range ? (a.range.start + ' ~ ' + a.range.end + ' · ' + t('qr.wed2tue')) : '', QR_STORE.writer);
+      a.range ? (a.range.start + ' ~ ' + a.range.end + ' · ' + qrSpanTxt(a.range)) : '', QR_STORE.writer);
   }, 500);
 }
 
 /* ---------- 주차/집계 ---------- */
-function qrCurWeek(){
-  const s = document.getElementById('qrWeek');
-  return s ? s.value : null;
+/* 보고 기간 = 시작 주차 ~ 끝 주차. 여러 주를 고르면 보고서 전체를 그 길이의 묶음으로 집계한다
+   (예: WK43~WK44 → 비교는 WK41~WK42, 추이도 2주 묶음) */
+function qrBlockN(){
+  const f = document.getElementById('qrWeekFrom'), t = document.getElementById('qrWeek');
+  if (!f || !t || !f.value || !t.value) return 1;
+  const W = qrWeekListRaw(), a = W.indexOf(f.value), b = W.indexOf(t.value);
+  return (a < 0 || b < 0 || a >= b) ? 1 : b - a + 1;
 }
+function qrCurWeek(){
+  const s = document.getElementById('qrWeek'); if (!s) return null;
+  const n = qrBlockN(); if (n < 2) return s.value;
+  const W = qrWeekListRaw(), b = W.indexOf(s.value);
+  return W[b - n + 1] + '~' + s.value;
+}
+function qrFromChanged(){ const f = document.getElementById('qrWeekFrom'), t = document.getElementById('qrWeek');
+  if (f && t && (qrWeekNum(f.value)||0) > (qrWeekNum(t.value)||0)) t.value = f.value;
+  try{ localStorage.setItem('stc_qr_wfrom', f.value); }catch(e){} renderQReport(); }
+function qrToChanged(){ const f = document.getElementById('qrWeekFrom'), t = document.getElementById('qrWeek');
+  if (f && t && (qrWeekNum(f.value)||0) > (qrWeekNum(t.value)||0)) f.value = t.value; renderQReport(); }
+/* 기간 설명 : 한 주면 '수~화 7일', 여러 주면 '수~화 · 2주 14일' */
+function qrSpanTxt(rg){ if (!rg) return t('qr.wed2tue');
+  const d = Math.round((new Date(rg.end+'T00:00:00') - new Date(rg.start+'T00:00:00'))/864e5) + 1;
+  if (d <= 7) return t('qr.wed2tue');
+  const L = (typeof LANG !== 'undefined' ? LANG : 'ko');
+  return L === 'th' ? `พุธ–อังคาร · ${d/7|0} สัปดาห์ ${d} วัน` : L === 'en' ? `Wed–Tue · ${d/7|0} weeks, ${d} days` : `수~화 · ${d/7|0}주 ${d}일`; }
 function qrWeekNum(w){ const m = String(w||'').match(/(\d+)/); return m ? parseInt(m[1],10) : null; }
 function qrWkOffset(){ return Number((document.getElementById('qrWkOffset')||{}).value || 0); }
-function qrWkLabel(w){ const n = qrWeekNum(w); return n ? ('WK' + (n + qrWkOffset())) : (w || '-'); }
+function qrWkLabel(w){ const s = String(w||'');
+  if (s.indexOf('~') >= 0){ const [a,b] = s.split('~'); return qrWkLabel(a) + '~' + qrWkLabel(b); }
+  const n = qrWeekNum(w); return n ? ('WK' + (n + qrWkOffset())) : (w || '-'); }
 
 /* ---- 주차 = 수요일~화요일 7일 (사내 기준) ----
    시트의 주차 라벨은 변환 파일 단위로 붙기 때문에 7일을 넘는 경우가 있다
@@ -3951,6 +3975,8 @@ function qrDateAdd(iso, days){
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 function qrWeekRange(week){
+  if (String(week||'').indexOf('~') >= 0){ const [a,b] = String(week).split('~'); const A = qrWeekRange(a), B = qrWeekRange(b);
+    return A && B ? { start:A.start, end:B.end } : null; }
   const n = qrWeekNum(week);
   if (n == null) return null;
   const start = qrDateAdd(QR_WEEK_ANCHOR.start, (n - QR_WEEK_ANCHOR.n) * 7);
@@ -3959,13 +3985,25 @@ function qrWeekRange(week){
 function qrEqNum(eq){ const m = String(eq||'').match(/(\d+)/); return m ? parseInt(m[1],10) : 9999; }
 function qrScope(){ const s = document.getElementById('qrScope'); return s ? s.value : 'all'; }
 
-function qrWeekList(){
+function qrWeekListRaw(){
   return [...new Set((RAW_Q||[]).map(r=>r['주차']))].filter(Boolean)
     .sort((a,b)=>(qrWeekNum(a)||0)-(qrWeekNum(b)||0));
 }
+/* 보고서용 주차 목록 — 여러 주를 고르면 끝 주차에 맞춘 N주 묶음 ('W43~W44') */
+function qrWeekList(){
+  const W = qrWeekListRaw(), n = qrBlockN(); if (n < 2) return W;
+  const t = document.getElementById('qrWeek'), e = W.indexOf(t.value), out = [];
+  for (let j = e; j >= 0; j -= n){ const ws = W.slice(Math.max(0, j-n+1), j+1); out.unshift(ws.length > 1 ? ws[0]+'~'+ws[ws.length-1] : ws[0]); }
+  return out.concat(W.slice(e+1));
+}
 function qrPopulateWeeks(){
   const sel = document.getElementById('qrWeek'); if (!sel) return;
-  const weeks = qrWeekList();
+  const weeks = qrWeekListRaw();
+  const fs = document.getElementById('qrWeekFrom');
+  if (fs){ const kf = fs.getAttribute('data-h') ? fs.value : (function(){ try{ return localStorage.getItem('stc_qr_wfrom')||''; }catch(e){ return ''; } })();
+    const h = weeks.map(w=>`<option value="${w}">${qrWkLabel(w)}</option>`).join('');
+    if (fs.getAttribute('data-h') !== h){ fs.innerHTML = h; fs.setAttribute('data-h', h); }
+    fs._kf = kf; }
   const prev = sel.value;
   const cur = Array.prototype.map.call(sel.options, o=>o.value).join('|');
   const off = String(qrWkOffset());
@@ -3974,6 +4012,11 @@ function qrPopulateWeeks(){
     sel.innerHTML = weeks.map(w=>`<option value="${w}">${qrWkLabel(w)}</option>`).join('');
     if (weeks.includes(prev)) sel.value = prev;
     else if (weeks.length) sel.value = weeks[weeks.length-1];
+  }
+  if (fs){
+    const kf = fs._kf; delete fs._kf;
+    const ok = w => weeks.includes(w) && (qrWeekNum(w)||0) <= (qrWeekNum(sel.value)||0);
+    fs.value = ok(kf) ? kf : sel.value;
   }
 }
 
@@ -3996,7 +4039,8 @@ function qrRows(week){
   if (rg) rows = qrRowsBetween(rg.start, rg.end, sc);
   /* 날짜가 비어 있거나 기준점이 맞지 않는 시트를 위한 폴백 — 주차 라벨로 자른다 */
   if (!rows.length){
-    rows = (RAW_Q||[]).filter(r => r['주차'] === week && !isOutsideWeekFix(r) && scopeOk(r));
+    const inW = String(week).indexOf('~') >= 0 ? (w => { const [a,b] = String(week).split('~').map(qrWeekNum), n = qrWeekNum(w); return n >= a && n <= b; }) : (w => w === week);
+    rows = (RAW_Q||[]).filter(r => inW(r['주차']) && !isOutsideWeekFix(r) && scopeOk(r));
   }
   return rows;
 }
@@ -4556,7 +4600,7 @@ function qrCmpSetup(week){
   if (btn) btn.style.display = QR_CMP.pinned ? '' : 'none';
   const hint = document.getElementById('qrCmpHint');
   if (hint){
-    const rep = (document.getElementById('qrWeek')||{}).value;
+    const rep = qrCurWeek();
     hint.innerHTML = (QR_CMP.b && rep && QR_CMP.b !== rep)
       ? t('qr.cmp.warn', { b: qrWkLabel(QR_CMP.b), r: qrWkLabel(rep) }) : '';
   }
@@ -4592,7 +4636,7 @@ function qrTrendDeltaHtml(aWeek, bWeek){
 
 /* 추이 차트 + 등락 설명을 함께 다시 그린다 (비교 주차가 바뀌어도 차트가 따라오도록) */
 function qrRedrawTrend(){
-  const week = (document.getElementById('qrWeek')||{}).value;
+  const week = qrCurWeek();
   if (!week) return;
   drawQWeeklyChart('chart-qr-trend', qrWeeklySeries(week, QR_TREND_WEEKS), week, QR_CMP.a);
   const el = document.getElementById('qrTrendDelta');
@@ -4629,7 +4673,7 @@ function qrRenderTables(){
     if (!A || !B) return false;
     const onChange = () => {
       QR_CMP.a = A.value || null; QR_CMP.b = B.value || null; QR_CMP.pinned = true;
-      qrCmpSetup((document.getElementById('qrWeek')||{}).value);
+      qrCmpSetup(qrCurWeek());
       qrRenderTables();
       qrRedrawTrend();
     };
@@ -4637,7 +4681,7 @@ function qrRenderTables(){
     B.addEventListener('change', onChange);
     if (R) R.addEventListener('click', ()=>{
       QR_CMP.pinned = false;
-      qrCmpSetup((document.getElementById('qrWeek')||{}).value);
+      qrCmpSetup(qrCurWeek());
       qrRenderTables();
       qrRedrawTrend();
     });
@@ -6025,10 +6069,10 @@ function renderQReportInner(){
   document.getElementById('qrWkLabel').textContent = qrWkLabel(week);
   const cov = document.getElementById('qrCover');
   if (cov) cov.innerHTML = rptCoverHtml('weekly', qrWkLabel(week),
-    a.range ? (a.range.start + ' ~ ' + a.range.end + ' · ' + t('qr.wed2tue')) : '',
+    a.range ? (a.range.start + ' ~ ' + a.range.end + ' · ' + qrSpanTxt(a.range)) : '',
     (document.getElementById('qrWriter')||{}).value);
   const rg = a.range;
-  document.getElementById('qrPeriod').textContent = rg ? `(${rg.start} ~ ${rg.end}, ${t('qr.wed2tue')})`
+  document.getElementById('qrPeriod').textContent = rg ? `(${rg.start} ~ ${rg.end}, ${qrSpanTxt(rg)})`
         : ((a.start && a.end) ? `(${a.start} ~ ${a.end})` : '');
   document.getElementById('qrTargetBadge').textContent = `Targeting ${QR_TARGET_Q.toFixed(1)}% - OEE QUALITY`;
 

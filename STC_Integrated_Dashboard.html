@@ -916,7 +916,7 @@ body.only-layout .f2-wrap{display:block;} body.only-layout .f2-main{max-width:no
     <div class="hd-status" id="hdStatus"></div>
   </div>
   <div class="hd-controls">
-    <div class="ctl"><label for="weekSel" data-i18n="ctl.week">주차</label><select id="weekSel"></select></div>
+    <div class="ctl"><label for="weekFrom" data-i18n="ctl.week">주차</label><select id="weekFrom" title="시작 주차"></select><span style="margin:0 4px;opacity:.8">~</span><select id="weekSel" title="끝 주차 (보고 주차)"></select></div>
     <div class="ctl"><label for="scopeSel" data-i18n="ctl.scope">범위</label>
       <select id="scopeSel">
         <option value="regular" data-i18n="ctl.regular">정규</option>
@@ -1318,10 +1318,15 @@ let RAW = { a:[], p:[], q:[] };
 const inScope = (r,scope) => scope!=='regular' || r['구분']==='정규';
 const keepEq  = r => { const e=eqOf(r); return e && !EXCLUDE_EQ.has(e); };
 
+/* 주차 선택 : 시작 ~ 끝 (같으면 한 주) — 'W43~W44' 같은 범위 라벨도 받는다 */
+const wkN = w => { const n = parseInt(String(w||'').replace(/\D/g,''),10); return isNaN(n) ? -1 : n; };
+function wkRange(){ const t = document.getElementById('weekSel').value, fEl = document.getElementById('weekFrom');
+  let f = fEl && fEl.value ? fEl.value : t; if(wkN(f) > wkN(t)) f = t; return { from:f, to:t, label: f===t ? t : f+'~'+t, multi: f!==t }; }
+function wkMatch(w, sel){ if(String(sel).indexOf('~') < 0) return w===sel; const [a,b] = String(sel).split('~'); const n = wkN(w); return n >= wkN(a) && n <= wkN(b); }
 function aggregate(week, scope){
-  const fa = RAW.a.filter(r=>r['주차']===week && inScope(r,scope) && keepEq(r));
-  const fp = RAW.p.filter(r=>r['주차']===week && inScope(r,scope) && keepEq(r));
-  const fq = RAW.q.filter(r=>r['주차']===week && inScope(r,scope) && keepEq(r));
+  const fa = RAW.a.filter(r=>wkMatch(r['주차'],week) && inScope(r,scope) && keepEq(r));
+  const fp = RAW.p.filter(r=>wkMatch(r['주차'],week) && inScope(r,scope) && keepEq(r));
+  const fq = RAW.q.filter(r=>wkMatch(r['주차'],week) && inScope(r,scope) && keepEq(r));
 
   let plan=0, run=0, loss=0, nof=0, nofRows=0, udt=0;
   const udtCols = UDT_DEFAULT.filter(c=>hasCol(RAW.a,c));
@@ -1385,7 +1390,7 @@ function byEquipment(fa,fq){
    ========================================================================= */
 function renderOverview(){
   const host = document.getElementById('panel-overview');
-  const week = document.getElementById('weekSel').value;
+  const WR = wkRange(), week = WR.label, weekEnd = WR.to;
   const scope = document.getElementById('scopeSel').value;
   if(!RAW.a.length){ host.innerHTML = `<div class="ov"><div class="empty">${T('st.noData')}</div></div>`; return; }
 
@@ -1434,7 +1439,7 @@ function renderOverview(){
       </div>
     </div>
 
-    ${f2OverviewBlock(week)}
+    ${f2OverviewBlock(weekEnd)}
 
     <div class="sec-title">${T('grp.fac1')} · ${T('sec.prod')}</div>
     <div class="tiles">
@@ -5914,6 +5919,23 @@ function syncWeekToFrame(frame, tries){
   let doc=null;
   try{ doc = frame.contentDocument; }catch(e){ return; }
   if(!doc) return;
+  /* MTTR/MTBF 화면 : 상단 「분석 기간」 주차(시작~끝)로 맞춘다 → 주간보고도 W43–W44 묶음으로 */
+  const gf = doc.getElementById('gpWf'), gt = doc.getElementById('gpWt'), WR = wkRange();
+  if(gf && gt){
+    if([...gt.options].some(o=>o.value===WR.to)){
+      const f0 = [...gf.options].some(o=>o.value===WR.from) ? WR.from : WR.to;
+      if(gf.value!==f0 || gt.value!==WR.to){ gf.value = f0; gt.value = WR.to; gt.dispatchEvent(new Event('change',{bubbles:true})); }
+      return;
+    }
+    if(tries<40) setTimeout(()=>syncWeekToFrame(frame,tries+1), 500);   /* 데이터를 아직 읽는 중 */
+    return;
+  }
+  /* 품질 6σ 주간 품질보고 : 보고 주차 시작~끝 */
+  const qf = doc.getElementById('qrWeekFrom'), qt = doc.getElementById('qrWeek');
+  if(qf && qt && [...qt.options].some(o=>o.value===WR.to)){
+    const f0 = [...qf.options].some(o=>o.value===WR.from) ? WR.from : WR.to;
+    if(qt.value!==WR.to || qf.value!==f0){ qt.value = WR.to; qf.value = f0; qf.dispatchEvent(new Event('change',{bubbles:true})); }
+  }
   const sel = doc.getElementById('weekSelect') || doc.querySelector('select[id*="eek"]');
   if(sel && [...sel.options].some(o=>o.value===week)){
     if(sel.value!==week){ sel.value=week; sel.dispatchEvent(new Event('change',{bubbles:true})); }
@@ -6121,6 +6143,10 @@ function populateWeeks(){
   sel.innerHTML = weeks.map(w=>`<option value="${w}">${w}</option>`).join('');
   if(weeks.indexOf(keep)>=0) sel.value=keep;
   else if(weeks.length) sel.value = weeks[weeks.length-1];
+  const fs = document.getElementById('weekFrom');
+  if(fs){ const kf = fs.value || (function(){ try{ return localStorage.getItem('stc_shell_wfrom')||''; }catch(e){ return ''; } })();
+    fs.innerHTML = weeks.map(w=>`<option value="${w}">${w}</option>`).join('');
+    fs.value = weeks.indexOf(kf)>=0 && wkN(kf) <= wkN(sel.value) ? kf : sel.value; }
   return weeks;
 }
 
@@ -6174,7 +6200,12 @@ try{
   }
   if(LANGS.includes(ql) && ql!==LANG) setLang(ql);
 }catch(e){}
-document.getElementById('weekSel').addEventListener('change', ()=>{ renderOverview(); renderF2(); syncWeekToAllFrames(); });
+document.getElementById('weekSel').addEventListener('change', ()=>{ const fs = document.getElementById('weekFrom'), t = document.getElementById('weekSel').value;
+  if(fs && wkN(fs.value) > wkN(t)) fs.value = t; renderOverview(); renderF2(); syncWeekToAllFrames(); });
+document.getElementById('weekFrom').addEventListener('change', ()=>{ const fs = document.getElementById('weekFrom'), ts = document.getElementById('weekSel');
+  if(wkN(fs.value) > wkN(ts.value)) ts.value = fs.value;
+  try{ localStorage.setItem('stc_shell_wfrom', fs.value); }catch(e){}
+  renderOverview(); renderF2(); syncWeekToAllFrames(); });
 document.getElementById('scopeSel').addEventListener('change', renderOverview);
 document.getElementById('btnRefresh').addEventListener('click', loadAll);
 document.getElementById('syncChk').addEventListener('change', e=>{ if(e.target.checked) syncWeekToAllFrames(); });

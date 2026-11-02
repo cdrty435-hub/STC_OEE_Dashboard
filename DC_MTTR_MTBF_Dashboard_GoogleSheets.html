@@ -253,6 +253,7 @@
   .mt-cover .wk{flex:0 0 auto;align-self:center;text-align:center;line-height:1;padding:6px 26px;border-left:1px solid rgba(255,255,255,.25);border-right:1px solid rgba(255,255,255,.25);}
   .mt-cover .wk span{display:block;font-size:12px;font-weight:800;letter-spacing:.3em;opacity:.75;margin-bottom:4px;}
   .mt-cover .wk b{font-size:64px;font-weight:900;letter-spacing:-.01em;color:#fde68a;}
+  .mt-cover .wk.rg b{font-size:44px;white-space:nowrap;}
   .mt-cover .side{text-align:right;font-size:13px;line-height:1.75;opacity:.95;white-space:nowrap;}
   .mt-cover .side b{font-size:16px;font-weight:900;letter-spacing:.02em;}
   .mt-cover .side .dp{display:inline-block;background:#f59e0b;color:#1f2937;font-weight:800;font-size:11.5px;border-radius:10px;padding:0 9px;}
@@ -2476,6 +2477,7 @@ function gpToReport(){
   const wt = document.getElementById('gpWt'), sel = document.getElementById('wkWeek');
   if(!wt || !sel || !wt.value) return;
   if([...sel.options].some(o=>o.value===wt.value) && sel.value !== wt.value){ sel.value = wt.value; sel.dispatchEvent(new Event('change', {bubbles:true})); }
+  else if(typeof renderWeekly === 'function') renderWeekly();
 }
 function gpApply(init){
   const f = document.getElementById('gpFrom'), t = document.getElementById('gpTo'); if(!f || !RUN.length) return;
@@ -4688,6 +4690,34 @@ let WK_SEL_MC = null;      // ② 차트에서 클릭한 설비
 let WK_SEL_WEEK = null;    // ③ 차트에서 클릭한 주차
 const WK_SUBS = ['금형','설비-전기','설비-라인','관리'];
 
+/* ===== 주간보고 N주 묶음 — 상단 분석 기간이 여러 주(2~13주)면 보고서를 그 주들 합산으로 (예: W43–W44)
+   비교·추이도 같은 길이 묶음으로 (W41–W42 → W43–W44). 끝 주 = 보고 주차 선택값 ===== */
+var WK_BLOCK = null;
+function wkBlockN(){
+  const f = document.getElementById('gpFrom'), wf = document.getElementById('gpWf'), wt = document.getElementById('gpWt');
+  if(!f || !wf || !wt || !wf.value || !wt.value || (f.dataset.q||'all') === 'all') return 1;
+  const a = allWeeks.indexOf(wf.value), b = allWeeks.indexOf(wt.value);
+  const n = (a<0 || b<0) ? 1 : Math.abs(b-a) + 1;
+  return n >= 2 && n <= 13 ? n : 1;
+}
+function wkBlockWrap(fn){
+  return function(){
+    const n = wkBlockN(), sel = document.getElementById('wkWeek');
+    if(n < 2 || !sel || !allWeeks.length || WK_BLOCK_IN){ if(!WK_BLOCK_IN) WK_BLOCK = null; return fn.apply(this, arguments); }
+    const AW = allWeeks.slice(), end = AW.includes(sel.value) ? sel.value : AW[AW.length-1], ei = AW.indexOf(end);
+    const map = {}, labels = [];
+    for(let j=ei; j>=0; j-=n){ const ws = AW.slice(Math.max(0, j-n+1), j+1); const lab = ws.length>1 ? ws[0]+'–'+ws[ws.length-1] : ws[0]; ws.forEach(w=>map[w]=lab); labels.unshift(lab); }
+    AW.slice(ei+1).forEach(w=>{ map[w] = w; labels.push(w); });     /* 끝 주 뒤는 그대로 */
+    const sR = RUN, sL = LOSS, sA = allWeeks;
+    RUN = sR.map(r=>map[r.w] && map[r.w]!==r.w ? Object.assign({}, r, { w: map[r.w] }) : r);
+    LOSS = sL.map(r=>map[r.w] && map[r.w]!==r.w ? Object.assign({}, r, { w: map[r.w] }) : r);
+    WK_BLOCK = { n, label: map[end], weeks: AW.slice(Math.max(0, ei-n+1), ei+1), run: RUN, loss: LOSS };
+    allWeeks = labels; WK_BLOCK_IN = true;
+    try{ return fn.apply(this, arguments); }
+    finally{ RUN = sR; LOSS = sL; allWeeks = sA; WK_BLOCK_IN = false; }
+  };
+}
+var WK_BLOCK_IN = false;
 function wkFillWeeks(){
   const sel = document.getElementById('wkWeek'); if(!sel) return;
   sel.innerHTML = allWeeks.map(w=>`<option value="${w}">${w}</option>`).join('');
@@ -4717,7 +4747,7 @@ function renderWeekly(){
   if(!allWeeks.length) return;
   const sel = document.getElementById('wkWeek'); if(!sel) return;
   if(!sel.options.length) wkFillWeeks();
-  const wk  = sel.value || allWeeks[allWeeks.length-1];
+  const wk  = (WK_BLOCK && WK_BLOCK_IN && WK_BLOCK.label) || sel.value || allWeeks[allWeeks.length-1];
   const idx = allWeeks.indexOf(wk);
   const pw  = idx>0 ? allWeeks[idx-1] : null;
 
@@ -4804,10 +4834,10 @@ function renderWeekly(){
   const titleEl = document.getElementById('wkTitle');
   titleEl.innerHTML = `MC MTTR / MTBF Weekly Report ${seq ? '· '+seq : ''}`.trim()
     + (dept==='ALL' ? '' : `<span class="wk-deptbadge">${dept} 계통</span>`);
-  const wkSpan = cur.from ? stcWeekSpan(cur.from) : null;
+  const wkSpan = cur.from ? (WK_BLOCK && WK_BLOCK_IN ? { from: stcWeekSpan(cur.from).from, to: stcWeekSpan(cur.to).to } : stcWeekSpan(cur.from)) : null;
   const wkCov = document.getElementById('wkCover');
   if (wkCov) wkCov.innerHTML = mtCoverHtml('weekly', wk,
-      wkSpan ? wkSpan.from+' ~ '+wkSpan.to : cur.from+' ~ '+cur.to, au, dept, seq);
+      (wkSpan ? wkSpan.from+' ~ '+wkSpan.to : cur.from+' ~ '+cur.to) + (WK_BLOCK && WK_BLOCK_IN ? ' · '+WK_BLOCK.n+'주 합산' : ''), au, dept, seq);
   document.getElementById('wkMeta').innerHTML =
     `<b>${wk}</b> · ${wkSpan ? wkSpan.from+' ~ '+wkSpan.to : cur.from+' ~ '+cur.to}`
     + (wkSpan && (wkSpan.from !== cur.from || wkSpan.to !== cur.to)
@@ -7506,7 +7536,8 @@ function mtCoverHtml(kind, period, note, who, dept, seq){
       '<div class="per">' + e(period) + (note ? '<span>' + e(note) + '</span>' : '') + '</div>' +
     '</div>' +
     /* 주간 보고서 — 가운데에 주차를 크게 (W40) */
-    (kind === 'weekly' && /W\d+/.test(String(period)) ? '<div class="wk"><span>WEEK</span><b>' + e(String(period).match(/W\d+/)[0]) + '</b></div>' : '') +
+    (kind === 'weekly' && /W\d+/.test(String(period)) ? (()=>{ const m = String(period).match(/W\d+(?:\s*[–~-]\s*W\d+)?/)[0]; const rg = /[–~-]/.test(m);
+      return '<div class="wk' + (rg ? ' rg' : '') + '"><span>' + (rg ? 'WEEKS' : 'WEEK') + '</span><b>' + e(m.replace(/\s*[–~-]\s*/,'–')) + '</b></div>'; })() : '') +
     '<div class="side"><b>STC Co., Ltd.</b><br>다이캐스팅 DC1~DC23 · 공무팀<br>' +
       (dept && dept !== 'ALL' ? '<span class="dp">' + e(dept) + ' 계통</span><br>' : '') +
       (who ? '작성 ' + e(who) + ' · ' : '') + '발행 ' + today + '</div></div>';
@@ -8856,7 +8887,8 @@ loadData();
   /* 이 페이지가 이미 읽어 둔 데이터·설정(UDT 코드, 최소정지, M/C Rate)을 그대로 쓴다 */
   STCKW.setProvider(function(){
     if (typeof RUN === 'undefined' || !RUN.length) return null;
-    return { run: RUN, loss: LOSS, isFail: isFail, rates: getRates() };
+    const B = (typeof WK_BLOCK !== 'undefined' && WK_BLOCK) ? WK_BLOCK : null;   /* 주간보고 N주 묶음이면 묶은 주차로 */
+    return { run: B ? B.run : RUN, loss: B ? B.loss : LOSS, isFail: isFail, rates: getRates() };
   });
   const $ = id => document.getElementById(id);
   const allDates = () => [...new Set(RUN.map(r=>r.d))].sort();
@@ -8864,7 +8896,7 @@ loadData();
 
   /* --- 주간보고 --- */
   function kwWeekly(){
-    const wk = ($('wkWeek')||{}).value; if (!wk) return;
+    const wk = (WK_BLOCK && WK_BLOCK_IN && WK_BLOCK.label) || ($('wkWeek')||{}).value; if (!wk) return;
     STCKW.mount('wkKW', { mode:'week', week:wk });
   }
   const _rw = renderWeekly;
@@ -9028,10 +9060,10 @@ loadData();
   }
   const DOW = ['일','월','화','수','목','금','토'];
   function span(){
-    const sel = document.getElementById('wkWeek'); const w = sel && sel.value;
-    const n = parseInt(String(w||'').replace(/\D/g,''),10); if(!n) return null;
+    const sel = document.getElementById('wkWeek'); const w = (window.WK_BLOCK && WK_BLOCK.label) || (sel && sel.value);
+    const ns = String(w||'').match(/\d+/g) || []; const n = parseInt(ns[0],10), n2 = parseInt(ns[ns.length-1],10); if(!n) return null;
     const a = Date.UTC(2026,7,26) + (n-36)*7*864e5;            /* W36 = 2026-08-26(수) */
-    const f = new Date(a), t = new Date(a+6*864e5), iso = d => d.toISOString().slice(0,10);
+    const f = new Date(a), t = new Date(Date.UTC(2026,7,26) + (n2-36)*7*864e5 + 6*864e5), iso = d => d.toISOString().slice(0,10);
     return { w, from: iso(f), to: iso(t) };
   }
   function render(){
@@ -9257,6 +9289,9 @@ window.stcClipCopy = function(item){
   };
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();
+
+/* 주간보고 N주 묶음 — 맨 바깥에서 감싼다 (안쪽 그리기가 모두 묶인 주차를 보게) */
+if(typeof renderWeekly === 'function' && typeof wkBlockWrap === 'function') renderWeekly = wkBlockWrap(renderWeekly);
 </script>
 </body>
 </html>
