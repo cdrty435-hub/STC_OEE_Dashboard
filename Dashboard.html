@@ -138,6 +138,9 @@ table.tt{border-collapse:collapse;font-size:12px;width:100%;table-layout:fixed}
 .ph .lab{position:absolute;left:4px;top:4px;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;color:#fff}
 .ph .lab.b{background:#b45309} .ph .lab.a{background:#15803d}
 .prog{font-size:12px;border-left:3px solid var(--line);padding-left:8px;color:var(--ink)}
+.dlmsg{font-size:13px;padding:10px 12px;border-radius:6px;background:var(--bad-bg);color:var(--bad);overflow-wrap:anywhere}
+.dlmsg.ok{background:var(--ok-bg);color:var(--ok)}
+.dlmsg.wait{background:var(--run-bg);color:var(--run)}
 .dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
 .dl button{text-align:left;display:flex;justify-content:space-between;gap:8px;align-items:center}
 .dl button small{color:var(--muted);font-size:11px}
@@ -214,6 +217,7 @@ table.tt{border-collapse:collapse;font-size:12px;width:100%;table-layout:fixed}
   <section class="card">
     <h2><span data-i="download"></span></h2>
     <p class="note" data-i="dlNote"></p>
+    <div class="dlmsg" id="dlmsg" hidden></div>
     <div class="dl" id="dl"></div>
   </section>
 </div>
@@ -417,19 +421,27 @@ function renderDl(){
   $('dl').querySelectorAll('button').forEach(b=>b.onclick=()=>download(b));
 }
 function saveB64(r){
+  if(!r||!r.b64)throw new Error('empty file');
   const bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
-  const url=URL.createObjectURL(new Blob([u],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
-  const a=document.createElement('a');a.href=url;a.download=r.filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
+  const blob=new Blob([u],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  if(window.navigator&&navigator.msSaveOrOpenBlob){navigator.msSaveOrOpenBlob(blob,r.filename);return}
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=r.filename;a.rel='noopener';a.style.display='none';
+  document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},8000);
 }
+function dlMsg(txt,cls){const m=$('dlmsg');m.textContent=txt;m.className='dlmsg '+(cls||'');m.hidden=!txt}
 function download(b){
-  b.disabled=true;toast(t('making'));
+  const label=b.querySelector('span').textContent;
+  $('dl').querySelectorAll('button').forEach(x=>x.disabled=true);
+  dlMsg(label+' — '+t('making'),'wait');
+  const done=r=>{$('dl').querySelectorAll('button').forEach(x=>x.disabled=false);
+    try{saveB64(r);dlMsg(label+' — '+t('saved')+' ('+r.filename+')','ok')}catch(e){dlMsg(t('fail')+': '+e.message)}};
+  const fail=e=>{$('dl').querySelectorAll('button').forEach(x=>x.disabled=false);dlMsg(t('fail')+': '+((e&&e.message)||e))};
   if(!IN_GAS){
-    api('api=xlsx'+(b.dataset.all?'':'&sheet='+encodeURIComponent(b.dataset.sheet)))
-      .then(j=>{b.disabled=false;saveB64(j.file);toast(t('saved'))})
-      .catch(e=>{b.disabled=false;toast(t('fail')+': '+e.message)});
+    api('api=xlsx'+(b.dataset.all?'':'&sheet='+encodeURIComponent(b.dataset.sheet))).then(j=>done(j.file)).catch(fail);
     return;
   }
-  const run=google.script.run.withSuccessHandler(r=>{b.disabled=false;saveB64(r);toast(t('saved'))}).withFailureHandler(e=>{b.disabled=false;toast(t('fail')+': '+(e.message||e))});
+  const run=google.script.run.withSuccessHandler(done).withFailureHandler(fail);
   b.dataset.all?run.exportAllXlsx():run.exportSheetXlsx(b.dataset.sheet);
 }
 function renderAll(keep){
