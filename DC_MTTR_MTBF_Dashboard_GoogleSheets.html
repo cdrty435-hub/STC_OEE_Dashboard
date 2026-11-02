@@ -576,6 +576,14 @@
 .gp-q{display:inline-flex;gap:0;border:1px solid #d8dfe7;border-radius:7px;overflow:hidden;margin-left:6px}
 .gp-q button{border:0;border-right:1px solid #e5e9ef;background:#fff;padding:4px 10px;font-size:12px;cursor:pointer;color:#334155}
 .gp-q button:last-child{border-right:0} .gp-q button.on{background:#1f3864;color:#fff;font-weight:700}
+.rep-bar{flex-wrap:wrap;row-gap:6px}
+.rep-bar .rp-g{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border:1px solid #e3d9c4;border-radius:8px;background:#fff}
+.rep-bar .rp-g>b{font-size:12px;color:#1f3864}
+.rep-bar .rp-c{display:inline-flex;border:1px solid #d8dfe7;border-radius:6px;overflow:hidden}
+.rep-bar .rp-c button{border:0;border-right:1px solid #e5e9ef;background:#fff;padding:3px 8px;font-size:11.5px;cursor:pointer;color:#334155}
+.rep-bar .rp-c button:last-child{border-right:0} .rep-bar .rp-c button.on{background:#1f3864;color:#fff;font-weight:700}
+.rep-bar .rp-c button.b.on{background:#64748b}
+.rep-bar select{border:1px solid #d8dfe7;border-radius:6px;padding:2px 6px;font-size:12px}
 </style>
 
 <style>
@@ -1051,6 +1059,14 @@
     <button type="button" class="udt-btn" id="udtPickBtn">UDT 코드 선택</button>
     <span class="lb" style="margin-left:auto" id="stdNote"></span>
   </div>
+  <div class="stdbar rep-bar">
+    <span class="lb">주간보고 항목별 고장유형</span>
+    <span class="rp-g"><b>주간 요약</b><span class="rp-c" data-rp="s1"></span></span>
+    <span class="rp-g"><b>지표 주간 추이</b><span class="rp-c" data-rp="s2"></span></span>
+    <span class="rp-g"><b>FAC별 종합 성과</b><span class="rp-c" data-rp="s3"></span>
+      <span class="lb">누적 1위</span><select id="rpRk"><option value="4">최근 4주</option><option value="8">최근 8주</option><option value="13">최근 13주</option><option value="all">전체 주차</option></select></span>
+    <span class="lb" id="rpNote" style="margin-left:auto"></span>
+  </div>
   <div class="udt-panel" id="udtPanel">
     <div id="udtBody"></div>
     <div class="udt-act">
@@ -1122,7 +1138,7 @@
       </div>
       <!-- ① 주간 요약(지표 카드)을 표지 바로 아래 맨 위로 -->
       <div class="wk-blk">
-        <h4>① 주간 요약<span class="wk-catbar">집계 계통
+        <h4>① 주간 요약<span class="wk-tgt" id="wkT1Note"></span><span class="wk-catbar">집계 계통
           <span class="wk-cchips" id="wkCat1"></span><span class="cur" id="wkCat1Note"></span></span></h4>
         <div class="wk-kpi" id="wkKpi"></div>
         <div class="wk-avail-note" id="wkAvailNote" style="display:none;"></div>
@@ -2471,6 +2487,31 @@ function gpApply(init){
   document.querySelectorAll('#gpQuick button').forEach(btn=>btn.addEventListener('click', ()=>{
     const r = gpQuick(btn.dataset.q); f.value = r[0]; t.value = r[1]; f.dataset.q = btn.dataset.q; gpApply(false); }));
 })();
+/* ===== 주간보고 항목별 고장유형 (지표 산출 기준 아래 줄) =====
+   · 주간 요약 · 지표 주간 추이 : 「위 기준」(UDT/전체 로스 라디오) 또는 고장유형(4계통) 골라서
+   · FAC별 종합 성과 : 기본 = 종합 로스(4계통 전체) · 설비 KPI 페이지 설정과 따로 관리
+   · 기간은 셋 다 주간보고의 보고 주차 · FAC 누적 1위는 보고 주차까지 N주 */
+const REP_KEY = 'stc_rep_types_v1', REP_TYPES = ['설비-전기','설비-라인','금형','관리'];
+function repGet(){ let o=null; try{ o=JSON.parse(localStorage.getItem(REP_KEY)||'null'); }catch(e){} o = o||{};
+  ['s1','s2','s3'].forEach(k=>{ if(!Array.isArray(o[k])) o[k]=[]; o[k]=o[k].filter(x=>REP_TYPES.includes(x)); }); if(!o.rk) o.rk='4'; return o; }
+function repSet(o){ try{ localStorage.setItem(REP_KEY, JSON.stringify(o)); }catch(e){} }
+function repLabel(k, a){ return a.length ? a.join(' + ') : (k==='s3' ? '종합 로스(4계통 전체)' : (STD_MODE ? '계획외 고장(UDT)' : '전체 로스')); }
+function repUI(){
+  const o = repGet();
+  document.querySelectorAll('.rep-bar .rp-c').forEach(el=>{
+    const k = el.dataset.rp, a = o[k];
+    el.innerHTML = `<button type="button" class="b${a.length?'':' on'}" data-t="">${k==='s3'?'종합 (전체 유형)':'위 기준'}</button>`
+      + REP_TYPES.map(t=>`<button type="button" class="${a.includes(t)?'on':''}" data-t="${t}">${t}</button>`).join('');
+    el.querySelectorAll('button').forEach(b=>b.onclick=()=>{ const O = repGet(); let v = O[k]; const t = b.dataset.t;
+      if(!t) v = []; else v = v.includes(t) ? v.filter(x=>x!==t) : v.concat([t]);
+      if(v.length === REP_TYPES.length && k==='s3') v = [];
+      O[k] = v; repSet(O); repUI(); if(typeof renderWeekly==='function') renderWeekly(); });
+  });
+  const rk = document.getElementById('rpRk'); if(rk){ rk.value = o.rk; }
+  const n = document.getElementById('rpNote');
+  if(n) n.textContent = '기간 = 주간보고 보고 주차 (세 항목 동일) · 「위 기준」 = 지표 산출 기준(UDT/전체 로스) · 고장유형을 고르면 그 유형의 로스(최소정지 이상)를 모두 고장으로 집계';
+}
+(function(){ const rk = document.getElementById('rpRk'); if(rk) rk.addEventListener('change', ()=>{ const O = repGet(); O.rk = rk.value; repSet(O); if(typeof renderWeekly==='function') renderWeekly(); }); repUI(); })();
 function buildWeekChips(){
   const wrap = document.getElementById('weekChips');
   wrap.innerHTML = '';
@@ -2680,13 +2721,13 @@ try{
   const cc = localStorage.getItem('stc_trend_cats');   if(cc) trendCats = new Set(JSON.parse(cc));
 }catch(e){}
 
-function weekStats(cat){
+function weekStats(cat, byType){
   return allWeeks.map(w=>{
     const R = RUN.filter(r=>r.w===w);
     const Lall = LOSS.filter(r=>r.w===w);
     const isAll = (cat==='ALL') || !cat ||
                   (Array.isArray(cat) && (!cat.length || cat.indexOf('ALL')>=0));
-    const L = fails(isAll ? Lall : Lall.filter(r=>matchCat(r,cat)));
+    const L = isAll ? fails(Lall) : byType ? Lall.filter(r=>matchCat(r,cat) && r.l >= MIN_STOP) : fails(Lall.filter(r=>matchCat(r,cat)));
     const runH = R.reduce((a,x)=>a+x.r,0)/60;
     const lossH = L.reduce((a,x)=>a+x.l,0)/60;
     const lossAllH = Lall.reduce((a,x)=>a+x.l,0)/60;
@@ -4632,7 +4673,7 @@ function renderWeekly(){
   /* 계통 선택 : 칩을 눌러 여러 계통을 함께 볼 수 있다 (①·②·④ 각각 저장) */
   const catName = c => (c==='ALL' ? '전체 로스' : c);
   /* UDT 단일기준 : 계통 선택을 폐지했으므로 항상 전체 계통으로 집계한다 */
-  const catGet = n => ['ALL'];
+  const catGet = n => { if(n===1){ const a = repGet().s1; return a.length ? a : ['ALL']; } return ['ALL']; };
   const catGetLegacy = n => {
     let v = null; try{ v = localStorage.getItem('stc_wk_cat'+n); }catch(e){}
     if(!v) return ['ALL'];
@@ -4673,10 +4714,11 @@ function renderWeekly(){
   const cat1 = catArg(cats1), cat2 = catArg(cats2), cat3 = catArg(cats3), cat4 = catArg(cats4), cat6 = catArg(cats6);
   [1,2].forEach(n=>{ const el = document.getElementById('wkCat'+n+'Note');
     if(el) el.textContent = catIsAll(catGet(n)) ? '' : '· 선택 계통만'; });
+  { const t1 = document.getElementById('wkT1Note'); if(t1) t1.textContent = ' · 고장유형 ' + repLabel('s1', repGet().s1); }
   const h3n = document.getElementById('wkH3Note');
   if(h3n) h3n.textContent = '· 전 주차 흐름';
 
-  const WS  = weekStats(cat1);
+  const WS  = weekStats(cat1, true);
   const WSA = catIsAll(cats3) && catIsAll(cats1) ? WS : weekStats(cat3);   // ③ 추이는 자체 계통 칩 기준
   const cur = WS.find(x=>x.w===wk) || null;
   const prv = pw ? (WS.find(x=>x.w===pw)||null) : null;
@@ -4686,7 +4728,7 @@ function renderWeekly(){
   const seq = (document.getElementById('wkSeq').value||'').trim();
   const au  = (document.getElementById('wkAuthor').value||'').trim();
   let dept = 'ALL';
-  try{ dept = localStorage.getItem('stc_wk_dept') || 'ALL'; }catch(e){}
+  dept = catIsAll(cats1) ? 'ALL' : catLabel(cats1);   /* 예전 부서 저장값(stc_wk_dept)은 쓰지 않음 */
   const titleEl = document.getElementById('wkTitle');
   titleEl.innerHTML = `MC MTTR / MTBF Weekly Report ${seq ? '· '+seq : ''}`.trim()
     + (dept==='ALL' ? '' : `<span class="wk-deptbadge">${dept} 계통</span>`);
@@ -7660,6 +7702,15 @@ loadData();
   const norm = s => String(s==null?'':s).replace(/\s+/g,'').trim();
   const CODESET = new Set(CODES.map(norm));
   const LS = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
+  /* 로스코드 → 고장유형(4계통) · 주간보고 항목별 고장유형 설정 (stc_rep_types_v1) */
+  const TYPE4 = { '설비-전기':['설비수리','취출기수리','스프레이수리','전기로회전','전기로수리','래들수리','펌프이상','컨베이어수리','진공설비','히터수리'],
+    '설비-라인':['조건변경','팁교체','스크랩용해','스프레이조정','노즐막힘','플런저오일막힘','바가지교체','탈산처리','설비냉각수'],
+    '금형':['금형수리','핀파손','로트마크,사상','제품소착','슬라이드코어수리','청소','금형파손','금형냉각라인'],
+    '관리':['휴식,설비교대','금형교체','미팅/정전','기타'] };
+  const typeOfCode = i => { const k = norm(i); return Object.keys(TYPE4).find(c=>TYPE4[c].some(x=>norm(x)===k)) || '관리'; };
+  function repTypesK(k){ let o=null; try{ o = JSON.parse(LS('stc_rep_types_v1')||'null'); }catch(e){}
+    const a = o && Array.isArray(o[k]) ? o[k].filter(x=>TYPE4[x]) : []; return a.length ? new Set(a) : null; }
+  function repRk(){ let o=null; try{ o = JSON.parse(LS('stc_rep_types_v1')||'null'); }catch(e){} return (o && o.rk) || '4'; }
 
   /* ---------------- 설정 (대시보드와 같은 저장값) ---------------- */
   function cfg(){
@@ -7766,7 +7817,7 @@ loadData();
 
   /* ---------------- 집계 ---------------- */
   function stats(data, f, C){
-    const fail = data.isFail ? data.isFail : (x => (!C.std || C.udt.has(norm(x.i))) && x.l >= C.minStop);
+    const fail = C.failOverride ? C.failOverride : data.isFail ? data.isFail : (x => (!C.std || C.udt.has(norm(x.i))) && x.l >= C.minStop);
     const R = data.run.filter(f), L = data.loss.filter(f);
     const F = L.filter(fail);
     const rate = data.rates || C.rates;
@@ -8270,7 +8321,11 @@ loadData();
        1~5번 지표(MTTR · MTBF · 로스시간 · 고장건수 · F-COST)를 주차별로 다시 집계해
        평균 · 최고 · 최저 · 제안 목표을 보여주고, 목표을 정하면 그래프에 선으로 표시한다.
        평균은 가동일이 적은 주(부분 주차)를 빼고 낸다. */
+    /* 지표 주간 추이 : 항목별 고장유형(지표 산출 기준 아래 줄)을 고르면 그 유형만 고장으로 */
+    const T2_ = repTypesK('s2'), C_k3 = T2_ ? Object.assign({}, C, { failOverride: x => T2_.has(typeOfCode(x.i)) && x.l >= C.minStop }) : C;
+    const S_k3 = T2_ ? stats(data, P.cur.f, C_k3) : S, Q_k3 = T2_ ? (P.prev ? stats(data, P.prev.f, C_k3) : null) : Q;
     if (opt.mode === 'week'){
+      const C = C_k3, S = S_k3, Q = Q_k3;
       const WKS = [...new Set(data.run.map(r=>r.w))].filter(Boolean).sort((a,b)=>wkNo(a)-wkNo(b));
       const upto = WKS.slice(0, WKS.indexOf(opt.week)+1 || WKS.length).slice(-16);
       const WS = upto.map(w=>({ w, s: stats(data, r=>r.w===w, C) }));
@@ -8303,7 +8358,7 @@ loadData();
         const ok = tg==null ? null : FULL.filter(x=> up ? x.s[k] >= tg : x.s[k] <= tg).length;
         return { name,k,u,dp,up,key, vs, avg, best, worstV, q, sug, tg, ok, saved: sv!==null && sv!=='' };
       });
-      h += `<h4 class="kw-h">지표 주간 추이 · 목표 설정 <small>${esc(upto[0]||'')} ~ ${esc(opt.week)} · ${FULL.length}주 평균 (가동일이 적은 부분 주차 ${WS.length-FULL.length}주 제외) · 목표 칸에 값을 넣으면 그래프·지표 요약에 바로 반영</small></h4>`;
+      h += `<h4 class="kw-h">지표 주간 추이 · 목표 설정 <small>고장유형 ${T2_ ? esc([...T2_].join(' + ')) : (C.std ? '계획외 고장(UDT)' : '전체 로스')} · ${esc(upto[0]||'')} ~ ${esc(opt.week)} · ${FULL.length}주 평균 (가동일이 적은 부분 주차 ${WS.length-FULL.length}주 제외) · 목표 칸에 값을 넣으면 그래프·지표 요약에 바로 반영</small></h4>`;
       h += `<div><table class="kw-tr"><colgroup><col style="width:7.5%"><col style="width:3.6%"><col style="width:7.5%"><col style="width:6%">${COLS.map(()=>'<col>').join('')}<col style="width:8.5%"><col style="width:25%"></colgroup><thead><tr><th>지표</th><th>단위</th><th class="tgh">목표</th><th class="av" title="부분 주차를 뺀 주평균">평균</th>`
          + COLS.map(c=>`<th class="${c.m?'mo':''}${c.w===opt.week?' cur':''}${c.part?' pt':''}">${esc(c.lbl)}${c.m?`<span class="sm">${esc(c.sub)}</span>`:c.part?'<span class="sm">부분 '+c.s.days.length+'일</span>':''}</th>`).join('')
          + `<th class="dl">${PREV?esc(PREV.w)+' → ':''}${esc(opt.week)}<span class="sm">전주 대비</span></th><th class="why">${PREV?esc(PREV.w)+' → ':''}${esc(opt.week)} 변화 (증감)</th></tr></thead><tbody>`;
@@ -8547,12 +8602,11 @@ loadData();
         '관리':['휴식,설비교대','금형교체','미팅/정전','기타'] };
       const CCOL = { '설비-전기':'#dc2626', '설비-라인':'#2563eb', '금형':'#d97706', '관리':'#64748b' };
       const catOf = i => { const k = norm(i); return Object.keys(FCAT).find(c=>FCAT[c].some(x=>norm(x)===k)) || '관리'; };
-      /* 설비 KPI 페이지 설정을 그대로 따른다 : 고장유형(stc_kpi_cat) · 1위 누적 기간(stc_kpi_rk) */
-      let KCAT = 'all'; try{ KCAT = LS('stc_kpi_cat') || 'all'; }catch(e){}
-      if (!FCAT[KCAT]) KCAT = 'all';
-      const failF = KCAT !== 'all' ? (x => FCAT[KCAT].some(c=>norm(c)===norm(x.i)) && x.l >= C.minStop)
-                  : data.isFail ? data.isFail : (x => (!C.std || C.udt.has(norm(x.i))) && x.l >= C.minStop);
-      const KLBL = KCAT !== 'all' ? KCAT + ' 전체' : (C.std ? '계획외 고장 UDT' : '전체 로스');
+      /* 주간보고 항목별 고장유형(지표 산출 기준 아래 줄)에서 따로 관리 — 설비 KPI 페이지 설정과 무관
+         기본 = 종합 로스(4계통 전체 · 최소정지 이상) */
+      const T3 = repTypesK('s3');
+      const failF = x => (!T3 || T3.has(catOf(x.i))) && x.l >= C.minStop;
+      const KLBL = T3 ? [...T3].join(' + ') : '종합 로스(4계통 전체)';
       const facStat = f => { const o = {}; ['C','D','E'].forEach(k=>o[k] = { run:0, plan:0, brk:0, n:0, cat:{} });
         data.run.filter(f).forEach(r=>{ const k = FMAP[r.m]; if(k){ o[k].run += r.r; o[k].plan += r.p; } });
         data.loss.filter(f).forEach(x=>{ const k = FMAP[x.m]; if(!k || x.l < C.minStop) return; const c = catOf(x.i), z = o[k].cat[c] || (o[k].cat[c] = { n:0, m:0 }); z.n++; z.m += x.l;
@@ -8567,19 +8621,17 @@ loadData();
       const rank = {}; FK.slice().sort((a,b)=>FS[b].a-FS[a].a).forEach((k,i)=>rank[k] = i+1);
       /* 누적 순위 */
       const ALLW = [...new Set(data.run.map(r=>r.w))].filter(Boolean).sort((a,b)=>wkNo(a)-wkNo(b));
-      let RKS = null; try{ RKS = JSON.parse(LS('stc_kpi_rk')||'null'); }catch(e){}
-      let wF = ALLW[0] || '', wT = opt.week;
-      if (RKS && RKS.n){ const i = ALLW.indexOf(opt.week); wF = ALLW[Math.max(0, (i<0?ALLW.length-1:i) - RKS.n + 1)] || wF; }
-      else if (RKS && RKS.f && RKS.t){ wF = RKS.f; wT = RKS.t; if (wkNo(wF) > wkNo(wT)){ const x = wF; wF = wT; wT = x; } }
+      const RKN = repRk(); let wF = ALLW[0] || '', wT = opt.week;
+      if (RKN !== 'all'){ const i = ALLW.indexOf(opt.week); wF = ALLW[Math.max(0, (i<0?ALLW.length-1:i) - (+RKN||4) + 1)] || wF; }
       const WKS = ALLW.filter(w=>wkNo(w) >= wkNo(wF) && wkNo(w) <= wkNo(wT));
       const cum = { C:[0,0,0], D:[0,0,0], E:[0,0,0] }, hist = { C:[], D:[], E:[] }; let nW = 0;
       WKS.forEach(w=>{ const s = facStat(r=>r.w===w), L = ['C','D','E'].filter(k=>s[k].plan>0).sort((a,b)=>s[b].a-s[a].a); if (L.length < 2) return; nW++;
         L.forEach((k,i)=>{ if(i<3) cum[k][i]++; hist[k].push({ w, r:i+1, a:s[k].a }); }); });
       const mx = f => Math.max(1, ...FK.flatMap(k=>Object.keys(FCAT).map(c=>(FS[k].cat[c]||{})[f]||0)));
-      const brkCats = c => KCAT !== 'all' ? (c===KCAT ? FCAT[c].length : 0) : FCAT[c].filter(x=>!C.std || C.udt.has(norm(x))).length;
+      const brkCats = c => (!T3 || T3.has(c)) ? FCAT[c].length : 0;
       const bars = (g, f) => Object.keys(FCAT).map(c=>{ const v = (g.cat[c]||{})[f]||0, tot = Object.values(g.cat).reduce((a,z)=>a+(z[f]||0),0), nb = brkCats(c);
         return `<span class="fk-n"><i style="background:${CCOL[c]}"></i>${c}${nb?`<em>${nb===FCAT[c].length?'고장':'고장 '+nb+'종'}</em>`:''}</span><span class="fk-b"><i style="width:${(v/mx(f)*100).toFixed(1)}%;background:${CCOL[c]}"></i></span><b>${v ? (f==='n' ? v : f1(v/60,1)) : '·'}<small>${v&&tot?Math.round(v/tot*100)+'%':''}</small></b>`; }).join('');
-      h += `<h4 class="kw-h">FAC별 종합 성과 <small>${esc(P.cur.label)} · FAC-C DC1~10 · FAC-D DC20~23 · FAC-E DC11~19 · 가용률 = 가동 ÷ (가동 + 고장) · 고장 기준 ${esc(KLBL)} · 누적 1위 ${esc(WKS[0]||'')} ~ ${esc(WKS[WKS.length-1]||'')} ${nW}주 <span style="color:#1d4ed8">(설비 KPI 설정 반영)</span></small></h4><div class="fk-grid">`;
+      h += `<h4 class="kw-h">FAC별 종합 성과 <small>${esc(P.cur.label)} · FAC-C DC1~10 · FAC-D DC20~23 · FAC-E DC11~19 · 가용률 = 가동 ÷ (가동 + 고장) · 고장 기준 ${esc(KLBL)} · 누적 1위 ${esc(WKS[0]||'')} ~ ${esc(WKS[WKS.length-1]||'')} ${nW}주 <span style="color:#1d4ed8">(지표 산출 기준 › 항목별 고장유형)</span></small></h4><div class="fk-grid">`;
       FK.forEach(k=>{ const g = FS[k], col = FCOL[k], rk = rank[k], c3 = cum[k];
         h += `<div class="fk-card"><div class="fk-head" style="background:${col}"><span class="nm">FAC-${k}<small>${esc(opt.week)}</small></span><span class="av"><small>가용률</small><b>${f1(g.a,1)}<i>%</i></b></span><span class="rk${rk===1?' top':''}">${['🥇','🥈','🥉'][rk-1]||''} ${rk}위<small>/${FK.length}</small></span></div>
           <div class="fk-body"><div class="fk-cum"><div><b>🥇 누적 1위</b><small>${esc(WKS[0]||'')} ~ ${esc(WKS[WKS.length-1]||'')} · ${nW}주</small></div><div class="c"><span class="g1"><b>${c3[0]}</b>회</span><span class="p">1위율 <b>${nW?Math.round(c3[0]/nW*100):0}%</b></span></div>
@@ -8587,7 +8639,7 @@ loadData();
             <div class="fk-row"><div class="lb">고장횟수 (회)</div><div class="fk-vline"><div class="vl" style="color:${col}">${g.n}</div>${wst(k)}</div><div class="fk-bars">${bars(g,'n')}</div></div>
             <div class="fk-row"><div class="lb">고장시간 (Hr)</div><div class="vl" style="color:${col}">${f1(g.brk/60,1)}</div><div class="fk-bars">${bars(g,'m')}</div></div>
             <div class="fk-tri"><div><div class="lb">MTTR (Hr)</div><div class="vl" style="color:${col}">${g.mttr==null?'-':f1(g.mttr,1)}</div></div><div><div class="lb">MTBF (Hr)</div><div class="vl" style="color:${col}">${g.mtbf==null?'-':f1(g.mtbf,1)}</div></div><div><div class="lb">가용률 (%)</div><div class="vl" style="color:${col}">${f1(g.a,1)}</div></div></div></div></div>`; });
-      h += `</div><div class="kw-note">※ 고장 기준 · 누적 기간 = 설비 KPI 페이지에서 고른 값 (고장유형 ${esc(KLBL)} · 최소정지 ${C.minStop}분 · 1위 누적 기간) · 계통 막대 = 최소정지 이상 전체 로스를 4분류 · 누적 순위 = 주마다 FAC 가용률 순위 (칸에 마우스 = 주차·가용률)</div>`;
+      h += `</div><div class="kw-note">※ 고장 기준 = 지표 산출 기준 › 주간보고 항목별 고장유형에서 따로 관리 (지금 ${esc(KLBL)} · 최소정지 ${C.minStop}분 이상 · 설비 KPI 페이지 설정과 무관) · 누적 1위 = 보고 주차까지 ${repRk()==='all'?'전체 주차':repRk()+'주'} · 계통 막대 = 최소정지 이상 전체 로스를 4분류 · 누적 순위 = 주마다 FAC 가용률 순위 (칸에 마우스 = 주차·가용률)</div>`;
     }
     h += `</div>`;
     return { html:h, key:P.cur.key };
