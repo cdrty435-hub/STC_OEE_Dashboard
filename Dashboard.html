@@ -220,7 +220,7 @@ table.tt{border-collapse:collapse;font-size:12px;width:100%;table-layout:fixed}
 
   <section class="card">
     <h2><span>엑셀 다운로드 · ดาวน์โหลด Excel</span></h2>
-    <p class="note">시트를 누르면 그 시트만 .xlsx 로 내려받습니다. 다른 시트를 참조하는 수식은 값으로 바뀝니다.<br>กดที่ชีตเพื่อดาวน์โหลดเฉพาะชีตนั้นเป็นไฟล์ .xlsx สูตรที่อ้างอิงชีตอื่นจะถูกแปลงเป็นค่า</p>
+    <p class="note">시트를 누르면 그 시트만 .xlsx 로 내려받습니다. 위에서 <b>한국어</b>를 고르면 한국어, <b>ไทย</b>를 고르면 태국어로 번역된 파일이 만들어집니다.<br>กดที่ชีตเพื่อดาวน์โหลดเป็นไฟล์ .xlsx — ถ้าเลือก <b>ไทย</b> ด้านบน ไฟล์จะถูกแปลเป็นภาษาไทย ถ้าเลือก <b>한국어</b> จะเป็นภาษาเกาหลี</p>
     <div class="dlmsg" id="dlmsg" hidden></div>
     <div class="dl" id="dl"></div>
   </section>
@@ -442,16 +442,16 @@ function download(b){
   const label=b.dataset.ko+(b.dataset.th&&b.dataset.th!==b.dataset.ko?' · '+b.dataset.th:'');
   const both=k=>I18N.ko[k]+' · '+I18N.th[k];
   $('dl').querySelectorAll('button').forEach(x=>x.disabled=true);
-  dlMsg(label+' — '+both('making'),'wait');
+  dlMsg(label+' — '+both('making')+(lang==='th'?' [ภาษาไทย]':' [한국어]'),'wait');
   const done=r=>{$('dl').querySelectorAll('button').forEach(x=>x.disabled=false);
     try{saveB64(r);dlMsg(label+' — '+both('saved')+' ('+r.filename+')','ok')}catch(e){dlMsg(both('fail')+': '+e.message)}};
   const fail=e=>{$('dl').querySelectorAll('button').forEach(x=>x.disabled=false);dlMsg(both('fail')+': '+((e&&e.message)||e))};
   if(!IN_GAS){
-    api('api=xlsx'+(b.dataset.all?'':'&sheet='+encodeURIComponent(b.dataset.sheet))).then(j=>done(j.file)).catch(fail);
+    api('api=xlsx&lang='+lang+(b.dataset.all?'':'&sheet='+encodeURIComponent(b.dataset.sheet))).then(j=>done(j.file)).catch(fail);
     return;
   }
   const run=google.script.run.withSuccessHandler(done).withFailureHandler(fail);
-  b.dataset.all?run.exportAllXlsx():run.exportSheetXlsx(b.dataset.sheet);
+  b.dataset.all?run.exportAllXlsx(lang):run.exportSheetXlsx(b.dataset.sheet,lang);
 }
 function renderAll(keep){
   applyI18n();$('upd').textContent=DATA.updated;
