@@ -142,7 +142,11 @@ table.tt{border-collapse:collapse;font-size:12px;width:100%;table-layout:fixed}
 .dlmsg.ok{background:var(--ok-bg);color:var(--ok)}
 .dlmsg.wait{background:var(--run-bg);color:var(--run)}
 .dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
-.dl button{text-align:left;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.dl button{text-align:left;display:flex;justify-content:space-between;gap:8px;align-items:center;min-height:52px}
+.dl button .nm{display:flex;flex-direction:column;gap:1px;min-width:0;line-height:1.3}
+.dl button .nm b{font-weight:600;font-size:13px}
+.dl button .nm i{font-style:normal;font-size:12px;color:var(--muted);font-family:"Noto Sans Thai",sans-serif}
+.dl button.primary .nm i{color:var(--on-accent);opacity:.75}
 .dl button small{color:var(--muted);font-size:11px}
 .note{font-size:12px;color:var(--muted)}
 .loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:50;font-size:14px;color:var(--muted)}
@@ -215,8 +219,8 @@ table.tt{border-collapse:collapse;font-size:12px;width:100%;table-layout:fixed}
   </section>
 
   <section class="card">
-    <h2><span data-i="download"></span></h2>
-    <p class="note" data-i="dlNote"></p>
+    <h2><span>엑셀 다운로드 · ดาวน์โหลด Excel</span></h2>
+    <p class="note">시트를 누르면 그 시트만 .xlsx 로 내려받습니다. 다른 시트를 참조하는 수식은 값으로 바뀝니다.<br>กดที่ชีตเพื่อดาวน์โหลดเฉพาะชีตนั้นเป็นไฟล์ .xlsx สูตรที่อ้างอิงชีตอื่นจะถูกแปลงเป็นค่า</p>
     <div class="dlmsg" id="dlmsg" hidden></div>
     <div class="dl" id="dl"></div>
   </section>
@@ -415,9 +419,13 @@ function renderTasks(){
     <td class="prog" data-label="${t('c_prog')}">${esc(tx(x,'prog'))}</td></tr>`}).join('')+'</tbody></table>';
   $('tasks').querySelectorAll('[data-lb]').forEach(b=>b.onclick=()=>{const lb=$('lb');lb.innerHTML=`<img src="${esc(b.dataset.lb)}" alt=""><p style="color:#fff;font-size:12px;margin:8px 0 0;text-align:center">${t('lbClose')}</p>`;lb.hidden=false;lb.onclick=()=>lb.hidden=true});
 }
+function sheetTh(s){
+  if(s.th)return s.th;
+  const tk=DATA.tasks.find(x=>x.own===s.name);return (tk&&tk.th&&tk.th.own)||'';
+}
 function renderDl(){
-  $('dl').innerHTML=`<button type="button" class="btn primary" data-all="1"><span>${t('all')}</span><small>.xlsx</small></button>`+
-   DATA.sheets.map(s=>`<button type="button" class="btn" data-sheet="${esc(s.name)}"><span>${esc(lang==='th'&&s.th?s.th:s.name)}</span><small>.xlsx</small></button>`).join('');
+  const btn=(attrs,cls,ko,th)=>`<button type="button" class="btn ${cls}" ${attrs} data-ko="${esc(ko)}" data-th="${esc(th)}"><span class="nm"><b>${esc(ko)}</b>${th&&th!==ko?`<i>${esc(th)}</i>`:''}</span><small>.xlsx</small></button>`;
+  $('dl').innerHTML=btn('data-all="1"','primary','전체 파일','ทั้งไฟล์')+DATA.sheets.map(s=>btn(`data-sheet="${esc(s.name)}"`,'',s.name,sheetTh(s))).join('');
   $('dl').querySelectorAll('button').forEach(b=>b.onclick=()=>download(b));
 }
 function saveB64(r){
@@ -431,12 +439,13 @@ function saveB64(r){
 }
 function dlMsg(txt,cls){const m=$('dlmsg');m.textContent=txt;m.className='dlmsg '+(cls||'');m.hidden=!txt}
 function download(b){
-  const label=b.querySelector('span').textContent;
+  const label=b.dataset.ko+(b.dataset.th&&b.dataset.th!==b.dataset.ko?' · '+b.dataset.th:'');
+  const both=k=>I18N.ko[k]+' · '+I18N.th[k];
   $('dl').querySelectorAll('button').forEach(x=>x.disabled=true);
-  dlMsg(label+' — '+t('making'),'wait');
+  dlMsg(label+' — '+both('making'),'wait');
   const done=r=>{$('dl').querySelectorAll('button').forEach(x=>x.disabled=false);
-    try{saveB64(r);dlMsg(label+' — '+t('saved')+' ('+r.filename+')','ok')}catch(e){dlMsg(t('fail')+': '+e.message)}};
-  const fail=e=>{$('dl').querySelectorAll('button').forEach(x=>x.disabled=false);dlMsg(t('fail')+': '+((e&&e.message)||e))};
+    try{saveB64(r);dlMsg(label+' — '+both('saved')+' ('+r.filename+')','ok')}catch(e){dlMsg(both('fail')+': '+e.message)}};
+  const fail=e=>{$('dl').querySelectorAll('button').forEach(x=>x.disabled=false);dlMsg(both('fail')+': '+((e&&e.message)||e))};
   if(!IN_GAS){
     api('api=xlsx'+(b.dataset.all?'':'&sheet='+encodeURIComponent(b.dataset.sheet))).then(j=>done(j.file)).catch(fail);
     return;
