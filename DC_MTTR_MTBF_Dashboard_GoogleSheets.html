@@ -2530,6 +2530,14 @@ function gpApply(init){
 const REP_KEY = 'stc_rep_types_v1', REP_TYPES = ['설비-전기','설비-라인','금형','관리'];
 function repGet(){ let o=null; try{ o=JSON.parse(localStorage.getItem(REP_KEY)||'null'); }catch(e){} o = o||{};
   ['s1','s2','s3','s4','b1','b2','b3','b5'].forEach(k=>{ if(!Array.isArray(o[k])) o[k]=[]; o[k]=o[k].filter(x=>REP_TYPES.includes(x)); }); if(!o.rk) o.rk='4'; return o; }
+/* 유형을 골라도 기준은 「지표 산출 기준」 UDT 체크 코드 — 그 유형에 체크한 코드가 있으면 체크한 코드만,
+   하나도 없으면(예: 관리) 그 유형 전체 · 전체 로스(구 방식)이면 유형 전체 */
+function repUdtOk(r){
+  if(!STD_MODE) return true;
+  const sub = r.s || subOf(r.i);
+  const has = [...UDT_SET].some(c=>subOf(c)===sub);
+  return !has || isUDT(r.i);
+}
 function repSet(o){ try{ localStorage.setItem(REP_KEY, JSON.stringify(o)); }catch(e){} }
 function repLabel(k, a){ return a.length ? a.join(' + ') : (k==='s3' ? '종합 로스(4계통 전체)' : (STD_MODE ? '계획외 고장(UDT)' : '전체 로스')); }
 /* 보고서 섹션(data-unit) ↔ 설정 키 — 고장유형을 고를 수 있는 항목만 (나머지는 칸이 회색) */
@@ -2582,7 +2590,7 @@ function repUI(){
   const rk = document.getElementById('rpRk');
   if(rk) rk.onchange = ()=>{ const O = repGet(); O.rk = rk.value; repSet(O); if(typeof renderWeekly==='function') renderWeekly(); };
   const n = document.getElementById('rpNote');
-  if(n) n.textContent = '번호 = 지금 주간보고 순서 (▲▼로 바꾸면 따라 바뀜) · 번호를 누르고 아래에서 유형 선택 (Ctrl+클릭 = 여러 항목) · 회색 = 유형 선택 없는 항목 · 기간 = 보고 주차 · 「위 기준」 = 지표 산출 기준(UDT/전체 로스) · 유형을 고르면 그 유형의 로스(최소정지 이상)를 모두 고장으로';
+  if(n) n.textContent = '번호 = 지금 주간보고 순서 (▲▼로 바꾸면 따라 바뀜) · 번호를 누르고 아래에서 유형 선택 (Ctrl+클릭 = 여러 항목) · 회색 = 유형 선택 없는 항목 · 기간 = 보고 주차 · 「위 기준」 = 지표 산출 기준(UDT/전체 로스) · 유형을 고르면 그 유형 안에서 UDT 체크 코드만 고장 (체크 코드가 없는 유형은 유형 전체) · FAC 「종합」은 모든 로스';
 }
 document.addEventListener('wk-ordered', ()=>{ clearTimeout(window.__rpT); window.__rpT = setTimeout(repUI, 50); });
 repUI();
@@ -2801,7 +2809,7 @@ function weekStats(cat, byType){
     const Lall = LOSS.filter(r=>r.w===w);
     const isAll = (cat==='ALL') || !cat ||
                   (Array.isArray(cat) && (!cat.length || cat.indexOf('ALL')>=0));
-    const L = isAll ? fails(Lall) : byType ? Lall.filter(r=>matchCat(r,cat) && r.l >= MIN_STOP) : fails(Lall.filter(r=>matchCat(r,cat)));
+    const L = isAll ? fails(Lall) : byType ? Lall.filter(r=>matchCat(r,cat) && r.l >= MIN_STOP && repUdtOk(r)) : fails(Lall.filter(r=>matchCat(r,cat)));
     const runH = R.reduce((a,x)=>a+x.r,0)/60;
     const lossH = L.reduce((a,x)=>a+x.l,0)/60;
     const lossAllH = Lall.reduce((a,x)=>a+x.l,0)/60;
@@ -3204,7 +3212,7 @@ function mcStats(week, cat, byType){
     const lAllM = L.filter(x=>x.m===m);
     const catAll = !cat || cat==='ALL' ||
                    (Array.isArray(cat) && (!cat.length || cat.indexOf('ALL')>=0));
-    const ll = catAll ? fails(lAllM) : byType ? lAllM.filter(x=>matchCat(x,cat) && x.l >= MIN_STOP) : fails(lAllM.filter(x=>matchCat(x,cat)));
+    const ll = catAll ? fails(lAllM) : byType ? lAllM.filter(x=>matchCat(x,cat) && x.l >= MIN_STOP && repUdtOk(x)) : fails(lAllM.filter(x=>matchCat(x,cat)));
     const runH = rr.reduce((a,x)=>a+x.r,0)/60, lossH = ll.reduce((a,x)=>a+x.l,0)/60;
     const n = (byType && !catAll) ? ll.length : nofCount(rr, lAllM, catAll ? null : ll);
     const planH = rr.reduce((a,x)=>a+(x.p||0),0)/60;
@@ -5321,7 +5329,7 @@ function renderWeekly(){
     const R0  = RUN.filter(r=>r.w===wk);
     const L0  = LOSS.filter(r=>r.w===wk);
     const isAll6 = catIsAll(cats6);
-    const Lok = isAll6 ? fails(L0) : L0.filter(r=>matchCat(r, cat6) && r.l >= MIN_STOP);
+    const Lok = isAll6 ? fails(L0) : L0.filter(r=>matchCat(r, cat6) && r.l >= MIN_STOP && repUdtOk(r));
     const sub = document.getElementById('wkPptSub');
     const mdTxt = md==='run' ? '실가동시간' : md==='real' ? '실적 계획시간' : ph+'h 일괄';
     if(sub) sub.textContent = `${wk} · PPT ${mdTxt} · ${catLabel(cats6)} 기준 · 계획외 고장(UDT)`;
@@ -7812,6 +7820,7 @@ loadData();
     '금형':['금형수리','핀파손','로트마크,사상','제품소착','슬라이드코어수리','청소','금형파손','금형냉각라인'],
     '관리':['휴식,설비교대','금형교체','미팅/정전','기타'] };
   const typeOfCode = i => { const k = norm(i); return Object.keys(TYPE4).find(c=>TYPE4[c].some(x=>norm(x)===k)) || '관리'; };
+  const udtOkK = (c0, t, i) => !c0.std || !TYPE4[t].some(x=>c0.udt.has(norm(x))) || c0.udt.has(norm(i));
   function repTypesK(k){ let o=null; try{ o = JSON.parse(LS('stc_rep_types_v1')||'null'); }catch(e){}
     const a = o && Array.isArray(o[k]) ? o[k].filter(x=>TYPE4[x]) : []; return a.length ? new Set(a) : null; }
   function repRk(){ let o=null; try{ o = JSON.parse(LS('stc_rep_types_v1')||'null'); }catch(e){} return (o && o.rk) || '4'; }
@@ -8224,7 +8233,7 @@ loadData();
   function build(opt, data){
     /* 지표 요약(공통 블록) : 항목별 고장유형 s4 — 고르면 그 유형의 로스만 고장 (워스트·액션도 같은 기준) */
     const C_base = cfg(), T4_ = opt.mode === 'week' ? repTypesK('s4') : null;   /* 주간보고만 */
-    const ovr = (c0, T) => Object.assign({}, c0, { failOverride: x => T.has(typeOfCode(x.i)) && x.l >= c0.minStop });
+    const ovr = (c0, T) => Object.assign({}, c0, { failOverride: x => { const t = typeOfCode(x.i); return T.has(t) && x.l >= c0.minStop && udtOkK(c0, t, x.i); } });
     const C = T4_ ? ovr(C_base, T4_) : C_base, P = periods(opt, data);
     const S = stats(data, P.cur.f, C), Q = P.prev ? stats(data, P.prev.f, C) : null;
     if (!S.days.length) return `<div class="kw"><div class="kw-empty">선택한 기간(${esc(P.cur.label)})에 가동 기록이 없습니다.</div></div>`;
@@ -8712,7 +8721,7 @@ loadData();
       /* 주간보고 항목별 고장유형(지표 산출 기준 아래 줄)에서 따로 관리 — 설비 KPI 페이지 설정과 무관
          기본 = 종합 로스(4계통 전체 · 최소정지 이상) */
       const T3 = repTypesK('s3');
-      const failF = x => (!T3 || T3.has(catOf(x.i))) && x.l >= C.minStop;
+      const failF = x => (!T3 || (T3.has(catOf(x.i)) && udtOkK(C, catOf(x.i), x.i))) && x.l >= C.minStop;   /* 종합 = 모든 로스 · 유형을 고르면 UDT 체크 코드 기준 */
       const KLBL = T3 ? [...T3].join(' + ') : '종합 로스(4계통 전체)';
       const facStat = f => { const o = {}; ['C','D','E'].forEach(k=>o[k] = { run:0, plan:0, brk:0, n:0, cat:{} });
         data.run.filter(f).forEach(r=>{ const k = FMAP[r.m]; if(k){ o[k].run += r.r; o[k].plan += r.p; } });
