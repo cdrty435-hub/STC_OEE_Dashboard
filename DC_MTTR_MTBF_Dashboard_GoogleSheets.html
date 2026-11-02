@@ -8040,6 +8040,16 @@ loadData();
 .kw .kw-exp .ty .r{display:grid;grid-template-columns:96px 1fr;gap:6px;align-items:center;margin:4px 0;font-size:12px;}
 .kw .kw-exp .ty .bw{position:relative;height:18px;} .kw .kw-exp .ty .bw::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;border-left:1px solid #cbd5e1;}
 .kw .kw-exp .ty .bar{position:absolute;top:2px;height:14px;border-radius:2px;} .kw .kw-exp .ty .bv{position:absolute;top:0;font-size:11.5px;font-weight:800;white-space:nowrap;line-height:18px;}
+.kw .kw-exp .cz{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;}
+.kw .kw-exp .cz .bx{border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px 10px;}
+.kw .kw-exp .cz .bt{font-size:13px;font-weight:800;color:#1f3864;margin-bottom:4px;}
+.kw .kw-exp .cz svg{width:100%;height:auto;display:block;max-height:270px;}
+.kw .kw-exp .ty2 .r2{margin:4px 0 6px;} .kw .kw-exp .ty2 .nm{font-size:12.5px;font-weight:800;color:#1f2937;margin-bottom:2px;}
+.kw .kw-exp .ty2 .bw2{position:relative;height:24px;} .kw .kw-exp .ty2 .bw2::before{content:"";position:absolute;left:45%;top:-20px;bottom:-4px;border-left:1.5px solid #cbd5e1;}
+.kw .kw-exp .ty2 .bar{position:absolute;top:0;height:24px;border-radius:2px;} .kw .kw-exp .ty2 .bv{position:absolute;top:0;line-height:24px;font-size:12.5px;font-weight:800;white-space:nowrap;}
+.kw .kw-exp .cc{margin-top:10px;font-size:12.5px;line-height:1.55;color:#1f2937;} .kw .kw-exp .cc ol{margin:3px 0 0;padding-left:20px;} .kw .kw-exp .cc li{margin:2px 0;}
+.kw .kw-exp .cc .nt{margin-top:4px;font-size:11px;color:#64748b;}
+@media (max-width:900px){ .kw .kw-exp .cz{grid-template-columns:1fr;} }
 .kw .kw-exp .tcs{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .kw .kw-exp .tc{border:1px solid #eef2f7;border-radius:8px;padding:6px 8px 4px;} .kw .kw-exp .tc .tt{font-size:12.5px;font-weight:800;color:#1f3864;text-align:center;}
 .kw .kw-exp .tc svg{width:100%;height:auto;display:block;max-height:240px;}
@@ -8694,13 +8704,13 @@ loadData();
           return `<div class="ec w2"><h5><i>2</i>추이 — ${say(tL,'lossH')}</h5><div class="tcs">${chart(tL,'lossH',1,'h',1)}${chart(tC,'cost',1000,'천 THB',1)}</div>`
             + `<div class="why2"><b>읽는 포인트</b> — ${trend ? trend + ' · ' : ''}F-COST는 ${say(tC,'cost')} · 월 = 그 달 주차 평균, 이번 달은 주차별 · 진한 막대 = 전주·금주</div></div>`;
         })();
-        const card2 = `<div class="ec"><h5><i>3</i>목표 대비 — 지표 주간 추이 표</h5>`
+        const card2 = `<div class="ec w2"><h5><i>3</i>목표 대비 — 지표 주간 추이 표</h5>`
           + (goodL.length ? `<div class="lb2 g">좋아진 점</div><ul>${goodL.join('')}</ul>` : '')
           + (badL.length ? `<div class="lb2 r">아쉬운 점</div><ul>${badL.join('')}</ul>` : '')
           + (revL.length ? `<div class="lb2 a">목표 재검토 제안</div><ul>${revL.join('')}</ul>` : '') + `</div>`;
 
         /* ③ 원인 분해 — 브리지 SVG */
-        const BW = 440, BH = 210, top = 26, base = 172, steps = [Q.lossH, Q.lossH+eN, S.lossH];
+        const BW = 440, BH = 236, top = 28, base = 196, steps = [Q.lossH, Q.lossH+eN, S.lossH];
         const mx = Math.max(...steps, 1) * 1.08, yy = v => base - v/mx*(base-top);
         const bars = [ { lb:`${pw}`, sub:'로스시간', a:0, b:Q.lossH, c:'#1e3c72', t:f1(Q.lossH,1) },
           { lb:'건수 효과', sub:`${Q.n}→${S.n}건`, a:Q.lossH, b:Q.lossH+eN, c:eN<0?'#0f766e':'#b42318', t:sgn(eN,1)+(same?` (${shN}%)`:'') },
@@ -8715,20 +8725,30 @@ loadData();
           if (i<3){ const nx = bars[i].b; sv += `<line x1="${x+w}" x2="${x+104}" y1="${yy(nx).toFixed(1)}" y2="${yy(nx).toFixed(1)}" stroke="#94a3b8" stroke-dasharray="3 2"/>`; } });
         sv += `</svg>`;
         const mxT = Math.max(...TYS.map(x=>Math.abs(x.d)), 0.1);
-        const tyH0 = TYS.map(x=>{ const w = Math.abs(x.d)/mxT*46, neg = x.d<0, col = neg?'#0f766e':'#b42318';
-          return `<div class="r"><span title="${esc(x.k)}"><b>${esc(x.k)}</b></span><div class="bw"><div class="bar" style="background:${col};${neg?`right:50%;width:${w}%`:`left:50%;width:${w}%`}"></div>`
-            + `<span class="bv" style="color:${col};${neg?`left:51%`:`right:51%`}">${sgn(x.d,1)}h · ${x.dn>0?'+':x.dn<0?'−':'±'}${Math.abs(x.dn)}건</span></div></div>`; }).join('');
-        let why = '';
-        if (same && down) why = shM >= 60 ? `건수는 ${Math.abs(dn)}건 줄었지만 <b>수리시간 단축 효과가 더 큼</b> → 「고장이 덜 난 주」보다 <b>「긴 고장이 없던 주」</b>. 장시간 수리가 다시 생기면 바로 반등할 수 있으므로, 고장건수(MTBF) 개선이 함께 확인되어야 실제 개선으로 볼 수 있음.`
-            : shN >= 60 ? `<b>고장 자체가 줄어든 주</b> — 건수 감소가 주된 원인. 예방·개선 활동의 효과로 볼 수 있으며 다음 주에도 건수가 유지되는지 확인.`
-            : `건수 감소와 수리시간 단축이 <b>함께</b> 작용한 주.`;
-        else if (same && !down) why = shM >= 60 ? `건수보다 <b>한 번의 수리가 길어진 것</b>이 주된 원인 → 장시간 고장 설비의 원인과 예비품·대응 절차 확인 필요.`
-            : shN >= 60 ? `<b>고장이 자주 난 주</b> — 건수 증가가 주된 원인 → 반복 고장 설비의 근본 원인 확인 필요.` : `건수 증가와 수리시간 증가가 함께 작용.`;
-        else why = `고장건수와 수리시간이 반대로 움직임 (건수 효과 ${sgn(eN,1)}h · 수리시간 효과 ${sgn(eM,1)}h) — 큰 쪽이 결과를 결정.`;
-        if (TYS.length && !TYS[0].etc) why += ` 고장유형으로는 <b>${esc(TYS[0].k)} ${sgn(TYS[0].d,1)}h</b>${TYS[1]&&!TYS[1].etc?` · <b>${esc(TYS[1].k)} ${sgn(TYS[1].d,1)}h</b>`:''}가 변화의 대부분.`;
-        const card3 = `<div class="ec"><h5><i>4</i>원인 분해 — 로스시간 = 고장건수 × MTTR</h5><div class="br"><div>${sv}</div>`
-          + `<div><div class="lb2" style="color:#1f3864;margin-top:0">고장유형별 변화 (${pw} → ${wk})</div><div class="ty">${tyH0}</div></div></div>`
-          + `<div class="why2"><b>해석</b> — ${why}${shM2!=null && Math.abs(shM2-shM)>=5 ? ` <span style="color:#64748b">(계산 순서를 바꾸면 수리시간 효과 ${shM2}% — ${(shM>=50)===(shM2>=50)?'어느 쪽이든 결론은 같음':'두 효과가 비슷한 수준'})</span>` : ''}</div></div>`;
+        /* 고장유형별 변화 — 이름은 막대 위 줄, 값은 막대 옆 (감소 = 초록 왼쪽 · 증가 = 빨강 오른쪽) */
+        const tyH0 = TYS.map(x=>{ const w = Math.abs(x.d)/mxT*40, neg = x.d<0, col = neg?'#0f766e':'#b42318';
+          const v = `${sgn(x.d,1)}h · ${x.dn>0?'+':x.dn<0?'−':'±'}${Math.abs(x.dn)}건`;
+          return `<div class="r2"><div class="nm">${esc(x.k)}</div><div class="bw2"><div class="bar" style="background:${col};${neg?`right:55%;width:${w}%`:`left:45%;width:${w}%`}"></div>`
+            + `<span class="bv" style="color:${col};left:${neg?'calc(45% + 6px)':`calc(${45+w}% + 6px)`}">${v}</span></div></div>`; }).join('');
+        /* 제목 = 결론 한 줄 */
+        const domM = same && shM >= shN;
+        const head = same ? `로스시간 ${down?'감소':'증가'}의 ${Math.max(shM,shN)}%는 ${domM ? '수리시간 '+(down?'단축':'증가') : '고장건수 '+(down?'감소':'증가')}`
+                          : `고장건수와 수리시간이 반대로 움직임`;
+        /* 결론 1 — 어떤 유형이 움직였나 · 결론 2 — 건수 효과와 수리시간 효과 중 무엇이 컸나 */
+        const mainTy = TYS.filter(x=>!x.etc && Math.sign(x.d)===Math.sign(dL)).slice(0,2).map(x=>String(x.k).replace(/수리$/,''));
+        const c1 = mainTy.length ? (down ? `${pw}의 장시간 ${esc(mainTy.join('·'))} 수리가 해소된 것이 주효` : `${wk}에 ${esc(mainTy.join('·'))} 수리가 늘거나 길어진 것이 주된 원인`)
+                                 : `유형별로 늘고 준 것이 섞여 있음 — 아래 Worst 설비에서 확인`;
+        let c2 = '';
+        if (same && down) c2 = shM >= 60 ? `건수는 ${Math.abs(dn)}건 줄었지만 MTTR이 ${f1(Q.mttr,2)}→${f1(S.mttr,2)}h로 줄어든 효과가 더 큼<br>→ 「고장이 덜 난 주」보다 「긴 고장이 없던 주」`
+            : shN >= 60 ? `건수가 ${Math.abs(dn)}건 줄어든 효과가 주된 원인<br>→ 「고장 자체가 줄어든 주」 — 다음 주에도 유지되는지 확인` : `건수 감소와 수리시간 단축이 함께 작용`;
+        else if (same && !down) c2 = shM >= 60 ? `건수보다 MTTR이 ${f1(Q.mttr,2)}→${f1(S.mttr,2)}h로 길어진 효과가 더 큼<br>→ 장시간 고장 설비의 원인·예비품·대응 절차 확인`
+            : shN >= 60 ? `건수가 ${Math.abs(dn)}건 늘어난 효과가 주된 원인<br>→ 반복 고장 설비의 근본 원인 확인` : `건수 증가와 수리시간 증가가 함께 작용`;
+        else c2 = `건수 효과 ${sgn(eN,1)}h · 수리시간 효과 ${sgn(eM,1)}h — 큰 쪽이 결과를 결정`;
+        const note = shM2!=null && Math.abs(shM2-shM)>=5 ? `<div class="nt">계산 순서를 바꾸면 수리시간 효과 ${shM2}% — ${(shM>=50)===(shM2>=50)?'어느 쪽이든 결론은 같음':'두 효과가 비슷한 수준'}</div>` : '';
+        const card3 = `<div class="ec w2"><h5><i>4</i>원인 분해 — ${head}</h5><div class="cz">`
+          + `<div class="bx"><div class="bt">로스시간 브리지 ${pw} → ${wk} (h)</div>${sv}</div>`
+          + `<div class="bx"><div class="bt">고장유형별 변화 (${pw} → ${wk})</div><div class="ty2">${tyH0}</div>`
+          + `<div class="cc"><b>결론</b><ol><li>${c1}</li><li>${c2}</li></ol>${note}</div></div></div></div>`;
 
         /* ④ Worst 설비 · 다음 주 확인 */
         const wl = [];
