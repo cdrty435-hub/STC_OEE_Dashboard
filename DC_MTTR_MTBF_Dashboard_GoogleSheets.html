@@ -586,6 +586,15 @@
 .rep-bar .rp-c button:last-child{border-right:0} .rep-bar .rp-c button.on{background:#1f3864;color:#fff;font-weight:700}
 .rep-bar .rp-c button.b.on{background:#64748b}
 .rep-bar select{border:1px solid #d8dfe7;border-radius:6px;padding:2px 6px;font-size:12px}
+.rep-bar .rp-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0}
+.rep-bar .rp-lb{font-size:12px;font-weight:700;color:#7a5a1a;min-width:52px}
+.rep-bar .rp-nums{display:flex;flex-wrap:wrap;gap:3px}
+.rep-bar .rp-n{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:34px;height:34px;padding:1px 3px;border:1px solid #d8dfe7;border-radius:6px;background:#fff;cursor:pointer;line-height:1.05}
+.rep-bar .rp-n b{font-size:13px;color:#1f3864} .rep-bar .rp-n small{font-size:9px;color:#b45309;font-weight:700;white-space:nowrap}
+.rep-bar .rp-n.on{background:#1f3864;border-color:#1f3864} .rep-bar .rp-n.on b{color:#fff} .rep-bar .rp-n.on small{color:#fcd34d}
+.rep-bar .rp-n.na{background:#f3f4f6;cursor:default;opacity:.6} .rep-bar .rp-n.na b{color:#9ca3af}
+.rep-bar .rp-n.hid{border-style:dashed}
+.rep-bar .rp-sel{font-size:11.5px;color:#475569}
 </style>
 
 <style>
@@ -1064,7 +1073,7 @@
   </div>
   <div class="stdbar rep-bar">
     <span class="lb">주간보고 항목별 고장유형</span>
-    <span id="rpItems" style="display:contents"></span>
+    <span id="rpItems" style="flex:1 1 auto;min-width:0"></span>
     <span class="lb" id="rpNote" style="flex-basis:100%;text-align:right"></span>
   </div>
   <div class="udt-panel" id="udtPanel">
@@ -2462,6 +2471,12 @@ function gpWeekSpans(){ const W = {}; RUN.forEach(r=>{ if(!r.w) return; const x 
     const s0 = t.toISOString().slice(0,10); t.setUTCDate(t.getUTCDate()+6); const e0 = t.toISOString().slice(0,10);
     if(s0 < W[k][0]) W[k][0] = s0; if(e0 > W[k][1]) W[k][1] = e0; });
   return W; }
+/* 분석 기간을 바꾸면 주간보고 보고 주차 = 기간의 끝 주차 (전주 비교는 그 앞 주) */
+function gpToReport(){
+  const wt = document.getElementById('gpWt'), sel = document.getElementById('wkWeek');
+  if(!wt || !sel || !wt.value) return;
+  if([...sel.options].some(o=>o.value===wt.value) && sel.value !== wt.value){ sel.value = wt.value; sel.dispatchEvent(new Event('change', {bubbles:true})); }
+}
 function gpApply(init){
   const f = document.getElementById('gpFrom'), t = document.getElementById('gpTo'); if(!f || !RUN.length) return;
   const [mn, mx] = gpBounds();
@@ -2490,21 +2505,21 @@ function gpApply(init){
       const kA = ks.find(k=>W[k][1] >= a) || ks[0], kB = ks.slice().reverse().find(k=>W[k][0] <= b) || ks[ks.length-1];
       wf.value = kA; wt.value = kB; } }
   const n = Math.round((new Date(b+'T00:00:00Z') - new Date(a+'T00:00:00Z'))/864e5) + 1;
-  document.getElementById('gpNote').textContent = (a===mn && b===mx ? '전체 기간' : `${n}일 · ${wks.size}개 주차`) + ' — 분석 탭의 기간·주차 선택에 적용 (주간·일일·월간 보고는 각자 선택)';
+  document.getElementById('gpNote').textContent = (a===mn && b===mx ? '전체 기간' : `${n}일 · ${wks.size}개 주차`) + ' — 분석 탭 기간·주차에 적용 · 주간보고 보고 주차 = 끝 주차 ('+(document.getElementById('gpWt')||{}).value+')';
   const tag = document.getElementById('dataRangeTag');
   if(tag) tag.textContent = `${a} ~ ${b}${a===mn&&b===mx?'':' (분석 기간 · 전체 '+mn+' ~ '+mx+')'} · 가동${RUN.length}행 · 로스${LOSS.length}행 · 원천: ${DATA_SOURCE}`;
 }
 (function(){
   const f = document.getElementById('gpFrom'), t = document.getElementById('gpTo'); if(!f) return;
-  const on = ()=>{ f.dataset.q='custom'; gpApply(false); };
+  const on = ()=>{ f.dataset.q='custom'; gpApply(false); gpToReport(); };
   f.addEventListener('change', on); t.addEventListener('change', on);
   const wf = document.getElementById('gpWf'), wt = document.getElementById('gpWt');
   const onW = ()=>{ const W = gpWeekSpans(); let A = W[wf.value], B = W[wt.value]; if(!A || !B) return;
     if(weekNum(wf.value) > weekNum(wt.value)){ const x = A; A = B; B = x; }
-    const [mn, mx] = gpBounds(); f.value = A[0] < mn ? mn : A[0]; t.value = B[1] > mx ? mx : B[1]; f.dataset.q = 'custom'; gpApply(false); };
+    const [mn, mx] = gpBounds(); f.value = A[0] < mn ? mn : A[0]; t.value = B[1] > mx ? mx : B[1]; f.dataset.q = 'custom'; gpApply(false); gpToReport(); };
   if(wf) wf.addEventListener('change', onW); if(wt) wt.addEventListener('change', onW);
   document.querySelectorAll('#gpQuick button').forEach(btn=>btn.addEventListener('click', ()=>{
-    const r = gpQuick(btn.dataset.q); f.value = r[0]; t.value = r[1]; f.dataset.q = btn.dataset.q; gpApply(false); }));
+    const r = gpQuick(btn.dataset.q); f.value = r[0]; t.value = r[1]; f.dataset.q = btn.dataset.q; gpApply(false); gpToReport(); }));
 })();
 /* ===== 주간보고 항목별 고장유형 (지표 산출 기준 아래 줄) =====
    · 주간 요약 · 지표 주간 추이 : 「위 기준」(UDT/전체 로스 라디오) 또는 고장유형(4계통) 골라서
@@ -2512,33 +2527,60 @@ function gpApply(init){
    · 기간은 셋 다 주간보고의 보고 주차 · FAC 누적 1위는 보고 주차까지 N주 */
 const REP_KEY = 'stc_rep_types_v1', REP_TYPES = ['설비-전기','설비-라인','금형','관리'];
 function repGet(){ let o=null; try{ o=JSON.parse(localStorage.getItem(REP_KEY)||'null'); }catch(e){} o = o||{};
-  ['s1','s2','s3','s4'].forEach(k=>{ if(!Array.isArray(o[k])) o[k]=[]; o[k]=o[k].filter(x=>REP_TYPES.includes(x)); }); if(!o.rk) o.rk='4'; return o; }
+  ['s1','s2','s3','s4','b1','b2','b3','b5'].forEach(k=>{ if(!Array.isArray(o[k])) o[k]=[]; o[k]=o[k].filter(x=>REP_TYPES.includes(x)); }); if(!o.rk) o.rk='4'; return o; }
 function repSet(o){ try{ localStorage.setItem(REP_KEY, JSON.stringify(o)); }catch(e){} }
 function repLabel(k, a){ return a.length ? a.join(' + ') : (k==='s3' ? '종합 로스(4계통 전체)' : (STD_MODE ? '계획외 고장(UDT)' : '전체 로스')); }
-/* 보고서 섹션 ↔ 설정 키 (보고서에서 순서가 바뀌므로 현재 번호로 보여 준다) */
-const REP_UNITS = [['b0','s1','주간 요약'],['k0','s4','지표 요약'],['k3','s2','지표 주간 추이'],['k4','s3','FAC별 종합 성과']];
+/* 보고서 섹션(data-unit) ↔ 설정 키 — 고장유형을 고를 수 있는 항목만 (나머지는 칸이 회색) */
+const REP_MAP = { b0:'s1', b1:'b1', b2:'b2', b3:'b3', b5:'b5', k0:'s4', k3:'s2', k4:'s3' };
+let REP_SEL = null;   // 지금 고른 항목(설정 키) 목록
+function repItems(){
+  const out = [];
+  document.querySelectorAll('#wkSheet [data-unit]').forEach(u=>{
+    const hs = u.classList.contains('kw-sec') ? [...u.querySelectorAll(':scope > h4.kw-h')] : [...u.querySelectorAll('h4')].filter(h=>!h.closest('.kw'));
+    hs.forEach(h=>{ const no = parseInt(((h.querySelector(':scope > .wk-no')||{}).textContent||''),10); if(!isFinite(no)) return;
+      const t = [...h.childNodes].filter(n=>n.nodeType===3).map(n=>n.nodeValue).join('').replace(/\s+/g,' ').trim();
+      out.push({ no, u:u.dataset.unit, k:REP_MAP[u.dataset.unit]||null, t, hid:u.classList.contains('wk-hid') }); });
+  });
+  return out.sort((a,b)=>a.no-b.no);
+}
 function repUI(){
   const box = document.getElementById('rpItems'); if(!box) return;
-  const o = repGet();
-  const L = REP_UNITS.map(([u,k,nm])=>{ const el = document.querySelector('#wkSheet [data-unit="'+u+'"]');
-    const no = el ? parseInt(((el.querySelector('.wk-no')||{}).textContent||''),10) : NaN; const hid = el && el.classList.contains('wk-hid');
-    return { u, k, nm, no: isFinite(no) ? no : null, hid }; })
-    .sort((a,b)=>(a.no==null)-(b.no==null) || (a.no||0)-(b.no||0));
-  box.innerHTML = L.map(x=>{ const a = o[x.k];
-    return `<span class="rp-g${x.hid?' hid':''}" title="${x.hid?'보고서에서 숨긴 항목':''}"><b>${x.no!=null?x.no+'. ':''}${x.nm}</b><span class="rp-c" data-rp="${x.k}">`
-      + `<button type="button" class="b${a.length?'':' on'}" data-t="">${x.k==='s3'?'종합 (전체 유형)':'위 기준'}</button>`
-      + REP_TYPES.map(t=>`<button type="button" class="${a.includes(t)?'on':''}" data-t="${t}">${t}</button>`).join('') + `</span>`
-      + (x.k==='s3' ? `<span class="lb">누적 1위</span><select id="rpRk">${[['4','최근 4주'],['8','최근 8주'],['13','최근 13주'],['all','전체 주차']].map(([v,l])=>`<option value="${v}"${o.rk===v?' selected':''}>${l}</option>`).join('')}</select>` : '')
-      + `</span>`; }).join('');
-  box.querySelectorAll('.rp-c').forEach(el=>{ const k = el.dataset.rp;
-    el.querySelectorAll('button').forEach(b=>b.onclick=()=>{ const O = repGet(); let v = O[k]; const t = b.dataset.t;
-      if(!t) v = []; else v = v.includes(t) ? v.filter(x=>x!==t) : v.concat([t]);
-      if(v.length === REP_TYPES.length && k==='s3') v = [];
-      O[k] = v; repSet(O); repUI(); if(typeof renderWeekly==='function') renderWeekly(); }); });
+  const o = repGet(), IT = repItems();
+  const keys = [...new Set(IT.filter(x=>x.k).map(x=>x.k))];
+  if(!REP_SEL || !REP_SEL.some(k=>keys.includes(k))) REP_SEL = keys.slice(0,1);
+  REP_SEL = REP_SEL.filter(k=>keys.includes(k));
+  const tag = k => { const a = o[k]||[]; return a.length ? a.map(x=>x.replace('설비-','')).join('+') : (k==='s3' ? '종합' : ''); };
+  /* 1행 : 항목 번호 칸 */
+  let h = `<div class="rp-row"><span class="rp-lb">항목</span><span class="rp-nums">` + IT.map(x=>{
+      const on = x.k && REP_SEL.includes(x.k), tg = x.k ? tag(x.k) : '';
+      return `<button type="button" class="rp-n${x.k?'':' na'}${on?' on':''}${x.hid?' hid':''}" ${x.k?`data-k="${x.k}"`:'disabled'} title="${x.no}. ${histEsc(x.t)}${x.k?'':' — 고장유형 선택 없는 항목'}${x.hid?' (보고서에서 숨김)':''}"><b>${x.no}</b>${tg?`<small>${histEsc(tg)}</small>`:''}</button>`; }).join('') + `</span></div>`;
+  /* 2행 : 고장유형 — 고른 항목 모두에 적용 */
+  const selA = REP_SEL.map(k=>o[k]||[]);
+  const has = t => selA.length && selA.every(a=>a.includes(t));
+  const none = selA.length && selA.every(a=>!a.length);
+  const fac = REP_SEL.includes('s3');
+  const nm = IT.filter(x=>x.k && REP_SEL.includes(x.k)).map(x=>x.no+'. '+x.t.slice(0,14)).join(' · ');
+  h += `<div class="rp-row"><span class="rp-lb">고장유형</span><span class="rp-c">`
+    + `<button type="button" class="b${none?' on':''}" data-t="">${fac && REP_SEL.length===1 ? '종합 (전체 유형)' : '위 기준'}</button>`
+    + REP_TYPES.map(t=>`<button type="button" class="${has(t)?'on':''}" data-t="${t}">${t}</button>`).join('') + `</span>`
+    + (fac ? `<span class="lb">FAC 누적 1위</span><select id="rpRk">${[['4','최근 4주'],['8','최근 8주'],['13','최근 13주'],['all','전체 주차']].map(([v,l])=>`<option value="${v}"${o.rk===v?' selected':''}>${l}</option>`).join('')}</select>` : '')
+    + `<span class="rp-sel">적용 대상 : ${nm ? histEsc(nm) : '위 칸에서 항목 번호를 누르세요'}</span></div>`;
+  box.innerHTML = h;
+  box.querySelectorAll('.rp-n[data-k]').forEach(b=>b.onclick=e=>{ const k = b.dataset.k;
+    if(e.ctrlKey || e.metaKey || e.shiftKey){ REP_SEL = REP_SEL.includes(k) ? REP_SEL.filter(x=>x!==k) : REP_SEL.concat([k]); if(!REP_SEL.length) REP_SEL = [k]; }
+    else REP_SEL = (REP_SEL.length===1 && REP_SEL[0]===k) ? [k] : [k];
+    repUI(); });
+  box.querySelectorAll('.rp-c button').forEach(b=>b.onclick=()=>{ const O = repGet(), t = b.dataset.t;
+    const all = REP_SEL.every(k=>(O[k]||[]).includes(t));
+    REP_SEL.forEach(k=>{ let v = O[k]||[];
+      if(!t) v = []; else v = all ? v.filter(x=>x!==t) : (v.includes(t) ? v : v.concat([t]));
+      if(k==='s3' && v.length === REP_TYPES.length) v = [];
+      O[k] = v; });
+    repSet(O); repUI(); if(typeof renderWeekly==='function') renderWeekly(); });
   const rk = document.getElementById('rpRk');
   if(rk) rk.onchange = ()=>{ const O = repGet(); O.rk = rk.value; repSet(O); if(typeof renderWeekly==='function') renderWeekly(); };
   const n = document.getElementById('rpNote');
-  if(n) n.textContent = '번호 = 지금 주간보고에 보이는 순서 (보고서에서 ▲▼로 바꾸면 여기 번호도 바뀜) · 기간 = 보고 주차 (모두 동일) · 「위 기준」 = 지표 산출 기준(UDT/전체 로스) · 유형을 고르면 그 유형의 로스(최소정지 이상)를 모두 고장으로 집계 · 지표 요약 유형은 워스트·액션에도 적용';
+  if(n) n.textContent = '번호 = 지금 주간보고 순서 (▲▼로 바꾸면 따라 바뀜) · 번호를 누르고 아래에서 유형 선택 (Ctrl+클릭 = 여러 항목) · 회색 = 유형 선택 없는 항목 · 기간 = 보고 주차 · 「위 기준」 = 지표 산출 기준(UDT/전체 로스) · 유형을 고르면 그 유형의 로스(최소정지 이상)를 모두 고장으로';
 }
 document.addEventListener('wk-ordered', ()=>{ clearTimeout(window.__rpT); window.__rpT = setTimeout(repUI, 50); });
 repUI();
@@ -3151,7 +3193,7 @@ function mtbfBasis(runH, lossH, cnt, planH, nMc){
   return runH / cnt;
 }
 
-function mcStats(week, cat){
+function mcStats(week, cat, byType){
   const R = RUN.filter(r=>r.w===week), L = LOSS.filter(r=>r.w===week);
   const out = {};
   ALL_MACHINES.forEach(m=>{
@@ -3159,7 +3201,7 @@ function mcStats(week, cat){
     const lAllM = L.filter(x=>x.m===m);
     const catAll = !cat || cat==='ALL' ||
                    (Array.isArray(cat) && (!cat.length || cat.indexOf('ALL')>=0));
-    const ll = fails(catAll ? lAllM : lAllM.filter(x=>matchCat(x,cat)));
+    const ll = catAll ? fails(lAllM) : byType ? lAllM.filter(x=>matchCat(x,cat) && x.l >= MIN_STOP) : fails(lAllM.filter(x=>matchCat(x,cat)));
     const runH = rr.reduce((a,x)=>a+x.r,0)/60, lossH = ll.reduce((a,x)=>a+x.l,0)/60;
     const n = nofCount(rr, lAllM, catAll ? null : ll);
     const planH = rr.reduce((a,x)=>a+(x.p||0),0)/60;
@@ -4703,7 +4745,7 @@ function renderWeekly(){
   /* 계통 선택 : 칩을 눌러 여러 계통을 함께 볼 수 있다 (①·②·④ 각각 저장) */
   const catName = c => (c==='ALL' ? '전체 로스' : c);
   /* UDT 단일기준 : 계통 선택을 폐지했으므로 항상 전체 계통으로 집계한다 */
-  const catGet = n => { if(n===1){ const a = repGet().s1; return a.length ? a : ['ALL']; } return ['ALL']; };
+  const catGet = n => { const k = {1:'s1',2:'b1',3:'b2',4:'b3',6:'b5'}[n]; const a = k ? (repGet()[k]||[]) : []; return a.length ? a : ['ALL']; };
   const catGetLegacy = n => {
     let v = null; try{ v = localStorage.getItem('stc_wk_cat'+n); }catch(e){}
     if(!v) return ['ALL'];
@@ -4749,7 +4791,7 @@ function renderWeekly(){
   if(h3n) h3n.textContent = '· 전 주차 흐름';
 
   const WS  = weekStats(cat1, true);
-  const WSA = catIsAll(cats3) && catIsAll(cats1) ? WS : weekStats(cat3);   // ③ 추이는 자체 계통 칩 기준
+  const WSA = catIsAll(cats3) && catIsAll(cats1) ? WS : weekStats(cat3, true);   // ③ 추이는 자체 계통 칩 기준
   const cur = WS.find(x=>x.w===wk) || null;
   const prv = pw ? (WS.find(x=>x.w===pw)||null) : null;
   if(!cur) return;
@@ -4834,9 +4876,9 @@ function renderWeekly(){
   }
 
   /* ---------- 자동 코멘트 ---------- */
-  const mcs   = mcStats(wk, cat2);                       // ② 차트용
-  const mcs4  = (catLabel(cats4)===catLabel(cats2)) ? mcs : mcStats(wk, cat4);  // ④ 워스트용
-  const mcsP  = pw ? mcStats(pw, cat4) : null;
+  const mcs   = mcStats(wk, cat2, true);                       // ② 차트용
+  const mcs4  = (catLabel(cats4)===catLabel(cats2)) ? mcs : mcStats(wk, cat4, true);  // ④ 워스트용
+  const mcsP  = pw ? mcStats(pw, cat4, true) : null;
   const arr   = Object.values(mcs4).filter(x=>x.cnt>=MIN_N);
   const wMttr = arr.slice().sort((a,b)=>b.mttr-a.mttr).slice(0,3);
   const wMtbf = arr.slice().sort((a,b)=>a.mtbf-b.mtbf).slice(0,3);
@@ -5248,7 +5290,7 @@ function renderWeekly(){
     const R0  = RUN.filter(r=>r.w===wk);
     const L0  = LOSS.filter(r=>r.w===wk);
     const isAll6 = catIsAll(cats6);
-    const Lok = fails(isAll6 ? L0 : L0.filter(r=>matchCat(r, cat6)));
+    const Lok = isAll6 ? fails(L0) : L0.filter(r=>matchCat(r, cat6) && r.l >= MIN_STOP);
     const sub = document.getElementById('wkPptSub');
     const mdTxt = md==='run' ? '실가동시간' : md==='real' ? '실적 계획시간' : ph+'h 일괄';
     if(sub) sub.textContent = `${wk} · PPT ${mdTxt} · ${catLabel(cats6)} 기준 · 계획외 고장(UDT)`;
