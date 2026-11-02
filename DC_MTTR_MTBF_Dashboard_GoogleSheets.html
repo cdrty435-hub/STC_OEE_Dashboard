@@ -8162,7 +8162,9 @@ loadData();
 .kw .kw-chg .why{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12.5px;color:#334155;} .kw .kw-chg .why > div{padding:6px 10px;border-radius:8px;}
 .kw .kw-chg .why .gd{background:#f0fdf4;} .kw .kw-chg .why .bd{background:#fff5f5;} .kw .kw-chg .why > div > b:first-child{display:block;margin-bottom:2px;} .kw .kw-chg .why .gd > b:first-child{color:#15803d;} .kw .kw-chg .why .bd > b:first-child{color:#b91c1c;}
 .kw .kw-chg .why .mc{display:block;font-size:11.5px;color:#64748b;margin-top:2px;}
-.kw table.kw-tr th.av{background:#dbe5f1;} .kw table.kw-tr td.av{background:#f4f7fb;} .kw table.kw-tr th.tgh{background:#fde2e2;color:#b91c1c;}
+.kw table.kw-tr th.av{background:#dbe5f1;} .kw table.kw-tr td.av{background:#f4f7fb;}
+.kw table.kw-tr th.old{background:#d9dee5 !important;color:#475569;} .kw table.kw-tr td.old{background:#eef0f3 !important;color:#475569;} .kw table.kw-tr td.old.bad{color:#c00000;}
+@media print{ .kw table.kw-tr th.old,.kw table.kw-tr td.old{-webkit-print-color-adjust:exact;print-color-adjust:exact;} } .kw table.kw-tr th.tgh{background:#fde2e2;color:#b91c1c;}
 .kw table.kw-tr td.bad{color:#c00000;font-weight:800;} .kw table.kw-tr td.n.av.dn{color:#15803d;} .kw table.kw-tr td.n.av.up{color:#dc2626;} .kw table.kw-tr td.hb{color:#15803d !important;font-weight:900;font-size:13.5px;} .kw table.kw-tr td.hw{color:#dc2626 !important;font-weight:900;font-size:13.5px;} .kw table.kw-tr td.tgc{text-align:center;background:#fff7f7;}
 .kw table.kw-tr td.tgc input{width:100%;max-width:80px;box-sizing:border-box;font:inherit;font-size:13px;font-weight:800;text-align:right;padding:3px 5px;border:1.5px solid #dc2626;border-radius:5px;color:#b91c1c;}
 .kw .kw-tr-act{display:flex;gap:8px;margin:6px 0 2px;} .kw .kw-tr-act button{font:inherit;font-size:11.5px;padding:4px 10px;border:1px solid #94a3b8;border-radius:14px;background:#fff;cursor:pointer;}
@@ -8456,6 +8458,8 @@ loadData();
           return { m:true, nw:ws.length, lbl:(+m.slice(5))+'월', sub: (ws.length>1 ? ws[0]+'~'+ws[ws.length-1] : ws[0]), s: stats(data, r=>ws.includes(r.w), C), part:false }; })
         .concat(WS.filter(x=>wMon(x.w)===curM).map(x=>({ m:false, lbl:x.w, w:x.w, x, s:x.s, part:x.part })));
       const iCur = WS.findIndex(x=>x.w===opt.week), PREV = iCur>0 ? WS[iCur-1] : null, CUR = WS[iCur] || null;
+      /* 비교 기준(평균 · 지난 달 · 전전주 이전)은 옅은 회색 — 전주·금주만 흰 바탕으로 눈에 띄게 */
+      const oldC = c => c.m || (c.w !== opt.week && !(PREV && c.w === PREV.w));
       const KS = [
         ['MTTR','mttr','h/건',2,false,'stc_target_mttr',1.5],
         ['MTBF','mtbf','h/건',2,true,'stc_target_mtbf',10],
@@ -8475,19 +8479,19 @@ loadData();
         return { name,k,u,dp,up,key, vs, avg, best, worstV, q, sug, tg, ok, saved: sv!==null && sv!=='' };
       });
       h += `<h4 class="kw-h">지표 주간 추이 · 목표 설정 <small>고장유형 ${T2_ ? esc([...T2_].join(' + ')) : (C.std ? '계획외 고장(UDT)' : '전체 로스')} · ${esc(upto[0]||'')} ~ ${esc(opt.week)} · ${FULL.length}주 평균 (가동일이 적은 부분 주차 ${WS.length-FULL.length}주 제외) · 목표 칸에 값을 넣으면 그래프·지표 요약에 바로 반영</small></h4>`;
-      h += `<div><table class="kw-tr"><colgroup><col style="width:7.5%"><col style="width:3.6%"><col style="width:7.5%"><col style="width:6%">${COLS.map(()=>'<col>').join('')}<col style="width:8.5%"><col style="width:25%"></colgroup><thead><tr><th>지표</th><th>단위</th><th class="tgh">목표</th><th class="av" title="부분 주차를 뺀 주평균">평균</th>`
-         + COLS.map(c=>`<th class="${c.m?'mo':''}${c.w===opt.week?' cur':''}${c.part?' pt':''}">${esc(c.lbl)}${c.m?`<span class="sm">${esc(c.sub)}</span>`:c.part?'<span class="sm">부분 '+c.s.days.length+'일</span>':''}</th>`).join('')
+      h += `<div><table class="kw-tr"><colgroup><col style="width:7.5%"><col style="width:3.6%"><col style="width:7.5%"><col style="width:6%">${COLS.map(()=>'<col>').join('')}<col style="width:8.5%"><col style="width:25%"></colgroup><thead><tr><th>지표</th><th>단위</th><th class="tgh">목표</th><th class="av old" title="부분 주차를 뺀 주평균">평균</th>`
+         + COLS.map(c=>`<th class="${c.m?'mo':''}${c.w===opt.week?' cur':''}${c.part?' pt':''}${oldC(c)?' old':''}">${esc(c.lbl)}${c.m?`<span class="sm">${esc(c.sub)}</span>`:c.part?'<span class="sm">부분 '+c.s.days.length+'일</span>':''}</th>`).join('')
          + `<th class="dl">${PREV?esc(PREV.w)+' → ':''}${esc(opt.week)}<span class="sm">전주 대비</span></th><th class="why">${PREV?esc(PREV.w)+' → ':''}${esc(opt.week)} 변화 (증감)</th></tr></thead><tbody>`;
       T.forEach(t=>{
         h += `<tr><td class="kp">${t.name}<span class="sm">${t.up?'높을수록 좋음':'낮을수록 좋음'}</span></td><td class="c">${t.u}</td>`;
         const fk = v => v>=100000 ? f0(v/1000)+'k' : v>=10000 ? f1(v/1000,1)+'k' : fx(v,t.dp);
         h += `<td class="tgc"><input type="number" step="${t.dp?Math.pow(10,-t.dp):1}" data-kwtg="${t.key}" value="${t.saved || t.tg!=null ? t.tg : ''}" placeholder="${fx(t.sug,t.dp).replace(/,/g,'')}"><span class="sm">제안 ${fx(t.sug,t.dp)}</span></td>`
-           + `<td class="n av"><b>${fk(t.avg)}</b></td>`;
+           + `<td class="n av old"><b>${fk(t.avg)}</b></td>`;
         /* 최고(가장 잘한 주) = 초록 · 최저(가장 못한 주) = 빨강 하이라이트 — 부분 주차 제외 */
         const bW = FULL.find(x=>x.s[t.k]===t.best), wW = FULL.find(x=>x.s[t.k]===t.worstV);
         COLS.forEach(c=>{ const v = c.m && ['lossH','n','cost'].includes(t.k) ? c.s[t.k]/(c.nw||1) : c.s[t.k], bad = !c.m && t.tg!=null && !c.part && (t.up ? v < t.tg : v > t.tg);
           const hl = c.m || t.vs.length<2 ? '' : c.x===bW ? ' hb' : c.x===wW ? ' hw' : '';
-          h += `<td class="n${c.m?' mo':''}${c.w===opt.week?' cur':''}${c.part?' pt':''}${bad?' bad':''}${hl}" title="${esc(c.lbl)}${c.m?' ('+esc(c.sub)+' · 로스·건수·F-COST 는 주평균)':''} ${fx(v,t.dp)} ${t.u}">${c.s.days.length?(v>=100000?f0(v/1000)+'k':v>=10000?f1(v/1000,1)+'k':fx(v,t.dp)):'–'}</td>`; });
+          h += `<td class="n${c.m?' mo':''}${c.w===opt.week?' cur':''}${c.part?' pt':''}${bad?' bad':''}${hl}${oldC(c)?' old':''}" title="${esc(c.lbl)}${c.m?' ('+esc(c.sub)+' · 로스·건수·F-COST 는 주평균)':''} ${fx(v,t.dp)} ${t.u}">${c.s.days.length?(v>=100000?f0(v/1000)+'k':v>=10000?f1(v/1000,1)+'k':fx(v,t.dp)):'–'}</td>`; });
         /* 전주 대비 */
         { const cv = CUR ? CUR.s[t.k] : null, pv = PREV ? PREV.s[t.k] : null;
           if (cv==null || pv==null) h += `<td class="c dl">–</td>`;
