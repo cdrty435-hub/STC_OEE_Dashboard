@@ -2156,7 +2156,7 @@ function unpivotRaw(rows){
       const v = toNum(r[k]);
       if(v > 0){
         const code = normCode(k);
-        loss.push({d:d, m:m, c:catOf(code), i:k.trim(), l:v, s:subOf(code), w:wk, u:isUDT(code)});
+        loss.push({d:d, m:m, c:catOf(code), i:k.trim(), l:v, s:subOf(code), w:wk, u:isUDT(code), sh:String(r['교대']||'').trim()});
       }
     });
   });
@@ -2216,6 +2216,12 @@ function clearHighlight(chart, baseColors){
 let RUN = [];
 let LOSS = [];
 /* 10번 수리이력(iframe)에서 기간별 설비 가동률을 가져가는 창구 — 가동률 = 가동 ÷ (가동 + 전체 로스) */
+/* 10번 수리이력(iframe)의 「OEE 검증」 달력이 쓰는 창구 — A_가동률 원본에서 펼친 로스 행 그대로 */
+window.stcOeeData = function(){
+  if(!RUN.length) return null;
+  return { loss: LOSS.map(r=>({d:r.d, m:r.m, i:r.i, l:r.l, c:r.c, sh:r.sh||''})), runDays: [...new Set(RUN.filter(r=>r.r>0||r.p>0).map(r=>r.d+'|'+r.m))],
+           minStop: MIN_STOP, udt: [...UDT_SET], src: DATA_SOURCE };
+};
 window.stcAvailBy = function(from, to){
   if(!RUN.length) return null;
   const run={}, loss={};
@@ -7787,6 +7793,36 @@ loadData();
 .kw table.kw-d td.rk{text-align:center;vertical-align:middle;font-weight:800;color:#c62828;}
 .kw textarea{width:100%;box-sizing:border-box;border:1px dashed #c9d2dc;border-radius:5px;padding:4px 5px;font:inherit;font-size:11px;min-height:54px;resize:vertical;background:#fffef5;}
 .kw .kw-note{font-size:10.5px;color:#6b7280;margin-top:4px;}
+.kw .kw-exp{margin-top:12px;border:1px solid #dbe3ec;border-radius:10px;background:#fbfcfe;padding:12px 14px 14px;break-inside:avoid;}
+.kw .kw-exp > .eh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.kw .kw-exp > .eh b{font-size:15px;color:#1f3864;} .kw .kw-exp > .eh small{font-size:11px;color:#64748b;}
+.kw .kw-exp .hl{font-size:17px;font-weight:900;color:#0f172a;margin:2px 0 10px;line-height:1.4;}
+.kw .kw-exp .eg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.kw .kw-exp .ec{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;}
+.kw .kw-exp .ec.w2{grid-column:1/-1;}
+.kw .kw-exp .ec > h5{margin:0 0 8px;font-size:13.5px;color:#1f3864;display:flex;align-items:center;gap:6px;}
+.kw .kw-exp .ec > h5 i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#1f3864;color:#fff;font-size:11.5px;}
+.kw .kw-exp .pills{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:10px;}
+.kw .kw-exp .pl{border:1px solid #e2e8f0;border-radius:8px;padding:7px 9px;background:#f8fafc;}
+.kw .kw-exp .pl .k{font-size:11.5px;color:#64748b;font-weight:700;} .kw .kw-exp .pl .v{font-size:18px;font-weight:900;color:#1f3864;font-variant-numeric:tabular-nums;} .kw .kw-exp .pl .v small{font-size:11px;color:#64748b;font-weight:600;}
+.kw .kw-exp .pl .d{font-size:11.5px;font-weight:800;} .kw .kw-exp .pl .t{font-size:11px;color:#64748b;}
+.kw .kw-exp .jg{display:inline-block;margin-top:3px;padding:1px 9px;border-radius:9px;font-size:11.5px;font-weight:800;}
+.kw .kw-exp .jg.ok{background:#e6f4f1;color:#0f766e;} .kw .kw-exp .jg.ng{background:#fdecea;color:#b42318;} .kw .kw-exp .jg.na{background:#f1f5f9;color:#64748b;}
+.kw .kw-exp .ms{display:flex;flex-direction:column;gap:7px;}
+.kw .kw-exp .m{display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:start;}
+.kw .kw-exp .m > i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1f3864;color:#fff;font-size:12px;font-weight:800;}
+.kw .kw-exp .m > i.a{background:#d97706;}
+.kw .kw-exp .m b{font-size:13.5px;color:#0f172a;} .kw .kw-exp .m span{display:block;font-size:12px;color:#475569;margin-top:1px;}
+.kw .kw-exp ul{margin:0;padding-left:18px;font-size:12.5px;line-height:1.6;color:#1f2733;} .kw .kw-exp ul li b{color:#0f172a;}
+.kw .kw-exp .lb2{font-size:12px;font-weight:800;margin:6px 0 2px;} .kw .kw-exp .lb2.g{color:#0f766e;} .kw .kw-exp .lb2.r{color:#b42318;} .kw .kw-exp .lb2.a{color:#b45309;}
+.kw .kw-exp .br{display:flex;flex-direction:column;gap:6px;}
+.kw .kw-exp .br svg{width:100%;max-width:470px;height:auto;display:block;margin:0 auto;}
+.kw .kw-exp .ty .r{display:grid;grid-template-columns:96px 1fr;gap:6px;align-items:center;margin:4px 0;font-size:12px;}
+.kw .kw-exp .ty .bw{position:relative;height:18px;} .kw .kw-exp .ty .bw::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;border-left:1px solid #cbd5e1;}
+.kw .kw-exp .ty .bar{position:absolute;top:2px;height:14px;border-radius:2px;} .kw .kw-exp .ty .bv{position:absolute;top:0;font-size:11.5px;font-weight:800;white-space:nowrap;line-height:18px;}
+.kw .kw-exp .why2{margin-top:8px;padding:8px 10px;background:#f1f5f9;border-radius:6px;font-size:12.5px;line-height:1.55;}
+.kw .kw-exp .g{color:#0f766e;font-weight:800;} .kw .kw-exp .r{color:#b42318;font-weight:800;}
+@media (max-width:900px){ .kw .kw-exp .eg,.kw .kw-exp .br{grid-template-columns:1fr;} .kw .kw-exp .pills{grid-template-columns:repeat(2,1fr);} }
 .kw .kw-empty{padding:10px;border:1px dashed #cbd5e1;border-radius:8px;color:#6b7280;font-size:12px;}
 .kw table.kw-m td,.kw table.kw-a td{font-size:11px;line-height:1.4;}
 .kw table.kw-m th.mh{font-size:13px;color:#b71c1c;font-weight:900;}
@@ -8317,6 +8353,131 @@ loadData();
       };
       h += `<div class="kw-tcs">${T.map(chart).join('')}</div>`;
       h += `<div class="kw-note">※ 지난 달 = 월별 칸(MTTR·MTBF 는 그 달 전체 기준 · 로스시간·고장건수·F-COST 는 주평균) · 이번 달 = 주차별 · 변화 = 전주 대비 가장 크게 늘고 준 원인 (초록 = 감소 · 빨강 = 증가) · 각 주차는 1번 지표 요약과 같은 기준(${C.std?'계획외 고장 UDT':'전체 로스'} · 최소정지 ${C.minStop}분)으로 다시 집계 · 평균은 부분 주차를 뺀 ${FULL.length}주 기준 · 제안 = 평균에서 10% 개선 (MTBF 는 +10%, 나머지는 −10%) · 빨강 칸 = 목표 미달 주 · MTTR/MTBF 목표은 상단 목표값과 같은 저장값 · 이 브라우저에 저장</div>`;
+
+      /* --- 해설 (발표용) : 1번 주간 요약 · 2번 지표 추이를 읽는 법을 데이터로 자동 작성 ---------
+         ① 결론  ② 목표 대비  ③ 원인 분해(건수 효과 × 수리시간 효과 · 고장유형)  ④ Worst 설비 · 다음 주 확인 */
+      const expHTML = (()=>{
+        if (!Q || !PREV || !CUR) return '';
+        const wk = esc(opt.week), pw = esc(PREV.w);
+        const pct = (c,p) => p ? Math.round(Math.abs(c-p)/p*100) : 0;
+        const fv = (t,v) => t.k==='cost' ? f0(v) : fx(v,t.dp);
+        const uu = t => t.k==='cost' ? ' THB' : t.u==='건' ? '건' : t.u==='h/건' ? 'h' : t.u;
+        /* 목표 판정 */
+        const J = T.map(t=>{ const c = S[t.k], p = Q[t.k], d = c-p, good = t.up ? d>0 : d<0, eq = Math.abs(d) < Math.pow(10,-(t.dp||0))/2;
+          const hit = t.tg==null ? null : (t.up ? c >= t.tg : c <= t.tg), gap = t.tg==null ? 0 : (t.up ? t.tg - c : c - t.tg);
+          const rk = t.vs.length ? t.vs.filter(v=> t.up ? v > c : v < c).length + 1 : null;
+          return { t, c, p, d, good, eq, hit, gap, rk, n: t.vs.length }; });
+        const withT = J.filter(x=>x.hit!=null), okN = withT.filter(x=>x.hit).length;
+        const jL = J.find(x=>x.t.k==='lossH'), jC = J.find(x=>x.t.k==='cost'), jA = T.find(t=>t.k==='lossH');
+        const dL = S.lossH - Q.lossH, dn = S.n - Q.n, dC = S.cost - Q.cost;
+        /* 로스시간 = 건수 × MTTR → 건수 효과 (전주 MTTR 기준) + 수리시간 효과 (금주 건수 기준) */
+        const eN = dn * Q.mttr, eM = S.n * (S.mttr - Q.mttr);
+        const eN2 = dn * S.mttr, eM2 = Q.n * (S.mttr - Q.mttr);   // 순서를 바꾼 경우
+        const same = Math.abs(dL) > 0.05 && Math.sign(eN) === Math.sign(dL) && Math.sign(eM) === Math.sign(dL);
+        const shM = same ? Math.round(eM/dL*100) : null, shN = same ? 100 - shM : null;
+        const shM2 = same && Math.sign(eM2)===Math.sign(dL) && Math.sign(eN2)===Math.sign(dL) ? Math.round(eM2/dL*100) : null;
+        const down = dL < 0;
+        /* 고장유형별 변화 */
+        const ks = [...new Set(Object.keys(S.codeH).concat(Object.keys(Q.codeH)))];
+        const TY = ks.map(k=>({ k, d:(S.codeH[k]||0)-(Q.codeH[k]||0), dn:(S.codeN[k]||0)-(Q.codeN[k]||0) })).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d));
+        const ty2 = TY.slice(0,2).filter(x=>Math.abs(x.d)>=0.05), rest = TY.slice(ty2.length);
+        const TYS = ty2.concat(rest.length ? [{ k:'기타 유형 '+(rest.reduce((a,x)=>a+x.d,0)<0?'(순감)':'(순증)'), d:rest.reduce((a,x)=>a+x.d,0), dn:rest.reduce((a,x)=>a+x.dn,0), etc:true }] : []);
+        /* Worst 설비 */
+        const ML = MACHINES.filter(m=>S.mc[m] && S.mc[m].lossH>0).sort((a,b)=>S.mc[b].lossH-S.mc[a].lossH);
+        const CL = MACHINES.filter(m=>S.mc[m] && S.mc[m].cost>0).sort((a,b)=>S.mc[b].cost-S.mc[a].cost);
+        const top1 = ML[0] ? S.mc[ML[0]] : null, top4 = ML.slice(0,4).reduce((a,m)=>a+S.mc[m].lossH,0);
+        const shr = v => S.lossH ? Math.round(v/S.lossH*100) : 0;
+        const mcD = MACHINES.map(m=>({ m, d:(S.mc[m]?S.mc[m].lossH:0)-(Q.mc[m]?Q.mc[m].lossH:0), c:S.mc[m] })).filter(x=>Math.abs(x.d)>=0.05);
+        const upM = mcD.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,2), dnM = mcD.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,2);
+        const cDn = MACHINES.map(m=>({ m, d:(S.mc[m]?S.mc[m].cost:0)-(Q.mc[m]?Q.mc[m].cost:0) })).filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,2);
+        const lRank = {}; ML.forEach((m,i)=>lRank[m]=i+1);
+        const jump = CL.slice(0,4).map((m,i)=>({ m, cr:i+1, lr:lRank[m]||0, ph: S.mc[m].lossH ? S.mc[m].cost/S.mc[m].lossH : 0 })).filter(x=>x.lr && x.lr - x.cr >= 2)[0];
+        const tc1 = top1 && top1.top[0];
+        const sameCause = top1 && tc1 ? ML.slice(1,4).filter(m=>S.mc[m].top[0] && S.mc[m].top[0].c===tc1.c) : [];
+
+        /* ① 결론 */
+        const miss = withT.filter(x=>!x.hit);
+        const hl = `${pw} 대비 로스시간 ${pct(S.lossH,Q.lossH)}% ${down?'감소':'증가'} · F-COST ${pct(S.cost,Q.cost)}% ${dC<0?'감소':'증가'}`
+          + (withT.length ? ` — ${withT.length}개 지표 중 ${okN}개 목표 달성` : '');
+        const pills = J.map(x=>`<div class="pl"><div class="k">${x.t.name}</div><div class="v">${fv(x.t,x.c)}<small> ${esc(x.t.u)}</small></div>`
+          + `<div class="d ${x.eq?'':x.good?'g':'r'}">${x.eq?'전주와 같음':`전주 대비 ${x.d>0?'▲':'▼'} ${fv(x.t,Math.abs(x.d))}`}</div>`
+          + `<div class="t">목표 ${x.t.tg==null?'미설정':fv(x.t,x.t.tg)}</div>`
+          + `<span class="jg ${x.hit==null?'na':x.hit?'ok':'ng'}">${x.hit==null?'목표 없음':x.hit?'달성':(x.t.up?'−':'+')+fv(x.t,x.gap)+uu(x.t)+' 미달'}</span></div>`).join('');
+        const avgPos = jA ? (S.lossH <= jA.avg ? `${jA.vs.length}주 평균(${f1(jA.avg,1)}h) 아래` : `${jA.vs.length}주 평균(${f1(jA.avg,1)}h) 위`) : '';
+        const m1 = [`${pw} ${f1(Q.lossH,1)}h · ${f0(Q.cost)} THB → ${wk} ${f1(S.lossH,1)}h · ${f0(S.cost)} THB`,
+          `로스시간 ${sgn(dL,1)}h (${down?'−':'+'}${pct(S.lossH,Q.lossH)}%) · F-COST ${dC<0?'−':'+'}${f0(Math.abs(dC))} THB (${dC<0?'−':'+'}${pct(S.cost,Q.cost)}%) — ${avgPos}`];
+        const m2 = same
+          ? [`${down?'감소':'증가'}의 ${Math.max(shM,shN)}%는 ${shM>=shN?'수리시간(MTTR)':'고장건수'} ${down?'감소':'증가'}, ${Math.min(shM,shN)}%는 ${shM>=shN?'고장건수':'수리시간'} ${down?'감소':'증가'}`,
+             `MTTR ${f1(Q.mttr,2)} → ${f1(S.mttr,2)}h 효과 ${sgn(eM,1)}h · 건수 ${Q.n} → ${S.n}건 효과 ${sgn(eN,1)}h`]
+          : [`고장건수와 수리시간이 반대로 움직임 — 건수 효과 ${sgn(eN,1)}h · 수리시간 효과 ${sgn(eM,1)}h`,
+             `MTTR ${f1(Q.mttr,2)} → ${f1(S.mttr,2)}h · 건수 ${Q.n} → ${S.n}건 → 합계 ${sgn(dL,1)}h`];
+        const m3 = [ (miss.length ? `남은 과제 : ${miss.map(x=>x.t.name).join('·')} 목표 미달` : (withT.length ? `목표를 정한 ${withT.length}개 지표 모두 달성 — 유지가 과제` : `목표 미설정 — 2번 표에서 목표를 정하면 판정이 붙음`)) + (top1 ? `, DC${top1.m} 로스시간 1위` : ''),
+          top1 ? `DC${top1.m} ${f1(top1.lossH,1)}h (${shr(top1.lossH)}%)${tc1?' · 최대 고장 '+esc(tc1.c)+' '+f1(tc1.h,1)+'h':''}${upM.length?' — 증가 설비 : '+upM.map(x=>'DC'+x.m+' +'+f1(x.d,1)+'h').join(', '):''}` : '' ];
+        const card1 = `<div class="ec w2"><h5><i>1</i>결론 — 1번 주간 요약</h5><div class="hl">${hl}</div><div class="pills">${pills}</div>
+          <div class="ms">${[m1,m2,m3].map((m,i)=>`<div class="m"><i class="${i===2?'a':''}">${i+1}</i><div><b>${m[0]}</b><span>${m[1]}</span></div></div>`).join('')}</div></div>`;
+
+        /* ② 목표 대비 */
+        const bestTxt = x => x.rk===1 && x.n>2 ? ` — ${x.n}주 중 최고` : x.rk && x.n>2 && x.rk <= Math.ceil(x.n/4) ? ` — ${x.n}주 중 ${x.rk}위` : '';
+        const goodL = J.filter(x=>x.good && !x.eq).map(x=>`<li><b>${x.t.name} ${fv(x.t,x.c)}${uu(x.t)}</b> (${pw} ${fv(x.t,x.p)})${bestTxt(x)}</li>`);
+        const badL = J.filter(x=>(!x.good && !x.eq) || x.hit===false).map(x=>`<li><b>${x.t.name} ${fv(x.t,x.c)}${uu(x.t)}</b>${x.hit===false?` — 목표 ${fv(x.t,x.t.tg)} 대비 ${fv(x.t,x.gap)}${uu(x.t)} 미달`:''}${!x.good && !x.eq?` · 전주보다 ${x.t.up?'낮아짐':'늘어남'}`:''}</li>`);
+        const revL = T.filter(t=>t.tg!=null && t.vs.length>=4 && (t.up ? t.tg < t.avg*0.9 : t.tg > t.avg*1.1)).map(t=>`<li><b>${t.name} 목표 ${fv(t,t.tg)}</b>는 ${t.vs.length}주 평균(${fv(t,t.avg)})보다 ${t.up?'낮아':'높아'} 변별력이 약함 → 제안 ${fv(t,t.sug)}</li>`)
+          .concat(T.filter(t=>t.tg==null).map(t=>`<li><b>${t.name}</b> 목표 미설정 — 제안 ${fv(t,t.sug)}</li>`));
+        const card2 = `<div class="ec"><h5><i>2</i>목표 대비 — 2번 지표 추이 표</h5>`
+          + (goodL.length ? `<div class="lb2 g">좋아진 점</div><ul>${goodL.join('')}</ul>` : '')
+          + (badL.length ? `<div class="lb2 r">아쉬운 점</div><ul>${badL.join('')}</ul>` : '')
+          + (revL.length ? `<div class="lb2 a">목표 재검토 제안</div><ul>${revL.join('')}</ul>` : '') + `</div>`;
+
+        /* ③ 원인 분해 — 브리지 SVG */
+        const BW = 440, BH = 210, top = 26, base = 172, steps = [Q.lossH, Q.lossH+eN, S.lossH];
+        const mx = Math.max(...steps, 1) * 1.08, yy = v => base - v/mx*(base-top);
+        const bars = [ { lb:`${pw}`, sub:'로스시간', a:0, b:Q.lossH, c:'#1e3c72', t:f1(Q.lossH,1) },
+          { lb:'건수 효과', sub:`${Q.n}→${S.n}건`, a:Q.lossH, b:Q.lossH+eN, c:eN<0?'#0f766e':'#b42318', t:sgn(eN,1)+(same?` (${shN}%)`:'') },
+          { lb:'수리시간 효과', sub:`MTTR ${f1(Q.mttr,2)}→${f1(S.mttr,2)}h`, a:Q.lossH+eN, b:S.lossH, c:eM<0?'#0f766e':'#b42318', t:sgn(eM,1)+(same?` (${shM}%)`:'') },
+          { lb:`${wk}`, sub:'로스시간', a:0, b:S.lossH, c:'#1e3c72', t:f1(S.lossH,1) } ];
+        let sv = `<svg viewBox="0 0 ${BW} ${BH}" role="img" aria-label="로스시간 브리지"><line x1="10" x2="${BW-10}" y1="${base}" y2="${base}" stroke="#cbd5e1"/>`;
+        bars.forEach((b,i)=>{ const x = 22 + i*104, w = 72, y1 = yy(Math.max(b.a,b.b)), y2 = yy(Math.min(b.a,b.b));
+          sv += `<rect x="${x}" y="${y1.toFixed(1)}" width="${w}" height="${Math.max(1,y2-y1).toFixed(1)}" fill="${b.c}" rx="2"/>`
+             + `<text x="${x+w/2}" y="${(y1-6).toFixed(1)}" text-anchor="middle" font-size="12.5" font-weight="800" fill="${b.c==='#1e3c72'?'#0f172a':b.c}">${b.t}</text>`
+             + `<text x="${x+w/2}" y="${base+15}" text-anchor="middle" font-size="11" fill="#475569" font-weight="700">${b.lb}</text>`
+             + `<text x="${x+w/2}" y="${base+29}" text-anchor="middle" font-size="10" fill="#64748b">${b.sub}</text>`;
+          if (i<3){ const nx = bars[i].b; sv += `<line x1="${x+w}" x2="${x+104}" y1="${yy(nx).toFixed(1)}" y2="${yy(nx).toFixed(1)}" stroke="#94a3b8" stroke-dasharray="3 2"/>`; } });
+        sv += `</svg>`;
+        const mxT = Math.max(...TYS.map(x=>Math.abs(x.d)), 0.1);
+        const tyH0 = TYS.map(x=>{ const w = Math.abs(x.d)/mxT*46, neg = x.d<0, col = neg?'#0f766e':'#b42318';
+          return `<div class="r"><span title="${esc(x.k)}"><b>${esc(x.k)}</b></span><div class="bw"><div class="bar" style="background:${col};${neg?`right:50%;width:${w}%`:`left:50%;width:${w}%`}"></div>`
+            + `<span class="bv" style="color:${col};${neg?`left:51%`:`right:51%`}">${sgn(x.d,1)}h · ${x.dn>0?'+':x.dn<0?'−':'±'}${Math.abs(x.dn)}건</span></div></div>`; }).join('');
+        let why = '';
+        if (same && down) why = shM >= 60 ? `건수는 ${Math.abs(dn)}건 줄었지만 <b>수리시간 단축 효과가 더 큼</b> → 「고장이 덜 난 주」보다 <b>「긴 고장이 없던 주」</b>. 장시간 수리가 다시 생기면 바로 반등할 수 있으므로, 고장건수(MTBF) 개선이 함께 확인되어야 실제 개선으로 볼 수 있음.`
+            : shN >= 60 ? `<b>고장 자체가 줄어든 주</b> — 건수 감소가 주된 원인. 예방·개선 활동의 효과로 볼 수 있으며 다음 주에도 건수가 유지되는지 확인.`
+            : `건수 감소와 수리시간 단축이 <b>함께</b> 작용한 주.`;
+        else if (same && !down) why = shM >= 60 ? `건수보다 <b>한 번의 수리가 길어진 것</b>이 주된 원인 → 장시간 고장 설비의 원인과 예비품·대응 절차 확인 필요.`
+            : shN >= 60 ? `<b>고장이 자주 난 주</b> — 건수 증가가 주된 원인 → 반복 고장 설비의 근본 원인 확인 필요.` : `건수 증가와 수리시간 증가가 함께 작용.`;
+        else why = `고장건수와 수리시간이 반대로 움직임 (건수 효과 ${sgn(eN,1)}h · 수리시간 효과 ${sgn(eM,1)}h) — 큰 쪽이 결과를 결정.`;
+        if (TYS.length && !TYS[0].etc) why += ` 고장유형으로는 <b>${esc(TYS[0].k)} ${sgn(TYS[0].d,1)}h</b>${TYS[1]&&!TYS[1].etc?` · <b>${esc(TYS[1].k)} ${sgn(TYS[1].d,1)}h</b>`:''}가 변화의 대부분.`;
+        const card3 = `<div class="ec"><h5><i>3</i>원인 분해 — 로스시간 = 고장건수 × MTTR</h5><div class="br"><div>${sv}</div>`
+          + `<div><div class="lb2" style="color:#1f3864;margin-top:0">고장유형별 변화 (${pw} → ${wk})</div><div class="ty">${tyH0}</div></div></div>`
+          + `<div class="why2"><b>해석</b> — ${why}${shM2!=null && Math.abs(shM2-shM)>=5 ? ` <span style="color:#64748b">(계산 순서를 바꾸면 수리시간 효과 ${shM2}% — ${(shM>=50)===(shM2>=50)?'어느 쪽이든 결론은 같음':'두 효과가 비슷한 수준'})</span>` : ''}</div></div>`;
+
+        /* ④ Worst 설비 · 다음 주 확인 */
+        const wl = [];
+        if (top1) wl.push(`<li><b>DC${top1.m} 로스시간 1위</b> ${f1(top1.lossH,1)}h (${shr(top1.lossH)}%)${tc1?` · 최대 고장 ${esc(tc1.c)} ${f1(tc1.h,1)}h`:''}${sameCause.length?` — ${sameCause.map(m=>'DC'+m).join('·')}도 같은 「${esc(tc1.c)}」`:''}</li>`);
+        if (ML.length>=4) wl.push(`<li>상위 4대(${ML.slice(0,4).map(m=>'DC'+m).join('·')})가 로스시간의 <b>${shr(top4)}%</b></li>`);
+        if (dnM.length) wl.push(`<li><span class="g">크게 준 설비</span> : ${dnM.map(x=>`DC${x.m} ${sgn(x.d,1)}h`).join(' · ')}</li>`);
+        if (upM.length) wl.push(`<li><span class="r">늘어난 설비</span> : ${upM.map(x=>`DC${x.m} +${f1(x.d,1)}h${x.c&&x.c.top[0]?' ('+esc(x.c.top[0].c)+')':''}`).join(' · ')}</li>`);
+        if (jump) wl.push(`<li><b>F-COST</b> : DC${jump.m}는 로스시간 ${jump.lr}위지만 금액 <b>${jump.cr}위</b> — 시간당 손실 약 ${f0(jump.ph)} THB/h (M/C Rate 차이)</li>`);
+        if (cDn.length) wl.push(`<li>F-COST 최대 감소 : ${cDn.map(x=>`DC${x.m} −${f0(Math.abs(x.d))}`).join(' · ')} THB</li>`);
+        const nx = [];
+        if (top1 && tc1) nx.push(`DC${top1.m}${sameCause.length?'·'+sameCause.map(m=>'DC'+m).join('·'):''} 「${esc(tc1.c)}」 재발 여부`);
+        upM.forEach(x=>{ if(!top1 || x.m!==top1.m) nx.push(`DC${x.m} 증가 원인${x.c&&x.c.top[0]?' ('+esc(x.c.top[0].c)+')':''}`); });
+        miss.forEach(x=>nx.push(`${x.t.name} 목표 ${fv(x.t,x.t.tg)}${uu(x.t)} ${x.t.up?'이상':'이하'}`));
+        if (same && down && shM>=60) nx.push('고장건수 감소가 이어지는지 (회복 → 개선 확인)');
+        const card4 = `<div class="ec w2"><h5><i>4</i>Worst 설비 · 다음 주 확인 포인트</h5><div class="eg"><div><ul>${wl.join('')}</ul></div>`
+          + (nx.length ? `<div><div class="lb2 a" style="margin-top:0">다음 주 확인</div><ul>${nx.slice(0,5).map(x=>`<li>${x}</li>`).join('')}</ul></div>` : '') + `</div></div>`;
+
+        return `<div class="kw-exp"><div class="eh"><b>📋 해설 — ${pw} → ${wk} 이렇게 읽습니다 (발표용)</b><small>1번 주간 요약 · 2번 지표 추이 값으로 자동 작성 · 주차를 바꾸면 함께 바뀜</small></div>`
+          + `<div class="eg">${card1}${card2}${card3}${card4}</div></div>`;
+      })();
+      h += expHTML;
     }
     /* --- FAC별 종합 성과 (설비 KPI 대시보드와 같은 카드) — 주간보고만 ---
        가용률 = 가동 ÷ (가동 + 고장) · 순위 = 가용률 높은 순 · 누적 순위 = 데이터 첫 주 ~ 이번 주 주마다 매긴 순위 횟수
