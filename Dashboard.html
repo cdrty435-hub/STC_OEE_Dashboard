@@ -97,6 +97,29 @@ select,input[type=search]{font:inherit;font-size:13px;color:var(--ink);backgroun
 .gb{position:absolute;top:8px;height:14px;border-radius:3px}
 .today{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);z-index:1}
 /* tasks */
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button{border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:6px 12px;border-radius:999px;font-weight:600;font-size:13px;display:inline-flex;gap:6px;align-items:center}
+.tabs button b{font-family:var(--mono);font-size:11px;background:var(--line2);color:var(--ink);padding:0 6px;border-radius:999px}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.tabs button[aria-selected="true"] b{background:var(--accent);color:var(--on-accent)}
+.tsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.tsum div{background:var(--sunk);padding:8px 10px;display:flex;flex-direction:column}
+.tsum span{font-size:11px;color:var(--muted);font-weight:600}
+.tsum b{font-family:var(--mono);font-size:20px;font-variant-numeric:tabular-nums}
+.twrap{overflow:auto;border:1px solid var(--line);border-radius:6px;max-height:75vh}
+table.tt{border-collapse:separate;border-spacing:0;font-size:12px;min-width:1500px;width:100%}
+.tt th{position:sticky;top:0;z-index:2;background:#17202a;color:#fff;font-weight:700;padding:8px 6px;text-align:center;white-space:nowrap;font-size:11px}
+.tt th.b{background:#b45309}.tt th.a{background:#15803d}
+.tt td{border-bottom:1px solid var(--line2);border-right:1px solid var(--line2);padding:6px;vertical-align:middle;background:var(--surface)}
+.tt td.c,.tt th.c{text-align:center}
+.tt td.mono{font-family:var(--mono);font-size:11px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tt .s1{position:sticky;left:0;z-index:1;width:52px;min-width:52px;max-width:52px;box-sizing:border-box}.tt .s2{position:sticky;left:52px;z-index:1;min-width:200px;font-weight:600}
+.tt th.s1,.tt th.s2{z-index:3}
+.tt td.pb{background:color-mix(in srgb,#b45309 7%,var(--surface));width:110px}.tt td.pa{background:color-mix(in srgb,#15803d 7%,var(--surface));width:110px}
+.thumb{display:block;width:100px;aspect-ratio:4/3;border-radius:4px;overflow:hidden;border:0;padding:0;background:var(--sunk);cursor:zoom-in}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.tt td.cat{font-size:11px;font-weight:700;min-width:150px}
+.tt td.iss{min-width:200px}
 .tasks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:12px}
 .task{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .task .top{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
@@ -171,14 +194,15 @@ select,input[type=search]{font:inherit;font-size:13px;color:var(--ink);backgroun
   </section>
 
   <section class="card">
-    <h2><span data-i="tasks"></span><small id="tCount"></small></h2>
+    <h2><span data-i="teamList"></span><small id="tCount"></small></h2>
+    <div class="tabs" id="teamTabs" role="tablist"></div>
+    <div class="tsum" id="tSum"></div>
     <div class="filters">
-      <select id="fTeam" aria-label="team"></select>
       <select id="fCat" aria-label="category"></select>
       <select id="fStat" aria-label="status"></select>
       <input type="search" id="fq" data-ip="search">
     </div>
-    <div class="tasks" id="tasks"></div>
+    <div class="twrap" id="tasks"></div>
   </section>
 
   <section class="card">
@@ -195,7 +219,7 @@ select,input[type=search]{font:inherit;font-size:13px;color:var(--ink);backgroun
 const API_URL='https://script.google.com/macros/s/AKfycbyWSr_Gy2Q-VEiz7VZzM6nIW3yHC_Q1pxc3UN6sHBDQrn2o2wjuIkr6uXi3aCKQAtrulA/exec';
 const IN_GAS=(typeof google!=='undefined'&&google.script&&google.script.run);
 function api(q){
-  return fetch(API_URL+'?'+q,{redirect:'follow'}).then(r=>r.text()).then(txt=>{
+  return fetch(API_URL+'?'+q+'&_='+Date.now(),{redirect:'follow',cache:'no-store'}).then(r=>r.text()).then(txt=>{
     let j;try{j=JSON.parse(txt)}catch(e){throw new Error('API 응답을 읽을 수 없습니다. 웹앱 배포의 액세스 권한을 "모든 사용자"로 설정했는지 확인하세요.')}
     if(!j.ok)throw new Error(j.error||'API error');return j;
   });
@@ -207,14 +231,14 @@ const I18N={
   dlNote:'시트를 누르면 그 시트만 .xlsx 로 내려받습니다. 다른 시트를 참조하는 수식은 값으로 바뀝니다.',all:'전체 파일',allTeams:'모든 담당팀',allCats:'모든 분야',allStat:'모든 상태',
   search:'작업·설비 검색',st_plan:'계획',st_doing:'진행',st_done:'완료',st_hold:'보류',st_late:'지연',soon:'마감 임박',before:'개선 전',after:'개선 후',noPhoto:'사진 없음',
   owner:'담당',period:'기간',noItems:'해당 작업이 없습니다.',nothing:'확인할 작업이 없습니다.',making:'엑셀 만드는 중…',saved:'내려받았습니다',fail:'실패',
-  cnt:'건',today:'오늘',dueIn:'일 남음',overdue:'일 지남',area:'대상',lbClose:'아무 곳이나 누르면 닫힘',week:'주',task:'작업'},
+  cnt:'건',today:'오늘',dueIn:'일 남음',overdue:'일 지남',area:'대상',lbClose:'아무 곳이나 누르면 닫힘',week:'주',task:'작업',teamList:'담당팀별 작업 목록',allTab:'전체',cnt2:'작업 수',extCnt:'외부 작업',actPct:'실제 진행률',c_id:'ID',c_work:'개선 작업',c_bef:'개선 전 사진',c_aft:'개선 후 사진',c_iss:'이슈 내용',c_cat:'분야',c_area:'대상 설비·위치',c_own:'담당(팀)',c_io:'내부/외부',c_s:'계획 시작',c_e:'계획 종료',c_st:'상태',c_ap:'실제 진행률',c_late:'지연',c_prog:'진행 사항'},
  th:{title:'แดชบอร์ดปรับปรุงความปลอดภัยและระบบไฟฟ้า',updated:'ข้อมูล ณ',refresh:'รีเฟรช',total:'งานทั้งหมด',done:'เสร็จแล้ว',doing:'กำลังทำ',late:'ล่าช้า',unassigned:'ยังไม่กำหนดผู้รับผิดชอบ',ext:'งานผู้รับเหมา',
   planned:'แผน',actual:'ผลจริง',pva:'แผนเทียบผลจริง',byCat:'ความคืบหน้าตามหมวด',pvaNote:'ความคืบหน้าตามแผนเทียบกับผลจริง ณ วันนี้',byTeam:'สถานะตามทีมผู้รับผิดชอบ',teamNote:'จำนวนงาน',byIO:'ภายใน / ภายนอก',
   inside:'ภายใน',outside:'ภายนอก',attention:'ต้องติดตาม',attNote:'งานล่าช้าและงานที่ต้องเสร็จภายใน 7 วัน',gantt:'แผนงาน (Gantt)',tasks:'รายการงาน',download:'ดาวน์โหลด Excel',
   dlNote:'กดที่ชีตเพื่อดาวน์โหลดเฉพาะชีตนั้นเป็นไฟล์ .xlsx สูตรที่อ้างอิงชีตอื่นจะถูกแปลงเป็นค่า',all:'ทั้งไฟล์',allTeams:'ทุกทีม',allCats:'ทุกหมวด',allStat:'ทุกสถานะ',
   search:'ค้นหางาน·เครื่องจักร',st_plan:'วางแผน',st_doing:'กำลังทำ',st_done:'เสร็จแล้ว',st_hold:'ระงับไว้',st_late:'ล่าช้า',soon:'ใกล้ครบกำหนด',before:'ก่อนปรับปรุง',after:'หลังปรับปรุง',noPhoto:'ไม่มีรูป',
   owner:'ผู้รับผิดชอบ',period:'ระยะเวลา',noItems:'ไม่มีงานที่ตรงเงื่อนไข',nothing:'ไม่มีงานที่ต้องติดตาม',making:'กำลังสร้างไฟล์ Excel…',saved:'ดาวน์โหลดแล้ว',fail:'ไม่สำเร็จ',
-  cnt:'งาน',today:'วันนี้',dueIn:'วันก่อนครบกำหนด',overdue:'วันที่เลยกำหนด',area:'จุดที่ทำ',lbClose:'แตะที่ใดก็ได้เพื่อปิด',week:'สัปดาห์',task:'งาน'}
+  cnt:'งาน',today:'วันนี้',dueIn:'วันก่อนครบกำหนด',overdue:'วันที่เลยกำหนด',area:'จุดที่ทำ',lbClose:'แตะที่ใดก็ได้เพื่อปิด',week:'สัปดาห์',task:'งาน',teamList:'รายการงานตามทีม',allTab:'ทั้งหมด',cnt2:'จำนวนงาน',extCnt:'งานผู้รับเหมา',actPct:'ความคืบหน้าจริง',c_id:'ID',c_work:'งานปรับปรุง',c_bef:'รูปก่อนปรับปรุง',c_aft:'รูปหลังปรับปรุง',c_iss:'ปัญหาที่พบ (จากพนักงาน)',c_cat:'หมวด',c_area:'เครื่องจักร·จุดที่ทำ',c_own:'ทีมผู้รับผิดชอบ',c_io:'ภายใน/ภายนอก',c_s:'เริ่มตามแผน',c_e:'สิ้นสุดตามแผน',c_st:'สถานะ',c_ap:'ความคืบหน้าจริง',c_late:'ล่าช้า',c_prog:'ความคืบหน้า·การดำเนินการ'}
 };
 const ST_KEY={'계획':'plan','진행':'doing','완료':'done','보류':'hold'};
 const CAT_COLOR=['--c1','--c2','--c3','--c4','--c5','--c6'];
@@ -306,7 +330,7 @@ function renderFilters(keep){
   const teams=[...groups('own').keys()].map(k=>[k,teamName(k)]);
   const cats=[...groups('cat').keys()].map(k=>[k,catName(k)]);
   fillSelect($('gTeam'),'allTeams',teams,keep);fillSelect($('gCat'),'allCats',cats,keep);
-  fillSelect($('fTeam'),'allTeams',teams,keep);fillSelect($('fCat'),'allCats',cats,keep);
+  fillSelect($('fCat'),'allCats',cats,keep);
   fillSelect($('fStat'),'allStat',['plan','doing','late','done','hold'].map(k=>[k,t('st_'+k)]),keep);
 }
 function renderGantt(){
@@ -336,19 +360,48 @@ function photo(url,kind){
   return url?`<button type="button" class="ph" data-lb="${esc(url)}"><img src="${esc(url)}" alt="${esc(lab)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"><span class="lab ${kind}">${esc(lab)}</span></button>`
             :`<div class="ph"><span class="lab ${kind}">${esc(lab)}</span>${t('noPhoto')}</div>`;
 }
+let curTeam=null;
+function teamOrder(){
+  const g=groups('own');const keys=[...g.keys()];
+  return keys.sort((a,b)=>(a==='미정')-(b==='미정'));
+}
+function renderTabs(){
+  const keys=teamOrder();
+  if(curTeam===null||(curTeam!==''&&!keys.includes(curTeam)))curTeam=keys.find(k=>k!=='미정')??'';
+  const cnt=k=>DATA.tasks.filter(x=>x.own===k).length;
+  $('teamTabs').innerHTML=keys.map(k=>`<button type="button" role="tab" data-team="${esc(k)}" aria-selected="${curTeam===k}">${esc(teamName(k))}<b>${cnt(k)}</b></button>`).join('')+
+    `<button type="button" role="tab" data-team="" aria-selected="${curTeam===''}">${t('allTab')}<b>${DATA.tasks.length}</b></button>`;
+  $('teamTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{curTeam=b.dataset.team;renderTabs();renderTasks()});
+}
+function thumb(url,lab){return url?`<button type="button" class="thumb" data-lb="${esc(url)}" aria-label="${esc(lab)}"><img src="${esc(url)}" alt="${esc(lab)}" loading="lazy" referrerpolicy="no-referrer"></button>`:''}
 function renderTasks(){
-  const team=$('fTeam').value,cat=$('fCat').value,st=$('fStat').value,q=$('fq').value.trim().toLowerCase();
-  const list=DATA.tasks.filter(x=>(!team||x.own===team)&&(!cat||x.cat===cat)&&(!st||x.eff===st)&&
-    (!q||[x.id,x.work,x.iss,x.area,x.th&&x.th.work,x.th&&x.th.area].join(' ').toLowerCase().includes(q)));
+  const cat=$('fCat').value,st=$('fStat').value,q=$('fq').value.trim().toLowerCase();
+  const base=DATA.tasks.filter(x=>curTeam===''||x.own===curTeam);
+  const list=base.filter(x=>(!cat||x.cat===cat)&&(!st||x.eff===st)&&
+    (!q||[x.id,x.work,x.iss,x.area,x.prog,x.th&&x.th.work,x.th&&x.th.area,x.th&&x.th.iss].join(' ').toLowerCase().includes(q)));
+  const c=k=>base.filter(x=>x.eff===k).length;
+  $('tSum').innerHTML=`<div><span>${t('cnt2')}</span><b>${base.length}</b></div><div><span>${t('done')}</span><b style="color:var(--ok)">${c('done')}</b></div>
+    <div><span>${t('doing')}</span><b style="color:var(--run)">${c('doing')}</b></div><div><span>${t('late')}</span><b style="color:var(--bad)">${c('late')}</b></div>
+    <div><span>${t('actPct')}</span><b>${pct(avg(base.map(x=>x.act)))}</b></div><div><span>${t('extCnt')}</span><b style="color:var(--ext)">${base.filter(x=>x.io==='외부').length}</b></div>`;
   $('tCount').textContent=list.length+' '+t('cnt');
-  $('tasks').innerHTML=list.length?list.map(x=>`<article class="task">
-    <div class="top"><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${esc(x.id)}</span>${chip(x)}${x.io==='외부'?`<span class="chip ext">${t('outside')}</span>`:''}</div>
-    <div class="ttl">${esc(tx(x,'work'))}</div>
-    <div class="iss">${esc(tx(x,'iss'))}</div>
-    <div class="meta"><span>${t('owner')}: <b>${esc(teamName(x.own))}</b></span><span>${t('period')}: ${md(x.start)}–${md(x.end)}</span><span>${t('actual')} ${pct(x.act)}</span>${x.area?`<span>${t('area')}: ${esc(tx(x,'area'))}</span>`:''}</div>
-    <div class="photos">${photo(x.before,'b')}${photo(x.after,'a')}</div>
-    ${x.prog?`<div class="prog">${esc(tx(x,'prog'))}</div>`:''}
-  </article>`).join(''):`<div class="empty">${t('noItems')}</div>`;
+  if(!list.length){$('tasks').innerHTML=`<div class="empty">${t('noItems')}</div>`;return}
+  const H=[['c_id','c s1'],['c_work','s2'],['c_bef','b'],['c_aft','a'],['c_iss',''],['c_cat',''],['c_area',''],['c_own',''],['c_io','c'],['c_s','c'],['c_e','c'],['c_st','c'],['c_ap','c'],['c_late','c'],['c_prog','']];
+  $('tasks').innerHTML=`<table class="tt"><thead><tr>${H.map(([k,cl])=>`<th class="${cl}">${t(k)}</th>`).join('')}</tr></thead><tbody>`+
+   list.map(x=>{const ci=CAT_COLOR[catIdx(x.cat)];return `<tr>
+    <td class="c mono s1">${esc(x.id)}</td>
+    <td class="s2">${esc(tx(x,'work'))}</td>
+    <td class="pb">${thumb(x.before,t('before'))}</td>
+    <td class="pa">${thumb(x.after,t('after'))}</td>
+    <td class="iss">${esc(tx(x,'iss'))}</td>
+    <td class="cat" style="background:color-mix(in srgb,var(${ci}) 12%,var(--surface))">${esc(catName(x.cat))}</td>
+    <td>${esc(tx(x,'area'))}</td>
+    <td style="white-space:nowrap">${esc(teamName(x.own))}</td>
+    <td class="c">${x.io==='외부'?`<span class="chip ext">${t('outside')}</span>`:x.io?t('inside'):''}</td>
+    <td class="c mono">${esc(x.start)}</td><td class="c mono">${esc(x.end)}</td>
+    <td class="c">${chip(x)}</td>
+    <td class="c mono">${pct(x.act)}</td>
+    <td class="c">${x.eff==='late'?`<span class="chip late">${t('st_late')}</span>`:''}</td>
+    <td>${esc(tx(x,'prog'))}</td></tr>`}).join('')+'</tbody></table>';
   $('tasks').querySelectorAll('[data-lb]').forEach(b=>b.onclick=()=>{const lb=$('lb');lb.innerHTML=`<img src="${esc(b.dataset.lb)}" alt=""><p style="color:#fff;font-size:12px;margin:8px 0 0;text-align:center">${t('lbClose')}</p>`;lb.hidden=false;lb.onclick=()=>lb.hidden=true});
 }
 function renderDl(){
@@ -374,11 +427,11 @@ function download(b){
 }
 function renderAll(keep){
   applyI18n();$('upd').textContent=DATA.updated;
-  renderKpis();renderCats();renderTeams();renderAtt();renderFilters(keep);renderGantt();renderTasks();renderDl();
+  renderKpis();renderCats();renderTeams();renderAtt();renderFilters(keep);renderGantt();renderTabs();renderTasks();renderDl();
 }
 function load(){
   $('refresh').disabled=true;
-  const ok=d=>{DATA=enrich(d);$('loading').hidden=true;$('refresh').disabled=false;renderAll(true)};
+  const ok=d=>{window.__lastLoad=Date.now();DATA=enrich(d);$('loading').hidden=true;$('refresh').disabled=false;renderAll(true)};
   const bad=e=>{$('loading').textContent=(e&&e.message)||String(e);$('refresh').disabled=false};
   if(window.SAMPLE_DATA)ok(window.SAMPLE_DATA);
   else if(IN_GAS)google.script.run.withSuccessHandler(ok).withFailureHandler(bad).getDashboardData();
@@ -387,9 +440,12 @@ function load(){
 function setLang(l){lang=l;try{localStorage.setItem('db_lang',l)}catch(e){};if(DATA)renderAll(true);else applyI18n()}
 $('lk').onclick=()=>setLang('ko');$('lt').onclick=()=>setLang('th');$('refresh').onclick=load;
 ['gTeam','gCat'].forEach(id=>$(id).onchange=renderGantt);
-['fTeam','fCat','fStat'].forEach(id=>$(id).onchange=renderTasks);$('fq').oninput=renderTasks;
+['fCat','fStat'].forEach(id=>$(id).onchange=renderTasks);$('fq').oninput=renderTasks;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('lb').hidden=true});
 applyI18n();load();
+// 5분마다 자동 새로고침 (화면이 보이는 동안만)
+setInterval(()=>{if(!document.hidden&&!$('refresh').disabled)load()},5*60*1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&DATA&&Date.now()-(window.__lastLoad||0)>60000)load()});
 </script>
 </body>
 </html>
