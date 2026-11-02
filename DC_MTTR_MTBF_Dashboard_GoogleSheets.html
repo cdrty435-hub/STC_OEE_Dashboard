@@ -572,6 +572,7 @@
   .lx-foot{font-family:var(--lxmono); font-size:10.5px; color:var(--lxmute); line-height:1.95;
     border-top:1px solid var(--lxline); padding-top:14px; margin-top:14px;}
   .lx-foot b{color:var(--lxsub); font-weight:500;}
+.gp-bar select{border:1px solid #d8dfe7;border-radius:6px;padding:4px 6px;font-size:13px;background:#fff}
 .gp-bar input[type=date]{border:1px solid #d8dfe7;border-radius:6px;padding:4px 7px;font-size:13px;background:#fff}
 .gp-q{display:inline-flex;gap:0;border:1px solid #d8dfe7;border-radius:7px;overflow:hidden;margin-left:6px}
 .gp-q button{border:0;border-right:1px solid #e5e9ef;background:#fff;padding:4px 10px;font-size:12px;cursor:pointer;color:#334155}
@@ -579,6 +580,7 @@
 .rep-bar{flex-wrap:wrap;row-gap:6px}
 .rep-bar .rp-g{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border:1px solid #e3d9c4;border-radius:8px;background:#fff}
 .rep-bar .rp-g>b{font-size:12px;color:#1f3864}
+.rep-bar .rp-g.hid{opacity:.55}
 .rep-bar .rp-c{display:inline-flex;border:1px solid #d8dfe7;border-radius:6px;overflow:hidden}
 .rep-bar .rp-c button{border:0;border-right:1px solid #e5e9ef;background:#fff;padding:3px 8px;font-size:11.5px;cursor:pointer;color:#334155}
 .rep-bar .rp-c button:last-child{border-right:0} .rep-bar .rp-c button.on{background:#1f3864;color:#fff;font-weight:700}
@@ -1039,6 +1041,7 @@
   <div class="stdbar gp-bar">
     <span class="lb">분석 기간</span>
     <input type="date" id="gpFrom"> <span class="lb">~</span> <input type="date" id="gpTo">
+    <span class="lb" style="margin-left:6px">주차</span><select id="gpWf"></select> <span class="lb">~</span> <select id="gpWt"></select>
     <span class="gp-q" id="gpQuick"><button type="button" data-q="all">전체</button><button type="button" data-q="m0">이번 달</button><button type="button" data-q="m1">지난 달</button><button type="button" data-q="w4">최근 4주</button><button type="button" data-q="w8">최근 8주</button><button type="button" data-q="w13">최근 13주</button></span>
     <span class="lb" id="gpNote" style="margin-left:auto"></span>
   </div>
@@ -1061,11 +1064,8 @@
   </div>
   <div class="stdbar rep-bar">
     <span class="lb">주간보고 항목별 고장유형</span>
-    <span class="rp-g"><b>주간 요약</b><span class="rp-c" data-rp="s1"></span></span>
-    <span class="rp-g"><b>지표 주간 추이</b><span class="rp-c" data-rp="s2"></span></span>
-    <span class="rp-g"><b>FAC별 종합 성과</b><span class="rp-c" data-rp="s3"></span>
-      <span class="lb">누적 1위</span><select id="rpRk"><option value="4">최근 4주</option><option value="8">최근 8주</option><option value="13">최근 13주</option><option value="all">전체 주차</option></select></span>
-    <span class="lb" id="rpNote" style="margin-left:auto"></span>
+    <span id="rpItems" style="display:contents"></span>
+    <span class="lb" id="rpNote" style="flex-basis:100%;text-align:right"></span>
   </div>
   <div class="udt-panel" id="udtPanel">
     <div id="udtBody"></div>
@@ -2456,6 +2456,12 @@ function gpQuick(q){
   if(wk){ /* 사내 주차(수~화) 단위로 끊는다 */ const t=new Date(mx+'T00:00:00Z'); const back=(t.getUTCDay()-3+7)%7; const ws=add(mx,-back); return [add(ws,-(wk-1)*7), mx]; }
   return [mn, mx];
 }
+function gpWeekSpans(){ const W = {}; RUN.forEach(r=>{ if(!r.w) return; const x = W[r.w] || (W[r.w] = [r.d, r.d]); if(r.d < x[0]) x[0] = r.d; if(r.d > x[1]) x[1] = r.d; });
+  /* 사내 주차 = 수~화 : 기록이 덜 찬 주도 수요일~화요일로 넓힌다 */
+  Object.keys(W).forEach(k=>{ const a = W[k][0], t = new Date(a+'T00:00:00Z'), back = (t.getUTCDay()-3+7)%7; t.setUTCDate(t.getUTCDate()-back);
+    const s0 = t.toISOString().slice(0,10); t.setUTCDate(t.getUTCDate()+6); const e0 = t.toISOString().slice(0,10);
+    if(s0 < W[k][0]) W[k][0] = s0; if(e0 > W[k][1]) W[k][1] = e0; });
+  return W; }
 function gpApply(init){
   const f = document.getElementById('gpFrom'), t = document.getElementById('gpTo'); if(!f || !RUN.length) return;
   const [mn, mx] = gpBounds();
@@ -2475,6 +2481,14 @@ function gpApply(init){
   /* 1번 설비별 MTTR/MTBF 주차 선택 = 기간에 걸친 주차 */
   const wks = new Set(RUN.filter(r=>r.d>=a && r.d<=b).map(r=>r.w));
   if(wks.size){ selectedWeeks = wks; if(document.getElementById('weekChips') && document.querySelector('.week-chip[data-week]')){ refreshWeekChips(); if(!init && typeof renderHero==='function') renderHero(); } }
+  /* 주차 선택 칸 : 기간에 걸친 첫 주·끝 주 표시 */
+  { const wf = document.getElementById('gpWf'), wt = document.getElementById('gpWt');
+    if(wf && wt){ const W = gpWeekSpans(), ks = Object.keys(W).sort((x,y)=>weekNum(x)-weekNum(y));
+      const opt = ks.map(k=>`<option value="${k}">${k} (${W[k][0].slice(5).replace('-','/')}~)</option>`).join('');
+      if(wf.dataset.h !== opt){ wf.innerHTML = opt; wt.innerHTML = opt.replace(/\((\d\d\/\d\d)~\)/g,'(~$1)'); wf.dataset.h = opt; }
+      ks.forEach(k=>{ const o = wt.querySelector('option[value="'+k+'"]'); if(o) o.textContent = `${k} (~${W[k][1].slice(5).replace('-','/')})`; });
+      const kA = ks.find(k=>W[k][1] >= a) || ks[0], kB = ks.slice().reverse().find(k=>W[k][0] <= b) || ks[ks.length-1];
+      wf.value = kA; wt.value = kB; } }
   const n = Math.round((new Date(b+'T00:00:00Z') - new Date(a+'T00:00:00Z'))/864e5) + 1;
   document.getElementById('gpNote').textContent = (a===mn && b===mx ? '전체 기간' : `${n}일 · ${wks.size}개 주차`) + ' — 분석 탭의 기간·주차 선택에 적용 (주간·일일·월간 보고는 각자 선택)';
   const tag = document.getElementById('dataRangeTag');
@@ -2484,6 +2498,11 @@ function gpApply(init){
   const f = document.getElementById('gpFrom'), t = document.getElementById('gpTo'); if(!f) return;
   const on = ()=>{ f.dataset.q='custom'; gpApply(false); };
   f.addEventListener('change', on); t.addEventListener('change', on);
+  const wf = document.getElementById('gpWf'), wt = document.getElementById('gpWt');
+  const onW = ()=>{ const W = gpWeekSpans(); let A = W[wf.value], B = W[wt.value]; if(!A || !B) return;
+    if(weekNum(wf.value) > weekNum(wt.value)){ const x = A; A = B; B = x; }
+    const [mn, mx] = gpBounds(); f.value = A[0] < mn ? mn : A[0]; t.value = B[1] > mx ? mx : B[1]; f.dataset.q = 'custom'; gpApply(false); };
+  if(wf) wf.addEventListener('change', onW); if(wt) wt.addEventListener('change', onW);
   document.querySelectorAll('#gpQuick button').forEach(btn=>btn.addEventListener('click', ()=>{
     const r = gpQuick(btn.dataset.q); f.value = r[0]; t.value = r[1]; f.dataset.q = btn.dataset.q; gpApply(false); }));
 })();
@@ -2493,25 +2512,36 @@ function gpApply(init){
    · 기간은 셋 다 주간보고의 보고 주차 · FAC 누적 1위는 보고 주차까지 N주 */
 const REP_KEY = 'stc_rep_types_v1', REP_TYPES = ['설비-전기','설비-라인','금형','관리'];
 function repGet(){ let o=null; try{ o=JSON.parse(localStorage.getItem(REP_KEY)||'null'); }catch(e){} o = o||{};
-  ['s1','s2','s3'].forEach(k=>{ if(!Array.isArray(o[k])) o[k]=[]; o[k]=o[k].filter(x=>REP_TYPES.includes(x)); }); if(!o.rk) o.rk='4'; return o; }
+  ['s1','s2','s3','s4'].forEach(k=>{ if(!Array.isArray(o[k])) o[k]=[]; o[k]=o[k].filter(x=>REP_TYPES.includes(x)); }); if(!o.rk) o.rk='4'; return o; }
 function repSet(o){ try{ localStorage.setItem(REP_KEY, JSON.stringify(o)); }catch(e){} }
 function repLabel(k, a){ return a.length ? a.join(' + ') : (k==='s3' ? '종합 로스(4계통 전체)' : (STD_MODE ? '계획외 고장(UDT)' : '전체 로스')); }
+/* 보고서 섹션 ↔ 설정 키 (보고서에서 순서가 바뀌므로 현재 번호로 보여 준다) */
+const REP_UNITS = [['b0','s1','주간 요약'],['k0','s4','지표 요약'],['k3','s2','지표 주간 추이'],['k4','s3','FAC별 종합 성과']];
 function repUI(){
+  const box = document.getElementById('rpItems'); if(!box) return;
   const o = repGet();
-  document.querySelectorAll('.rep-bar .rp-c').forEach(el=>{
-    const k = el.dataset.rp, a = o[k];
-    el.innerHTML = `<button type="button" class="b${a.length?'':' on'}" data-t="">${k==='s3'?'종합 (전체 유형)':'위 기준'}</button>`
-      + REP_TYPES.map(t=>`<button type="button" class="${a.includes(t)?'on':''}" data-t="${t}">${t}</button>`).join('');
+  const L = REP_UNITS.map(([u,k,nm])=>{ const el = document.querySelector('#wkSheet [data-unit="'+u+'"]');
+    const no = el ? parseInt(((el.querySelector('.wk-no')||{}).textContent||''),10) : NaN; const hid = el && el.classList.contains('wk-hid');
+    return { u, k, nm, no: isFinite(no) ? no : null, hid }; })
+    .sort((a,b)=>(a.no==null)-(b.no==null) || (a.no||0)-(b.no||0));
+  box.innerHTML = L.map(x=>{ const a = o[x.k];
+    return `<span class="rp-g${x.hid?' hid':''}" title="${x.hid?'보고서에서 숨긴 항목':''}"><b>${x.no!=null?x.no+'. ':''}${x.nm}</b><span class="rp-c" data-rp="${x.k}">`
+      + `<button type="button" class="b${a.length?'':' on'}" data-t="">${x.k==='s3'?'종합 (전체 유형)':'위 기준'}</button>`
+      + REP_TYPES.map(t=>`<button type="button" class="${a.includes(t)?'on':''}" data-t="${t}">${t}</button>`).join('') + `</span>`
+      + (x.k==='s3' ? `<span class="lb">누적 1위</span><select id="rpRk">${[['4','최근 4주'],['8','최근 8주'],['13','최근 13주'],['all','전체 주차']].map(([v,l])=>`<option value="${v}"${o.rk===v?' selected':''}>${l}</option>`).join('')}</select>` : '')
+      + `</span>`; }).join('');
+  box.querySelectorAll('.rp-c').forEach(el=>{ const k = el.dataset.rp;
     el.querySelectorAll('button').forEach(b=>b.onclick=()=>{ const O = repGet(); let v = O[k]; const t = b.dataset.t;
       if(!t) v = []; else v = v.includes(t) ? v.filter(x=>x!==t) : v.concat([t]);
       if(v.length === REP_TYPES.length && k==='s3') v = [];
-      O[k] = v; repSet(O); repUI(); if(typeof renderWeekly==='function') renderWeekly(); });
-  });
-  const rk = document.getElementById('rpRk'); if(rk){ rk.value = o.rk; }
+      O[k] = v; repSet(O); repUI(); if(typeof renderWeekly==='function') renderWeekly(); }); });
+  const rk = document.getElementById('rpRk');
+  if(rk) rk.onchange = ()=>{ const O = repGet(); O.rk = rk.value; repSet(O); if(typeof renderWeekly==='function') renderWeekly(); };
   const n = document.getElementById('rpNote');
-  if(n) n.textContent = '기간 = 주간보고 보고 주차 (세 항목 동일) · 「위 기준」 = 지표 산출 기준(UDT/전체 로스) · 고장유형을 고르면 그 유형의 로스(최소정지 이상)를 모두 고장으로 집계';
+  if(n) n.textContent = '번호 = 지금 주간보고에 보이는 순서 (보고서에서 ▲▼로 바꾸면 여기 번호도 바뀜) · 기간 = 보고 주차 (모두 동일) · 「위 기준」 = 지표 산출 기준(UDT/전체 로스) · 유형을 고르면 그 유형의 로스(최소정지 이상)를 모두 고장으로 집계 · 지표 요약 유형은 워스트·액션에도 적용';
 }
-(function(){ const rk = document.getElementById('rpRk'); if(rk) rk.addEventListener('change', ()=>{ const O = repGet(); O.rk = rk.value; repSet(O); if(typeof renderWeekly==='function') renderWeekly(); }); repUI(); })();
+document.addEventListener('wk-ordered', ()=>{ clearTimeout(window.__rpT); window.__rpT = setTimeout(repUI, 50); });
+repUI();
 function buildWeekChips(){
   const wrap = document.getElementById('weekChips');
   wrap.innerHTML = '';
@@ -8118,7 +8148,10 @@ loadData();
   function notesSet(key,o){ try{ localStorage.setItem('stc_kw_notes_'+key, JSON.stringify(o)); }catch(e){} }
 
   function build(opt, data){
-    const C = cfg(), P = periods(opt, data);
+    /* 지표 요약(공통 블록) : 항목별 고장유형 s4 — 고르면 그 유형의 로스만 고장 (워스트·액션도 같은 기준) */
+    const C_base = cfg(), T4_ = opt.mode === 'week' ? repTypesK('s4') : null;   /* 주간보고만 */
+    const ovr = (c0, T) => Object.assign({}, c0, { failOverride: x => T.has(typeOfCode(x.i)) && x.l >= c0.minStop });
+    const C = T4_ ? ovr(C_base, T4_) : C_base, P = periods(opt, data);
     const S = stats(data, P.cur.f, C), Q = P.prev ? stats(data, P.prev.f, C) : null;
     if (!S.days.length) return `<div class="kw"><div class="kw-empty">선택한 기간(${esc(P.cur.label)})에 가동 기록이 없습니다.</div></div>`;
     const W = worst(S), qm = m => Q ? Q.mc[m] : null;
@@ -8156,7 +8189,7 @@ loadData();
       const d = c-p; if (Math.abs(d) < Math.pow(10,-dp)/2) return '<span class="eq">±0</span>';
       const good = goodUp ? d>0 : d<0; return `<span class="${good?'dn':'up'}">${sgn(d,dp)}${dp===1&&goodUp?'%p':''}</span>`; };
     let h = `<div class="kw">`;
-    h += `<h4 class="kw-h">1. 지표 요약 <small>금기간 ${esc(P.cur.label)} · 비교 ${esc(pl)} · ${C.std ? '계획외 고장(UDT)' : '<b style="color:#dc2626">⚠ 전체 로스 기준 — 휴식·금형교체 등 계획정지 포함 (상단 [지표 산출 기준]에서 국제표준 선택 시 UDT만)</b>'} · 최소정지 ${C.minStop}분 · 목표 MTTR ≤ ${f1(C.tMttr,2)} / MTBF ≥ ${f1(C.tMtbf,2)} h/건</small></h4>`;
+    h += `<h4 class="kw-h">1. 지표 요약 <small>금기간 ${esc(P.cur.label)} · 비교 ${esc(pl)} · ${T4_ ? '고장유형 <b>'+esc([...T4_].join(' + '))+'</b>' : C.std ? '계획외 고장(UDT)' : '<b style="color:#dc2626">⚠ 전체 로스 기준 — 휴식·금형교체 등 계획정지 포함 (상단 [지표 산출 기준]에서 국제표준 선택 시 UDT만)</b>'} · 최소정지 ${C.minStop}분 · 목표 MTTR ≤ ${f1(C.tMttr,2)} / MTBF ≥ ${f1(C.tMtbf,2)} h/건</small></h4>`;
     /* 간소화 : Worst 1·2·3 칸을 빼고 목표 · 판정 칸 추가 — 주요 원인은 오른쪽 한 칸에 한 줄씩 */
     const TG = { mttr:C.tMttr, mtbf:C.tMtbf, lossH:parseFloat(LS('stc_target_loss')), n:parseFloat(LS('stc_target_cnt')), cost:parseFloat(LS('stc_target_cost')) };
     h += `<table class="kw-s kw-s2"><colgroup><col style="width:4%"><col style="width:10%"><col style="width:12%"><col style="width:13%"><col style="width:9%"><col style="width:12%"><col style="width:40%"></colgroup>`;
@@ -8322,8 +8355,8 @@ loadData();
        평균 · 최고 · 최저 · 제안 목표을 보여주고, 목표을 정하면 그래프에 선으로 표시한다.
        평균은 가동일이 적은 주(부분 주차)를 빼고 낸다. */
     /* 지표 주간 추이 : 항목별 고장유형(지표 산출 기준 아래 줄)을 고르면 그 유형만 고장으로 */
-    const T2_ = repTypesK('s2'), C_k3 = T2_ ? Object.assign({}, C, { failOverride: x => T2_.has(typeOfCode(x.i)) && x.l >= C.minStop }) : C;
-    const S_k3 = T2_ ? stats(data, P.cur.f, C_k3) : S, Q_k3 = T2_ ? (P.prev ? stats(data, P.prev.f, C_k3) : null) : Q;
+    const T2_ = repTypesK('s2'), C_k3 = T2_ ? ovr(C_base, T2_) : C_base;
+    const S_k3 = C_k3 === C ? S : stats(data, P.cur.f, C_k3), Q_k3 = C_k3 === C ? Q : (P.prev ? stats(data, P.prev.f, C_k3) : null);
     if (opt.mode === 'week'){
       const C = C_k3, S = S_k3, Q = Q_k3;
       const WKS = [...new Set(data.run.map(r=>r.w))].filter(Boolean).sort((a,b)=>wkNo(a)-wkNo(b));
@@ -8524,7 +8557,7 @@ loadData();
              `MTTR ${f1(Q.mttr,2)} → ${f1(S.mttr,2)}h · 건수 ${Q.n} → ${S.n}건 → 합계 ${sgn(dL,1)}h`];
         const m3 = [ (miss.length ? `남은 과제 : ${miss.map(x=>x.t.name).join('·')} 목표 미달` : (withT.length ? `목표를 정한 ${withT.length}개 지표 모두 달성 — 유지가 과제` : `목표 미설정 — 2번 표에서 목표를 정하면 판정이 붙음`)) + (top1 ? `, DC${top1.m} 로스시간 1위` : ''),
           top1 ? `DC${top1.m} ${f1(top1.lossH,1)}h (${shr(top1.lossH)}%)${tc1?' · 최대 고장 '+esc(tc1.c)+' '+f1(tc1.h,1)+'h':''}${upM.length?' — 증가 설비 : '+upM.map(x=>'DC'+x.m+' +'+f1(x.d,1)+'h').join(', '):''}` : '' ];
-        const card1 = `<div class="ec w2"><h5><i>1</i>결론 — 1번 주간 요약</h5><div class="hl">${hl}</div><div class="pills">${pills}</div>
+        const card1 = `<div class="ec w2"><h5><i>1</i>결론 — 주간 요약</h5><div class="hl">${hl}</div><div class="pills">${pills}</div>
           <div class="ms">${[m1,m2,m3].map((m,i)=>`<div class="m"><i class="${i===2?'a':''}">${i+1}</i><div><b>${m[0]}</b><span>${m[1]}</span></div></div>`).join('')}</div></div>`;
 
         /* ② 목표 대비 */
@@ -8533,7 +8566,7 @@ loadData();
         const badL = J.filter(x=>(!x.good && !x.eq) || x.hit===false).map(x=>`<li><b>${x.t.name} ${fv(x.t,x.c)}${uu(x.t)}</b>${x.hit===false?` — 목표 ${fv(x.t,x.t.tg)} 대비 ${fv(x.t,x.gap)}${uu(x.t)} 미달`:''}${!x.good && !x.eq?` · 전주보다 ${x.t.up?'낮아짐':'늘어남'}`:''}</li>`);
         const revL = T.filter(t=>t.tg!=null && t.vs.length>=4 && (t.up ? t.tg < t.avg*0.9 : t.tg > t.avg*1.1)).map(t=>`<li><b>${t.name} 목표 ${fv(t,t.tg)}</b>는 ${t.vs.length}주 평균(${fv(t,t.avg)})보다 ${t.up?'낮아':'높아'} 변별력이 약함 → 제안 ${fv(t,t.sug)}</li>`)
           .concat(T.filter(t=>t.tg==null).map(t=>`<li><b>${t.name}</b> 목표 미설정 — 제안 ${fv(t,t.sug)}</li>`));
-        const card2 = `<div class="ec"><h5><i>2</i>목표 대비 — 2번 지표 추이 표</h5>`
+        const card2 = `<div class="ec"><h5><i>2</i>목표 대비 — 지표 주간 추이 표</h5>`
           + (goodL.length ? `<div class="lb2 g">좋아진 점</div><ul>${goodL.join('')}</ul>` : '')
           + (badL.length ? `<div class="lb2 r">아쉬운 점</div><ul>${badL.join('')}</ul>` : '')
           + (revL.length ? `<div class="lb2 a">목표 재검토 제안</div><ul>${revL.join('')}</ul>` : '') + `</div>`;
@@ -8585,7 +8618,7 @@ loadData();
         const card4 = `<div class="ec w2"><h5><i>4</i>Worst 설비 · 다음 주 확인 포인트</h5><div class="eg"><div><ul>${wl.join('')}</ul></div>`
           + (nx.length ? `<div><div class="lb2 a" style="margin-top:0">다음 주 확인</div><ul>${nx.slice(0,5).map(x=>`<li>${x}</li>`).join('')}</ul></div>` : '') + `</div></div>`;
 
-        return `<div class="kw-exp"><div class="eh"><b>📋 해설 — ${pw} → ${wk} 이렇게 읽습니다 (발표용)</b><small>1번 주간 요약 · 2번 지표 추이 값으로 자동 작성 · 주차를 바꾸면 함께 바뀜</small></div>`
+        return `<div class="kw-exp"><div class="eh"><b>📋 해설 — ${pw} → ${wk} 이렇게 읽습니다 (발표용)</b><small>주간 요약 · 지표 주간 추이 값으로 자동 작성 · 주차를 바꾸면 함께 바뀜</small></div>`
           + `<div class="eg">${card1}${card2}${card3}${card4}</div></div>`;
       })();
       h += expHTML;
@@ -9092,7 +9125,18 @@ loadData();
       const on = visible(el);
       hs.forEach((h, j)=>{ numSpan(h).textContent = on ? (++n) + '. ' : ''; if(j===0) ctl(h, id); });
     });
+    /* 하위 항목(그래프 제목 · 해설 패널)에도 번호 — 바로 위 항목 번호를 따라 7-1. 7-2. … */
+    U.forEach(u=>{ const on = visible(u) && !u.classList.contains('wk-hid');
+      const H4 = (u.classList.contains('kw-sec') ? [...u.querySelectorAll(':scope > h4.kw-h')] : [...u.querySelectorAll('h4')].filter(h=>!h.closest('.kw')));
+      const subs = [...u.querySelectorAll('h5, .kw-exp > .eh > b')].filter(h=>!h.closest('.kw-exp .ec'));
+      const cnt = {};
+      subs.forEach(h=>{ let sp = h.querySelector(':scope > .wk-sno'); if(!sp){ sp = document.createElement('span'); sp.className = 'wk-sno'; h.insertBefore(sp, h.firstChild); }
+        const par = H4.filter(x=>x.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING).pop();
+        const base = par ? parseInt((par.querySelector(':scope > .wk-no')||{}).textContent,10) : NaN;
+        sp.textContent = on && isFinite(base) ? base + '-' + (cnt[base] = (cnt[base]||0) + 1) + '. ' : ''; });
+    });
     window.__wkOrder = order;
+    try{ document.dispatchEvent(new Event('wk-ordered')); }catch(e){}
     /* 본문이 다른 섹션 번호를 가리키는 문구도 바뀐 번호로 (예: 「④ 항목에서 원인·조치」 · 「1번 MTTR…」) */
     const N = {}; U.forEach(u=>{ const sp = u.querySelector('.wk-no'); const v = sp && parseInt(sp.textContent,10); if(v) N[u.dataset.unit] = v; });
     const vd = document.getElementById('wkVerdict');
