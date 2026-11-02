@@ -2805,7 +2805,8 @@ function weekStats(cat, byType){
     const runH = R.reduce((a,x)=>a+x.r,0)/60;
     const lossH = L.reduce((a,x)=>a+x.l,0)/60;
     const lossAllH = Lall.reduce((a,x)=>a+x.l,0)/60;
-    const n = nofCount(R, Lall, (cat==='ALL') ? null : L);
+    /* 고장유형을 직접 고른 경우(byType)는 고른 로스 1건 = 1건 — UDT 걸러내기를 다시 하지 않는다 (2번 지표 추이와 같은 셈) */
+    const n = (byType && !isAll) ? L.length : nofCount(R, Lall, (cat==='ALL') ? null : L);
     const planH = R.reduce((a,x)=>a+(x.p||0),0)/60;
     const nMc = new Set(R.map(x=>x.m)).size || 1;
     const ds = R.map(x=>x.d).sort();
@@ -3205,7 +3206,7 @@ function mcStats(week, cat, byType){
                    (Array.isArray(cat) && (!cat.length || cat.indexOf('ALL')>=0));
     const ll = catAll ? fails(lAllM) : byType ? lAllM.filter(x=>matchCat(x,cat) && x.l >= MIN_STOP) : fails(lAllM.filter(x=>matchCat(x,cat)));
     const runH = rr.reduce((a,x)=>a+x.r,0)/60, lossH = ll.reduce((a,x)=>a+x.l,0)/60;
-    const n = nofCount(rr, lAllM, catAll ? null : ll);
+    const n = (byType && !catAll) ? ll.length : nofCount(rr, lAllM, catAll ? null : ll);
     const planH = rr.reduce((a,x)=>a+(x.p||0),0)/60;
     out[m] = { m:m, runH:runH, lossH:lossH, cnt:n,
                mttr: n?lossH/n:0, mtbf: mtbfBasis(runH, lossH, n, planH),
