@@ -254,6 +254,20 @@ body.embed{background:transparent}body.embed .wrap{padding:0 0 20px;max-width:no
 @media print{.filters,.sync .btn,.cfg,.more{display:none!important}.tbl-wrap{max-height:none;overflow:visible}body{background:#fff}}
 
 /* ===== OEE 검증 달력 ===== */
+.vf .mx2-wrap{overflow-x:auto}
+.mx2-t.vf-t{table-layout:fixed;width:100%;min-width:0}
+.mx2-t.vf-t td{height:20px;padding:0 1px;line-height:1}
+.mx2-t.vf-t td.d{font-size:0;line-height:0}
+.mx2-t.vf-t td .vp{vertical-align:middle}
+.mx2-t.vf-t th{padding:2px 0;font-size:10px}
+.mx2-t.vf-t th.mc,.mx2-t.vf-t td.mc{padding-left:4px;width:auto;font-size:12px}
+.mx2-t.vf-t .n,.mx2-t.vf-t .rt2{width:auto;padding-right:3px;font-size:11px}
+.mx2-t.vf-t .d{min-width:0;width:auto;padding:0}
+.mx2-t.vf-t td.memo{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;font-size:11px}
+.mx2-t.vf-t .vp{min-width:15px;height:15px;font-size:8.5px;padding:0 1px;border-width:1px;letter-spacing:-.5px;border-radius:4px}
+.mx2-t.vf-t .n,.mx2-t.vf-t .rt2{font-size:10.5px}
+.mx2-t.vf-t .vp.lk{min-width:10px;font-size:11px}
+.mx2-t.vf-t .vp.rt{min-width:26px;font-size:9.5px}
 .vf{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 14px}
 .vf-k{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:10px}
 .vf-k>div{border:1px solid var(--border-soft);border-radius:9px;padding:8px 10px;background:#fafbfd}
@@ -270,7 +284,7 @@ body.embed{background:transparent}body.embed .wrap{padding:0 0 20px;max-width:no
 .vf-codes button.on{background:#1f3864;border-color:#1f3864;color:#fff}
 .vp{display:inline-flex;min-width:19px;height:19px;border-radius:10px;align-items:center;justify-content:center;font:700 11px var(--mono);padding:0 4px;line-height:1}
 .vp.ok{background:#1f3864;color:#fff} .vp.ok.e{background:var(--ef)}
-.vp.ms{background:var(--red-soft);color:var(--red);border:1.5px solid var(--red)}
+.vp.mi{background:var(--red-soft);color:var(--red);border:1.5px solid var(--red)}
 .vp.rc{background:#fff;color:#5f6c7b;border:1.5px dashed #94a3b8}
 .vp.lk{color:var(--teal);font-size:12px;min-width:12px;padding:0}
 .vp.na{background:#f1f5f9;color:#94a3b8;border:1px dashed #cbd5e1}
@@ -285,12 +299,13 @@ body.embed{background:transparent}body.embed .wrap{padding:0 0 20px;max-width:no
 .vd{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border-soft)}
 .vd td,.vd th{padding:6px 8px;border-bottom:1px solid var(--border-soft);font-size:12.5px;vertical-align:top;white-space:normal;line-height:1.45;text-align:left}
 .vd th{font-size:11px;color:var(--text-faint);background:#fafbfc}
-.vd tr.ms td{background:#fdf3f2} .vd tr.rc td{background:#f8fafc}
+.vd tr.mi td{background:#fdf3f2} .vd tr.rc td{background:#f8fafc}
 .vd .bd{display:inline-block;padding:1px 8px;border-radius:9px;font-size:11px;font-weight:800;white-space:nowrap}
-.vd .bd.ok{background:var(--teal-soft);color:var(--teal)} .vd .bd.ms{background:var(--red-soft);color:var(--red)} .vd .bd.rc{background:#eef1f5;color:#5f6c7b} .vd .bd.na{background:#f1f5f9;color:#94a3b8}
+.vd .bd.ok{background:var(--teal-soft);color:var(--teal)} .vd .bd.mi{background:var(--red-soft);color:var(--red)} .vd .bd.rc{background:#eef1f5;color:#5f6c7b} .vd .bd.na{background:#f1f5f9;color:#94a3b8}
 .vd .oe{font-family:var(--mono);font-size:12px} .vd .draft{display:block;margin-top:3px;color:#b06a12;font-size:11.5px}
 .vf-note{font-size:11.5px;color:var(--text-faint);margin-top:8px;line-height:1.55}
-@media (max-width:900px){.vf-k{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:1100px){.vf-k{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.vf-k>div{padding:6px 9px}.vf-k .v{font-size:17px}}
+@media (max-width:560px){.vf-k{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media print{.vp,.mx2-t td.nd,.mx2-t th.nd{-webkit-print-color-adjust:exact;print-color-adjust:exact}.vf-codes,.vf-bar .sp{display:none}}
 </style>
 </head>
@@ -373,7 +388,7 @@ const ls = {get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.p
 let ROWS = [], LOADED_AT = null, SRC_NOTE = '';
 const UI = Object.assign({grp:'all',pre:'d30',from:'',to:'',cause:'all',src:'all',mc:'',q:'',orig:false,dir:-1,view:'list',lim:150,month:''}, ls.get(K_UI,{}));
 UI.lim = 150; UI.month = '';
-const saveUI = ()=>ls.set(K_UI,{grp:UI.grp,pre:UI.pre,from:UI.from,to:UI.to,cause:UI.cause,src:UI.src,orig:UI.orig,dir:UI.dir,view:UI.view,ord:UI.ord});
+const saveUI = ()=>ls.set(K_UI,{grp:UI.grp,pre:UI.pre,from:UI.from,to:UI.to,cause:UI.cause,src:UI.src,orig:UI.orig,dir:UI.dir,view:UI.view,ord:UI.ord,vcell:UI.vcell});
 
 /* ---------------- CSV ---------------- */
 function parseCSV(t){
@@ -754,6 +769,7 @@ function oeeGet(){
   if(!OEE_LOADING) oeeFetch();
   return null;
 }
+const hh=m=>{ if(!(m>0)) return ''; const h=m/60; return h>=10?String(Math.round(h)):String(Math.round(h*10)/10).replace(/^0\./,'.'); };
 function verifyCalc(){
   const O=OEE, minS=O.minStop==null?10:+O.minStop;
   const okCode=i=>{ const k=normK(i); return VQ.has(k) && (UI.cause==='all' || (UI.cause==='전기로')===(k==='전기로수리')); };
@@ -766,7 +782,7 @@ function verifyCalc(){
   const nx=(d,n)=>ds(dU(d)+n*864e5);
   const S=new Map();
   F.forEach((f,k)=>{ const [c,d]=k.split('|'); const same=R.has(k), next=R.has(c+'|'+nx(d,1));
-    S.set(k,{c,d,f,r:R.get(k)||[],st:same||next?'ok':'ms',via:same?'same':next?'next':''}); });
+    S.set(k,{c,d,f,r:R.get(k)||[],st:same||next?'ok':'mi',via:same?'same':next?'next':''}); });
   R.forEach((r,k)=>{ if(S.has(k)) return; const [c,d]=k.split('|');
     const prev=F.has(c+'|'+nx(d,-1));
     S.set(k,{c,d,f:[],r,st:prev?'lk':d>oMax||d<oMin?'na':'rc',via:prev?'prev':''}); });
@@ -781,7 +797,7 @@ function verify(codes){
   const dc=codes.filter(c=>c.startsWith('DC'));
   const B=buckets(), cols=B.out, unit={d:'일',w:'주',m:'월'}[B.u];
   const all=[...V.S.values()].filter(x=>dc.includes(x.c));
-  const fd=all.filter(x=>x.f.length), ok=fd.filter(x=>x.st==='ok'), ms=fd.filter(x=>x.st==='ms'), rc=all.filter(x=>x.st==='rc'), na=all.filter(x=>x.st==='na');
+  const fd=all.filter(x=>x.f.length), ok=fd.filter(x=>x.st==='ok'), ms=fd.filter(x=>x.st==='mi'), rc=all.filter(x=>x.st==='rc'), na=all.filter(x=>x.st==='na');
   const oN=fd.reduce((a,x)=>a+x.f.length,0), oM=fd.reduce((a,x)=>a+x.f.reduce((b,y)=>b+y.l,0),0), msM=ms.reduce((a,x)=>a+x.f.reduce((b,y)=>b+y.l,0),0);
   const rAll=all.reduce((a,x)=>a+x.r.length,0), rM=all.reduce((a,x)=>a+x.r.reduce((b,y)=>b+(y.min||0),0),0);
   const rate=fd.length?Math.round(ok.length/fd.length*100):null, rateT=oM?Math.round((oM-msM)/oM*100):null;
@@ -795,36 +811,38 @@ function verify(codes){
     <div><div class="l">OEE에 없는 이력</div><div class="v">${rc.length}<small>일</small></div><div class="s">${rc.reduce((a,x)=>a+x.r.length,0)}건 · 예방정비·금형·로스 미입력 확인</div></div>
     <div><div class="l">OEE 집계 기간</div><div class="v" style="font-size:14px;margin-top:6px">${V.oMin.slice(5)} ~ ${V.oMax.slice(5)}</div><div class="s">${na.length?`그 뒤 이력 ${na.reduce((a,x)=>a+x.r.length,0)}건은 판정 보류 · `:''}${esc(O.src||'')}</div></div></div>
    <div class="vf-codes"><b style="color:var(--text-dim);margin-right:4px">OEE 고장으로 볼 로스코드</b>${EQ_ALL.map(c=>`<button data-vq="${c}" class="${VQ.has(c)?'on':''}">${c}</button>`).join('')}<button data-vq="__def" style="border-style:dashed">기본값</button></div>
-   <div class="vf-bar"><span class="lg"><span class="vp ok">2</span>일치 (숫자=OEE 고장 건수) <span class="vp ok e">1</span>전기로 포함 <span class="vp lk">✓</span>전날 고장의 수리 기록 <span class="vp ms">2</span>이력 누락 <span class="vp rc">R</span>OEE에 없는 이력 <span class="vp na">R</span>OEE 미집계일 · 칸=${unit}별 · 줄을 누르면 일자별 대조</span>
+   <div class="vf-bar"><span class="seg" id="vfCell" title="달력 칸에 표시할 값"><button data-v="h" aria-pressed="${UI.vcell!=='n'}">고장수리시간(h)</button><button data-v="n" aria-pressed="${UI.vcell==='n'}">고장 건수</button></span><span class="lg"><span class="vp ok">${UI.vcell==='n'?'2':'1.5'}</span>일치 (숫자=${UI.vcell==='n'?'OEE 고장 건수':'OEE 고장수리시간 h'}) <span class="vp ok e">${UI.vcell==='n'?'1':'.5'}</span>전기로 포함 <span class="vp lk">✓</span>전날 고장의 수리 기록 <span class="vp mi">${UI.vcell==='n'?'2':'3.2'}</span>이력 누락 <span class="vp rc">${UI.vcell==='n'?'R':'1'}</span>OEE에 없는 이력${UI.vcell==='n'?'':'(이력 수리시간)'} <span class="vp na">R</span>OEE 미집계일 · 칸=${unit}별 · 줄을 누르면 일자별 대조</span>
      <span class="sp"><button class="btn" id="vfCsv1">검증 결과 CSV</button><button class="btn" id="vfCsv2" style="background:#1f3864;color:#fff;border-color:#1f3864">새 수리이력 CSV (누락분 포함)</button></span></div>
-   <div class="mx2-wrap"><table class="mx2-t"><thead><tr><th class="mc" rowspan="2">설비</th><th class="grp" colspan="2">OEE 고장</th><th class="grp" colspan="2">수리이력</th><th class="n" rowspan="2" title="고장일 중 수리이력이 있는 비율">기록률</th>`+
+   <div class="mx2-wrap"><table class="mx2-t vf-t"><colgroup><col style="width:40px"><col style="width:22px"><col style="width:26px"><col style="width:20px"><col style="width:24px"><col style="width:32px">${cols.map(()=>'<col>').join('')}<col style="width:${cols.length>20?92:170}px"></colgroup><thead><tr><th class="mc" rowspan="2">설비</th><th class="grp" colspan="2">OEE 고장</th><th class="grp" colspan="2">수리이력</th><th class="n" rowspan="2" title="고장일 중 수리이력이 있는 비율">기록률</th>`+
    cols.map(c=>`<th class="d${c.w?' we':''}${c.a>V.oMax?' nd':''}" rowspan="2" title="${c.a}${c.a!==c.b?' ~ '+c.b:''}${c.a>V.oMax?' · OEE 미집계':''}">${c.l}<br><small>${c.s}</small></th>`).join('')+
    `<th class="last" rowspan="2">판정</th></tr><tr><th class="n">건</th><th class="n">h</th><th class="n">건</th><th class="n">h</th></tr></thead><tbody>`;
   const rows=dc.filter(c=>!UI.mc||UI.mc===c);
   for(const c of rows){
-    const X=all.filter(x=>x.c===c), xf=X.filter(x=>x.f.length), xo=xf.filter(x=>x.st==='ok'), xm=xf.filter(x=>x.st==='ms'), xr=X.filter(x=>x.st==='rc');
+    const X=all.filter(x=>x.c===c), xf=X.filter(x=>x.f.length), xo=xf.filter(x=>x.st==='ok'), xm=xf.filter(x=>x.st==='mi'), xr=X.filter(x=>x.st==='rc');
     const on=xf.reduce((a,x)=>a+x.f.length,0), om=xf.reduce((a,x)=>a+x.f.reduce((b,y)=>b+y.l,0),0);
     const rn=X.reduce((a,x)=>a+x.r.length,0), rm=X.reduce((a,x)=>a+x.r.reduce((b,y)=>b+(y.min||0),0),0);
     const rr=xf.length?Math.round(xo.length/xf.length*100):null;
     const ranRun=[...V.run].some(k=>k.startsWith(c+'|')&&k.split('|')[1]>=UI.from&&k.split('|')[1]<=UI.to);
-    let memo='';
+    let memo='', mt='';
     if(!X.length) memo=ranRun?'<span class="q">고장·수리 없음</span>':'<span class="q">가동 없음</span>';
     else{ const p=[];
       if(xm.length){ const big=xm.slice().sort((a,b)=>b.f.reduce((s,y)=>s+y.l,0)-a.f.reduce((s,y)=>s+y.l,0))[0];
-        p.push(`<span class="r">누락 ${xm.length}일 · ${fmtH(xm.reduce((a,x)=>a+x.f.reduce((b,y)=>b+y.l,0),0))}h</span> — 최대 ${big.d.slice(5).replace('-','/')} ${esc(ohTxt(big.f))}`); }
-      else if(xf.length) p.push('<span class="g">✓ 고장일 모두 기록</span>');
-      if(xr.length) p.push(`<span class="q">OEE에 없는 이력 ${xr.reduce((a,x)=>a+x.r.length,0)}건</span>`);
-      memo=p.join('<br>'); }
+        p.push(`<span class="r">누락 ${xm.length}일·${fmtH(xm.reduce((a,x)=>a+x.f.reduce((b,y)=>b+y.l,0),0))}h</span>`);
+        mt=`최대 누락 ${big.d.slice(5).replace('-','/')} ${ohTxt(big.f)}`; }
+      else if(xf.length) p.push('<span class="g">✓ 모두 기록</span>');
+      if(xr.length){ p.push(`<span class="q">OEE없음 ${xr.reduce((a,x)=>a+x.r.length,0)}</span>`); mt+=(mt?'\n':'')+'OEE에 없는 이력 '+xr.reduce((a,x)=>a+x.r.length,0)+'건 (예방정비·금형·로스 미입력 확인)'; }
+      memo=p.join(' · '); }
     h+=`<tr class="mx2-r${VF_OPEN===c?' open':''}" data-vmc="${c}"><td class="mc"><b>${nm(c)}</b></td><td class="n">${on||''}</td><td class="n">${om?fmtH(om):''}</td><td class="n">${rn||''}</td><td class="n">${rm?fmtH(rm):''}</td><td class="rt2 ${rc3(rr)}">${rr==null?'':rr+'%'}</td>`+
       cols.map(col=>{ const it=X.filter(x=>x.d>=col.a&&x.d<=col.b); const cls=`d${col.w?' we':''}${col.a>V.oMax?' nd':''}`;
         if(!it.length) return `<td class="${cls}"></td>`;
-        const tip=it.map(x=>`${x.d.slice(5)} [${{ok:'일치',ms:'이력 누락',rc:'OEE에 없음',lk:'전날 고장 수리',na:'OEE 미집계'}[x.st]}]${x.f.length?' OEE: '+ohDetail(x.f):''}${x.r.length?' / 이력: '+x.r.map(r=>clean(r.sym||r.symO)).join(' · '):''}`).join('\n');
+        const tip=it.map(x=>`${x.d.slice(5)} [${{ok:'일치',mi:'이력 누락',rc:'OEE에 없음',lk:'전날 고장 수리',na:'OEE 미집계'}[x.st]}]${x.f.length?' OEE: '+ohDetail(x.f):''}${x.r.length?' / 이력: '+x.r.map(r=>clean(r.sym||r.symO)).join(' · '):''}`).join('\n');
         if(B.u==='d'){ const x=it[0]; const e=x.f.some(y=>normK(y.i)==='전기로수리');
-          const v=x.st==='ok'?`<span class="vp ok${e?' e':''}">${x.f.length}</span>`:x.st==='ms'?`<span class="vp ms">${x.f.length}</span>`:x.st==='lk'?`<span class="vp lk">✓</span>`:`<span class="vp ${x.st}">R</span>`;
+          const fv=UI.vcell==='n'?x.f.length:hh(x.f.reduce((a,y)=>a+y.l,0)), rv=UI.vcell==='n'?'R':hh(x.r.reduce((a,y)=>a+(y.min||0),0))||'R';
+          const v=x.st==='ok'?`<span class="vp ok${e?' e':''}">${fv}</span>`:x.st==='mi'?`<span class="vp mi">${fv}</span>`:x.st==='lk'?`<span class="vp lk">✓</span>`:`<span class="vp ${x.st}">${rv}</span>`;
           return `<td class="${cls}" title="${esc(tip)}">${v}</td>`; }
         const a=it.filter(x=>x.f.length).length, b=it.filter(x=>x.st==='ok').length, r2=it.filter(x=>x.st==='rc').length;
         return `<td class="${cls}" title="${esc(tip)}">${a?`<span class="vp rt ${rc3(Math.round(b/a*100))}">${b}/${a}</span>`:`<span class="vp rc">R${r2>1?r2:''}</span>`}</td>`; }).join('')+
-      `<td class="memo">${memo}</td></tr>`;
+      `<td class="memo" title="${esc(mt)}">${memo}</td></tr>`;
     if(VF_OPEN===c) h+=`<tr class="mx2-dt"><td colspan="${cols.length+7}">${vfDetail(X)}</td></tr>`;
   }
   h+=`</tbody></table></div>
@@ -836,16 +854,17 @@ function verify(codes){
 function vfDetail(X){
   const L=X.slice().sort((a,b)=>(a.d<b.d?-1:1)*UI.dir);
   if(!L.length) return '<div class="muted" style="padding:6px">이 기간에 OEE 고장·수리이력이 없습니다</div>';
-  const BD={ok:['ok','일치'],lk:['ok','전날 고장 수리'],ms:['ms','이력 누락'],rc:['rc','OEE에 없음'],na:['na','OEE 미집계']};
-  return `<table class="vd"><thead><tr><th style="width:92px">일자</th><th style="width:96px">판정</th><th style="width:34%">OEE 고장 (교대 · 코드 · 분)</th><th>수리이력</th></tr></thead><tbody>`+
+  const BD={ok:['ok','일치'],lk:['ok','전날 고장 수리'],mi:['mi','이력 누락'],rc:['rc','OEE에 없음'],na:['na','OEE 미집계']};
+  return `<table class="vd"><thead><tr><th style="width:92px">일자</th><th style="width:96px">판정</th><th style="width:34%">OEE 고장 (교대 · 코드 · 고장수리시간)</th><th>수리이력 (수리시간)</th></tr></thead><tbody>`+
     L.map(x=>{ const b=BD[x.st]; const fm=x.f.reduce((a,y)=>a+y.l,0);
       const rr=x.r.length?x.r.map(r=>`<div>${r.cause==='전기로'?'<span class="tag ef">전기로</span> ':''}<b>${esc(clean(r.sym||r.symO))}</b>${(r.act||r.actO)?' → '+esc(clean(r.act||r.actO)):''} <span class="muted">${r.min!=null?r.min+'분 · ':''}${esc(r.src)}</span></div>`).join('')
         : x.st==='ok'&&x.via==='next' ? '<span class="muted">다음 날 기록 (아래 행)</span>' : '<span class="muted">—</span>';
       return `<tr class="${x.st}"><td class="mono">${x.d.slice(5).replace('-','/')} (${dow(x.d)})</td><td><span class="bd ${b[0]}">${b[1]}</span>${x.via==='next'?'<div class="muted" style="font-size:11px">다음 날 기록</div>':''}</td>
-        <td class="oe">${x.f.length?esc(ohDetail(x.f))+` <b>= ${x.f.length}건 ${Math.round(fm)}분</b>`:'<span class="muted">설비 고장 로스 없음</span>'}${x.st==='ms'?`<span class="draft">→ 새 이력 초안 : ${esc(ohTxt(x.f))} (원인·조치 확인 필요)</span>`:''}</td><td>${rr}</td></tr>`; }).join('')+`</tbody></table>`;
+        <td class="oe">${x.f.length?esc(ohDetail(x.f))+` <b>= ${x.f.length}건 ${Math.round(fm)}분</b>`:'<span class="muted">설비 고장 로스 없음</span>'}${x.st==='mi'?`<span class="draft">→ 새 이력 초안 : ${esc(ohTxt(x.f))} (원인·조치 확인 필요)</span>`:''}</td><td>${rr}</td></tr>`; }).join('')+`</tbody></table>`;
 }
 function vfBind(){
   $('#list').querySelectorAll('[data-vmc]').forEach(tr=>tr.onclick=()=>{VF_OPEN=VF_OPEN===tr.dataset.vmc?'':tr.dataset.vmc;render()});
+  $('#list').querySelectorAll('#vfCell button').forEach(b=>b.onclick=()=>{UI.vcell=b.dataset.v;saveUI();render()});
   $('#list').querySelectorAll('[data-vq]').forEach(b=>b.onclick=()=>{ const k=b.dataset.vq;
     if(k==='__def') VQ=new Set(EQ_DEF); else { if(VQ.has(k)) VQ.delete(k); else VQ.add(k); }
     ls.set(K_VQ,[...VQ]); render(); });
@@ -853,7 +872,7 @@ function vfBind(){
     const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+[H.map(q).join(',')].concat(rows.map(r=>r.map(q).join(','))).join('\r\n')],{type:'text/csv'})); a.download=name; a.click(); };
   const c1=$('#vfCsv1'); if(c1) c1.onclick=()=>{ if(!VF_LAST) return;
     const L=[...VF_LAST.S.values()].filter(x=>!UI.mc||x.c===UI.mc).sort((a,b)=>a.c.localeCompare(b.c)||a.d.localeCompare(b.d));
-    const J={ok:'일치',lk:'전날 고장 수리',ms:'이력 누락',rc:'OEE에 없음',na:'OEE 미집계'};
+    const J={ok:'일치',lk:'전날 고장 수리',mi:'이력 누락',rc:'OEE에 없음',na:'OEE 미집계'};
     dl('수리이력_OEE검증_'+UI.from+'_'+UI.to+'.csv',['설비코드','일자','판정','OEE 고장건수','OEE 고장(분)','OEE 내역','수리이력 건수','수리시간(분)','수리 내용','출처'],
       L.map(x=>[x.c,x.d,J[x.st]+(x.via==='next'?' (다음 날 기록)':''),x.f.length,Math.round(x.f.reduce((a,y)=>a+y.l,0)),ohDetail(x.f),x.r.length,x.r.reduce((a,y)=>a+(y.min||0),0),x.r.map(r=>clean(r.sym||r.symO)+((r.act||r.actO)?' → '+clean(r.act||r.actO):'')).join(' / '),[...new Set(x.r.map(r=>r.src))].join('·')])); };
   const c2=$('#vfCsv2'); if(c2) c2.onclick=()=>{ if(!VF_LAST) return;
@@ -863,7 +882,7 @@ function vfBind(){
       const J={ok:'일치',lk:'일치(전날 고장)',rc:'OEE에 없음',na:'OEE 미집계'}[x.st];
       const fm=Math.round(x.f.reduce((a,y)=>a+y.l,0));
       x.r.forEach(r=>out.push([r.id,r.src,r.date,r.code,r.cause,r.ef,r.cat,r.work,r.sym,r.prob,r.act,r.part,r.st,r.en,r.min,r.who,r.symO,r.probO,r.actO,J||'일치',fm||'']));
-      if(x.st==='ms'){ const ef=x.f.every(y=>normK(y.i)==='전기로수리');
+      if(x.st==='mi'){ const ef=x.f.every(y=>normK(y.i)==='전기로수리');
         out.push(['','OEE자동',x.d,x.c,ef?'전기로':'본체','','','고장수리','OEE 로스: '+ohDetail(x.f),'(확인 필요)','(확인 필요)','','','',fm,'','','','','이력 누락 → OEE 로스로 추가',fm]); } });
     out.sort((a,b)=>String(a[2]).localeCompare(String(b[2]))||String(a[3]).localeCompare(String(b[3])));
     dl('새수리이력_OEE검증_'+UI.from+'_'+UI.to+'.csv',H,out); };
