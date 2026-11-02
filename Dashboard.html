@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#eef1f4; --surface:#fff; --sunk:#f6f8fa; --ink:#17202a; --muted:#5b6775; --line:#d6dce3; --line2:#e8ecf0;
+  --accent:#f2b705; --on-accent:#1b1500;
+  --ok:#15803d; --ok-bg:#dcf3e3; --run:#1d4ed8; --run-bg:#dde7fb; --bad:#c81e1e; --bad-bg:#fbe1e1; --idle:#5b6775; --idle-bg:#e8ecf0;
+  --plan:#93b4e8; --ext:#ea580c; --ext-bg:#ffedd5;
+  --c1:#c2410c; --c2:#2563eb; --c3:#7c3aed; --c4:#0f766e; --c5:#be185d; --c6:#4d7c0f;
+  --f:"IBM Plex Sans KR","Noto Sans Thai",system-ui,"Malgun Gothic",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#10151b; --surface:#19212a; --sunk:#141b22; --ink:#e6ebf0; --muted:#93a0ad; --line:#2c3743; --line2:#222c36;
+  --ok:#4ade80; --ok-bg:#163524; --run:#7aa5ff; --run-bg:#1b2b4a; --bad:#ff7373; --bad-bg:#3d1a1d; --idle:#93a0ad; --idle-bg:#242e38;
+  --plan:#4b6a9e; --ext:#fb8a3c; --ext-bg:#3a2414;
+  --c1:#fb7a3c; --c2:#6b9cff; --c3:#a98bff; --c4:#2fc4b2; --c5:#f06aa8; --c6:#9ccc4a; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:14px;line-height:1.5}
+body.th{font-family:"Noto Sans Thai","IBM Plex Sans KR",system-ui,sans-serif}
+.wrap{max-width:1360px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-left)) 48px;display:flex;flex-direction:column;gap:16px}
+.hazard{height:8px;border-radius:2px;background:repeating-linear-gradient(-45deg,var(--accent) 0 12px,var(--ink) 12px 24px)}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
+h1{margin:0;font-size:24px;line-height:1.25;text-wrap:balance}
+.sub{margin:2px 0 0;color:var(--muted);font-size:12px}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.seg{display:flex;background:var(--line2);padding:3px;border-radius:8px;gap:2px}
+.seg button{border:0;background:transparent;color:var(--muted);padding:6px 12px;border-radius:6px;font-weight:600;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px;border-radius:6px;font-weight:500;font-size:13px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.btn:disabled{opacity:.55;cursor:wait}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.kpi{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .k{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi .v small{font-size:12px;color:var(--muted);margin-left:4px;font-weight:500}
+.kpi.ok .v{color:var(--ok)} .kpi.run .v{color:var(--run)} .kpi.bad .v{color:var(--bad)} .kpi.idle .v{color:var(--idle)}
+.pvsa{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.pvsa .row{display:grid;grid-template-columns:44px 1fr 40px;gap:6px;align-items:center;font-size:11px;color:var(--muted)}
+.track{height:8px;background:var(--line2);border-radius:4px;overflow:hidden}
+.track i{display:block;height:100%}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card h2{margin:0;font-size:15px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.card h2 small{font-size:11px;color:var(--muted);font-weight:500}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--muted)}
+.legend span{display:inline-flex;gap:5px;align-items:center}
+.legend i{width:12px;height:8px;border-radius:2px;display:inline-block}
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) 92px;gap:10px;align-items:center}
+.bar .name{font-size:12px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.bar .name .sw{width:8px;height:8px;border-radius:2px;flex:none}
+.dual{display:flex;flex-direction:column;gap:3px}
+.dual .track{height:7px}
+.bar .num{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.stack{display:flex;height:14px;border-radius:3px;overflow:hidden;background:var(--line2)}
+.stack i{display:block;height:100%}
+.list{display:flex;flex-direction:column;gap:6px;max-height:360px;overflow:auto}
+.item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line2);border-radius:6px;background:var(--sunk)}
+.item .id{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.item b{font-weight:500;font-size:13px;display:block;min-width:0}
+.item span.meta{font-size:11px;color:var(--muted)}
+.chip{font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;white-space:nowrap}
+.chip.plan{background:var(--idle-bg);color:var(--idle)} .chip.doing{background:var(--run-bg);color:var(--run)}
+.chip.done{background:var(--ok-bg);color:var(--ok)} .chip.late{background:var(--bad-bg);color:var(--bad)}
+.chip.hold{border:1px dashed var(--idle);color:var(--idle)} .chip.ext{background:var(--ext-bg);color:var(--ext)}
+.chip.soon{background:#fff3c4;color:#7a4e00}
+.empty{color:var(--muted);font-size:13px;padding:16px;text-align:center}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input[type=search]{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
+/* gantt */
+.gwrap{overflow:auto;border:1px solid var(--line);border-radius:6px;max-height:560px}
+.g{width:max-content;min-width:100%}
+.grow{display:grid;grid-template-columns:240px var(--tw)}
+.gl{position:sticky;left:0;z-index:2;background:var(--surface);border-right:1px solid var(--line);padding:4px 10px;font-size:12px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.ghead{position:sticky;top:0;z-index:3;background:var(--surface);border-bottom:1px solid var(--line)}
+.ghead .gl{z-index:4;font-weight:600;color:var(--muted);font-size:11px}
+.wk{display:flex}
+.wk div{flex:none;border-left:1px solid var(--line2);font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;padding:4px 0}
+.wk div.now{background:var(--accent);color:var(--on-accent);font-weight:600}
+.gcat .gl,.gcat .gt{background:var(--sunk);font-weight:700}
+.gcat{border-top:1px solid var(--line)}
+.gt{position:relative;height:30px;border-top:1px solid var(--line2)}
+.gb{position:absolute;top:8px;height:14px;border-radius:3px}
+.today{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);z-index:1}
+/* tasks */
+.tasks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:12px}
+.task{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.task .top{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.task .ttl{font-weight:600;font-size:14px}
+.task .iss{font-size:12px;color:var(--muted)}
+.task .meta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ph{aspect-ratio:4/3;border-radius:5px;overflow:hidden;background:var(--sunk);border:1px solid var(--line2);position:relative;display:grid;place-items:center;font-size:11px;color:var(--muted);padding:0;width:100%}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph .lab{position:absolute;left:4px;top:4px;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;color:#fff}
+.ph .lab.b{background:#b45309} .ph .lab.a{background:#15803d}
+.prog{font-size:12px;border-left:3px solid var(--line);padding-left:8px;color:var(--ink)}
+.dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.dl button{text-align:left;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.dl button small{color:var(--muted);font-size:11px}
+.note{font-size:12px;color:var(--muted)}
+.loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:50;font-size:14px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:6px;font-size:13px;z-index:60}
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.88);display:grid;place-items:center;z-index:70;padding:16px}
+.lb img{max-width:100%;max-height:90vh;border-radius:4px}
+@media (max-width:640px){.grow{grid-template-columns:150px var(--tw)} h1{font-size:20px} .bar{grid-template-columns:1fr;gap:4px} .bar .num{text-align:left}}
+</style>
+</head>
+<body>
+<div class="loading" id="loading">데이터를 불러오는 중… / กำลังโหลดข้อมูล…</div>
+<div class="wrap">
+  <div class="hazard"></div>
+  <header>
+    <div>
+      <h1 data-i="title"></h1>
+      <p class="sub"><span data-i="updated"></span> <span id="upd"></span></p>
+    </div>
+    <div class="tools">
+      <div class="seg" role="group" aria-label="language">
+        <button type="button" id="lk" aria-pressed="true">한국어</button>
+        <button type="button" id="lt" aria-pressed="false">ไทย</button>
+      </div>
+      <button type="button" class="btn" id="refresh" data-i="refresh"></button>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis"></section>
+
+  <div class="grid2">
+    <section class="card">
+      <h2><span data-i="byCat"></span><small data-i="pvaNote"></small></h2>
+      <div class="legend"><span><i style="background:var(--plan)"></i><span data-i="planned"></span></span><span><i style="background:var(--ok)"></i><span data-i="actual"></span></span></div>
+      <div class="bars" id="cats"></div>
+    </section>
+    <section class="card">
+      <h2><span data-i="byTeam"></span><small data-i="teamNote"></small></h2>
+      <div class="legend" id="stackLegend"></div>
+      <div class="bars" id="teams"></div>
+      <h2 style="margin-top:6px"><span data-i="byIO"></span></h2>
+      <div class="bars" id="io"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2><span data-i="attention"></span><small data-i="attNote"></small></h2>
+    <div class="list" id="att"></div>
+  </section>
+
+  <section class="card">
+    <h2><span data-i="gantt"></span></h2>
+    <div class="filters">
+      <select id="gTeam" aria-label="team"></select>
+      <select id="gCat" aria-label="category"></select>
+    </div>
+    <div class="legend" id="gLegend"></div>
+    <div class="gwrap" id="gantt"></div>
+  </section>
+
+  <section class="card">
+    <h2><span data-i="tasks"></span><small id="tCount"></small></h2>
+    <div class="filters">
+      <select id="fTeam" aria-label="team"></select>
+      <select id="fCat" aria-label="category"></select>
+      <select id="fStat" aria-label="status"></select>
+      <input type="search" id="fq" data-ip="search">
+    </div>
+    <div class="tasks" id="tasks"></div>
+  </section>
+
+  <section class="card">
+    <h2><span data-i="download"></span></h2>
+    <p class="note" data-i="dlNote"></p>
+    <div class="dl" id="dl"></div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+<div class="lb" id="lb" hidden></div>
+
+<script>
+const I18N={
+ ko:{title:'안전·전기 개선 대시보드',updated:'기준',refresh:'새로고침',total:'전체 작업',done:'완료',doing:'진행 중',late:'지연',unassigned:'담당 미정',ext:'외부 작업',
+  planned:'계획',actual:'실적',pva:'계획 대비 실적',byCat:'분야별 진행률',pvaNote:'오늘 기준 계획 진행률과 실제 진행률',byTeam:'담당팀별 현황',teamNote:'건수 기준',byIO:'내부 / 외부',
+  inside:'내부',outside:'외부',attention:'확인 필요',attNote:'지연 및 7일 안에 끝나야 할 작업',gantt:'간트 일정',tasks:'작업 목록',download:'엑셀 다운로드',
+  dlNote:'시트를 누르면 그 시트만 .xlsx 로 내려받습니다. 다른 시트를 참조하는 수식은 값으로 바뀝니다.',all:'전체 파일',allTeams:'모든 담당팀',allCats:'모든 분야',allStat:'모든 상태',
+  search:'작업·설비 검색',st_plan:'계획',st_doing:'진행',st_done:'완료',st_hold:'보류',st_late:'지연',soon:'마감 임박',before:'개선 전',after:'개선 후',noPhoto:'사진 없음',
+  owner:'담당',period:'기간',noItems:'해당 작업이 없습니다.',nothing:'확인할 작업이 없습니다.',making:'엑셀 만드는 중…',saved:'내려받았습니다',fail:'실패',
+  cnt:'건',today:'오늘',dueIn:'일 남음',overdue:'일 지남',area:'대상',lbClose:'아무 곳이나 누르면 닫힘',week:'주',task:'작업'},
+ th:{title:'แดชบอร์ดปรับปรุงความปลอดภัยและระบบไฟฟ้า',updated:'ข้อมูล ณ',refresh:'รีเฟรช',total:'งานทั้งหมด',done:'เสร็จแล้ว',doing:'กำลังทำ',late:'ล่าช้า',unassigned:'ยังไม่กำหนดผู้รับผิดชอบ',ext:'งานผู้รับเหมา',
+  planned:'แผน',actual:'ผลจริง',pva:'แผนเทียบผลจริง',byCat:'ความคืบหน้าตามหมวด',pvaNote:'ความคืบหน้าตามแผนเทียบกับผลจริง ณ วันนี้',byTeam:'สถานะตามทีมผู้รับผิดชอบ',teamNote:'จำนวนงาน',byIO:'ภายใน / ภายนอก',
+  inside:'ภายใน',outside:'ภายนอก',attention:'ต้องติดตาม',attNote:'งานล่าช้าและงานที่ต้องเสร็จภายใน 7 วัน',gantt:'แผนงาน (Gantt)',tasks:'รายการงาน',download:'ดาวน์โหลด Excel',
+  dlNote:'กดที่ชีตเพื่อดาวน์โหลดเฉพาะชีตนั้นเป็นไฟล์ .xlsx สูตรที่อ้างอิงชีตอื่นจะถูกแปลงเป็นค่า',all:'ทั้งไฟล์',allTeams:'ทุกทีม',allCats:'ทุกหมวด',allStat:'ทุกสถานะ',
+  search:'ค้นหางาน·เครื่องจักร',st_plan:'วางแผน',st_doing:'กำลังทำ',st_done:'เสร็จแล้ว',st_hold:'ระงับไว้',st_late:'ล่าช้า',soon:'ใกล้ครบกำหนด',before:'ก่อนปรับปรุง',after:'หลังปรับปรุง',noPhoto:'ไม่มีรูป',
+  owner:'ผู้รับผิดชอบ',period:'ระยะเวลา',noItems:'ไม่มีงานที่ตรงเงื่อนไข',nothing:'ไม่มีงานที่ต้องติดตาม',making:'กำลังสร้างไฟล์ Excel…',saved:'ดาวน์โหลดแล้ว',fail:'ไม่สำเร็จ',
+  cnt:'งาน',today:'วันนี้',dueIn:'วันก่อนครบกำหนด',overdue:'วันที่เลยกำหนด',area:'จุดที่ทำ',lbClose:'แตะที่ใดก็ได้เพื่อปิด',week:'สัปดาห์',task:'งาน'}
+};
+const ST_KEY={'계획':'plan','진행':'doing','완료':'done','보류':'hold'};
+const CAT_COLOR=['--c1','--c2','--c3','--c4','--c5','--c6'];
+const DAY=86400000;
+let DATA=null, lang='ko';
+try{lang=localStorage.getItem('db_lang')||'ko'}catch(e){}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const t=k=>(I18N[lang]||I18N.ko)[k]||k;
+const pd=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||'');return m?Date.UTC(+m[1],m[2]-1,+m[3]):NaN};
+const md=s=>{const v=pd(s);if(isNaN(v))return '–';const d=new Date(v);return (d.getUTCMonth()+1)+'/'+d.getUTCDate()};
+function tx(task,field){ if(lang==='th'&&task.th&&task.th[field]) return task.th[field]; return task[field]; }
+function teamName(k){ if(lang!=='th')return k; const tk=(DATA.tasks.find(x=>x.own===k)||{}).th; return (tk&&tk.own)||k; }
+function catName(k){ if(lang!=='th')return k; const tk=(DATA.tasks.find(x=>x.cat===k)||{}).th; return (tk&&tk.cat)||k; }
+function catIdx(c){const n=parseInt(c,10);return isNaN(n)?0:(n-1)%6}
+function toast(m){const e=$('toast');e.textContent=m;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,2600)}
+
+function enrich(d){
+  const today=pd(d.today);
+  d.tasks.forEach(x=>{
+    const s=pd(x.start),e=pd(x.end);
+    const k=ST_KEY[x.status]||'plan';
+    x.eff=k==='done'?'done':k==='hold'?'hold':(!isNaN(e)&&e<today?'late':k);
+    x.act=k==='done'?1:Math.max(0,Math.min(1,x.ap||0));
+    x.pln=(isNaN(s)||isNaN(e))?0:Math.max(0,Math.min(1,(today-s+DAY)/(e-s+DAY)));
+    x.left=isNaN(e)?null:Math.round((e-today)/DAY);
+  });
+  return d;
+}
+const avg=a=>a.length?a.reduce((p,c)=>p+c,0)/a.length:0;
+const pct=v=>Math.round(v*100)+'%';
+
+/* ---------- render ---------- */
+function applyI18n(){
+  document.documentElement.lang=lang; document.body.classList.toggle('th',lang==='th');
+  document.querySelectorAll('[data-i]').forEach(el=>el.textContent=t(el.dataset.i));
+  document.querySelectorAll('[data-ip]').forEach(el=>el.placeholder=t(el.dataset.ip));
+  $('lk').setAttribute('aria-pressed',lang==='ko'); $('lt').setAttribute('aria-pressed',lang==='th');
+}
+function renderKpis(){
+  const T=DATA.tasks, n=T.length, c=k=>T.filter(x=>x.eff===k).length;
+  const pl=avg(T.map(x=>x.pln)), ac=avg(T.map(x=>x.act));
+  $('kpis').innerHTML=`
+   <div class="kpi"><span class="k">${t('total')}</span><span class="v">${n}</span></div>
+   <div class="kpi ok"><span class="k">${t('done')}</span><span class="v">${c('done')}<small>${n?pct(c('done')/n):'0%'}</small></span></div>
+   <div class="kpi run"><span class="k">${t('doing')}</span><span class="v">${c('doing')}</span></div>
+   <div class="kpi bad"><span class="k">${t('late')}</span><span class="v">${c('late')}</span></div>
+   <div class="kpi idle"><span class="k">${t('unassigned')}</span><span class="v">${T.filter(x=>x.own==='미정').length}</span></div>
+   <div class="kpi"><span class="k">${t('pva')}</span>
+     <div class="pvsa"><div class="row"><span>${t('planned')}</span><div class="track"><i style="width:${pct(pl)};background:var(--plan)"></i></div><span>${pct(pl)}</span></div>
+     <div class="row"><span>${t('actual')}</span><div class="track"><i style="width:${pct(ac)};background:var(--ok)"></i></div><span>${pct(ac)}</span></div></div></div>`;
+}
+function groups(key){const m=new Map();DATA.tasks.forEach(x=>{if(!m.has(x[key]))m.set(x[key],[]);m.get(x[key]).push(x)});return m}
+function renderCats(){
+  let h='';
+  groups('cat').forEach((arr,k)=>{
+    const pl=avg(arr.map(x=>x.pln)),ac=avg(arr.map(x=>x.act));const ci=catIdx(k);
+    h+=`<div class="bar"><span class="name" title="${esc(catName(k))}"><i class="sw" style="background:var(${CAT_COLOR[ci]})"></i>${esc(catName(k))}</span>
+      <div class="dual"><div class="track"><i style="width:${pct(pl)};background:var(--plan)"></i></div><div class="track"><i style="width:${pct(ac)};background:var(--ok)"></i></div></div>
+      <span class="num">${pct(ac)} / ${pct(pl)}</span></div>`;
+  });
+  $('cats').innerHTML=h||`<div class="empty">${t('noItems')}</div>`;
+}
+const STACK=[['done','var(--ok)'],['doing','var(--run)'],['late','var(--bad)'],['plan','var(--plan)'],['hold','var(--idle)']];
+function stackBar(arr,max){
+  return `<div class="stack" style="width:${Math.max(6,arr.length/max*100)}%">${STACK.map(([k,c])=>{const n=arr.filter(x=>x.eff===k).length;return n?`<i style="flex:${n};background:${c}" title="${t('st_'+k)} ${n}"></i>`:''}).join('')}</div>`;
+}
+function renderTeams(){
+  $('stackLegend').innerHTML=STACK.map(([k,c])=>`<span><i style="background:${c}"></i>${t('st_'+k)}</span>`).join('');
+  const g=groups('own');const max=Math.max(1,...[...g.values()].map(a=>a.length));
+  const keys=[...g.keys()].sort((a,b)=>(a==='미정')-(b==='미정')||g.get(b).length-g.get(a).length);
+  $('teams').innerHTML=keys.map(k=>{const a=g.get(k);const dn=a.filter(x=>x.eff==='done').length,lt=a.filter(x=>x.eff==='late').length;
+    return `<div class="bar"><span class="name" title="${esc(teamName(k))}">${esc(teamName(k))}</span>${stackBar(a,max)}<span class="num">${dn}/${a.length}${lt?` · <b style="color:var(--bad)">${lt}</b>`:''}</span></div>`}).join('');
+  const io=groups('io');const imax=Math.max(1,...[...io.values()].map(a=>a.length));
+  $('io').innerHTML=['내부','외부'].filter(k=>io.has(k)).map(k=>{const a=io.get(k);return `<div class="bar"><span class="name">${k==='내부'?t('inside'):t('outside')}</span>${stackBar(a,imax)}<span class="num">${a.filter(x=>x.eff==='done').length}/${a.length} · ${pct(avg(a.map(x=>x.act)))}</span></div>`}).join('');
+}
+function chip(x){return `<span class="chip ${x.eff}">${t('st_'+x.eff)}</span>`}
+function renderAtt(){
+  const a=DATA.tasks.filter(x=>x.eff==='late'||(x.eff!=='done'&&x.eff!=='hold'&&x.left!==null&&x.left>=0&&x.left<=7))
+    .sort((p,q)=>(p.left??999)-(q.left??999));
+  $('att').innerHTML=a.length?a.map(x=>`<div class="item"><span class="id">${esc(x.id)}</span><div><b>${esc(tx(x,'work'))}</b><span class="meta">${esc(teamName(x.own))} · ${md(x.start)}–${md(x.end)} · ${x.left<0?(-x.left)+' '+t('overdue'):x.left+' '+t('dueIn')}</span></div>${x.eff==='late'?chip(x):`<span class="chip soon">${t('soon')}</span>`}</div>`).join(''):`<div class="empty">${t('nothing')}</div>`;
+}
+function fillSelect(el,allKey,items,keep){
+  const cur=keep?el.value:'';
+  el.innerHTML=`<option value="">${t(allKey)}</option>`+items.map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join('');
+  if(cur&&items.some(i=>i[0]===cur))el.value=cur;
+}
+function renderFilters(keep){
+  const teams=[...groups('own').keys()].map(k=>[k,teamName(k)]);
+  const cats=[...groups('cat').keys()].map(k=>[k,catName(k)]);
+  fillSelect($('gTeam'),'allTeams',teams,keep);fillSelect($('gCat'),'allCats',cats,keep);
+  fillSelect($('fTeam'),'allTeams',teams,keep);fillSelect($('fCat'),'allCats',cats,keep);
+  fillSelect($('fStat'),'allStat',['plan','doing','late','done','hold'].map(k=>[k,t('st_'+k)]),keep);
+}
+function renderGantt(){
+  const team=$('gTeam').value,cat=$('gCat').value;
+  const list=DATA.tasks.filter(x=>(!team||x.own===team)&&(!cat||x.cat===cat)&&!isNaN(pd(x.start))&&!isNaN(pd(x.end)));
+  $('gLegend').innerHTML=STACK.map(([k,c])=>`<span><i style="background:${c}"></i>${t('st_'+k)}</span>`).join('')+`<span><i style="background:var(--accent);width:3px"></i>${t('today')}</span>`;
+  if(!list.length){$('gantt').innerHTML=`<div class="empty">${t('noItems')}</div>`;return}
+  let s=Math.min(...list.map(x=>pd(x.start))),e=Math.max(...list.map(x=>pd(x.end)));
+  const dow=(new Date(s).getUTCDay()+6)%7;s-=dow*DAY;const weeks=Math.max(4,Math.ceil((e-s+DAY)/(7*DAY)));
+  const dw=7,wpx=dw*7,tw=weeks*wpx,today=pd(DATA.today);
+  let wk='';for(let i=0;i<weeks;i++){const ws=s+i*7*DAY;const now=today>=ws&&today<ws+7*DAY;wk+=`<div class="${now?'now':''}" style="width:${wpx}px">${md(new Date(ws).toISOString())}</div>`}
+  const tl=(today-s)/DAY*dw;const showT=today>=s&&today<=s+weeks*7*DAY;
+  const col={done:'var(--ok)',doing:'var(--run)',late:'var(--bad)',plan:'var(--plan)',hold:'var(--idle)'};
+  let h=`<div class="g" style="--tw:${tw}px"><div class="grow ghead"><div class="gl">${t('task')}</div><div class="wk">${wk}</div></div>`;
+  let last=null;
+  list.forEach(x=>{
+    if(x.cat!==last){last=x.cat;h+=`<div class="grow gcat"><div class="gl"><i style="width:8px;height:8px;border-radius:2px;background:var(${CAT_COLOR[catIdx(x.cat)]});flex:none"></i>${esc(catName(x.cat))}</div><div class="gt" style="height:26px;background-image:repeating-linear-gradient(90deg,var(--line2) 0 1px,transparent 1px ${wpx}px)">${showT?`<div class="today" style="left:${tl}px"></div>`:''}</div></div>`}
+    const l=(pd(x.start)-s)/DAY*dw,w=Math.max(dw,(pd(x.end)-pd(x.start)+DAY)/DAY*dw);
+    h+=`<div class="grow"><div class="gl" title="${esc(tx(x,'work'))}"><span class="id" style="font-family:var(--mono);font-size:10px;color:var(--muted)">${esc(x.id)}</span>${esc(tx(x,'work'))}</div>
+      <div class="gt" style="background-image:repeating-linear-gradient(90deg,var(--line2) 0 1px,transparent 1px ${wpx}px)">${showT?`<div class="today" style="left:${tl}px"></div>`:''}
+      <div class="gb" style="left:${l}px;width:${w}px;background:${col[x.eff]};${x.io==='외부'?'box-shadow:inset 0 -3px 0 var(--ext)':''}" title="${esc(tx(x,'work'))} · ${md(x.start)}–${md(x.end)} · ${t('st_'+x.eff)} · ${teamName(x.own)}"></div></div></div>`;
+  });
+  $('gantt').innerHTML=h+'</div>';
+}
+function photo(url,kind){
+  const lab=kind==='b'?t('before'):t('after');
+  return url?`<button type="button" class="ph" data-lb="${esc(url)}"><img src="${esc(url)}" alt="${esc(lab)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"><span class="lab ${kind}">${esc(lab)}</span></button>`
+            :`<div class="ph"><span class="lab ${kind}">${esc(lab)}</span>${t('noPhoto')}</div>`;
+}
+function renderTasks(){
+  const team=$('fTeam').value,cat=$('fCat').value,st=$('fStat').value,q=$('fq').value.trim().toLowerCase();
+  const list=DATA.tasks.filter(x=>(!team||x.own===team)&&(!cat||x.cat===cat)&&(!st||x.eff===st)&&
+    (!q||[x.id,x.work,x.iss,x.area,x.th&&x.th.work,x.th&&x.th.area].join(' ').toLowerCase().includes(q)));
+  $('tCount').textContent=list.length+' '+t('cnt');
+  $('tasks').innerHTML=list.length?list.map(x=>`<article class="task">
+    <div class="top"><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${esc(x.id)}</span>${chip(x)}${x.io==='외부'?`<span class="chip ext">${t('outside')}</span>`:''}</div>
+    <div class="ttl">${esc(tx(x,'work'))}</div>
+    <div class="iss">${esc(tx(x,'iss'))}</div>
+    <div class="meta"><span>${t('owner')}: <b>${esc(teamName(x.own))}</b></span><span>${t('period')}: ${md(x.start)}–${md(x.end)}</span><span>${t('actual')} ${pct(x.act)}</span>${x.area?`<span>${t('area')}: ${esc(tx(x,'area'))}</span>`:''}</div>
+    <div class="photos">${photo(x.before,'b')}${photo(x.after,'a')}</div>
+    ${x.prog?`<div class="prog">${esc(tx(x,'prog'))}</div>`:''}
+  </article>`).join(''):`<div class="empty">${t('noItems')}</div>`;
+  $('tasks').querySelectorAll('[data-lb]').forEach(b=>b.onclick=()=>{const lb=$('lb');lb.innerHTML=`<img src="${esc(b.dataset.lb)}" alt=""><p style="color:#fff;font-size:12px;margin:8px 0 0;text-align:center">${t('lbClose')}</p>`;lb.hidden=false;lb.onclick=()=>lb.hidden=true});
+}
+function renderDl(){
+  $('dl').innerHTML=`<button type="button" class="btn primary" data-all="1"><span>${t('all')}</span><small>.xlsx</small></button>`+
+   DATA.sheets.map(s=>`<button type="button" class="btn" data-sheet="${esc(s.name)}"><span>${esc(lang==='th'&&s.th?s.th:s.name)}</span><small>.xlsx</small></button>`).join('');
+  $('dl').querySelectorAll('button').forEach(b=>b.onclick=()=>download(b));
+}
+function saveB64(r){
+  const bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  const url=URL.createObjectURL(new Blob([u],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  const a=document.createElement('a');a.href=url;a.download=r.filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+function download(b){
+  if(typeof google==='undefined'){toast('Apps Script 에서만 동작');return}
+  b.disabled=true;toast(t('making'));
+  const run=google.script.run.withSuccessHandler(r=>{b.disabled=false;saveB64(r);toast(t('saved'))}).withFailureHandler(e=>{b.disabled=false;toast(t('fail')+': '+(e.message||e))});
+  b.dataset.all?run.exportAllXlsx():run.exportSheetXlsx(b.dataset.sheet);
+}
+function renderAll(keep){
+  applyI18n();$('upd').textContent=DATA.updated;
+  renderKpis();renderCats();renderTeams();renderAtt();renderFilters(keep);renderGantt();renderTasks();renderDl();
+}
+function load(){
+  $('refresh').disabled=true;
+  const ok=d=>{DATA=enrich(d);$('loading').hidden=true;$('refresh').disabled=false;renderAll(true)};
+  const bad=e=>{$('loading').textContent=(e&&e.message)||String(e);$('refresh').disabled=false};
+  if(typeof google!=='undefined'&&google.script)google.script.run.withSuccessHandler(ok).withFailureHandler(bad).getDashboardData();
+  else if(window.SAMPLE_DATA)ok(window.SAMPLE_DATA);
+  else bad('Apps Script 웹앱으로 열어 주세요.');
+}
+function setLang(l){lang=l;try{localStorage.setItem('db_lang',l)}catch(e){};if(DATA)renderAll(true);else applyI18n()}
+$('lk').onclick=()=>setLang('ko');$('lt').onclick=()=>setLang('th');$('refresh').onclick=load;
+['gTeam','gCat'].forEach(id=>$(id).onchange=renderGantt);
+['fTeam','fCat','fStat'].forEach(id=>$(id).onchange=renderTasks);$('fq').oninput=renderTasks;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('lb').hidden=true});
+applyI18n();load();
+</script>
+</body>
+</html>
