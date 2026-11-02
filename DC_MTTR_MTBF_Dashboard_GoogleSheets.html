@@ -572,6 +572,10 @@
   .lx-foot{font-family:var(--lxmono); font-size:10.5px; color:var(--lxmute); line-height:1.95;
     border-top:1px solid var(--lxline); padding-top:14px; margin-top:14px;}
   .lx-foot b{color:var(--lxsub); font-weight:500;}
+.gp-bar input[type=date]{border:1px solid #d8dfe7;border-radius:6px;padding:4px 7px;font-size:13px;background:#fff}
+.gp-q{display:inline-flex;gap:0;border:1px solid #d8dfe7;border-radius:7px;overflow:hidden;margin-left:6px}
+.gp-q button{border:0;border-right:1px solid #e5e9ef;background:#fff;padding:4px 10px;font-size:12px;cursor:pointer;color:#334155}
+.gp-q button:last-child{border-right:0} .gp-q button.on{background:#1f3864;color:#fff;font-weight:700}
 </style>
 
 <style>
@@ -1024,6 +1028,12 @@
     <span class="status-chip missing">DC14 결번</span>
   </div>
 
+  <div class="stdbar gp-bar">
+    <span class="lb">분석 기간</span>
+    <input type="date" id="gpFrom"> <span class="lb">~</span> <input type="date" id="gpTo">
+    <span class="gp-q" id="gpQuick"><button type="button" data-q="all">전체</button><button type="button" data-q="m0">이번 달</button><button type="button" data-q="m1">지난 달</button><button type="button" data-q="w4">최근 4주</button><button type="button" data-q="w8">최근 8주</button><button type="button" data-q="w13">최근 13주</button></span>
+    <span class="lb" id="gpNote" style="margin-left:auto"></span>
+  </div>
   <div class="stdbar">
     <span class="lb">지표 산출 기준</span>
     <label><input type="radio" name="stdmode" value="1" id="stdOn"> 국제표준 — 계획외 고장(UDT)만</label>
@@ -2402,6 +2412,7 @@ async function loadData(){
       `가동률 = 가동시간 ÷ (가동시간+로스시간) × 100 &nbsp;·&nbsp; 원천: ${DATA_SOURCE} — OEE 원본만 갱신하면 자동 반영  &nbsp;·&nbsp; ` +
       `DC1·DC7·DC17은 고장으로 가동 중단된 설비, DC14는 결번`;
 
+    try{ gpApply(true); }catch(e){ console.error(e); }
     render();
   }catch(e){
     errBanner.style.display = 'block';
@@ -2415,6 +2426,51 @@ async function loadData(){
   }
 }
 
+/* ===== 분석 기간 (상단) — 1~9번 분석 탭의 기간 입력·주차 선택을 한 번에 맞춘다 =====
+   · 주간·일일·월간 보고는 각자 보고 주차·기간을 고르므로 여기에 묶지 않는다
+   · 고른 기간은 이 브라우저에 저장 */
+const GP_KEY = 'stc_gp_range_v1';
+function gpBounds(){ const ds = RUN.map(r=>r.d).concat(LOSS.map(r=>r.d)).filter(Boolean).sort(); return [ds[0]||'', ds[ds.length-1]||'']; }
+function gpQuick(q){
+  const [mn, mx] = gpBounds(); if(!mx) return [mn, mx];
+  const add = (s,n)=>{ const d=new Date(s+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
+  if(q==='m0') return [mx.slice(0,8)+'01', mx];
+  if(q==='m1'){ const d=new Date(mx.slice(0,8)+'01T00:00:00Z'); d.setUTCDate(0); const e=d.toISOString().slice(0,10); return [e.slice(0,8)+'01', e]; }
+  const wk = {w4:4, w8:8, w13:13}[q];
+  if(wk){ /* 사내 주차(수~화) 단위로 끊는다 */ const t=new Date(mx+'T00:00:00Z'); const back=(t.getUTCDay()-3+7)%7; const ws=add(mx,-back); return [add(ws,-(wk-1)*7), mx]; }
+  return [mn, mx];
+}
+function gpApply(init){
+  const f = document.getElementById('gpFrom'), t = document.getElementById('gpTo'); if(!f || !RUN.length) return;
+  const [mn, mx] = gpBounds();
+  f.min = t.min = mn; f.max = t.max = mx;
+  if(init){ let sv=null; try{ sv=JSON.parse(localStorage.getItem(GP_KEY)||'null'); }catch(e){}
+    let r = sv && sv.q && sv.q!=='custom' ? gpQuick(sv.q) : sv ? [sv.from, sv.to] : [mn, mx];
+    if(!r[0] || r[0] < mn || r[0] > mx) r[0] = mn; if(!r[1] || r[1] > mx || r[1] < mn) r[1] = mx;
+    f.value = r[0]; t.value = r[1]; f.dataset.q = sv && sv.q || 'all'; }
+  if(f.value > t.value){ const x=f.value; f.value=t.value; t.value=x; }
+  const a = f.value, b = t.value, q = f.dataset.q || 'custom';
+  try{ localStorage.setItem(GP_KEY, JSON.stringify({from:a, to:b, q})); }catch(e){}
+  document.querySelectorAll('#gpQuick button').forEach(x=>x.classList.toggle('on', x.dataset.q===q));
+  /* 탭별 기간 입력 */
+  [['startDate','endDate'],['paretoStartDate','paretoEndDate'],['pptStartDate','pptEndDate'],['costStart','costEnd']].forEach(([s,e])=>{
+    const S=document.getElementById(s), E=document.getElementById(e); if(!S||!E) return;
+    S.value = a; E.value = b; if(!init){ S.dispatchEvent(new Event('change')); E.dispatchEvent(new Event('change')); } });
+  /* 1번 설비별 MTTR/MTBF 주차 선택 = 기간에 걸친 주차 */
+  const wks = new Set(RUN.filter(r=>r.d>=a && r.d<=b).map(r=>r.w));
+  if(wks.size){ selectedWeeks = wks; if(document.getElementById('weekChips') && document.querySelector('.week-chip[data-week]')){ refreshWeekChips(); if(!init && typeof renderHero==='function') renderHero(); } }
+  const n = Math.round((new Date(b+'T00:00:00Z') - new Date(a+'T00:00:00Z'))/864e5) + 1;
+  document.getElementById('gpNote').textContent = (a===mn && b===mx ? '전체 기간' : `${n}일 · ${wks.size}개 주차`) + ' — 분석 탭의 기간·주차 선택에 적용 (주간·일일·월간 보고는 각자 선택)';
+  const tag = document.getElementById('dataRangeTag');
+  if(tag) tag.textContent = `${a} ~ ${b}${a===mn&&b===mx?'':' (분석 기간 · 전체 '+mn+' ~ '+mx+')'} · 가동${RUN.length}행 · 로스${LOSS.length}행 · 원천: ${DATA_SOURCE}`;
+}
+(function(){
+  const f = document.getElementById('gpFrom'), t = document.getElementById('gpTo'); if(!f) return;
+  const on = ()=>{ f.dataset.q='custom'; gpApply(false); };
+  f.addEventListener('change', on); t.addEventListener('change', on);
+  document.querySelectorAll('#gpQuick button').forEach(btn=>btn.addEventListener('click', ()=>{
+    const r = gpQuick(btn.dataset.q); f.value = r[0]; t.value = r[1]; f.dataset.q = btn.dataset.q; gpApply(false); }));
+})();
 function buildWeekChips(){
   const wrap = document.getElementById('weekChips');
   wrap.innerHTML = '';
