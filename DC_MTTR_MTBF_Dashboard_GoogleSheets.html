@@ -7835,6 +7835,7 @@ loadData();
   const udtOkK = (c0, t, i) => !c0.std || !TYPE4[t].some(x=>c0.udt.has(norm(x))) || c0.udt.has(norm(i));
   function repTypesK(k){ let o=null; try{ o = JSON.parse(LS('stc_rep_types_v1')||'null'); }catch(e){}
     const a = o && Array.isArray(o[k]) ? o[k].filter(x=>TYPE4[x]) : []; return a.length ? new Set(a) : null; }
+  window.stcSetMcTarget = v => { const n = parseFloat(v); try{ if(isFinite(n) && n > 0) localStorage.setItem('stc_target_cost_mc', String(n)); else localStorage.removeItem('stc_target_cost_mc'); }catch(e){} if(typeof renderWeekly==='function') renderWeekly(); };
   function repRk(){ let o=null; try{ o = JSON.parse(LS('stc_rep_types_v1')||'null'); }catch(e){} return (o && o.rk) || '4'; }
 
   /* ---------------- 설정 (대시보드와 같은 저장값) ---------------- */
@@ -8203,6 +8204,7 @@ loadData();
 .kw .kw-fc .h b{font-size:16px;font-weight:900;color:#1f3864;} .kw .kw-fc .h small{font-size:13px;color:#334155;} .kw .kw-fc .pill{display:inline-block;padding:2px 10px;border-radius:12px;font-weight:900;margin-right:6px;}
 .kw .kw-fc .pill.ok{background:#dcfce7;color:#166534;} .kw .kw-fc .pill.ng{background:#fee2e2;color:#991b1b;}
 .kw .kw-fc svg{width:100%;height:auto;display:block;}
+.kw .kw-fc .mct{font-size:12px;font-weight:700;color:#334155;margin-right:8px;} .kw .kw-fc .mct input{width:90px;font:inherit;font-weight:800;text-align:right;padding:2px 6px;border:1.5px solid #dc2626;border-radius:5px;color:#b91c1c;}
 .kw .kw-fc .an{margin:6px 0 4px;padding:6px 10px;background:#f8fafc;border-radius:6px;font-size:12.5px;line-height:1.5;} .kw .kw-fc .an .g{color:#15803d;} .kw .kw-fc .an .r{color:#b91c1c;}
 .kw .kw-fc table.fct{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;} .kw .kw-fc table.fct th{background:#f1f5f9;color:#475569;font-size:11px;padding:3px 6px;text-align:right;} .kw .kw-fc table.fct th:first-child,.kw .kw-fc table.fct td:first-child{text-align:left;}
 .kw .kw-fc table.fct td{padding:3px 6px;border-bottom:1px solid #eef2f7;} .kw .kw-fc table.fct td.n{text-align:right;font-variant-numeric:tabular-nums;} .kw .kw-fc table.fct td.g{color:#15803d;font-weight:700;} .kw .kw-fc table.fct td.r{color:#b91c1c;font-weight:700;}
@@ -8614,34 +8616,37 @@ loadData();
         const tg = tC.tg, MS2 = MACHINES.slice();   /* DC1 ~ DC23 모두 (DC14 결번 제외) */
         if (!MS2.length) return '';
         const act = MACHINES.filter(m=>CUR.s.mc[m] && CUR.s.mc[m].runH>0).length || MS2.length;
-        const per = tg!=null ? tg/act : null;
+        /* 설비당 목표 — 직접 입력값(stc_target_cost_mc) 우선, 없으면 F-COST 목표 ÷ 가동 설비 수 */
+        const perSet = parseFloat(LS('stc_target_cost_mc')), perAuto = tg!=null ? tg/act : null;
+        const per = isFinite(perSet) && perSet > 0 ? perSet : perAuto;
         const cv = m => CUR.s.mc[m] ? CUR.s.mc[m].cost : 0, pv = m => PREV && PREV.s.mc[m] ? PREV.s.mc[m].cost : 0;
-        const W = 600, H = 230, Lm = 40, Rm = 8, Tm = 22, Bm = 26, pw = W-Lm-Rm, ph = H-Tm-Bm;
+        const W = 600, H = 250, Lm = 46, Rm = 8, Tm = 40, Bm = 26, pw = W-Lm-Rm, ph = H-Tm-Bm;
         const mx = Math.max(...MS2.map(m=>Math.max(cv(m), pv(m))), per||0) * 1.18 || 1, y = v => Tm + ph - v/mx*ph, bw = pw/MS2.length;
         let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="F-COST 설비별">`;
-        [0, mx/2, mx].forEach(v=>{ g += `<line x1="${Lm}" x2="${W-Rm}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="#eef2f7"/><text x="${Lm-4}" y="${(y(v)+3).toFixed(1)}" text-anchor="end" font-size="9.5" fill="#94a3b8">${f0(v/1000)}k</text>`; });
+        [0, mx/2, mx].forEach(v=>{ g += `<line x1="${Lm}" x2="${W-Rm}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="#eef2f7"/><text x="${Lm-4}" y="${(y(v)+3).toFixed(1)}" text-anchor="end" font-size="9" fill="#94a3b8">${f0(v)}</text>`; });
         const over = [];
         MS2.forEach((m,i)=>{ const c = cv(m), p0 = pv(m), x0 = Lm + i*bw, w = bw*0.36;
           const ok = per==null ? null : c <= per; if (ok===false) over.push(m);
           const col = ok==null ? '#1e3c72' : ok ? '#16a34a' : '#dc2626';
           if (p0>0) g += `<rect x="${(x0+bw*0.1).toFixed(1)}" y="${y(p0).toFixed(1)}" width="${w.toFixed(1)}" height="${(Tm+ph-y(p0)).toFixed(1)}" fill="#cbd5e1"><title>DC${m} ${esc(PREV?PREV.w:'')} ${f0(p0)} THB</title></rect>`;
           if (c>0) g += `<rect x="${(x0+bw*0.1+w).toFixed(1)}" y="${y(c).toFixed(1)}" width="${w.toFixed(1)}" height="${(Tm+ph-y(c)).toFixed(1)}" fill="${col}"><title>DC${m} ${esc(opt.week)} ${f0(c)} THB${per!=null?(ok?' · 설비당 목표 이내':' · 설비당 목표 초과'):''}</title></rect>`;
-          if (c>=1000) g += `<text x="${(x0+bw*0.1+w*1.5).toFixed(1)}" y="${(y(c)-3).toFixed(1)}" text-anchor="middle" font-size="8.5" font-weight="800" fill="${col}">${f1(c/1000, c<10000?1:0)}</text>`;
+          /* 막대 위 금액 (THB) — 세로로 써서 옆 막대와 겹치지 않게 */
+          if (c>0){ const tx = x0+bw*0.1+w*1.5, ty = y(c)-3; g += `<text transform="translate(${tx.toFixed(1)},${ty.toFixed(1)}) rotate(-90)" text-anchor="start" dominant-baseline="middle" font-size="9" font-weight="800" fill="${col}">${f0(c)}</text>`; }
           g += `<text x="${(x0+bw/2).toFixed(1)}" y="${H-Bm+12}" text-anchor="middle" font-size="9.5" font-weight="${ok===false?800:500}" fill="${ok===false?'#b91c1c':'#475569'}">${m}</text>`; });
-        g += `<text x="${Lm}" y="${H-3}" font-size="9" fill="#94a3b8">DC 호기 · 막대 위 = 천 THB</text>`;
+        g += `<text x="${Lm}" y="${H-3}" font-size="9" fill="#94a3b8">DC 호기 · 막대 위 = ${esc(opt.week)} 금액 (THB)</text>`;
         if (per!=null) g += `<line x1="${Lm}" x2="${W-Rm}" y1="${y(per).toFixed(1)}" y2="${y(per).toFixed(1)}" stroke="#b91c1c" stroke-width="1.6" stroke-dasharray="6 4"/>`;
         g += `</svg>`;
         const curV = CUR.s.cost, ok = tg!=null ? curV <= tg : null;
         let an = '';
-        if (tg!=null){
+        if (tg!=null || per!=null){
           const ov = over.slice().sort((a,b)=>cv(b)-cv(a)), ovSum = ov.reduce((a,m)=>a+(cv(m)-per),0);
-          an = (ok ? `<b class="g">${esc(opt.week)} 목표 달성</b> — 합계 ${f0(curV)} / 목표 ${f0(tg)} · 여유 <b>${f0(tg-curV)}</b>`
+          an = (tg==null ? `<b>${esc(opt.week)} 합계 ${f0(curV)}</b>` : ok ? `<b class="g">${esc(opt.week)} 목표 달성</b> — 합계 ${f0(curV)} / 목표 ${f0(tg)} · 여유 <b>${f0(tg-curV)}</b>`
                    : `<b class="r">${esc(opt.week)} 목표 미달</b> — 합계 ${f0(curV)} / 목표 ${f0(tg)} · <b>${f0(curV-tg)}</b> 초과`)
-             + ` · 설비당 목표 ${f0(per)} (= ${f0(tg)} ÷ 가동 ${act}대) 초과 <b>${ov.length}대</b>${ov.length?': '+ov.slice(0,6).map(m=>`DC${m} ${f0(cv(m))}`).join(' · ')+(ov.length>6?' …':''):''}`;
+             + ` · 설비당 목표 ${f0(per)}${isFinite(perSet)&&perSet>0?' (직접 설정)':` (= ${f0(tg)} ÷ 가동 ${act}대)`} 초과 <b>${ov.length}대</b>${ov.length?': '+ov.slice(0,6).map(m=>`DC${m} ${f0(cv(m))}`).join(' · ')+(ov.length>6?' …':''):''}`;
         }
+        const inp = `<label class="mct">설비당 목표 <input type="number" min="0" step="500" value="${isFinite(perSet)&&perSet>0?perSet:''}" placeholder="${perAuto!=null?'자동 '+Math.round(perAuto):'금액'}" onchange="window.stcSetMcTarget && stcSetMcTarget(this.value)" title="비우면 자동 = F-COST 목표 ÷ 가동 설비 수"> THB</label>`;
         return `<div class="kw-fc"><div class="h"><b>F-COST 설비별 · 목표 달성</b>`
-          + (tg==null ? `<small>위 표 F-COST 목표 칸에 값을 넣으면 설비당 목표선이 그려집니다</small>`
-             : `<small><span class="pill ${ok?'ok':'ng'}">${esc(opt.week)} ${ok?'✔ 달성':'✖ 미달'} · ${f0(curV)} / 목표 ${f0(tg)}</span></small>`)
+          + `<small>${inp}${tg!=null?` <span class="pill ${ok?'ok':'ng'}">${esc(opt.week)} ${ok?'✔ 달성':'✖ 미달'} · ${f0(curV)} / 목표 ${f0(tg)}</span>`:''}</small>`
           + `</div>${g}<div class="lg"><span><i style="background:#cbd5e1"></i>${esc(PREV?PREV.w:'전주')}</span><span><i style="background:#16a34a"></i>${esc(opt.week)} 설비당 목표 이내</span><span><i style="background:#dc2626"></i>${esc(opt.week)} 초과</span><span><i class="ln"></i>설비당 목표${per!=null?' '+f0(per):''}</span></div>`
           + (an ? `<div class="an">${an}</div>` : '') + `</div>`; })();
       /* 2×2 — 윗줄 : 지표 표 | Worst 로스시간 · 아랫줄 : F-COST 그래프 | Worst F-COST (줄마다 높이 맞춤) */
