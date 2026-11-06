@@ -8191,15 +8191,22 @@ loadData();
 .kw .kw-chg .why .gd{background:#f0fdf4;} .kw .kw-chg .why .bd{background:#fff5f5;} .kw .kw-chg .why > div > b:first-child{display:block;margin-bottom:2px;} .kw .kw-chg .why .gd > b:first-child{color:#15803d;} .kw .kw-chg .why .bd > b:first-child{color:#b91c1c;}
 .kw .kw-chg .why .mc{display:block;font-size:11.5px;color:#64748b;margin-top:2px;}
 .kw table.kw-tr th.av{background:#dbe5f1;} .kw table.kw-tr td.av{background:#f4f7fb;}
-.kw .kw-l2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px;align-items:start;} .kw .kw-l2 .c1,.kw .kw-l2 .c2{display:flex;flex-direction:column;gap:10px;min-width:0;}
-.kw .kw-l2 .c2 .dnc{margin:0;}
+.kw .kw-l2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;align-items:stretch;margin-bottom:6px;}
+.kw .kw-l2 > .q{min-width:0;display:flex;flex-direction:column;} .kw .kw-l2 > .q > *{flex:1 1 auto;margin:0 !important;}
+.kw .kw-l2 > .q.tb > div{display:flex;} .kw .kw-l2 > .q.tb table{height:100%;}
+.kw .kw-l2 .dnc{display:flex;flex-direction:column;} .kw .kw-l2 .dnc > .b{flex:1 1 auto;align-items:center;}
+.kw .kw-l2 .kw-fc{display:flex;flex-direction:column;} .kw .kw-l2 .kw-fc svg{flex:0 0 auto;}
 .kw table.kw-tr2{font-size:12px;} .kw table.kw-tr2 td.why{font-size:11.5px;} .kw table.kw-tr2 td.why .wl{font-size:11.5px;} .kw table.kw-tr2 td.c{overflow:visible;}
 .kw table.kw-tr th.ach{background:#dcfce7;color:#166534;} .kw table.kw-tr td.ach{font-weight:900;font-size:13px;} .kw table.kw-tr td.ach.ok{color:#15803d;background:#f0fdf4;} .kw table.kw-tr td.ach.ng{color:#b91c1c;background:#fef2f2;} .kw table.kw-tr td.ach.na{color:#94a3b8;}
 .kw table.kw-tr td.ach .sm{display:block;font-size:10.5px;font-weight:700;opacity:.85;}
 .kw .kw-fc{border:1px solid #dbe3ec;border-radius:10px;padding:10px 12px;background:#fff;} .kw .kw-fc .h{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:4px;}
 .kw .kw-fc .h b{font-size:16px;font-weight:900;color:#1f3864;} .kw .kw-fc .h small{font-size:13px;color:#334155;} .kw .kw-fc .pill{display:inline-block;padding:2px 10px;border-radius:12px;font-weight:900;margin-right:6px;}
 .kw .kw-fc .pill.ok{background:#dcfce7;color:#166534;} .kw .kw-fc .pill.ng{background:#fee2e2;color:#991b1b;}
-.kw .kw-fc svg{width:100%;height:auto;display:block;} .kw .kw-fc .lg{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#64748b;justify-content:center;} .kw .kw-fc .lg i{display:inline-block;width:11px;height:9px;margin-right:4px;vertical-align:middle;} .kw .kw-fc .lg i.ln{height:0;width:16px;border-top:2px dashed #b91c1c;}
+.kw .kw-fc svg{width:100%;height:auto;display:block;}
+.kw .kw-fc .an{margin:6px 0 4px;padding:6px 10px;background:#f8fafc;border-radius:6px;font-size:12.5px;line-height:1.5;} .kw .kw-fc .an .g{color:#15803d;} .kw .kw-fc .an .r{color:#b91c1c;}
+.kw .kw-fc table.fct{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;} .kw .kw-fc table.fct th{background:#f1f5f9;color:#475569;font-size:11px;padding:3px 6px;text-align:right;} .kw .kw-fc table.fct th:first-child,.kw .kw-fc table.fct td:first-child{text-align:left;}
+.kw .kw-fc table.fct td{padding:3px 6px;border-bottom:1px solid #eef2f7;} .kw .kw-fc table.fct td.n{text-align:right;font-variant-numeric:tabular-nums;} .kw .kw-fc table.fct td.g{color:#15803d;font-weight:700;} .kw .kw-fc table.fct td.r{color:#b91c1c;font-weight:700;}
+.kw .kw-fc table.fct td i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;} .kw .kw-fc .lg{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#64748b;justify-content:center;} .kw .kw-fc .lg i{display:inline-block;width:11px;height:9px;margin-right:4px;vertical-align:middle;} .kw .kw-fc .lg i.ln{height:0;width:16px;border-top:2px dashed #b91c1c;}
 @media (max-width:1100px){ .kw .kw-l2{grid-template-columns:1fr;} }
 .kw table.kw-tr th.old{color:#94a3b8;} .kw table.kw-tr th.old .sm{color:#a8b3c1;} .kw table.kw-tr td.old,.kw table.kw-tr td.old b{color:#a3adba !important;} .kw table.kw-tr td.old.bad{color:#e3a1a1 !important;} .kw table.kw-tr th.tgh{background:#fde2e2;color:#b91c1c;}
 .kw table.kw-tr td.bad{color:#c00000;font-weight:800;} .kw table.kw-tr td.n.av.dn{color:#15803d;} .kw table.kw-tr td.n.av.up{color:#dc2626;} .kw table.kw-tr td.hb{color:#15803d !important;font-weight:900;font-size:13.5px;} .kw table.kw-tr td.hw{color:#dc2626 !important;font-weight:900;font-size:13.5px;} .kw table.kw-tr td.tgc{text-align:center;background:#fff7f7;}
@@ -8601,28 +8608,52 @@ loadData();
         dnL = donut('Worst 설비 · 고장 로스시간 (h)', 'lossH', 'h', 1, v=>f1(v,1), true); dnC = donut('Worst 설비 · F-COST (THB)', 'cost', '', 0, v=>f0(v), false);
       }
       /* F-COST 주차별 막대 + 목표선 — 목표 이하 = 초록(달성) · 넘으면 = 빨강(미달) */
+      /* F-COST 주차별 · 설비별 누적 막대 + 목표선 — 금주 F-COST 상위 4대는 색으로, 나머지는 회색 「기타」
+         막대 위 합계 글자 = 초록(목표 이하 · 달성) / 빨강(초과 · 미달) · 아래에 목표 달성 분석 */
       const fcH = (()=>{ const tC = T.find(t=>t.k==='cost'); if(!tC) return '';
         const L = WS.filter(x=>x.s.days.length).slice(-12), tg = tC.tg;
-        if (!L.length) return '';
-        const W = 560, H = 230, Lm = 44, Rm = 10, Tm = 26, Bm = 30, pw = W-Lm-Rm, ph = H-Tm-Bm;
-        const mx = Math.max(...L.map(x=>x.s.cost), tg||0, tC.avg) * 1.15 || 1, y = v => Tm + ph - v/mx*ph, bw = pw/L.length;
-        let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="F-COST 주차별">`;
+        if (!L.length || !CUR) return '';
+        const PALC = ['#1e3c72','#3b82f6','#f59e0b','#10b981'], ETC = '#cbd5e1';   /* 도넛 PAL 과 같은 순서 */
+        /* 오른쪽 Worst 도넛과 같은 설비 · 같은 색 (금주 로스시간 상위 4대) */
+        const TOP = MACHINES.filter(m=>CUR.s.mc[m] && CUR.s.mc[m].lossH>0).sort((a,b)=>CUR.s.mc[b].lossH-CUR.s.mc[a].lossH).slice(0,4);
+        const W = 600, H = 205, Lm = 44, Rm = 12, Tm = 26, Bm = 26, pw = W-Lm-Rm, ph = H-Tm-Bm;
+        const mx = Math.max(...L.map(x=>x.s.cost), tg||0) * 1.15 || 1, y = v => Tm + ph - v/mx*ph, bw = pw/L.length;
+        let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="F-COST 주차별 · 설비별">`;
         [0, mx/2, mx].forEach(v=>{ g += `<line x1="${Lm}" x2="${W-Rm}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="#eef2f7"/><text x="${Lm-5}" y="${(y(v)+3).toFixed(1)}" text-anchor="end" font-size="10" fill="#94a3b8">${f0(v/1000)}k</text>`; });
         let okN = 0;
-        L.forEach((x,i)=>{ const v = x.s.cost, ok = tg==null ? null : v <= tg; if (ok) okN++;
-          const cur = x.w===opt.week, col = ok==null ? '#64748b' : ok ? '#16a34a' : '#dc2626';
-          const bx = Lm + i*bw + bw*0.16, w = bw*0.68;
-          g += `<rect x="${bx.toFixed(1)}" y="${y(v).toFixed(1)}" width="${w.toFixed(1)}" height="${(Tm+ph-y(v)).toFixed(1)}" fill="${col}" opacity="${cur?1:0.55}" rx="2"${cur?' stroke="#0f172a" stroke-width="1.5"':''}><title>${esc(x.w)} ${f0(v)} THB${ok==null?'':ok?' · 목표 달성':' · 목표 미달'}</title></rect>`
-             + `<text x="${(bx+w/2).toFixed(1)}" y="${(y(v)-4).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="${cur?900:600}" fill="${cur?'#0f172a':'#64748b'}">${f0(v/1000)}k</text>`
+        L.forEach((x,i)=>{ const tot = x.s.cost, ok = tg==null ? null : tot <= tg; if (ok) okN++;
+          const cur = x.w===opt.week, bx = Lm + i*bw + bw*0.16, w = bw*0.68;
+          let acc = 0; const segs = TOP.map((m,j)=>({ v: (x.s.mc[m]||{}).cost||0, c: PALC[j], n:'DC'+m })); segs.push({ v: Math.max(0, tot - segs.reduce((a,z)=>a+z.v,0)), c: ETC, n:'기타' });
+          segs.forEach(z=>{ if(z.v<=0) return; const y1 = y(acc+z.v), y0 = y(acc);
+            g += `<rect x="${bx.toFixed(1)}" y="${y1.toFixed(1)}" width="${w.toFixed(1)}" height="${(y0-y1).toFixed(1)}" fill="${z.c}" opacity="${cur?1:0.6}"><title>${esc(x.w)} ${z.n} ${f0(z.v)} THB</title></rect>`; acc += z.v; });
+          if (cur) g += `<rect x="${bx.toFixed(1)}" y="${y(tot).toFixed(1)}" width="${w.toFixed(1)}" height="${(Tm+ph-y(tot)).toFixed(1)}" fill="none" stroke="#0f172a" stroke-width="1.6"/>`;
+          const lc = ok==null ? '#334155' : ok ? '#15803d' : '#b91c1c';
+          g += `<text x="${(bx+w/2).toFixed(1)}" y="${(y(tot)-5).toFixed(1)}" text-anchor="middle" font-size="${cur?11.5:10}" font-weight="${cur?900:700}" fill="${lc}">${ok==null?'':ok?'✔':'✖'}${f0(tot/1000)}k</text>`
              + `<text x="${(bx+w/2).toFixed(1)}" y="${H-Bm+14}" text-anchor="middle" font-size="10.5" font-weight="${cur?900:500}" fill="${cur?'#0f172a':'#64748b'}">${esc(x.w)}</text>`; });
-        if (tg!=null) g += `<line x1="${Lm}" x2="${W-Rm}" y1="${y(tg).toFixed(1)}" y2="${y(tg).toFixed(1)}" stroke="#b91c1c" stroke-width="1.8" stroke-dasharray="7 4"/><text x="${W-Rm}" y="${(y(tg)-4).toFixed(1)}" text-anchor="end" font-size="10.5" font-weight="800" fill="#b91c1c">목표 ${f0(tg/1000)}k</text>`;
+        if (tg!=null) g += `<line x1="${Lm}" x2="${W-Rm}" y1="${y(tg).toFixed(1)}" y2="${y(tg).toFixed(1)}" stroke="#b91c1c" stroke-width="1.8" stroke-dasharray="7 4"/><text x="${Lm+4}" y="${(y(tg)-4).toFixed(1)}" text-anchor="start" font-size="10.5" font-weight="800" fill="#b91c1c">목표 ${f0(tg/1000)}k</text>`;
         g += `</svg>`;
-        const curV = CUR ? CUR.s.cost : null, ok = tg!=null && curV!=null ? curV <= tg : null;
-        return `<div class="kw-fc"><div class="h"><b>F-COST 주차별 · 목표 달성</b>`
-          + (tg==null ? `<small>목표를 넣으면 달성 여부가 색으로 표시됩니다</small>`
+        const curV = CUR.s.cost, ok = tg!=null ? curV <= tg : null;
+        /* 달성 분석 — 금주 설비별 F-COST 와 목표까지 얼마를 줄여야 하는지 */
+        const ALLM = MACHINES.filter(m=>CUR.s.mc[m] && CUR.s.mc[m].cost>0).sort((a,b)=>CUR.s.mc[b].cost-CUR.s.mc[a].cost);
+        let an = '';
+        if (tg!=null){
+          if (ok) an = `<b class="g">${esc(opt.week)} 목표 달성</b> — ${f0(curV)} / 목표 ${f0(tg)} · 여유 <b>${f0(tg-curV)}</b> THB`;
+          else { const gap = curV - tg; let acc = 0; const need = [];
+            for (const m of ALLM){ need.push(m); acc += CUR.s.mc[m].cost; if (acc >= gap) break; }
+            an = `<b class="r">${esc(opt.week)} 목표 미달</b> — ${f0(curV)} / 목표 ${f0(tg)} · <b>${f0(gap)}</b> THB 초과 → `
+               + (acc >= gap ? `상위 <b>${need.map(m=>'DC'+m).join('·')}</b> ${need.length}대의 손실(${f0(acc)})을 없애야 달성되는 크기` : `전체 설비 손실을 모두 줄여도 부족`); }
+        }
+        const rows = ALLM.slice(0,6).map((m,i)=>{ const v = CUR.s.mc[m].cost, pv = PREV && PREV.s.mc[m] ? PREV.s.mc[m].cost : 0, sh = curV ? v/curV*100 : 0, tsh = tg ? v/tg*100 : null;
+          const ci = TOP.indexOf(m);
+          return `<tr><td><i style="background:${ci>=0?PALC[ci]:ETC}"></i>DC${m}</td><td class="n"><b>${f0(v)}</b></td><td class="n ${v-pv<0?'g':v-pv>0?'r':''}">${pv||v ? (v-pv>0?'+':v-pv<0?'−':'')+f0(Math.abs(v-pv)) : ''}</td><td class="n">${f1(sh,0)}%</td>${tg!=null?`<td class="n${tsh>=100?' r':''}">${f1(tsh,0)}%</td>`:''}</tr>`; }).join('');
+        const tb = `<table class="fct"><thead><tr><th>설비 (금주 F-COST 순)</th><th>${esc(opt.week)}</th><th>전주 대비</th><th>비중</th>${tg!=null?'<th title="이 설비 하나가 목표 금액의 몇 %를 차지하는지">목표 대비</th>':''}</tr></thead><tbody>${rows}</tbody></table>`;
+        return `<div class="kw-fc"><div class="h"><b>F-COST 주차별 · 설비별 · 목표 달성</b>`
+          + (tg==null ? `<small>위 표 F-COST 목표 칸에 값을 넣으면 달성 여부가 표시됩니다</small>`
              : `<small><span class="pill ${ok?'ok':'ng'}">${esc(opt.week)} ${ok?'✔ 달성':'✖ 미달'} · ${f0(curV)} / 목표 ${f0(tg)}</span> 최근 ${L.length}주 중 <b>${okN}주 달성</b> (${Math.round(okN/L.length*100)}%)</small>`)
-          + `</div>${g}<div class="lg"><span><i style="background:#16a34a"></i>목표 이하(달성)</span><span><i style="background:#dc2626"></i>목표 초과(미달)</span><span><i class="ln"></i>목표선</span><span>테두리 막대 = 금주</span></div></div>`; })();
-      h += `<div class="kw-l2"><div class="c1">${tblH}${fcH}</div><div class="c2">${dnL}${dnC}</div></div>`;
+          + `</div>${g}<div class="lg">${TOP.map((m,j)=>`<span><i style="background:${PALC[j]}"></i>DC${m}</span>`).join('')}<span><i style="background:${ETC}"></i>기타</span><span><i class="ln"></i>목표선</span><span>✔ 달성 · ✖ 미달 · 테두리 = 금주</span></div>`
+          + (an ? `<div class="an">${an}</div>` : '') + `</div>`; })();   /* 설비별 금액 표는 오른쪽 Worst F-COST 와 겹쳐 뺌 */
+      /* 2×2 — 윗줄 : 지표 표 | Worst 로스시간 · 아랫줄 : F-COST 그래프 | Worst F-COST (줄마다 높이 맞춤) */
+      h += `<div class="kw-l2"><div class="q tb">${tblH}</div><div class="q">${dnL}</div><div class="q">${fcH}</div><div class="q">${dnC}</div></div>`;
       if (CUR && PREV){
         h += `<div class="kw-note" style="margin-top:2px">※ Worst 4 = 금주 <b>로스시간</b>이 큰 설비 4대 (양쪽 같은 설비 · 같은 색으로 비교) · 순위 = 각 표의 기준(왼쪽 로스시간 · 오른쪽 F-COST)으로 매긴 전체 설비 중 순위 — F-COST 는 설비별 M/C Rate 가 달라 로스시간 순위와 다를 수 있음 · 합계 = 1번 주간 요약과 같은 값</div>`;
       }
