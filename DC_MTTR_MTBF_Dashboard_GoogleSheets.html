@@ -8195,8 +8195,8 @@ loadData();
 .kw .kw-l2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:stretch;margin-bottom:6px;}
 .kw .kw-l2 > .q{min-width:0;display:flex;flex-direction:column;} .kw .kw-l2 > .q > *{flex:1 1 auto;margin:0 !important;}
 .kw .kw-l2 > .q.tb > div{display:flex;} .kw .kw-l2 > .q.tb table{height:100%;}
-.kw .kw-l2 .dnc{display:flex;flex-direction:column;} .kw .kw-l2 .dnc > .b{flex:1 1 auto;align-items:center;}
-.kw .kw-l2 .kw-fc{display:flex;flex-direction:column;} .kw .kw-l2 .kw-fc svg{flex:0 0 auto;}
+.kw .kw-l2 .dnc{display:flex;flex-direction:column;} .kw .kw-l2 .dnc > .b{flex:0 0 auto;align-items:center;margin-top:6px;}
+.kw .kw-l2 .kw-fc{display:flex;flex-direction:column;justify-content:space-between;} .kw .kw-l2 .kw-fc svg{flex:0 0 auto;max-height:240px;}
 .kw table.kw-tr2{font-size:12px;} .kw table.kw-tr2 td.dl .sm{display:block;white-space:normal;font-size:9.5px;line-height:1.2;} .kw table.kw-tr2 th{white-space:normal;line-height:1.2;} .kw table.kw-tr2 td.kp .sm{white-space:normal;} .kw table.kw-tr2 td.why .wl .lb{min-width:3.4em;} .kw table.kw-tr2 td.why{font-size:11px;} .kw table.kw-tr2 td.why .wl{font-size:11px;white-space:normal;line-height:1.35;} .kw table.kw-tr2 td.c{overflow:visible;}
 .kw table.kw-tr th.ach{background:#dcfce7;color:#166534;} .kw table.kw-tr td.ach{font-weight:900;font-size:13px;} .kw table.kw-tr td.ach.ok{color:#15803d;background:#f0fdf4;} .kw table.kw-tr td.ach.ng{color:#b91c1c;background:#fef2f2;} .kw table.kw-tr td.ach.na{color:#94a3b8;}
 .kw table.kw-tr td.ach .sm{display:block;font-size:10.5px;font-weight:700;opacity:.85;}
@@ -8616,11 +8616,11 @@ loadData();
         const tg = tC.tg, MS2 = MACHINES.slice();   /* DC1 ~ DC23 모두 (DC14 결번 제외) */
         if (!MS2.length) return '';
         const act = MACHINES.filter(m=>CUR.s.mc[m] && CUR.s.mc[m].runH>0).length || MS2.length;
-        /* 설비당 목표 — 직접 입력값(stc_target_cost_mc) 우선, 없으면 F-COST 목표 ÷ 가동 설비 수 */
-        const perSet = parseFloat(LS('stc_target_cost_mc')), perAuto = tg!=null ? tg/act : null;
-        const per = isFinite(perSet) && perSet > 0 ? perSet : perAuto;
+        /* 설비당 목표 — 사내 관리 기준 : 설비별 주간 60,000 THB 이하 (입력칸에서 바꾸면 그 값) */
+        const MC_DEF = 60000, perSet0 = parseFloat(LS('stc_target_cost_mc')), perSet = isFinite(perSet0) && perSet0 > 0 ? perSet0 : MC_DEF, perAuto = null;
+        const per = perSet;
         const cv = m => CUR.s.mc[m] ? CUR.s.mc[m].cost : 0, pv = m => PREV && PREV.s.mc[m] ? PREV.s.mc[m].cost : 0;
-        const W = 600, H = 250, Lm = 46, Rm = 8, Tm = 40, Bm = 26, pw = W-Lm-Rm, ph = H-Tm-Bm;
+        const W = 600, H = 205, Lm = 46, Rm = 8, Tm = 36, Bm = 24, pw = W-Lm-Rm, ph = H-Tm-Bm;
         const mx = Math.max(...MS2.map(m=>Math.max(cv(m), pv(m))), per||0) * 1.18 || 1, y = v => Tm + ph - v/mx*ph, bw = pw/MS2.length;
         let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="F-COST 설비별">`;
         [0, mx/2, mx].forEach(v=>{ g += `<line x1="${Lm}" x2="${W-Rm}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="#eef2f7"/><text x="${Lm-4}" y="${(y(v)+3).toFixed(1)}" text-anchor="end" font-size="9" fill="#94a3b8">${f0(v)}</text>`; });
@@ -8642,15 +8642,15 @@ loadData();
           const ov = over.slice().sort((a,b)=>cv(b)-cv(a)), ovSum = ov.reduce((a,m)=>a+(cv(m)-per),0);
           an = (tg==null ? `<b>${esc(opt.week)} 합계 ${f0(curV)}</b>` : ok ? `<b class="g">${esc(opt.week)} 목표 달성</b> — 합계 ${f0(curV)} / 목표 ${f0(tg)} · 여유 <b>${f0(tg-curV)}</b>`
                    : `<b class="r">${esc(opt.week)} 목표 미달</b> — 합계 ${f0(curV)} / 목표 ${f0(tg)} · <b>${f0(curV-tg)}</b> 초과`)
-             + ` · 설비당 목표 ${f0(per)}${isFinite(perSet)&&perSet>0?' (직접 설정)':` (= ${f0(tg)} ÷ 가동 ${act}대)`} 초과 <b>${ov.length}대</b>${ov.length?': '+ov.slice(0,6).map(m=>`DC${m} ${f0(cv(m))}`).join(' · ')+(ov.length>6?' …':''):''}`;
+             + ` · 설비당 목표 ${f0(per)} 초과 <b>${ov.length}대</b>${ov.length?': '+ov.slice(0,6).map(m=>`DC${m} ${f0(cv(m))}`).join(' · ')+(ov.length>6?' …':''):''}`;
         }
-        const inp = `<label class="mct">설비당 목표 <input type="number" min="0" step="500" value="${isFinite(perSet)&&perSet>0?perSet:''}" placeholder="${perAuto!=null?'자동 '+Math.round(perAuto):'금액'}" onchange="window.stcSetMcTarget && stcSetMcTarget(this.value)" title="비우면 자동 = F-COST 목표 ÷ 가동 설비 수"> THB</label>`;
+        const inp = `<label class="mct">설비당 목표 <input type="number" min="0" step="500" value="${perSet}" placeholder="60000" onchange="window.stcSetMcTarget && stcSetMcTarget(this.value)" title="설비별 주간 F-COST 관리 기준 (기본 60,000 · 비우면 기본값)"> THB / 주</label>`;
         return `<div class="kw-fc"><div class="h"><b>F-COST 설비별 · 목표 달성</b>`
-          + `<small>${inp}${tg!=null?` <span class="pill ${ok?'ok':'ng'}">${esc(opt.week)} ${ok?'✔ 달성':'✖ 미달'} · ${f0(curV)} / 목표 ${f0(tg)}</span>`:''}</small>`
+          + `<small>${inp}<span class="pill ${over.length?'ng':'ok'}">설비별 ${over.length?'✖ 초과 '+over.length+'대':'✔ 전 설비 이내'}</span>${tg!=null?` <span class="pill ${ok?'ok':'ng'}">${esc(opt.week)} ${ok?'✔ 달성':'✖ 미달'} · ${f0(curV)} / 목표 ${f0(tg)}</span>`:''}</small>`
           + `</div>${g}<div class="lg"><span><i style="background:#cbd5e1"></i>${esc(PREV?PREV.w:'전주')}</span><span><i style="background:#16a34a"></i>${esc(opt.week)} 설비당 목표 이내</span><span><i style="background:#dc2626"></i>${esc(opt.week)} 초과</span><span><i class="ln"></i>설비당 목표${per!=null?' '+f0(per):''}</span></div>`
           + (an ? `<div class="an">${an}</div>` : '') + `</div>`; })();
-      /* 2×2 — 윗줄 : 지표 표 | Worst 로스시간 · 아랫줄 : F-COST 그래프 | Worst F-COST (줄마다 높이 맞춤) */
-      h += `<div class="kw-l2"><div class="q tb">${tblH}</div><div class="q">${dnL}</div><div class="q">${fcH}</div><div class="q">${dnC}</div></div>`;
+      /* 2×2 — 윗줄 : 지표 표 | F-COST 설비별 그래프 · 아랫줄 : Worst 로스시간 | Worst F-COST (줄마다 높이 맞춤) */
+      h += `<div class="kw-l2"><div class="q tb">${tblH}</div><div class="q">${fcH}</div><div class="q">${dnL}</div><div class="q">${dnC}</div></div>`;
       if (CUR && PREV){
         h += `<div class="kw-note" style="margin-top:2px">※ Worst 4 = 금주 <b>로스시간</b>이 큰 설비 4대 (양쪽 같은 설비 · 같은 색으로 비교) · 순위 = 각 표의 기준(왼쪽 로스시간 · 오른쪽 F-COST)으로 매긴 전체 설비 중 순위 — F-COST 는 설비별 M/C Rate 가 달라 로스시간 순위와 다를 수 있음 · 합계 = 1번 주간 요약과 같은 값</div>`;
       }
