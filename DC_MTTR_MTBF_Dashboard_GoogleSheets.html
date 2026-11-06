@@ -8054,6 +8054,11 @@ loadData();
 .kw .kw-exp .ty .bw{position:relative;height:18px;} .kw .kw-exp .ty .bw::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;border-left:1px solid #cbd5e1;}
 .kw .kw-exp .ty .bar{position:absolute;top:2px;height:14px;border-radius:2px;} .kw .kw-exp .ty .bv{position:absolute;top:0;font-size:11.5px;font-weight:800;white-space:nowrap;line-height:18px;}
 .kw .kw-exp .cz{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;}
+.kw .kw-exp .c1g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch;margin-top:10px;}
+.kw .kw-exp .c1r{border:1px solid #dbe3ec;border-radius:10px;padding:10px 12px;background:#fff;display:flex;flex-direction:column;min-height:300px;box-sizing:border-box;}
+.kw .kw-exp .c1r > .ms{margin:0;flex:1 1 auto;display:flex;flex-direction:column;justify-content:space-around;} .kw .kw-exp .c1r .svw{flex:1 1 auto;display:flex;align-items:center;} .kw .kw-exp .c1r .svw svg{width:100%;height:auto;display:block;}
+.kw .kw-exp .c1r > .ty2{flex:1 1 auto;} .kw .kw-exp .c1r .cc{margin-top:6px;} .kw .kw-exp .c1r .bt{font-size:13px;font-weight:800;color:#1f3864;margin-bottom:4px;}
+@media (max-width:900px){ .kw .kw-exp .c1g{grid-template-columns:1fr;} }
 .kw .kw-exp .cz .bx{border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px 10px;}
 .kw .kw-exp .cz .bt{font-size:13px;font-weight:800;color:#1f3864;margin-bottom:4px;}
 .kw .kw-exp .cz svg{width:100%;height:auto;display:block;max-height:270px;}
@@ -8219,6 +8224,14 @@ loadData();
 .kw .kw-l2 table.kw-tr2 td{color:#111827;font-weight:600;}
 .kw .kw-l2 table.kw-tr2 td.kp{font-weight:900;color:#0f172a;} .kw .kw-l2 table.kw-tr2 td .sm{color:#334155;font-weight:700;}
 .kw .kw-l2 table.kw-tr2 td.why .wl{color:#111827;font-weight:600;} .kw .kw-l2 table.kw-tr2 td.why .wl .lb{color:#334155;}
+.kw .kw-l2 table.kw-tr2 th,.kw .kw-l2 table.kw-tr2 td{border:0 !important;border-bottom:1px solid #eef2f7 !important;background:transparent !important;}
+.kw .kw-l2 table.kw-tr2 thead th{background:#f1f5f9 !important;border-bottom:1px solid #cbd5e1 !important;color:#475569 !important;font-size:11.5px;font-weight:700;}
+.kw .kw-l2 table.kw-tr2 thead th .sm{color:#64748b !important;}
+.kw .kw-l2 table.kw-tr2 thead th.cur{color:#0f172a !important;font-weight:900;}
+.kw .kw-l2 table.kw-tr2 td.cur,.kw .kw-l2 table.kw-tr2 td.cu{font-weight:900;color:#0f172a;}
+.kw .kw-l2 table.kw-tr2 td.tgc{background:transparent !important;}
+.kw .kw-l2 table.kw-tr2 td.kp{text-align:left;padding-left:8px;}
+.kw .kw-l2 table.kw-tr2 tbody tr:last-child td{border-bottom:1px solid #cbd5e1 !important;}
 .kw .kw-l2 table.kw-tr2 td.ach.ok{color:#15803d;} .kw .kw-l2 table.kw-tr2 td.ach.ng{color:#b91c1c;} .kw .kw-l2 table.kw-tr2 td.dl.gd{color:#15803d;} .kw .kw-l2 table.kw-tr2 td.dl.bd{color:#b91c1c;}
 .kw table.kw-tr td.tgc input{width:100%;max-width:80px;box-sizing:border-box;font:inherit;font-size:13px;font-weight:800;text-align:right;padding:3px 5px;border:1.5px solid #dc2626;border-radius:5px;color:#b91c1c;}
 .kw .kw-tr-act{display:flex;gap:8px;margin:6px 0 2px;} .kw .kw-tr-act button{font:inherit;font-size:11.5px;padding:4px 10px;border:1px solid #94a3b8;border-radius:14px;background:#fff;cursor:pointer;}
@@ -8752,8 +8765,12 @@ loadData();
              `MTTR ${f1(Q.mttr,2)} → ${f1(S.mttr,2)}h · 건수 ${Q.n} → ${S.n}건 → 합계 ${sgn(dL,1)}h`];
         const m3 = [ (miss.length ? `남은 과제 : ${miss.map(x=>x.t.name).join('·')} 목표 미달` : (withT.length ? `목표를 정한 ${withT.length}개 지표 모두 달성 — 유지가 과제` : `목표 미설정 — 2번 표에서 목표를 정하면 판정이 붙음`)) + (top1 ? `, DC${top1.m} 로스시간 1위` : ''),
           top1 ? `DC${top1.m} ${f1(top1.lossH,1)}h (${shr(top1.lossH)}%)${tc1?' · 최대 고장 '+esc(tc1.c)+' '+f1(tc1.h,1)+'h':''}${upM.length?' — 증가 설비 : '+upM.map(x=>'DC'+x.m+' +'+f1(x.d,1)+'h').join(', '):''}` : '' ];
-        const card1 = `<div class="ec w2"><h5><i>1</i>결론 — 주간 요약</h5><div class="hl">${hl}</div><div class="pills">${pills}</div>
-          <div class="ms">${[m1,m2,m3].map((m,i)=>`<div class="m"><i class="${i===2?'a':''}">${i+1}</i><div><b>${m[0]}</b><span>${m[1]}</span></div></div>`).join('')}</div></div>`;
+        /* 1~3 요약 줄(왼쪽) + 고장유형별 변화·결론(오른쪽) — 원인 분해의 오른쪽 내용을 결론 카드에도 나란히 */
+        const card1 = () => `<div class="ec w2"><h5><i>1</i>결론 — 주간 요약</h5><div class="hl">${hl}</div><div class="pills">${pills}</div>
+          <div class="c1g"><div class="bx c1r"><div class="bt">주간 요약 3줄</div><div class="ms">${[m1,m2,m3].map((m,i)=>`<div class="m"><i class="${i===2?'a':''}">${i+1}</i><div><b>${m[0]}</b><span>${m[1]}</span></div></div>`).join('')}</div></div>`
+          + `<div class="bx c1r"><div class="bt">로스시간 브리지 ${pw} → ${wk} (h)</div><div class="svw">${sv}</div></div>`
+          + `<div class="bx c1r"><div class="bt">고장유형별 변화 (${pw} → ${wk})</div><div class="ty2">${tyH0}</div>`
+          + `<div class="cc"><b>결론</b><ol><li>${c1}</li><li>${c2}</li></ol></div></div></div></div>`;
 
         /* ② 목표 대비 */
         const bestTxt = x => x.rk===1 && x.n>2 ? ` — ${x.n}주 중 최고` : x.rk && x.n>2 && x.rk <= Math.ceil(x.n/4) ? ` — ${x.n}주 중 ${x.rk}위` : '';
@@ -8860,7 +8877,7 @@ loadData();
           + (nx.length ? `<div><div class="lb2 a" style="margin-top:0">다음 주 확인</div><ul>${nx.slice(0,5).map(x=>`<li>${x}</li>`).join('')}</ul></div>` : '') + `</div></div>`;
 
         return `<div class="kw-exp"><div class="eh"><b>📋 해설 — ${pw} → ${wk} 이렇게 읽습니다 (발표용)</b><small>주간 요약 · 지표 주간 추이 값으로 자동 작성 · 주차를 바꾸면 함께 바뀜</small></div>`
-          + `<div class="eg">${card1}${cardT}${card2}${card3}${card4}</div></div>`;
+          + `<div class="eg">${card1()}${cardT}${card2}${card3}${card4}</div></div>`;
       })();
       h += expHTML;
     }
