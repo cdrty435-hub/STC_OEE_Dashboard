@@ -273,6 +273,11 @@ function pDate(v){
   if(m){ let y=+m[1]; if(y>2400) y-=543; return new Date(y, +m[2]-1, +m[3]); }
   m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/);
   if(m){ let a=+m[1], b=+m[2], y=+m[3]; if(y<100) y+=2000; if(y>2400) y-=543; let mo=a, d=b; if(a>12){ d=a; mo=b; } return new Date(y, mo-1, d); }
+  const MO = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+  m = s.match(/^(\d{1,2})[-\s\/.]([A-Za-z]{3})[A-Za-z]*[-\s\/.,]+(\d{2,4})/);                    /* 1-Jul-2025 */
+  if(m && MO[m[2].toLowerCase()]){ let y=+m[3]; if(y<100) y+=2000; if(y>2400) y-=543; return new Date(y, MO[m[2].toLowerCase()]-1, +m[1]); }
+  m = s.match(/^([A-Za-z]{3})[A-Za-z]*[-\s\/.]+(\d{1,2})[,\s\/.-]+(\d{2,4})/);                      /* Jul 1, 2025 */
+  if(m && MO[m[1].toLowerCase()]){ let y=+m[3]; if(y<100) y+=2000; if(y>2400) y-=543; return new Date(y, MO[m[1].toLowerCase()]-1, +m[2]); }
   const n = num(s); if(!isNaN(n) && n>30000 && n<80000) return new Date(Math.round((n-25569)*864e5) + new Date().getTimezoneOffset()*6e4);
   return null;
 }
@@ -335,17 +340,33 @@ async function getCsv(k, must){
   throw last;
 }
 /* 머리줄 찾기: 'Issue_no' 가 있는 줄 (원본은 1행 제목 · 2행 머리줄) */
+/* 금형팀 원본 Daily repair 열 순서 (A~AL) · Cause1~4 를 뺀 정리본 순서 — 머리줄 칸이 비어 있거나 글자가 조금 달라도 위치로 맞춘다 */
+const REPAIR_LAYOUTS = [
+  ['Issue_no','Run_Doc','Run_Number','Shift','Request_date','Request_Time','Start_Date','Week','Start_Time','Stop','Start_afterstop','Finished_Date','Finished','Cause1','Cause2','Cause3','Cause4','DC','Mold_no','Repeat','Part code','Part name','__TYPE','Time_Min','Cause','Detail of the repair','Cav.Repair','Location repair','Spare part',"Qty's",'Unit Price','฿','$','Repair price','Accept','Customer','Requestor','Repairer'],
+  ['Issue_no','Run_Doc','Run_Number','Shift','Request_date','Request_Time','Start_Date','Week','Start_Time','Stop','Start_afterstop','Finished_Date','Finished','DC','Mold_no','Repeat','Part code','Part name','__TYPE','Time_Min','Cause','Detail of the repair','Cav.Repair','Location repair','Spare part',"Qty's",'Unit Price','฿','$','Repair price','Accept','Customer','Requestor','Repairer']
+];
+const nk = s => String(s||'').toLowerCase().replace(/[^a-z0-9฿$]/g,'');
 function toObjects(aoa, must){
-  let h = aoa.findIndex(r => r.some(c => String(c).trim()===must));
+  const mk = nk(must);
+  let h = aoa.findIndex(r => r.some(c => nk(c)===mk));
   if(h<0) h = 0;
-  const H = aoa[h].map(c=>String(c).replace(/\s+/g,' ').trim());
+  let H = aoa[h].map(c=>String(c).replace(/\s+/g,' ').trim());
+  if(mk==='issueno'){
+    /* 머리줄 이름을 표준 이름으로 맞춤: ① 글자 정규화로 같은 이름 ② 빈 칸·모르는 이름은 원본 열 순서(위치)로 */
+    const score = L => L.reduce((a,n,i)=> a + (H[i] && (nk(H[i])===nk(n) || (n==='__TYPE' && /แก้ไข/.test(H[i])))?1:0), 0);
+    const L = REPAIR_LAYOUTS.map(l=>[l,score(l)]).sort((x,y)=>y[1]-x[1])[0][0];
+    const std = {}; L.forEach(n=>{ std[nk(n)] = n; });
+    H = H.map((x,i)=>{ if(/แก้ไข/.test(x)) return '__TYPE'; const m = std[nk(x)]; if(m) return m; if(!x.trim() && L[i]) return L[i]; return x; });
+    /* 이름이 하나도 안 맞은 표준 열은 위치로 채움 */
+    L.forEach((n,i)=>{ if(H.indexOf(n)<0 && i<H.length && !REPAIR_LAYOUTS.some(l=>l.indexOf(H[i])>=0)) H[i] = n; });
+  }
   return aoa.slice(h+1).map(r => { const o={}; H.forEach((k,i)=>{ if(k && !(k in o)) o[k]=r[i]; }); o.__H=H; return o; });
 }
 function col(o, ...names){ for(const n of names){ if(o[n]!==undefined) return o[n]; } return undefined; }
 
 function buildRepair(objs){
   const H = objs.length ? objs[0].__H : [];
-  const typeCol = H.find(h=>/แก้ไข/.test(h)) || H[18];
+  const typeCol = H.indexOf('__TYPE')>=0 ? '__TYPE' : (H.find(h=>/แก้ไข/.test(h)) || H[18]);
   const nameToCode = {}; RT.forEach(([c,n])=>{ nameToCode[normKey(n)] = c; });
   const codeOf = s => { const k=normKey(s); if(!k) return ''; if(nameToCode[k]) return nameToCode[k];
     for(const [c,n] of RT){ const kn=normKey(n); if(kn.startsWith(k) || k.startsWith(kn.slice(0,8)) || kn.endsWith(k)) return c; }
@@ -353,7 +374,7 @@ function buildRepair(objs){
     return 'RT023'; };
   const out=[]; let LAST=null; DQ = { total:0, badDate:[], neg:[], long:[], dupGroups:0, dupRows:0, noMold:0, noDc:0, unkDc:[], noType:0, dc14:[], brokenTime:[], noDate:[], seen:0, sample:'' };
   objs.forEach(o=>{
-    DQ.seen++; if(!DQ.sample) DQ.sample = H.slice(0,8).map(h=>h+'='+String(o[h]??'')).join(' · ');
+    DQ.seen++; if(!DQ.hdr) DQ.hdr = H; if(!DQ.sample) DQ.sample = H.slice(0,8).map(h=>h+'='+String(o[h]??'')).join(' · ');
     const iss = String(col(o,'Issue_no')||'').trim(); if(!/^STC/i.test(iss)) return;
     DQ.total++;
     let rq = pDate(col(o,'Request_date')), sd = pDate(col(o,'Start_Date')), fd = pDate(col(o,'Finished_Date'));
@@ -446,7 +467,7 @@ async function load(){
     if(r.status!=='fulfilled') throw r.reason;
     ROWS = buildRepair(toObjects(r.value,'Issue_no'));
     if(!ROWS.length) throw new Error(`머리줄은 찾았지만 읽을 수 있는 수리 줄이 0줄입니다 — 머리줄 아래 ${DQ.seen}줄 · Issue_no 가 STC 로 시작하는 줄 ${DQ.total} · 날짜를 못 읽은 줄 ${DQ.noDate.length}`
-      + (DQ.noDate.length?` (예: ${DQ.noDate.slice(0,2).join(' | ')})`:'') + (DQ.sample?` · 첫 줄: ${DQ.sample}`:'')
+      + (DQ.noDate.length?` (예: ${DQ.noDate.slice(0,2).join(' | ')})`:'') + (DQ.sample?` · 첫 줄: ${DQ.sample}`:'') + ` · 머리줄: ${(DQ.hdr||[]).slice(0,14).join(' | ')}`
       + ` — 시트에 데이터가 들어 있는지(Ctrl+Home 으로 3행 확인), 웹 게시 반영(1~5분)을 확인해 주세요`);
     OEE  = a.status==='fulfilled' ? buildOee(a.value) : [];
     SHOT = p.status==='fulfilled' ? buildShot(p.value) : [];
