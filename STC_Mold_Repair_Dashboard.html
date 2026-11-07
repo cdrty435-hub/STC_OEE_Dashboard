@@ -173,7 +173,7 @@
       <button class="tabbtn" data-tab="tab-pareto"><span class="no">5</span><span class="tx">작업·원인 파레토</span></button>
       <button class="tabbtn" data-tab="tab-dc"><span class="no">6</span><span class="tx">호기별 · OEE 대조</span></button>
       <button class="tabbtn" data-tab="tab-repeat"><span class="no">7</span><span class="tx">재수리 추적</span></button>
-      <button class="tabbtn" data-tab="tab-cost"><span class="no">8</span><span class="tx">부품 · 수리비</span></button>
+      <button class="tabbtn" data-tab="tab-cost"><span class="no">8</span><span class="tx">F-COST · 수리비</span></button>
       <button class="tabbtn" data-tab="tab-ops"><span class="no">9</span><span class="tx">운영 (교대·작업자)</span></button>
       <button class="tabbtn" data-tab="tab-dq"><span class="no">10</span><span class="tx">데이터 품질</span></button>
       <button class="tabbtn" data-tab="tab-list"><span class="no">11</span><span class="tx">수리이력 조회</span></button>
@@ -249,6 +249,10 @@ const CAUSE = [
 ];
 const causeGroup = s => { s = String(s||'').toLowerCase(); if(!s.trim()) return '미기재'; for(const [n,re] of CAUSE) if(re.test(s)) return n; return '기타'; };
 /* OEE 금형 계통 로스 (분류마스터의 「금형」 카테고리 8종) · 금형교체는 따로 */
+/* 설비별 M/C Rate (THB/분) — MTTR 화면과 같은 기본값 · 같은 저장값(stc_mc_rate)을 함께 씀 */
+const RATE_DEF = {1:8.91375,2:6.666667,3:14.159583,4:14.159583,5:14.159583,6:14.159583,7:14.159583,8:11.086667,9:14.159583,10:14.159583,11:16.472083,12:16.472083,13:14.159583,14:16.7825,15:16.7825,16:6.666667,17:6.666667,18:8.572083,19:8.8825,20:19.871042,21:16.7825,22:14.159583,23:14.159583};
+function getRates(){ const r = Object.assign({}, RATE_DEF); try{ const j=JSON.parse(localStorage.getItem('stc_mc_rate')||'null'); if(j) Object.assign(r,j); }catch(e){} return r; }
+const rateOf = dc => { const n = +String(dc).replace(/\D/g,''); return +getRates()[n] || 0; };
 const OEE_MOLD = ['금형수리','금형파손','핀파손','슬라이드코어수리','청소','금형냉각라인','제품소착','로트마크, 사상'];
 
 /* =====================================================================
@@ -449,7 +453,7 @@ function buildOee(aoa){
     let mold=0; OEE_MOLD.forEach(k=>{ const v=num(o[k]); if(!isNaN(v)) mold+=v; });
     const chg=num(o['금형교체']); const run=num(o['가동시간_분']);
     const mn = String(o['Mold Number']||o['edition no.']||'').trim();
-    out.push({ d, wk:stcWeek(d).k, dc, mold, chg:isNaN(chg)?0:chg, run:isNaN(run)?0:run, pin:num(o['핀파손'])||0, moldNo:String(o['Mold Number']||'').trim() });
+    out.push({ d, dk:dayKey(d), wk:stcWeek(d).k, dc, mold, chg:isNaN(chg)?0:chg, run:isNaN(run)?0:run, pin:num(o['핀파손'])||0, moldNo:String(o['Mold Number']||'').trim() });
   });
   return out;
 }
@@ -485,8 +489,22 @@ function setStatus(t){ $('status').textContent = t; }
 /* =====================================================================
    4. 기간 · 필터
    ===================================================================== */
+/* F-COST = OEE 금형 계통 로스(분) × 그 호기 M/C Rate — 호기·일 단위 값을 같은 호기 ±1일 수리 의뢰에 나눠 금형별로 추정 배분 */
+function allocFcost(){
+  OEE.forEach(o=>{ o.fcost = o.mold * rateOf(o.dc); });
+  ISS.forEach(x=>{ x.fcost = 0; });
+  const by = {}; ISS.forEach(x=>{ (by[x.dc+'|'+dayKey(x.rq)] = by[x.dc+'|'+dayKey(x.rq)] || []).push(x); });
+  let un = 0;
+  OEE.forEach(o=>{ if(o.fcost<=0) return;
+    let L = by[o.dc+'|'+o.dk] || [];
+    if(!L.length) L = (by[o.dc+'|'+dayKey(addDays(o.d,1))]||[]).concat(by[o.dc+'|'+dayKey(addDays(o.d,-1))]||[]);
+    L = L.filter(x=>x.mold);
+    if(!L.length){ o.unalloc = o.fcost; un += o.fcost; return; }
+    o.unalloc = 0; L.forEach(x=>{ x.fcost += o.fcost / L.length; }); });
+  return un;
+}
 function afterLoad(noA, noP){
-  ISS = buildIssues(ROWS); flagIssues();
+  ISS = buildIssues(ROWS); flagIssues(); allocFcost();
   const ks = new Set(ROWS.map(r=>r.wk));
   const mn = Math.min(...ks), mx = Math.max(...ks); WEEKS = [];
   for(let d=weekStart(mn); ; d=addDays(d,7)){ const k=stcWeek(d).k; WEEKS.push(k); if(k>=mx) break; if(WEEKS.length>400) break; }
@@ -530,9 +548,10 @@ function metrics(weeks, f){
   const mins = I.map(x=>x.min).filter(v=>v>0);
   const oeeCovered = weeks.some(w=>oeeWeeks().has(w)), shotCovered = weeks.some(w=>shotWeeks().has(w));
   const oeeMold = oeeCovered ? O.reduce((a,o)=>a+o.mold,0)/60 : null, oeeChg = oeeCovered ? O.reduce((a,o)=>a+o.chg,0)/60 : null;
+  const fcost = oeeCovered ? O.reduce((a,o)=>a+(o.fcost||0),0) : null;
   const shots = shotCovered ? Sh.reduce((a,s)=>a+s.shot,0) : null;
   return { n, u, plan:n-u, rp, h:min/60, cost, uRate:n?u/n:NaN, rpRate:u?rp/u:NaN, med:median(mins), over:mins.length?mins.filter(v=>v>ST.usl).length/mins.length:NaN,
-    oeeMold, oeeChg, shots, per10k: shots ? u/shots*1e4 : null, msbf: shots && u ? shots/u : null, wait:median(I.map(x=>x.wait).filter(v=>!isNaN(v))), I, R };
+    oeeMold, oeeChg, fcost, total: fcost==null ? null : fcost + cost, shots, per10k: shots ? u/shots*1e4 : null, msbf: shots && u ? shots/u : null, wait:median(I.map(x=>x.wait).filter(v=>!isNaN(v))), I, R };
 }
 
 /* =====================================================================
@@ -553,7 +572,7 @@ function barChart(o){
     if(o.stack){ o.series.forEach(s=>{ const v=s.vals[i]||0; if(v<=0) return; g+=`<rect x="${x0+bw*.16}" y="${y(acc+v)}" width="${bw*.68}" height="${y(acc)-y(acc+v)}" fill="${s.color}" rx="1.5"><title>${esc(lb)} ${esc(s.name)} ${fmt(v)}</title></rect>`; acc+=v; });
       if(acc>0 && n<=30) g+=`<text x="${x0+bw/2}" y="${y(acc)-4}" text-anchor="middle" font-size="${n>18?8.5:10}" font-weight="${hi?900:700}" fill="${hi?'#0f172a':'#475569'}">${fmt(acc)}</text>`;
     } else { const k=o.series.length, w=bw*.72/k; o.series.forEach((s,j)=>{ const v=s.vals[i]||0; g+=`<rect x="${x0+bw*.14+j*w}" y="${y(v)}" width="${w-1}" height="${T+ph-y(v)}" fill="${s.color}" rx="1.5"><title>${esc(lb)} ${esc(s.name)} ${fmt(v)}</title></rect>`; if(n*k<=26 && v>0) g+=`<text x="${x0+bw*.14+j*w+w/2}" y="${y(v)-3}" text-anchor="middle" font-size="9" fill="#334155">${fmt(v)}</text>`; }); }
-    if(n<=40 && (n<=20 || i%2===0)) g+=`<text x="${x0+bw/2}" y="${H-B+13}" text-anchor="middle" font-size="${n>20?8.5:10}" font-weight="${hi?900:500}" fill="${hi?'#0f172a':'#64748b'}">${esc(lb)}</text>`;
+    if(n<=40 && (n<=24 || i%2===0)) g+=`<text x="${x0+bw/2}" y="${H-B+13}" text-anchor="middle" font-size="${n>20?8.5:10}" font-weight="${hi?900:500}" fill="${hi?'#0f172a':'#64748b'}">${esc(lb)}</text>`;
   });
   if(o.target!=null) g+=`<line x1="${L}" x2="${W-Rm}" y1="${y(o.target)}" y2="${y(o.target)}" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="6 3"/>`;
   if(o.line){ const lv=o.line.vals.map(v=>v==null?null:v), lm=Math.max(...lv.filter(v=>v!=null),1e-9)*1.15, ly=v=>T+ph-v/lm*ph; let d='';
@@ -608,7 +627,8 @@ function renderOv(P){
     ${kpiCard('수리 의뢰', f0(M.n), '건', dTxt(M.n,Q.n,true))}
     ${kpiCard('고장(비계획) 수리', f0(M.u), '건', dTxt(M.u,Q.u,true), '비계획 비율 '+pc(M.uRate))}
     ${kpiCard('수리 작업시간', f1(M.h), 'h', dTxt(M.h,Q.h,true,f1), '금형 작업장 기준')}
-    ${kpiCard('수리비', f0(M.cost), '', dTxt(M.cost,Q.cost,true), 'Repair price 합')}
+    ${kpiCard('금형 F-COST', M.fcost==null?'–':f0(M.fcost), 'THB', dTxt(M.fcost,Q.fcost,true), '정지 손실 = OEE 금형 로스 × M/C Rate')}
+    ${kpiCard('수리비', f0(M.cost), 'THB', dTxt(M.cost,Q.cost,true), '실제 지출 = Repair price')}
     ${kpiCard(ST.rpDays+'일 내 재수리율', pc(M.rpRate), '', dTxt(M.rpRate*100,Q.rpRate*100,true,v=>f1(v)+'%p'), M.rp+'건 · 같은 금형·같은 고장 작업 / 고장 의뢰')}
     ${kpiCard('설비 정지 (OEE 금형)', M.oeeMold==null?'–':f1(M.oeeMold), 'h', dTxt(M.oeeMold,Q.oeeMold,true,f1), M.oeeChg==null?'OEE 기간 밖':'금형교체 '+f1(M.oeeChg)+'h 별도')}
     ${kpiCard('고장 1건당 Shot', M.msbf==null?'–':f0(M.msbf), 'shot', dTxt(M.msbf,Q.msbf,false), M.per10k==null?'P_성능 기간 밖':'1만 Shot당 '+f1(M.per10k,2)+'건')}
@@ -641,22 +661,22 @@ function renderTrend(P){
 let MOLD_SORT = 'n';
 function moldAgg(I){
   const m = {};
-  I.forEach(x=>{ if(!x.mold) return; const a = m[x.mold] = m[x.mold] || { mold:x.mold, pname:x.pname, n:0, u:0, h:0, cost:0, rp:0, dcs:new Set(), codes:{}, cgs:{}, last:null, list:[] };
-    a.n++; if(x.unpl) a.u++; a.h += x.min/60; a.cost += x.cost; if(x.repeat) a.rp++; if(x.dc) a.dcs.add(x.dc); a.list.push(x);
+  I.forEach(x=>{ if(!x.mold) return; const a = m[x.mold] = m[x.mold] || { mold:x.mold, pname:x.pname, n:0, u:0, h:0, cost:0, fcost:0, rp:0, dcs:new Set(), codes:{}, cgs:{}, last:null, list:[] };
+    a.n++; if(x.unpl) a.u++; a.h += x.min/60; a.cost += x.cost; a.fcost += x.fcost||0; if(x.repeat) a.rp++; if(x.dc) a.dcs.add(x.dc); a.list.push(x);
     x.rows.forEach(r=>{ a.codes[r.code]=(a.codes[r.code]||0)+1; }); x.cgs.forEach(c=>{ a.cgs[c]=(a.cgs[c]||0)+1; });
     if(!a.last || x.rq > a.last) a.last = x.rq; });
   return Object.values(m).map(a=>{ const ds=a.list.map(x=>+x.rq).sort((p,q)=>p-q); const gaps=ds.slice(1).map((d,i)=>(d-ds[i])/864e5);
     a.gap = median(gaps); a.topCode = Object.entries(a.codes).sort((p,q)=>q[1]-p[1])[0]; a.topCg = Object.entries(a.cgs).sort((p,q)=>q[1]-p[1])[0]; return a; });
 }
 function renderMold(P){
-  const I = fIss(P.weeks); const A = moldAgg(I).sort((a,b)=> MOLD_SORT==='h'?b.h-a.h : MOLD_SORT==='cost'?b.cost-a.cost : MOLD_SORT==='rp'?b.rp-a.rp||b.n-a.n : b.n-a.n||b.h-a.h);
+  const I = fIss(P.weeks); const A = moldAgg(I).sort((a,b)=> MOLD_SORT==='h'?b.h-a.h : MOLD_SORT==='cost'?b.cost-a.cost : MOLD_SORT==='tot'?(b.fcost+b.cost)-(a.fcost+a.cost) : MOLD_SORT==='fc'?b.fcost-a.fcost : MOLD_SORT==='rp'?b.rp-a.rp||b.n-a.n : b.n-a.n||b.h-a.h);
   const tot = I.length || 1, top10 = A.slice(0,10).reduce((s,a)=>s+a.n,0);
   const sb = (k,t) => `<button class="btn${MOLD_SORT===k?' navy':''}" onclick="MOLD_SORT='${k}';render()">${t}</button>`;
   $('tab-mold').innerHTML = `<div class="card"><h2><span class="no">3</span>Worst 금형 <small style="font-size:12px;color:#64748b;font-weight:600">${wkLabel(P.a)}${P.n>1?' ~ '+wkLabel(P.b):''}${fTxt()} · 금형 ${A.length}개 · 상위 10개가 의뢰의 ${Math.round(top10/tot*100)}%</small></h2>
-    <div class="desc">정렬 ${sb('n','건수')} ${sb('h','작업시간')} ${sb('cost','수리비')} ${sb('rp','재수리')} · 행을 누르면 그 금형의 전체 이력이 열립니다 · 수리 간격 = 의뢰일 사이 일수의 중앙값</div>
-    <div class="tw"><table class="t"><thead><tr><th>순위</th><th>금형</th><th>품명</th><th>호기</th><th>의뢰</th><th>고장</th><th>작업시간 h</th><th>수리비</th><th>재수리</th><th>수리 간격(일)</th><th>최다 작업</th><th>최다 원인</th><th>최근</th></tr></thead><tbody>
+    <div class="desc">정렬 ${sb('n','건수')} ${sb('h','작업시간')} ${sb('fc','F-COST')} ${sb('cost','수리비')} ${sb('tot','총비용')} ${sb('rp','재수리')} · 행을 누르면 그 금형의 전체 이력이 열립니다 · 수리 간격 = 의뢰일 사이 일수의 중앙값</div>
+    <div class="tw"><table class="t"><thead><tr><th>순위</th><th>금형</th><th>품명</th><th>호기</th><th>의뢰</th><th>고장</th><th>작업시간 h</th><th>F-COST(추정)</th><th>수리비</th><th>총비용</th><th>재수리</th><th>수리 간격(일)</th><th>최다 작업</th><th>최다 원인</th><th>최근</th></tr></thead><tbody>
     ${A.slice(0,40).map((a,i)=>`<tr class="click" onclick="openMold('${esc(a.mold)}')"><td class="c">${i+1}</td><td class="c"><b>#${esc(a.mold)}</b></td><td>${esc(a.pname)}</td><td style="font-size:11.5px">${[...a.dcs].join(', ')}</td>
-      <td class="n"><b>${a.n}</b></td><td class="n">${a.u}</td><td class="n">${f1(a.h)}</td><td class="n">${f0(a.cost)}</td><td class="n ${a.rp?'r':''}">${a.rp||''}</td><td class="n">${isNaN(a.gap)?'–':f1(a.gap)}</td>
+      <td class="n"><b>${a.n}</b></td><td class="n">${a.u}</td><td class="n">${f1(a.h)}</td><td class="n r">${f0(a.fcost)}</td><td class="n">${f0(a.cost)}</td><td class="n"><b>${f0(a.fcost+a.cost)}</b></td><td class="n ${a.rp?'r':''}">${a.rp||''}</td><td class="n">${isNaN(a.gap)?'–':f1(a.gap)}</td>
       <td>${a.topCode?esc(RT_SHORT(a.topCode[0]))+' <span class="mute">'+a.topCode[1]+'</span>':''}</td><td>${a.topCg?esc(a.topCg[0])+' <span class="mute">'+a.topCg[1]+'</span>':''}</td><td class="c">${dayKey(a.last).slice(5)}</td></tr>`).join('')}
     </tbody></table></div></div>`;
 }
@@ -727,17 +747,17 @@ function renderDc(P){
   const iKey = new Set(); ISS.forEach(x=>{ for(const k of [-1,0,1]) iKey.add(x.dc+'|'+dayKey(addDays(x.rq,k))); });
   const D = dcs.map(dc=>{ const ii=I.filter(x=>x.dc===dc), oo=O.filter(o=>o.dc===dc); const od = oo.filter(o=>o.mold>0);
     return { dc, n:ii.length, u:ii.filter(x=>x.unpl).length, h:ii.reduce((a,x)=>a+x.min,0)/60, cost:ii.reduce((a,x)=>a+x.cost,0),
-      om: ow ? oo.reduce((a,o)=>a+o.mold,0)/60 : null, oc: ow ? oo.reduce((a,o)=>a+o.chg,0)/60 : null,
+      om: ow ? oo.reduce((a,o)=>a+o.mold,0)/60 : null, fc: ow ? oo.reduce((a,o)=>a+(o.fcost||0),0) : null, rate: rateOf(dc), oc: ow ? oo.reduce((a,o)=>a+o.chg,0)/60 : null,
       link: ii.length ? ii.filter(x=>oKey.has(x.dc+'|'+dayKey(x.rq))).length/ii.length : NaN,
       miss: od.filter(o=>!iKey.has(o.dc+'|'+dayKey(o.d))).length }; });
-  const T = D.reduce((a,d)=>({n:a.n+d.n,u:a.u+d.u,h:a.h+d.h,cost:a.cost+d.cost,om:a.om+(d.om||0),oc:a.oc+(d.oc||0),miss:a.miss+d.miss}),{n:0,u:0,h:0,cost:0,om:0,oc:0,miss:0});
+  const T = D.reduce((a,d)=>({n:a.n+d.n,u:a.u+d.u,h:a.h+d.h,cost:a.cost+d.cost,om:a.om+(d.om||0),fc:a.fc+(d.fc||0),oc:a.oc+(d.oc||0),miss:a.miss+d.miss}),{n:0,u:0,h:0,cost:0,om:0,fc:0,oc:0,miss:0});
   $('tab-dc').innerHTML = `<div class="card"><h2><span class="no">6</span>호기별 수리 · OEE 금형 정지 대조 <small style="font-size:12px;color:#64748b;font-weight:600">${wkLabel(P.a)}${P.n>1?' ~ '+wkLabel(P.b):''}${fTxt()}</small></h2>
     <div class="desc"><b>두 시간은 뜻이 다릅니다</b> — 작업시간 = 금형을 내려 작업장에서 고친 시간(그동안 설비는 다른 금형으로 돌 수 있음) · OEE 금형 정지 = 설비가 금형 때문에 멈춘 시간(A_가동률 금형 계통 8종). 그래서 MTTR·가동률은 OEE로, 금형 보전 지표는 이 탭으로 따로 봅니다.
       연결률 = 수리 의뢰일 ±1일에 같은 호기 OEE 금형 로스가 있는 비율 · 수리기록 없는 정지일 = OEE에 금형 로스가 있는데 ±1일 안에 수리 의뢰가 없는 날 (설비에 단 채로 고친 작업이 기록에서 빠졌을 가능성)</div>
     ${ow ? barChart({labels:D.map(d=>d.dc), series:[{name:'금형 작업시간 h',color:'#1e3c72',vals:D.map(d=>d.h)},{name:'OEE 금형 정지 h',color:'#dc2626',vals:D.map(d=>d.om||0)}], fmt:f0, W:1000, H:230}) : '<div class="an">이 기간에는 A_가동률 데이터가 없습니다 (OEE는 2026-06-24부터).</div>'}
-    <div class="tw" style="margin-top:8px"><table class="t"><thead><tr><th>호기</th><th>의뢰</th><th>고장</th><th>작업시간 h</th><th>수리비</th><th>OEE 금형 정지 h</th><th>OEE 금형교체 h</th><th>연결률</th><th>수리기록 없는 정지일</th></tr></thead><tbody>
-    ${D.map(d=>`<tr><td class="c"><b>${d.dc}</b></td><td class="n">${d.n}</td><td class="n">${d.u}</td><td class="n">${f1(d.h)}</td><td class="n">${f0(d.cost)}</td><td class="n">${d.om==null?'–':f1(d.om)}</td><td class="n">${d.oc==null?'–':f1(d.oc)}</td><td class="n ${d.link<.7?'r':''}">${ow?pc(d.link):'–'}</td><td class="n ${d.miss>2?'r':''}">${ow?d.miss:'–'}</td></tr>`).join('')}
-    <tr class="tot"><td class="c">합계</td><td class="n">${T.n}</td><td class="n">${T.u}</td><td class="n">${f1(T.h)}</td><td class="n">${f0(T.cost)}</td><td class="n">${ow?f1(T.om):'–'}</td><td class="n">${ow?f1(T.oc):'–'}</td><td></td><td class="n">${ow?T.miss:'–'}</td></tr>
+    <div class="tw" style="margin-top:8px"><table class="t"><thead><tr><th>호기</th><th>의뢰</th><th>고장</th><th>작업시간 h</th><th>수리비</th><th>OEE 금형 정지 h</th><th>M/C Rate</th><th>F-COST</th><th>OEE 금형교체 h</th><th>연결률</th><th>수리기록 없는 정지일</th></tr></thead><tbody>
+    ${D.map(d=>`<tr><td class="c"><b>${d.dc}</b></td><td class="n">${d.n}</td><td class="n">${d.u}</td><td class="n">${f1(d.h)}</td><td class="n">${f0(d.cost)}</td><td class="n">${d.om==null?'–':f1(d.om)}</td><td class="n mute">${f1(d.rate,2)}</td><td class="n r">${d.fc==null?'–':f0(d.fc)}</td><td class="n">${d.oc==null?'–':f1(d.oc)}</td><td class="n ${d.link<.7?'r':''}">${ow?pc(d.link):'–'}</td><td class="n ${d.miss>2?'r':''}">${ow?d.miss:'–'}</td></tr>`).join('')}
+    <tr class="tot"><td class="c">합계</td><td class="n">${T.n}</td><td class="n">${T.u}</td><td class="n">${f1(T.h)}</td><td class="n">${f0(T.cost)}</td><td class="n">${ow?f1(T.om):'–'}</td><td></td><td class="n r">${ow?f0(T.fc):'–'}</td><td class="n">${ow?f1(T.oc):'–'}</td><td></td><td class="n">${ow?T.miss:'–'}</td></tr>
     </tbody></table></div></div>`;
 }
 
@@ -764,13 +784,23 @@ function renderCost(P){
   const S = Object.values(sp).sort((a,b)=>b.q-a.q);
   const byT = groupBy(R, r=>RT_SHORT(r.code), r=>r.cost).slice(0,10), byM = groupBy(R, r=>r.mold?'#'+r.mold+' '+r.pname:'', r=>r.cost).slice(0,10);
   const tot = R.reduce((a,r)=>a+r.cost,0), parts = R.reduce((a,r)=>a+(isNaN(r.partsCost)?0:r.partsCost),0);
-  $('tab-cost').innerHTML = `<div class="card"><h2><span class="no">8</span>부품 · 수리비 <small style="font-size:12px;color:#64748b;font-weight:600">${wkLabel(P.a)}${P.n>1?' ~ '+wkLabel(P.b):''}${fTxt()}</small></h2>
+  const ws = WEEKS.slice(Math.max(0,P.ib-11), P.ib+1), MS = ws.map(w=>({w,...metrics([w])})), M = metrics(P.weeks), Q = metrics(P.prev);
+  const rt = getRates();
+  const fcHtml = `<div class="card"><h2><span class="no">8</span>금형 비용 — F-COST · 수리비 <small style="font-size:12px;color:#64748b;font-weight:600">${wkLabel(P.a)}${P.n>1?' ~ '+wkLabel(P.b):''}${fTxt()}</small></h2>
+    <div class="desc"><b>F-COST (정지 손실)</b> = OEE 금형 계통 로스(분) × 호기 M/C Rate(THB/분) — 설비가 금형 때문에 멈춰 <b>못 번 돈</b> · MTTR 화면의 F-COST와 같은 계산 방식(로스 코드만 금형 계통 8종)<br>
+      <b>수리비 (실제 지출)</b> = 금형팀 Repair price — 금형을 고치는 데 <b>쓴 돈</b> · 둘은 다른 돈이라 더하면 「금형 총비용」</div>
+    <div class="kpis">${kpiCard('금형 F-COST', M.fcost==null?'–':f0(M.fcost), 'THB', dTxt(M.fcost,Q.fcost,true), '정지 손실')}${kpiCard('수리비', f0(M.cost), 'THB', dTxt(M.cost,Q.cost,true), '실제 지출')}${kpiCard('금형 총비용', M.total==null?'–':f0(M.total), 'THB', dTxt(M.total,Q.total,true), 'F-COST + 수리비')}${kpiCard('F-COST 중 금형 미확인', f0(fOee(P.weeks).reduce((a,o)=>a+(o.unalloc||0),0)), 'THB', '', '같은 호기 ±1일 수리 기록 없음')}</div>
+    ${barChart({labels:ws.map(wkLabel), stack:true, hiIdx:[ws.length-1], series:[{name:'F-COST (정지 손실)',color:'#dc2626',vals:MS.map(m=>m.fcost||0)},{name:'수리비 (지출)',color:'#1e3c72',vals:MS.map(m=>m.cost)}], fmt:v=>v>=1000?f1(v/1000,0)+'k':f0(v), W:1000, H:240})}
+    <details style="margin-top:8px"><summary style="cursor:pointer;font-size:12.5px;font-weight:700;color:#1f3864">설비별 M/C Rate (THB/분) — MTTR 화면과 같은 값 · 여기서 고치면 MTTR에도 반영</summary>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:4px 10px;margin-top:6px">${Object.keys(RATE_DEF).filter(k=>k!=='14').map(k=>`<label style="font-size:12px;display:flex;gap:6px;align-items:center"><b style="width:38px">DC${k}</b><input type="number" step="0.01" data-rate="${k}" value="${(+rt[k]).toFixed(4)}" style="width:80px;font:inherit;font-size:12px;border:1px solid #cbd5e1;border-radius:5px;padding:2px 4px"></label>`).join('')}</div></details></div>`;
+  $('tab-cost').innerHTML = fcHtml + `<div class="card"><h2>부품 · 수리비 <small style="font-size:12px;color:#64748b;font-weight:600">${wkLabel(P.a)}${P.n>1?' ~ '+wkLabel(P.b):''}${fTxt()}</small></h2>
     <div class="kpis">${kpiCard('수리비 합 (Repair price)', f0(tot), '')}${kpiCard('부품비 (฿ 열)', f0(parts), '')}${kpiCard('부품 사용 줄', f0(R.filter(r=>r.spare).length), '줄')}${kpiCard('부품 수량', f0(S.reduce((a,s)=>a+s.q,0)), '개')}</div>
     <div class="g2"><div><h3 style="font-size:14px;margin:4px 0">작업유형별 수리비</h3>${hbar(byT,{color:'#0f766e'})}</div><div><h3 style="font-size:14px;margin:4px 0">금형별 수리비 Top 10</h3>${hbar(byM,{color:'#7c3aed'})}</div></div></div>
     <div class="card"><h2>부품 사용 Top 30</h2><div class="desc">Spare part 열 기준 · Spare part list 탭의 보증 Shot과 비교하면 핀 교체 주기를 정할 수 있습니다</div>
     <div class="tw"><table class="t"><thead><tr><th>부품</th><th>사용 줄</th><th>수량</th><th>부품비</th><th>금형 수</th><th>금형</th></tr></thead><tbody>
     ${S.slice(0,30).map(s=>`<tr><td>${esc(s.k)}</td><td class="n">${s.n}</td><td class="n"><b>${f0(s.q)}</b></td><td class="n">${f0(s.c)}</td><td class="n">${s.molds.size}</td><td style="font-size:11px">${[...s.molds].slice(0,6).map(m=>'#'+esc(m)).join(' ')}</td></tr>`).join('')}
     </tbody></table></div></div>`;
+  $('tab-cost').querySelectorAll('[data-rate]').forEach(i=>i.onchange=()=>{ const r=getRates(); r[i.dataset.rate]=parseFloat(i.value)||0; try{ localStorage.setItem('stc_mc_rate', JSON.stringify(r)); }catch(e){} allocFcost(); render(); });
 }
 
 /* ---------- 9. 운영 ---------- */
@@ -845,12 +875,14 @@ function dlCsv(){
 /* =====================================================================
    7. 주간보고 (1장)
    ===================================================================== */
-const WK_SECS = ['s1','s2','s3','s4','s5','s6','s7','s8'];
+const WK_SECS = ['s1','s2','s9','s3','s4','s5','s6','s7','s8'];   /* s9 = 금형 비용 (F-COST · 수리비) */
+const wkOrder = () => { const o = LS('stc_mold_wk_order', WK_SECS).filter(s=>WK_SECS.indexOf(s)>=0); WK_SECS.forEach((s,i)=>{ if(o.indexOf(s)<0){ const after = o.indexOf(WK_SECS[i-1]); o.splice(after<0?o.length:after+1, 0, s); } }); return o; };
 const TG = [   /* 목표 칸 — 낮을수록 좋음 */
   { k:'h',     name:'수리 작업시간',    u:'h',  dp:1, get:m=>m.h },
-  { k:'cost',  name:'수리비',          u:'',   dp:0, get:m=>m.cost },
-  { k:'rp',    name:'재수리',          u:'건', dp:0, get:m=>m.rp },
-  { k:'oee',   name:'OEE 금형 정지',    u:'h',  dp:1, get:m=>m.oeeMold }
+  { k:'oee',   name:'OEE 금형 정지',    u:'h',  dp:1, get:m=>m.oeeMold },
+  { k:'fcost', name:'금형 F-COST',      u:'THB', dp:0, get:m=>m.fcost, sub:'정지 손실 = 정지분 × M/C Rate' },
+  { k:'cost',  name:'수리비',          u:'THB', dp:0, get:m=>m.cost, sub:'실제 지출 = Repair price' },
+  { k:'rp',    name:'재수리',          u:'건', dp:0, get:m=>m.rp }
 ];
 const fx = (v,dp) => v==null||isNaN(v) ? '–' : dp ? f1(v,dp) : f0(v);
 function renderWeekly(P){
@@ -861,7 +893,7 @@ function renderWeekly(P){
   const per = P.n;   /* 목표는 주간 기준 → 여러 주 묶음이면 × 주 수 */
   const wkT = P.n>1 ? `${wkLabel(P.a)}–${wkLabel(P.b)}` : wkLabel(P.b), pwT = P.prev.length ? (P.prev.length>1?`${wkLabel(P.prev[0])}–${wkLabel(P.prev[P.prev.length-1])}`:wkLabel(P.prev[0])) : '전기간';
   const s0 = weekStart(P.a), s1 = addDays(weekStart(P.b),6);
-  const order = LS('stc_mold_wk_order', WK_SECS).filter(s=>WK_SECS.indexOf(s)>=0); WK_SECS.forEach(s=>{ if(order.indexOf(s)<0) order.push(s); });
+  const order = wkOrder();
   const hide = LS('stc_mold_wk_hide', []);
   const meta = LS('stc_mold_wk_meta', {}); $('wkAuthor').value = meta.a||''; $('wkSeq').value = meta.s||'';
 
@@ -883,7 +915,7 @@ function renderWeekly(P){
         <td class="c">${x.hit==null?'<span class="mute">목표 없음</span>':x.hit?`<b class="g">✔ 달성</b><div class="mute" style="font-size:10.5px">여유 ${fx(-x.gap,x.t.dp)}</div>`:`<b class="r">✖ 미달</b><div class="mute" style="font-size:10.5px">초과 ${fx(x.gap,x.t.dp)}</div>`}</td>
         <td class="c">${d==null?'–':Math.abs(d)<1e-9?'<span class="mute">같음</span>':`<b class="${d<0?'g':'r'}">${d>0?'▲':'▼'} ${fx(Math.abs(d),x.t.dp)}</b><div class="mute" style="font-size:10.5px">${x.p?Math.round(Math.abs(d)/x.p*100)+'% '+(d<0?'감소':'증가'):''}</div>`}</td></tr>`; }).join('')}
       </tbody></table><div class="mute" style="font-size:11px;margin-top:6px">목표는 주 단위로 넣습니다 (빈칸 = 제안값: 최근 16주 평균의 90%)${per>1?` · 여러 주 묶음이라 목표 × ${per}주로 판정`:''} · 지난 주차 흐름은 오른쪽 그래프</div></div>
-    <div class="ec s2c">${barChart({labels:tw.map(wkLabel), hiIdx:[tw.length-1], series:[{name:'수리 작업시간 h',color:'#1e3c72',vals:TM.map(m=>m.h)},{name:'OEE 금형 정지 h',color:'#dc2626',vals:TM.map(m=>m.oeeMold||0)}], line:{name:'재수리 건',color:'#f59e0b',vals:TM.map(m=>m.rp)}, lfmt:f0, fmt:f0, W:620, H:285})}</div></div>`;
+    <div class="ec s2c">${barChart({labels:tw.map(wkLabel), hiIdx:[tw.length-1], series:[{name:'수리 작업시간 h',color:'#1e3c72',vals:TM.map(m=>m.h)},{name:'OEE 금형 정지 h',color:'#dc2626',vals:TM.map(m=>m.oeeMold||0)}], line:{name:'재수리 건',color:'#f59e0b',vals:TM.map(m=>m.rp)}, lfmt:f0, fmt:f0, W:620, H:340})}</div></div>`;
   /* 3. Worst 금형 */
   const A = moldAgg(M.I).sort((a,b)=>b.n-a.n||b.h-a.h).slice(0,6);
   const sp = mold => { const L=ISS.filter(x=>x.mold===mold); const c=tw.map(w=>L.filter(x=>x.wk===w).length), mx=Math.max(...c,1);
@@ -903,6 +935,26 @@ function renderWeekly(P){
   const dcs = [...new Set(M.I.map(x=>x.dc).concat(fOee(P.weeks).filter(o=>o.mold>0).map(o=>o.dc)).filter(d=>/^DC\d+$/.test(d)&&d!=='DC14'))].sort((a,b)=>+a.slice(2)-+b.slice(2));
   const O = fOee(P.weeks), ow = P.weeks.some(w=>oeeWeeks().has(w));
   const s6h = barChart({labels:dcs, series:[{name:'수리 의뢰 건',color:'#1e3c72',vals:dcs.map(d=>M.I.filter(x=>x.dc===d).length)}], line: ow?{name:'OEE 금형 정지 h',color:'#dc2626',vals:dcs.map(d=>O.filter(o=>o.dc===d).reduce((a,o)=>a+o.mold,0)/60)}:null, lfmt:f1, W:1200, H:200});
+  /* 9. 금형 비용 — F-COST(호기별) · 금형별 총비용 */
+  const s9h = (()=>{
+    const DCS = Array.from({length:23},(_,i)=>'DC'+(i+1)).filter(d=>d!=='DC14');
+    const Oc = fOee(P.weeks), Op = fOee(P.prev);
+    const fc = DCS.map(d=>Oc.filter(o=>o.dc===d).reduce((a,o)=>a+(o.fcost||0),0)), fp = DCS.map(d=>Op.filter(o=>o.dc===d).reduce((a,o)=>a+(o.fcost||0),0));
+    const rc = DCS.map(d=>M.I.filter(x=>x.dc===d).reduce((a,x)=>a+x.cost,0));
+    const chart = ow ? barChart({labels:DCS.map(d=>d.slice(2)), series:[{name:pwT+' F-COST',color:'#cbd5e1',vals:fp},{name:wkT+' F-COST',color:'#dc2626',vals:fc},{name:wkT+' 수리비',color:'#1e3c72',vals:rc}], fmt:v=>v>=1000?f1(v/1000,1)+'k':f0(v), W:760, H:250})
+                     : '<div class="an">이 기간에는 A_가동률 데이터가 없어 F-COST를 계산할 수 없습니다 (OEE는 2026-06-24부터).</div>';
+    const A = moldAgg(M.I).map(a=>({...a, tot:a.fcost+a.cost})).sort((a,b)=>b.tot-a.tot).slice(0,6);
+    const un = Oc.reduce((a,o)=>a+(o.unalloc||0),0);
+    const tbl = `<table class="t"><thead><tr><th>순위</th><th>금형</th><th>품명</th><th>F-COST (추정)</th><th>수리비</th><th>합계</th></tr></thead><tbody>
+      ${A.map((a,i)=>`<tr class="click" onclick="openMold('${esc(a.mold)}')"><td class="c">${i+1}</td><td class="c"><b>#${esc(a.mold)}</b></td><td style="font-size:12px">${esc(a.pname)}</td><td class="n r">${f0(a.fcost)}</td><td class="n">${f0(a.cost)}</td><td class="n"><b>${f0(a.tot)}</b></td></tr>`).join('') || '<tr><td colspan="6" class="c mute">이 기간 없음</td></tr>'}
+      <tr class="tot"><td></td><td colspan="2">기간 합계${un?` <span class="mute" style="font-weight:600;font-size:11px">(금형 미확인 F-COST ${f0(un)} 포함)</span>`:''}</td><td class="n r">${M.fcost==null?'–':f0(M.fcost)}</td><td class="n">${f0(M.cost)}</td><td class="n">${M.total==null?'–':f0(M.total)}</td></tr></tbody></table>`;
+    return `<div class="g2" style="align-items:stretch"><div class="ec"><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+        <span class="pill" style="background:#fee2e2;color:#991b1b">F-COST ${M.fcost==null?'–':f0(M.fcost)} THB${Q.fcost!=null&&M.fcost!=null?` · ${pwT} ${f0(Q.fcost)}`:''}</span>
+        <span class="pill u">수리비 ${f0(M.cost)} THB · ${pwT} ${f0(Q.cost)}</span>
+        <span class="pill" style="background:#0f172a;color:#fff">총비용 ${M.total==null?'–':f0(M.total)} THB</span></div>${chart}
+        <div class="mute" style="font-size:11px">F-COST = OEE 금형 계통 로스(분) × 호기 M/C Rate(THB/분, MTTR과 같은 값) · 수리비 = 금형팀 Repair price</div></div>
+      <div class="ec"><b style="font-size:13px">금형별 총비용 Top 6</b> <span class="mute" style="font-size:11px">F-COST는 같은 호기 같은 날(없으면 ±1일) 수리한 금형에 나눠 붙인 추정치</span>${tbl}</div></div>`;
+  })();
   /* 7. 해설 */
   const pctCh = (c,p) => p ? Math.round(Math.abs(c-p)/p*100) : null;
   const top1 = A[0], cgTop = groupBy(M.I.filter(x=>x.unpl).flatMap(x=>[...x.cgs]), x=>x)[0];
@@ -912,6 +964,7 @@ function renderWeekly(P){
   else lines.push(`목표 미설정 — 2번 표의 목표 칸에 주간 목표를 넣으면 달성 판정이 붙습니다`);
   if(top1) lines.push(`<b>Worst 금형 #${esc(top1.mold)} (${esc(top1.pname)})</b> ${top1.n}건 · ${f1(top1.h)}h${top1.topCode?' — 주로 '+esc(RT_SHORT(top1.topCode[0])):''}${top1.rp?` · ${ST.rpDays}일 내 재수리 ${top1.rp}건`:''}`);
   if(cgTop) lines.push(`고장 원인 1위 <b>${esc(cgTop.k)}</b> ${cgTop.v}건 (고장 의뢰의 ${Math.round(cgTop.v/(M.u||1)*100)}%)`);
+  if(M.fcost!=null) lines.push(`<b>금형 비용 ${f0(M.total)} THB</b> = F-COST(정지 손실) ${f0(M.fcost)} + 수리비(지출) ${f0(M.cost)}${Q.total!=null?` — ${pwT} ${f0(Q.total)} THB 대비 ${M.total<=Q.total?'▼':'▲'} ${f0(Math.abs(M.total-Q.total))}`:''}`);
   if(M.oeeMold!=null) lines.push(`설비 쪽 금형 정지(OEE) <b>${f1(M.oeeMold)}h</b>${Q.oeeMold!=null?` (${pwT} ${f1(Q.oeeMold)}h)`:''} · 금형교체 ${f1(M.oeeChg)}h 별도`);
   if(M.per10k!=null) lines.push(`Shot 대비: 고장 1건당 <b>${f0(M.msbf)} Shot</b> (1만 Shot당 ${f1(M.per10k,2)}건)${Q.msbf?` · ${pwT} ${f0(Q.msbf)} Shot`:''}`);
   const s7h = `<div class="ec"><ol>${lines.map(l=>`<li>${l}</li>`).join('')}</ol></div>`;
@@ -920,7 +973,7 @@ function renderWeekly(P){
   const s8h = `<table class="t"><thead><tr><th style="width:110px">금형</th><th>조치 내용</th><th style="width:140px">담당</th><th style="width:110px">기한</th></tr></thead><tbody>${plan.map((p,i)=>`<tr>${['m','t','o','d'].map(f=>`<td><textarea class="plan" data-pl="${i}" data-f="${f}">${esc(p[f])}</textarea></td>`).join('')}</tr>`).join('')}</tbody></table>
     <div class="mute noprint" style="font-size:11px;margin-top:4px">이 브라우저에 주차별로 저장 · Worst 금형 · 재수리 금형부터 적는 걸 권합니다</div>`;
 
-  const SEC = { s1:['주간 요약','목표 대비 · '+pwT+' 대비',s1h], s2:['지표 주간 추이 · 목표 설정',pwT+' → '+wkT+' · 그래프 = 최근 8주',s2h], s3:['Worst 금형','의뢰 건수 순 · 누르면 금형 이력',s3h], s4:['작업유형 · 원인 변화',pwT+' → '+wkT,s4h],
+  const SEC = { s9:['금형 비용 — F-COST · 수리비','호기별 F-COST · 금형별 총비용',s9h], s1:['주간 요약','목표 대비 · '+pwT+' 대비',s1h], s2:['지표 주간 추이 · 목표 설정',pwT+' → '+wkT+' · 그래프 = 최근 8주',s2h], s3:['Worst 금형','의뢰 건수 순 · 누르면 금형 이력',s3h], s4:['작업유형 · 원인 변화',pwT+' → '+wkT,s4h],
     s5:['재수리 금형',ST.rpDays+'일 이내 같은 금형 · 같은 고장 작업',s5h], s6:['호기별 수리 · 설비 금형 정지','막대 = 수리 의뢰 · 선 = OEE 금형 정지 h',s6h], s7:['해설','값으로 자동 작성',s7h], s8:['다음 주 조치 계획','직접 입력',s8h] };
   let html = `<div class="cover"><div><div class="ey">MOLD MAINTENANCE REPORT</div><h3>금형 수리 주간 보고서</h3><div style="opacity:.85">Mold Repair Weekly Report · ${dayKey(s0)} ~ ${dayKey(s1)}</div></div>
     <div class="wk">${wkT}</div><div class="rt"><b>STC Co., Ltd.</b><br>다이캐스팅 금형 · 공무팀${meta.a?'<br>작성 '+esc(meta.a):''}${meta.s?' · '+esc(meta.s):''}<br>발행 ${dayKey(new Date())}${fTxt()}</div></div>`;
@@ -931,7 +984,7 @@ function renderWeekly(P){
   $('wkSheet').querySelectorAll('[data-tg]').forEach(i=>i.onchange=()=>{ const t=LS('stc_mold_tg',{}); if(i.value==='') delete t[i.dataset.tg]; else t[i.dataset.tg]=+i.value; SS('stc_mold_tg',t); render(); });
   $('wkSheet').querySelectorAll('[data-pl]').forEach(i=>i.onchange=()=>{ const pl=LS(PK,[]); while(pl.length<4) pl.push({m:'',t:'',o:'',d:''}); pl[+i.dataset.pl][i.dataset.f]=i.value; SS(PK,pl); });
 }
-function wkMove(k,d){ const o=LS('stc_mold_wk_order',WK_SECS).filter(s=>WK_SECS.indexOf(s)>=0); WK_SECS.forEach(s=>{ if(o.indexOf(s)<0) o.push(s); }); const i=o.indexOf(k), j=i+d; if(j<0||j>=o.length) return; [o[i],o[j]]=[o[j],o[i]]; SS('stc_mold_wk_order',o); render(); }
+function wkMove(k,d){ const o=wkOrder(); const i=o.indexOf(k), j=i+d; if(j<0||j>=o.length) return; [o[i],o[j]]=[o[j],o[i]]; SS('stc_mold_wk_order',o); render(); }
 function wkHide(k,h){ let a=LS('stc_mold_wk_hide',[]); a=a.filter(x=>x!==k); if(h) a.push(k); SS('stc_mold_wk_hide',a); render(); }
 
 /* =====================================================================
