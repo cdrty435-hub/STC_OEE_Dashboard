@@ -106,7 +106,7 @@
   .hidph{border:1px dashed #cbd5e1;border-radius:8px;padding:6px 12px;font-size:12px;color:#64748b;margin-top:10px;display:flex;align-items:center;gap:8px;}
   .wkcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
   .wkcards .kpi{border-color:#dbe3ec;}
-  .s2g{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr) !important;} .s2g td:first-child{white-space:nowrap;} .s2g table.t td,.s2g table.t th{padding:4px 5px;}
+  .s2g{grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;align-items:stretch !important;} .s2g table.s2t td{padding:14px 7px !important;} .s2g > .s2c{display:flex;flex-direction:column;justify-content:center;} .s2g td:first-child{white-space:nowrap;} .s2g table.t td,.s2g table.t th{padding:4px 5px;}
   .tgin::placeholder{color:#cbd5e1;font-weight:600;}
   .tgin{width:84px;font:inherit;font-size:12.5px;font-weight:800;text-align:right;padding:2px 5px;border:1.5px solid #dc2626;border-radius:5px;color:#b91c1c;}
   textarea.plan{width:100%;font:inherit;font-size:12.5px;border:1px solid #cbd5e1;border-radius:6px;padding:4px 6px;min-height:28px;resize:vertical;}
@@ -847,13 +847,10 @@ function dlCsv(){
    ===================================================================== */
 const WK_SECS = ['s1','s2','s3','s4','s5','s6','s7','s8'];
 const TG = [   /* 목표 칸 — 낮을수록 좋음 */
-  { k:'n',     name:'수리 의뢰',       u:'건', dp:0, get:m=>m.n },
-  { k:'u',     name:'고장(비계획)',     u:'건', dp:0, get:m=>m.u },
   { k:'h',     name:'수리 작업시간',    u:'h',  dp:1, get:m=>m.h },
   { k:'cost',  name:'수리비',          u:'',   dp:0, get:m=>m.cost },
   { k:'rp',    name:'재수리',          u:'건', dp:0, get:m=>m.rp },
-  { k:'oee',   name:'OEE 금형 정지',    u:'h',  dp:1, get:m=>m.oeeMold },
-  { k:'p10k',  name:'고장/1만 Shot',    u:'건', dp:2, get:m=>m.per10k }
+  { k:'oee',   name:'OEE 금형 정지',    u:'h',  dp:1, get:m=>m.oeeMold }
 ];
 const fx = (v,dp) => v==null||isNaN(v) ? '–' : dp ? f1(v,dp) : f0(v);
 function renderWeekly(P){
@@ -878,11 +875,15 @@ function renderWeekly(P){
   const s1h = `<div class="wkcards">${J.map(x=>kpiCard(x.t.name, fx(x.c,x.t.dp), x.t.u, dTxt(x.c,x.p,true,v=>fx(v,x.t.dp)).replace(/전기간/,pwT),
       `목표 ${x.tv==null?'미설정':fx(x.tv,x.t.dp)}`, `<span class="jg ${x.hit==null?'na':x.hit?'ok':'ng'}">${x.hit==null?'목표 없음':x.hit?'달성':'+'+fx(x.gap,x.t.dp)+' 미달'}</span>`)).join('')}</div>`;
   /* 2. 지표 주간 추이 + 목표 설정 */
-  const s2h = `<div class="g2 s2g" style="align-items:start"><div class="ec"><div class="tw"><table class="t"><thead><tr><th>지표</th><th>목표 (주)</th>${TM.map(m=>`<th class="${m.w===P.b?'cur':''}">${wkLabel(m.w)}</th>`).join('')}</tr></thead><tbody>
-      ${J.map(x=>`<tr><td><b>${x.t.name}</b> <span class="mute" style="font-size:11px">${x.t.u}</span></td><td class="c"><input class="tgin" data-tg="${x.t.k}" type="number" step="${x.t.dp?Math.pow(10,-x.t.dp):1}" value="${tg[x.t.k]??''}" placeholder="${x.sug==null?'':fx(x.sug,x.t.dp).replace(/,/g,'')}"><div class="mute" style="font-size:10.5px">제안 ${fx(x.sug,x.t.dp)}</div></td>
-        ${TM.map(m=>{ const v=x.t.get(m), tv=tg[x.t.k]!=null&&tg[x.t.k]!==''?+tg[x.t.k]:null; return `<td class="n${m.w===P.b?' cur':''} ${tv!=null&&v!=null&&!isNaN(v)?(v<=tv?'g':'r'):''}">${fx(v,x.t.dp)}</td>`; }).join('')}</tr>`).join('')}
-      </tbody></table></div><div class="mute" style="font-size:11px;margin-top:4px">목표는 주 단위로 넣습니다 (빈칸 = 제안값은 최근 16주 평균의 90%) · 초록 = 목표 이내 · 빨강 = 초과</div></div>
-    <div class="ec">${barChart({labels:tw.map(wkLabel), stack:true, hiIdx:[tw.length-1], series:[{name:'고장(비계획)',color:'#1e3c72',vals:TM.map(m=>m.u)},{name:'계획·예방',color:'#94a3b8',vals:TM.map(m=>m.plan)}], line:{name:'OEE 금형 정지 h',color:'#dc2626',vals:TM.map(m=>m.oeeMold)}, lfmt:f1, target: tg.n!=null&&tg.n!==''?+tg.n:null, W:620, H:250})}</div></div>`;
+  const s2h = `<div class="g2 s2g"><div class="ec"><table class="t s2t"><thead><tr><th>지표</th><th>목표 (주)</th><th>${pwT}</th><th class="cur">${wkT}</th><th>${wkT}<div style="font-size:10px;font-weight:600">목표 달성</div></th><th>${pwT} → ${wkT}<div style="font-size:10px;font-weight:600">전주 대비</div></th></tr></thead><tbody>
+      ${J.map(x=>{ const d = x.c!=null&&x.p!=null&&!isNaN(x.c)&&!isNaN(x.p) ? x.c-x.p : null;
+        return `<tr><td><b>${x.t.name}</b> <span class="mute" style="font-size:11px">${x.t.u}</span></td>
+        <td class="c"><input class="tgin" data-tg="${x.t.k}" type="number" step="${x.t.dp?Math.pow(10,-x.t.dp):1}" value="${tg[x.t.k]??''}" placeholder="${x.sug==null?'':fx(x.sug,x.t.dp).replace(/,/g,'')}"><div class="mute" style="font-size:10.5px">제안 ${fx(x.sug,x.t.dp)}</div></td>
+        <td class="n">${fx(x.p,x.t.dp)}</td><td class="n cur" style="font-size:15px">${fx(x.c,x.t.dp)}</td>
+        <td class="c">${x.hit==null?'<span class="mute">목표 없음</span>':x.hit?`<b class="g">✔ 달성</b><div class="mute" style="font-size:10.5px">여유 ${fx(-x.gap,x.t.dp)}</div>`:`<b class="r">✖ 미달</b><div class="mute" style="font-size:10.5px">초과 ${fx(x.gap,x.t.dp)}</div>`}</td>
+        <td class="c">${d==null?'–':Math.abs(d)<1e-9?'<span class="mute">같음</span>':`<b class="${d<0?'g':'r'}">${d>0?'▲':'▼'} ${fx(Math.abs(d),x.t.dp)}</b><div class="mute" style="font-size:10.5px">${x.p?Math.round(Math.abs(d)/x.p*100)+'% '+(d<0?'감소':'증가'):''}</div>`}</td></tr>`; }).join('')}
+      </tbody></table><div class="mute" style="font-size:11px;margin-top:6px">목표는 주 단위로 넣습니다 (빈칸 = 제안값: 최근 16주 평균의 90%)${per>1?` · 여러 주 묶음이라 목표 × ${per}주로 판정`:''} · 지난 주차 흐름은 오른쪽 그래프</div></div>
+    <div class="ec s2c">${barChart({labels:tw.map(wkLabel), hiIdx:[tw.length-1], series:[{name:'수리 작업시간 h',color:'#1e3c72',vals:TM.map(m=>m.h)},{name:'OEE 금형 정지 h',color:'#dc2626',vals:TM.map(m=>m.oeeMold||0)}], line:{name:'재수리 건',color:'#f59e0b',vals:TM.map(m=>m.rp)}, lfmt:f0, fmt:f0, W:620, H:285})}</div></div>`;
   /* 3. Worst 금형 */
   const A = moldAgg(M.I).sort((a,b)=>b.n-a.n||b.h-a.h).slice(0,6);
   const sp = mold => { const L=ISS.filter(x=>x.mold===mold); const c=tw.map(w=>L.filter(x=>x.wk===w).length), mx=Math.max(...c,1);
@@ -919,7 +920,7 @@ function renderWeekly(P){
   const s8h = `<table class="t"><thead><tr><th style="width:110px">금형</th><th>조치 내용</th><th style="width:140px">담당</th><th style="width:110px">기한</th></tr></thead><tbody>${plan.map((p,i)=>`<tr>${['m','t','o','d'].map(f=>`<td><textarea class="plan" data-pl="${i}" data-f="${f}">${esc(p[f])}</textarea></td>`).join('')}</tr>`).join('')}</tbody></table>
     <div class="mute noprint" style="font-size:11px;margin-top:4px">이 브라우저에 주차별로 저장 · Worst 금형 · 재수리 금형부터 적는 걸 권합니다</div>`;
 
-  const SEC = { s1:['주간 요약','목표 대비 · '+pwT+' 대비',s1h], s2:['지표 주간 추이 · 목표 설정','최근 8주',s2h], s3:['Worst 금형','의뢰 건수 순 · 누르면 금형 이력',s3h], s4:['작업유형 · 원인 변화',pwT+' → '+wkT,s4h],
+  const SEC = { s1:['주간 요약','목표 대비 · '+pwT+' 대비',s1h], s2:['지표 주간 추이 · 목표 설정',pwT+' → '+wkT+' · 그래프 = 최근 8주',s2h], s3:['Worst 금형','의뢰 건수 순 · 누르면 금형 이력',s3h], s4:['작업유형 · 원인 변화',pwT+' → '+wkT,s4h],
     s5:['재수리 금형',ST.rpDays+'일 이내 같은 금형 · 같은 고장 작업',s5h], s6:['호기별 수리 · 설비 금형 정지','막대 = 수리 의뢰 · 선 = OEE 금형 정지 h',s6h], s7:['해설','값으로 자동 작성',s7h], s8:['다음 주 조치 계획','직접 입력',s8h] };
   let html = `<div class="cover"><div><div class="ey">MOLD MAINTENANCE REPORT</div><h3>금형 수리 주간 보고서</h3><div style="opacity:.85">Mold Repair Weekly Report · ${dayKey(s0)} ~ ${dayKey(s1)}</div></div>
     <div class="wk">${wkT}</div><div class="rt"><b>STC Co., Ltd.</b><br>다이캐스팅 금형 · 공무팀${meta.a?'<br>작성 '+esc(meta.a):''}${meta.s?' · '+esc(meta.s):''}<br>발행 ${dayKey(new Date())}${fTxt()}</div></div>`;
