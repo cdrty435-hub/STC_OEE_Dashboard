@@ -920,14 +920,40 @@ function renderWeekly(P){
   const A = moldAgg(M.I).sort((a,b)=>b.n-a.n||b.h-a.h).slice(0,6);
   const sp = mold => { const L=ISS.filter(x=>x.mold===mold); const c=tw.map(w=>L.filter(x=>x.wk===w).length), mx=Math.max(...c,1);
     return `<svg viewBox="0 0 96 22" style="width:96px;display:inline-block">${c.map((v,i)=>`<rect x="${i*12+1}" y="${21-v/mx*19}" width="9" height="${v/mx*19}" fill="${i===c.length-1?'#1e3c72':'#b8c2d0'}"/>`).join('')}</svg>`; };
-  const s3h = `<div class="tw"><table class="t"><thead><tr><th>순위</th><th>금형</th><th>품명</th><th>호기</th><th>${wkT} 의뢰</th><th>고장</th><th>작업 h</th><th>수리비</th><th>최다 작업 · 원인</th><th>재수리</th><th>최근 8주</th></tr></thead><tbody>
-    ${A.map((a,i)=>`<tr class="click" onclick="openMold('${esc(a.mold)}')"><td class="c">${i+1}</td><td class="c"><b>#${esc(a.mold)}</b></td><td>${esc(a.pname)}</td><td style="font-size:11px">${[...a.dcs].join(', ')}</td><td class="n"><b>${a.n}</b></td><td class="n">${a.u}</td><td class="n">${f1(a.h)}</td><td class="n">${f0(a.cost)}</td>
-      <td style="font-size:12px">${a.topCode?esc(RT_SHORT(a.topCode[0])):''}${a.topCg?' · '+esc(a.topCg[0]):''}</td><td class="c">${a.rp?`<span class="pill rp">${a.rp}건</span>`:''}</td><td class="c">${sp(a.mold)}</td></tr>`).join('') || '<tr><td colspan="11" class="c mute">이 기간 수리 없음</td></tr>'}
-    </tbody></table></div>`;
-  /* 4. 작업유형 · 원인 (금주 vs 전주) */
-  const cmp = (fnK, onlyU) => { const c=groupBy(M.R.filter(r=>!onlyU||isUnpl(r.code)), fnK), p=groupBy(Q.R.filter(r=>!onlyU||isUnpl(r.code)), fnK); const pm=Object.fromEntries(p.map(x=>[x.k,x.v]));
-    return `<table class="t"><thead><tr><th style="text-align:left">항목</th><th>${pwT}</th><th class="cur">${wkT}</th><th>증감</th></tr></thead><tbody>${c.slice(0,7).map(x=>{ const d=x.v-(pm[x.k]||0); return `<tr><td>${esc(x.k)}</td><td class="n">${pm[x.k]||0}</td><td class="n cur">${x.v}</td><td class="n ${d>0?'r':d<0?'g':''}">${d>0?'+':''}${d||'–'}</td></tr>`; }).join('')}</tbody></table>`; };
-  const s4h = `<div class="g2"><div class="ec"><b style="font-size:13px">작업유형 (작업 줄 수)</b>${cmp(r=>RT_SHORT(r.code))}</div><div class="ec"><b style="font-size:13px">원인 그룹 (고장 작업)</b>${cmp(r=>r.cg,true)}</div></div>`;
+  /* 도넛 카드 (MTTR 2-2 · 2-3 과 같은 모양) — 상위 4 + 기타, 왼쪽 도넛 · 오른쪽 전주/금주 표 */
+  const DPAL = ['#1e3c72','#3b82f6','#f59e0b','#10b981'], DOTH = '#cbd5e1';
+  const donut = (vals, cols, center, unit) => { const tot = vals.reduce((a,b)=>a+b,0)||1, R=58, C=2*Math.PI*R; let off=0;
+    return `<svg viewBox="0 0 160 160" style="width:150px;flex:0 0 150px"><circle cx="80" cy="80" r="${R}" fill="none" stroke="#f1f5f9" stroke-width="26"/>`
+      + vals.map((v,i)=>{ const L=v/tot*C; const g=`<circle cx="80" cy="80" r="${R}" fill="none" stroke="${cols[i]}" stroke-width="26" stroke-dasharray="${L} ${C-L}" stroke-dashoffset="${-off}" transform="rotate(-90 80 80)"/>`; off+=L; return g; }).join('')
+      + `<text x="80" y="74" text-anchor="middle" font-size="11" fill="#64748b">${esc(wkT)}</text><text x="80" y="94" text-anchor="middle" font-size="19" font-weight="900" fill="#0f172a">${center}</text>${unit?`<text x="80" y="110" text-anchor="middle" font-size="10" fill="#64748b">${unit}</text>`:''}</svg>`; };
+  /* items: [{k, sub, c(금주), p(전주), click}] — 금주 기준 상위 4 */
+  const dcard = (title, unit, items, opt) => { opt = opt||{};
+    const cur = items.filter(x=>x.c>0).sort((a,b)=>b.c-a.c||b.p-a.p), top = cur.slice(0,4), rest = items.filter(x=>top.indexOf(x)<0);
+    const oth = { k:`기타 ${rest.filter(x=>x.c>0).length}${opt.cnt||'종'}`, c:rest.reduce((a,x)=>a+x.c,0), p:rest.reduce((a,x)=>a+x.p,0), etc:true };
+    const rows = top.concat(oth.c||oth.p ? [oth] : []), tc = items.reduce((a,x)=>a+x.c,0), tp = items.reduce((a,x)=>a+x.p,0);
+    const fm = opt.fmt || f0, dl = d => Math.abs(d)<1e-9 ? '–' : `<span class="${d<0?'g':'r'}">${d>0?'+':'−'}${fm(Math.abs(d))}</span>`;
+    const tbl = `<table class="t" style="font-size:12px"><thead><tr><th style="width:26px">순위</th><th style="text-align:left">${opt.head||'항목'}</th>${opt.extraH||''}<th>${esc(pwT)}</th><th class="cur">${esc(wkT)}</th><th>증감</th><th>비중</th></tr></thead><tbody>
+      ${rows.map((x,i)=>`<tr${x.click?` class="click" onclick="${x.click}"`:''}><td class="c mute">${x.etc?'':(i+1)+'위'}</td><td><i style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:${x.etc?DOTH:DPAL[i]};-webkit-print-color-adjust:exact;print-color-adjust:exact"></i><b${x.etc?' style="font-weight:600;color:#64748b"':''}>${esc(x.k)}</b>${x.sub?`<div style="font-size:10.5px;color:#64748b;margin-left:16px">${esc(x.sub)}</div>`:''}</td>
+        ${opt.extra?opt.extra(x):''}<td class="n">${fm(x.p)}</td><td class="n cur">${fm(x.c)}</td><td class="n">${dl(x.c-x.p)}</td><td class="n mute">${tc?Math.round(x.c/tc*100)+'%':''}</td></tr>`).join('')}
+      <tr class="tot"><td></td><td>합계</td>${opt.extra?opt.extra(null):''}<td class="n">${fm(tp)}</td><td class="n">${fm(tc)}</td><td class="n">${dl(tc-tp)}</td><td class="n">100%</td></tr></tbody></table>`;
+    return `<div class="ec"><div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:6px"><b style="font-size:15px;color:#1f3864">${title}</b>
+        <span style="font-size:13px;font-weight:700">${esc(pwT)} ${fm(tp)} → ${esc(wkT)} <b>${fm(tc)}</b> ${dl(tc-tp)}</span></div>
+      <div style="display:flex;gap:14px;align-items:center">${donut(rows.map(x=>x.c), rows.map((x,i)=>x.etc?DOTH:DPAL[i]), fm(tc), unit)}<div style="flex:1;min-width:0">${tbl}</div></div>
+      ${opt.note?`<div class="mute" style="font-size:11px;margin-top:4px">${opt.note}</div>`:''}</div>`; };
+  /* 3. Worst 금형 — 금주 의뢰 건수 상위 4 */
+  const AP = {}; moldAgg(Q.I).forEach(a=>{ AP[a.mold]=a; });
+  const AC = moldAgg(M.I); const mItems = AC.map(a=>({ k:'#'+a.mold, sub:`${a.pname} · ${[...a.dcs].join(',')}`, c:a.n, p:AP[a.mold]?AP[a.mold].n:0, a, click:`openMold('${esc(a.mold)}')` }))
+    .concat(Object.values(AP).filter(a=>!AC.some(b=>b.mold===a.mold)).map(a=>({k:'#'+a.mold, c:0, p:a.n})));
+  const s3h = `<div class="g2">${dcard('Worst 금형 · 수리 의뢰 (건)', '건', mItems, { head:'금형 · 품명 · 호기', cnt:'개',
+      extraH:'<th>재수리</th>', extra:x=> x===null ? '<td></td>' : `<td class="c">${x.a&&x.a.rp?`<span class="pill rp">${x.a.rp}</span>`:''}</td>` })}
+    ${(()=>{ /* 같은 금형을 작업시간 기준으로 */ const hi = AC.map(a=>({ k:'#'+a.mold, sub:a.pname, c:a.h, p:AP[a.mold]?AP[a.mold].h:0, click:`openMold('${esc(a.mold)}')` })).concat(Object.values(AP).filter(a=>!AC.some(b=>b.mold===a.mold)).map(a=>({k:'#'+a.mold,c:0,p:a.h})));
+      return dcard('Worst 금형 · 작업시간 (h)', 'h', hi, { head:'금형 · 품명', cnt:'개', fmt:v=>f1(v) }); })()}</div>
+    <div class="mute" style="font-size:11px;margin-top:4px">※ 상위 4 = 금주 기준 · 순위는 각 도넛의 기준(왼쪽 의뢰 건수 · 오른쪽 작업시간) · 금형 번호를 누르면 전체 이력</div>`;
+  /* 4. 작업유형 · 원인 그룹 — 도넛 */
+  const cnt2 = (rowsC, rowsP, kf) => { const c=groupBy(rowsC,kf), p=groupBy(rowsP,kf), pm=Object.fromEntries(p.map(x=>[x.k,x.v])), cm=Object.fromEntries(c.map(x=>[x.k,x.v]));
+    return [...new Set(c.map(x=>x.k).concat(p.map(x=>x.k)))].map(k=>({k, c:cm[k]||0, p:pm[k]||0})); };
+  const s4h = `<div class="g2">${dcard('작업유형 (작업 줄 수)', '줄', cnt2(M.R, Q.R, r=>RT_SHORT(r.code)), { head:'작업유형' })}
+    ${dcard('고장 원인 그룹 (고장 작업 줄 수)', '줄', cnt2(M.R.filter(r=>isUnpl(r.code)), Q.R.filter(r=>isUnpl(r.code)), r=>r.cg), { head:'원인 그룹', note:'원인 문장을 그룹으로 묶음 · 원문은 5번 파레토 탭' })}</div>`;
   /* 5. 재수리 */
   const RP = M.I.filter(x=>x.repeat);
   const s5h = RP.length ? `<table class="t"><thead><tr><th>금형</th><th>품명</th><th>앞 의뢰</th><th>앞 작업</th><th>이번</th><th>이번 작업</th><th>간격</th></tr></thead><tbody>${RP.slice(-12).reverse().map(x=>`<tr class="click" onclick="openMold('${esc(x.mold)}')"><td class="c"><b>#${esc(x.mold)}</b></td><td>${esc(x.pname)}</td><td class="c">${dayKey(x.prev.rq).slice(5)}</td><td>${[...x.prev.codes].map(c=>esc(RT_SHORT(c))).join(', ')}</td><td class="c">${dayKey(x.rq).slice(5)}</td><td>${[...x.codes].map(c=>esc(RT_SHORT(c))).join(', ')}</td><td class="n r"><b>${Math.round((x.rq-x.prev.rq)/864e5)}일</b></td></tr>`).join('')}${RP.length>12?`<tr><td colspan="7" class="c mute">외 ${RP.length-12}건 — 7번 재수리 추적 탭에서 전체 보기</td></tr>`:''}</tbody></table>` : `<div class="an">이 기간 ${ST.rpDays}일 내 재수리 없음</div>`;
@@ -973,7 +999,7 @@ function renderWeekly(P){
   const s8h = `<table class="t"><thead><tr><th style="width:110px">금형</th><th>조치 내용</th><th style="width:140px">담당</th><th style="width:110px">기한</th></tr></thead><tbody>${plan.map((p,i)=>`<tr>${['m','t','o','d'].map(f=>`<td><textarea class="plan" data-pl="${i}" data-f="${f}">${esc(p[f])}</textarea></td>`).join('')}</tr>`).join('')}</tbody></table>
     <div class="mute noprint" style="font-size:11px;margin-top:4px">이 브라우저에 주차별로 저장 · Worst 금형 · 재수리 금형부터 적는 걸 권합니다</div>`;
 
-  const SEC = { s9:['금형 비용 — F-COST · 수리비','호기별 F-COST · 금형별 총비용',s9h], s1:['주간 요약','목표 대비 · '+pwT+' 대비',s1h], s2:['지표 주간 추이 · 목표 설정',pwT+' → '+wkT+' · 그래프 = 최근 8주',s2h], s3:['Worst 금형','의뢰 건수 순 · 누르면 금형 이력',s3h], s4:['작업유형 · 원인 변화',pwT+' → '+wkT,s4h],
+  const SEC = { s9:['금형 비용 — F-COST · 수리비','호기별 F-COST · 금형별 총비용',s9h], s1:['주간 요약','목표 대비 · '+pwT+' 대비',s1h], s2:['지표 주간 추이 · 목표 설정',pwT+' → '+wkT+' · 그래프 = 최근 8주',s2h], s3:['Worst 금형','도넛 = 금주 상위 4 + 기타 · 누르면 금형 이력',s3h], s4:['작업유형 · 원인 변화',pwT+' → '+wkT+' · 도넛 = 금주 상위 4 + 기타',s4h],
     s5:['재수리 금형',ST.rpDays+'일 이내 같은 금형 · 같은 고장 작업',s5h], s6:['호기별 수리 · 설비 금형 정지','막대 = 수리 의뢰 · 선 = OEE 금형 정지 h',s6h], s7:['해설','값으로 자동 작성',s7h], s8:['다음 주 조치 계획','직접 입력',s8h] };
   let html = `<div class="cover"><div><div class="ey">MOLD MAINTENANCE REPORT</div><h3>금형 수리 주간 보고서</h3><div style="opacity:.85">Mold Repair Weekly Report · ${dayKey(s0)} ~ ${dayKey(s1)}</div></div>
     <div class="wk">${wkT}</div><div class="rt"><b>STC Co., Ltd.</b><br>다이캐스팅 금형 · 공무팀${meta.a?'<br>작성 '+esc(meta.a):''}${meta.s?' · '+esc(meta.s):''}<br>발행 ${dayKey(new Date())}${fTxt()}</div></div>`;
