@@ -106,7 +106,7 @@
   .hidph{border:1px dashed #cbd5e1;border-radius:8px;padding:6px 12px;font-size:12px;color:#64748b;margin-top:10px;display:flex;align-items:center;gap:8px;}
   .wkcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
   .wkcards .kpi{border-color:#dbe3ec;}
-  .s2g{grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;align-items:stretch !important;} .s2g table.s2t td{padding:14px 7px !important;} .s2g > .s2c{display:flex;flex-direction:column;justify-content:center;} .s2g td:first-child{white-space:nowrap;} .s2g table.t td,.s2g table.t th{padding:4px 5px;}
+  .s2g{grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;align-items:stretch !important;} .s2g table.s2t td{padding:14px 7px !important;} .s2g > .s2c{display:flex;flex-direction:column;justify-content:center;} .s2g > .ec:first-child{display:flex;flex-direction:column;} .s2g > .ec:first-child > table.s2t{flex:1 1 auto;height:100%;} .s2g td:first-child{white-space:nowrap;} .s2g table.t td,.s2g table.t th{padding:4px 5px;}
   .tgin::placeholder{color:#cbd5e1;font-weight:600;}
   .tgin{width:84px;font:inherit;font-size:12.5px;font-weight:800;text-align:right;padding:2px 5px;border:1.5px solid #dc2626;border-radius:5px;color:#b91c1c;}
   textarea.plan{width:100%;font:inherit;font-size:12.5px;border:1px solid #cbd5e1;border-radius:6px;padding:4px 6px;min-height:28px;resize:vertical;}
@@ -919,6 +919,8 @@ function renderWeekly(P){
     ${M.shots!=null&&M.u?'':`<div class="mute" style="font-size:11px;margin-top:4px">MSBF: 이 기간 Shot(P_성능) 또는 고장 수리가 없어 계산하지 않음</div>`}
     <div class="mute" style="font-size:11px;margin-top:4px">MSBF는 지금 품명(Model) 단위 Shot으로 계산 — OEE에 Mold Number를 입력하면 금형 단위로 정확해집니다 · 계획 정비 비율은 Daily repair에 「수리 계기」 열이 있으면 그 값(고장/PM/품질)으로, 없으면 작업유형(청소·PM 등 = 계획)으로 판정${HAS_TRIG?' — <b>현재 수리 계기 열 사용 중</b>':''}</div>`;
   /* 2. 지표 주간 추이 + 목표 설정 */
+  /* 2번 그래프 — 왼쪽 표 높이에 맞춰 화면에서 크기를 다시 잡는다 (fitS2) */
+  S2CH = (W,H) => barChart({labels:tw.map(wkLabel), hiIdx:[tw.length-1], series:[{name:'금형 기인 정지시간 h',color:'#dc2626',vals:TM.map(m=>m.oeeMold||0)}], line:{name:'금형 비용 THB',color:'#1e3c72',vals:TM.map(m=>m.total)}, lfmt:v=>v>=1000?f0(v/1000)+'k':f0(v), fmt:f0, target: tg.oee!=null&&tg.oee!==''?+tg.oee:null, W, H});
   const s2h = `<div class="g2 s2g"><div class="ec"><table class="t s2t"><thead><tr><th>지표</th><th>목표 (주)</th><th>${pwT}</th><th class="cur">${wkT}</th><th>${wkT}<div style="font-size:10px;font-weight:600">목표 달성</div></th><th>${pwT} → ${wkT}<div style="font-size:10px;font-weight:600">전주 대비</div></th></tr></thead><tbody>
       ${J.map(x=>{ const d = x.c!=null&&x.p!=null&&!isNaN(x.c)&&!isNaN(x.p) ? x.c-x.p : null;
         return `<tr><td><b>${x.t.name}</b> <span class="mute" style="font-size:11px">${x.t.u}</span><div class="mute" style="font-size:10.5px">${x.t.hi?'높을수록 좋음':'낮을수록 좋음'}</div></td>
@@ -927,7 +929,7 @@ function renderWeekly(P){
         <td class="c">${x.hit==null?'<span class="mute">목표 없음</span>':x.hit?`<b class="g">✔ 달성</b><div class="mute" style="font-size:10.5px">여유 ${fx(-x.gap,x.t.dp)}</div>`:`<b class="r">✖ 미달</b><div class="mute" style="font-size:10.5px">${x.t.hi?'부족':'초과'} ${fx(x.gap,x.t.dp)}</div>`}</td>
         <td class="c">${d==null?'–':Math.abs(d)<1e-9?'<span class="mute">같음</span>':`<b class="${(x.t.hi?d>0:d<0)?'g':'r'}">${d>0?'▲':'▼'} ${fx(Math.abs(d),x.t.dp)}</b><div class="mute" style="font-size:10.5px">${x.p?Math.round(Math.abs(d)/x.p*100)+'% '+(d<0?'감소':'증가'):''}</div>`}</td></tr>`; }).join('')}
       </tbody></table><div class="mute" style="font-size:11px;margin-top:6px">목표는 주 단위로 넣습니다 (빈칸 = 제안값: 최근 16주 평균의 90% · 높을수록 좋은 지표는 110%)${per>1?` · 여러 주 묶음이라 정지시간·비용 목표는 × ${per}주로 판정`:''} · 지난 주차 흐름은 오른쪽 그래프</div></div>
-    <div class="ec s2c">${barChart({labels:tw.map(wkLabel), hiIdx:[tw.length-1], series:[{name:'금형 기인 정지시간 h',color:'#dc2626',vals:TM.map(m=>m.oeeMold||0)}], line:{name:'금형 비용 THB',color:'#1e3c72',vals:TM.map(m=>m.total)}, lfmt:v=>v>=1000?f0(v/1000)+'k':f0(v), fmt:f0, target: tg.oee!=null&&tg.oee!==''?+tg.oee:null, W:620, H:380})}</div></div>`;
+    <div class="ec s2c" id="s2chart">${S2CH(620,300)}</div></div>`;
   /* 3. Worst 금형 */
   const A = moldAgg(M.I).sort((a,b)=>b.n-a.n||b.h-a.h).slice(0,6);
   const sp = mold => { const L=ISS.filter(x=>x.mold===mold); const c=tw.map(w=>L.filter(x=>x.wk===w).length), mx=Math.max(...c,1);
@@ -1037,10 +1039,19 @@ function renderWeekly(P){
   let no = 0;
   order.forEach((k,idx)=>{ const s = SEC[k]; if(hide.indexOf(k)>=0){ html += `<div class="hidph noprint">숨긴 항목: ${s[0]} <button class="btn" onclick="wkHide('${k}',false)">되살리기</button></div>`; return; }
     no++; html += `<div class="sec" data-k="${k}"><div class="sh"><b>${no}. ${s[0]}</b><small>${s[1]}</small><span class="ctl"><button onclick="wkMove('${k}',-1)" title="위로">▲</button><button onclick="wkMove('${k}',1)" title="아래로">▼</button><button class="x" onclick="wkHide('${k}',true)" title="숨기기">✕</button></span></div>${s[2]}</div>`; });
-  $('wkSheet').innerHTML = html;
+  $('wkSheet').innerHTML = html; fitS2();
   $('wkSheet').querySelectorAll('[data-tg]').forEach(i=>i.onchange=()=>{ const t=LS('stc_mold_tg',{}); if(i.value==='') delete t[i.dataset.tg]; else t[i.dataset.tg]=+i.value; SS('stc_mold_tg',t); render(); });
   $('wkSheet').querySelectorAll('[data-pl]').forEach(i=>i.onchange=()=>{ const pl=LS(PK,[]); while(pl.length<4) pl.push({m:'',t:'',o:'',d:''}); pl[+i.dataset.pl][i.dataset.f]=i.value; SS(PK,pl); });
 }
+let S2CH = null;
+function fitS2(){   /* 오른쪽 그래프를 왼쪽 표와 같은 높이로 */
+  const box = $('s2chart'); if(!box || !S2CH) return; const left = box.previousElementSibling; if(!left) return;
+  const cs = getComputedStyle(box), padV = parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom), padH = parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight);
+  const w = box.clientWidth - padH, h = left.getBoundingClientRect().height - padV - 2 - 28;   /* 28 = 범례 줄 */
+  if(w > 200 && h > 150) box.innerHTML = S2CH(Math.round(w), Math.round(h));
+}
+window.addEventListener('resize', ()=>{ clearTimeout(window._s2t); window._s2t = setTimeout(fitS2, 150); });
+window.addEventListener('beforeprint', fitS2);
 function wkMove(k,d){ const o=wkOrder(); const i=o.indexOf(k), j=i+d; if(j<0||j>=o.length) return; [o[i],o[j]]=[o[j],o[i]]; SS('stc_mold_wk_order',o); render(); }
 function wkHide(k,h){ let a=LS('stc_mold_wk_hide',[]); a=a.filter(x=>x!==k); if(h) a.push(k); SS('stc_mold_wk_hide',a); render(); }
 
