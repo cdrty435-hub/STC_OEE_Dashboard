@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mold Repair Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root{
+    --bg:#f4f6f9; --panel:#fff; --panel-2:#eef1f5; --border:#dde3ea; --soft:#eef2f7;
+    --text:#1a2230; --dim:#3d4a59; --faint:#64748b;
+    --navy:#1f3864; --amber:#c9791a; --teal:#0f9d68; --red:#d13a30; --blue:#2563eb;
+    --plan:#94a3b8; --unpl:#1e3c72;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',Helvetica,Arial,sans-serif;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(1200px 500px at 15% -10%,#e8ecf3 0%,transparent 60%),var(--bg);color:var(--text);font-family:var(--sans);font-weight:500;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1500px;margin:0 auto;padding:28px 24px 70px;}
+  .wrap:has(#tab-weekly.show){max-width:1900px;}
+  header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;margin-bottom:16px;}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--amber);text-transform:uppercase;margin-bottom:8px;font-weight:600;}
+  h1{font-size:28px;margin:0;font-weight:800;letter-spacing:-.015em;}
+  .sub{color:var(--dim);font-size:13px;margin-top:8px;line-height:1.6;}
+  .hr{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+  .range-tag{font-family:var(--mono);font-size:12px;color:var(--dim);background:var(--panel-2);border:1px solid var(--border);padding:7px 12px;border-radius:7px;display:flex;align-items:center;gap:9px;}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block;box-shadow:0 0 8px var(--teal);}
+  .live-dot.err{background:var(--red);box-shadow:0 0 8px var(--red);}
+  .btn{font-size:12px;border:1px solid #d8dfe7;background:#fff;border-radius:7px;padding:5px 10px;cursor:pointer;font-weight:600;color:#33404f;}
+  .btn:hover{background:#eef3f8;} .btn.pri{background:var(--amber);border-color:var(--amber);color:#1a1206;font-weight:800;}
+  .btn.navy{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff8ec;border:1px solid #f0dcb6;border-radius:10px;padding:9px 14px;margin-bottom:10px;font-size:12.5px;}
+  .bar .lb{color:#7a5a24;font-weight:700;}
+  .bar select,.bar input{font:inherit;font-size:12.5px;border:1px solid #e0cba8;border-radius:6px;padding:4px 7px;background:#fff;}
+  .bar .note{color:#8a6a34;font-size:11.5px;margin-left:auto;}
+  .seg{display:inline-flex;gap:3px;} .seg button{border:1px solid #e0cba8;background:#fff;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;}
+  .seg button:hover{background:#fdf1dc;}
+  .codepanel{display:none;background:#fff;border:1px solid #f0dcb6;border-radius:10px;padding:10px 14px;margin:-4px 0 10px;}
+  .codepanel.open{display:block;}
+  .codepanel .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:4px 12px;}
+  .codepanel label{display:flex;gap:6px;align-items:center;font-size:12px;padding:3px 6px;border-radius:6px;cursor:pointer;}
+  .codepanel label.on{background:#fdeceb;color:#a3241c;font-weight:700;}
+  .codepanel small{font-family:var(--mono);font-size:10.5px;opacity:.75;margin-left:auto;}
+  .layout{display:flex;gap:18px;align-items:flex-start;}
+  .tabbar{display:flex;flex-direction:column;gap:3px;padding:8px;background:#eef2f6;border-radius:12px;position:sticky;top:10px;z-index:30;flex:0 0 200px;width:200px;}
+  .tabbtn{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:0;background:transparent;color:#33404f;font-size:13px;font-weight:600;padding:10px 12px;border-radius:9px;cursor:pointer;white-space:nowrap;}
+  .tabbtn .no{flex:0 0 22px;height:20px;line-height:20px;text-align:center;border-radius:6px;background:#d7dee7;color:#33404f;font-size:12px;font-weight:800;}
+  .tabbtn .tx{flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;}
+  .tabbtn:hover{background:#e2e8ef;} .tabbtn.active{background:var(--navy);color:#fff;box-shadow:0 1px 4px rgba(31,56,100,.25);}
+  .tabbtn.active .no{background:#e8a33d;color:#1a1206;}
+  .tabsep{height:1px;background:#d7dee7;margin:5px 8px;}
+  .panes{flex:1 1 auto;min-width:0;}
+  .tabpane{display:none;} .tabpane.show{display:block;}
+  @media(max-width:960px){.layout{flex-direction:column;}.tabbar{flex-direction:row;flex-wrap:wrap;width:100%;flex:none;position:static;}.tabbtn{width:auto;}}
+  .card{background:#fff;border:1px solid #dbe3ec;border-radius:12px;padding:14px 16px;margin-bottom:14px;}
+  .card h2{font-size:17px;margin:0 0 4px;font-weight:900;color:var(--navy);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .card h2 .no{display:inline-block;background:var(--navy);color:#fff;border-radius:6px;padding:1px 8px;font-size:13px;}
+  .card .desc{font-size:12px;color:var(--faint);margin-bottom:10px;line-height:1.55;}
+  .g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;}
+  .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+  @media(max-width:1100px){.g2,.g3{grid-template-columns:1fr;}}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;}
+  .kpi{background:#fff;border:1px solid #dbe3ec;border-radius:10px;padding:10px 12px;}
+  .kpi .k{font-size:12px;color:var(--faint);font-weight:700;}
+  .kpi .v{font-size:24px;font-weight:900;color:#0f172a;margin-top:2px;font-variant-numeric:tabular-nums;}
+  .kpi .v small{font-size:12px;color:var(--faint);font-weight:700;margin-left:2px;}
+  .kpi .d{font-size:12px;font-weight:800;margin-top:2px;} .kpi .t{font-size:11px;color:var(--faint);margin-top:1px;}
+  .g{color:#15803d;} .r{color:#b91c1c;} .mute{color:#94a3b8;}
+  .jg{display:inline-block;margin-top:4px;padding:1px 9px;border-radius:10px;font-size:12px;font-weight:900;}
+  .jg.ok{background:#dcfce7;color:#15803d;} .jg.ng{background:#fee2e2;color:#b91c1c;} .jg.na{background:#f1f5f9;color:#64748b;}
+  table.t{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.t th{background:#f1f5f9;border-bottom:1px solid #cbd5e1;color:#475569;font-size:11.5px;font-weight:700;padding:5px 7px;text-align:center;white-space:nowrap;}
+  table.t td{border-bottom:1px solid #eef2f7;padding:5px 7px;vertical-align:middle;}
+  table.t td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;} table.t td.c{text-align:center;}
+  table.t tr.hl td{background:#fffbeb;} table.t tr.tot td{border-top:1px solid #cbd5e1;font-weight:800;background:#f8fafc;}
+  table.t tr.click{cursor:pointer;} table.t tr.click:hover td{background:#eef6ff;}
+  table.t td.cur,table.t th.cur{font-weight:900;color:#0f172a;}
+  .tw{overflow-x:auto;}
+  .pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:800;background:#eef2f7;color:#334155;margin:1px 2px 1px 0;white-space:nowrap;}
+  .pill.u{background:#e0e7ff;color:#1e3a8a;} .pill.p{background:#f1f5f9;color:#64748b;} .pill.rp{background:#fee2e2;color:#991b1b;}
+  svg{display:block;width:100%;height:auto;}
+  .lg{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:#475569;justify-content:center;margin-top:4px;}
+  .lg i{display:inline-block;width:11px;height:9px;margin-right:4px;vertical-align:middle;border-radius:2px;}
+  .lg i.ln{height:0;width:16px;border-top:2px solid;border-radius:0;} .lg i.dash{height:0;width:16px;border-top:2px dashed #dc2626;border-radius:0;}
+  .msg{padding:30px;text-align:center;color:var(--dim);font-size:14px;line-height:1.8;background:#fff;border:1px dashed #cbd5e1;border-radius:12px;}
+  .msg.err{border-color:#fca5a5;background:#fff7f7;color:#7f1d1d;text-align:left;}
+  .an{background:#f8fafc;border-radius:8px;padding:8px 12px;font-size:12.5px;line-height:1.6;margin-top:8px;}
+  .search{font:inherit;font-size:13px;border:1px solid #cbd5e1;border-radius:7px;padding:6px 10px;width:320px;max-width:100%;}
+  /* 모달 */
+  .ov{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;z-index:100;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;}
+  .ov.open{display:flex;} .ov .box{background:#fff;border-radius:14px;max-width:1200px;width:100%;padding:18px 20px;}
+  .ov .x{float:right;}
+  /* ===== 주간보고 ===== */
+  .wk-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px;}
+  .wk-bar label{font-weight:700;color:#475569;} .wk-bar input{font:inherit;font-size:12.5px;border:1px solid #cbd5e1;border-radius:6px;padding:4px 7px;}
+  .sheet{background:#fff;border:1px solid #dbe3ec;border-radius:12px;padding:18px 20px;}
+  .cover{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(120deg,#1f3864,#2c4f8a);color:#fff;border-radius:10px;padding:18px 24px;margin-bottom:14px;gap:16px;flex-wrap:wrap;}
+  .cover .ey{font-family:var(--mono);font-size:11px;letter-spacing:.18em;opacity:.8;}
+  .cover h3{font-size:26px;margin:6px 0 4px;font-weight:900;} .cover .wk{font-size:52px;font-weight:900;color:#ffd166;line-height:1;}
+  .cover .rt{text-align:right;font-size:13px;line-height:1.7;}
+  .sec{margin-top:16px;} .sec > .sh{display:flex;align-items:center;gap:8px;border-left:5px solid #e8a33d;padding-left:10px;margin-bottom:8px;}
+  .sec > .sh b{font-size:17px;font-weight:900;color:#0f172a;} .sec > .sh small{font-size:12px;color:var(--faint);}
+  .sec > .sh .ctl{margin-left:auto;display:flex;gap:3px;}
+  .sec > .sh .ctl button{border:1px solid #d8dfe7;background:#fff;border-radius:5px;width:24px;height:22px;font-size:11px;cursor:pointer;color:#475569;padding:0;}
+  .sec > .sh .ctl button.x{color:#dc2626;}
+  .hidph{border:1px dashed #cbd5e1;border-radius:8px;padding:6px 12px;font-size:12px;color:#64748b;margin-top:10px;display:flex;align-items:center;gap:8px;}
+  .wkcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
+  .wkcards .kpi{border-color:#dbe3ec;}
+  .s2g{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr) !important;} .s2g td:first-child{white-space:nowrap;} .s2g table.t td,.s2g table.t th{padding:4px 5px;}
+  .tgin::placeholder{color:#cbd5e1;font-weight:600;}
+  .tgin{width:84px;font:inherit;font-size:12.5px;font-weight:800;text-align:right;padding:2px 5px;border:1.5px solid #dc2626;border-radius:5px;color:#b91c1c;}
+  textarea.plan{width:100%;font:inherit;font-size:12.5px;border:1px solid #cbd5e1;border-radius:6px;padding:4px 6px;min-height:28px;resize:vertical;}
+  .ec{border:1px solid #dbe3ec;border-radius:10px;padding:10px 14px;background:#fff;}
+  .ec ol{margin:4px 0 0;padding-left:20px;line-height:1.7;font-size:13px;}
+  body.focus header,body.focus .bar,body.focus .codepanel,body.focus .tabbar{display:none !important;}
+  @media print{
+    @page{size:A4 landscape;margin:8mm;}
+    body{background:#fff;} .wrap{max-width:none;padding:0;}
+    header,.bar,.codepanel,.tabbar,.wk-bar,.ctl,.hidph,.noprint{display:none !important;}
+    .tabpane{display:none !important;} #tab-weekly{display:block !important;}
+    .sheet{border:0;padding:0;} .sec{break-inside:avoid;}
+    .cover,.jg,.pill,svg *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .tgin{border:0;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">STC · DIE-CASTING MOLD MAINTENANCE</div>
+      <h1>금형 수리이력 대시보드</h1>
+      <div class="sub">원천: OEE_RawData_APQ 「Daily repair」 탭 (금형팀 원본 A~AL 그대로) · 설비 정지시간은 「A_가동률」 금형 계통 로스 · Shot 수는 「P_성능」 — 세 시트를 같은 주차(수~화)로 맞춰 봅니다</div>
+    </div>
+    <div class="hr">
+      <div class="range-tag"><span class="live-dot" id="dot"></span><span id="status">데이터를 읽는 중…</span><button class="btn pri" id="reload">새로고침</button></div>
+    </div>
+  </header>
+
+  <!-- 분석 기간 (통합 대시보드가 gpWf / gpWt 로 주차를 맞춘다) -->
+  <div class="bar">
+    <span class="lb">분석 기간</span>
+    <select id="gpWf" style="width:150px"></select> <span>~</span> <select id="gpWt" style="width:150px"></select>
+    <span class="seg" id="quick">
+      <button data-q="all">전체</button><button data-q="1">최근 1주</button><button data-q="4">최근 4주</button><button data-q="8">최근 8주</button><button data-q="13">최근 13주</button><button data-q="26">최근 26주</button>
+    </span>
+    <span class="lb" style="margin-left:10px">호기</span><select id="fDc" style="width:90px"><option value="">전체</option></select>
+    <span class="lb">고객</span><select id="fCus" style="width:110px"><option value="">전체</option></select>
+    <span class="lb">품명</span><select id="fPart" style="width:190px"><option value="">전체</option></select>
+    <span class="note" id="gpNote"></span>
+  </div>
+  <div class="bar">
+    <span class="lb">지표 산출 기준</span>
+    <span>고장(비계획) 작업 =</span><button class="btn" id="codeBtn">작업코드 선택</button><span id="codeSum" style="color:#7a5a24"></span>
+    <span class="lb" style="margin-left:10px">재수리 판정</span><input type="number" id="rpDays" min="1" max="60" style="width:56px"> <span>일 이내 같은 금형 · 같은 고장 작업</span>
+    <span class="lb" style="margin-left:10px">장시간 기준</span><input type="number" id="usl" min="10" step="10" style="width:64px"> <span>분</span>
+    <span class="note">같은 의뢰에서 같은 시작~종료 시간을 여러 줄에 적은 경우 시간·수리비를 줄 수로 나눠 한 번만 계상 · 수리비 = Repair price 열</span>
+  </div>
+  <div class="codepanel" id="codePanel">
+    <div style="font-size:12px;color:#7a5a24;margin-bottom:6px">체크한 작업유형을 <b>고장(비계획) 수리</b>로 봅니다. 체크 안 한 유형(청소·PM·누수점검 등)은 <b>계획·예방</b>으로 집계합니다. 한 의뢰에 고장 작업이 하나라도 있으면 그 의뢰는 고장 수리입니다. · 괄호 = 전 기간 건수 · 시간</div>
+    <div class="grid" id="codeGrid"></div>
+    <div style="margin-top:8px;display:flex;gap:6px"><button class="btn" id="codeDef">초기값</button><button class="btn" id="codeAll">전체 선택</button><button class="btn" id="codeNone">전체 해제</button></div>
+  </div>
+
+  <div class="layout">
+    <nav class="tabbar" id="tabBar">
+      <button class="tabbtn active" data-tab="tab-weekly"><span class="no">★</span><span class="tx">주간보고 (1장)</span></button>
+      <div class="tabsep"></div>
+      <button class="tabbtn" data-tab="tab-ov"><span class="no">1</span><span class="tx">종합 현황</span></button>
+      <button class="tabbtn" data-tab="tab-trend"><span class="no">2</span><span class="tx">주차별 추이</span></button>
+      <button class="tabbtn" data-tab="tab-mold"><span class="no">3</span><span class="tx">Worst 금형</span></button>
+      <button class="tabbtn" data-tab="tab-shot"><span class="no">4</span><span class="tx">Shot 기준 지표</span></button>
+      <button class="tabbtn" data-tab="tab-pareto"><span class="no">5</span><span class="tx">작업·원인 파레토</span></button>
+      <button class="tabbtn" data-tab="tab-dc"><span class="no">6</span><span class="tx">호기별 · OEE 대조</span></button>
+      <button class="tabbtn" data-tab="tab-repeat"><span class="no">7</span><span class="tx">재수리 추적</span></button>
+      <button class="tabbtn" data-tab="tab-cost"><span class="no">8</span><span class="tx">부품 · 수리비</span></button>
+      <button class="tabbtn" data-tab="tab-ops"><span class="no">9</span><span class="tx">운영 (교대·작업자)</span></button>
+      <button class="tabbtn" data-tab="tab-dq"><span class="no">10</span><span class="tx">데이터 품질</span></button>
+      <button class="tabbtn" data-tab="tab-list"><span class="no">11</span><span class="tx">수리이력 조회</span></button>
+    </nav>
+    <div class="panes">
+      <section id="tab-weekly" class="tabpane show">
+        <div class="wk-bar noprint">
+          <label>작성</label><input id="wkAuthor" style="width:150px" placeholder="공무팀 / 작성자">
+          <label>차수</label><input id="wkSeq" style="width:70px" placeholder="예: 1차">
+          <button class="btn" id="wkFocus">⛶ 보고서 보기</button>
+          <button class="btn" id="wkReset">↺ 항목 순서 처음대로</button>
+          <button class="btn navy" id="wkPrint">인쇄 / PDF 저장</button>
+          <span style="font-size:11.5px;color:#64748b;margin-left:auto">보고 주차 = 분석 기간의 끝 주차 · 기간이 여러 주면 그 묶음을 직전 같은 길이 기간과 비교</span>
+        </div>
+        <div id="wkSheet" class="sheet"><div class="msg">데이터를 읽는 중…</div></div>
+      </section>
+      <section id="tab-ov" class="tabpane"></section>
+      <section id="tab-trend" class="tabpane"></section>
+      <section id="tab-mold" class="tabpane"></section>
+      <section id="tab-shot" class="tabpane"></section>
+      <section id="tab-pareto" class="tabpane"></section>
+      <section id="tab-dc" class="tabpane"></section>
+      <section id="tab-repeat" class="tabpane"></section>
+      <section id="tab-cost" class="tabpane"></section>
+      <section id="tab-ops" class="tabpane"></section>
+      <section id="tab-dq" class="tabpane"></section>
+      <section id="tab-list" class="tabpane"></section>
+    </div>
+  </div>
+</div>
+<div class="ov" id="ov"><div class="box"><button class="btn x" onclick="closeOv()">닫기 ✕</button><div id="ovBody"></div></div></div>
+
+<script>
+/* =====================================================================
+   0. 데이터 원천 — OEE_RawData_APQ (웹에 게시된 CSV)
+   ===================================================================== */
+const PUB = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6U8gG0Mr3oJ-5XOOzr7Eh_oZGc-BGHFG0n1__eor4Zc8aJaMuf01NXCAHJECH6U8aUvtnQGLKD5-_/pub';
+const GID = { repair:'936303810', A:'345197688', P:'287133604' };
+const csvUrl = gid => `${PUB}?gid=${gid}&single=true&output=csv&t=${Date.now()}`;
+
+/* 작업유형 코드 (Repair-type 탭과 같음) */
+const RT = [['RT001','Ejector Pin replacement 에젝터핀 교체'],['RT002','Ejector Pin Repair 이젝터 핀 수리'],['RT003','Core Pin Replacement 코어핀 교체'],['RT004','Algon welding 알곤용접'],['RT005','Polishing'],['RT006','Disassembly, assembly 분해,조립'],['RT007','Sleeve cooling 슬리브 냉각'],['RT008','Core cooling 코어 냉각'],['RT009','Slide Repair 슬라이드 수리'],['RT010','O-ring replacement 오링 교체'],['RT011','Laser welding 레이저 용접'],['RT012','Ejector base repair 에젝터판 수리'],['RT013','Replacing Lot Marking 로트마킹 교체'],['RT014','Discharge coating 방전 코팅'],['RT015','Replacing the cooling hose 냉각 호스 교체'],['RT016','Mold cleaning 금형 청소'],['RT017','Clean dry ice 드라이 아이스 청소'],['RT018','Cleaning the cleaning agent 세척제 청소'],['RT019','Leakage Test 냉각수, 윤활유 누출 확인'],['RT020','Sticking 제품 박힘'],['RT021','Mold Adjustment 치수 보정 또는 조정'],['RT022','Replacing slide 슬라이드 교체'],['RT023','Other 다른'],['RT024','PM Mold'],['RT025','Grinding'],['RT026','Gun Drill'],['RT027','Lapping'],['RT028','Lathe M/C'],['RT029','Milling'],['RT030','EDM coating'],['RT031','Fitting']];
+const RT_NAME = Object.fromEntries(RT);
+const RT_SHORT = c => { const n = RT_NAME[c]||c; const k = n.match(/[가-힣][가-힣,\s·]*$/); return k ? k[0].trim() : n; };
+/* 계획·예방으로 보는 기본 코드 (청소·PM·누수점검·로트마킹 교체) — 나머지는 고장(비계획) */
+const PLAN_DEF = ['RT013','RT016','RT017','RT018','RT019','RT024'];
+/* 원인 문장 → 원인 그룹 (자유 입력 700여 가지를 묶는다) */
+const CAUSE = [
+  ['핀 높이 불량', /pin ?(low|high)|high(er)? pin|heigher|lower pin|pins? (is |are )?(high|low|lower|higher)|pin height|pinlow/],
+  ['코어핀 파손', /core ?pin|corepin|insert pin/],
+  ['이젝터핀 파손', /e-?jector|e\/p|\bep\b/],
+  ['크랙·깨짐', /crack|broken|break|chip|collaps/],
+  ['소착·박힘', /stick|solder|drag/],
+  ['청소', /clean|dirty|dust|carbon|residue|contamina/],
+  ['분해·조립', /dis+as?embl|dissembly|assembl/],
+  ['과열', /overheat|over heat|\bhot\b/],
+  ['누수·냉각', /leak|water|cool/],
+  ['웰드마크·기공', /weld mark|porosit|porocit|blow ?hole|\bgas\b/],
+  ['부식', /corros|rust/],
+  ['로트마크', /lot ?mark|date ?mark/],
+  ['찍힘·스크래치·변형', /scr?a?c?t?ch|scartch|sctatch|dent|damage|deform|bend|wear|deflect/],
+  ['슬라이드', /slide/],
+  ['치수·조정', /dimension|size|adjust|thick|datum|spec/],
+  ['버·플래시', /flash|burr|\bfin\b/],
+  ['PM·점검', /\bpm\b|check|inspect/]
+];
+const causeGroup = s => { s = String(s||'').toLowerCase(); if(!s.trim()) return '미기재'; for(const [n,re] of CAUSE) if(re.test(s)) return n; return '기타'; };
+/* OEE 금형 계통 로스 (분류마스터의 「금형」 카테고리 8종) · 금형교체는 따로 */
+const OEE_MOLD = ['금형수리','금형파손','핀파손','슬라이드코어수리','청소','금형냉각라인','제품소착','로트마크, 사상'];
+
+/* =====================================================================
+   1. 공통 도구
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const f0 = v => v==null||isNaN(v) ? '–' : Math.round(v).toLocaleString();
+const f1 = (v,d=1) => v==null||isNaN(v) ? '–' : Number(v).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+const pc = v => v==null||isNaN(v) ? '–' : f1(v*100,1)+'%';
+const num = v => { if(v==null) return NaN; const s=String(v).replace(/[,\s฿$]/g,''); if(s===''||s==='-') return NaN; return parseFloat(s); };
+const LS = (k,d) => { try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } };
+const SS = (k,v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+const median = a => { if(!a.length) return NaN; const s=a.slice().sort((x,y)=>x-y), m=s.length>>1; return s.length%2 ? s[m] : (s[m-1]+s[m])/2; };
+const normDc = s => { s=String(s||'').trim().toUpperCase().replace(/\s+/g,''); const m=s.match(/^DC0*(\d+)$/); return m ? 'DC'+(+m[1]) : s; };
+const normKey = s => String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+
+/* 날짜·시간 파싱 — 구글시트 CSV 는 보이는 형식 그대로 나온다 (yyyy-mm-dd · m/d/yyyy · 태국력 25xx 대응) */
+function pDate(v){
+  if(v==null) return null; const s=String(v).trim(); if(!s) return null;
+  let m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+  if(m){ let y=+m[1]; if(y>2400) y-=543; return new Date(y, +m[2]-1, +m[3]); }
+  m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/);
+  if(m){ let a=+m[1], b=+m[2], y=+m[3]; if(y<100) y+=2000; if(y>2400) y-=543; let mo=a, d=b; if(a>12){ d=a; mo=b; } return new Date(y, mo-1, d); }
+  const n = num(s); if(!isNaN(n) && n>30000 && n<80000) return new Date(Math.round((n-25569)*864e5) + new Date().getTimezoneOffset()*6e4);
+  return null;
+}
+function pTime(v){   /* → 분 (0~1440) */
+  if(v==null) return null; const s=String(v).trim(); if(!s) return null;
+  if(/^(1899|1900)-/.test(s)) return null;        /* 1900-01-09 같은 깨진 값 */
+  let m = s.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
+  if(m){ let h=+m[1]; const mi=+m[2]; if(m[4]){ const pm=/pm/i.test(m[4]); if(pm&&h<12) h+=12; if(!pm&&h===12) h=0; } return h*60+mi; }
+  const n=num(s); if(!isNaN(n) && n>=0 && n<1) return Math.round(n*1440);
+  return null;
+}
+const dayKey = d => d ? d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0') : '';
+const addDays = (d,n) => new Date(d.getFullYear(), d.getMonth(), d.getDate()+n);
+/* STC 주차 = 수요일~화요일 · 라벨 = (날짜+5일)의 ISO 주차 (OEE 원본 「주차」 열과 100% 일치 확인) */
+function stcWeek(d){
+  const t = addDays(d,5), x = new Date(Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()));
+  const dow = x.getUTCDay()||7; x.setUTCDate(x.getUTCDate()+4-dow);
+  const y = x.getUTCFullYear(), w = Math.ceil(((x - Date.UTC(y,0,1))/864e5 + 1)/7);
+  return { y, w, k: y*100+w };
+}
+function weekStart(k){   /* 주차 키 → 그 주 수요일 */
+  const y=Math.floor(k/100), w=k%100, j4=new Date(y,0,4), dow=(j4.getDay()||7);
+  const mon = addDays(j4, 1-dow + (w-1)*7);   /* ISO 주 월요일 */
+  return addDays(mon,-5);                      /* 수요일 = 월요일-5 */
+}
+let MAXY = 2026;
+const wkLabel = k => { const y=Math.floor(k/100), w=k%100; return (y===MAXY ? '' : String(y).slice(2)+'-') + 'W'+w; };
+const wkRangeTxt = k => { const s=weekStart(k), e=addDays(s,6); return dayKey(s).slice(5)+'~'+dayKey(e).slice(5); };
+
+/* =====================================================================
+   2. 상태 · 설정
+   ===================================================================== */
+let ROWS=[], ISS=[], OEE=[], SHOT=[], WEEKS=[], DQ={};
+const ST = {
+  plan: LS('stc_mold_plan', PLAN_DEF),
+  rpDays: LS('stc_mold_rpdays', 7),
+  usl: LS('stc_mold_usl', 60)
+};
+const isUnpl = c => ST.plan.indexOf(c) < 0;
+
+/* =====================================================================
+   3. 읽기
+   ===================================================================== */
+async function getCsv(gid){
+  const r = await fetch(csvUrl(gid), {cache:'no-store'});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const t = await r.text();
+  if(/^\s*<(!doctype|html)/i.test(t)) throw new Error('CSV 대신 웹페이지가 왔습니다 (탭이 웹 게시에 포함되지 않음)');
+  return Papa.parse(t, {skipEmptyLines:true}).data;
+}
+/* 머리줄 찾기: 'Issue_no' 가 있는 줄 (원본은 1행 제목 · 2행 머리줄) */
+function toObjects(aoa, must){
+  let h = aoa.findIndex(r => r.some(c => String(c).trim()===must));
+  if(h<0) h = 0;
+  const H = aoa[h].map(c=>String(c).replace(/\s+/g,' ').trim());
+  return aoa.slice(h+1).map(r => { const o={}; H.forEach((k,i)=>{ if(k && !(k in o)) o[k]=r[i]; }); o.__H=H; return o; });
+}
+function col(o, ...names){ for(const n of names){ if(o[n]!==undefined) return o[n]; } return undefined; }
+
+function buildRepair(objs){
+  const H = objs.length ? objs[0].__H : [];
+  const typeCol = H.find(h=>/แก้ไข/.test(h)) || H[18];
+  const nameToCode = {}; RT.forEach(([c,n])=>{ nameToCode[normKey(n)] = c; });
+  const codeOf = s => { const k=normKey(s); if(!k) return ''; if(nameToCode[k]) return nameToCode[k];
+    for(const [c,n] of RT){ const kn=normKey(n); if(kn.startsWith(k) || k.startsWith(kn.slice(0,8)) || kn.endsWith(k)) return c; }
+    const hk = String(s).replace(/[^가-힣]/g,''); if(hk) for(const [c,n] of RT){ if(n.replace(/[^가-힣]/g,'').indexOf(hk)>=0) return c; }
+    return 'RT023'; };
+  const out=[]; let LAST=null; DQ = { total:0, badDate:[], neg:[], long:[], dupGroups:0, dupRows:0, noMold:0, noDc:0, unkDc:[], noType:0, dc14:[], brokenTime:[] };
+  objs.forEach(o=>{
+    const iss = String(col(o,'Issue_no')||'').trim(); if(!/^STC/i.test(iss)) return;
+    DQ.total++;
+    let rq = pDate(col(o,'Request_date')), sd = pDate(col(o,'Start_Date')), fd = pDate(col(o,'Finished_Date'));
+    /* 의뢰일과 시작일이 60일 넘게 다르면 둘 중 하나가 오타 — 바로 앞 줄 날짜에 가까운 쪽 (첫 줄이면 의뢰번호 연월과 맞는 쪽) */
+    if(rq && sd && Math.abs(sd-rq) > 60*864e5){
+      DQ.badDate.push(iss);
+      const ym = (iss.match(/IN(\d{2})(\d{2})/)||[]), yy = ym[1] ? 2000+ +ym[1] : 0, mm = ym[2] ? +ym[2] : 0;
+      const ok = d => d.getFullYear()===yy && d.getMonth()+1===mm;
+      const good = LAST ? (Math.abs(sd-LAST) < Math.abs(rq-LAST) ? sd : rq) : (ok(sd) && !ok(rq) ? sd : rq);
+      if(good===sd){ rq = sd; } else { const sh = rq - sd; sd = rq; if(fd) fd = new Date(+fd + sh); }
+    }
+    if(!rq) rq = sd; if(!rq) return; LAST = rq;
+    const st = pTime(col(o,'Start_Time')), ft = pTime(col(o,'Finished')), rt = pTime(col(o,'Request_Time'));
+    if(col(o,'Finished') && ft==null && /^(1899|1900)/.test(String(col(o,'Finished')))) DQ.brokenTime.push(iss);
+    let S = sd && st!=null ? new Date(+sd + st*6e4) : null, E = fd && ft!=null ? new Date(+fd + ft*6e4) : null;
+    if(S && E && E < S && +fd===+sd) E = new Date(+E + 864e5);
+    let tm = num(col(o,'Time_Min'));
+    if(!isNaN(tm) && tm < 0){ DQ.neg.push(iss); tm = S && E ? (E-S)/6e4 : NaN; }
+    if(isNaN(tm) && S && E) tm = (E-S)/6e4;
+    const dc = normDc(col(o,'DC'));
+    if(!dc) DQ.noDc++; else if(!/^DC\d+$/.test(dc)) DQ.unkDc.push(iss+' '+dc); else if(dc==='DC14') DQ.dc14.push(iss);
+    let mold = String(col(o,'Mold_no')||'').trim(); if(/^\d+(\.0+)?$/.test(mold)) mold = String(parseInt(mold)); if(!mold) DQ.noMold++;
+    const tname = String(o[typeCol]||'').replace(/\s+/g,' ').trim(); if(!tname) DQ.noType++;
+    const code = tname ? codeOf(tname) : 'RT023';
+    const sh = String(col(o,'Shift')||'').trim().toLowerCase();
+    const wk = stcWeek(rq);
+    out.push({ iss, rq, wk:wk.k, y:wk.y, shift: sh==='night'?'야간':sh==='day'?'주간':(sh||'-'),
+      rqMin: rt, S, E, tm: isNaN(tm)?0:tm, dc, mold, part:String(col(o,'Part code')||'').trim(), pname:String(col(o,'Part name')||'').replace(/\s+/g,' ').trim(),
+      code, tname, cause:String(col(o,'Cause')||'').trim(), cg:causeGroup(col(o,'Cause')), detail:String(col(o,'Detail of the repair')||'').trim(),
+      cav:num(col(o,'Cav.Repair')), loc:String(col(o,'Location repair')||'').trim(), spare:String(col(o,'Spare part')||'').trim(), qty:num(col(o,"Qty's")),
+      partsCost:num(col(o,'฿')), price:num(col(o,'Repair price')), cus:String(col(o,'Customer')||col(o,'Accept')||'').trim(),
+      req:String(col(o,'Requestor')||'').trim(), rep:String(col(o,'Repairer')||'').trim().toUpperCase() });
+  });
+  /* 같은 의뢰 · 같은 시작~종료 · 같은 시간 → 시간·수리비를 줄 수로 나눈다 */
+  const grp = {};
+  out.forEach(r=>{ const k = r.iss+'|'+(r.S?+r.S:'')+'|'+(r.E?+r.E:'')+'|'+r.tm; (grp[k]=grp[k]||[]).push(r); });
+  Object.values(grp).forEach(g=>{ const n=g.length; if(n>1 && g[0].tm>0){ DQ.dupGroups++; DQ.dupRows+=n-1; }
+    g.forEach(r=>{ r.min = r.tm/n; r.cost = (isNaN(r.price)?0:r.price)/(n>1&&r.tm>0?n:1); r.dupN = n; }); });
+  out.forEach(r=>{ if(r.min>1440) DQ.long.push(r.iss); });
+  MAXY = Math.max(...out.map(r=>r.y), 2026);
+  return out;
+}
+/* 의뢰(Issue) 단위로 묶기 */
+function buildIssues(rows){
+  const m = new Map();
+  rows.forEach(r=>{
+    let x = m.get(r.iss);
+    if(!x){ x = { iss:r.iss, rq:r.rq, wk:r.wk, dc:r.dc, mold:r.mold, pname:r.pname, part:r.part, cus:r.cus, shift:r.shift, rows:[], min:0, cost:0, codes:new Set(), cgs:new Set(), S:r.S, E:r.E, rqMin:r.rqMin, reps:new Set() }; m.set(r.iss,x); }
+    x.rows.push(r); x.min += r.min; x.cost += r.cost; x.codes.add(r.code); x.cgs.add(r.cg); if(r.rep) x.reps.add(r.rep);
+    if(r.S && (!x.S || r.S < x.S)) x.S = r.S; if(r.E && (!x.E || r.E > x.E)) x.E = r.E;
+    if(!x.mold && r.mold) x.mold = r.mold; if(!x.dc && r.dc) x.dc = r.dc;
+  });
+  const arr = [...m.values()].sort((a,b)=>a.rq-b.rq || (a.S||0)-(b.S||0));
+  arr.forEach(x=>{ x.wait = x.S && x.rqMin!=null ? (x.S - (+x.rq + x.rqMin*6e4))/6e4 : NaN; if(x.wait<0 || x.wait>7*1440) x.wait = NaN; });
+  return arr;
+}
+function flagIssues(){   /* 계획/고장 · 재수리 (설정이 바뀔 때마다 다시)
+     재수리 = 고장 수리 중, 같은 금형에 같은 고장 작업(작업코드)이 N일 안에 다시 들어온 의뢰 */
+  const last = {};
+  ISS.forEach(x=>{
+    x.unpl = [...x.codes].some(isUnpl);
+    x.repeat = false; x.prev = null; x.rpCodes = [];
+    if(!x.mold || !x.unpl) return;
+    [...x.codes].filter(isUnpl).forEach(c=>{ const p = last[x.mold+'|'+c];
+      if(p && (x.rq - p.rq) <= ST.rpDays*864e5){ x.repeat = true; x.rpCodes.push(c); if(!x.prev || p.rq > x.prev.rq) x.prev = p; } });
+    [...x.codes].filter(isUnpl).forEach(c=>{ last[x.mold+'|'+c] = x; });
+  });
+}
+function buildOee(aoa){
+  const objs = toObjects(aoa,'일자'); const out=[];
+  objs.forEach(o=>{ const d=pDate(o['일자']); if(!d) return; const dc=normDc(o['설비명']); if(!/^DC\d+$/.test(dc)) return;
+    let mold=0; OEE_MOLD.forEach(k=>{ const v=num(o[k]); if(!isNaN(v)) mold+=v; });
+    const chg=num(o['금형교체']); const run=num(o['가동시간_분']);
+    const mn = String(o['Mold Number']||o['edition no.']||'').trim();
+    out.push({ d, wk:stcWeek(d).k, dc, mold, chg:isNaN(chg)?0:chg, run:isNaN(run)?0:run, pin:num(o['핀파손'])||0, moldNo:String(o['Mold Number']||'').trim() });
+  });
+  return out;
+}
+function buildShot(aoa){
+  const objs = toObjects(aoa,'일자'); const out=[];
+  objs.forEach(o=>{ const d=pDate(o['일자']); if(!d) return; const sh=num(o['Avg_shot']); if(isNaN(sh)||sh<=0) return;
+    out.push({ d, wk:stcWeek(d).k, dc:normDc(o['설비명']), model:String(o['Model']||'').trim(), mk:normKey(o['Model']), shot:sh }); });
+  return out;
+}
+
+async function load(){
+  setStatus('데이터를 읽는 중…');
+  try{
+    const [r,a,p] = await Promise.allSettled([getCsv(GID.repair), getCsv(GID.A), getCsv(GID.P)]);
+    if(r.status!=='fulfilled') throw r.reason;
+    ROWS = buildRepair(toObjects(r.value,'Issue_no'));
+    OEE  = a.status==='fulfilled' ? buildOee(a.value) : [];
+    SHOT = p.status==='fulfilled' ? buildShot(p.value) : [];
+    afterLoad(a.status!=='fulfilled', p.status!=='fulfilled');
+  }catch(e){
+    $('dot').classList.add('err');
+    setStatus('Daily repair 탭을 읽지 못했습니다');
+    $('wkSheet').innerHTML = `<div class="msg err"><b>Daily repair 탭을 읽지 못했습니다.</b> (${esc(e.message||e)})<br>
+      ① 구글시트 OEE_RawData_APQ → 파일 → 공유 → <b>웹에 게시</b> → 「전체 문서」 또는 목록에 <b>Daily repair</b> 가 포함돼 있는지 확인 → CSV 로 게시<br>
+      ② 게시 후 1~5분 지나서 새로고침 · 탭 gid 가 ${GID.repair} 인지 확인 (탭을 지웠다 다시 만들면 gid 가 바뀝니다)</div>`;
+  }
+}
+function setStatus(t){ $('status').textContent = t; }
+
+/* =====================================================================
+   4. 기간 · 필터
+   ===================================================================== */
+function afterLoad(noA, noP){
+  ISS = buildIssues(ROWS); flagIssues();
+  const ks = new Set(ROWS.map(r=>r.wk));
+  const mn = Math.min(...ks), mx = Math.max(...ks); WEEKS = [];
+  for(let d=weekStart(mn); ; d=addDays(d,7)){ const k=stcWeek(d).k; WEEKS.push(k); if(k>=mx) break; if(WEEKS.length>400) break; }
+  const opt = WEEKS.map(k=>`<option value="${wkLabel(k)}" data-k="${k}">${wkLabel(k)} (${wkRangeTxt(k)})</option>`).join('');
+  const pf=$('gpWf').value, pt=$('gpWt').value;
+  $('gpWf').innerHTML = opt; $('gpWt').innerHTML = opt;
+  const saved = LS('stc_mold_gp', null);
+  const last = wkLabel(WEEKS[WEEKS.length-1]);
+  $('gpWt').value = pt || (saved&&saved.t) || last; if(!$('gpWt').value) $('gpWt').value = last;
+  $('gpWf').value = pf || (saved&&saved.f) || $('gpWt').value; if(!$('gpWf').value) $('gpWf').value = $('gpWt').value;
+  fillSel('fDc', [...new Set(ISS.map(x=>x.dc).filter(d=>/^DC\d+$/.test(d)))].sort((a,b)=>+a.slice(2)-+b.slice(2)));
+  fillSel('fCus', [...new Set(ISS.map(x=>x.cus).filter(Boolean))].sort());
+  fillSel('fPart', [...new Set(ISS.map(x=>x.pname).filter(Boolean))].sort());
+  const d0 = ROWS.reduce((a,r)=>r.rq<a?r.rq:a, ROWS[0].rq), d1 = ROWS.reduce((a,r)=>r.rq>a?r.rq:a, ROWS[0].rq);
+  setStatus(`원천 Daily repair ${ROWS.length.toLocaleString()}줄 · 의뢰 ${ISS.length.toLocaleString()}건 (${dayKey(d0)} ~ ${dayKey(d1)})`
+    + (noA?' · A_가동률 읽기 실패':` · OEE ${OEE.length.toLocaleString()}행`) + (noP?' · P_성능 읽기 실패':` · Shot ${SHOT.length.toLocaleString()}행`));
+  $('dot').classList.remove('err');
+  renderCodes(); render();
+}
+function fillSel(id, arr){ const s=$(id), v=s.value; s.innerHTML = '<option value="">전체</option>' + arr.map(x=>`<option>${esc(x)}</option>`).join(''); s.value = v; }
+const wkOf = sel => +($(sel).selectedOptions[0]||{}).dataset?.k || 0;
+function period(){
+  let a = wkOf('gpWf'), b = wkOf('gpWt'); if(a>b){ const t=a; a=b; b=t; }
+  const ia = WEEKS.indexOf(a), ib = WEEKS.indexOf(b), n = ib-ia+1;
+  const prev = ia-n >= 0 ? WEEKS.slice(ia-n, ia) : WEEKS.slice(0, ia);
+  return { a, b, n, weeks: WEEKS.slice(ia, ib+1), prev, ia, ib };
+}
+const F = () => ({ dc:$('fDc').value, cus:$('fCus').value, part:$('fPart').value });
+function fIss(weeks, f){ f=f||F(); const W=new Set(weeks); return ISS.filter(x=>W.has(x.wk) && (!f.dc||x.dc===f.dc) && (!f.cus||x.cus===f.cus) && (!f.part||x.pname===f.part)); }
+function fRows(weeks, f){ f=f||F(); const W=new Set(weeks); return ROWS.filter(r=>W.has(r.wk) && (!f.dc||r.dc===f.dc) && (!f.cus||r.cus===f.cus) && (!f.part||r.pname===f.part)); }
+function fOee(weeks, f){ f=f||F(); const W=new Set(weeks); return OEE.filter(o=>W.has(o.wk) && (!f.dc||o.dc===f.dc)); }
+function fShot(weeks, f){ f=f||F(); const W=new Set(weeks); const pk = f.part?normKey(f.part):''; return SHOT.filter(s=>W.has(s.wk) && (!f.dc||s.dc===f.dc) && (!pk||s.mk===pk)); }
+const shotWeeks = () => new Set(SHOT.map(s=>s.wk));
+const oeeWeeks = () => new Set(OEE.map(s=>s.wk));
+
+/* 지표 묶음 */
+function metrics(weeks, f){
+  const I = fIss(weeks,f), R = fRows(weeks,f), O = fOee(weeks,f), Sh = fShot(weeks,f);
+  const n = I.length, u = I.filter(x=>x.unpl).length, rp = I.filter(x=>x.repeat).length;
+  const min = R.reduce((a,r)=>a+r.min,0), cost = R.reduce((a,r)=>a+r.cost,0);
+  const mins = I.map(x=>x.min).filter(v=>v>0);
+  const oeeCovered = weeks.some(w=>oeeWeeks().has(w)), shotCovered = weeks.some(w=>shotWeeks().has(w));
+  const oeeMold = oeeCovered ? O.reduce((a,o)=>a+o.mold,0)/60 : null, oeeChg = oeeCovered ? O.reduce((a,o)=>a+o.chg,0)/60 : null;
+  const shots = shotCovered ? Sh.reduce((a,s)=>a+s.shot,0) : null;
+  return { n, u, plan:n-u, rp, h:min/60, cost, uRate:n?u/n:NaN, rpRate:u?rp/u:NaN, med:median(mins), over:mins.length?mins.filter(v=>v>ST.usl).length/mins.length:NaN,
+    oeeMold, oeeChg, shots, per10k: shots ? u/shots*1e4 : null, msbf: shots && u ? shots/u : null, wait:median(I.map(x=>x.wait).filter(v=>!isNaN(v))), I, R };
+}
+
+/* =====================================================================
+   5. SVG 차트
+   ===================================================================== */
+const PAL = ['#1e3c72','#3b82f6','#f59e0b','#10b981','#a855f7','#ef4444','#14b8a6','#64748b'];
+function barChart(o){
+  /* o: {labels, series:[{name,vals,color}], stack, line:{name,vals,color}, target, W,H, fmt, lfmt, hiIdx} */
+  const W=o.W||640, H=o.H||230, L=44, Rm=o.line?44:10, T=24, B=30, pw=W-L-Rm, ph=H-T-B, n=o.labels.length;
+  const tot = o.labels.map((_,i)=> o.stack ? o.series.reduce((a,s)=>a+(s.vals[i]||0),0) : Math.max(...o.series.map(s=>s.vals[i]||0)));
+  const mx = Math.max(...tot, o.target||0, 1e-9)*1.15, y = v => T+ph-v/mx*ph, bw = pw/Math.max(n,1);
+  const fmt = o.fmt||f0;
+  let g = `<svg viewBox="0 0 ${W} ${H}">`;
+  [0,.5,1].forEach(t=>{ const v=mx*t; g+=`<line x1="${L}" x2="${W-Rm}" y1="${y(v)}" y2="${y(v)}" stroke="#eef2f7"/><text x="${L-4}" y="${y(v)+3}" text-anchor="end" font-size="9.5" fill="#94a3b8">${fmt(v)}</text>`; });
+  o.labels.forEach((lb,i)=>{
+    const x0 = L + i*bw; let acc=0;
+    const hi = o.hiIdx!=null && o.hiIdx.indexOf ? o.hiIdx.indexOf(i)>=0 : false;
+    if(o.stack){ o.series.forEach(s=>{ const v=s.vals[i]||0; if(v<=0) return; g+=`<rect x="${x0+bw*.16}" y="${y(acc+v)}" width="${bw*.68}" height="${y(acc)-y(acc+v)}" fill="${s.color}" rx="1.5"><title>${esc(lb)} ${esc(s.name)} ${fmt(v)}</title></rect>`; acc+=v; });
+      if(acc>0 && n<=30) g+=`<text x="${x0+bw/2}" y="${y(acc)-4}" text-anchor="middle" font-size="${n>18?8.5:10}" font-weight="${hi?900:700}" fill="${hi?'#0f172a':'#475569'}">${fmt(acc)}</text>`;
+    } else { const k=o.series.length, w=bw*.72/k; o.series.forEach((s,j)=>{ const v=s.vals[i]||0; g+=`<rect x="${x0+bw*.14+j*w}" y="${y(v)}" width="${w-1}" height="${T+ph-y(v)}" fill="${s.color}" rx="1.5"><title>${esc(lb)} ${esc(s.name)} ${fmt(v)}</title></rect>`; if(n*k<=26 && v>0) g+=`<text x="${x0+bw*.14+j*w+w/2}" y="${y(v)-3}" text-anchor="middle" font-size="9" fill="#334155">${fmt(v)}</text>`; }); }
+    if(n<=40 && (n<=20 || i%2===0)) g+=`<text x="${x0+bw/2}" y="${H-B+13}" text-anchor="middle" font-size="${n>20?8.5:10}" font-weight="${hi?900:500}" fill="${hi?'#0f172a':'#64748b'}">${esc(lb)}</text>`;
+  });
+  if(o.target!=null) g+=`<line x1="${L}" x2="${W-Rm}" y1="${y(o.target)}" y2="${y(o.target)}" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="6 3"/>`;
+  if(o.line){ const lv=o.line.vals.map(v=>v==null?null:v), lm=Math.max(...lv.filter(v=>v!=null),1e-9)*1.15, ly=v=>T+ph-v/lm*ph; let d='';
+    lv.forEach((v,i)=>{ if(v==null) return; d += (d?'L':'M')+(L+i*bw+bw/2)+' '+ly(v); });
+    g+=`<path d="${d}" fill="none" stroke="${o.line.color}" stroke-width="2"/>`;
+    lv.forEach((v,i)=>{ if(v==null) return; g+=`<circle cx="${L+i*bw+bw/2}" cy="${ly(v)}" r="2.6" fill="${o.line.color}"><title>${esc(o.labels[i])} ${esc(o.line.name)} ${(o.lfmt||f1)(v)}</title></circle>`; });
+    [0,.5,1].forEach(t=>{ g+=`<text x="${W-Rm+4}" y="${ly(lm*t)+3}" font-size="9.5" fill="${o.line.color}">${(o.lfmt||f0)(lm*t)}</text>`; }); }
+  g += `</svg>`;
+  const lg = o.series.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('') + (o.line?`<span><i class="ln" style="border-color:${o.line.color}"></i>${esc(o.line.name)}</span>`:'') + (o.target!=null?`<span><i class="dash"></i>목표 ${fmt(o.target)}</span>`:'');
+  return g + `<div class="lg">${lg}</div>`;
+}
+function hbar(items, o){   /* 가로 막대 (파레토 겸용) — items:[{k,v,sub}] */
+  o=o||{}; const mx=Math.max(...items.map(x=>x.v),1e-9), tot=items.reduce((a,x)=>a+x.v,0)||1; let acc=0;
+  return `<table class="t">${items.map((x,i)=>{ acc+=x.v; const w=x.v/mx*100;
+    return `<tr${o.click?` class="click" onclick="${o.click(x)}"`:''}><td style="width:34%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px" title="${esc(x.k)}"><b>${esc(x.k)}</b>${x.sub?`<div style="font-size:11px;color:#64748b">${esc(x.sub)}</div>`:''}</td>
+      <td><div style="background:${o.color||'#1e3c72'};height:16px;width:${w}%;border-radius:2px;min-width:2px"></div></td>
+      <td class="n" style="width:80px"><b>${(o.fmt||f0)(x.v)}</b></td><td class="n" style="width:56px;color:#64748b">${Math.round(x.v/tot*100)}%</td>${o.cum?`<td class="n" style="width:56px;color:#b45309">${Math.round(acc/tot*100)}%</td>`:''}</tr>`; }).join('')}</table>`;
+}
+const groupBy = (arr, kf, vf) => { const m={}; arr.forEach(x=>{ const k=kf(x); if(k==null||k==='') return; m[k]=(m[k]||0)+(vf?vf(x):1); }); return Object.entries(m).map(([k,v])=>({k,v})).sort((a,b)=>b.v-a.v); };
+
+/* =====================================================================
+   6. 렌더
+   ===================================================================== */
+let ACTIVE = 'tab-weekly';
+function render(){
+  if(!ROWS.length) return;
+  const P = period();
+  SS('stc_mold_gp', {f:$('gpWf').value, t:$('gpWt').value});
+  $('gpNote').textContent = `${P.n}주 · ${dayKey(weekStart(P.a))} ~ ${dayKey(addDays(weekStart(P.b),6))}`;
+  $('codeSum').textContent = `고장 ${RT.length-ST.plan.length}종 · 계획·예방 ${ST.plan.length}종 (${ST.plan.map(RT_SHORT).join('·')})`;
+  $('rpDays').value = ST.rpDays; $('usl').value = ST.usl;
+  const fn = { 'tab-weekly':renderWeekly, 'tab-ov':renderOv, 'tab-trend':renderTrend, 'tab-mold':renderMold, 'tab-shot':renderShot, 'tab-pareto':renderPareto,
+    'tab-dc':renderDc, 'tab-repeat':renderRepeat, 'tab-cost':renderCost, 'tab-ops':renderOps, 'tab-dq':renderDq, 'tab-list':renderList }[ACTIVE];
+  fn && fn(P);
+}
+const fTxt = () => { const f=F(); const a=[f.dc,f.cus,f.part].filter(Boolean); return a.length ? ' · 필터 '+a.join(' / ') : ''; };
+const kpiCard = (k, v, unit, d, t, jg) => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}<small>${unit||''}</small></div>${d?`<div class="d">${d}</div>`:''}${t?`<div class="t">${t}</div>`:''}${jg||''}</div>`;
+function dTxt(c, p, lowGood, fmt){ if(p==null||c==null||isNaN(c)||isNaN(p)) return ''; const d=c-p; if(Math.abs(d)<1e-9) return '<span class="mute">전기간과 같음</span>';
+  const good = lowGood ? d<0 : d>0; return `<span class="${good?'g':'r'}">${d>0?'▲':'▼'} ${(fmt||f0)(Math.abs(d))}</span> <span class="mute" style="font-weight:600">전기간 ${(fmt||f0)(p)}</span>`; }
+
+/* ---------- 1. 종합 현황 ---------- */
+function renderOv(P){
+  const M = metrics(P.weeks), Q = metrics(P.prev);
+  const months = {}; ROWS.filter(r=>{ const f=F(); return (!f.dc||r.dc===f.dc)&&(!f.cus||r.cus===f.cus)&&(!f.part||r.pname===f.part); }).forEach(r=>{ const k=dayKey(r.rq).slice(0,7); const m=months[k]=months[k]||{iss:new Set(),u:new Set(),min:0,cost:0}; m.iss.add(r.iss); m.min+=r.min; m.cost+=r.cost; });
+  ISS.forEach(x=>{ const k=dayKey(x.rq).slice(0,7); if(months[k] && x.unpl && months[k].iss.has(x.iss)) months[k].u.add(x.iss); });
+  const mk = Object.keys(months).sort();
+  const topC = groupBy(M.I.filter(x=>x.unpl).flatMap(x=>[...x.cgs]), x=>x).slice(0,8);
+  const topT = groupBy(M.R, r=>RT_SHORT(r.code), r=>r.min/60).slice(0,8);
+  $('tab-ov').innerHTML = `
+  <div class="card"><h2><span class="no">1</span>종합 현황 <small style="font-size:12px;color:#64748b;font-weight:600">${wkLabel(P.a)}${P.n>1?' ~ '+wkLabel(P.b):''}${fTxt()} · ▲▼ = 직전 같은 길이 기간 대비</small></h2>
+  <div class="kpis">
+    ${kpiCard('수리 의뢰', f0(M.n), '건', dTxt(M.n,Q.n,true))}
+    ${kpiCard('고장(비계획) 수리', f0(M.u), '건', dTxt(M.u,Q.u,true), '비계획 비율 '+pc(M.uRate))}
+    ${kpiCard('수리 작업시간', f1(M.h), 'h', dTxt(M.h,Q.h,true,f1), '금형 작업장 기준')}
+    ${kpiCard('수리비', f0(M.cost), '', dTxt(M.cost,Q.cost,true), 'Repair price 합')}
+    ${kpiCard(ST.rpDays+'일 내 재수리율', pc(M.rpRate), '', dTxt(M.rpRate*100,Q.rpRate*100,true,v=>f1(v)+'%p'), M.rp+'건 · 같은 금형·같은 고장 작업 / 고장 의뢰')}
+    ${kpiCard('설비 정지 (OEE 금형)', M.oeeMold==null?'–':f1(M.oeeMold), 'h', dTxt(M.oeeMold,Q.oeeMold,true,f1), M.oeeChg==null?'OEE 기간 밖':'금형교체 '+f1(M.oeeChg)+'h 별도')}
+    ${kpiCard('고장 1건당 Shot', M.msbf==null?'–':f0(M.msbf), 'shot', dTxt(M.msbf,Q.msbf,false), M.per10k==null?'P_성능 기간 밖':'1만 Shot당 '+f1(M.per10k,2)+'건')}
+    ${kpiCard('건당 수리시간 (중앙값)', f0(M.med), '분', dTxt(M.med,Q.med,true), ST.usl+'분 초과 '+pc(M.over))}
+  </div></div>
+  <div class="g2">
+    <div class="card"><h2>월별 수리 의뢰 · 작업시간</h2><div class="desc">막대 = 고장/계획 의뢰 건수 · 선 = 작업시간(h) · 전 기간</div>
+      ${barChart({labels:mk.map(k=>k.slice(2)), stack:true, series:[{name:'고장(비계획)',color:'#1e3c72',vals:mk.map(k=>months[k].u.size)},{name:'계획·예방',color:'#94a3b8',vals:mk.map(k=>months[k].iss.size-months[k].u.size)}], line:{name:'작업시간 h',color:'#f59e0b',vals:mk.map(k=>months[k].min/60)}})}</div>
+    <div class="card"><h2>고장 원인 그룹 Top 8</h2><div class="desc">고장(비계획) 의뢰 기준 · 원인 문장을 그룹으로 묶음 (5번 파레토에서 원문 확인)</div>${hbar(topC.map(x=>({k:x.k,v:x.v})))}</div>
+  </div>
+  <div class="card"><h2>작업유형별 작업시간 Top 8 (h)</h2>${hbar(topT, {fmt:f1, color:'#0f766e'})}</div>`;
+}
+
+/* ---------- 2. 주차별 추이 ---------- */
+function renderTrend(P){
+  const ws = WEEKS.slice(Math.max(0,P.ib-25), P.ib+1);
+  const MS = ws.map(w=>({w, ...metrics([w])}));
+  const row = (lb, fn, lowGood) => `<tr><td><b>${lb}</b></td>${MS.map(m=>`<td class="n${m.w===P.b?' cur':''}">${fn(m)}</td>`).join('')}</tr>`;
+  $('tab-trend').innerHTML = `
+  <div class="card"><h2><span class="no">2</span>주차별 추이 <small style="font-size:12px;color:#64748b;font-weight:600">최근 ${ws.length}주 (끝 = ${wkLabel(P.b)})${fTxt()}</small></h2>
+    ${barChart({labels:ws.map(wkLabel), stack:true, hiIdx:[ws.length-1], series:[{name:'고장(비계획)',color:'#1e3c72',vals:MS.map(m=>m.u)},{name:'계획·예방',color:'#94a3b8',vals:MS.map(m=>m.plan)}], line:{name:'OEE 금형 정지 h',color:'#dc2626',vals:MS.map(m=>m.oeeMold)}, lfmt:f1, W:1000, H:260})}
+  </div>
+  <div class="card"><h2>주차별 지표 표</h2><div class="tw"><table class="t"><thead><tr><th>지표</th>${MS.map(m=>`<th class="${m.w===P.b?'cur':''}">${wkLabel(m.w)}</th>`).join('')}</tr></thead><tbody>
+    ${row('의뢰 건수', m=>f0(m.n))}${row('고장(비계획)', m=>f0(m.u))}${row('작업시간 h', m=>f1(m.h))}${row('수리비', m=>f0(m.cost))}
+    ${row('재수리 건', m=>f0(m.rp))}${row('OEE 금형 정지 h', m=>m.oeeMold==null?'–':f1(m.oeeMold))}${row('Shot', m=>m.shots==null?'–':f0(m.shots))}${row('고장/1만 Shot', m=>m.per10k==null?'–':f1(m.per10k,2))}
+  </tbody></table></div></div>`;
+}
+
+/* ---------- 3. Worst 금형 ---------- */
+let MOLD_SORT = 'n';
+function moldAgg(I){
+  const m = {};
+  I.forEach(x=>{ if(!x.mold) return; const a = m[x.mold] = m[x.mold] || { mold:x.mold, pname:x.pname, n:0, u:0, h:0, cost:0, rp:0, dcs:new Set(), codes:{}, cgs:{}, last:null, list:[] };
+    a.n++; if(x.unpl) a.u++; a.h += x.min/60; a.cost += x.cost; if(x.repeat) a.rp++; if(x.dc) a.dcs.add(x.dc); a.list.push(x);
+    x.rows.forEach(r=>{ a.codes[r.code]=(a.codes[r.code]||0)+1; }); x.cgs.forEach(c=>{ a.cgs[c]=(a.cgs[c]||0)+1; });
+    if(!a.last || x.rq > a.last) a.last = x.rq; });
+  return Object.values(m).map(a=>{ const ds=a.list.map(x=>+x.rq).sort((p,q)=>p-q); const gaps=ds.slice(1).map((d,i)=>(d-ds[i])/864e5);
+    a.gap = median(gaps); a.topCode = Object.entries(a.codes).sort((p,q)=>q[1]-p[1])[0]; a.topCg = Object.entries(a.cgs).sort((p,q)=>q[1]-p[1])[0]; return a; });
+}
+function renderMold(P){
+  const I = fIss(P.weeks); const A = moldAgg(I).sort((a,b)=> MOLD_SORT==='h'?b.h-a.h : MOLD_SORT==='cost'?b.cost-a.cost : MOLD_SORT==='rp'?b.rp-a.rp||b.n-a.n : b.n-a.n||b.h-a.h);
+  const tot = I.length || 1, top10 = A.slice(0,10).reduce((s,a)=>s+a.n,0);
+  const sb = (k,t) => `<button class="btn${MOLD_SORT===k?' navy':''}" onclick="MOLD_SORT='${k}';render()">${t}</button>`;
+  $('tab-mold').innerHTML = `<div class="card"><h2><span class="no">3</span>Worst 금형 <small style="font-size:12px;color:#64748b;font-weight:600">${wkLabel(P.a)}${P.n>1?' ~ '+wkLabel(P.b):''}${fTxt()} · 금형 ${A.length}개 · 상위 10개가 의뢰의 ${Math.round(top10/tot*100)}%</small></h2>
+    <div class="desc">정렬 ${sb('n','건수')} ${sb('h','작업시간')} ${sb('cost','수리비')} ${sb('rp','재수리')} · 행을 누르면 그 금형의 전체 이력이 열립니다 · 수리 간격 = 의뢰일 사이 일수의 중앙값</div>
+    <div class="tw"><table class="t"><thead><tr><th>순위</th><th>금형</th><th>품명</th><th>호기</th><th>의뢰</th><th>고장</th><th>작업시간 h</th><th>수리비</th><th>재수리</th><th>수리 간격(일)</th><th>최다 작업</th><th>최다 원인</th><th>최근</th></tr></thead><tbody>
+    ${A.slice(0,40).map((a,i)=>`<tr class="click" onclick="openMold('${esc(a.mold)}')"><td class="c">${i+1}</td><td class="c"><b>#${esc(a.mold)}</b></td><td>${esc(a.pname)}</td><td style="font-size:11.5px">${[...a.dcs].join(', ')}</td>
+      <td class="n"><b>${a.n}</b></td><td class="n">${a.u}</td><td class="n">${f1(a.h)}</td><td class="n">${f0(a.cost)}</td><td class="n ${a.rp?'r':''}">${a.rp||''}</td><td class="n">${isNaN(a.gap)?'–':f1(a.gap)}</td>
+      <td>${a.topCode?esc(RT_SHORT(a.topCode[0]))+' <span class="mute">'+a.topCode[1]+'</span>':''}</td><td>${a.topCg?esc(a.topCg[0])+' <span class="mute">'+a.topCg[1]+'</span>':''}</td><td class="c">${dayKey(a.last).slice(5)}</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+}
+function openMold(mold){
+  const L = ISS.filter(x=>x.mold===mold); if(!L.length) return;
+  const sh = SHOT.filter(s=>s.mk===normKey(L[0].pname));
+  const ws = WEEKS.slice(-26), cnt = ws.map(w=>L.filter(x=>x.wk===w).length);
+  $('ovBody').innerHTML = `<h2 style="margin:0 0 6px;color:#1f3864">금형 #${esc(mold)} · ${esc(L[0].pname)} <small style="font-size:13px;color:#64748b">${esc(L[0].part)} · 전 기간 의뢰 ${L.length}건 · 고장 ${L.filter(x=>x.unpl).length}건 · 작업 ${f1(L.reduce((a,x)=>a+x.min,0)/60)}h · 수리비 ${f0(L.reduce((a,x)=>a+x.cost,0))}</small></h2>
+    ${barChart({labels:ws.map(wkLabel), series:[{name:'주차별 의뢰 건수',color:'#1e3c72',vals:cnt}], W:1100, H:170})}
+    <div class="tw" style="max-height:480px;overflow:auto;margin-top:8px"><table class="t"><thead><tr><th>의뢰</th><th>일자</th><th>주차</th><th>호기</th><th>작업</th><th>원인</th><th>수리 내용</th><th>분</th><th>수리비</th><th>작업자</th><th>재수리</th></tr></thead><tbody>
+    ${L.slice().reverse().map(x=>`<tr${x.repeat?' class="hl"':''}><td style="font-size:11px">${esc(x.iss)}</td><td class="c">${dayKey(x.rq)}</td><td class="c">${wkLabel(x.wk)}</td><td class="c">${esc(x.dc)}</td>
+      <td>${[...x.codes].map(c=>`<span class="pill ${isUnpl(c)?'u':'p'}">${esc(RT_SHORT(c))}</span>`).join('')}</td><td style="font-size:11.5px">${esc(x.rows[0].cause)}</td><td style="font-size:11.5px">${esc(x.rows[0].detail)}</td>
+      <td class="n">${f0(x.min)}</td><td class="n">${f0(x.cost)}</td><td style="font-size:11px">${[...x.reps].join(', ')}</td><td class="c">${x.repeat?`<span class="pill rp">${Math.round((x.rq-x.prev.rq)/864e5)}일</span>`:''}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  $('ov').classList.add('open');
+}
+function closeOv(){ $('ov').classList.remove('open'); }
+
+/* ---------- 4. Shot 기준 지표 ---------- */
+function renderShot(P){
+  const sw = shotWeeks(); const ws = P.weeks.filter(w=>sw.has(w));
+  if(!ws.length){ $('tab-shot').innerHTML = `<div class="msg">선택한 기간에 P_성능(Shot) 데이터가 없습니다. P_성능은 ${SHOT.length?dayKey(SHOT.reduce((a,s)=>s.d<a?s.d:a,SHOT[0].d))+'부터':'읽지 못함'} — 분석 기간을 그 이후로 잡아 주세요.</div>`; return; }
+  const I = fIss(ws), Sh = fShot(ws);
+  const sm = {}; Sh.forEach(s=>{ const a=sm[s.mk]=sm[s.mk]||{model:s.model, shot:0, dcs:new Set()}; a.shot+=s.shot; a.dcs.add(s.dc); });
+  const rm = {}; I.forEach(x=>{ const k=normKey(x.pname); const a=rm[k]=rm[k]||{n:0,u:0,h:0,cost:0,pname:x.pname}; a.n++; if(x.unpl) a.u++; a.h+=x.min/60; a.cost+=x.cost; });
+  const keys = [...new Set(Object.keys(sm).concat(Object.keys(rm)))];
+  const A = keys.map(k=>{ const s=sm[k]||{shot:0,dcs:new Set()}, r=rm[k]||{n:0,u:0,h:0,cost:0}; return { k, name:(r.pname||s.model), shot:s.shot, dcs:[...s.dcs], ...r,
+    msbf: r.u ? s.shot/r.u : null, hPer10k: s.shot ? r.h/s.shot*1e4 : null, costPer1k: s.shot ? r.cost/s.shot*1e3 : null }; });
+  const matched = I.filter(x=>sm[normKey(x.pname)]).length;
+  const withBoth = A.filter(a=>a.shot>0 && a.u>0).sort((a,b)=>a.msbf-b.msbf);
+  const noRepair = A.filter(a=>a.shot>0 && !a.n).sort((a,b)=>b.shot-a.shot);
+  const tot = { shot:Sh.reduce((a,s)=>a+s.shot,0), u:I.filter(x=>x.unpl).length, h:I.reduce((a,x)=>a+x.min,0)/60 };
+  $('tab-shot').innerHTML = `<div class="card"><h2><span class="no">4</span>Shot 기준 지표 <small style="font-size:12px;color:#64748b;font-weight:600">${wkLabel(ws[0])}${ws.length>1?' ~ '+wkLabel(ws[ws.length-1]):''} (P_성능이 있는 주차)${fTxt()}</small></h2>
+    <div class="desc">외부(금형 보전 관리 솔루션·업계) 기준 지표 — 금형 고장은 <b>달력 시간이 아니라 Shot 수</b>로 봅니다. 많이 찍은 금형이 수리가 많은 건 당연하므로 <b>고장 1건당 Shot (Shots Between Failures)</b>과 <b>1만 Shot당 수리시간</b>으로 비교해야 진짜 약한 금형이 보입니다.
+      Shot = P_성능 Avg_shot (= 생산수량 ÷ CAV) · 연결 기준 = 품명(Part name) ↔ Model · 이 기간 수리 의뢰 ${I.length}건 중 ${matched}건(${Math.round(matched/(I.length||1)*100)}%) 연결</div>
+    <div class="kpis">${kpiCard('기간 Shot', f0(tot.shot), 'shot')}${kpiCard('고장(비계획) 수리', f0(tot.u), '건')}${kpiCard('고장 1건당 Shot', tot.u?f0(tot.shot/tot.u):'–', 'shot')}${kpiCard('1만 Shot당 작업시간', tot.shot?f1(tot.h/tot.shot*1e4,2):'–', 'h')}</div>
+    <h3 style="font-size:14px;margin:6px 0">고장 1건당 Shot이 적은 품명 (= 약한 금형 순)</h3>
+    <div class="tw"><table class="t"><thead><tr><th>순위</th><th>품명</th><th>호기</th><th>Shot</th><th>의뢰</th><th>고장</th><th>고장 1건당 Shot</th><th>1만 Shot당 작업 h</th><th>1천 Shot당 수리비</th></tr></thead><tbody>
+      ${withBoth.slice(0,25).map((a,i)=>`<tr><td class="c">${i+1}</td><td><b>${esc(a.name)}</b></td><td style="font-size:11px">${a.dcs.join(', ')}</td><td class="n">${f0(a.shot)}</td><td class="n">${a.n}</td><td class="n"><b>${a.u}</b></td><td class="n ${a.msbf<2000?'r':''}"><b>${f0(a.msbf)}</b></td><td class="n">${f1(a.hPer10k,2)}</td><td class="n">${f1(a.costPer1k,1)}</td></tr>`).join('')}
+    </tbody></table></div>
+    ${noRepair.length?`<div class="an"><b>이 기간 Shot은 있는데 수리 의뢰가 없는 품명 ${noRepair.length}개</b> — ${noRepair.slice(0,10).map(a=>esc(a.name)+' '+f0(a.shot)).join(' · ')}${noRepair.length>10?' …':''}</div>`:''}
+    <div class="an"><b>다음 단계 (외부 관리 방식)</b> — ① 금형마다 <b>누적 Shot · 마지막 PM 이후 Shot</b>을 세어 정해진 Shot(예: 청소 n만 · PM n십만)에 도달하기 전(80%)에 예방 작업을 잡습니다. ② 그러려면 OEE 입력 때 <b>Mold Number</b>가 필요합니다 (현재 OEE 가동 행의 ${pc(OEE.filter(o=>o.run>0&&o.moldNo).length/(OEE.filter(o=>o.run>0).length||1))}만 입력) — 품명 대신 금형 번호로 Shot을 세면 같은 품명의 금형 2~3벌도 구분됩니다.</div>
+  </div>`;
+}
+
+/* ---------- 5. 파레토 ---------- */
+let PA_M = 'n';
+function renderPareto(P){
+  const I = fIss(P.weeks), R = fRows(P.weeks);
+  const v = PA_M==='h' ? (r=>r.min/60) : PA_M==='cost' ? (r=>r.cost) : (()=>1);
+  const byT = groupBy(R, r=>RT_SHORT(r.code), v), byC = groupBy(R.filter(r=>isUnpl(r.code)), r=>r.cg, v);
+  const raw = groupBy(R.filter(r=>r.cause), r=>r.cause.toLowerCase().replace(/^the /,'').trim()).slice(0,20);
+  const sb = (k,t) => `<button class="btn${PA_M===k?' navy':''}" onclick="PA_M='${k}';render()">${t}</button>`;
+  const fm = PA_M==='h'?f1:f0;
+  $('tab-pareto').innerHTML = `<div class="card"><h2><span class="no">5</span>작업유형 · 원인 파레토 <small style="font-size:12px;color:#64748b;font-weight:600">${wkLabel(P.a)}${P.n>1?' ~ '+wkLabel(P.b):''}${fTxt()}</small></h2>
+    <div class="desc">기준 ${sb('n','작업 줄 수')} ${sb('h','작업시간 h')} ${sb('cost','수리비')} · 오른쪽 끝 = 누적 %</div>
+    <div class="g2"><div><h3 style="font-size:14px;margin:4px 0">작업유형 (전체)</h3>${hbar(byT,{cum:true,fmt:fm})}</div>
+    <div><h3 style="font-size:14px;margin:4px 0">원인 그룹 (고장 작업만)</h3>${hbar(byC,{cum:true,fmt:fm,color:'#b42318'})}</div></div></div>
+    <div class="card"><h2>원인 원문 Top 20</h2><div class="desc">자유 입력이라 같은 원인이 여러 표현으로 나뉩니다 — 원인 코드 목록(15~20개)을 정해 드롭다운으로 받으면 이 표가 정확해집니다</div>${hbar(raw.map(x=>({k:x.k,v:x.v})),{color:'#64748b'})}</div>`;
+}
+
+/* ---------- 6. 호기별 · OEE 대조 ---------- */
+function renderDc(P){
+  const I = fIss(P.weeks), O = fOee(P.weeks), ow = P.weeks.some(w=>oeeWeeks().has(w));
+  const dcs = [...new Set(I.map(x=>x.dc).concat(O.map(o=>o.dc)).filter(d=>/^DC\d+$/.test(d) && d!=='DC14'))].sort((a,b)=>+a.slice(2)-+b.slice(2));
+  /* 연결률 — 수리 의뢰일 ±1일 같은 호기에 OEE 금형 로스(또는 금형교체)가 있는가 / 그 반대 */
+  const oKey = new Set(); OEE.forEach(o=>{ if(o.mold+o.chg>0) for(const k of [-1,0,1]) oKey.add(o.dc+'|'+dayKey(addDays(o.d,k))); });
+  const iKey = new Set(); ISS.forEach(x=>{ for(const k of [-1,0,1]) iKey.add(x.dc+'|'+dayKey(addDays(x.rq,k))); });
+  const D = dcs.map(dc=>{ const ii=I.filter(x=>x.dc===dc), oo=O.filter(o=>o.dc===dc); const od = oo.filter(o=>o.mold>0);
+    return { dc, n:ii.length, u:ii.filter(x=>x.unpl).length, h:ii.reduce((a,x)=>a+x.min,0)/60, cost:ii.reduce((a,x)=>a+x.cost,0),
+      om: ow ? oo.reduce((a,o)=>a+o.mold,0)/60 : null, oc: ow ? oo.reduce((a,o)=>a+o.chg,0)/60 : null,
+      link: ii.length ? ii.filter(x=>oKey.has(x.dc+'|'+dayKey(x.rq))).length/ii.length : NaN,
+      miss: od.filter(o=>!iKey.has(o.dc+'|'+dayKey(o.d))).length }; });
+  const T = D.reduce((a,d)=>({n:a.n+d.n,u:a.u+d.u,h:a.h+d.h,cost:a.cost+d.cost,om:a.om+(d.om||0),oc:a.oc+(d.oc||0),miss:a.miss+d.miss}),{n:0,u:0,h:0,cost:0,om:0,oc:0,miss:0});
+  $('tab-dc').innerHTML = `<div class="card"><h2><span class="no">6</span>호기별 수리 · OEE 금형 정지 대조 <small style="font-size:12px;color:#64748b;font-weight:600">${wkLabel(P.a)}${P.n>1?' ~ '+wkLabel(P.b):''}${fTxt()}</small></h2>
+    <div class="desc"><b>두 시간은 뜻이 다릅니다</b> — 작업시간 = 금형을 내려 작업장에서 고친 시간(그동안 설비는 다른 금형으로 돌 수 있음) · OEE 금형 정지 = 설비가 금형 때문에 멈춘 시간(A_가동률 금형 계통 8종). 그래서 MTTR·가동률은 OEE로, 금형 보전 지표는 이 탭으로 따로 봅니다.
+      연결률 = 수리 의뢰일 ±1일에 같은 호기 OEE 금형 로스가 있는 비율 · 수리기록 없는 정지일 = OEE에 금형 로스가 있는데 ±1일 안에 수리 의뢰가 없는 날 (설비에 단 채로 고친 작업이 기록에서 빠졌을 가능성)</div>
+    ${ow ? barChart({labels:D.map(d=>d.dc), series:[{name:'금형 작업시간 h',color:'#1e3c72',vals:D.map(d=>d.h)},{name:'OEE 금형 정지 h',color:'#dc2626',vals:D.map(d=>d.om||0)}], fmt:f0, W:1000, H:230}) : '<div class="an">이 기간에는 A_가동률 데이터가 없습니다 (OEE는 2026-06-24부터).</div>'}
+    <div class="tw" style="margin-top:8px"><table class="t"><thead><tr><th>호기</th><th>의뢰</th><th>고장</th><th>작업시간 h</th><th>수리비</th><th>OEE 금형 정지 h</th><th>OEE 금형교체 h</th><th>연결률</th><th>수리기록 없는 정지일</th></tr></thead><tbody>
+    ${D.map(d=>`<tr><td class="c"><b>${d.dc}</b></td><td class="n">${d.n}</td><td class="n">${d.u}</td><td class="n">${f1(d.h)}</td><td class="n">${f0(d.cost)}</td><td class="n">${d.om==null?'–':f1(d.om)}</td><td class="n">${d.oc==null?'–':f1(d.oc)}</td><td class="n ${d.link<.7?'r':''}">${ow?pc(d.link):'–'}</td><td class="n ${d.miss>2?'r':''}">${ow?d.miss:'–'}</td></tr>`).join('')}
+    <tr class="tot"><td class="c">합계</td><td class="n">${T.n}</td><td class="n">${T.u}</td><td class="n">${f1(T.h)}</td><td class="n">${f0(T.cost)}</td><td class="n">${ow?f1(T.om):'–'}</td><td class="n">${ow?f1(T.oc):'–'}</td><td></td><td class="n">${ow?T.miss:'–'}</td></tr>
+    </tbody></table></div></div>`;
+}
+
+/* ---------- 7. 재수리 ---------- */
+function renderRepeat(P){
+  const I = fIss(P.weeks), R = I.filter(x=>x.repeat);
+  const byM = groupBy(R, x=>x.mold).slice(0,12);
+  const byC = groupBy(R.flatMap(x=>x.rpCodes), c=>RT_SHORT(c)).slice(0,10);
+  $('tab-repeat').innerHTML = `<div class="card"><h2><span class="no">7</span>재수리 추적 <small style="font-size:12px;color:#64748b;font-weight:600">${wkLabel(P.a)}${P.n>1?' ~ '+wkLabel(P.b):''}${fTxt()} · 같은 금형에 같은 고장 작업이 ${ST.rpDays}일 안에 다시 들어온 의뢰</small></h2>
+    <div class="desc">외부 관리 방식에서 「수리 후 첫 시험 합격률」·「반복 지적」에 해당하는 지표입니다. 수리하고 금방 다시 들어오면 고친 방법이나 부품 수명에 문제가 있다는 뜻입니다.</div>
+    <div class="kpis">${kpiCard('재수리 의뢰', f0(R.length), '건')}${kpiCard('재수리율 (고장 의뢰 중)', pc(I.filter(x=>x.unpl).length?R.length/I.filter(x=>x.unpl).length:NaN), '')}${kpiCard('재수리 간격 중앙값', f1(median(R.map(x=>(x.rq-x.prev.rq)/864e5))), '일')}</div>
+    <div class="g2"><div><h3 style="font-size:14px;margin:4px 0">재수리 많은 금형</h3>${hbar(byM.map(x=>({k:'#'+x.k+' '+((ISS.find(i=>i.mold===x.k)||{}).pname||''),v:x.v})),{color:'#b42318',click:x=>`openMold('${esc(x.k.split(' ')[0].slice(1))}')`})}</div>
+    <div><h3 style="font-size:14px;margin:4px 0">다시 들어온 고장 작업</h3>${hbar(byC,{color:'#b45309'})}</div></div></div>
+    <div class="card"><h2>재수리 목록</h2><div class="tw" style="max-height:520px;overflow:auto"><table class="t"><thead><tr><th>금형</th><th>품명</th><th>앞 의뢰</th><th>앞 작업</th><th>→</th><th>이번 의뢰</th><th>이번 작업</th><th>간격</th><th>호기</th></tr></thead><tbody>
+    ${R.slice().reverse().slice(0,300).map(x=>`<tr class="click" onclick="openMold('${esc(x.mold)}')"><td class="c"><b>#${esc(x.mold)}</b></td><td>${esc(x.pname)}</td><td class="c">${dayKey(x.prev.rq).slice(5)}</td><td>${[...x.prev.codes].map(c=>esc(RT_SHORT(c))).join(', ')}</td><td class="c">→</td>
+      <td class="c">${dayKey(x.rq).slice(5)}</td><td>${[...x.codes].map(c=>esc(RT_SHORT(c))).join(', ')}</td><td class="n"><b>${Math.round((x.rq-x.prev.rq)/864e5)}일</b></td><td class="c">${esc(x.dc)}</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+}
+
+/* ---------- 8. 부품 · 수리비 ---------- */
+function renderCost(P){
+  const R = fRows(P.weeks);
+  const sp = {}; R.filter(r=>r.spare).forEach(r=>{ const k=r.spare.replace(/\s+/g,' '); const a=sp[k]=sp[k]||{k,n:0,q:0,c:0,molds:new Set()}; a.n++; a.q+=isNaN(r.qty)?0:r.qty; a.c+=isNaN(r.partsCost)?0:r.partsCost; if(r.mold) a.molds.add(r.mold); });
+  const S = Object.values(sp).sort((a,b)=>b.q-a.q);
+  const byT = groupBy(R, r=>RT_SHORT(r.code), r=>r.cost).slice(0,10), byM = groupBy(R, r=>r.mold?'#'+r.mold+' '+r.pname:'', r=>r.cost).slice(0,10);
+  const tot = R.reduce((a,r)=>a+r.cost,0), parts = R.reduce((a,r)=>a+(isNaN(r.partsCost)?0:r.partsCost),0);
+  $('tab-cost').innerHTML = `<div class="card"><h2><span class="no">8</span>부품 · 수리비 <small style="font-size:12px;color:#64748b;font-weight:600">${wkLabel(P.a)}${P.n>1?' ~ '+wkLabel(P.b):''}${fTxt()}</small></h2>
+    <div class="kpis">${kpiCard('수리비 합 (Repair price)', f0(tot), '')}${kpiCard('부품비 (฿ 열)', f0(parts), '')}${kpiCard('부품 사용 줄', f0(R.filter(r=>r.spare).length), '줄')}${kpiCard('부품 수량', f0(S.reduce((a,s)=>a+s.q,0)), '개')}</div>
+    <div class="g2"><div><h3 style="font-size:14px;margin:4px 0">작업유형별 수리비</h3>${hbar(byT,{color:'#0f766e'})}</div><div><h3 style="font-size:14px;margin:4px 0">금형별 수리비 Top 10</h3>${hbar(byM,{color:'#7c3aed'})}</div></div></div>
+    <div class="card"><h2>부품 사용 Top 30</h2><div class="desc">Spare part 열 기준 · Spare part list 탭의 보증 Shot과 비교하면 핀 교체 주기를 정할 수 있습니다</div>
+    <div class="tw"><table class="t"><thead><tr><th>부품</th><th>사용 줄</th><th>수량</th><th>부품비</th><th>금형 수</th><th>금형</th></tr></thead><tbody>
+    ${S.slice(0,30).map(s=>`<tr><td>${esc(s.k)}</td><td class="n">${s.n}</td><td class="n"><b>${f0(s.q)}</b></td><td class="n">${f0(s.c)}</td><td class="n">${s.molds.size}</td><td style="font-size:11px">${[...s.molds].slice(0,6).map(m=>'#'+esc(m)).join(' ')}</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+}
+
+/* ---------- 9. 운영 ---------- */
+function renderOps(P){
+  const I = fIss(P.weeks), R = fRows(P.weeks);
+  const sh = ['주간','야간'].map(s=>{ const ii=I.filter(x=>x.shift===s); return { s, n:ii.length, h:ii.reduce((a,x)=>a+x.min,0)/60, wait:median(ii.map(x=>x.wait).filter(v=>!isNaN(v))) }; });
+  const rp = {}; R.forEach(r=>{ if(!r.rep) return; const a=rp[r.rep]=rp[r.rep]||{k:r.rep,iss:new Set(),h:0}; a.iss.add(r.iss); a.h+=r.min/60; });
+  const RP = Object.values(rp).sort((a,b)=>b.h-a.h);
+  const loc = groupBy(I, x=>x.rows[0].loc||'미기재');
+  const long = I.filter(x=>x.min>1440).sort((a,b)=>b.min-a.min);
+  $('tab-ops').innerHTML = `<div class="card"><h2><span class="no">9</span>운영 — 교대 · 작업자 · 대기시간 <small style="font-size:12px;color:#64748b;font-weight:600">${wkLabel(P.a)}${P.n>1?' ~ '+wkLabel(P.b):''}${fTxt()}</small></h2>
+    <div class="desc">대기시간 = 의뢰 시각 → 작업 시작 (금형을 내린 뒤 손대기까지). 외부 기준의 「우선순위 P1~P4」처럼, 대기시간이 긴 교대·시간대는 인원 배치를 볼 지점입니다.</div>
+    <div class="kpis">${sh.map(s=>kpiCard(s.s+' 의뢰', f0(s.n), '건', '', `작업 ${f1(s.h)}h · 대기 중앙값 ${f0(s.wait)}분`)).join('')}${kpiCard('수리 장소', loc.map(l=>l.k+' '+l.v).join(' · '), '')}</div>
+    <div class="g2"><div><h3 style="font-size:14px;margin:4px 0">작업자별 작업시간 (h)</h3>${hbar(RP.map(a=>({k:a.k,v:a.h,sub:a.iss.size+'건'})),{fmt:f1,color:'#0f766e'})}</div>
+    <div><h3 style="font-size:14px;margin:4px 0">24시간 넘는 의뢰 ${long.length}건</h3><div class="tw" style="max-height:420px;overflow:auto"><table class="t"><thead><tr><th>의뢰</th><th>금형</th><th>시작</th><th>종료</th><th>작업 h</th></tr></thead><tbody>
+      ${long.map(x=>`<tr><td style="font-size:11px">${esc(x.iss)}</td><td class="c">#${esc(x.mold)}</td><td class="c">${x.S?dayKey(x.S).slice(5)+' '+String(x.S.getHours()).padStart(2,'0')+':'+String(x.S.getMinutes()).padStart(2,'0'):''}</td><td class="c">${x.E?dayKey(x.E).slice(5):''}</td><td class="n"><b>${f1(x.min/60)}</b></td></tr>`).join('')}
+    </tbody></table></div></div></div></div>`;
+}
+
+/* ---------- 10. 데이터 품질 ---------- */
+function renderDq(){
+  const run = OEE.filter(o=>o.run>0), mn = run.filter(o=>o.moldNo).length;
+  const items = [
+    ['같은 시간을 여러 줄에 반복', DQ.dupRows+'줄 ('+DQ.dupGroups+'묶음)', '시간·수리비를 줄 수로 나눠 한 번만 계상함 · 입력 때 작업마다 실제 시간을 적도록'],
+    ['의뢰일이 시작일과 60일 넘게 다름', DQ.badDate.length+'건', '앞 줄 날짜에 가까운 쪽으로 맞춤 · '+DQ.badDate.slice(0,5).join(', ')],
+    ['음수 작업시간', DQ.neg.length+'건', '시작~종료로 다시 계산 · '+DQ.neg.slice(0,5).join(', ')],
+    ['종료시각 깨짐 (1900년)', DQ.brokenTime.length+'건', DQ.brokenTime.slice(0,5).join(', ')],
+    ['24시간 넘는 작업 줄', DQ.long.length+'건', '실제인지 확인 (며칠 걸친 외주·용접 등) · 9번 운영 탭에 목록'],
+    ['호기 미기재', DQ.noDc+'줄', ''],
+    ['DC14 (실제 없는 호기)', DQ.dc14.length+'줄', DQ.dc14.slice(0,5).join(', ')],
+    ['호기 표기 오류', DQ.unkDc.length+'줄', DQ.unkDc.slice(0,5).join(', ')],
+    ['금형번호 미기재', DQ.noMold+'줄', ''],
+    ['작업유형 미기재', DQ.noType+'줄', ''],
+    ['OEE 가동 행의 Mold Number 입력률', OEE.length?pc(mn/(run.length||1)):'–', 'Shot을 금형 단위로 세려면 필요 (현재는 품명 단위로 연결)'],
+    ['원인 문장 종류', new Set(ROWS.map(r=>r.cause.toLowerCase())).size+'가지', '원인 코드 15~20개로 드롭다운화 권장 (지금은 화면에서 그룹으로 묶음)']
+  ];
+  $('tab-dq').innerHTML = `<div class="card"><h2><span class="no">10</span>데이터 품질 <small style="font-size:12px;color:#64748b;font-weight:600">전 기간 · 원천 ${DQ.total.toLocaleString()}줄</small></h2>
+    <div class="desc">원본 시트는 그대로 두고 화면에서만 보정합니다. 아래 건수가 줄어들수록 지표가 정확해집니다.</div>
+    <table class="t"><thead><tr><th>점검 항목</th><th>결과</th><th>처리 · 예</th></tr></thead><tbody>${items.map(i=>`<tr><td><b>${i[0]}</b></td><td class="n">${i[1]}</td><td style="font-size:12px">${esc(i[2])}</td></tr>`).join('')}</tbody></table></div>
+    <div class="card"><h2>외부 관리 방식과 비교 — 지금 데이터에 없는 항목</h2><div class="desc">금형 보전 관리 솔루션·업계 관행에서 수리 1건마다 남기는 항목입니다. 원본 A~AL 뒤에 열을 늘리기보다, 필요한 것부터 하나씩 추가하는 걸 권합니다.</div>
+    <table class="t"><thead><tr><th>항목</th><th>쓰임</th><th>지금</th></tr></thead><tbody>
+      <tr><td><b>수리 계기</b> (파손 / Shot 도달 PM / 정기 / 품질 이상)</td><td>계획·비계획을 작업유형이 아니라 실제 계기로 구분</td><td class="r">없음 — 작업유형으로 추정</td></tr>
+      <tr><td><b>수리 시점 누적 Shot</b></td><td>고장 1건당 Shot · PM 주기 설정</td><td class="r">없음 — P_성능으로 품명 단위 추정</td></tr>
+      <tr><td><b>금형 상태</b> (설비 장착 / 보관 / 수리 대기 / 수리 중 / 시험 대기 / 보류 / 폐기)</td><td>지금 어느 금형이 묶여 있는지</td><td class="r">없음</td></tr>
+      <tr><td><b>수리 후 첫 시험 결과</b> (합격 / 재작업)</td><td>수리 품질 · 재수리 원인</td><td class="r">없음 — ${ST.rpDays}일 내 재수리로 대신 봄</td></tr>
+      <tr><td><b>우선순위</b> (P1 생산 중단 ~ P4 다음 정비 때)</td><td>대기시간 관리</td><td class="r">없음</td></tr>
+      <tr><td>원인 코드 · 작업 코드 · 부품 코드</td><td>집계 정확도</td><td>작업유형은 있음 (RT 코드) · 원인은 자유 입력</td></tr>
+    </tbody></table></div>`;
+}
+
+/* ---------- 11. 수리이력 조회 ---------- */
+let LQ = '';
+function renderList(P){
+  const R = fRows(P.weeks); const q = LQ.toLowerCase();
+  const L = q ? R.filter(r=>[r.iss,r.mold,r.pname,r.part,r.dc,r.tname,r.cause,r.detail,r.spare,r.rep].join(' ').toLowerCase().indexOf(q)>=0) : R;
+  $('tab-list').innerHTML = `<div class="card"><h2><span class="no">11</span>수리이력 조회 <small style="font-size:12px;color:#64748b;font-weight:600">${wkLabel(P.a)}${P.n>1?' ~ '+wkLabel(P.b):''}${fTxt()} · ${L.length.toLocaleString()}줄</small></h2>
+    <div class="desc"><input class="search" id="lq" placeholder="금형번호 · 품명 · 호기 · 원인 · 부품 · 작업자 검색" value="${esc(LQ)}"> <button class="btn" onclick="dlCsv()">CSV 내려받기</button> · 최근 순 500줄까지 표시</div>
+    <div class="tw" style="max-height:640px;overflow:auto"><table class="t"><thead><tr><th>의뢰</th><th>일자</th><th>주차</th><th>교대</th><th>호기</th><th>금형</th><th>품명</th><th>작업</th><th>원인</th><th>수리 내용</th><th>분</th><th>수리비</th><th>부품</th><th>작업자</th></tr></thead><tbody>
+    ${L.slice().reverse().slice(0,500).map(r=>`<tr><td style="font-size:11px">${esc(r.iss)}</td><td class="c">${dayKey(r.rq)}</td><td class="c">${wkLabel(r.wk)}</td><td class="c">${r.shift}</td><td class="c">${esc(r.dc)}</td><td class="c">${r.mold?`<a href="#" onclick="openMold('${esc(r.mold)}');return false">#${esc(r.mold)}</a>`:''}</td><td>${esc(r.pname)}</td>
+      <td><span class="pill ${isUnpl(r.code)?'u':'p'}">${esc(RT_SHORT(r.code))}</span></td><td style="font-size:11.5px">${esc(r.cause)}</td><td style="font-size:11.5px">${esc(r.detail)}</td><td class="n">${f0(r.min)}${r.dupN>1&&r.tm>0?'<span class="mute" title="같은 시간을 여러 줄에 적어 나눔"> ÷'+r.dupN+'</span>':''}</td><td class="n">${f0(r.cost)}</td><td style="font-size:11px">${esc(r.spare)}</td><td style="font-size:11px">${esc(r.rep)}</td></tr>`).join('')}
+    </tbody></table></div></div>`;
+  const i = $('lq'); i.oninput = () => { LQ = i.value; clearTimeout(i._t); i._t = setTimeout(()=>{ render(); const j=$('lq'); j.focus(); j.setSelectionRange(j.value.length,j.value.length); }, 300); };
+}
+function dlCsv(){
+  const P = period(); const q = LQ.toLowerCase(); const R = fRows(P.weeks).filter(r=>!q || [r.iss,r.mold,r.pname,r.part,r.dc,r.tname,r.cause,r.detail,r.spare,r.rep].join(' ').toLowerCase().indexOf(q)>=0);
+  const H = ['의뢰','일자','주차','교대','호기','금형','Part code','품명','작업코드','작업','고장여부','원인','원인그룹','수리내용','분(보정)','수리비(보정)','부품','수량','작업자'];
+  const lines = [H].concat(R.map(r=>[r.iss,dayKey(r.rq),wkLabel(r.wk),r.shift,r.dc,r.mold,r.part,r.pname,r.code,r.tname,isUnpl(r.code)?'고장':'계획',r.cause,r.cg,r.detail,r.min.toFixed(1),r.cost.toFixed(2),r.spare,isNaN(r.qty)?'':r.qty,r.rep]));
+  const csv = '﻿' + lines.map(l=>l.map(v=>{ v=String(v==null?'':v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }).join(',')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download = `금형수리이력_${wkLabel(P.a)}-${wkLabel(P.b)}.csv`; a.click();
+}
+
+/* =====================================================================
+   7. 주간보고 (1장)
+   ===================================================================== */
+const WK_SECS = ['s1','s2','s3','s4','s5','s6','s7','s8'];
+const TG = [   /* 목표 칸 — 낮을수록 좋음 */
+  { k:'n',     name:'수리 의뢰',       u:'건', dp:0, get:m=>m.n },
+  { k:'u',     name:'고장(비계획)',     u:'건', dp:0, get:m=>m.u },
+  { k:'h',     name:'수리 작업시간',    u:'h',  dp:1, get:m=>m.h },
+  { k:'cost',  name:'수리비',          u:'',   dp:0, get:m=>m.cost },
+  { k:'rp',    name:'재수리',          u:'건', dp:0, get:m=>m.rp },
+  { k:'oee',   name:'OEE 금형 정지',    u:'h',  dp:1, get:m=>m.oeeMold },
+  { k:'p10k',  name:'고장/1만 Shot',    u:'건', dp:2, get:m=>m.per10k }
+];
+const fx = (v,dp) => v==null||isNaN(v) ? '–' : dp ? f1(v,dp) : f0(v);
+function renderWeekly(P){
+  const tg = LS('stc_mold_tg', {});
+  const M = metrics(P.weeks), Q = metrics(P.prev);
+  const tw = WEEKS.slice(Math.max(0,P.ib-7), P.ib+1), TM = tw.map(w=>({w,...metrics([w])}));
+  const avgW = WEEKS.slice(Math.max(0,P.ib-15), P.ib+1);
+  const per = P.n;   /* 목표는 주간 기준 → 여러 주 묶음이면 × 주 수 */
+  const wkT = P.n>1 ? `${wkLabel(P.a)}–${wkLabel(P.b)}` : wkLabel(P.b), pwT = P.prev.length ? (P.prev.length>1?`${wkLabel(P.prev[0])}–${wkLabel(P.prev[P.prev.length-1])}`:wkLabel(P.prev[0])) : '전기간';
+  const s0 = weekStart(P.a), s1 = addDays(weekStart(P.b),6);
+  const order = LS('stc_mold_wk_order', WK_SECS).filter(s=>WK_SECS.indexOf(s)>=0); WK_SECS.forEach(s=>{ if(order.indexOf(s)<0) order.push(s); });
+  const hide = LS('stc_mold_wk_hide', []);
+  const meta = LS('stc_mold_wk_meta', {}); $('wkAuthor').value = meta.a||''; $('wkSeq').value = meta.s||'';
+
+  /* 목표 판정 */
+  const J = TG.map(t=>{ const c=t.get(M), p=t.get(Q); const sug = (()=>{ const v=avgW.map(w=>t.get(metrics([w]))).filter(v=>v!=null&&!isNaN(v)); return v.length ? v.reduce((a,b)=>a+b,0)/v.length*0.9 : null; })();
+    const tv = tg[t.k]!=null && tg[t.k]!=='' ? +tg[t.k]*per : null;
+    return { t, c, p, tv, sug, hit: tv==null||c==null||isNaN(c) ? null : c <= tv, gap: tv==null||c==null ? null : c - tv }; });
+  const withT = J.filter(x=>x.hit!=null), okN = withT.filter(x=>x.hit).length;
+
+  /* 1. 주간 요약 */
+  const s1h = `<div class="wkcards">${J.map(x=>kpiCard(x.t.name, fx(x.c,x.t.dp), x.t.u, dTxt(x.c,x.p,true,v=>fx(v,x.t.dp)).replace(/전기간/,pwT),
+      `목표 ${x.tv==null?'미설정':fx(x.tv,x.t.dp)}`, `<span class="jg ${x.hit==null?'na':x.hit?'ok':'ng'}">${x.hit==null?'목표 없음':x.hit?'달성':'+'+fx(x.gap,x.t.dp)+' 미달'}</span>`)).join('')}</div>`;
+  /* 2. 지표 주간 추이 + 목표 설정 */
+  const s2h = `<div class="g2 s2g" style="align-items:start"><div class="ec"><div class="tw"><table class="t"><thead><tr><th>지표</th><th>목표 (주)</th>${TM.map(m=>`<th class="${m.w===P.b?'cur':''}">${wkLabel(m.w)}</th>`).join('')}</tr></thead><tbody>
+      ${J.map(x=>`<tr><td><b>${x.t.name}</b> <span class="mute" style="font-size:11px">${x.t.u}</span></td><td class="c"><input class="tgin" data-tg="${x.t.k}" type="number" step="${x.t.dp?Math.pow(10,-x.t.dp):1}" value="${tg[x.t.k]??''}" placeholder="${x.sug==null?'':fx(x.sug,x.t.dp).replace(/,/g,'')}"><div class="mute" style="font-size:10.5px">제안 ${fx(x.sug,x.t.dp)}</div></td>
+        ${TM.map(m=>{ const v=x.t.get(m), tv=tg[x.t.k]!=null&&tg[x.t.k]!==''?+tg[x.t.k]:null; return `<td class="n${m.w===P.b?' cur':''} ${tv!=null&&v!=null&&!isNaN(v)?(v<=tv?'g':'r'):''}">${fx(v,x.t.dp)}</td>`; }).join('')}</tr>`).join('')}
+      </tbody></table></div><div class="mute" style="font-size:11px;margin-top:4px">목표는 주 단위로 넣습니다 (빈칸 = 제안값은 최근 16주 평균의 90%) · 초록 = 목표 이내 · 빨강 = 초과</div></div>
+    <div class="ec">${barChart({labels:tw.map(wkLabel), stack:true, hiIdx:[tw.length-1], series:[{name:'고장(비계획)',color:'#1e3c72',vals:TM.map(m=>m.u)},{name:'계획·예방',color:'#94a3b8',vals:TM.map(m=>m.plan)}], line:{name:'OEE 금형 정지 h',color:'#dc2626',vals:TM.map(m=>m.oeeMold)}, lfmt:f1, target: tg.n!=null&&tg.n!==''?+tg.n:null, W:620, H:250})}</div></div>`;
+  /* 3. Worst 금형 */
+  const A = moldAgg(M.I).sort((a,b)=>b.n-a.n||b.h-a.h).slice(0,6);
+  const sp = mold => { const L=ISS.filter(x=>x.mold===mold); const c=tw.map(w=>L.filter(x=>x.wk===w).length), mx=Math.max(...c,1);
+    return `<svg viewBox="0 0 96 22" style="width:96px;display:inline-block">${c.map((v,i)=>`<rect x="${i*12+1}" y="${21-v/mx*19}" width="9" height="${v/mx*19}" fill="${i===c.length-1?'#1e3c72':'#b8c2d0'}"/>`).join('')}</svg>`; };
+  const s3h = `<div class="tw"><table class="t"><thead><tr><th>순위</th><th>금형</th><th>품명</th><th>호기</th><th>${wkT} 의뢰</th><th>고장</th><th>작업 h</th><th>수리비</th><th>최다 작업 · 원인</th><th>재수리</th><th>최근 8주</th></tr></thead><tbody>
+    ${A.map((a,i)=>`<tr class="click" onclick="openMold('${esc(a.mold)}')"><td class="c">${i+1}</td><td class="c"><b>#${esc(a.mold)}</b></td><td>${esc(a.pname)}</td><td style="font-size:11px">${[...a.dcs].join(', ')}</td><td class="n"><b>${a.n}</b></td><td class="n">${a.u}</td><td class="n">${f1(a.h)}</td><td class="n">${f0(a.cost)}</td>
+      <td style="font-size:12px">${a.topCode?esc(RT_SHORT(a.topCode[0])):''}${a.topCg?' · '+esc(a.topCg[0]):''}</td><td class="c">${a.rp?`<span class="pill rp">${a.rp}건</span>`:''}</td><td class="c">${sp(a.mold)}</td></tr>`).join('') || '<tr><td colspan="11" class="c mute">이 기간 수리 없음</td></tr>'}
+    </tbody></table></div>`;
+  /* 4. 작업유형 · 원인 (금주 vs 전주) */
+  const cmp = (fnK, onlyU) => { const c=groupBy(M.R.filter(r=>!onlyU||isUnpl(r.code)), fnK), p=groupBy(Q.R.filter(r=>!onlyU||isUnpl(r.code)), fnK); const pm=Object.fromEntries(p.map(x=>[x.k,x.v]));
+    return `<table class="t"><thead><tr><th style="text-align:left">항목</th><th>${pwT}</th><th class="cur">${wkT}</th><th>증감</th></tr></thead><tbody>${c.slice(0,7).map(x=>{ const d=x.v-(pm[x.k]||0); return `<tr><td>${esc(x.k)}</td><td class="n">${pm[x.k]||0}</td><td class="n cur">${x.v}</td><td class="n ${d>0?'r':d<0?'g':''}">${d>0?'+':''}${d||'–'}</td></tr>`; }).join('')}</tbody></table>`; };
+  const s4h = `<div class="g2"><div class="ec"><b style="font-size:13px">작업유형 (작업 줄 수)</b>${cmp(r=>RT_SHORT(r.code))}</div><div class="ec"><b style="font-size:13px">원인 그룹 (고장 작업)</b>${cmp(r=>r.cg,true)}</div></div>`;
+  /* 5. 재수리 */
+  const RP = M.I.filter(x=>x.repeat);
+  const s5h = RP.length ? `<table class="t"><thead><tr><th>금형</th><th>품명</th><th>앞 의뢰</th><th>앞 작업</th><th>이번</th><th>이번 작업</th><th>간격</th></tr></thead><tbody>${RP.slice(-12).reverse().map(x=>`<tr class="click" onclick="openMold('${esc(x.mold)}')"><td class="c"><b>#${esc(x.mold)}</b></td><td>${esc(x.pname)}</td><td class="c">${dayKey(x.prev.rq).slice(5)}</td><td>${[...x.prev.codes].map(c=>esc(RT_SHORT(c))).join(', ')}</td><td class="c">${dayKey(x.rq).slice(5)}</td><td>${[...x.codes].map(c=>esc(RT_SHORT(c))).join(', ')}</td><td class="n r"><b>${Math.round((x.rq-x.prev.rq)/864e5)}일</b></td></tr>`).join('')}${RP.length>12?`<tr><td colspan="7" class="c mute">외 ${RP.length-12}건 — 7번 재수리 추적 탭에서 전체 보기</td></tr>`:''}</tbody></table>` : `<div class="an">이 기간 ${ST.rpDays}일 내 재수리 없음</div>`;
+  /* 6. 호기별 */
+  const dcs = [...new Set(M.I.map(x=>x.dc).concat(fOee(P.weeks).filter(o=>o.mold>0).map(o=>o.dc)).filter(d=>/^DC\d+$/.test(d)&&d!=='DC14'))].sort((a,b)=>+a.slice(2)-+b.slice(2));
+  const O = fOee(P.weeks), ow = P.weeks.some(w=>oeeWeeks().has(w));
+  const s6h = barChart({labels:dcs, series:[{name:'수리 의뢰 건',color:'#1e3c72',vals:dcs.map(d=>M.I.filter(x=>x.dc===d).length)}], line: ow?{name:'OEE 금형 정지 h',color:'#dc2626',vals:dcs.map(d=>O.filter(o=>o.dc===d).reduce((a,o)=>a+o.mold,0)/60)}:null, lfmt:f1, W:1200, H:200});
+  /* 7. 해설 */
+  const pctCh = (c,p) => p ? Math.round(Math.abs(c-p)/p*100) : null;
+  const top1 = A[0], cgTop = groupBy(M.I.filter(x=>x.unpl).flatMap(x=>[...x.cgs]), x=>x)[0];
+  const lines = [];
+  lines.push(`<b>${wkT} 수리 의뢰 ${M.n}건 (고장 ${M.u} · 계획 ${M.plan})</b> — ${pwT} ${Q.n}건 대비 ${M.n===Q.n?'같음':(M.n<Q.n?'▼ ':'▲ ')+(pctCh(M.n,Q.n)??'')+(Q.n?'%':'')} · 작업시간 ${f1(M.h)}h (${pwT} ${f1(Q.h)}h)`);
+  if(withT.length) lines.push(`목표를 정한 ${withT.length}개 지표 중 <b>${okN}개 달성</b>${withT.filter(x=>!x.hit).length?' — 미달: '+withT.filter(x=>!x.hit).map(x=>x.t.name).join('·'):''}`);
+  else lines.push(`목표 미설정 — 2번 표의 목표 칸에 주간 목표를 넣으면 달성 판정이 붙습니다`);
+  if(top1) lines.push(`<b>Worst 금형 #${esc(top1.mold)} (${esc(top1.pname)})</b> ${top1.n}건 · ${f1(top1.h)}h${top1.topCode?' — 주로 '+esc(RT_SHORT(top1.topCode[0])):''}${top1.rp?` · ${ST.rpDays}일 내 재수리 ${top1.rp}건`:''}`);
+  if(cgTop) lines.push(`고장 원인 1위 <b>${esc(cgTop.k)}</b> ${cgTop.v}건 (고장 의뢰의 ${Math.round(cgTop.v/(M.u||1)*100)}%)`);
+  if(M.oeeMold!=null) lines.push(`설비 쪽 금형 정지(OEE) <b>${f1(M.oeeMold)}h</b>${Q.oeeMold!=null?` (${pwT} ${f1(Q.oeeMold)}h)`:''} · 금형교체 ${f1(M.oeeChg)}h 별도`);
+  if(M.per10k!=null) lines.push(`Shot 대비: 고장 1건당 <b>${f0(M.msbf)} Shot</b> (1만 Shot당 ${f1(M.per10k,2)}건)${Q.msbf?` · ${pwT} ${f0(Q.msbf)} Shot`:''}`);
+  const s7h = `<div class="ec"><ol>${lines.map(l=>`<li>${l}</li>`).join('')}</ol></div>`;
+  /* 8. 다음 주 조치 */
+  const PK = 'stc_mold_wk_plan_'+P.b; const plan = LS(PK, []); while(plan.length<4) plan.push({m:'',t:'',o:'',d:''});
+  const s8h = `<table class="t"><thead><tr><th style="width:110px">금형</th><th>조치 내용</th><th style="width:140px">담당</th><th style="width:110px">기한</th></tr></thead><tbody>${plan.map((p,i)=>`<tr>${['m','t','o','d'].map(f=>`<td><textarea class="plan" data-pl="${i}" data-f="${f}">${esc(p[f])}</textarea></td>`).join('')}</tr>`).join('')}</tbody></table>
+    <div class="mute noprint" style="font-size:11px;margin-top:4px">이 브라우저에 주차별로 저장 · Worst 금형 · 재수리 금형부터 적는 걸 권합니다</div>`;
+
+  const SEC = { s1:['주간 요약','목표 대비 · '+pwT+' 대비',s1h], s2:['지표 주간 추이 · 목표 설정','최근 8주',s2h], s3:['Worst 금형','의뢰 건수 순 · 누르면 금형 이력',s3h], s4:['작업유형 · 원인 변화',pwT+' → '+wkT,s4h],
+    s5:['재수리 금형',ST.rpDays+'일 이내 같은 금형 · 같은 고장 작업',s5h], s6:['호기별 수리 · 설비 금형 정지','막대 = 수리 의뢰 · 선 = OEE 금형 정지 h',s6h], s7:['해설','값으로 자동 작성',s7h], s8:['다음 주 조치 계획','직접 입력',s8h] };
+  let html = `<div class="cover"><div><div class="ey">MOLD MAINTENANCE REPORT</div><h3>금형 수리 주간 보고서</h3><div style="opacity:.85">Mold Repair Weekly Report · ${dayKey(s0)} ~ ${dayKey(s1)}</div></div>
+    <div class="wk">${wkT}</div><div class="rt"><b>STC Co., Ltd.</b><br>다이캐스팅 금형 · 공무팀${meta.a?'<br>작성 '+esc(meta.a):''}${meta.s?' · '+esc(meta.s):''}<br>발행 ${dayKey(new Date())}${fTxt()}</div></div>`;
+  let no = 0;
+  order.forEach((k,idx)=>{ const s = SEC[k]; if(hide.indexOf(k)>=0){ html += `<div class="hidph noprint">숨긴 항목: ${s[0]} <button class="btn" onclick="wkHide('${k}',false)">되살리기</button></div>`; return; }
+    no++; html += `<div class="sec" data-k="${k}"><div class="sh"><b>${no}. ${s[0]}</b><small>${s[1]}</small><span class="ctl"><button onclick="wkMove('${k}',-1)" title="위로">▲</button><button onclick="wkMove('${k}',1)" title="아래로">▼</button><button class="x" onclick="wkHide('${k}',true)" title="숨기기">✕</button></span></div>${s[2]}</div>`; });
+  $('wkSheet').innerHTML = html;
+  $('wkSheet').querySelectorAll('[data-tg]').forEach(i=>i.onchange=()=>{ const t=LS('stc_mold_tg',{}); if(i.value==='') delete t[i.dataset.tg]; else t[i.dataset.tg]=+i.value; SS('stc_mold_tg',t); render(); });
+  $('wkSheet').querySelectorAll('[data-pl]').forEach(i=>i.onchange=()=>{ const pl=LS(PK,[]); while(pl.length<4) pl.push({m:'',t:'',o:'',d:''}); pl[+i.dataset.pl][i.dataset.f]=i.value; SS(PK,pl); });
+}
+function wkMove(k,d){ const o=LS('stc_mold_wk_order',WK_SECS).filter(s=>WK_SECS.indexOf(s)>=0); WK_SECS.forEach(s=>{ if(o.indexOf(s)<0) o.push(s); }); const i=o.indexOf(k), j=i+d; if(j<0||j>=o.length) return; [o[i],o[j]]=[o[j],o[i]]; SS('stc_mold_wk_order',o); render(); }
+function wkHide(k,h){ let a=LS('stc_mold_wk_hide',[]); a=a.filter(x=>x!==k); if(h) a.push(k); SS('stc_mold_wk_hide',a); render(); }
+
+/* =====================================================================
+   8. 작업코드 선택 · 이벤트
+   ===================================================================== */
+function renderCodes(){
+  const cnt = {}; ROWS.forEach(r=>{ const c=cnt[r.code]=cnt[r.code]||{n:0,h:0}; c.n++; c.h+=r.min/60; });
+  $('codeGrid').innerHTML = RT.map(([c,n])=>`<label class="${isUnpl(c)?'on':''}"><input type="checkbox" data-c="${c}" ${isUnpl(c)?'checked':''}> ${c} ${esc(n)}<small>(${cnt[c]?cnt[c].n:0} · ${cnt[c]?f0(cnt[c].h):0}h)</small></label>`).join('');
+  $('codeGrid').querySelectorAll('input').forEach(i=>i.onchange=()=>{ const c=i.dataset.c; ST.plan = ST.plan.filter(x=>x!==c); if(!i.checked) ST.plan.push(c); SS('stc_mold_plan',ST.plan); flagIssues(); renderCodes(); render(); });
+}
+$('codeBtn').onclick = () => $('codePanel').classList.toggle('open');
+$('codeDef').onclick = () => { ST.plan = PLAN_DEF.slice(); SS('stc_mold_plan',ST.plan); flagIssues(); renderCodes(); render(); };
+$('codeAll').onclick = () => { ST.plan = []; SS('stc_mold_plan',ST.plan); flagIssues(); renderCodes(); render(); };
+$('codeNone').onclick = () => { ST.plan = RT.map(x=>x[0]); SS('stc_mold_plan',ST.plan); flagIssues(); renderCodes(); render(); };
+$('rpDays').onchange = e => { ST.rpDays = Math.max(1, +e.target.value||7); SS('stc_mold_rpdays',ST.rpDays); flagIssues(); render(); };
+$('usl').onchange = e => { ST.usl = Math.max(1, +e.target.value||60); SS('stc_mold_usl',ST.usl); render(); };
+['gpWf','gpWt'].forEach(id => $(id).addEventListener('change', () => { if(wkOf('gpWf')>wkOf('gpWt')){ if(id==='gpWf') $('gpWt').value=$('gpWf').value; else $('gpWf').value=$('gpWt').value; } render(); }));
+['fDc','fCus','fPart'].forEach(id => $(id).onchange = render);
+$('quick').querySelectorAll('button').forEach(b=>b.onclick=()=>{ if(!WEEKS.length) return; const q=b.dataset.q; const last=WEEKS[WEEKS.length-1];
+  $('gpWt').value = wkLabel(last); $('gpWf').value = q==='all' ? wkLabel(WEEKS[0]) : wkLabel(WEEKS[Math.max(0, WEEKS.length-(+q))]); render(); });
+$('tabBar').querySelectorAll('.tabbtn').forEach(b=>b.onclick=()=>{ $('tabBar').querySelectorAll('.tabbtn').forEach(x=>x.classList.toggle('active',x===b));
+  document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('show', p.id===b.dataset.tab)); ACTIVE = b.dataset.tab; SS('stc_mold_tab',ACTIVE); render(); });
+(()=>{ const t=LS('stc_mold_tab','tab-weekly'); const b=document.querySelector(`.tabbtn[data-tab="${t}"]`); if(b && t!=='tab-weekly'){ $('tabBar').querySelectorAll('.tabbtn').forEach(x=>x.classList.toggle('active',x===b)); document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('show',p.id===t)); ACTIVE=t; } })();
+$('reload').onclick = load;
+$('wkPrint').onclick = () => window.print();
+$('wkFocus').onclick = () => document.body.classList.toggle('focus');
+$('wkReset').onclick = () => { SS('stc_mold_wk_order',WK_SECS); SS('stc_mold_wk_hide',[]); render(); };
+['wkAuthor','wkSeq'].forEach(id=>$(id).onchange=()=>{ SS('stc_mold_wk_meta',{a:$('wkAuthor').value,s:$('wkSeq').value}); render(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeOv(); document.body.classList.remove('focus'); } });
+$('ov').addEventListener('click', e=>{ if(e.target.id==='ov') closeOv(); });
+load();
+</script>
+</body>
+</html>
