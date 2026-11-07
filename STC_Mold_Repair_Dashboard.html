@@ -351,8 +351,9 @@ function buildRepair(objs){
     for(const [c,n] of RT){ const kn=normKey(n); if(kn.startsWith(k) || k.startsWith(kn.slice(0,8)) || kn.endsWith(k)) return c; }
     const hk = String(s).replace(/[^가-힣]/g,''); if(hk) for(const [c,n] of RT){ if(n.replace(/[^가-힣]/g,'').indexOf(hk)>=0) return c; }
     return 'RT023'; };
-  const out=[]; let LAST=null; DQ = { total:0, badDate:[], neg:[], long:[], dupGroups:0, dupRows:0, noMold:0, noDc:0, unkDc:[], noType:0, dc14:[], brokenTime:[] };
+  const out=[]; let LAST=null; DQ = { total:0, badDate:[], neg:[], long:[], dupGroups:0, dupRows:0, noMold:0, noDc:0, unkDc:[], noType:0, dc14:[], brokenTime:[], noDate:[], seen:0, sample:'' };
   objs.forEach(o=>{
+    DQ.seen++; if(!DQ.sample) DQ.sample = H.slice(0,8).map(h=>h+'='+String(o[h]??'')).join(' · ');
     const iss = String(col(o,'Issue_no')||'').trim(); if(!/^STC/i.test(iss)) return;
     DQ.total++;
     let rq = pDate(col(o,'Request_date')), sd = pDate(col(o,'Start_Date')), fd = pDate(col(o,'Finished_Date'));
@@ -364,7 +365,7 @@ function buildRepair(objs){
       const good = LAST ? (Math.abs(sd-LAST) < Math.abs(rq-LAST) ? sd : rq) : (ok(sd) && !ok(rq) ? sd : rq);
       if(good===sd){ rq = sd; } else { const sh = rq - sd; sd = rq; if(fd) fd = new Date(+fd + sh); }
     }
-    if(!rq) rq = sd; if(!rq) return; LAST = rq;
+    if(!rq) rq = sd; if(!rq){ DQ.noDate.push(String(col(o,'Request_date')||'')+' / '+String(col(o,'Start_Date')||'')); return; } LAST = rq;
     const st = pTime(col(o,'Start_Time')), ft = pTime(col(o,'Finished')), rt = pTime(col(o,'Request_Time'));
     if(col(o,'Finished') && ft==null && /^(1899|1900)/.test(String(col(o,'Finished')))) DQ.brokenTime.push(iss);
     let S = sd && st!=null ? new Date(+sd + st*6e4) : null, E = fd && ft!=null ? new Date(+fd + ft*6e4) : null;
@@ -444,6 +445,9 @@ async function load(){
     const [r,a,p] = await Promise.allSettled([getCsv('repair','Issue_no'), getCsv('A','일자'), getCsv('P','일자')]);
     if(r.status!=='fulfilled') throw r.reason;
     ROWS = buildRepair(toObjects(r.value,'Issue_no'));
+    if(!ROWS.length) throw new Error(`머리줄은 찾았지만 읽을 수 있는 수리 줄이 0줄입니다 — 머리줄 아래 ${DQ.seen}줄 · Issue_no 가 STC 로 시작하는 줄 ${DQ.total} · 날짜를 못 읽은 줄 ${DQ.noDate.length}`
+      + (DQ.noDate.length?` (예: ${DQ.noDate.slice(0,2).join(' | ')})`:'') + (DQ.sample?` · 첫 줄: ${DQ.sample}`:'')
+      + ` — 시트에 데이터가 들어 있는지(Ctrl+Home 으로 3행 확인), 웹 게시 반영(1~5분)을 확인해 주세요`);
     OEE  = a.status==='fulfilled' ? buildOee(a.value) : [];
     SHOT = p.status==='fulfilled' ? buildShot(p.value) : [];
     afterLoad(a.status!=='fulfilled', p.status!=='fulfilled');
