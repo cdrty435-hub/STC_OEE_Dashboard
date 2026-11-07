@@ -875,7 +875,7 @@ function dlCsv(){
 /* =====================================================================
    7. 주간보고 (1장)
    ===================================================================== */
-const WK_SECS = ['s1','s2','s9','s3','s4','s5','s6','s7','s8'];   /* s9 = 금형 비용 (F-COST · 수리비) */
+const WK_SECS = ['s1','s2','s9','s10','s3','s4','s5','s6','s7','s8'];   /* s9 = 금형 비용 (F-COST · 수리비) */
 const wkOrder = () => { const o = LS('stc_mold_wk_order', WK_SECS).filter(s=>WK_SECS.indexOf(s)>=0); WK_SECS.forEach((s,i)=>{ if(o.indexOf(s)<0){ const after = o.indexOf(WK_SECS[i-1]); o.splice(after<0?o.length:after+1, 0, s); } }); return o; };
 const TG = [   /* 목표 칸 — 낮을수록 좋음 */
   { k:'h',     name:'수리 작업시간',    u:'h',  dp:1, get:m=>m.h },
@@ -979,7 +979,22 @@ function renderWeekly(P){
         <span class="pill u">수리비 ${f0(M.cost)} THB · ${pwT} ${f0(Q.cost)}</span>
         <span class="pill" style="background:#0f172a;color:#fff">총비용 ${M.total==null?'–':f0(M.total)} THB</span></div>${chart}
         <div class="mute" style="font-size:11px">F-COST = OEE 금형 계통 로스(분) × 호기 M/C Rate(THB/분, MTTR과 같은 값) · 수리비 = 금형팀 Repair price</div></div>
-      <div class="ec"><b style="font-size:13px">금형별 총비용 Top 6</b> <span class="mute" style="font-size:11px">F-COST는 같은 호기 같은 날(없으면 ±1일) 수리한 금형에 나눠 붙인 추정치</span>${tbl}</div></div>`;
+      <div class="ec"><b style="font-size:13px">금형별 총비용 Top 6</b> <span class="mute" style="font-size:11px">F-COST는 같은 호기 같은 날(없으면 ±1일) 수리한 금형에 나눠 붙인 추정치</span>${tbl}</div></div>
+      <div class="ec" style="margin-top:12px"><b style="font-size:13px">주차별 금형 비용 (최근 12주)</b> <span class="mute" style="font-size:11px">빨강 = F-COST (정지 손실) · 남색 = 수리비 (지출) · 막대 위 = 합계</span>
+        ${(()=>{ const ws12 = WEEKS.slice(Math.max(0,P.ib-11), P.ib+1), MS12 = ws12.map(w=>metrics([w]));
+          return barChart({labels:ws12.map(wkLabel), stack:true, hiIdx:[ws12.length-1], series:[{name:'F-COST (정지 손실)',color:'#dc2626',vals:MS12.map(m=>m.fcost||0)},{name:'수리비 (지출)',color:'#1e3c72',vals:MS12.map(m=>m.cost)}], fmt:v=>v>=1000?f0(v/1000)+'k':f0(v), W:1300, H:220}); })()}</div>`;
+  })();
+  /* 10. 부품 · 수리비 */
+  const s10h = (()=>{
+    const R = M.R, parts = R.reduce((a,r)=>a+(isNaN(r.partsCost)?0:r.partsCost),0), used = R.filter(r=>r.spare);
+    const byT = groupBy(R, r=>RT_SHORT(r.code), r=>r.cost).filter(x=>x.v>0).slice(0,8);
+    const byM = groupBy(R, r=>r.mold?'#'+r.mold+' '+r.pname:'', r=>r.cost).filter(x=>x.v>0).slice(0,8);
+    const sp = {}; used.forEach(r=>{ const k=r.spare.replace(/\s+/g,' '); const a=sp[k]=sp[k]||{k,n:0,q:0,c:0,molds:new Set()}; a.n++; a.q+=isNaN(r.qty)?0:r.qty; a.c+=isNaN(r.partsCost)?0:r.partsCost; if(r.mold) a.molds.add(r.mold); });
+    const S = Object.values(sp).sort((a,b)=>b.q-a.q).slice(0,8);
+    return `<div class="wkcards" style="margin-bottom:10px">${kpiCard('수리비 합 (Repair price)', f0(M.cost), 'THB', dTxt(M.cost,Q.cost,true).replace(/전기간/,pwT))}${kpiCard('부품비 (฿ 열)', f0(parts), 'THB')}${kpiCard('부품 사용 줄', f0(used.length), '줄')}${kpiCard('부품 수량', f0(used.reduce((a,r)=>a+(isNaN(r.qty)?0:r.qty),0)), '개')}</div>
+      <div class="g3"><div class="ec"><b style="font-size:13px">작업유형별 수리비</b>${byT.length?hbar(byT,{color:'#0f766e'}):'<div class="mute">없음</div>'}</div>
+        <div class="ec"><b style="font-size:13px">금형별 수리비 Top 8</b>${byM.length?hbar(byM,{color:'#7c3aed'}):'<div class="mute">없음</div>'}</div>
+        <div class="ec"><b style="font-size:13px">부품 사용 Top 8</b>${S.length?`<table class="t" style="font-size:11.5px"><thead><tr><th style="text-align:left">부품</th><th>수량</th><th>부품비</th><th>금형</th></tr></thead><tbody>${S.map(x=>`<tr><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(x.k)}">${esc(x.k)}</td><td class="n"><b>${f0(x.q)}</b></td><td class="n">${f0(x.c)}</td><td style="font-size:10.5px">${[...x.molds].slice(0,3).map(m=>'#'+esc(m)).join(' ')}</td></tr>`).join('')}</tbody></table>`:'<div class="mute">이 기간 부품 사용 없음</div>'}</div></div>`;
   })();
   /* 7. 해설 */
   const pctCh = (c,p) => p ? Math.round(Math.abs(c-p)/p*100) : null;
@@ -999,7 +1014,7 @@ function renderWeekly(P){
   const s8h = `<table class="t"><thead><tr><th style="width:110px">금형</th><th>조치 내용</th><th style="width:140px">담당</th><th style="width:110px">기한</th></tr></thead><tbody>${plan.map((p,i)=>`<tr>${['m','t','o','d'].map(f=>`<td><textarea class="plan" data-pl="${i}" data-f="${f}">${esc(p[f])}</textarea></td>`).join('')}</tr>`).join('')}</tbody></table>
     <div class="mute noprint" style="font-size:11px;margin-top:4px">이 브라우저에 주차별로 저장 · Worst 금형 · 재수리 금형부터 적는 걸 권합니다</div>`;
 
-  const SEC = { s9:['금형 비용 — F-COST · 수리비','호기별 F-COST · 금형별 총비용',s9h], s1:['주간 요약','목표 대비 · '+pwT+' 대비',s1h], s2:['지표 주간 추이 · 목표 설정',pwT+' → '+wkT+' · 그래프 = 최근 8주',s2h], s3:['Worst 금형','도넛 = 금주 상위 4 + 기타 · 누르면 금형 이력',s3h], s4:['작업유형 · 원인 변화',pwT+' → '+wkT+' · 도넛 = 금주 상위 4 + 기타',s4h],
+  const SEC = { s10:['부품 · 수리비','작업유형별 · 금형별 수리비 · 부품 사용',s10h], s9:['금형 비용 — F-COST · 수리비','호기별 F-COST · 금형별 총비용',s9h], s1:['주간 요약','목표 대비 · '+pwT+' 대비',s1h], s2:['지표 주간 추이 · 목표 설정',pwT+' → '+wkT+' · 그래프 = 최근 8주',s2h], s3:['Worst 금형','도넛 = 금주 상위 4 + 기타 · 누르면 금형 이력',s3h], s4:['작업유형 · 원인 변화',pwT+' → '+wkT+' · 도넛 = 금주 상위 4 + 기타',s4h],
     s5:['재수리 금형',ST.rpDays+'일 이내 같은 금형 · 같은 고장 작업',s5h], s6:['호기별 수리 · 설비 금형 정지','막대 = 수리 의뢰 · 선 = OEE 금형 정지 h',s6h], s7:['해설','값으로 자동 작성',s7h], s8:['다음 주 조치 계획','직접 입력',s8h] };
   let html = `<div class="cover"><div><div class="ey">MOLD MAINTENANCE REPORT</div><h3>금형 수리 주간 보고서</h3><div style="opacity:.85">Mold Repair Weekly Report · ${dayKey(s0)} ~ ${dayKey(s1)}</div></div>
     <div class="wk">${wkT}</div><div class="rt"><b>STC Co., Ltd.</b><br>다이캐스팅 금형 · 공무팀${meta.a?'<br>작성 '+esc(meta.a):''}${meta.s?' · '+esc(meta.s):''}<br>발행 ${dayKey(new Date())}${fTxt()}</div></div>`;
