@@ -211,8 +211,15 @@
    0. 데이터 원천 — OEE_RawData_APQ (웹에 게시된 CSV)
    ===================================================================== */
 const PUB = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6U8gG0Mr3oJ-5XOOzr7Eh_oZGc-BGHFG0n1__eor4Zc8aJaMuf01NXCAHJECH6U8aUvtnQGLKD5-_/pub';
+const FILE_ID = '1m-b3Ur5VhewDhM0cbv39q8cuMm9Y0asyH1NyV0coDD4';   /* OEE_RawData_APQ */
 const GID = { repair:'936303810', A:'345197688', P:'287133604' };
+const TAB = { repair:'Daily repair', A:'A_가동률', P:'P_성능' };
 const csvUrl = gid => `${PUB}?gid=${gid}&single=true&output=csv&t=${Date.now()}`;
+/* 읽는 순서: ① gid → ② 게시 CSV(탭 이름) → ③ gviz(탭 이름)
+   탭을 지우고 다시 만들어 gid 가 바뀌어도 탭 이름이 같으면 그대로 읽힌다 */
+const srcUrls = k => [ csvUrl(GID[k]),
+  `${PUB}?output=csv&sheet=${encodeURIComponent(TAB[k])}&t=${Date.now()}`,
+  `https://docs.google.com/spreadsheets/d/${FILE_ID}/gviz/tq?tqx=out:csv&headers=0&sheet=${encodeURIComponent(TAB[k])}` ];
 
 /* 작업유형 코드 (Repair-type 탭과 같음) */
 const RT = [['RT001','Ejector Pin replacement 에젝터핀 교체'],['RT002','Ejector Pin Repair 이젝터 핀 수리'],['RT003','Core Pin Replacement 코어핀 교체'],['RT004','Algon welding 알곤용접'],['RT005','Polishing'],['RT006','Disassembly, assembly 분해,조립'],['RT007','Sleeve cooling 슬리브 냉각'],['RT008','Core cooling 코어 냉각'],['RT009','Slide Repair 슬라이드 수리'],['RT010','O-ring replacement 오링 교체'],['RT011','Laser welding 레이저 용접'],['RT012','Ejector base repair 에젝터판 수리'],['RT013','Replacing Lot Marking 로트마킹 교체'],['RT014','Discharge coating 방전 코팅'],['RT015','Replacing the cooling hose 냉각 호스 교체'],['RT016','Mold cleaning 금형 청소'],['RT017','Clean dry ice 드라이 아이스 청소'],['RT018','Cleaning the cleaning agent 세척제 청소'],['RT019','Leakage Test 냉각수, 윤활유 누출 확인'],['RT020','Sticking 제품 박힘'],['RT021','Mold Adjustment 치수 보정 또는 조정'],['RT022','Replacing slide 슬라이드 교체'],['RT023','Other 다른'],['RT024','PM Mold'],['RT025','Grinding'],['RT026','Gun Drill'],['RT027','Lapping'],['RT028','Lathe M/C'],['RT029','Milling'],['RT030','EDM coating'],['RT031','Fitting']];
@@ -309,12 +316,23 @@ const isUnpl = c => ST.plan.indexOf(c) < 0;
 /* =====================================================================
    3. 읽기
    ===================================================================== */
-async function getCsv(gid){
-  const r = await fetch(csvUrl(gid), {cache:'no-store'});
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  const t = await r.text();
-  if(/^\s*<(!doctype|html)/i.test(t)) throw new Error('CSV 대신 웹페이지가 왔습니다 (탭이 웹 게시에 포함되지 않음)');
-  return Papa.parse(t, {skipEmptyLines:true}).data;
+const SRC_USED = {};
+async function getCsv(k, must){
+  let last = null;
+  for(const [i,u] of srcUrls(k).entries()){
+    try{
+      const r = await fetch(u, {cache:'no-store'});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const t = await r.text();
+      if(/^\s*<(!doctype|html)/i.test(t)) throw new Error('CSV 대신 웹페이지가 왔습니다 (탭이 웹 게시에 포함되지 않음)');
+      const aoa = Papa.parse(t, {skipEmptyLines:true}).data;
+      /* gid 가 다른 탭을 가리키게 된 경우(탭을 지우고 다시 만듦) — 머리줄로 확인 */
+      if(!aoa.slice(0,6).some(r=>r.some(c=>String(c).trim()===must))) throw new Error(`「${must}」 머리줄이 없음`);
+      SRC_USED[k] = ['gid','탭 이름으로','gviz로'][i];
+      return aoa;
+    }catch(e){ last = e; }
+  }
+  throw last;
 }
 /* 머리줄 찾기: 'Issue_no' 가 있는 줄 (원본은 1행 제목 · 2행 머리줄) */
 function toObjects(aoa, must){
@@ -423,7 +441,7 @@ function buildShot(aoa){
 async function load(){
   setStatus('데이터를 읽는 중…');
   try{
-    const [r,a,p] = await Promise.allSettled([getCsv(GID.repair), getCsv(GID.A), getCsv(GID.P)]);
+    const [r,a,p] = await Promise.allSettled([getCsv('repair','Issue_no'), getCsv('A','일자'), getCsv('P','일자')]);
     if(r.status!=='fulfilled') throw r.reason;
     ROWS = buildRepair(toObjects(r.value,'Issue_no'));
     OEE  = a.status==='fulfilled' ? buildOee(a.value) : [];
@@ -434,7 +452,7 @@ async function load(){
     setStatus('Daily repair 탭을 읽지 못했습니다');
     $('wkSheet').innerHTML = `<div class="msg err"><b>Daily repair 탭을 읽지 못했습니다.</b> (${esc(e.message||e)})<br>
       ① 구글시트 OEE_RawData_APQ → 파일 → 공유 → <b>웹에 게시</b> → 「전체 문서」 또는 목록에 <b>Daily repair</b> 가 포함돼 있는지 확인 → CSV 로 게시<br>
-      ② 게시 후 1~5분 지나서 새로고침 · 탭 gid 가 ${GID.repair} 인지 확인 (탭을 지웠다 다시 만들면 gid 가 바뀝니다)</div>`;
+      ② 탭 이름이 정확히 <b>Daily repair</b> 인지 확인 (gid 가 바뀌어도 이 이름으로 찾습니다) · 2행(또는 1행)에 <b>Issue_no</b> 머리줄이 있어야 합니다<br>③ 게시 후 1~5분 지나서 새로고침</div>`;
   }
 }
 function setStatus(t){ $('status').textContent = t; }
@@ -458,7 +476,7 @@ function afterLoad(noA, noP){
   fillSel('fCus', [...new Set(ISS.map(x=>x.cus).filter(Boolean))].sort());
   fillSel('fPart', [...new Set(ISS.map(x=>x.pname).filter(Boolean))].sort());
   const d0 = ROWS.reduce((a,r)=>r.rq<a?r.rq:a, ROWS[0].rq), d1 = ROWS.reduce((a,r)=>r.rq>a?r.rq:a, ROWS[0].rq);
-  setStatus(`원천 Daily repair ${ROWS.length.toLocaleString()}줄 · 의뢰 ${ISS.length.toLocaleString()}건 (${dayKey(d0)} ~ ${dayKey(d1)})`
+  setStatus(`원천 Daily repair${SRC_USED.repair&&SRC_USED.repair!=='gid'?'('+SRC_USED.repair+' 읽음)':''} ${ROWS.length.toLocaleString()}줄 · 의뢰 ${ISS.length.toLocaleString()}건 (${dayKey(d0)} ~ ${dayKey(d1)})`
     + (noA?' · A_가동률 읽기 실패':` · OEE ${OEE.length.toLocaleString()}행`) + (noP?' · P_성능 읽기 실패':` · Shot ${SHOT.length.toLocaleString()}행`));
   $('dot').classList.remove('err');
   renderCodes(); render();
