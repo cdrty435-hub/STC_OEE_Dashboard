@@ -401,7 +401,7 @@ function buildRepair(objs){
     if(S && E && E < S && +fd===+sd) E = new Date(+E + 864e5);
     let tm = num(col(o,'Time_Min'));
     if(!isNaN(tm) && tm < 0){ DQ.neg.push(iss); tm = S && E ? (E-S)/6e4 : NaN; }
-    if(isNaN(tm) && S && E) tm = (E-S)/6e4;
+    if(isNaN(tm) && S && E){ tm = (E-S)/6e4; if(tm > 1440){ DQ.calcLong = (DQ.calcLong||[]).concat(iss); tm = 0; } }   /* Time_Min 빈칸 + 시작~종료가 24h 넘으면 날짜 오타로 보고 0 (예: 02-12 → 05-12) */
     const dc = normDc(col(o,'DC'));
     if(!dc) DQ.noDc++; else if(!/^DC\d+$/.test(dc)) DQ.unkDc.push(iss+' '+dc); else if(dc==='DC14') DQ.dc14.push(iss);
     let mold = String(col(o,'Mold_no')||'').trim(); if(/^\d+(\.0+)?$/.test(mold)) mold = String(parseInt(mold)); if(!mold) DQ.noMold++;
@@ -674,7 +674,7 @@ function moldAgg(I){
     a.n++; if(x.unpl) a.u++; a.h += x.min/60; a.cost += x.cost; a.fcost += x.fcost||0; if(x.repeat) a.rp++; if(x.dc) a.dcs.add(x.dc); a.list.push(x);
     x.rows.forEach(r=>{ a.codes[r.code]=(a.codes[r.code]||0)+1; }); x.cgs.forEach(c=>{ a.cgs[c]=(a.cgs[c]||0)+1; });
     if(!a.last || x.rq > a.last) a.last = x.rq; });
-  return Object.values(m).map(a=>{ const ds=a.list.map(x=>+x.rq).sort((p,q)=>p-q); const gaps=ds.slice(1).map((d,i)=>(d-ds[i])/864e5);
+  return Object.values(m).map(a=>{ const pn={}; a.list.forEach(x=>{ if(x.pname) pn[x.pname]=(pn[x.pname]||0)+1; }); const best=Object.entries(pn).sort((p,q)=>q[1]-p[1])[0]; if(best) a.pname=best[0]; const ds=a.list.map(x=>+x.rq).sort((p,q)=>p-q); const gaps=ds.slice(1).map((d,i)=>(d-ds[i])/864e5);
     a.gap = median(gaps); a.topCode = Object.entries(a.codes).sort((p,q)=>q[1]-p[1])[0]; a.topCg = Object.entries(a.cgs).sort((p,q)=>q[1]-p[1])[0]; return a; });
 }
 function renderMold(P){
@@ -838,6 +838,8 @@ function renderDq(){
     ['음수 작업시간', DQ.neg.length+'건', '시작~종료로 다시 계산 · '+DQ.neg.slice(0,5).join(', ')],
     ['종료시각 깨짐 (1900년)', DQ.brokenTime.length+'건', DQ.brokenTime.slice(0,5).join(', ')],
     ['24시간 넘는 작업 줄', DQ.long.length+'건', '실제인지 확인 (며칠 걸친 외주·용접 등) · 9번 운영 탭에 목록'],
+    ['Time_Min 빈칸 + 시작~종료 24h 초과', (DQ.calcLong||[]).length+'건', '날짜 오타로 보고 0분 처리 · '+(DQ.calcLong||[]).slice(0,5).join(', ')],
+    ['같은 금형번호에 품명이 2개 이상', (()=>{ const m={}; ROWS.forEach(r=>{ if(r.mold&&r.pname){ (m[r.mold]=m[r.mold]||new Set()).add(r.pname); } }); return Object.values(m).filter(x=>x.size>1).length; })()+'개', '품명 오타이거나 번호가 겹친 다른 금형 — 금형 마스터(번호↔품명) 정리 필요 · 화면은 가장 많이 쓴 품명으로 표시'],
     ['호기 미기재', DQ.noDc+'줄', ''],
     ['DC14 (실제 없는 호기)', DQ.dc14.length+'줄', DQ.dc14.slice(0,5).join(', ')],
     ['호기 표기 오류', DQ.unkDc.length+'줄', DQ.unkDc.slice(0,5).join(', ')],

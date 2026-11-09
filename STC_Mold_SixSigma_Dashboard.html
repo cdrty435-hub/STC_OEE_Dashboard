@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>STC 금형 수리 6시그마 대시보드 | Mold Repair Six Sigma Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
 :root{
   --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --line:#2a3140;
@@ -81,6 +82,12 @@ tr:hover td{background:var(--panel2)}
 
 .foot{text-align:center;color:var(--dim);font-size:11px;font-family:var(--mono);margin-top:30px;padding-top:20px;border-top:1px solid var(--line)}
 
+.pbar{display:flex;gap:4px;justify-content:flex-end;align-items:center;margin-bottom:4px;flex-wrap:wrap}
+.pbar select,.pbar button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:5px;font:inherit;font-size:11.5px;padding:3px 7px;cursor:pointer}
+.pbar button:hover{border-color:var(--accent)}
+.kpi.sg::before{background:#a78bfa}
+.msg{padding:28px;border:1px dashed var(--line);border-radius:10px;color:var(--sub);text-align:center;margin-top:20px}
+.msg.err{border-color:var(--bad);color:#ffb4b4;text-align:left}
 @media(max-width:860px){.g2,.g3{grid-template-columns:1fr}.period{text-align:left}}
 </style>
 </head>
@@ -95,8 +102,10 @@ tr:hover td{background:var(--panel2)}
       </div>
     </div>
     <div class="period">
-      분석기간 <span class="p" id="hd-period">-</span><br>
-      총 <span class="p" id="hd-cnt">-</span>건 · 금형 <span class="p" id="hd-mold">-</span>종
+      <div class="pbar"><select id="pFrom"></select> ~ <select id="pTo"></select>
+        <button data-m="3">3개월</button><button data-m="6">6개월</button><button data-m="12">12개월</button><button data-m="0">전체</button><button id="reload" title="구글시트 다시 읽기">↻</button></div>
+      분석기간 <span class="p" id="hd-period">-</span> · 의뢰 <span class="p" id="hd-cnt">-</span>건 · 금형 <span class="p" id="hd-mold">-</span>종<br>
+      <span id="hd-src" style="color:var(--dim)">원천: OEE_RawData_APQ 「Daily repair」 · 「P_성능」 (실시간)</span>
     </div>
   </div>
   <div class="wrap">
@@ -118,8 +127,8 @@ tr:hover td{background:var(--panel2)}
   <div class="insight" id="ov-insight"></div>
   <div class="grid g2">
     <div class="panel">
-      <h3>월별 수리 건수 & 총 다운타임 <span class="tag">Volume vs Downtime</span></h3>
-      <div class="desc">막대=수리건수, 선=총 수리시간(시간). 물량과 손실시간의 상관을 본다.</div>
+      <h3>월별 수리 의뢰 & 수리 작업시간 <span class="tag">Volume vs Repair Time</span></h3>
+      <div class="desc">막대=수리 의뢰 건수, 선=금형 작업시간(h). ※ 설비 정지시간(OEE)과는 다른 값.</div>
       <div class="chartbox"><canvas id="c-ovmonthly"></canvas></div>
     </div>
     <div class="panel">
@@ -136,7 +145,7 @@ tr:hover td{background:var(--panel2)}
   <div class="grid g2">
     <div class="panel">
       <h3>월별 수리건수 <span class="tag">Cases / Month</span></h3>
-      <div class="desc">물량 추이. 관리한계선(평균±관리폭)으로 이상 월 식별.</div>
+      <div class="desc">c-관리도: 평균 ± 3√평균 (UCL/LCL) · 빨간 점 = 관리 한계 밖인 달 · * = 진행 중인 달(판정 제외)</div>
       <div class="chartbox"><canvas id="c-trcnt"></canvas></div>
     </div>
     <div class="panel">
@@ -147,7 +156,7 @@ tr:hover td{background:var(--panel2)}
   </div>
   <div class="grid" style="margin-top:16px">
     <div class="panel">
-      <h3>월별 수리비용 <span class="tag">Cost / Month (USD)</span></h3>
+      <h3>월별 수리비 <span class="tag">Cost / Month (THB)</span></h3>
       <div class="desc">부품·수리 비용 추이. 스파이크 월은 대형 금형손상 집중 시점.</div>
       <div class="chartbox"><canvas id="c-trcost"></canvas></div>
     </div>
@@ -181,8 +190,8 @@ tr:hover td{background:var(--panel2)}
   <div class="insight" id="eq-insight"></div>
   <div class="grid g2">
     <div class="panel">
-      <h3>설비(DC)별 수리건수 & 다운타임 <span class="tag">By Machine</span></h3>
-      <div class="desc">건수 상위 15개 설비. 다운타임 큰 설비는 예방보전 우선대상.</div>
+      <h3>설비(DC)별 수리 의뢰 & 작업시간 <span class="tag">By Machine</span></h3>
+      <div class="desc">건수 상위 15개 호기. 선 = 금형 작업시간(h).</div>
       <div class="chartbox tall"><canvas id="c-eqdc"></canvas></div>
     </div>
     <div class="panel">
@@ -218,141 +227,452 @@ tr:hover td{background:var(--panel2)}
   </div>
 </section>
 
-<div class="foot">STC Co., Ltd. · Maintenance Engineering · Six Sigma Mold Repair Analysis · 데이터 자동집계 (Google Sheets → CSV → Dashboard)</div>
+<div class="foot">STC Co., Ltd. · Maintenance Engineering · Six Sigma Mold Repair Analysis · 원천 OEE_RawData_APQ 「Daily repair」 → CSV → 실시간 집계 (금형 수리이력 대시보드와 같은 계산)</div>
 </div>
 
 <script>
-const DATA = {"summary": {"period": "2025-07-01 ~ 2026-07-09", "total_cases": 4176, "unique_molds": 173, "unique_dc": 25, "total_downtime_min": 279989, "total_downtime_hr": 4666.5, "time_mean": 67.2, "time_median": 30.0, "time_std": 346.9, "time_p95": 184.0, "total_cost_usd": 1773620.0, "cost_cases": 2982, "avg_cost_usd": 595.0, "top_cause": "Core pin broken", "top_cause_pct": 12.3, "top_mold": "350", "top_mold_cnt": 308, "usl_60_z": -0.02, "pct_over_60": 18.8, "pct_over_120": 8.7}, "monthly": [{"ym": "2025-07", "cnt": 214, "time_sum": 24196.0, "time_med": 70.0, "cost_sum": 8180.0, "molds": 57}, {"ym": "2025-08", "cnt": 305, "time_sum": 35750.0, "time_med": 40.0, "cost_sum": 36202.0, "molds": 69}, {"ym": "2025-09", "cnt": 348, "time_sum": 14605.0, "time_med": 30.0, "cost_sum": 21741.0, "molds": 65}, {"ym": "2025-10", "cnt": 462, "time_sum": 16179.0, "time_med": 24.0, "cost_sum": 215061.0, "molds": 64}, {"ym": "2025-11", "cnt": 322, "time_sum": 11115.0, "time_med": 25.0, "cost_sum": 142079.0, "molds": 54}, {"ym": "2025-12", "cnt": 362, "time_sum": 12676.0, "time_med": 25.0, "cost_sum": 139460.0, "molds": 57}, {"ym": "2026-01", "cnt": 469, "time_sum": 21111.0, "time_med": 19.0, "cost_sum": 248982.0, "molds": 50}, {"ym": "2026-02", "cnt": 441, "time_sum": 10903.0, "time_med": 19.0, "cost_sum": 111801.0, "molds": 56}, {"ym": "2026-03", "cnt": 346, "time_sum": 23938.0, "time_med": 30.0, "cost_sum": 103370.0, "molds": 58}, {"ym": "2026-04", "cnt": 234, "time_sum": 25830.0, "time_med": 45.0, "cost_sum": 138966.0, "molds": 47}, {"ym": "2026-05", "cnt": 273, "time_sum": 41469.0, "time_med": 50.0, "cost_sum": 188446.0, "molds": 53}, {"ym": "2026-06", "cnt": 325, "time_sum": 33338.0, "time_med": 55.0, "cost_sum": 307118.0, "molds": 57}, {"ym": "2026-07", "cnt": 75, "time_sum": 8879.0, "time_med": 35.0, "cost_sum": 112215.0, "molds": 24}], "by_dc": [{"DC": "DC22", "cnt": 451, "time_sum": 37053.0, "time_med": 30.0, "cost_sum": 337983.0}, {"DC": "DC3", "cnt": 376, "time_sum": 16959.0, "time_med": 28.0, "cost_sum": 68352.0}, {"DC": "DC12", "cnt": 358, "time_sum": 17670.0, "time_med": 25.0, "cost_sum": 116243.0}, {"DC": "DC13", "cnt": 340, "time_sum": 14092.0, "time_med": 22.0, "cost_sum": 92341.0}, {"DC": "DC23", "cnt": 321, "time_sum": 29681.0, "time_med": 38.0, "cost_sum": 231489.0}, {"DC": "DC10", "cnt": 298, "time_sum": 17943.0, "time_med": 35.0, "cost_sum": 95018.0}, {"DC": "DC9", "cnt": 273, "time_sum": 27555.0, "time_med": 30.0, "cost_sum": 136774.0}, {"DC": "DC4", "cnt": 229, "time_sum": 19186.0, "time_med": 30.0, "cost_sum": 69974.0}, {"DC": "DC2", "cnt": 222, "time_sum": 9035.0, "time_med": 30.0, "cost_sum": 82394.0}, {"DC": "DC21", "cnt": 183, "time_sum": 10908.0, "time_med": 30.0, "cost_sum": 36367.0}, {"DC": "DC15", "cnt": 183, "time_sum": 10658.0, "time_med": 30.0, "cost_sum": 60025.0}, {"DC": "DC17", "cnt": 169, "time_sum": 23852.0, "time_med": 26.0, "cost_sum": 67292.0}, {"DC": "DC8", "cnt": 150, "time_sum": 6231.0, "time_med": 29.0, "cost_sum": 24931.0}, {"DC": "DC11", "cnt": 131, "time_sum": 6058.0, "time_med": 20.0, "cost_sum": 53340.0}, {"DC": "DC19", "cnt": 112, "time_sum": 5166.0, "time_med": 25.0, "cost_sum": 34770.0}], "by_mold": [{"Mold_no": "350", "cnt": 308, "time_sum": 12234.0, "cost_sum": 30890.0}, {"Mold_no": "321", "cnt": 215, "time_sum": 9941.0, "cost_sum": 63339.0}, {"Mold_no": "267", "cnt": 176, "time_sum": 7209.0, "cost_sum": 52906.0}, {"Mold_no": "279", "cnt": 129, "time_sum": 6486.0, "cost_sum": 35604.0}, {"Mold_no": "257", "cnt": 127, "time_sum": 4495.0, "cost_sum": 38904.0}, {"Mold_no": "280", "cnt": 121, "time_sum": 7261.0, "cost_sum": 60606.0}, {"Mold_no": "334", "cnt": 118, "time_sum": 8314.0, "cost_sum": 154913.0}, {"Mold_no": "347", "cnt": 118, "time_sum": 4888.0, "cost_sum": 33112.0}, {"Mold_no": "320", "cnt": 116, "time_sum": 4801.0, "cost_sum": 36157.0}, {"Mold_no": "359", "cnt": 112, "time_sum": 3197.0, "cost_sum": 20786.0}, {"Mold_no": "318", "cnt": 103, "time_sum": 5220.0, "cost_sum": 15763.0}, {"Mold_no": "333", "cnt": 90, "time_sum": 6102.0, "cost_sum": 59666.0}, {"Mold_no": "332", "cnt": 84, "time_sum": 16085.0, "cost_sum": 154264.0}, {"Mold_no": "348", "cnt": 84, "time_sum": 2673.0, "cost_sum": 23203.0}, {"Mold_no": "356", "cnt": 83, "time_sum": 4283.0, "cost_sum": 59180.0}], "repair_pareto": [{"Repair_type": "Disassembly, assembly 분해,조립", "cnt": 740, "time_sum": 15906.0, "cum_pct": 17.7}, {"Repair_type": "Core Pin Replacement 코어핀 교체", "cnt": 714, "time_sum": 46036.0, "cum_pct": 34.9}, {"Repair_type": "Clean dry ice 드라이 아이스 청소", "cnt": 579, "time_sum": 40925.0, "cum_pct": 48.8}, {"Repair_type": "Ejector Pin replacement 에젝터핀 교체", "cnt": 545, "time_sum": 41568.0, "cum_pct": 61.8}, {"Repair_type": "Polishing", "cnt": 486, "time_sum": 25817.0, "cum_pct": 73.5}, {"Repair_type": "Algon welding 알곤용접", "cnt": 248, "time_sum": 40303.0, "cum_pct": 79.4}, {"Repair_type": "Grinding", "cnt": 228, "time_sum": 15445.0, "cum_pct": 84.9}, {"Repair_type": "Other 다른", "cnt": 129, "time_sum": 11020.0, "cum_pct": 88.0}, {"Repair_type": "Sticking 제품 박힘", "cnt": 126, "time_sum": 10514.0, "cum_pct": 91.0}, {"Repair_type": "Leakage Test 냉각수, 윤활유 누출 확인", "cnt": 83, "time_sum": 8269.0, "cum_pct": 93.0}, {"Repair_type": "Replacing Lot Marking 로트마킹 교체", "cnt": 78, "time_sum": 3274.0, "cum_pct": 94.9}, {"Repair_type": "Discharge coating 방전 코팅", "cnt": 47, "time_sum": 1807.0, "cum_pct": 96.0}], "cause_pareto": [{"Cause_norm": "Core pin broken", "cnt": 513, "time_sum": 32017.0, "cost_sum": 25575.0, "cum_pct": 12.3}, {"Cause_norm": "Cleaning", "cnt": 462, "time_sum": 35410.0, "cost_sum": 532130.0, "cum_pct": 23.3}, {"Cause_norm": "Ejector pin broken", "cnt": 432, "time_sum": 34195.0, "cost_sum": 36841.0, "cum_pct": 33.7}, {"Cause_norm": "Disassembly", "cnt": 360, "time_sum": 6998.0, "cost_sum": 58317.0, "cum_pct": 42.3}, {"Cause_norm": "Overheat", "cnt": 176, "time_sum": 6031.0, "cost_sum": 34407.0, "cum_pct": 46.5}, {"Cause_norm": "Assembly", "cnt": 110, "time_sum": 2800.0, "cost_sum": 23068.0, "cum_pct": 49.2}, {"Cause_norm": "Crack", "cnt": 105, "time_sum": 4690.0, "cost_sum": 136377.0, "cum_pct": 51.7}, {"Cause_norm": "Sticking", "cnt": 101, "time_sum": 7031.0, "cost_sum": 36768.0, "cum_pct": 54.1}, {"Cause_norm": "Weld mark", "cnt": 66, "time_sum": 6380.0, "cost_sum": 42613.0, "cum_pct": 55.7}, {"Cause_norm": "Mold Broken", "cnt": 60, "time_sum": 5540.0, "cost_sum": 144297.0, "cum_pct": 57.1}, {"Cause_norm": "Replacing lot mark", "cnt": 50, "time_sum": 1712.0, "cost_sum": 708.0, "cum_pct": 58.3}, {"Cause_norm": "Mold crack", "cnt": 45, "time_sum": 4793.0, "cost_sum": 24697.0, "cum_pct": 59.4}], "by_shift": [{"Shift_norm": "Day", "cnt": 2634, "time_med": 30.0}, {"Shift_norm": "Night", "cnt": 1542, "time_med": 29.0}], "by_repairer": [{"Repairer": "AEKKACHAI", "cnt": 1626, "time_sum": 105460.0}, {"Repairer": "VENKI", "cnt": 1107, "time_sum": 74625.0}, {"Repairer": "Jetsadagorn", "cnt": 572, "time_sum": 31581.0}, {"Repairer": "CHINNAWUT", "cnt": 294, "time_sum": 22624.0}, {"Repairer": "SARUNYU", "cnt": 231, "time_sum": 8013.0}, {"Repairer": "CHINAWUT", "cnt": 152, "time_sum": 6867.0}, {"Repairer": "LEE FIRSY", "cnt": 49, "time_sum": 4033.0}, {"Repairer": "NEANG", "cnt": 40, "time_sum": 3319.0}, {"Repairer": "KIRAN", "cnt": 20, "time_sum": 396.0}, {"Repairer": "NITIPAN", "cnt": 16, "time_sum": 1030.0}, {"Repairer": "KORRAKOD", "cnt": 12, "time_sum": 747.0}, {"Repairer": "CHAWANWIT", "cnt": 11, "time_sum": 308.0}, {"Repairer": "SARUNYA", "cnt": 9, "time_sum": 324.0}, {"Repairer": "TEERAMETH", "cnt": 6, "time_sum": 157.0}, {"Repairer": "THEERAMET", "cnt": 5, "time_sum": 302.0}]};
-const F=n=>Number(n).toLocaleString();
-const FK=n=>n>=1000?(n/1000).toFixed(1)+'k':F(n);
-const S=DATA.summary;
+/* ===== 데이터 계층 — 금형 수리이력 대시보드(STC_Mold_Repair_Dashboard.html)와 같은 코드 ===== */
+/* =====================================================================
+   0. 데이터 원천 — OEE_RawData_APQ (웹에 게시된 CSV)
+   ===================================================================== */
+const PUB = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6U8gG0Mr3oJ-5XOOzr7Eh_oZGc-BGHFG0n1__eor4Zc8aJaMuf01NXCAHJECH6U8aUvtnQGLKD5-_/pub';
+const FILE_ID = '1m-b3Ur5VhewDhM0cbv39q8cuMm9Y0asyH1NyV0coDD4';   /* OEE_RawData_APQ */
+const GID = { repair:'936303810', A:'345197688', P:'287133604' };
+const TAB = { repair:'Daily repair', A:'A_가동률', P:'P_성능' };
+const csvUrl = gid => `${PUB}?gid=${gid}&single=true&output=csv&t=${Date.now()}`;
+/* 읽는 순서: ① gid → ② 게시 CSV(탭 이름) → ③ gviz(탭 이름)
+   탭을 지우고 다시 만들어 gid 가 바뀌어도 탭 이름이 같으면 그대로 읽힌다 */
+const srcUrls = k => [ csvUrl(GID[k]),
+  `${PUB}?output=csv&sheet=${encodeURIComponent(TAB[k])}&t=${Date.now()}`,
+  `https://docs.google.com/spreadsheets/d/${FILE_ID}/gviz/tq?tqx=out:csv&headers=0&sheet=${encodeURIComponent(TAB[k])}` ];
 
-// palette
-const AC='#00d3a7',AC2='#3fb7ff',WARN='#ffb02e',BAD='#ff5d5d',GRID='#232a36',SUB='#8b98a9';
-Chart.defaults.color=SUB; Chart.defaults.font.family="'SF Mono',monospace"; Chart.defaults.font.size=11;
-Chart.defaults.plugins.legend.labels.boxWidth=10;
-
-// header
-hd_period.textContent=S.period;
-hd_cnt.textContent=F(S.total_cases);
-hd_mold.textContent=S.unique_molds;
-
-// KPI cards
-const kpis=[
- {l:'총 수리건수',v:F(S.total_cases),u:'건',n:'유효 이슈 기준',c:''},
- {l:'총 다운타임',v:F(S.total_downtime_hr),u:'시간',n:'수리시간 합계',c:'a2'},
- {l:'건당 중앙값',v:S.time_median,u:'분',n:'평균 '+S.time_mean+'분',c:''},
- {l:'총 수리비용',v:'$'+FK(S.total_cost_usd),u:'',n:F(S.cost_cases)+'건 집계',c:'w'},
- {l:'60분 초과율',v:S.pct_over_60,u:'%',n:'목표시간 USL 초과',c:S.pct_over_60>15?'b':''},
- {l:'최다 고장금형',v:'#'+S.top_mold,u:'',n:S.top_mold_cnt+'건 반복',c:'b'},
+/* 작업유형 코드 (Repair-type 탭과 같음) */
+const RT = [['RT001','Ejector Pin replacement 에젝터핀 교체'],['RT002','Ejector Pin Repair 이젝터 핀 수리'],['RT003','Core Pin Replacement 코어핀 교체'],['RT004','Algon welding 알곤용접'],['RT005','Polishing'],['RT006','Disassembly, assembly 분해,조립'],['RT007','Sleeve cooling 슬리브 냉각'],['RT008','Core cooling 코어 냉각'],['RT009','Slide Repair 슬라이드 수리'],['RT010','O-ring replacement 오링 교체'],['RT011','Laser welding 레이저 용접'],['RT012','Ejector base repair 에젝터판 수리'],['RT013','Replacing Lot Marking 로트마킹 교체'],['RT014','Discharge coating 방전 코팅'],['RT015','Replacing the cooling hose 냉각 호스 교체'],['RT016','Mold cleaning 금형 청소'],['RT017','Clean dry ice 드라이 아이스 청소'],['RT018','Cleaning the cleaning agent 세척제 청소'],['RT019','Leakage Test 냉각수, 윤활유 누출 확인'],['RT020','Sticking 제품 박힘'],['RT021','Mold Adjustment 치수 보정 또는 조정'],['RT022','Replacing slide 슬라이드 교체'],['RT023','Other 다른'],['RT024','PM Mold'],['RT025','Grinding'],['RT026','Gun Drill'],['RT027','Lapping'],['RT028','Lathe M/C'],['RT029','Milling'],['RT030','EDM coating'],['RT031','Fitting']];
+const RT_NAME = Object.fromEntries(RT);
+const RT_SHORT = c => { const n = RT_NAME[c]||c; const k = n.match(/[가-힣][가-힣,\s·]*$/); return k ? k[0].trim() : n; };
+/* 계획·예방으로 보는 기본 코드 (청소·PM·누수점검·로트마킹 교체) — 나머지는 고장(비계획) */
+const PLAN_DEF = ['RT013','RT016','RT017','RT018','RT019','RT024'];
+/* 원인 문장 → 원인 그룹 (자유 입력 700여 가지를 묶는다) */
+const CAUSE = [
+  ['핀 높이 불량', /pin ?(low|high)|high(er)? pin|heigher|lower pin|pins? (is |are )?(high|low|lower|higher)|pin height|pinlow/],
+  ['코어핀 파손', /core ?pin|corepin|insert pin/],
+  ['이젝터핀 파손', /e-?jector|e\/p|\bep\b/],
+  ['크랙·깨짐', /crack|broken|break|chip|collaps/],
+  ['소착·박힘', /stick|solder|drag/],
+  ['청소', /clean|dirty|dust|carbon|residue|contamina/],
+  ['분해·조립', /dis+as?embl|dissembly|assembl/],
+  ['과열', /overheat|over heat|\bhot\b/],
+  ['누수·냉각', /leak|water|cool/],
+  ['웰드마크·기공', /weld mark|porosit|porocit|blow ?hole|\bgas\b/],
+  ['부식', /corros|rust/],
+  ['로트마크', /lot ?mark|date ?mark/],
+  ['찍힘·스크래치·변형', /scr?a?c?t?ch|scartch|sctatch|dent|damage|deform|bend|wear|deflect/],
+  ['슬라이드', /slide/],
+  ['치수·조정', /dimension|size|adjust|thick|datum|spec/],
+  ['버·플래시', /flash|burr|\bfin\b/],
+  ['PM·점검', /\bpm\b|check|inspect/]
 ];
-kpi_row.innerHTML=kpis.map(k=>`<div class="kpi ${k.c}"><div class="lab">${k.l}</div><div class="val">${k.v}<span class="unit"> ${k.u}</span></div><div class="note">${k.n}</div></div>`).join('');
+const causeGroup = s => { s = String(s||'').toLowerCase(); if(!s.trim()) return '미기재'; for(const [n,re] of CAUSE) if(re.test(s)) return n; return '기타'; };
+/* OEE 금형 계통 로스 (분류마스터의 「금형」 카테고리 8종) · 금형교체는 따로 */
+/* 설비별 M/C Rate (THB/분) — MTTR 화면과 같은 기본값 · 같은 저장값(stc_mc_rate)을 함께 씀 */
+const RATE_DEF = {1:8.91375,2:6.666667,3:14.159583,4:14.159583,5:14.159583,6:14.159583,7:14.159583,8:11.086667,9:14.159583,10:14.159583,11:16.472083,12:16.472083,13:14.159583,14:16.7825,15:16.7825,16:6.666667,17:6.666667,18:8.572083,19:8.8825,20:19.871042,21:16.7825,22:14.159583,23:14.159583};
+function getRates(){ const r = Object.assign({}, RATE_DEF); try{ const j=JSON.parse(localStorage.getItem('stc_mc_rate')||'null'); if(j) Object.assign(r,j); }catch(e){} return r; }
+const rateOf = dc => { const n = +String(dc).replace(/\D/g,''); return +getRates()[n] || 0; };
+const OEE_MOLD = ['금형수리','금형파손','핀파손','슬라이드코어수리','청소','금형냉각라인','제품소착','로트마크, 사상'];
 
-// insights
-ov_insight.innerHTML=`<div class="h">핵심 요약 · Executive Summary</div>분석기간 동안 <b>${F(S.total_cases)}건</b>의 금형 수리가 발생했으며 총 <b>${F(S.total_downtime_hr)}시간</b>의 설비 손실과 <b>$${F(S.total_cost_usd)}</b>의 비용이 집계되었다. 최다 원인은 <b>${S.top_cause}</b>(${S.top_cause_pct}%)이며, 금형 <b>#${S.top_mold}</b>이 ${S.top_mold_cnt}건으로 반복 고장이 가장 심하다. 건당 소요시간은 중앙값 ${S.time_median}분이지만 표준편차가 ${S.time_std}분으로 편차가 커, 장시간 수리 건에 대한 표준화가 개선 포인트다.`;
+/* =====================================================================
+   1. 공통 도구
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const f0 = v => v==null||isNaN(v) ? '–' : Math.round(v).toLocaleString();
+const f1 = (v,d=1) => v==null||isNaN(v) ? '–' : Number(v).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+const pc = v => v==null||isNaN(v) ? '–' : f1(v*100,1)+'%';
+const num = v => { if(v==null) return NaN; const s=String(v).replace(/[,\s฿$]/g,''); if(s===''||s==='-') return NaN; return parseFloat(s); };
+const LS = (k,d) => { try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } };
+const SS = (k,v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+const median = a => { if(!a.length) return NaN; const s=a.slice().sort((x,y)=>x-y), m=s.length>>1; return s.length%2 ? s[m] : (s[m-1]+s[m])/2; };
+const normDc = s => { s=String(s||'').trim().toUpperCase().replace(/\s+/g,''); const m=s.match(/^DC0*(\d+)$/); return m ? 'DC'+(+m[1]) : s; };
+const normKey = s => String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 
-tr_insight.innerHTML=`<div class="h">추이 관점</div>수리 물량은 <b>2025-10(462건)·2026-01(469건)</b>에 정점을 보였고, 최근 수리시간 중앙값이 다시 상승하는 구간이 있어 관리상태 점검이 필요하다. 비용은 특정 월에 <b>대형 금형손상</b>이 집중되며 급증한다.`;
-
-pa_insight.innerHTML=`<div class="h">파레토 관점 · Vital Few</div>상위 5개 수리유형(분해조립·코어핀·드라이아이스청소·에젝터핀·연마)이 전체의 <b>73.5%</b>를 차지한다. 빈도 대비 <b>알곤용접</b>은 건수는 적으나 총 소요시간이 매우 커, 시간손실 관점의 우선순위가 다르다는 점에 주목.`;
-
-eq_insight.innerHTML=`<div class="h">설비/금형 관점</div><b>DC22</b>가 건수·비용 모두 1위(451건, $${F(337983)})로 집중 관리 대상이다. 금형 <b>#350</b>은 308건으로 최다 반복 고장이나 건당 시간·비용은 낮아 경미·반복형이며, <b>#334·#332</b>는 건수 대비 비용이 매우 높은 <b>고비용 손상형</b>이다.`;
-
-op_insight.innerHTML=`<div class="h">운영 관점</div>주간 수리가 야간의 약 1.7배이며 건당 소요시간은 주야 유사하다. 담당자 <b>AEKKACHAI·VENKI</b> 2명이 전체의 65%를 처리해 <b>업무 편중</b>이 뚜렷하다 — 인력 리스크 및 교육 필요.`;
-
-// ---- charts ----
-const M=DATA.monthly, months=M.map(x=>x.ym.slice(2));
-const gridOpt={grid:{color:GRID},border:{color:GRID}};
-const noGrid={grid:{display:false}};
-
-new Chart(c_ovmonthly,{data:{labels:months,datasets:[
- {type:'bar',label:'수리건수',data:M.map(x=>x.cnt),backgroundColor:AC+'cc',yAxisID:'y',borderRadius:3},
- {type:'line',label:'다운타임(h)',data:M.map(x=>Math.round(x.time_sum/60)),borderColor:AC2,backgroundColor:AC2,yAxisID:'y1',tension:.35,pointRadius:2}
-]},options:{maintainAspectRatio:false,scales:{x:noGrid,y:{...gridOpt,position:'left'},y1:{...noGrid,position:'right'}}}});
-
-new Chart(c_ovcause,{type:'bar',data:{labels:DATA.cause_pareto.slice(0,6).map(x=>x.Cause_norm),datasets:[{data:DATA.cause_pareto.slice(0,6).map(x=>x.cnt),backgroundColor:[BAD,AC,WARN,AC2,'#a78bfa','#f472b6'],borderRadius:4}]},options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:gridOpt,y:noGrid}}});
-
-// trend
-const meanCnt=M.reduce((a,b)=>a+b.cnt,0)/M.length;
-new Chart(c_trcnt,{data:{labels:months,datasets:[
- {type:'line',label:'건수',data:M.map(x=>x.cnt),borderColor:AC,backgroundColor:AC+'22',fill:true,tension:.3,pointRadius:3},
- {type:'line',label:'평균',data:M.map(()=>Math.round(meanCnt)),borderColor:SUB,borderDash:[5,4],pointRadius:0}
-]},options:{maintainAspectRatio:false,scales:{x:noGrid,y:gridOpt}}});
-
-new Chart(c_trtime,{data:{labels:months,datasets:[
- {type:'line',label:'중앙값(분)',data:M.map(x=>x.time_med),borderColor:WARN,backgroundColor:WARN+'22',fill:true,tension:.3,pointRadius:3},
- {type:'line',label:'목표 60분(USL)',data:M.map(()=>60),borderColor:BAD,borderDash:[5,4],pointRadius:0}
-]},options:{maintainAspectRatio:false,scales:{x:noGrid,y:gridOpt}}});
-
-new Chart(c_trcost,{type:'bar',data:{labels:months,datasets:[{label:'수리비($)',data:M.map(x=>x.cost_sum),backgroundColor:M.map(x=>x.cost_sum>200000?BAD+'cc':AC2+'cc'),borderRadius:3}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:noGrid,y:{...gridOpt,ticks:{callback:v=>'$'+FK(v)}}}}});
-
-// pareto builder
-function pareto(cv,rows,labelKey){
- const labels=rows.map(r=>r[labelKey]);
- new Chart(cv,{data:{labels,datasets:[
-  {type:'bar',label:'건수',data:rows.map(r=>r.cnt),backgroundColor:AC+'cc',yAxisID:'y',borderRadius:3},
-  {type:'line',label:'누적%',data:rows.map(r=>r.cum_pct),borderColor:WARN,backgroundColor:WARN,yAxisID:'y1',tension:.2,pointRadius:3}
- ]},options:{maintainAspectRatio:false,scales:{
-  x:{...noGrid,ticks:{maxRotation:60,minRotation:40,font:{size:9}}},
-  y:{...gridOpt,position:'left'},
-  y1:{...noGrid,position:'right',min:0,max:100,ticks:{callback:v=>v+'%'}}
- }}});
+/* 날짜·시간 파싱 — 구글시트 CSV 는 보이는 형식 그대로 나온다 (yyyy-mm-dd · m/d/yyyy · 태국력 25xx 대응) */
+function pDate(v){
+  if(v==null) return null; const s=String(v).trim(); if(!s) return null;
+  let m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+  if(m){ let y=+m[1]; if(y>2400) y-=543; return new Date(y, +m[2]-1, +m[3]); }
+  m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/);
+  if(m){ let a=+m[1], b=+m[2], y=+m[3]; if(y<100) y+=2000; if(y>2400) y-=543; let mo=a, d=b; if(a>12){ d=a; mo=b; } return new Date(y, mo-1, d); }
+  const MO = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+  m = s.match(/^(\d{1,2})[-\s\/.]([A-Za-z]{3})[A-Za-z]*[-\s\/.,]+(\d{2,4})/);                    /* 1-Jul-2025 */
+  if(m && MO[m[2].toLowerCase()]){ let y=+m[3]; if(y<100) y+=2000; if(y>2400) y-=543; return new Date(y, MO[m[2].toLowerCase()]-1, +m[1]); }
+  m = s.match(/^([A-Za-z]{3})[A-Za-z]*[-\s\/.]+(\d{1,2})[,\s\/.-]+(\d{2,4})/);                      /* Jul 1, 2025 */
+  if(m && MO[m[1].toLowerCase()]){ let y=+m[3]; if(y<100) y+=2000; if(y>2400) y-=543; return new Date(y, MO[m[1].toLowerCase()]-1, +m[2]); }
+  const n = num(s); if(!isNaN(n) && n>30000 && n<80000) return new Date(Math.round((n-25569)*864e5) + new Date().getTimezoneOffset()*6e4);
+  return null;
 }
-pareto(c_paRepair,DATA.repair_pareto,'Repair_type');
-pareto(c_paCause,DATA.cause_pareto,'Cause_norm');
+function pTime(v){   /* → 분 (0~1440) */
+  if(v==null) return null; const s=String(v).trim(); if(!s) return null;
+  if(/^(1899|1900)-/.test(s)) return null;        /* 1900-01-09 같은 깨진 값 */
+  let m = s.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
+  if(m){ let h=+m[1]; const mi=+m[2]; if(m[4]){ const pm=/pm/i.test(m[4]); if(pm&&h<12) h+=12; if(!pm&&h===12) h=0; } return h*60+mi; }
+  const n=num(s); if(!isNaN(n) && n>=0 && n<1) return Math.round(n*1440);
+  return null;
+}
+const dayKey = d => d ? d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0') : '';
+const addDays = (d,n) => new Date(d.getFullYear(), d.getMonth(), d.getDate()+n);
+/* STC 주차 = 수요일~화요일 · 라벨 = (날짜+5일)의 ISO 주차 (OEE 원본 「주차」 열과 100% 일치 확인) */
+function stcWeek(d){
+  const t = addDays(d,5), x = new Date(Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()));
+  const dow = x.getUTCDay()||7; x.setUTCDate(x.getUTCDate()+4-dow);
+  const y = x.getUTCFullYear(), w = Math.ceil(((x - Date.UTC(y,0,1))/864e5 + 1)/7);
+  return { y, w, k: y*100+w };
+}
+function weekStart(k){   /* 주차 키 → 그 주 수요일 */
+  const y=Math.floor(k/100), w=k%100, j4=new Date(y,0,4), dow=(j4.getDay()||7);
+  const mon = addDays(j4, 1-dow + (w-1)*7);   /* ISO 주 월요일 */
+  return addDays(mon,-5);                      /* 수요일 = 월요일-5 */
+}
+let MAXY = 2026;
+const wkLabel = k => { const y=Math.floor(k/100), w=k%100; return (y===MAXY ? '' : String(y).slice(2)+'-') + 'W'+w; };
+const wkRangeTxt = k => { const s=weekStart(k), e=addDays(s,6); return dayKey(s).slice(5)+'~'+dayKey(e).slice(5); };
 
-// cause table
-(function(){
- const rows=DATA.cause_pareto;
- const mx=Math.max(...rows.map(r=>r.cnt));
- let h='<table><thead><tr><th>#</th><th>원인 Cause</th><th class="num">건수</th><th class="num">시간(분)</th><th class="num">비용($)</th></tr></thead><tbody>';
- rows.forEach((r,i)=>{h+=`<tr><td class="rank">${i+1}</td><td class="bar-cell"><div class="bar" style="width:${r.cnt/mx*100}%"></div><span>${r.Cause_norm}</span></td><td class="num">${F(r.cnt)}</td><td class="num">${F(r.time_sum)}</td><td class="num">$${F(r.cost_sum)}</td></tr>`});
- h+='</tbody></table>'; t_cause.innerHTML=h;
-})();
+/* =====================================================================
+   2. 상태 · 설정
+   ===================================================================== */
+let ROWS=[], ISS=[], OEE=[], SHOT=[], WEEKS=[], DQ={};
+const ST = {
+  plan: LS('stc_mold_plan', PLAN_DEF),
+  rpDays: LS('stc_mold_rpdays', 7),
+  usl: LS('stc_mold_usl', 60)
+};
+const isUnpl = c => ST.plan.indexOf(c) < 0;
 
-// mold table
-(function(){
- const rows=DATA.by_mold; const mx=Math.max(...rows.map(r=>r.cnt));
- let h='<table><thead><tr><th>#</th><th>금형 Mold</th><th class="num">건수</th><th class="num">시간</th><th class="num">비용($)</th><th>유형</th></tr></thead><tbody>';
- rows.forEach((r,i)=>{
-   const cpc=r.cost_sum/r.cnt;
-   const tag=cpc>800?'<span class="chip hi">고비용</span>':(r.cnt>150?'<span class="chip mid">반복다발</span>':'<span class="chip lo">경미</span>');
-   h+=`<tr><td class="rank">${i+1}</td><td class="bar-cell"><div class="bar" style="width:${r.cnt/mx*100}%"></div><span>#${r.Mold_no}</span></td><td class="num">${F(r.cnt)}</td><td class="num">${F(r.time_sum)}</td><td class="num">$${F(r.cost_sum)}</td><td>${tag}</td></tr>`});
- h+='</tbody></table>'; t_mold.innerHTML=h;
-})();
+/* =====================================================================
+   3. 읽기
+   ===================================================================== */
+const SRC_USED = {};
+async function getCsv(k, must){
+  let last = null;
+  for(const [i,u] of srcUrls(k).entries()){
+    try{
+      const r = await fetch(u, {cache:'no-store'});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const t = await r.text();
+      if(/^\s*<(!doctype|html)/i.test(t)) throw new Error('CSV 대신 웹페이지가 왔습니다 (탭이 웹 게시에 포함되지 않음)');
+      const aoa = Papa.parse(t, {skipEmptyLines:true}).data;
+      /* gid 가 다른 탭을 가리키게 된 경우(탭을 지우고 다시 만듦) — 머리줄로 확인 */
+      if(!aoa.slice(0,6).some(r=>r.some(c=>String(c).trim()===must))) throw new Error(`「${must}」 머리줄이 없음`);
+      SRC_USED[k] = ['gid','탭 이름으로','gviz로'][i];
+      return aoa;
+    }catch(e){ last = e; }
+  }
+  throw last;
+}
+/* 머리줄 찾기: 'Issue_no' 가 있는 줄 (원본은 1행 제목 · 2행 머리줄) */
+/* 금형팀 원본 Daily repair 열 순서 (A~AL) · Cause1~4 를 뺀 정리본 순서 — 머리줄 칸이 비어 있거나 글자가 조금 달라도 위치로 맞춘다 */
+const REPAIR_LAYOUTS = [
+  ['Issue_no','Run_Doc','Run_Number','Shift','Request_date','Request_Time','Start_Date','Week','Start_Time','Stop','Start_afterstop','Finished_Date','Finished','Cause1','Cause2','Cause3','Cause4','DC','Mold_no','Repeat','Part code','Part name','__TYPE','Time_Min','Cause','Detail of the repair','Cav.Repair','Location repair','Spare part',"Qty's",'Unit Price','฿','$','Repair price','Accept','Customer','Requestor','Repairer'],
+  ['Issue_no','Run_Doc','Run_Number','Shift','Request_date','Request_Time','Start_Date','Week','Start_Time','Stop','Start_afterstop','Finished_Date','Finished','DC','Mold_no','Repeat','Part code','Part name','__TYPE','Time_Min','Cause','Detail of the repair','Cav.Repair','Location repair','Spare part',"Qty's",'Unit Price','฿','$','Repair price','Accept','Customer','Requestor','Repairer']
+];
+const nk = s => String(s||'').toLowerCase().replace(/[^a-z0-9฿$]/g,'');
+function toObjects(aoa, must){
+  const mk = nk(must);
+  let h = aoa.findIndex(r => r.some(c => nk(c)===mk));
+  if(h<0) h = 0;
+  let H = aoa[h].map(c=>String(c).replace(/\s+/g,' ').trim());
+  if(mk==='issueno'){
+    /* 머리줄 이름을 표준 이름으로 맞춤: ① 글자 정규화로 같은 이름 ② 빈 칸·모르는 이름은 원본 열 순서(위치)로 */
+    const score = L => L.reduce((a,n,i)=> a + (H[i] && (nk(H[i])===nk(n) || (n==='__TYPE' && /แก้ไข/.test(H[i])))?1:0), 0);
+    const L = REPAIR_LAYOUTS.map(l=>[l,score(l)]).sort((x,y)=>y[1]-x[1])[0][0];
+    const std = {}; L.forEach(n=>{ std[nk(n)] = n; });
+    H = H.map((x,i)=>{ if(/แก้ไข/.test(x)) return '__TYPE'; const m = std[nk(x)]; if(m) return m; if(!x.trim() && L[i]) return L[i]; return x; });
+    /* 이름이 하나도 안 맞은 표준 열은 위치로 채움 */
+    L.forEach((n,i)=>{ if(H.indexOf(n)<0 && i<H.length && !REPAIR_LAYOUTS.some(l=>l.indexOf(H[i])>=0)) H[i] = n; });
+  }
+  return aoa.slice(h+1).map(r => { const o={}; H.forEach((k,i)=>{ if(k && !(k in o)) o[k]=r[i]; }); o.__H=H; return o; });
+}
+function col(o, ...names){ for(const n of names){ if(o[n]!==undefined) return o[n]; } return undefined; }
 
-// dc chart + table
-(function(){
- const rows=DATA.by_dc;
- new Chart(c_eqdc,{data:{labels:rows.map(r=>r.DC),datasets:[
-  {type:'bar',label:'건수',data:rows.map(r=>r.cnt),backgroundColor:AC+'cc',yAxisID:'y',borderRadius:3},
-  {type:'line',label:'다운타임(h)',data:rows.map(r=>Math.round(r.time_sum/60)),borderColor:AC2,yAxisID:'y1',tension:.3,pointRadius:2}
- ]},options:{maintainAspectRatio:false,scales:{x:{...noGrid,ticks:{font:{size:9}}},y:{...gridOpt},y1:{...noGrid,position:'right'}}}});
- const mx=Math.max(...rows.map(r=>r.cnt));
- let h='<table><thead><tr><th>설비 DC</th><th class="num">건수</th><th class="num">총시간(분)</th><th class="num">중앙값</th><th class="num">비용($)</th></tr></thead><tbody>';
- rows.forEach(r=>{h+=`<tr><td class="bar-cell"><div class="bar" style="width:${r.cnt/mx*100}%"></div><span>${r.DC}</span></td><td class="num">${F(r.cnt)}</td><td class="num">${F(r.time_sum)}</td><td class="num">${r.time_med}</td><td class="num">$${F(r.cost_sum)}</td></tr>`});
- h+='</tbody></table>'; t_dc.innerHTML=h;
-})();
+/* 「수리 계기」 열 (선택) — 고장 / PM / 품질 · 없으면 작업유형으로 계획·고장 판정 */
+let HAS_TRIG = false;
+function trigOf(v){ const t = String(v||'').trim().toLowerCase(); if(!t) return '';
+  if(/pm|계획|예방|정기|plan|prevent|shot/.test(t)) return 'plan'; if(/품질|quality|ng|불량/.test(t)) return 'quality'; return 'break'; }
+function buildRepair(objs){
+  const H = objs.length ? objs[0].__H : [];
+  const typeCol = H.indexOf('__TYPE')>=0 ? '__TYPE' : (H.find(h=>/แก้ไข/.test(h)) || H[18]);
+  const nameToCode = {}; RT.forEach(([c,n])=>{ nameToCode[normKey(n)] = c; });
+  const codeOf = s => { const k=normKey(s); if(!k) return ''; if(nameToCode[k]) return nameToCode[k];
+    for(const [c,n] of RT){ const kn=normKey(n); if(kn.startsWith(k) || k.startsWith(kn.slice(0,8)) || kn.endsWith(k)) return c; }
+    const hk = String(s).replace(/[^가-힣]/g,''); if(hk) for(const [c,n] of RT){ if(n.replace(/[^가-힣]/g,'').indexOf(hk)>=0) return c; }
+    return 'RT023'; };
+  const out=[]; let LAST=null; DQ = { total:0, badDate:[], neg:[], long:[], dupGroups:0, dupRows:0, noMold:0, noDc:0, unkDc:[], noType:0, dc14:[], brokenTime:[], noDate:[], seen:0, sample:'' };
+  objs.forEach(o=>{
+    DQ.seen++; if(!DQ.hdr) DQ.hdr = H; if(!DQ.sample) DQ.sample = H.slice(0,8).map(h=>h+'='+String(o[h]??'')).join(' · ');
+    const iss = String(col(o,'Issue_no')||'').trim(); if(!/^STC/i.test(iss)) return;
+    DQ.total++;
+    let rq = pDate(col(o,'Request_date')), sd = pDate(col(o,'Start_Date')), fd = pDate(col(o,'Finished_Date'));
+    /* 의뢰일과 시작일이 60일 넘게 다르면 둘 중 하나가 오타 — 바로 앞 줄 날짜에 가까운 쪽 (첫 줄이면 의뢰번호 연월과 맞는 쪽) */
+    if(rq && sd && Math.abs(sd-rq) > 60*864e5){
+      DQ.badDate.push(iss);
+      const ym = (iss.match(/IN(\d{2})(\d{2})/)||[]), yy = ym[1] ? 2000+ +ym[1] : 0, mm = ym[2] ? +ym[2] : 0;
+      const ok = d => d.getFullYear()===yy && d.getMonth()+1===mm;
+      const good = LAST ? (Math.abs(sd-LAST) < Math.abs(rq-LAST) ? sd : rq) : (ok(sd) && !ok(rq) ? sd : rq);
+      if(good===sd){ rq = sd; } else { const sh = rq - sd; sd = rq; if(fd) fd = new Date(+fd + sh); }
+    }
+    if(!rq) rq = sd; if(!rq){ DQ.noDate.push(String(col(o,'Request_date')||'')+' / '+String(col(o,'Start_Date')||'')); return; } LAST = rq;
+    const st = pTime(col(o,'Start_Time')), ft = pTime(col(o,'Finished')), rt = pTime(col(o,'Request_Time'));
+    if(col(o,'Finished') && ft==null && /^(1899|1900)/.test(String(col(o,'Finished')))) DQ.brokenTime.push(iss);
+    let S = sd && st!=null ? new Date(+sd + st*6e4) : null, E = fd && ft!=null ? new Date(+fd + ft*6e4) : null;
+    if(S && E && E < S && +fd===+sd) E = new Date(+E + 864e5);
+    let tm = num(col(o,'Time_Min'));
+    if(!isNaN(tm) && tm < 0){ DQ.neg.push(iss); tm = S && E ? (E-S)/6e4 : NaN; }
+    if(isNaN(tm) && S && E){ tm = (E-S)/6e4; if(tm > 1440){ DQ.calcLong = (DQ.calcLong||[]).concat(iss); tm = 0; } }   /* Time_Min 빈칸 + 시작~종료가 24h 넘으면 날짜 오타로 보고 0 (예: 02-12 → 05-12) */
+    const dc = normDc(col(o,'DC'));
+    if(!dc) DQ.noDc++; else if(!/^DC\d+$/.test(dc)) DQ.unkDc.push(iss+' '+dc); else if(dc==='DC14') DQ.dc14.push(iss);
+    let mold = String(col(o,'Mold_no')||'').trim(); if(/^\d+(\.0+)?$/.test(mold)) mold = String(parseInt(mold)); if(!mold) DQ.noMold++;
+    const tname = String(o[typeCol]||'').replace(/\s+/g,' ').trim(); if(!tname) DQ.noType++;
+    const code = tname ? codeOf(tname) : 'RT023';
+    const sh = String(col(o,'Shift')||'').trim().toLowerCase();
+    const wk = stcWeek(rq);
+    out.push({ iss, rq, wk:wk.k, y:wk.y, shift: sh==='night'?'야간':sh==='day'?'주간':(sh||'-'),
+      rqMin: rt, S, E, tm: isNaN(tm)?0:tm, dc, mold, part:String(col(o,'Part code')||'').trim(), pname:String(col(o,'Part name')||'').replace(/\s+/g,' ').trim(),
+      code, tname, cause:String(col(o,'Cause')||'').trim(), cg:causeGroup(col(o,'Cause')), detail:String(col(o,'Detail of the repair')||'').trim(),
+      cav:num(col(o,'Cav.Repair')), loc:String(col(o,'Location repair')||'').trim(), spare:String(col(o,'Spare part')||'').trim(), qty:num(col(o,"Qty's")),
+      partsCost:num(col(o,'฿')), price:num(col(o,'Repair price')), cus:String(col(o,'Customer')||col(o,'Accept')||'').trim(),
+      req:String(col(o,'Requestor')||'').trim(), rep:String(col(o,'Repairer')||'').trim().toUpperCase(), trig:trigOf(col(o,'수리 계기','수리계기','Trigger','Repair trigger','Repair Trigger')) });
+  });
+  /* 같은 의뢰 · 같은 시작~종료 · 같은 시간 → 시간·수리비를 줄 수로 나눈다 */
+  const grp = {};
+  out.forEach(r=>{ const k = r.iss+'|'+(r.S?+r.S:'')+'|'+(r.E?+r.E:'')+'|'+r.tm; (grp[k]=grp[k]||[]).push(r); });
+  Object.values(grp).forEach(g=>{ const n=g.length; if(n>1 && g[0].tm>0){ DQ.dupGroups++; DQ.dupRows+=n-1; }
+    g.forEach(r=>{ r.min = r.tm/n; r.cost = (isNaN(r.price)?0:r.price)/(n>1&&r.tm>0?n:1); r.dupN = n; }); });
+  out.forEach(r=>{ if(r.min>1440) DQ.long.push(r.iss); });
+  MAXY = Math.max(...out.map(r=>r.y), 2026);
+  HAS_TRIG = out.some(r=>r.trig);
+  return out;
+}
+/* 의뢰(Issue) 단위로 묶기 */
+function buildIssues(rows){
+  const m = new Map();
+  rows.forEach(r=>{
+    let x = m.get(r.iss);
+    if(!x){ x = { iss:r.iss, rq:r.rq, wk:r.wk, dc:r.dc, mold:r.mold, pname:r.pname, part:r.part, cus:r.cus, shift:r.shift, rows:[], min:0, cost:0, codes:new Set(), cgs:new Set(), S:r.S, E:r.E, rqMin:r.rqMin, reps:new Set() }; m.set(r.iss,x); }
+    x.rows.push(r); x.min += r.min; x.cost += r.cost; x.codes.add(r.code); x.cgs.add(r.cg); if(r.rep) x.reps.add(r.rep);
+    if(r.S && (!x.S || r.S < x.S)) x.S = r.S; if(r.E && (!x.E || r.E > x.E)) x.E = r.E;
+    if(!x.mold && r.mold) x.mold = r.mold; if(!x.dc && r.dc) x.dc = r.dc;
+  });
+  const arr = [...m.values()].sort((a,b)=>a.rq-b.rq || (a.S||0)-(b.S||0));
+  arr.forEach(x=>{ x.wait = x.S && x.rqMin!=null ? (x.S - (+x.rq + x.rqMin*6e4))/6e4 : NaN; if(x.wait<0 || x.wait>7*1440) x.wait = NaN; });
+  return arr;
+}
+function flagIssues(){   /* 계획/고장 · 재수리 (설정이 바뀔 때마다 다시)
+     재수리 = 고장 수리 중, 같은 금형에 같은 고장 작업(작업코드)이 N일 안에 다시 들어온 의뢰 */
+  const last = {};
+  ISS.forEach(x=>{
+    const tr = x.rows.map(r=>r.trig).filter(Boolean);
+    x.trig = tr.length ? (tr.indexOf('break')>=0 ? 'break' : tr.indexOf('quality')>=0 ? 'quality' : 'plan') : '';
+    x.unpl = x.trig ? x.trig!=='plan' : [...x.codes].some(isUnpl);
+    x.repeat = false; x.prev = null; x.rpCodes = [];
+    if(!x.mold || !x.unpl) return;
+    [...x.codes].filter(isUnpl).forEach(c=>{ const p = last[x.mold+'|'+c];
+      if(p && (x.rq - p.rq) <= ST.rpDays*864e5){ x.repeat = true; x.rpCodes.push(c); if(!x.prev || p.rq > x.prev.rq) x.prev = p; } });
+    [...x.codes].filter(isUnpl).forEach(c=>{ last[x.mold+'|'+c] = x; });
+  });
+}
+function buildOee(aoa){
+  const objs = toObjects(aoa,'일자'); const out=[];
+  objs.forEach(o=>{ const d=pDate(o['일자']); if(!d) return; const dc=normDc(o['설비명']); if(!/^DC\d+$/.test(dc)) return;
+    let mold=0; OEE_MOLD.forEach(k=>{ const v=num(o[k]); if(!isNaN(v)) mold+=v; });
+    const chg=num(o['금형교체']); const run=num(o['가동시간_분']);
+    const mn = String(o['Mold Number']||o['edition no.']||'').trim();
+    out.push({ d, dk:dayKey(d), wk:stcWeek(d).k, dc, mold, chg:isNaN(chg)?0:chg, run:isNaN(run)?0:run, pin:num(o['핀파손'])||0, moldNo:String(o['Mold Number']||'').trim() });
+  });
+  return out;
+}
+function buildShot(aoa){
+  const objs = toObjects(aoa,'일자'); const out=[];
+  objs.forEach(o=>{ const d=pDate(o['일자']); if(!d) return; const sh=num(o['Avg_shot']); if(isNaN(sh)||sh<=0) return;
+    out.push({ d, wk:stcWeek(d).k, dc:normDc(o['설비명']), model:String(o['Model']||'').trim(), mk:normKey(o['Model']), shot:sh }); });
+  return out;
+}
 
-// operation
-(function(){
- const sh=DATA.by_shift;
- new Chart(c_opshift,{type:'bar',data:{labels:sh.map(x=>x.Shift_norm),datasets:[
-  {label:'건수',data:sh.map(x=>x.cnt),backgroundColor:[AC,AC2],borderRadius:5,yAxisID:'y'},
- ]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:noGrid,y:gridOpt}}});
- const rp=DATA.by_repairer.slice(0,8);
- new Chart(c_oprep,{type:'bar',data:{labels:rp.map(x=>x.Repairer),datasets:[{label:'건수',data:rp.map(x=>x.cnt),backgroundColor:AC+'cc',borderRadius:3}]},options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:gridOpt,y:{...noGrid,ticks:{font:{size:10}}}}}});
- const rows=DATA.by_repairer; const tot=rows.reduce((a,b)=>a+b.cnt,0); const mx=Math.max(...rows.map(r=>r.cnt));
- let h='<table><thead><tr><th>담당자 Repairer</th><th class="num">처리건수</th><th class="num">비중</th><th class="num">총시간(분)</th></tr></thead><tbody>';
- rows.forEach(r=>{h+=`<tr><td class="bar-cell"><div class="bar" style="width:${r.cnt/mx*100}%"></div><span>${r.Repairer}</span></td><td class="num">${F(r.cnt)}</td><td class="num">${(r.cnt/tot*100).toFixed(1)}%</td><td class="num">${F(r.time_sum)}</td></tr>`});
- h+='</tbody></table>'; t_rep.innerHTML=h;
-})();
 
-// tabs
+/* ===== 6σ 화면 ===== */
+/* 요소 참조 — 원래 파일은 hd_period 같은 이름을 정의하지 않아 첫 줄에서 멈췄음 (화면이 비어 보이던 원인) */
+const EL = id => document.getElementById(id);
+const hd_period=EL('hd-period'), hd_cnt=EL('hd-cnt'), hd_mold=EL('hd-mold'), kpi_row=EL('kpi-row'),
+  ov_insight=EL('ov-insight'), tr_insight=EL('tr-insight'), pa_insight=EL('pa-insight'), eq_insight=EL('eq-insight'), op_insight=EL('op-insight'),
+  c_ovmonthly=EL('c-ovmonthly'), c_ovcause=EL('c-ovcause'), c_trcnt=EL('c-trcnt'), c_trtime=EL('c-trtime'), c_trcost=EL('c-trcost'),
+  c_paRepair=EL('c-paRepair'), c_paCause=EL('c-paCause'), c_eqdc=EL('c-eqdc'), c_opshift=EL('c-opshift'), c_oprep=EL('c-oprep'),
+  t_cause=EL('t-cause'), t_mold=EL('t-mold'), t_dc=EL('t-dc'), t_rep=EL('t-rep');
+const F=n=>Number(n).toLocaleString(undefined,{maximumFractionDigits:0});
+const F1=n=>Number(n).toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1});
+const FK=n=>n>=1000?(n/1000).toFixed(1)+'k':F(n);
+const AC='#00d3a7',AC2='#3fb7ff',WARN='#ffb02e',BAD='#ff5d5d',GRID='#232a36',SUB='#8b98a9';
+if(window.Chart){ Chart.defaults.color=SUB; Chart.defaults.font.family="'SF Mono',monospace"; Chart.defaults.font.size=11; Chart.defaults.plugins.legend.labels.boxWidth=10; }
+const gridOpt={grid:{color:GRID},border:{color:GRID}}, noGrid={grid:{display:false}};
+const USL = 60;
+/* 역정규 (Acklam) — 시그마 수준 = Φ⁻¹(1−p) + 1.5 (품질 6σ 대시보드와 같은 식) */
+function nInv(q){ const a=[-39.6968302866538,220.946098424521,-275.928510446969,138.357751867269,-30.6647980661472,2.50662827745924],b=[-54.4760987982241,161.585836858041,-155.698979859887,66.8013118877197,-13.2806815528857],c=[-0.00778489400243029,-0.322396458041136,-2.40075827716184,-2.54973253934373,4.37466414146497,2.93816398269878],d=[0.00778469570904146,0.32246712907004,2.445134137143,3.75440866190742],pl=0.02425; let x,t,r;
+  if(q<pl){ t=Math.sqrt(-2*Math.log(q)); x=(((((c[0]*t+c[1])*t+c[2])*t+c[3])*t+c[4])*t+c[5])/((((d[0]*t+d[1])*t+d[2])*t+d[3])*t+1); }
+  else if(q<=1-pl){ t=q-0.5; r=t*t; x=(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*t/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1); }
+  else { t=Math.sqrt(-2*Math.log(1-q)); x=-(((((c[0]*t+c[1])*t+c[2])*t+c[3])*t+c[4])*t+c[5])/((((d[0]*t+d[1])*t+d[2])*t+d[3])*t+1); } return x; }
+const sigma = p => p<=0 ? 6 : p>=1 ? 0 : Math.max(0, Math.min(6, nInv(1-p)+1.5));
+const pct = (arr,p) => { if(!arr.length) return NaN; const s=arr.slice().sort((x,y)=>x-y); return s[Math.min(s.length-1, Math.floor(p*(s.length-1)))]; };
+let CH = [];
+const mkChart = (el,cfg) => { const c = new Chart(el,cfg); CH.push(c); return c; };
+let MONTHS = [];
+
+async function load6(){
+  document.getElementById('hd-src').textContent = '원천을 읽는 중…';
+  try{
+    const [r,p] = await Promise.allSettled([getCsv('repair','Issue_no'), getCsv('P','일자')]);
+    if(r.status!=='fulfilled') throw r.reason;
+    ROWS = buildRepair(toObjects(r.value,'Issue_no'));
+    if(!ROWS.length) throw new Error('Daily repair 에서 읽을 수 있는 수리 줄이 0줄');
+    SHOT = p.status==='fulfilled' ? buildShot(p.value) : [];
+    ISS = buildIssues(ROWS); flagIssues();
+    MONTHS = [...new Set(ROWS.map(r=>dayKey(r.rq).slice(0,7)))].sort();
+    const o = MONTHS.map(m=>`<option>${m}</option>`).join('');
+    const pf = document.getElementById('pFrom'), pt = document.getElementById('pTo');
+    const keepF = pf.value, keepT = pt.value; pf.innerHTML = o; pt.innerHTML = o;
+    const sv = LS('stc_m6_period', null);
+    pt.value = keepT || (sv&&sv.t) || MONTHS[MONTHS.length-1]; if(!pt.value) pt.value = MONTHS[MONTHS.length-1];
+    pf.value = keepF || (sv&&sv.f) || MONTHS[0]; if(!pf.value) pf.value = MONTHS[0];
+    document.getElementById('hd-src').textContent = `원천: Daily repair ${ROWS.length.toLocaleString()}줄 · 의뢰 ${ISS.length.toLocaleString()}건` + (SHOT.length?` · P_성능 Shot ${SHOT.length.toLocaleString()}행`:' · P_성능 읽기 실패') + ' (실시간)';
+    render6();
+  }catch(e){
+    document.getElementById('hd-src').textContent = 'Daily repair 를 읽지 못했습니다';
+    document.getElementById('ov').insertAdjacentHTML('afterbegin', `<div class="msg err"><b>Daily repair 탭을 읽지 못했습니다.</b> (${esc(e.message||e)})<br>구글시트 OEE_RawData_APQ → 파일 → 공유 → 웹에 게시 → 전체 문서(CSV) · 탭 이름 「Daily repair」 확인 후 새로고침</div>`);
+  }
+}
+
+function build(f,t){
+  const inM = d => { const m = dayKey(d).slice(0,7); return m>=f && m<=t; };
+  const I = ISS.filter(x=>inM(x.rq)), R = ROWS.filter(r=>inM(r.rq));
+  const mins = I.map(x=>x.min).filter(v=>v>0);
+  const mean = mins.reduce((a,b)=>a+b,0)/(mins.length||1), sd = Math.sqrt(mins.reduce((a,b)=>a+(b-mean)**2,0)/Math.max(1,mins.length-1));
+  const over60 = mins.filter(v=>v>USL).length/(mins.length||1), over120 = mins.filter(v=>v>120).length/(mins.length||1);
+  const U = I.filter(x=>x.unpl), RP = I.filter(x=>x.repeat);
+  const sh = SHOT.filter(s=>inM(s.d)).reduce((a,s)=>a+s.shot,0);
+  const shotCover = SHOT.length ? SHOT.reduce((a,s)=>s.d<a?s.d:a, SHOT[0].d) : null;
+  const Uin = shotCover ? U.filter(x=>x.rq>=shotCover) : [];
+  const grp = (arr, kf, ex) => { const m = {}; arr.forEach(x=>{ const k = kf(x); if(k==null||k==='') return; const a = m[k] = m[k] || {k, cnt:0, time:0, cost:0, mins:[], molds:new Set()}; a.cnt++; a.time += x.min||0; a.cost += x.cost||0; if(x.min>0) a.mins.push(x.min); if(x.mold) a.molds.add(x.mold); if(ex) ex(a,x); }); return Object.values(m); };
+  const cum = rows => { const t = rows.reduce((a,r)=>a+r.cnt,0)||1; let c = 0; return rows.map(r=>({...r, cum_pct: Math.round((c+=r.cnt)/t*1000)/10 })); };
+  const monthly = grp(I, x=>dayKey(x.rq).slice(0,7)).sort((a,b)=>a.k<b.k?-1:1).map(a=>({ym:a.k, cnt:a.cnt, time_sum:a.time, time_med:median(a.mins), cost_sum:a.cost, molds:a.molds.size,
+     over:a.mins.filter(v=>v>USL).length/(a.mins.length||1), u:I.filter(x=>x.unpl && dayKey(x.rq).slice(0,7)===a.k).length, rp:I.filter(x=>x.repeat && dayKey(x.rq).slice(0,7)===a.k).length,
+     shot:SHOT.filter(s=>dayKey(s.d).slice(0,7)===a.k).reduce((s,v)=>s+v.shot,0) }));
+  const by_dc = grp(I.filter(x=>/^DC\d+$/.test(x.dc)&&x.dc!=='DC14'), x=>x.dc).sort((a,b)=>b.cnt-a.cnt).slice(0,15).map(a=>({DC:a.k, cnt:a.cnt, time_sum:a.time, time_med:median(a.mins), cost_sum:a.cost}));
+  const by_mold = grp(I, x=>x.mold, (a,x)=>{ a.pn = a.pn || {}; if(x.pname) a.pn[x.pname] = (a.pn[x.pname]||0)+1; a.pname = Object.entries(a.pn).sort((p,q)=>q[1]-p[1])[0]?.[0]; }).sort((a,b)=>b.cnt-a.cnt).slice(0,15).map(a=>({Mold_no:a.k, pname:a.pname, cnt:a.cnt, time_sum:a.time, cost_sum:a.cost}));
+  const repair_pareto = cum(grp(R, r=>RT_SHORT(r.code)).sort((a,b)=>b.cnt-a.cnt)).slice(0,12).map(a=>({Repair_type:a.k, cnt:a.cnt, time_sum:a.time, cum_pct:a.cum_pct}));
+  const cause_pareto = cum(grp(R.filter(r=>isUnpl(r.code)), r=>r.cg).sort((a,b)=>b.cnt-a.cnt)).slice(0,12).map(a=>({Cause_norm:a.k, cnt:a.cnt, time_sum:a.time, cost_sum:a.cost, cum_pct:a.cum_pct}));
+  const by_shift = grp(I, x=>x.shift).filter(a=>a.k==='주간'||a.k==='야간').sort((a,b)=>a.k==='주간'?-1:1).map(a=>({Shift_norm:a.k, cnt:a.cnt, time_med:median(a.mins)}));
+  const by_rep = {}; R.forEach(r=>{ if(!r.rep) return; const a = by_rep[r.rep] = by_rep[r.rep] || {Repairer:r.rep, iss:new Set(), time_sum:0}; a.iss.add(r.iss); a.time_sum += r.min; });
+  const by_repairer = Object.values(by_rep).map(a=>({Repairer:a.Repairer, cnt:a.iss.size, time_sum:a.time_sum})).sort((a,b)=>b.cnt-a.cnt).slice(0,15);
+  const topM = by_mold[0] || {}, topC = cause_pareto[0] || {};
+  return { I, R, monthly, by_dc, by_mold, repair_pareto, cause_pareto, by_shift, by_repairer,
+    summary:{ period:`${f} ~ ${t}`, total_cases:I.length, unique_molds:new Set(I.map(x=>x.mold).filter(Boolean)).size, total_hr:mins.reduce((a,b)=>a+b,0)/60,
+      time_mean:mean, time_median:median(mins), time_std:sd, time_p90:pct(mins,.9), time_p95:pct(mins,.95), total_cost:I.reduce((a,x)=>a+x.cost,0),
+      over60, over120, u:U.length, rp:RP.length, rpRate:U.length?RP.length/U.length:NaN, shots:sh, uShot:Uin.length,
+      dpmo: sh ? Uin.length/sh*1e6 : null, top_mold:topM.Mold_no, top_mold_cnt:topM.cnt, top_mold_name:topM.pname, top_cause:topC.Cause_norm, top_cause_pct: topC.cnt ? Math.round(topC.cnt/cause_pareto.reduce((a,c)=>a+c.cnt,0)*1000)/10 : 0 } };
+}
+
+function render6(){
+  const f = document.getElementById('pFrom').value, t = document.getElementById('pTo').value; if(!f||!t) return;
+  const [ff,tt] = f<=t ? [f,t] : [t,f]; SS('stc_m6_period',{f:ff,t:tt});
+  const D = build(ff,tt), S = D.summary, M = D.monthly;
+  /* 마지막 달이 아직 진행 중이면 관리도 평균·이상 판정에서 뺀다 */
+  const maxD = ROWS.reduce((a,r)=>r.rq>a?r.rq:a, ROWS[0].rq), lastFull = new Date(maxD.getFullYear(), maxD.getMonth()+1, 0).getDate() === maxD.getDate();
+  const partial = ym => !lastFull && ym === dayKey(maxD).slice(0,7);
+  const months = M.map(x=>x.ym.slice(2)+(partial(x.ym)?'*':''));
+  CH.forEach(c=>c.destroy()); CH = [];
+  document.querySelectorAll('.msg').forEach(m=>m.remove());
+  hd_period.textContent = S.period; hd_cnt.textContent = F(S.total_cases); hd_mold.textContent = S.unique_molds;
+  const sgT = sigma(S.over60), sgR = sigma(S.rpRate), sgS = S.dpmo!=null ? sigma(S.dpmo/1e6) : null;
+  const kpis=[
+    {l:'수리 의뢰',v:F(S.total_cases),u:'건',n:`고장 ${F(S.u)} · 계획 ${F(S.total_cases-S.u)}`,c:''},
+    {l:'수리 작업시간',v:F(S.total_hr),u:'h',n:'금형 작업장 기준 (반복 시간 줄 보정)',c:'a2'},
+    {l:'건당 중앙값',v:F(S.time_median),u:'분',n:`평균 ${F(S.time_mean)}분 · 상위 10% ${F(S.time_p90)}분`,c:''},
+    {l:'수리비',v:FK(S.total_cost),u:'THB',n:'Repair price 합',c:'w'},
+    {l:'60분 초과율',v:F1(S.over60*100),u:'%',n:`USL 60분 · 120분 초과 ${F1(S.over120*100)}%`,c:S.over60>.15?'b':''},
+    {l:'최다 고장금형',v:S.top_mold?'#'+S.top_mold:'–',u:'',n:S.top_mold?`${S.top_mold_cnt}건 · ${S.top_mold_name||''}`:'',c:'b'},
+    {l:'σ · Shot 기준 금형 품질',v:sgS==null?'–':sgS.toFixed(2),u:'σ',n:S.dpmo==null?'P_성능 기간 밖':`고장 ${F(S.uShot)} / ${F(S.shots)} Shot = ${F(S.dpmo)} DPMO`,c:'sg'},
+    {l:'σ · 수리시간 (USL 60분)',v:sgT.toFixed(2),u:'σ',n:`결함 = 60분 초과 ${F1(S.over60*100)}%`,c:'sg'},
+    {l:'σ · 재수리',v:isNaN(sgR)?'–':sgR.toFixed(2),u:'σ',n:`결함 = ${ST.rpDays}일 내 같은 고장 ${F1((S.rpRate||0)*100)}%`,c:'sg'}
+  ];
+  kpi_row.innerHTML = kpis.map(k=>`<div class="kpi ${k.c}"><div class="lab">${k.l}</div><div class="val">${k.v}<span class="unit"> ${k.u}</span></div><div class="note">${k.n}</div></div>`).join('');
+  /* 해설 — 값으로 자동 작성 */
+  const tp5 = D.repair_pareto.slice(0,5), tp5p = tp5.length ? tp5[tp5.length-1].cum_pct : 0;
+  const pk = M.slice().sort((a,b)=>b.cnt-a.cnt).slice(0,2);
+  const last = M[M.length-1], prev = M[M.length-2];
+  ov_insight.innerHTML = `<div class="h">핵심 요약 · Executive Summary</div>${esc(S.period)} 동안 <b>${F(S.total_cases)}건</b>의 금형 수리 의뢰, 작업시간 <b>${F(S.total_hr)}h</b>, 수리비 <b>${F(S.total_cost)} THB</b>.
+    최다 원인 <b>${esc(S.top_cause||'–')}</b>(${S.top_cause_pct}%), 최다 금형 <b>#${esc(S.top_mold||'–')}</b>(${S.top_mold_cnt||0}건).
+    시그마 수준 — Shot 기준 <b>${sgS==null?'–':sgS.toFixed(1)+'σ'}</b> · 수리시간 <b>${sgT.toFixed(1)}σ</b> · 재수리 <b>${isNaN(sgR)?'–':sgR.toFixed(1)+'σ'}</b> → 개선 1순위는 시그마가 가장 낮은 항목.`;
+  tr_insight.innerHTML = `<div class="h">추이 관점</div>수리 물량 정점 <b>${pk.map(x=>x.ym+'('+x.cnt+'건)').join(' · ')}</b>.${last&&prev?` 최근 달 ${last.ym} ${last.cnt}건 (전월 ${prev.cnt}건) · 건당 중앙값 ${F(last.time_med)}분 (전월 ${F(prev.time_med)}분).`:''} 중앙값이 USL 60분 아래여도 60분 초과율이 ${F1(S.over60*100)}%라 긴 수리가 꼬리를 만든다.`;
+  pa_insight.innerHTML = `<div class="h">파레토 관점 · Vital Few</div>상위 5개 작업유형(${tp5.map(x=>esc(x.Repair_type)).join('·')})이 작업 줄의 <b>${tp5p}%</b>. 고장 원인 1위 <b>${esc(S.top_cause||'–')}</b>.`;
+  const d0 = D.by_dc[0] || {};
+  eq_insight.innerHTML = `<div class="h">설비/금형 관점</div><b>${esc(d0.DC||'–')}</b>가 의뢰 ${d0.cnt||0}건으로 1위 (수리비 ${F(d0.cost_sum||0)} THB). 금형 <b>#${esc(S.top_mold||'–')}</b> ${S.top_mold_cnt||0}건 — 반복 금형은 Shot 대비로도 확인 (금형 수리이력 4번 Shot 기준 지표).`;
+  const shD = D.by_shift.find(x=>x.Shift_norm==='주간')||{cnt:0}, shN = D.by_shift.find(x=>x.Shift_norm==='야간')||{cnt:0};
+  const top2 = D.by_repairer.slice(0,2), totR = D.by_repairer.reduce((a,b)=>a+b.cnt,0)||1;
+  op_insight.innerHTML = `<div class="h">운영 관점</div>주간 ${shD.cnt}건 · 야간 ${shN.cnt}건 (중앙값 ${F(shD.time_med||0)}분 / ${F(shN.time_med||0)}분). 담당자 <b>${top2.map(x=>esc(x.Repairer)).join('·')}</b> 2명이 ${Math.round(top2.reduce((a,b)=>a+b.cnt,0)/totR*100)}% 처리.`;
+
+  mkChart(c_ovmonthly,{data:{labels:months,datasets:[
+    {type:'bar',label:'수리 의뢰',data:M.map(x=>x.cnt),backgroundColor:AC+'cc',yAxisID:'y',borderRadius:3},
+    {type:'line',label:'작업시간(h)',data:M.map(x=>Math.round(x.time_sum/60)),borderColor:AC2,backgroundColor:AC2,yAxisID:'y1',tension:.35,pointRadius:2}
+  ]},options:{maintainAspectRatio:false,scales:{x:noGrid,y:{...gridOpt,position:'left'},y1:{...noGrid,position:'right'}}}});
+  mkChart(c_ovcause,{type:'bar',data:{labels:D.cause_pareto.slice(0,6).map(x=>x.Cause_norm),datasets:[{data:D.cause_pareto.slice(0,6).map(x=>x.cnt),backgroundColor:[BAD,AC,WARN,AC2,'#a78bfa','#f472b6'],borderRadius:4}]},options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:gridOpt,y:noGrid}}});
+  /* 추이 — 월별 건수 관리도(c-chart: 평균 ± 3√평균) */
+  const MF = M.filter(x=>!partial(x.ym)), mc = MF.reduce((a,b)=>a+b.cnt,0)/(MF.length||1), ucl = mc+3*Math.sqrt(mc), lcl = Math.max(0, mc-3*Math.sqrt(mc));
+  mkChart(c_trcnt,{data:{labels:months,datasets:[
+    {type:'line',label:'건수',data:M.map(x=>x.cnt),borderColor:AC,backgroundColor:AC+'22',fill:true,tension:.3,pointRadius:M.map(x=>!partial(x.ym)&&(x.cnt>ucl||x.cnt<lcl)?6:3),pointBackgroundColor:M.map(x=>!partial(x.ym)&&(x.cnt>ucl||x.cnt<lcl)?BAD:AC)},
+    {type:'line',label:'평균 '+Math.round(mc),data:M.map(()=>Math.round(mc)),borderColor:SUB,borderDash:[5,4],pointRadius:0},
+    {type:'line',label:'UCL',data:M.map(()=>Math.round(ucl)),borderColor:BAD,borderDash:[2,3],pointRadius:0},
+    {type:'line',label:'LCL',data:M.map(()=>Math.round(lcl)),borderColor:BAD,borderDash:[2,3],pointRadius:0}
+  ]},options:{maintainAspectRatio:false,scales:{x:noGrid,y:gridOpt}}});
+  mkChart(c_trtime,{data:{labels:months,datasets:[
+    {type:'line',label:'중앙값(분)',data:M.map(x=>x.time_med),borderColor:WARN,backgroundColor:WARN+'22',fill:true,tension:.3,pointRadius:3,yAxisID:'y'},
+    {type:'line',label:'목표 60분(USL)',data:M.map(()=>USL),borderColor:BAD,borderDash:[5,4],pointRadius:0,yAxisID:'y'},
+    {type:'bar',label:'60분 초과율(%)',data:M.map(x=>Math.round(x.over*1000)/10),backgroundColor:'#a78bfa55',yAxisID:'y1',borderRadius:2}
+  ]},options:{maintainAspectRatio:false,scales:{x:noGrid,y:gridOpt,y1:{...noGrid,position:'right',min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
+  mkChart(c_trcost,{type:'bar',data:{labels:months,datasets:[{label:'수리비(THB)',data:M.map(x=>Math.round(x.cost_sum)),backgroundColor:AC2+'cc',borderRadius:3}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:noGrid,y:gridOpt}}});
+  /* 파레토 */
+  const pareto = (cv,rows,labelKey) => mkChart(cv,{data:{labels:rows.map(r=>r[labelKey]),datasets:[
+    {type:'bar',label:'건수',data:rows.map(r=>r.cnt),backgroundColor:AC+'cc',yAxisID:'y',borderRadius:3},
+    {type:'line',label:'누적%',data:rows.map(r=>r.cum_pct),borderColor:WARN,backgroundColor:WARN,yAxisID:'y1',tension:.2,pointRadius:3}
+  ]},options:{maintainAspectRatio:false,scales:{x:{...noGrid,ticks:{maxRotation:60,minRotation:40,font:{size:9}}},y:{...gridOpt,position:'left'},y1:{...noGrid,position:'right',min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
+  pareto(c_paRepair, D.repair_pareto, 'Repair_type');
+  pareto(c_paCause, D.cause_pareto, 'Cause_norm');
+  const barT = (rows, cols, mx) => rows.map((r,i)=>`<tr>${cols.map((c,j)=>c(r,i,mx)).join('')}</tr>`).join('');
+  { const rows = D.cause_pareto, mx = Math.max(1,...rows.map(r=>r.cnt));
+    t_cause.innerHTML = `<table><thead><tr><th>#</th><th>원인 그룹 (고장 작업)</th><th class="num">건수</th><th class="num">시간(분)</th><th class="num">수리비(THB)</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td class="rank">${i+1}</td><td class="bar-cell"><div class="bar" style="width:${r.cnt/mx*100}%"></div><span>${esc(r.Cause_norm)}</span></td><td class="num">${F(r.cnt)}</td><td class="num">${F(r.time_sum)}</td><td class="num">${F(r.cost_sum)}</td></tr>`).join('')}</tbody></table>`; }
+  { const rows = D.by_mold, mx = Math.max(1,...rows.map(r=>r.cnt));
+    t_mold.innerHTML = `<table><thead><tr><th>#</th><th>금형 Mold</th><th class="num">건수</th><th class="num">시간(분)</th><th class="num">수리비</th><th>유형</th></tr></thead><tbody>${rows.map((r,i)=>{ const cpc=r.cost_sum/r.cnt; const tag=cpc>800?'<span class="chip hi">고비용</span>':(r.cnt>=Math.max(10,mx*.5)?'<span class="chip mid">반복다발</span>':'<span class="chip lo">경미</span>');
+      return `<tr><td class="rank">${i+1}</td><td class="bar-cell"><div class="bar" style="width:${r.cnt/mx*100}%"></div><span>#${esc(r.Mold_no)} <span style="color:var(--dim);font-size:11px">${esc(r.pname||'')}</span></span></td><td class="num">${F(r.cnt)}</td><td class="num">${F(r.time_sum)}</td><td class="num">${F(r.cost_sum)}</td><td>${tag}</td></tr>`; }).join('')}</tbody></table>`; }
+  { const rows = D.by_dc;
+    mkChart(c_eqdc,{data:{labels:rows.map(r=>r.DC),datasets:[
+      {type:'bar',label:'수리 의뢰',data:rows.map(r=>r.cnt),backgroundColor:AC+'cc',yAxisID:'y',borderRadius:3},
+      {type:'line',label:'작업시간(h)',data:rows.map(r=>Math.round(r.time_sum/60)),borderColor:AC2,yAxisID:'y1',tension:.3,pointRadius:2}
+    ]},options:{maintainAspectRatio:false,scales:{x:{...noGrid,ticks:{font:{size:9}}},y:{...gridOpt},y1:{...noGrid,position:'right'}}}});
+    const mx = Math.max(1,...rows.map(r=>r.cnt));
+    t_dc.innerHTML = `<table><thead><tr><th>설비 DC</th><th class="num">의뢰</th><th class="num">작업시간(분)</th><th class="num">중앙값</th><th class="num">수리비(THB)</th></tr></thead><tbody>${rows.map(r=>`<tr><td class="bar-cell"><div class="bar" style="width:${r.cnt/mx*100}%"></div><span>${r.DC}</span></td><td class="num">${F(r.cnt)}</td><td class="num">${F(r.time_sum)}</td><td class="num">${F(r.time_med)}</td><td class="num">${F(r.cost_sum)}</td></tr>`).join('')}</tbody></table>`; }
+  { const sh = D.by_shift;
+    mkChart(c_opshift,{type:'bar',data:{labels:sh.map(x=>x.Shift_norm),datasets:[{label:'의뢰',data:sh.map(x=>x.cnt),backgroundColor:[AC,AC2],borderRadius:5}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:noGrid,y:gridOpt}}});
+    const rp = D.by_repairer.slice(0,8);
+    mkChart(c_oprep,{type:'bar',data:{labels:rp.map(x=>x.Repairer),datasets:[{label:'의뢰',data:rp.map(x=>x.cnt),backgroundColor:AC+'cc',borderRadius:3}]},options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:gridOpt,y:noGrid}}});
+    const rows = D.by_repairer, tot = rows.reduce((a,b)=>a+b.cnt,0)||1, mx = Math.max(1,...rows.map(r=>r.cnt));
+    t_rep.innerHTML = `<table><thead><tr><th>담당자 Repairer</th><th class="num">처리 의뢰</th><th class="num">비중</th><th class="num">작업시간(분)</th></tr></thead><tbody>${rows.map(r=>`<tr><td class="bar-cell"><div class="bar" style="width:${r.cnt/mx*100}%"></div><span>${esc(r.Repairer)}</span></td><td class="num">${F(r.cnt)}</td><td class="num">${(r.cnt/tot*100).toFixed(1)}%</td><td class="num">${F(r.time_sum)}</td></tr>`).join('')}</tbody></table>`; }
+}
+
+/* 탭 · 기간 */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
- document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
- document.querySelectorAll('section').forEach(x=>x.classList.remove('on'));
- t.classList.add('on'); document.getElementById(t.dataset.t).classList.add('on');
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('section').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on'); document.getElementById(t.dataset.t).classList.add('on');
 });
+['pFrom','pTo'].forEach(id=>document.getElementById(id).onchange = render6);
+document.querySelectorAll('.pbar button[data-m]').forEach(b=>b.onclick=()=>{ if(!MONTHS.length) return; const n=+b.dataset.m; document.getElementById('pTo').value = MONTHS[MONTHS.length-1]; document.getElementById('pFrom').value = n ? MONTHS[Math.max(0,MONTHS.length-n)] : MONTHS[0]; render6(); });
+document.getElementById('reload').onclick = load6;
+load6();
 </script>
 </body>
 </html>
