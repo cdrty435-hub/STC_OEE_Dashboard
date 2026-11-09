@@ -578,7 +578,7 @@ function barChart(o){
     const hi = o.hiIdx!=null && o.hiIdx.indexOf ? o.hiIdx.indexOf(i)>=0 : false;
     if(o.stack){ o.series.forEach(s=>{ const v=s.vals[i]||0; if(v<=0) return; g+=`<rect x="${x0+bw*.16}" y="${y(acc+v)}" width="${bw*.68}" height="${y(acc)-y(acc+v)}" fill="${s.color}" rx="1.5"><title>${esc(lb)} ${esc(s.name)} ${fmt(v)}</title></rect>`; acc+=v; });
       if(acc>0 && n<=30) g+=`<text x="${x0+bw/2}" y="${y(acc)-4}" text-anchor="middle" font-size="${n>18?8.5:10}" font-weight="${hi?900:700}" fill="${hi?'#0f172a':'#475569'}">${fmt(acc)}</text>`;
-    } else { const k=o.series.length, w=bw*.72/k; o.series.forEach((s,j)=>{ const v=s.vals[i]||0; g+=`<rect x="${x0+bw*.14+j*w}" y="${y(v)}" width="${w-1}" height="${T+ph-y(v)}" fill="${s.color}" rx="1.5"><title>${esc(lb)} ${esc(s.name)} ${fmt(v)}</title></rect>`; if(n*k<=26 && v>0) g+=`<text x="${x0+bw*.14+j*w+w/2}" y="${y(v)-3}" text-anchor="middle" font-size="9" fill="#334155">${fmt(v)}</text>`; }); }
+    } else { const k=o.series.length, w=bw*(o.wide?.86:.72)/k; o.series.forEach((s,j)=>{ const v=s.vals[i]||0; g+=`<rect x="${x0+bw*(o.wide?.07:.14)+j*w}" y="${y(v)}" width="${w-1}" height="${T+ph-y(v)}" fill="${s.color}" rx="1.5"><title>${esc(lb)} ${esc(s.name)} ${fmt(v)}</title></rect>`; if(n*k<=26 && v>0) g+=`<text x="${x0+bw*(o.wide?.07:.14)+j*w+w/2}" y="${y(v)-3}" text-anchor="middle" font-size="9" fill="#334155">${fmt(v)}</text>`; }); }
     if(n<=40 && (n<=24 || i%2===0)) g+=`<text x="${x0+bw/2}" y="${H-B+13}" text-anchor="middle" font-size="${n>20?8.5:10}" font-weight="${hi?900:500}" fill="${hi?'#0f172a':'#64748b'}">${esc(lb)}</text>`;
   });
   if(o.target!=null) g+=`<line x1="${L}" x2="${W-Rm}" y1="${y(o.target)}" y2="${y(o.target)}" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="6 3"/><text x="${L+4}" y="${y(o.target)-4}" font-size="10.5" font-weight="800" fill="#dc2626" stroke="#fff" stroke-width="3" paint-order="stroke">목표 ${fmt(o.target)}</text>`;
@@ -984,22 +984,22 @@ function renderWeekly(P){
     const Oc = fOee(P.weeks), Op = fOee(P.prev);
     const fc = DCS.map(d=>Oc.filter(o=>o.dc===d).reduce((a,o)=>a+(o.fcost||0),0)), fp = DCS.map(d=>Op.filter(o=>o.dc===d).reduce((a,o)=>a+(o.fcost||0),0));
     const rc = DCS.map(d=>M.I.filter(x=>x.dc===d).reduce((a,x)=>a+x.cost,0));
-    const chart = ow ? barChart({labels:DCS.map(d=>d.slice(2)), series:[{name:pwT+' F-COST',color:'#cbd5e1',vals:fp},{name:wkT+' F-COST',color:'#dc2626',vals:fc},{name:wkT+' 수리비',color:'#1e3c72',vals:rc}], fmt:v=>v>=1000?f1(v/1000,1)+'k':f0(v), W:760, H:250})
+    const chart = ow ? barChart({labels:DCS.map(d=>d.slice(2)), series:[{name:pwT+' F-COST',color:'#cbd5e1',vals:fp},{name:wkT+' F-COST',color:'#dc2626',vals:fc},{name:wkT+' 수리비',color:'#1e3c72',vals:rc}], fmt:v=>v>=1000?f1(v/1000,1)+'k':f0(v), W:1300, H:240, wide:true})
                      : '<div class="an">이 기간에는 A_가동률 데이터가 없어 F-COST를 계산할 수 없습니다 (OEE는 2026-06-24부터).</div>';
     const A = moldAgg(M.I).map(a=>({...a, tot:a.fcost+a.cost})).sort((a,b)=>b.tot-a.tot).slice(0,6);
     const un = Oc.reduce((a,o)=>a+(o.unalloc||0),0);
     const tbl = `<table class="t"><thead><tr><th>순위</th><th>금형</th><th>품명</th><th>F-COST (추정)</th><th>수리비</th><th>합계</th></tr></thead><tbody>
       ${A.map((a,i)=>`<tr class="click" onclick="openMold('${esc(a.mold)}')"><td class="c">${i+1}</td><td class="c"><b>#${esc(a.mold)}</b></td><td style="font-size:12px">${esc(a.pname)}</td><td class="n r">${f0(a.fcost)}</td><td class="n">${f0(a.cost)}</td><td class="n"><b>${f0(a.tot)}</b></td></tr>`).join('') || '<tr><td colspan="6" class="c mute">이 기간 없음</td></tr>'}
       <tr class="tot"><td></td><td colspan="2">기간 합계${un?` <span class="mute" style="font-weight:600;font-size:11px">(금형 미확인 F-COST ${f0(un)} 포함)</span>`:''}</td><td class="n r">${M.fcost==null?'–':f0(M.fcost)}</td><td class="n">${f0(M.cost)}</td><td class="n">${M.total==null?'–':f0(M.total)}</td></tr></tbody></table>`;
-    return `<div class="g2" style="align-items:stretch"><div class="ec"><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+    return `<div class="ec"><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
         <span class="pill" style="background:#fee2e2;color:#991b1b">F-COST ${M.fcost==null?'–':f0(M.fcost)} THB${Q.fcost!=null&&M.fcost!=null?` · ${pwT} ${f0(Q.fcost)}`:''}</span>
         <span class="pill u">수리비 ${f0(M.cost)} THB · ${pwT} ${f0(Q.cost)}</span>
         <span class="pill" style="background:#0f172a;color:#fff">총비용 ${M.total==null?'–':f0(M.total)} THB</span></div>${chart}
-        <div class="mute" style="font-size:11px">F-COST = OEE 금형 계통 로스(분) × 호기 M/C Rate(THB/분, MTTR과 같은 값) · 수리비 = 금형팀 Repair price</div></div>
-      <div class="ec"><b style="font-size:13px">금형별 총비용 Top 6</b> <span class="mute" style="font-size:11px">F-COST는 같은 호기 같은 날(없으면 ±1일) 수리한 금형에 나눠 붙인 추정치</span>${tbl}</div></div>
-      <div class="ec" style="margin-top:12px"><b style="font-size:13px">주차별 금형 비용 (최근 12주)</b> <span class="mute" style="font-size:11px">빨강 = F-COST (정지 손실) · 남색 = 수리비 (지출) · 막대 위 = 합계</span>
+        <div class="mute" style="font-size:11px">호기별 · 회색 = 전주 F-COST · 빨강 = 금주 F-COST · 남색 = 금주 수리비 · F-COST = OEE 금형 계통 로스(분) × 호기 M/C Rate(THB/분, MTTR과 같은 값) · 수리비 = 금형팀 Repair price</div></div>
+      <div class="g2" style="margin-top:12px;align-items:stretch"><div class="ec"><b style="font-size:13px">금형별 총비용 Top 6</b> <span class="mute" style="font-size:11px">F-COST는 같은 호기 같은 날(없으면 ±1일) 수리한 금형에 나눠 붙인 추정치</span>${tbl}</div>
+      <div class="ec"><b style="font-size:13px">주차별 금형 비용 (최근 12주)</b> <span class="mute" style="font-size:11px">빨강 = F-COST (정지 손실) · 남색 = 수리비 (지출) · 막대 위 = 합계</span>
         ${(()=>{ const ws12 = WEEKS.slice(Math.max(0,P.ib-11), P.ib+1), MS12 = ws12.map(w=>metrics([w]));
-          return barChart({labels:ws12.map(wkLabel), stack:true, hiIdx:[ws12.length-1], series:[{name:'F-COST (정지 손실)',color:'#dc2626',vals:MS12.map(m=>m.fcost||0)},{name:'수리비 (지출)',color:'#1e3c72',vals:MS12.map(m=>m.cost)}], fmt:v=>v>=1000?f0(v/1000)+'k':f0(v), W:1300, H:220}); })()}</div>`;
+          return barChart({labels:ws12.map(wkLabel), stack:true, hiIdx:[ws12.length-1], series:[{name:'F-COST (정지 손실)',color:'#dc2626',vals:MS12.map(m=>m.fcost||0)},{name:'수리비 (지출)',color:'#1e3c72',vals:MS12.map(m=>m.cost)}], fmt:v=>v>=1000?f0(v/1000)+'k':f0(v), W:700, H:300}); })()}</div></div>`;
   })();
   /* 10. 부품 · 수리비 */
   const s10h = (()=>{
