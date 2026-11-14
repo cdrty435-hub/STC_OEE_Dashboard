@@ -51,11 +51,37 @@
   .tile ol { margin: 4px 0 0; padding-left: 18px; color: var(--ink2); }
   .tile ol b { color: var(--ink); }
 
+  .tile .row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .tile .meta { color: var(--ink2); font-size: 12px; margin-top: 4px; }
+  .tile .mini { display: grid; grid-template-columns: 44px 1fr 62px; align-items: center; gap: 6px; font-size: 12px; margin: 3px 0; }
+  .tile .mini b { color: var(--ink); }
+  .tile .mini .tr { height: 8px; }
+  .tile .mini .fl { height: 8px; background: var(--s3); border-radius: 0 4px 4px 0; }
+  .tile .mini .vv { text-align: right; color: var(--ink2); font-variant-numeric: tabular-nums; }
+  .prog { height: 8px; background: var(--grid); border-radius: 4px; margin-top: 8px; overflow: hidden; }
+  .prog i { display: block; height: 100%; background: var(--critical); border-radius: 4px; }
+  .charts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 10px; padding: 0 18px 10px; }
+  @media (max-width: 900px) { .charts { grid-template-columns: 1fr; } }
+  .card { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+  .ct { font-size: 12px; color: var(--ink2); margin-bottom: 6px; font-weight: 600; }
+  .pbar { display: grid; grid-template-columns: 120px 1fr 64px; align-items: center; gap: 8px; font-size: 12px; margin: 2px 0; }
+  .pbar span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pbar .tr { height: 10px; }
+  .pbar .fl { height: 10px; background: var(--s3); border-radius: 0 4px 4px 0; min-width: 2px; }
+  .pbar .vv { text-align: right; color: var(--ink2); font-variant-numeric: tabular-nums; }
+  .trend { display: flex; align-items: flex-end; justify-content: space-evenly; gap: 2px; height: 150px; padding-top: 8px; border-bottom: 1px solid var(--axis); }
+  .trend .col { flex: 1 1 0; max-width: 56px; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; min-width: 4px; cursor: default; }
+  .trend .col:hover .b { background: var(--s4); }
+  .trend .b { background: var(--s3); border-radius: 4px 4px 0 0; min-height: 1px; }
+  .trend .b.empty { background: transparent; }
+  .tx { display: flex; justify-content: space-evenly; gap: 2px; font-size: 10px; color: var(--muted); margin-top: 3px; }
+  .tx span { flex: 1 1 0; max-width: 56px; text-align: center; min-width: 4px; overflow: hidden; white-space: nowrap; }
+  .tavg { font-size: 11px; color: var(--ink2); margin-top: 4px; }
   .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 0 18px 8px; color: var(--ink2); font-size: 12px; }
   .legend .sw { display: inline-block; width: 18px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; border: 1px solid var(--ring); }
   .legend .scale span { margin-right: 8px; white-space: nowrap; }
 
-  .wrap { margin: 0 18px 18px; overflow: auto; max-height: calc(100vh - 230px); background: var(--surface);
+  .wrap { margin: 0 18px 18px; overflow: auto; max-height: calc(100vh - 120px); background: var(--surface);
     border: 1px solid var(--ring); border-radius: 10px; }
   table.cal { border-collapse: separate; border-spacing: 2px; }
   .cal th { position: sticky; top: 0; background: var(--surface); z-index: 2; font-weight: 600; color: var(--ink2);
@@ -112,6 +138,10 @@
   .note .ph { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; margin-top: 6px; }
   .note .ph img { width: 100%; height: 110px; object-fit: cover; border-radius: 6px; border: 1px solid var(--ring); display: block; }
   .note .ph span { font-size: 12px; color: var(--s3); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 10px; }
+  .chip { font: inherit; font-size: 12px; border: 1px solid var(--axis); background: var(--surface); color: var(--ink2);
+    border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+  .chip.on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
   .empty { color: var(--muted); font-size: 12px; padding: 6px 0; }
   .warnbox { border: 2px solid var(--critical); border-radius: 8px; padding: 8px 10px; font-size: 12px; margin-bottom: 12px; }
   #loading { padding: 40px; text-align: center; color: var(--muted); }
@@ -136,6 +166,10 @@
 </header>
 
 <div class="tiles" id="tiles"></div>
+<div class="charts">
+  <div class="card"><div class="ct">정지 원인 Top 10 <span class="sub" id="cpd"></span></div><div id="pareto"></div></div>
+  <div class="card"><div class="ct" id="trendTitle">로스 추세</div><div id="trend"></div></div>
+</div>
 
 <div class="legend">
   <span class="scale" id="scale"></span>
@@ -219,12 +253,46 @@ function render(data) {
   const s = data.summary;
   const pct = s.bigLossCells ? Math.round(s.unexplained / s.bigLossCells * 100) : 0;
   const per = VIEW === 'week' ? '선택 기간' : '이번 달';
+  const rate = s.totalPlan ? Math.round(s.totalLoss / s.totalPlan * 1000) / 10 : 0;
+  const tmax = s.top.length ? s.top[0][1] : 1;
   document.getElementById('tiles').innerHTML =
-    '<div class="tile"><div class="k">' + per + ' 로스 Top 5</div><ol>' +
-      (s.top.length ? s.top.map(t => '<li><b>' + t[0] + '</b> ' + fmtMin(t[1]) + '</li>').join('') : '<li>데이터 없음</li>') + '</ol></div>' +
-    '<div class="tile"><div class="k">설비 로스 120분+ 인 날 (호기×일)</div><div class="v">' + s.bigLossCells + '<small> 칸</small></div></div>' +
-    '<div class="tile"><div class="k">그중 이유 기록 없음</div><div class="v">' + s.unexplained + '<small> 칸 (' + pct + '%)</small></div></div>' +
-    '<div class="tile"><div class="k">미결 기록 (진행·대기·미해결)</div><div class="v">' + s.open + '<small> 건</small></div></div>';
+    '<div class="tile"><div class="k">' + per + ' 총 로스</div><div class="row"><div class="v">' + Math.round(s.totalLoss / 60).toLocaleString() +
+      '<small> 시간</small></div></div><div class="meta">계획 ' + Math.round(s.totalPlan / 60).toLocaleString() + '시간 중 <b>로스율 ' + rate + '%</b></div></div>' +
+    '<div class="tile"><div class="k">로스 Top 5 호기</div>' +
+      (s.top.length ? s.top.map(t => '<div class="mini"><b>' + t[0] + '</b><div class="tr"><div class="fl" style="width:' + (t[1] / tmax * 100) +
+        '%"></div></div><span class="vv">' + Math.round(t[1] / 60) + 'h</span></div>').join('') : '<div class="meta">데이터 없음</div>') + '</div>' +
+    '<div class="tile"><div class="k">설비 로스 120분+ 인데 이유 기록 없음</div><div class="row"><div class="v">' + s.unexplained +
+      '<small> / ' + s.bigLossCells + ' 칸</small></div></div><div class="prog"><i style="width:' + pct + '%"></i></div><div class="meta">' + pct + '% 가 이유 미기록</div></div>' +
+    '<div class="tile"><div class="k">미결 기록 (최근 14일)</div><div class="row"><div class="v">' + s.open + '<small> 건</small></div></div>' +
+      '<div class="meta">' + (s.openFrom ? md(s.openFrom) + ' 이후 진행·대기·미해결·미조치' : '') + '</div></div>';
+
+  // 정지 원인 Top 10
+  const ct = s.codeTop || [], cmax = ct.length ? ct[0][1] : 1;
+  document.getElementById('cpd').textContent = '(' + per + ', 전체 호기)';
+  document.getElementById('pareto').innerHTML = ct.length ? ct.map(c =>
+    '<div class="pbar" data-tip="' + esc(c[0]) + ' · ' + fmtMin(c[1]) + ' (' + (s.totalLoss ? Math.round(c[1] / s.totalLoss * 100) : 0) + '%)"><span>' + esc(c[0]) +
+    '</span><div class="tr"><div class="fl" style="width:' + (c[1] / cmax * 100) + '%"></div></div><span class="vv">' + Math.round(c[1] / 60) + 'h</span></div>').join('')
+    : '<div class="empty">데이터 없음</div>';
+
+  // 추세 (월간: 일별 / 주간: 주별)
+  let pts;
+  if (data.view === 'week') {
+    pts = data.weeks.map(w => {
+      let t = 0; Object.keys(data.cells).forEach(mc => { const c = data.cells[mc][w.key]; if (c) t += c.loss; });
+      return { label: w.label, tip: w.label + ' (' + md(w.start) + '~' + md(w.end) + ')', v: t };
+    });
+    document.getElementById('trendTitle').textContent = '주별 로스 추세 (전체 호기, 시간)';
+  } else {
+    pts = data.days.map(d => ({ label: String(+d.slice(8)), tip: md(d) + ' (' + wd(d) + ')', v: (s.byDay || {})[d] || 0 }));
+    document.getElementById('trendTitle').textContent = '일별 로스 추세 (전체 호기, 시간)';
+  }
+  const vmax = Math.max(1, ...pts.map(p => p.v)), withData = pts.filter(p => p.v > 0);
+  const avg = withData.length ? withData.reduce((a, p) => a + p.v, 0) / withData.length : 0;
+  document.getElementById('trend').innerHTML =
+    '<div class="trend">' + pts.map(p => '<div class="col" data-tip="' + esc(p.tip) + ' · ' + (p.v ? fmtMin(p.v) : '데이터 없음') + '"><div class="b' +
+      (p.v ? '' : ' empty') + '" style="height:' + (p.v / vmax * 100) + '%"></div></div>').join('') + '</div>' +
+    '<div class="tx">' + pts.map((p, i) => '<span>' + (data.view === 'week' || i % 2 === 0 ? esc(p.label) : '') + '</span>').join('') + '</div>' +
+    '<div class="tavg">데이터 있는 ' + (data.view === 'week' ? '주' : '날') + ' 평균 ' + Math.round(avg / 60) + '시간 · 최대 ' + Math.round(vmax / 60) + '시간</div>';
 
   if (data.view === 'week') renderWeek(data); else renderMonth(data);
 }
@@ -304,6 +372,12 @@ calEl.addEventListener('mousemove', e => {
   tip.style.left = Math.min(e.clientX + 14, window.innerWidth - 290) + 'px'; tip.style.top = (e.clientY + 14) + 'px';
 });
 calEl.addEventListener('mouseleave', () => tip.style.display = 'none');
+document.querySelector('.charts').addEventListener('mousemove', e => {
+  const t = e.target.closest('[data-tip]'); if (!t) { tip.style.display = 'none'; return; }
+  tip.textContent = t.dataset.tip; tip.style.display = 'block';
+  tip.style.left = Math.min(e.clientX + 14, window.innerWidth - 290) + 'px'; tip.style.top = (e.clientY + 14) + 'px';
+});
+document.querySelector('.charts').addEventListener('mouseleave', () => tip.style.display = 'none');
 calEl.addEventListener('click', e => {
   const td = e.target.closest('td.c'); if (!td) return;
   document.querySelectorAll('td.sel').forEach(x => x.classList.remove('sel'));
@@ -318,6 +392,34 @@ function codeBars(codes) {
   return list.map(x => '<div class="bar"><span>' + esc(x[0]) + '</span><div class="track"><div class="fill" style="width:' +
     (x[1] / max * 100) + '%"></div></div><span class="val">' + x[1] + '분</span></div>').join('');
 }
+// ---------- 기록 필터 (LINE 불량 / LINE 수리 / 아침조회 / 미결만) ----------
+const SRC_GROUPS = ['LINE 불량', 'LINE 수리', '아침조회'];
+const FILTER = { 'LINE 불량': true, 'LINE 수리': true, '아침조회': true, openOnly: false };
+try { Object.assign(FILTER, JSON.parse(localStorage.getItem('lossNoteFilter') || '{}')); } catch (e) {}
+let CUR_NOTES = [], CUR_SHOWDATE = false;
+const srcGroup = n => /^아침조회/.test(n.src) ? '아침조회' : n.src;
+const isOpen = n => /미해결|재발|진행|대기|미조치/.test(n.status || '');
+
+function notesSection(notes, showDate, title) {
+  CUR_NOTES = notes; CUR_SHOWDATE = showDate;
+  return '<div class="sec"><h3>' + title + ' (' + notes.length + '건)</h3><div class="chips" id="chips"></div><div id="notelist"></div></div>';
+}
+function drawNotes() {
+  const cnt = {}; CUR_NOTES.forEach(n => { const g = srcGroup(n); cnt[g] = (cnt[g] || 0) + 1; });
+  document.getElementById('chips').innerHTML = SRC_GROUPS.map(g =>
+    '<button class="chip' + (FILTER[g] ? ' on' : '') + '" data-g="' + g + '" aria-pressed="' + !!FILTER[g] + '">' + (FILTER[g] ? '✓ ' : '') + g + ' ' + (cnt[g] || 0) + '</button>').join('') +
+    '<button class="chip' + (FILTER.openOnly ? ' on' : '') + '" data-g="openOnly" aria-pressed="' + FILTER.openOnly + '">' + (FILTER.openOnly ? '✓ ' : '') + '미결만</button>';
+  const shown = CUR_NOTES.filter(n => FILTER[srcGroup(n)] !== false && (!FILTER.openOnly || isOpen(n)));
+  document.getElementById('notelist').innerHTML = shown.length ? noteCards(shown, CUR_SHOWDATE)
+    : '<div class="empty">' + (CUR_NOTES.length ? '선택한 조건에 맞는 기록이 없습니다' : 'LINE·아침조회 기록 없음') + '</div>';
+}
+document.getElementById('pb').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  const g = b.dataset.g; FILTER[g] = !FILTER[g];
+  try { localStorage.setItem('lossNoteFilter', JSON.stringify(FILTER)); } catch (err) {}
+  drawNotes();
+});
+
 // 수리 사진 썸네일 (구글드라이브). 누르면 원본이 새 창으로 열림
 function photoHtml(n) {
   const ids = n.photos || [];
@@ -359,9 +461,9 @@ function openPanel(key) {
         return '<tr><td>' + esc(s.shift) + (s.kind && s.kind !== '정규' ? ' (' + esc(s.kind) + ')' : '') + '</td><td>' + s.plan + '</td><td>' + s.run + '</td><td>' + s.loss + '</td><td>' + (t ? esc(t[0]) : '') + '</td></tr>';
       }).join('') + '</table>';
   } else h += '<div class="empty">OEE 데이터 없음</div>';
-  h += '</div><div class="sec"><h3>이 날의 기록 (' + notes.length + '건)</h3>' + noteCards(notes, false) +
-    '<div class="sub" style="margin-top:6px">※ 아침조회는 다음 날 아침 회의 내용을 이 날짜 칸에 붙여서 보여줍니다.</div></div>';
-  showPanel(h);
+  h += '</div>' + notesSection(notes, false, '이 날의 기록') +
+    '<div class="sub" style="margin-top:-6px">※ 아침조회는 다음 날 아침 회의 내용을 이 날짜 칸에 붙여서 보여줍니다.</div>';
+  showPanel(h); drawNotes();
 }
 
 function openWeekPanel(key) {
@@ -381,8 +483,8 @@ function openWeekPanel(key) {
     h += '<tr><td>' + md(d) + ' (' + wd(d) + ')</td><td>' + (x ? x.loss : '') + '</td><td>' + (x ? x.equip : '') + '</td><td>' +
       (x && x.notes ? '📝' + x.notes : '') + '</td><td class="q">' + (x && x.unexplained ? '?' : '') + '</td></tr>';
   }
-  h += '</table></div><div class="sec"><h3>이 주의 기록 (' + notes.length + '건)</h3>' + noteCards(notes, true) + '</div>';
-  showPanel(h);
+  h += '</table></div>' + notesSection(notes, true, '이 주의 기록');
+  showPanel(h); drawNotes();
 }
 
 function showPanel(html) {
