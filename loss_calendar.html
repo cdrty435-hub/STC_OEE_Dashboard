@@ -199,6 +199,12 @@ function load() {
 
 // ---------- 그리기 ----------
 function render(data) {
+  if (VIEW === 'week' && data.view !== 'week') {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('loading').textContent =
+      '주간 데이터를 받지 못했습니다. Apps Script의 Code.gs·로스달력 최신본을 저장하고 「배포 관리 → 새 버전」으로 다시 배포해 주세요.';
+    return;
+  }
   D = data;
   document.getElementById('loading').style.display = 'none';
   document.getElementById('upd').textContent = '갱신 ' + data.updated;
