@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STC 로스 달력</title>
+<style>
+  :root {
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10);
+    --s1: #cde2fb; --s2: #86b6ef; --s3: #3987e5; --s4: #1c5cab;
+    --t1: #0b0b0b; --t2: #0b0b0b; --t3: #ffffff; --t4: #ffffff;
+    --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+    --weekend: #f3f2ee; --hover: rgba(11,11,11,0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+      --s1: #0d366b; --s2: #1c5cab; --s3: #3987e5; --s4: #86b6ef;
+      --t1: #f0efec; --t2: #f0efec; --t3: #ffffff; --t4: #0b0b0b;
+      --weekend: #222220; --hover: rgba(255,255,255,0.06);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+    font: 13px/1.45 "Noto Sans KR", "Noto Sans Thai", -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 18px 8px; }
+  h1 { font-size: 18px; margin: 0; font-weight: 700; }
+  .sub { color: var(--muted); font-size: 12px; }
+  .nav { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+  .nav button, .nav input { font: inherit; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--axis); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+  .nav input { cursor: text; width: 130px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; padding: 4px 18px 10px; }
+  .tile { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 10px 12px; }
+  .tile .k { color: var(--ink2); font-size: 12px; }
+  .tile .v { font-size: 24px; font-weight: 700; margin-top: 2px; }
+  .tile .v small { font-size: 13px; font-weight: 400; color: var(--ink2); }
+  .tile ol { margin: 4px 0 0; padding-left: 18px; color: var(--ink2); }
+  .tile ol b { color: var(--ink); }
+
+  .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 0 18px 8px; color: var(--ink2); font-size: 12px; }
+  .legend .sw { display: inline-block; width: 18px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; border: 1px solid var(--ring); }
+  .legend .scale span { margin-right: 8px; white-space: nowrap; }
+
+  .wrap { margin: 0 18px 18px; overflow: auto; max-height: calc(100vh - 230px); background: var(--surface);
+    border: 1px solid var(--ring); border-radius: 10px; }
+  table.cal { border-collapse: separate; border-spacing: 2px; }
+  .cal th { position: sticky; top: 0; background: var(--surface); z-index: 2; font-weight: 600; color: var(--ink2);
+    font-size: 11px; padding: 4px 0; min-width: 38px; }
+  .cal th.wk { color: var(--muted); }
+  .cal th.mc, .cal td.mc { position: sticky; left: 0; z-index: 3; background: var(--surface); text-align: left;
+    padding: 0 10px 0 8px; font-weight: 600; color: var(--ink); min-width: 62px; }
+  .cal th.mc { z-index: 4; }
+  .cal td.c { width: 38px; height: 34px; border-radius: 4px; text-align: center; vertical-align: middle;
+    font-size: 11px; font-variant-numeric: tabular-nums; cursor: pointer; position: relative; }
+  .cal td.c.we { background: var(--weekend); }
+  .cal td.c:hover { outline: 2px solid var(--axis); }
+  .cal td.c.sel { outline: 2px solid var(--ink); }
+  .cal td.l1 { background: var(--s1); color: var(--t1); }
+  .cal td.l2 { background: var(--s2); color: var(--t2); }
+  .cal td.l3 { background: var(--s3); color: var(--t3); }
+  .cal td.l4 { background: var(--s4); color: var(--t4); }
+  .cal td.c .n { position: absolute; top: 2px; right: 3px; font-size: 9px; line-height: 1; }
+  .cal td.c.unx { box-shadow: inset 0 0 0 2px var(--critical); }
+  .cal td.c.unx::after { content: "?"; position: absolute; left: 3px; top: 1px; font-size: 9px; font-weight: 700; color: var(--critical); }
+  .cal td.c.l3.unx::after, .cal td.c.l4.unx::after { color: #fff; }
+  .cal td.tot { color: var(--ink2); font-size: 11px; padding: 0 8px; text-align: right; white-space: nowrap; }
+
+  #tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--surface); font-size: 12px;
+    padding: 6px 9px; border-radius: 6px; display: none; z-index: 20; max-width: 280px; }
+
+  #panel { position: fixed; top: 0; right: 0; width: min(460px, 100%); height: 100%; background: var(--surface);
+    border-left: 1px solid var(--ring); box-shadow: -8px 0 24px rgba(0,0,0,0.12); transform: translateX(105%);
+    transition: transform .18s ease; z-index: 30; display: flex; flex-direction: column; }
+  #panel.open { transform: none; }
+  #panel .ph { padding: 14px 16px 10px; border-bottom: 1px solid var(--grid); display: flex; align-items: flex-start; gap: 10px; }
+  #panel .ph h2 { margin: 0; font-size: 17px; }
+  #panel .ph .x { margin-left: auto; font-size: 20px; background: none; border: 0; color: var(--ink2); cursor: pointer; }
+  #panel .pb { overflow: auto; padding: 12px 16px 24px; }
+  .sec { margin: 4px 0 14px; }
+  .sec h3 { font-size: 13px; margin: 0 0 6px; color: var(--ink2); font-weight: 600; }
+  table.sh { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  table.sh td, table.sh th { padding: 4px 6px; border-bottom: 1px solid var(--grid); text-align: right; font-size: 12px; }
+  table.sh th { color: var(--muted); font-weight: 500; }
+  table.sh td:first-child, table.sh th:first-child { text-align: left; }
+  .bar { display: grid; grid-template-columns: 110px 1fr 52px; align-items: center; gap: 8px; margin: 3px 0; font-size: 12px; }
+  .bar .track { height: 10px; }
+  .bar .fill { height: 10px; background: var(--s3); border-radius: 0 4px 4px 0; min-width: 2px; }
+  .bar .fill.nx { background: var(--axis); }
+  .bar .val { text-align: right; color: var(--ink2); font-variant-numeric: tabular-nums; }
+  .note { border: 1px solid var(--ring); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+  .note .top { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 11px; color: var(--ink2); }
+  .badge { border: 1px solid var(--axis); border-radius: 999px; padding: 0 7px; font-size: 11px; color: var(--ink2); }
+  .st { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--ink); }
+  .st i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .note .ko { margin-top: 4px; font-size: 13px; }
+  .note details { margin-top: 3px; color: var(--muted); font-size: 12px; }
+  .note a { color: var(--s3); text-decoration: none; font-size: 12px; }
+  .empty { color: var(--muted); font-size: 12px; padding: 6px 0; }
+  .warnbox { border: 2px solid var(--critical); border-radius: 8px; padding: 8px 10px; font-size: 12px; margin-bottom: 12px; }
+  #loading { padding: 40px; text-align: center; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>STC 로스 달력</h1>
+    <div class="sub">OEE 로스시간 × LINE 기록 · 아침조회 &nbsp;|&nbsp; <span id="upd"></span></div>
+  </div>
+  <div class="nav">
+    <button id="prev" aria-label="이전 달">◀</button>
+    <input id="ym" type="month">
+    <button id="next" aria-label="다음 달">▶</button>
+  </div>
+</header>
+
+<div class="tiles" id="tiles"></div>
+
+<div class="legend">
+  <span class="scale">로스(분/일):
+    <span><i class="sw" style="background:var(--s1)"></i>1–59</span>
+    <span><i class="sw" style="background:var(--s2)"></i>60–179</span>
+    <span><i class="sw" style="background:var(--s3)"></i>180–359</span>
+    <span><i class="sw" style="background:var(--s4)"></i>360+</span>
+  </span>
+  <span>📝 기록 있음 (숫자 = 건수)</span>
+  <span><i class="sw" style="background:transparent;box-shadow:inset 0 0 0 2px var(--critical)"></i>? 설비 로스 120분+ 인데 이유 기록 없음</span>
+</div>
+
+<div class="wrap"><div id="loading">불러오는 중…</div><table class="cal" id="cal"></table></div>
+<div id="tip"></div>
+
+<aside id="panel" aria-hidden="true">
+  <div class="ph"><div><h2 id="pt"></h2><div class="sub" id="ps"></div></div><button class="x" id="px" aria-label="닫기">×</button></div>
+  <div class="pb" id="pb"></div>
+</aside>
+
+<script>
+// 데이터 주소: LINE수집기 웹앱 (Code.gs doGet 의 ?api=loss)
+const API_URL = 'https://script.google.com/macros/s/AKfycbzmKgVmd2fuGfDIJS2ImMxzGBXXjuodifGQH5XgmPnQva91_AO4SzrUBAr5d4vjQBpX/exec';
+const WD = ['일','월','화','수','목','금','토'];
+let D = null, selKey = null;
+
+function lvl(m) { return m <= 0 ? 0 : m < 60 ? 1 : m < 180 ? 2 : m < 360 ? 3 : 4; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmtMin(m) { m = Math.round(m); return m >= 60 ? (Math.floor(m/60) + '시간 ' + (m%60 ? m%60 + '분' : '')).trim() : m + '분'; }
+function stColor(s) {
+  s = s || '';
+  if (/미해결|재발|미조치/.test(s)) return ['var(--critical)', s];
+  if (/완료|조치/.test(s)) return ['var(--good)', s];
+  if (/진행|대기/.test(s)) return ['var(--warning)', s];
+  return ['var(--muted)', s || '보고'];
+}
+
+function load(ym) {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('cal').innerHTML = '';
+  closePanel();
+  if (window.google && google.script && google.script.run) {
+    google.script.run.withSuccessHandler(j => render(JSON.parse(j)))
+      .withFailureHandler(e => { document.getElementById('loading').textContent = '불러오기 실패: ' + e.message; })
+      .getLossCalendar(ym);
+  } else if (window.SAMPLE) {
+    render(window.SAMPLE);
+  } else {
+    // GitHub Pages 등 외부에서 열었을 때
+    fetch(API_URL + '?api=loss&ym=' + encodeURIComponent(ym))
+      .then(r => r.json())
+      .then(render)
+      .catch(e => { document.getElementById('loading').textContent = '불러오기 실패: ' + e.message; });
+  }
+}
+
+function render(data) {
+  D = data;
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('ym').value = data.ym;
+  document.getElementById('upd').textContent = '갱신 ' + data.updated;
+
+  // 요약 타일
+  const s = data.summary;
+  const pct = s.bigLossCells ? Math.round(s.unexplained / s.bigLossCells * 100) : 0;
+  document.getElementById('tiles').innerHTML =
+    '<div class="tile"><div class="k">이번 달 로스 Top 5</div><ol>' +
+      (s.top.length ? s.top.map(t => '<li><b>' + t[0] + '</b> ' + fmtMin(t[1]) + '</li>').join('') : '<li>데이터 없음</li>') + '</ol></div>' +
+    '<div class="tile"><div class="k">설비 로스 120분+ 인 칸</div><div class="v">' + s.bigLossCells + '<small> 칸</small></div></div>' +
+    '<div class="tile"><div class="k">그중 이유 기록 없음</div><div class="v">' + s.unexplained + '<small> 칸 (' + pct + '%)</small></div></div>' +
+    '<div class="tile"><div class="k">미결 기록 (진행·대기·미해결)</div><div class="v">' + s.open + '<small> 건</small></div></div>';
+
+  // 달력
+  let h = '<thead><tr><th class="mc">호기</th>';
+  data.days.forEach(d => {
+    const dt = new Date(d + 'T00:00:00'), w = dt.getDay();
+    h += '<th class="' + (w === 0 || w === 6 ? 'wk' : '') + '">' + dt.getDate() + '<br>' + WD[w] + '</th>';
+  });
+  h += '<th>월 합계</th></tr></thead><tbody>';
+  // 이 달에 OEE 기록도, LINE·조회 기록도 없는 호기는 숨김
+  data.machines.filter(mc => (data.cells[mc] && Object.keys(data.cells[mc]).length) ||
+      (data.notes[mc] && Object.keys(data.notes[mc]).length)).forEach(mc => {
+    let tot = 0;
+    h += '<tr><td class="mc">' + mc + '</td>';
+    data.days.forEach(d => {
+      const c = data.cells[mc] && data.cells[mc][d];
+      const n = (data.notes[mc] && data.notes[mc][d]) || [];
+      const w = new Date(d + 'T00:00:00').getDay();
+      const loss = c ? c.loss : 0; tot += loss;
+      const cls = ['c', loss > 0 ? 'l' + lvl(loss) : (w === 0 || w === 6 ? 'we' : ''), c && c.unexplained ? 'unx' : ''].join(' ');
+      h += '<td class="' + cls + '" data-k="' + mc + '|' + d + '">' + (loss > 0 ? Math.round(loss) : '') +
+        (n.length ? '<span class="n">📝' + (n.length > 1 ? n.length : '') + '</span>' : '') + '</td>';
+    });
+    h += '<td class="tot">' + (tot ? fmtMin(tot) : '') + '</td></tr>';
+  });
+  h += '</tbody>';
+  const cal = document.getElementById('cal');
+  cal.innerHTML = h;
+}
+
+// 툴팁 · 클릭
+const tip = document.getElementById('tip');
+document.getElementById('cal').addEventListener('mousemove', e => {
+  const td = e.target.closest('td.c'); if (!td || !D) { tip.style.display = 'none'; return; }
+  const [mc, d] = td.dataset.k.split('|');
+  const c = D.cells[mc] && D.cells[mc][d];
+  const n = (D.notes[mc] && D.notes[mc][d]) || [];
+  const top = c ? Object.entries(c.codes).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0] + ' ' + x[1] + '분').join(', ') : '';
+  tip.innerHTML = '<b>' + mc + ' · ' + d.slice(5) + '</b><br>' +
+    (c ? '로스 ' + fmtMin(c.loss) + (top ? '<br>' + esc(top) : '') : '로스 없음') +
+    '<br>기록 ' + n.length + '건' + (c && c.unexplained ? '<br>⚠ 이유 기록 없음' : '');
+  tip.style.display = 'block';
+  const x = Math.min(e.clientX + 14, window.innerWidth - 290);
+  tip.style.left = x + 'px'; tip.style.top = (e.clientY + 14) + 'px';
+});
+document.getElementById('cal').addEventListener('mouseleave', () => tip.style.display = 'none');
+document.getElementById('cal').addEventListener('click', e => {
+  const td = e.target.closest('td.c'); if (!td) return;
+  document.querySelectorAll('td.sel').forEach(x => x.classList.remove('sel'));
+  td.classList.add('sel');
+  openPanel(td.dataset.k);
+});
+
+function openPanel(key) {
+  selKey = key;
+  const [mc, d] = key.split('|');
+  const c = D.cells[mc] && D.cells[mc][d];
+  const notes = (D.notes[mc] && D.notes[mc][d]) || [];
+  const dt = new Date(d + 'T00:00:00');
+  document.getElementById('pt').textContent = mc + ' · ' + d + ' (' + WD[dt.getDay()] + ')';
+  document.getElementById('ps').textContent = c ? '로스 ' + fmtMin(c.loss) + ' · 계획 ' + fmtMin(c.plan) + ' · 가동 ' + fmtMin(c.run) : '이 날 OEE 기록 없음';
+
+  let h = '';
+  if (c && c.unexplained) h += '<div class="warnbox">⚠ 설비 관련 로스가 ' + fmtMin(c.equip) + '인데 LINE·아침조회에 이유가 없습니다. 담당자 확인이 필요합니다.</div>';
+
+  // 로스 내역
+  h += '<div class="sec"><h3>로스 내역 (OEE)</h3>';
+  if (c) {
+    const codes = Object.entries(c.codes).sort((a, b) => b[1] - a[1]);
+    const max = codes.length ? codes[0][1] : 1;
+    h += codes.length ? codes.map(x =>
+      '<div class="bar"><span>' + esc(x[0]) + '</span><div class="track"><div class="fill" style="width:' + (x[1] / max * 100) + '%"></div></div><span class="val">' + x[1] + '분</span></div>'
+    ).join('') : '<div class="empty">정지 코드 기록 없음</div>';
+    h += '<table class="sh" style="margin-top:8px"><tr><th>교대</th><th>계획</th><th>가동</th><th>로스</th><th>주요 원인</th></tr>' +
+      c.shifts.map(s => {
+        const t = Object.entries(s.codes).sort((a, b) => b[1] - a[1])[0];
+        return '<tr><td>' + esc(s.shift) + (s.kind && s.kind !== '정규' ? ' (' + esc(s.kind) + ')' : '') + '</td><td>' + s.plan + '</td><td>' + s.run + '</td><td>' + s.loss + '</td><td>' + (t ? esc(t[0]) : '') + '</td></tr>';
+      }).join('') + '</table>';
+  } else h += '<div class="empty">OEE 데이터 없음</div>';
+  h += '</div>';
+
+  // 기록
+  h += '<div class="sec"><h3>이 날의 기록 (' + notes.length + '건)</h3>';
+  if (!notes.length) h += '<div class="empty">LINE·아침조회 기록 없음</div>';
+  notes.slice().sort((a, b) => (a.time || '99') < (b.time || '99') ? -1 : 1).forEach(n => {
+    const st = stColor(n.status);
+    h += '<div class="note"><div class="top"><span class="badge">' + esc(n.src) + '</span>' +
+      (n.time ? '<span>' + esc(n.time) + '</span>' : '') +
+      (n.type ? '<span>' + esc(n.type) + '</span>' : '') +
+      '<span class="st"><i style="background:' + st[0] + '"></i>' + esc(st[1]) + '</span></div>' +
+      '<div class="ko">' + esc(n.ko || n.text) + '</div>' +
+      (n.ko && n.text ? '<details><summary>원문</summary>' + esc(n.text) + '</details>' : '') +
+      (n.photo ? '<a href="' + esc(n.photo) + '" target="_blank">📷 사진 ' + (n.photoCount || 1) + '장 보기 ↗</a>' : '') +
+      '</div>';
+  });
+  h += '<div class="sub" style="margin-top:6px">※ 아침조회는 다음 날 아침 회의 내용을 이 날짜 칸에 붙여서 보여줍니다.</div></div>';
+
+  document.getElementById('pb').innerHTML = h;
+  const p = document.getElementById('panel'); p.classList.add('open'); p.setAttribute('aria-hidden', 'false');
+}
+function closePanel() {
+  const p = document.getElementById('panel'); p.classList.remove('open'); p.setAttribute('aria-hidden', 'true');
+  document.querySelectorAll('td.sel').forEach(x => x.classList.remove('sel'));
+}
+document.getElementById('px').onclick = closePanel;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+function shift(delta) {
+  const [y, m] = document.getElementById('ym').value.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  load(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'));
+}
+document.getElementById('prev').onclick = () => shift(-1);
+document.getElementById('next').onclick = () => shift(1);
+document.getElementById('ym').onchange = e => load(e.target.value);
+
+const now = new Date();
+load(now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'));
+</script>
+</body>
+</html>
