@@ -271,6 +271,24 @@
 
   #tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--surface); font-size: 12px; line-height: 1.5;
     padding: 7px 10px; border-radius: 7px; display: none; z-index: 50; max-width: 300px; box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+
+  /* ---------- 스크롤바 없이: 달력은 화면 폭에 맞춰 늘어나고 페이지째 내려감 ---------- */
+  html, body { height: auto !important; }
+  .layout { align-items: start; }
+  .board { overflow: visible; height: auto !important; }
+  .scroll { overflow: visible; }
+  table.cal { width: calc(100% - 16px); }
+  td.c, .cal.week td.c { width: auto; min-width: 0; }
+  .cal .mc { min-width: 84px; padding-right: 6px; }
+  .cal td.tot { white-space: nowrap; font-size: 10.5px; }
+  .board { min-width: 0; }
+  table.cal { table-layout: fixed; }
+  .cal thead tr.mini th.mc { width: 92px; }
+  .cal thead tr.mini th:last-child { width: 84px; }
+  .insp { position: sticky; top: 12px; max-height: calc(100vh - 24px); }
+  .ib, .insp { scrollbar-width: none; }
+  .ib::-webkit-scrollbar { display: none; }
+  #worst { display: none !important; }
 </style>
 </head>
 <body>
