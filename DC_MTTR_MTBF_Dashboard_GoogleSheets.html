@@ -2326,7 +2326,7 @@ function fetchCSV(url, timeoutMs=15000){
       if(!res.ok){ reject(new Error(`HTTP ${res.status} (${res.statusText || '응답 오류'})`)); return; }
       const text = await res.text();
       if(!text || text.trim().length === 0){ reject(new Error('빈 응답을 받았습니다.')); return; }
-      const parsed = Papa.parse(text, {header:true, skipEmptyLines:true});
+      const parsed = Papa.parse(text, {header:true, skipEmptyLines:true, transformHeader:(h,i)=> (i===0 && !String(h).trim()) ? '일자' : h});
       resolve(parsed.data);
     }catch(err){
       clearTimeout(timer);

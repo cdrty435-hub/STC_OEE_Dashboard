@@ -668,7 +668,7 @@ function fetchCSV(url){
     return r.text();
   }).then(t=>{
     if(/^\s*</.test(t)) throw new Error('CSV가 아닌 응답(게시 설정 확인)');
-    const out = Papa.parse(t, {header:true, skipEmptyLines:true});
+    const out = Papa.parse(t, {header:true, skipEmptyLines:true, transformHeader:(h,i)=> (i===0 && !String(h).trim()) ? '일자' : h});
     return out.data;
   });
 }

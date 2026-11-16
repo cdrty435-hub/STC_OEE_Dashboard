@@ -340,7 +340,7 @@ function parseCSV(text) {
     }
   }
   if (field.length || row.length) { row.push(field); rows.push(row); }
-  const header = rows[0] || [];
+  const header = (rows[0] || []).map((h,i)=> (i===0 && !String(h).trim()) ? '일자' : h);   /* A1 '일자' 칸이 비어도 날짜 열로 인식 */
   return rows.slice(1)
     .filter(r => !(r.length === 1 && r[0] === ''))
     .map(r => { const obj = {}; header.forEach((h,i)=> obj[h]=r[i]); return obj; });

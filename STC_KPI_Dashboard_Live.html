@@ -410,7 +410,7 @@ async function fetchCsv(gid){
   const res = await fetch(csvUrl(gid), { cache:'no-store' });
   if(!res.ok) throw new Error(`시트 응답 오류 (gid=${gid}): ${res.status}`);
   const text = await res.text();
-  return Papa.parse(text, { header:true, skipEmptyLines:true }).data;
+  return Papa.parse(text, { header:true, skipEmptyLines:true, transformHeader:(h,i)=> (i===0 && !String(h).trim()) ? '일자' : h }).data;
 }
 function toNum(v){ if(v===undefined||v===null||v==='') return 0; const n=parseFloat(String(v).replace(/,/g,'').replace('%','')); return isNaN(n)?0:n; }
 function parseDate(s){ if(!s) return null; const d=new Date(s); return isNaN(d.getTime())?null:d; }

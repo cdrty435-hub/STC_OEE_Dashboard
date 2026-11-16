@@ -743,7 +743,7 @@ const OEE_URLS=['https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6U8gG0Mr3oJ-5
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6U8gG0Mr3oJ-5XOOzr7Eh_oZGc-BGHFG0n1__eor4Zc8aJaMuf01NXCAHJECH6U8aUvtnQGLKD5-_/pub?output=csv'];
 let OEE=null, OEE_ERR='', OEE_LOADING=false, OEE_TRY=0, VF_OPEN='', VF_LAST=null;
 function oeeUnpivot(tab){
-  const H=(tab[0]||[]).map(h=>String(h).trim()), ix=n=>H.indexOf(n);
+  const H=(tab[0]||[]).map((h,i)=>{ h=String(h).trim(); return (i===0&&!h)?'일자':h; }), ix=n=>H.indexOf(n);
   const iD=ix('일자'), iM=ix('설비명'), iS=ix('교대'), iR=ix('가동시간_분'), iP=ix('계획시간_분');
   if(iD<0||iM<0) return null;
   const cc=H.map((h,i)=>[i,normK(h)]).filter(([i,h])=>EQ_ALL.includes(h));
