@@ -8601,13 +8601,16 @@ loadData();
       /* 전주 → 금주 무엇이 줄고 늘었나 : 고장원인별 로스시간 · 설비별 F-COST 도넛 (금주 구성) + 전주 대비 표 */
       if (CUR && PREV){
         const PAL = ['#1e3c72','#3b82f6','#f59e0b','#10b981','#cbd5e1'];
-        /* 두 도넛을 같은 설비로 맞춘다 : 금주 로스시간 Worst 4 설비 + 기타 (같은 색) — 왼쪽 = 고장(로스시간) · 오른쪽 = F-COST */
+        /* Worst 설비 도넛 : 표마다 전주 대비 증가량(증감) 큰 설비 4대 + 기타 — 왼쪽 = 고장(로스시간) · 오른쪽 = F-COST */
         const MS = MACHINES.filter(m=>(CUR.s.mc[m]&&CUR.s.mc[m].lossH) || (PREV.s.mc[m]&&PREV.s.mc[m].lossH));
-        const W4 = MS.slice().sort((a,b)=>(CUR.s.mc[b]?CUR.s.mc[b].lossH:0)-(CUR.s.mc[a]?CUR.s.mc[a].lossH:0)).slice(0,4);
         const val = (S, m, k) => S.mc[m] ? S.mc[m][k] : 0;
-        const rankOf = k => { const o = {}; MACHINES.filter(m=>val(CUR.s,m,k)>0).sort((a,b)=>val(CUR.s,b,k)-val(CUR.s,a,k)).forEach((m,i)=>o[m]=i+1); return o; };
+        /* 증감순 : 전주 대비 많이 늘어난 설비부터 (표마다 자기 기준 — 왼쪽 로스시간 · 오른쪽 F-COST) */
+        const dOf = (m, k) => val(CUR.s,m,k) - val(PREV.s,m,k);
+        const byInc = k => MS.slice().sort((a,b)=>dOf(b,k)-dOf(a,k) || val(CUR.s,b,k)-val(CUR.s,a,k));
+        const rankOf = k => { const o = {}; byInc(k).forEach((m,i)=>o[m]=i+1); return o; };
         const RK = { lossH: rankOf('lossH'), cost: rankOf('cost') };
         const donut = (title, k, unit, dp, fmtv, withCause) => {
+          const W4 = byInc(k).slice(0,4);
           const rest = MS.filter(m=>!W4.includes(m));
           const L = W4.map(m=>({ k:'DC'+m, m, c:val(CUR.s,m,k), p:val(PREV.s,m,k) }))
             .concat(rest.length ? [{ k:`기타 ${rest.length}대`, etc:true, c:rest.reduce((a,m)=>a+val(CUR.s,m,k),0), p:rest.reduce((a,m)=>a+val(PREV.s,m,k),0) }] : []);
@@ -8626,7 +8629,7 @@ loadData();
           const dT = tc - tp;
           const nT = withCause ? `<b> / ${CUR.s.n}건</b> <span class="${CUR.s.n-PREV.s.n<0?'g':'r'}">(${CUR.s.n-PREV.s.n<0?'▼':'▲'} ${Math.abs(CUR.s.n-PREV.s.n)}건)</span>` : '';
           return `<div class="dnc"><div class="h"><b>${title}</b><small>${esc(PREV.w)} ${fmtv(tp)}${unit} → ${esc(opt.week)} <b>${fmtv(tc)}${unit}</b> <span class="${dT<0?'g':'r'}">${dT<0?'▼':'▲'} ${fmtv(Math.abs(dT))}${unit}</span>${nT}</small></div>
-            <div class="b">${svg}<table><thead><tr><th title="금주 ${k==='cost'?'F-COST':'로스시간'} 순위 (전체 설비 중)">순위</th><th>설비${withCause?' · 금주 최대 고장':''}</th>${withCause?`<th>${esc(opt.week)} 건수</th>`:''}<th>${esc(PREV.w)}</th><th>${esc(opt.week)}</th><th>증감</th><th>비중</th></tr></thead><tbody>${rows}</tbody>
+            <div class="b">${svg}<table><thead><tr><th title="전주 대비 ${k==='cost'?'F-COST':'로스시간'} 증가 순위 (전체 설비 중)">순위</th><th>설비${withCause?' · 금주 최대 고장':''}</th>${withCause?`<th>${esc(opt.week)} 건수</th>`:''}<th>${esc(PREV.w)}</th><th>${esc(opt.week)}</th><th>증감</th><th>비중</th></tr></thead><tbody>${rows}</tbody>
               <tfoot><tr><td></td><td><b>합계</b></td>${withCause?`<td class="n">${CUR.s.n}건</td>`:''}<td class="n">${fmtv(tp)}</td><td class="n cv">${fmtv(tc)}</td><td class="n ${dT<0?'g':dT>0?'r':''}">${(dT>0?'+':'−')+fmtv(Math.abs(dT))}</td><td class="n s">100%</td></tr></tfoot></table></div></div>`; };
         dnL = donut('Worst 설비 · 고장 로스시간 (h)', 'lossH', 'h', 1, v=>f1(v,1), true); dnC = donut('Worst 설비 · F-COST (THB)', 'cost', '', 0, v=>f0(v), false);
       }
@@ -8673,7 +8676,7 @@ loadData();
       /* 2×2 — 윗줄 : 지표 표 | F-COST 설비별 그래프 · 아랫줄 : Worst 로스시간 | Worst F-COST (줄마다 높이 맞춤) */
       h += `<div class="kw-l2"><div class="q tb">${tblH}</div><div class="q">${fcH}</div><div class="q">${dnL}</div><div class="q">${dnC}</div></div>`;
       if (CUR && PREV){
-        h += `<div class="kw-note" style="margin-top:2px">※ Worst 4 = 금주 <b>로스시간</b>이 큰 설비 4대 (양쪽 같은 설비 · 같은 색으로 비교) · 순위 = 각 표의 기준(왼쪽 로스시간 · 오른쪽 F-COST)으로 매긴 전체 설비 중 순위 — F-COST 는 설비별 M/C Rate 가 달라 로스시간 순위와 다를 수 있음 · 합계 = 1번 주간 요약과 같은 값</div>`;
+        h += `<div class="kw-note" style="margin-top:2px">※ Worst 4 = 전주 대비 <b>증가량(증감)</b>이 큰 설비 4대 — 왼쪽은 로스시간 증감, 오른쪽은 F-COST 증감 기준으로 각각 정렬 (그래서 양쪽 설비·색이 다를 수 있음) · 순위 = 전체 설비 중 증가 순위 (▼ 감소 설비는 뒤쪽) · 합계 = 1번 주간 요약과 같은 값</div>`;
       }
       h += `<div class="kw-tr-act"><button type="button" data-kwtgsug="1">제안값을 목표으로 적용 (비어 있는 칸만)</button><button type="button" data-kwtgclr="1">로스·건수·F-COST 목표 지우기</button></div>`;
 
