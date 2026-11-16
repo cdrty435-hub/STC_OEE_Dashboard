@@ -473,7 +473,8 @@ function card(n) {
     (n.type ? '<span>· ' + esc(n.type) + '</span>' : '') + '<span class="st"><i style="background:' + st[0] + '"></i>' + esc(st[1]) + '</span></div>' +
     '<div class="ko">' + esc(n.ko && n.ko !== '(번역 대기)' ? n.ko : n.text) + '</div>' +
     (n.ko && n.text && n.ko !== '(번역 대기)' ? '<details><summary>원문</summary>' + esc(n.text) + '</details>' : '') + photos(n) +
-    (n.key && API_URL ? '<div class="phbar"><button class="addph" data-key="' + esc(n.key) + '">📷 사진 추가</button><span class="upmsg"></span></div>' : '') + '</div>';
+    (n.key ? '<div class="phbar"><button class="addph" data-key="' + esc(n.key) + '">📷 사진 추가</button><span class="upmsg"></span></div>'
+           : '<div class="phbar"><button class="addph" disabled>📷 사진 추가</button><span class="upmsg err">Apps Script를 「새 버전」으로 배포하면 사용할 수 있습니다</span></div>') + '</div>';
 }
 function photos(n) {
   const ids = n.photos || [], added = n.added || [];
