@@ -277,7 +277,8 @@
   .layout { align-items: start; }
   .board { overflow: visible; height: auto !important; }
   .scroll { overflow: visible; }
-  table.cal { width: calc(100% - 16px); }
+  table.cal { width: calc(100% - 16px); max-width: calc(100% - 16px); }
+  .scroll { min-width: 0; }
   td.c, .cal.week td.c { width: auto; min-width: 0; }
   .cal .mc { min-width: 84px; padding-right: 6px; }
   .cal td.tot { white-space: nowrap; font-size: 10.5px; }
@@ -430,18 +431,24 @@ function rowHead(mc, tot, max) {
   return '<td class="mc"><div class="nm">' + mc + '</div><div class="tt"><i style="width:' + (max ? Math.max(2, tot / max * 44) : 0) + 'px"></i>' + (tot ? hrs(tot) : '') + '</div></td>';
 }
 
-// ---------- 열 폭 맞추기: 모든 날짜 칸을 같은 폭으로 ----------
+// ---------- 열 폭 맞추기: 데이터 없는 날짜(입력 전)는 데이터 날짜의 절반 폭 ----------
 function balanceCols() {
   const t = $('cal'); if (!t) return;
   const ths = [...t.querySelectorAll('thead tr.mini th')];
   if (ths.length < 3) return;
   const mid = ths.slice(1, -1), nar = mid.filter(x => x.classList.contains('nar'));
-  const avail = t.clientWidth - 92 - 84 - 2 * (ths.length + 1);
-  const unit = avail / mid.length;                                   // 모든 날짜 칸 같은 폭 (데이터 없는 날 포함)
-  mid.forEach(x => { x.style.width = Math.floor(unit) + 'px'; });
+  // 표 자신이 아니라 바깥 칸(#scroll) 폭으로 계산 — 확대·축소(Ctrl+휠) 때 표가 계속 커지는 문제 방지
+  const host = $('scroll') || t.parentElement;
+  const cs = getComputedStyle(host), inner = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0);
+  const tw = Math.max(300, Math.floor(inner - 16));
+  t.style.width = tw + 'px';
+  const avail = tw - 92 - 84 - 2 * (ths.length + 1);
+  const unit = avail / (mid.length - nar.length + nar.length * 0.5);
+  mid.forEach(x => { x.style.width = Math.floor(x.classList.contains('nar') ? unit * 0.5 : unit) + 'px'; });
   t.classList.toggle('wide', unit >= 48);
 }
 let BAL_T; window.addEventListener('resize', () => { clearTimeout(BAL_T); BAL_T = setTimeout(balanceCols, 120); });
+try { new ResizeObserver(() => { clearTimeout(BAL_T); BAL_T = setTimeout(balanceCols, 80); }).observe(document.querySelector('.board')); } catch (e) {}
 
 // ---------- 일자(주)별 워스트 4 ----------
 let WORST = {};
