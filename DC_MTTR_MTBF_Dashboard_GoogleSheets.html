@@ -8620,7 +8620,8 @@ loadData();
         const rankOf = k => { const o = {}; byInc(k).forEach((m,i)=>o[m]=i+1); return o; };
         const RK = { lossH: rankOf('lossH'), cost: rankOf('cost') };
         const donut = (title, k, unit, dp, fmtv, withCause) => {
-          const W4 = byInc(k).slice(0,4);
+          /* 뽑기 = 전주 대비 증가량 큰 4대 · 보여주는 순서(순위) = 금주 값이 큰 순 */
+          const W4 = byInc(k).slice(0,4).sort((a,b)=>val(CUR.s,b,k)-val(CUR.s,a,k));
           const rest = MS.filter(m=>!W4.includes(m));
           const L = W4.map(m=>({ k:'DC'+m, m, c:val(CUR.s,m,k), p:val(PREV.s,m,k) }))
             .concat(rest.length ? [{ k:`기타 ${rest.length}대`, etc:true, c:rest.reduce((a,m)=>a+val(CUR.s,m,k),0), p:rest.reduce((a,m)=>a+val(PREV.s,m,k),0) }] : []);
@@ -8633,7 +8634,7 @@ loadData();
             a0 = a1; });
           svg += `<text x="60" y="56" text-anchor="middle" font-size="9" fill="#64748b">${esc(opt.week)}</text><text x="60" y="70" text-anchor="middle" font-size="12.5" font-weight="800" fill="#0f172a">${fmtv(tc)}</text></svg>`;
           const rows = L.map((x,i)=>{ const d = x.c - x.p, top = !x.etc && CUR.s.mc[x.m] && CUR.s.mc[x.m].top[0];
-            const rk = x.etc ? '' : (RK[k][x.m] || '–'), nc = x.etc ? '' : (CUR.s.mc[x.m] ? CUR.s.mc[x.m].n : 0);
+            const rk = x.etc ? '' : i+1, nc = x.etc ? '' : (CUR.s.mc[x.m] ? CUR.s.mc[x.m].n : 0);
             const nAll = withCause && x.etc ? MS.filter(m=>!W4.includes(m)).reduce((a,m)=>a+(CUR.s.mc[m]?CUR.s.mc[m].n:0),0) : nc;
             return `<tr class="${x.etc?'etc':''}"><td class="rk">${rk ? rk+'위' : ''}</td><td><i style="background:${PAL[x.etc?4:i]}"></i><b>${esc(x.k)}</b>${withCause && top ? `<span class="cz">${esc(top.c)} ${f1(top.h,1)}h</span>` : ''}</td>${withCause?`<td class="n">${nAll}건</td>`:''}<td class="n">${fmtv(x.p)}</td><td class="n cv">${fmtv(x.c)}</td><td class="n ${d<0?'g':d>0?'r':''}">${Math.abs(d)<(dp?0.05:1)?'–':(d>0?'+':'−')+fmtv(Math.abs(d))}</td><td class="n s">${tc?Math.round(x.c/tc*100)+'%':''}</td></tr>`; }).join('');
           const dT = tc - tp;
@@ -8686,7 +8687,7 @@ loadData();
       /* 2×2 — 윗줄 : 지표 표 | F-COST 설비별 그래프 · 아랫줄 : Worst 로스시간 | Worst F-COST (줄마다 높이 맞춤) */
       h += `<div class="kw-l2"><div class="q tb">${tblH}</div><div class="q">${fcH}</div><div class="q">${dnL}</div><div class="q">${dnC}</div></div>`;
       if (CUR && PREV){
-        h += `<div class="kw-note" style="margin-top:2px">※ Worst 4 = 전주 대비 <b>증가량(증감)</b>이 큰 설비 4대 — 왼쪽은 로스시간 증감, 오른쪽은 F-COST 증감 기준으로 각각 정렬 (그래서 양쪽 설비·색이 다를 수 있음) · 순위 = 전체 설비 중 증가 순위 (▼ 감소 설비는 뒤쪽) · 합계 = 1번 주간 요약과 같은 값</div>`;
+        h += `<div class="kw-note" style="margin-top:2px">※ Worst 4 = 전주 대비 <b>증가량(증감)</b>이 큰 설비 4대 — 왼쪽은 로스시간, 오른쪽은 F-COST 기준으로 각각 뽑음 (그래서 양쪽 설비·색이 다를 수 있음) · 순위 = 뽑은 4대 중 <b>금주 값이 큰 순</b> · 합계 = 1번 주간 요약과 같은 값</div>`;
       }
       h += `<div class="kw-tr-act"><button type="button" data-kwtgsug="1">제안값을 목표으로 적용 (비어 있는 칸만)</button><button type="button" data-kwtgclr="1">로스·건수·F-COST 목표 지우기</button></div>`;
 
