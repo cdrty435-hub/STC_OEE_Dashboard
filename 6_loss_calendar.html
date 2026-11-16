@@ -125,6 +125,11 @@
   .noworst td.c.w1, .noworst td.c.w2, .noworst td.c.w3, .noworst td.c.w4 { outline: none; }
   .noworst td.c .wr, .noworst ~ #worst { display: none; }
   /* 워스트 4 줄 (달력 맨 아래 고정, 날짜 칸과 같은 폭) */
+  /* 함께 보기: 고장횟수는 보라색 작은 숫자 (파랑 칸 어디서나 읽히게 흰 바탕) */
+  td.c .lv { display: block; line-height: 1.05; }
+  td.c .nf { display: block; width: max-content; margin: 1px auto 0; padding: 0 4px; border-radius: 6px; font-size: 9px; line-height: 11px;
+    font-weight: 700; color: #6d28d9; background: rgba(255,255,255,.9); }
+  .legend .nfk { display: inline-block; padding: 0 4px; border-radius: 6px; font-size: 10px; font-weight: 700; color: #6d28d9; background: #f3e8ff; margin-right: 3px; }
   .cal tfoot td { position: sticky; background: var(--surface); z-index: 2; box-shadow: 0 0 0 2px var(--surface); }
   .cal tfoot tr.wr1 td { bottom: 96px; } .cal tfoot tr.wr2 td { bottom: 64px; }
   .cal tfoot tr.wr3 td { bottom: 32px; } .cal tfoot tr.wr4 td { bottom: 0; }
@@ -307,7 +312,7 @@
 <div class="top">
   <div class="brand"><b>STC 로스 달력</b><span>OEE 로스 × LINE 기록 × 아침조회</span></div>
   <div class="seg"><button id="vMonth" class="on">월간</button><button id="vWeek">주간</button></div>
-  <div class="seg" title="달력 칸의 숫자·색 기준"><button id="mLoss" class="on">로스시간</button><button id="mNof">고장횟수</button></div>
+  <div class="seg" title="달력 칸의 숫자·색 기준"><button id="mBoth" class="on">함께</button><button id="mLoss">로스시간</button><button id="mNof">고장횟수</button></div>
   <div class="period">
     <button id="prev" aria-label="이전">‹</button>
     <div class="lbl" id="plbl">—</div>
@@ -356,7 +361,9 @@ function md(d) { return (+d.slice(5, 7)) + '/' + (+d.slice(8, 10)); }
 function wd(d) { return WD[new Date(d + 'T00:00:00').getDay()]; }
 function lvl(m) { const b = BINS[VIEW]; return m <= 0 ? 0 : m < b[0] ? 1 : m < b[1] ? 2 : m < b[2] ? 3 : 4; }
 // ---------- 로스시간 / 고장횟수 전환 ----------
-let MODE = (() => { try { return localStorage.getItem('lossMode') === 'nof' ? 'nof' : 'loss'; } catch (e) { return 'loss'; } })();
+// both = 로스시간(색·큰 숫자) + 고장횟수(보라 작은 숫자) 함께 · loss · nof
+let MODE = (() => { try { const m = localStorage.getItem('lossMode'); return m === 'nof' || m === 'loss' ? m : 'both'; } catch (e) { return 'both'; } })();
+const nfTag = c => MODE === 'both' && c && c.nof ? '<span class="nf">' + c.nof + '회</span>' : '';
 const NBINS = { month: [2, 4, 6], week: [6, 16, 31] };       // 고장횟수 색 구간: 1 · 2–3 · 4–5 · 6+ (주간 1–5 · 6–15 · 16–30 · 31+)
 const val = c => !c ? 0 : MODE === 'nof' ? (c.nof || 0) : c.loss;
 function lvlV(v) { if (MODE !== 'nof') return lvl(v); const b = NBINS[VIEW]; return v <= 0 ? 0 : v < b[0] ? 1 : v < b[1] ? 2 : v < b[2] ? 3 : 4; }
@@ -434,6 +441,7 @@ function renderLegend() {
     '<span><i class="sw" style="background:var(--s2)"></i>' + b[0] + '–' + (b[1] - 1) + '</span>' +
     '<span><i class="sw" style="background:var(--s3)"></i>' + b[1] + '–' + (b[2] - 1) + '</span>' +
     '<span><i class="sw" style="background:var(--s4)"></i>' + b[2] + '+</span>' +
+    (MODE === 'both' ? '<span><i class="nfk">3회</i>고장횟수</span>' : '') +
     '<span><i class="dot"></i>LINE·아침조회 기록 있음</span>' +
     '<span><i class="ring"></i>설비 로스 120분+ 인데 이유 기록 없음' + (VIEW === 'week' ? ' (숫자=일수)' : '') + '</span>';
 }
@@ -577,7 +585,7 @@ function renderMonth() {
       const loss = val(c);
       const wr = WORST[mc + '|' + d];
       const cls = ['c', loss > 0 ? 'l' + lvlV(loss) : (c ? '' : 'empty'), c && c.unexplained ? 'unx' : '', wr ? 'w' + wr : ''].join(' ');
-      h += '<td class="' + cls + (nar(d) ? ' nar' : '') + '" data-k="' + mc + '|' + d + '">' + (loss > 0 ? Math.round(loss) : '') + wbadge(mc, d) +
+      h += '<td class="' + cls + (nar(d) ? ' nar' : '') + '" data-k="' + mc + '|' + d + '">' + (loss > 0 ? '<span class="lv">' + Math.round(loss) + '</span>' : '') + nfTag(c) + wbadge(mc, d) +
         (n.length ? '<i class="d"></i>' : '') + (c && c.unexplained ? '<span class="q">?</span>' : '') + '</td>';
     });
     h += totCell(mc, days) + '</tr>';
@@ -607,7 +615,7 @@ function renderWeek() {
       const loss = val(c), q = c ? c.unexplainedDays : 0;
       const wr = WORST[mc + '|' + w.key];
       h += '<td class="' + ['c', loss > 0 ? 'l' + lvlV(loss) : (c ? '' : 'empty'), q ? 'unx' : '', wr ? 'w' + wr : ''].join(' ') + '" data-k="' + mc + '|' + w.key + '">' +
-        (loss > 0 ? (MODE === 'nof' ? Math.round(loss) : hrs(loss)) : '') + wbadge(mc, w.key) + (n.length ? '<i class="d"></i>' : '') + (q ? '<span class="q">?' + q + '</span>' : '') + '</td>';
+        (loss > 0 ? '<span class="lv">' + (MODE === 'nof' ? Math.round(loss) : hrs(loss)) + '</span>' : '') + nfTag(c) + wbadge(mc, w.key) + (n.length ? '<i class="d"></i>' : '') + (q ? '<span class="q">?' + q + '</span>' : '') + '</td>';
     });
     h += totCell(mc, ws.map(w => w.key)) + '</tr>';
   });
@@ -1078,14 +1086,15 @@ function move(delta) {
 }
 function setMode(m) {
   MODE = m; try { localStorage.setItem('lossMode', m); } catch (e) {}
-  $('mLoss').classList.toggle('on', m === 'loss'); $('mNof').classList.toggle('on', m === 'nof');
+  $('mLoss').classList.toggle('on', m === 'loss'); $('mNof').classList.toggle('on', m === 'nof'); $('mBoth').classList.toggle('on', m === 'both');
   if (!D) return;
   const k = SEL; render(D);
   if (k) { const td = document.querySelector('td.c[data-k="' + k + '"]'); if (td) td.click(); }
 }
 $('mLoss').onclick = () => setMode('loss');
 $('mNof').onclick = () => setMode('nof');
-$('mLoss').classList.toggle('on', MODE === 'loss'); $('mNof').classList.toggle('on', MODE === 'nof');
+$('mBoth').onclick = () => setMode('both');
+$('mLoss').classList.toggle('on', MODE === 'loss'); $('mNof').classList.toggle('on', MODE === 'nof'); $('mBoth').classList.toggle('on', MODE === 'both');
 $('vMonth').onclick = () => setView('month');
 $('vWeek').onclick = () => setView('week');
 $('prev').onclick = () => move(-1);
