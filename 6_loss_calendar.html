@@ -171,6 +171,15 @@
   .addph:disabled { opacity: .5; cursor: wait; }
   .upmsg { font-size: 11.5px; color: var(--muted); }
   .upmsg.err { color: var(--critical); }
+  #pinbox { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 60; }
+  #pinbox .in { background: var(--surface); border-radius: 12px; padding: 20px 22px; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  #pinbox h4 { margin: 0 0 12px; font-size: 15px; }
+  #pinbox label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+  #pinbox input { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--line2); border-radius: 7px; font: inherit; font-size: 14px; }
+  #pinbox .btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  #pinbox button { padding: 7px 14px; border-radius: 7px; border: 1px solid var(--line2); background: transparent; font: inherit; cursor: pointer; }
+  #pinbox button.ok { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+  #pinbox .err { color: var(--critical); font-size: 12px; margin-top: 8px; min-height: 1em; }
   .trend { display: flex; align-items: flex-end; gap: 2px; height: 70px; border-bottom: 1px solid var(--line2); }
   .trend i { flex: 1; background: var(--s3); border-radius: 2px 2px 0 0; min-height: 1px; }
   .trend i:hover { background: var(--s4); }
@@ -500,22 +509,32 @@ const phInput = Object.assign(document.createElement('input'), { type: 'file', a
 phInput.style.display = 'none'; document.body.appendChild(phInput);
 let PH_KEY = null;
 const noteByKey = k => CUR.find(n => n.key === k);
-function getPin(reset) {
-  let pin = '';
-  try { pin = reset ? '' : localStorage.getItem('photoPin') || ''; } catch (e) {}
-  if (!pin) {
-    pin = (prompt('사진 추가 PIN 번호를 입력하세요') || '').trim();
-    if (!pin) return '';
-    try { localStorage.setItem('photoPin', pin); } catch (e) {}
-  }
-  return pin;
+// PIN·이름 입력창 (페이지 안에 표시 — 브라우저 팝업 차단과 무관)
+const pinBox = document.createElement('div');
+pinBox.id = 'pinbox';
+pinBox.innerHTML = '<div class="in"><h4>📷 사진 추가</h4><label>PIN 번호</label><input id="pinIn" type="password" inputmode="numeric" autocomplete="off">' +
+  '<label>올리는 사람 이름 (생략 가능)</label><input id="whoIn" type="text" autocomplete="name">' +
+  '<div class="err" id="pinErr"></div><div class="btns"><button id="pinNo">취소</button><button class="ok" id="pinOk">확인</button></div></div>';
+document.body.appendChild(pinBox);
+const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+function askPin(msg) {
+  return new Promise(res => {
+    $('pinIn').value = ''; $('whoIn').value = ls('photoWho') || ''; $('pinErr').textContent = msg || '';
+    pinBox.style.display = 'flex'; setTimeout(() => $('pinIn').focus(), 50);
+    const done = ok => {
+      pinBox.style.display = 'none'; $('pinOk').onclick = $('pinNo').onclick = $('pinIn').onkeydown = $('whoIn').onkeydown = null;
+      if (!ok) return res('');
+      const p = $('pinIn').value.trim(); ls('photoPin', p); ls('photoWho', $('whoIn').value.trim()); res(p);
+    };
+    $('pinOk').onclick = () => done(true); $('pinNo').onclick = () => done(false);
+    $('pinIn').onkeydown = $('whoIn').onkeydown = e => { if (e.key === 'Enter') done(true); if (e.key === 'Escape') done(false); };
+  });
 }
-function getWho() {
-  let w = null;
-  try { w = localStorage.getItem('photoWho'); } catch (e) {}
-  if (w === null) { w = (prompt('올리는 사람 이름 (생략 가능)') || '').trim(); try { localStorage.setItem('photoWho', w); } catch (e) {} }
-  return w;
+async function getPin(reset, msg) {
+  const p = reset ? '' : ls('photoPin');
+  return p || await askPin(msg);
 }
+function getWho() { return ls('photoWho') || ''; }
 function shrink(file) {   // 긴 변 1600px, JPEG 85% 로 줄여서 올림
   return new Promise((res, rej) => {
     const img = new Image(), url = URL.createObjectURL(file);
@@ -543,7 +562,7 @@ function setMsg(key, t, err) {
 phInput.addEventListener('change', async () => {
   const files = [...phInput.files], key = PH_KEY; phInput.value = '';
   const n = noteByKey(key); if (!n || !files.length) return;
-  let pin = getPin(); if (!pin) return;
+  let pin = await getPin(); if (!pin) { setMsg(key, 'PIN 번호를 입력해야 올릴 수 있습니다', true); return; }
   const who = getWho();
   const dc = (SEL || '').split('|')[0];
   for (let i = 0; i < files.length; i++) {
@@ -552,7 +571,7 @@ phInput.addEventListener('change', async () => {
       const data = await shrink(files[i]);
       let r = await postApi({ action: 'addPhoto', pin, key, dc, date: n.date, src: n.src, text: n.ko || n.text, who, data });
       if (!r.ok && /PIN/.test(r.error || '')) {
-        pin = getPin(true); if (!pin) { setMsg(key, 'PIN 번호가 필요합니다', true); return; }
+        pin = await getPin(true, 'PIN 번호가 맞지 않습니다. 다시 입력하세요'); if (!pin) { setMsg(key, 'PIN 번호가 필요합니다', true); return; }
         r = await postApi({ action: 'addPhoto', pin, key, dc, date: n.date, src: n.src, text: n.ko || n.text, who, data });
       }
       if (!r.ok) { setMsg(key, '실패: ' + (r.error || ''), true); return; }
@@ -570,11 +589,11 @@ document.addEventListener('click', async e => {
   e.preventDefault();
   const key = x.closest('.note').dataset.key, id = x.dataset.id, n = noteByKey(key);
   if (!n || !confirm('이 사진을 지울까요?')) return;
-  const pin = getPin(); if (!pin) return;
+  const pin = await getPin(); if (!pin) return;
   x.disabled = true;
   try {
     const r = await postApi({ action: 'delPhoto', pin, key, id });
-    if (!r.ok) { setMsg(key, '삭제 실패: ' + (r.error || ''), true); if (/PIN/.test(r.error || '')) getPin(true); x.disabled = false; return; }
+    if (!r.ok) { setMsg(key, '삭제 실패: ' + (r.error || ''), true); if (/PIN/.test(r.error || '')) ls('photoPin', ''); x.disabled = false; return; }
     n.photos = n.photos.filter(v => v !== id); n.added = n.added.filter(v => v !== id);
     drawNotes(); setMsg(key, '사진을 지웠습니다');
   } catch (er) { setMsg(key, '삭제 실패: ' + (er.message || er), true); x.disabled = false; }
