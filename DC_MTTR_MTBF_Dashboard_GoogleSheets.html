@@ -1104,6 +1104,7 @@
     <button class="tabbtn" data-tab="tab-cost"><span class="no">7</span><span class="tx">로스 비용 (F-COST)</span></button>
     <button class="tabbtn" data-tab="tab-pareto"><span class="no">8</span><span class="tx">로스 파레토</span></button>
     <button class="tabbtn" data-tab="tab-repair"><span class="no">9</span><span class="tx">DC·TP 수리이력</span></button>
+    <button class="tabbtn" data-tab="tab-line"><span class="no">10</span><span class="tx">LINE 수집기 (로스 달력)</span></button>
   </nav>
 
   <div class="panes">
@@ -1959,6 +1960,14 @@
   <section id="tab-repair" class="tabpane">
     <iframe id="repairFrame" title="DC·TP 수리이력" data-src="STC_Repair_History.html?embed=1"
       style="display:block;width:100%;height:900px;border:0;background:transparent"></iframe>
+  </section>
+  <!-- ===== 10. LINE 수집기 — 로스 달력 (OEE 로스 × LINE 기록 × 아침조회, 6_loss_calendar.html) ===== -->
+  <section id="tab-line" class="tabpane">
+    <div style="display:flex;justify-content:flex-end;margin:0 0 6px"><a href="6_loss_calendar.html" target="_blank" rel="noopener"
+      style="font-size:12px;color:#475569;text-decoration:none;border:1px solid #cbd5e1;border-radius:6px;padding:4px 10px">↗ 새 창으로 크게 보기</a></div>
+    <iframe id="lineFrame" title="LINE 수집기 · 로스 달력" data-src="6_loss_calendar.html?embed=1"
+      allow="clipboard-read; clipboard-write"
+      style="display:block;width:100%;height:calc(100vh - 70px);min-height:760px;border:0;border-radius:10px;background:transparent"></iframe>
   </section>
   </div><!-- /panes -->
   </div><!-- /layout -->
@@ -6133,6 +6142,7 @@ function renderWeekly(){
 /* ---------- 탭 전환 ---------- */
 function showTab(id){
   if(id==='tab-repair'){ const f=document.getElementById('repairFrame'); if(f && !f.getAttribute('src')) f.setAttribute('src', f.dataset.src+'&v='+Date.now().toString(36)); }
+  if(id==='tab-line'){ const f=document.getElementById('lineFrame'); if(f && !f.getAttribute('src')) f.setAttribute('src', f.dataset.src+'&v='+Date.now().toString(36)); }
   document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('show', p.id===id));
   document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab===id));
   try{ localStorage.setItem('stc_tab', id); }catch(e){}
