@@ -81,7 +81,7 @@
   .scroll { overflow: auto; flex: 1; min-height: 0; }
 
   table.cal { border-collapse: separate; border-spacing: 2px; margin: 4px 8px 10px; }
-  .cal th { position: sticky; background: var(--surface); z-index: 2; font-weight: 500; color: var(--muted); font-size: 10.5px; padding: 0; }
+  .cal th { position: sticky; background: var(--surface); box-shadow: 0 0 0 3px var(--surface); z-index: 2; font-weight: 500; color: var(--muted); font-size: 10.5px; padding: 0; }
   .cal thead tr.mini th { top: 0; height: 30px; vertical-align: bottom; }
   .cal thead tr.days th { top: 30px; padding: 2px 0 4px; }
   .cal th .dn { display: block; color: var(--ink); font-size: 11.5px; font-weight: 600; }
@@ -111,6 +111,40 @@
   td.c.unx .q { position: absolute; left: 3px; top: 1px; font-size: 9px; font-weight: 800; color: var(--critical); }
   td.c.l3.unx .q, td.c.l4.unx .q { color: #fff; }
   .focus td.c:not(.unx) { opacity: .28; }
+  /* 일자별 워스트 4 */
+  :root { --w1: #c2410c; --w2: #ea580c; --w3: #fb923c; --w4: #fdba74; }
+  td.c.w1, td.c.w2, td.c.w3, td.c.w4 { z-index: 1; }
+  td.c.w1 { outline: 2.5px solid var(--w1); outline-offset: -1px; }
+  td.c.w2 { outline: 2.5px solid var(--w2); outline-offset: -1px; }
+  td.c.w3 { outline: 2px solid var(--w3); outline-offset: -1px; }
+  td.c.w4 { outline: 2px solid var(--w4); outline-offset: -1px; }
+  td.c .wr { position: absolute; left: -3px; bottom: -3px; width: 13px; height: 13px; border-radius: 50%; font-size: 8.5px; line-height: 13px;
+    font-weight: 800; color: #fff; text-align: center; box-shadow: 0 0 0 1.5px var(--surface); }
+  td.c .wr.r1 { background: var(--w1); } td.c .wr.r2 { background: var(--w2); }
+  td.c .wr.r3 { background: var(--w3); color: #431407; } td.c .wr.r4 { background: var(--w4); color: #431407; }
+  .noworst td.c.w1, .noworst td.c.w2, .noworst td.c.w3, .noworst td.c.w4 { outline: none; }
+  .noworst td.c .wr, .noworst ~ #worst { display: none; }
+  #worst { padding: 14px 4px 6px; border-top: 1px solid var(--line); margin-top: 10px; }
+  #worst h3 { margin: 0 0 10px 6px; font-size: 13px; display: flex; align-items: baseline; gap: 8px; }
+  #worst h3 span { font-size: 11.5px; color: var(--muted); font-weight: 400; }
+  .wlist { display: flex; gap: 8px; overflow-x: auto; padding: 0 6px 8px; scroll-snap-type: x proximity; }
+  .wday { flex: 0 0 214px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); scroll-snap-align: end; }
+  .wday.today { border-color: var(--ink2); }
+  .wday .wh { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 10px; border-bottom: 1px solid var(--line);
+    font-size: 12.5px; font-weight: 700; }
+  .wday .wh span { font-size: 11px; color: var(--muted); font-weight: 400; }
+  .wit { display: grid; grid-template-columns: 18px 1fr; gap: 6px; padding: 7px 10px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .wit:last-child { border-bottom: 0; border-radius: 0 0 10px 10px; }
+  .wit:hover { background: var(--raise); }
+  .wit .rk { width: 18px; height: 18px; border-radius: 50%; font-size: 10.5px; line-height: 18px; text-align: center; font-weight: 800; color: #fff; }
+  .wit .rk.r1 { background: var(--w1); } .wit .rk.r2 { background: var(--w2); }
+  .wit .rk.r3 { background: var(--w3); color: #431407; } .wit .rk.r4 { background: var(--w4); color: #431407; }
+  .wit .l1x { font-size: 12.5px; display: flex; gap: 6px; align-items: baseline; }
+  .wit .l1x b { font-size: 13px; } .wit .l1x .mn { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink2); font-weight: 600; }
+  .wit .is { font-size: 11.5px; line-height: 1.4; color: var(--ink2); margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical; overflow: hidden; }
+  .wit .is.no { color: var(--critical); }
+  .wit .sb { font-size: 10px; color: var(--muted); margin-right: 3px; }
   td.tot { color: var(--ink2); font-size: 11px; padding: 0 10px; white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
   tr.sum td { color: var(--ink2); font-size: 10.5px; text-align: center; padding-top: 4px; font-variant-numeric: tabular-nums; }
   #loading { padding: 50px; text-align: center; color: var(--muted); }
@@ -231,6 +265,7 @@
   <div class="toggles">
     <button class="tg" id="tgFocus" title="이유 기록이 없는 칸만 강조">? 미기록만 보기</button>
     <button class="tg on" id="tgDots" title="LINE·아침조회 기록 표시">● 기록 표시</button>
+    <button class="tg on" id="tgWorst" title="날짜(주)마다 로스가 가장 큰 4대를 표시하고 주요 이슈를 아래에 정리">★ 워스트 4</button>
   </div>
   <span class="upd" id="upd"></span>
 </div>
@@ -240,7 +275,7 @@
 <div class="layout">
   <section class="board">
     <div class="legend" id="legend"></div>
-    <div class="scroll" id="scroll"><div id="loading">불러오는 중…</div><table class="cal" id="cal"></table></div>
+    <div class="scroll" id="scroll"><div id="loading">불러오는 중…</div><table class="cal" id="cal"></table><div id="worst"></div></div>
   </section>
   <aside class="insp" id="insp">
     <div class="ih"><div class="t" id="it">요약</div><div class="s" id="is"></div></div>
@@ -348,6 +383,59 @@ function rowHead(mc, tot, max) {
   return '<td class="mc"><div class="nm">' + mc + '</div><div class="tt"><i style="width:' + (max ? Math.max(2, tot / max * 44) : 0) + 'px"></i>' + (tot ? hrs(tot) : '') + '</div></td>';
 }
 
+// ---------- 일자(주)별 워스트 4 ----------
+let WORST = {};
+let WORST_ON = (() => { try { return localStorage.getItem('lossWorst') !== '0'; } catch (e) { return true; } })();          // 'DC08|2026-11-12' → 1..4
+function calcWorst(cols) {
+  WORST = {};
+  const ms = machinesShown(), out = [];
+  cols.forEach(k => {
+    const list = ms.map(mc => ({ mc, c: D.cells[mc] && D.cells[mc][k] })).filter(x => x.c && x.c.loss > 0)
+      .sort((a, b) => b.c.loss - a.c.loss).slice(0, 4);
+    list.forEach((x, i) => { WORST[x.mc + '|' + k] = i + 1; });
+    if (list.length) out.push({ k, list });
+  });
+  return out;
+}
+const ISSUE_RANK = n => (/미해결|미조치|재발/.test(n.status || '') ? 0 : 10) +
+  ({ 'LINE 수리': 1, '직접 입력': 2, 'LINE 불량': 3 }[grp(n)] || 4);
+// 그 칸의 주요 이슈: 미해결 → LINE 수리 → 직접 입력 → LINE 불량 → 아침조회 순, 없으면 OEE 주 원인
+function issueOf(mc, k) {
+  const ns = ((D.notes[mc] && D.notes[mc][k]) || []).slice().sort((a, b) => ISSUE_RANK(a) - ISSUE_RANK(b));
+  const c = D.cells[mc] && D.cells[mc][k];
+  const top = c ? Object.entries(c.codes).sort((a, b) => b[1] - a[1])[0] : null;
+  if (ns.length) {
+    const n = ns[0], t = (n.ko && n.ko !== '(번역 대기)' ? n.ko : n.text) || '';
+    return { src: grp(n), text: t.replace(/\s+/g, ' ').trim(), more: ns.length - 1, code: top ? top[0] : '' };
+  }
+  return { src: '', text: top ? top[0] + ' ' + top[1] + '분 — 이유 기록 없음' : '이유 기록 없음', none: true };
+}
+function wbadge(mc, k) { const r = WORST[mc + '|' + k]; return r ? '<span class="wr r' + r + '">' + r + '</span>' : ''; }
+function renderWorstBoard(groups) {
+  const td = today();
+  if (!groups.length) { $('worst').innerHTML = ''; return; }
+  $('worst').innerHTML = '<h3>' + (VIEW === 'week' ? '주별' : '일자별') + ' 워스트 4 <span>로스가 가장 큰 4대와 주요 이슈 · 누르면 상세</span></h3><div class="wlist" id="wlist">' +
+    groups.map(g => {
+      const w = VIEW === 'week' ? D.weeks.find(x => x.key === g.k) : null;
+      const tot = g.list.reduce((a, x) => a + x.c.loss, 0);
+      return '<div class="wday' + (!w && g.k === td ? ' today' : '') + '"><div class="wh">' +
+        (w ? esc(w.label) + ' <span>' + md(w.start) + '~</span>' : md(g.k) + '(' + wd(g.k) + ') <span>4대 ' + fmtMin(tot) + '</span>') + '</div>' +
+        g.list.map((x, i) => {
+          const is = issueOf(x.mc, g.k);
+          return '<div class="wit" data-k="' + x.mc + '|' + g.k + '"><span class="rk r' + (i + 1) + '">' + (i + 1) + '</span><div>' +
+            '<div class="l1x"><b>' + x.mc + '</b>' + (is.code ? '<span class="sb">' + esc(is.code) + '</span>' : '') + '<span class="mn">' + (VIEW === 'week' ? hrs(x.c.loss) : fmtMin(x.c.loss)) + '</span></div>' +
+            '<div class="is' + (is.none ? ' no' : '') + '">' + (is.src ? '<span class="sb">[' + esc(is.src.replace('LINE ', '')) + ']</span>' : (is.none ? '⚠ ' : '')) +
+            esc(is.text) + (is.more ? ' <span class="sb">외 ' + is.more + '건</span>' : '') + '</div></div></div>';
+        }).join('') + '</div>';
+    }).join('') + '</div>';
+  const wl = $('wlist'); wl.scrollLeft = wl.scrollWidth;
+}
+document.addEventListener('click', e => {
+  const it = e.target.closest('.wit'); if (!it) return;
+  const td = document.querySelector('#cal td.c[data-k="' + it.dataset.k + '"]');
+  if (td) { td.scrollIntoView({ block: 'nearest', inline: 'nearest' }); td.click(); }
+});
+
 function renderMonth() {
   const days = D.days, byDay = D.summary.byDay || {};
   const dmax = Math.max(1, ...days.map(d => byDay[d] || 0));
@@ -361,19 +449,22 @@ function renderMonth() {
   const ms = machinesShown();
   const tots = {}; ms.forEach(mc => { tots[mc] = days.reduce((a, d) => a + ((D.cells[mc] && D.cells[mc][d]) ? D.cells[mc][d].loss : 0), 0); });
   const tmax = Math.max(1, ...ms.map(m => tots[m]));
+  const groups = calcWorst(days);
   ms.forEach(mc => {
     h += '<tr>' + rowHead(mc, tots[mc], tmax);
     days.forEach(d => {
       const c = D.cells[mc] && D.cells[mc][d], n = (D.notes[mc] && D.notes[mc][d]) || [];
       const loss = c ? c.loss : 0;
-      const cls = ['c', loss > 0 ? 'l' + lvl(loss) : (c ? '' : 'empty'), c && c.unexplained ? 'unx' : ''].join(' ');
-      h += '<td class="' + cls + '" data-k="' + mc + '|' + d + '">' + (loss > 0 ? Math.round(loss) : '') +
+      const wr = WORST[mc + '|' + d];
+      const cls = ['c', loss > 0 ? 'l' + lvl(loss) : (c ? '' : 'empty'), c && c.unexplained ? 'unx' : '', wr ? 'w' + wr : ''].join(' ');
+      h += '<td class="' + cls + '" data-k="' + mc + '|' + d + '">' + (loss > 0 ? Math.round(loss) : '') + wbadge(mc, d) +
         (n.length ? '<i class="d"></i>' : '') + (c && c.unexplained ? '<span class="q">?</span>' : '') + '</td>';
     });
     h += '<td class="tot">' + (tots[mc] ? fmtMin(tots[mc]) : '') + '</td></tr>';
   });
-  $('cal').className = 'cal' + ($('tgDots').classList.contains('on') ? '' : ' nodots') + (FOCUS ? ' focus' : '');
+  $('cal').className = 'cal' + ($('tgDots').classList.contains('on') ? '' : ' nodots') + (FOCUS ? ' focus' : '') + (WORST_ON ? '' : ' noworst');
   $('cal').innerHTML = h + '</tbody>';
+  renderWorstBoard(groups);
 }
 
 function renderWeek() {
@@ -387,19 +478,22 @@ function renderWeek() {
   const ms = machinesShown();
   const tots = {}; ms.forEach(mc => { tots[mc] = ws.reduce((a, w) => a + ((D.cells[mc] && D.cells[mc][w.key]) ? D.cells[mc][w.key].loss : 0), 0); });
   const tmax = Math.max(1, ...ms.map(m => tots[m]));
+  const groups = calcWorst(ws.map(w => w.key));
   ms.forEach(mc => {
     h += '<tr>' + rowHead(mc, tots[mc], tmax);
     ws.forEach(w => {
       const c = D.cells[mc] && D.cells[mc][w.key], n = (D.notes[mc] && D.notes[mc][w.key]) || [];
       const loss = c ? c.loss : 0, q = c ? c.unexplainedDays : 0;
-      h += '<td class="' + ['c', loss > 0 ? 'l' + lvl(loss) : (c ? '' : 'empty'), q ? 'unx' : ''].join(' ') + '" data-k="' + mc + '|' + w.key + '">' +
-        (loss > 0 ? hrs(loss) : '') + (n.length ? '<i class="d"></i>' : '') + (q ? '<span class="q">?' + q + '</span>' : '') + '</td>';
+      const wr = WORST[mc + '|' + w.key];
+      h += '<td class="' + ['c', loss > 0 ? 'l' + lvl(loss) : (c ? '' : 'empty'), q ? 'unx' : '', wr ? 'w' + wr : ''].join(' ') + '" data-k="' + mc + '|' + w.key + '">' +
+        (loss > 0 ? hrs(loss) : '') + wbadge(mc, w.key) + (n.length ? '<i class="d"></i>' : '') + (q ? '<span class="q">?' + q + '</span>' : '') + '</td>';
     });
     h += '<td class="tot">' + (tots[mc] ? fmtMin(tots[mc]) : '') + '</td></tr>';
   });
   h += '<tr class="sum"><td class="mc" style="color:var(--ink2);font-weight:600">전체</td>' + colTot.map(t => '<td>' + (t ? hrs(t) : '') + '</td>').join('') + '<td></td></tr>';
-  $('cal').className = 'cal week' + ($('tgDots').classList.contains('on') ? '' : ' nodots') + (FOCUS ? ' focus' : '');
+  $('cal').className = 'cal week' + ($('tgDots').classList.contains('on') ? '' : ' nodots') + (FOCUS ? ' focus' : '') + (WORST_ON ? '' : ' noworst');
   $('cal').innerHTML = h + '</tbody>';
+  renderWorstBoard(groups);
 }
 
 // ---------- 인스펙터: 요약 ----------
@@ -796,7 +890,8 @@ document.addEventListener('mousemove', e => {
     const top = c ? Object.entries(c.codes).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => esc(x[0]) + ' ' + x[1] + '분').join('<br>') : '';
     const ttl = VIEW === 'week' ? mc + ' · ' + esc((D.weeks.find(w => w.key === k) || {}).label) : mc + ' · ' + md(k) + '(' + wd(k) + ')';
     tip.innerHTML = '<b>' + ttl + '</b><br>' + (c ? '로스 ' + fmtMin(c.loss) + (top ? '<br><span style="opacity:.75">' + top + '</span>' : '') : 'OEE 기록 없음') +
-      '<br>기록 ' + n.length + '건' + ((VIEW === 'week' ? c && c.unexplainedDays : c && c.unexplained) ? '<br>⚠ 이유 기록 없음' : '');
+      '<br>기록 ' + n.length + '건' + ((VIEW === 'week' ? c && c.unexplainedDays : c && c.unexplained) ? '<br>⚠ 이유 기록 없음' : '') +
+      (WORST_ON && WORST[td.dataset.k] ? '<br><b style="color:var(--w3)">★ 워스트 ' + WORST[td.dataset.k] + '위</b> ' + esc(issueOf(mc, k).text.slice(0, 80)) : '');
   } else if (t) {
     tip.textContent = t.dataset.tip;
   } else { tip.style.display = 'none'; return; }
@@ -815,6 +910,11 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && D) showSum
 let FOCUS = false;
 function toggleFocus() { FOCUS = !FOCUS; $('tgFocus').classList.toggle('on', FOCUS); $('cal').classList.toggle('focus', FOCUS); }
 $('tgFocus').onclick = toggleFocus;
+$('tgWorst').classList.toggle('on', WORST_ON);
+$('tgWorst').onclick = () => {
+  WORST_ON = $('tgWorst').classList.toggle('on'); $('cal').classList.toggle('noworst', !WORST_ON);
+  try { localStorage.setItem('lossWorst', WORST_ON ? '1' : '0'); } catch (e) {}
+};
 $('tgDots').onclick = () => { const on = $('tgDots').classList.toggle('on'); $('cal').classList.toggle('nodots', !on); };
 
 function setView(v) {
