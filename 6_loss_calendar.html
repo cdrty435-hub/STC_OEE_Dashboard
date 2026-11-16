@@ -124,6 +124,29 @@
   td.c .wr.r3 { background: var(--w3); color: #431407; } td.c .wr.r4 { background: var(--w4); color: #431407; }
   .noworst td.c.w1, .noworst td.c.w2, .noworst td.c.w3, .noworst td.c.w4 { outline: none; }
   .noworst td.c .wr, .noworst ~ #worst { display: none; }
+  /* 워스트 4 줄 (달력 맨 아래 고정, 날짜 칸과 같은 폭) */
+  .cal tfoot td { position: sticky; background: var(--surface); z-index: 2; box-shadow: 0 0 0 2px var(--surface); }
+  .cal tfoot tr.wr1 td { bottom: 96px; } .cal tfoot tr.wr2 td { bottom: 64px; }
+  .cal tfoot tr.wr3 td { bottom: 32px; } .cal tfoot tr.wr4 td { bottom: 0; }
+  .cal tfoot tr.wr1 td { box-shadow: 0 0 0 2px var(--surface), 0 -8px 0 var(--surface), 0 -9px 0 var(--line); }
+  .cal tfoot td.mc { z-index: 3; font-size: 11px; color: var(--ink2); font-weight: 600; white-space: nowrap; }
+  .cal tfoot td.mc .rk { display: inline-block; width: 15px; height: 15px; border-radius: 50%; color: #fff; font-size: 9.5px; line-height: 15px;
+    text-align: center; font-weight: 800; margin-right: 4px; }
+  .rk.r1 { background: var(--w1); } .rk.r2 { background: var(--w2); } .rk.r3 { background: var(--w3); color: #431407 !important; } .rk.r4 { background: var(--w4); color: #431407 !important; }
+  td.wc { height: 28px; border-radius: 5px; text-align: center; font-size: 10.5px; font-weight: 700; cursor: pointer; font-variant-numeric: tabular-nums; }
+  td.wc.r1 { background: #fde3d3; color: #7c2d12; outline: 1.5px solid var(--w1); outline-offset: -1.5px; }
+  td.wc.r2 { background: #feeadc; color: #7c2d12; outline: 1.5px solid var(--w2); outline-offset: -1.5px; }
+  td.wc.r3 { background: #fff1e6; color: #7c2d12; outline: 1px solid var(--w3); outline-offset: -1px; }
+  td.wc.r4 { background: #fff7ef; color: #7c2d12; outline: 1px solid var(--w4); outline-offset: -1px; }
+  td.wc.nx::after { content: '!'; color: var(--critical); font-size: 9px; margin-left: 1px; vertical-align: super; }
+  td.wc:hover { outline: 2px solid var(--ink2); outline-offset: -2px; }
+  .noworst tfoot { display: none; }
+  .cal thead tr.days th.colk { cursor: pointer; } .cal thead tr.days th.colk:hover .dn { text-decoration: underline; }
+  .wpan .wit { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 6px; }
+  .wpan .wit .is { -webkit-line-clamp: 5; }
+  .wnav { display: flex; gap: 6px; align-items: center; }
+  .wnav button { border: 1px solid var(--line2); background: transparent; border-radius: 6px; padding: 1px 8px; cursor: pointer; font: inherit; font-size: 12px; }
+  .wnav button:disabled { opacity: .35; cursor: default; }
   #worst { padding: 14px 4px 6px; border-top: 1px solid var(--line); margin-top: 10px; }
   #worst h3 { margin: 0 0 10px 6px; font-size: 13px; display: flex; align-items: baseline; gap: 8px; }
   #worst h3 span { font-size: 11.5px; color: var(--muted); font-weight: 400; }
@@ -387,7 +410,7 @@ function rowHead(mc, tot, max) {
 let WORST = {};
 let WORST_ON = (() => { try { return localStorage.getItem('lossWorst') !== '0'; } catch (e) { return true; } })();          // 'DC08|2026-11-12' → 1..4
 function calcWorst(cols) {
-  WORST = {};
+  WORST = {}; WCOLS = cols;
   const ms = machinesShown(), out = [];
   cols.forEach(k => {
     const list = ms.map(mc => ({ mc, c: D.cells[mc] && D.cells[mc][k] })).filter(x => x.c && x.c.loss > 0)
@@ -395,6 +418,7 @@ function calcWorst(cols) {
     list.forEach((x, i) => { WORST[x.mc + '|' + k] = i + 1; });
     if (list.length) out.push({ k, list });
   });
+  WGROUPS = out;
   return out;
 }
 const ISSUE_RANK = n => (/미해결|미조치|재발/.test(n.status || '') ? 0 : 10) +
@@ -411,25 +435,55 @@ function issueOf(mc, k) {
   return { src: '', text: top ? top[0] + ' ' + top[1] + '분 — 이유 기록 없음' : '이유 기록 없음', none: true };
 }
 function wbadge(mc, k) { const r = WORST[mc + '|' + k]; return r ? '<span class="wr r' + r + '">' + r + '</span>' : ''; }
-function renderWorstBoard(groups) {
-  const td = today();
-  if (!groups.length) { $('worst').innerHTML = ''; return; }
-  $('worst').innerHTML = '<h3>' + (VIEW === 'week' ? '주별' : '일자별') + ' 워스트 4 <span>로스가 가장 큰 4대와 주요 이슈 · 누르면 상세</span></h3><div class="wlist" id="wlist">' +
-    groups.map(g => {
-      const w = VIEW === 'week' ? D.weeks.find(x => x.key === g.k) : null;
-      const tot = g.list.reduce((a, x) => a + x.c.loss, 0);
-      return '<div class="wday' + (!w && g.k === td ? ' today' : '') + '"><div class="wh">' +
-        (w ? esc(w.label) + ' <span>' + md(w.start) + '~</span>' : md(g.k) + '(' + wd(g.k) + ') <span>4대 ' + fmtMin(tot) + '</span>') + '</div>' +
-        g.list.map((x, i) => {
-          const is = issueOf(x.mc, g.k);
-          return '<div class="wit" data-k="' + x.mc + '|' + g.k + '"><span class="rk r' + (i + 1) + '">' + (i + 1) + '</span><div>' +
-            '<div class="l1x"><b>' + x.mc + '</b>' + (is.code ? '<span class="sb">' + esc(is.code) + '</span>' : '') + '<span class="mn">' + (VIEW === 'week' ? hrs(x.c.loss) : fmtMin(x.c.loss)) + '</span></div>' +
-            '<div class="is' + (is.none ? ' no' : '') + '">' + (is.src ? '<span class="sb">[' + esc(is.src.replace('LINE ', '')) + ']</span>' : (is.none ? '⚠ ' : '')) +
-            esc(is.text) + (is.more ? ' <span class="sb">외 ' + is.more + '건</span>' : '') + '</div></div></div>';
-        }).join('') + '</div>';
-    }).join('') + '</div>';
-  const wl = $('wlist'); wl.scrollLeft = wl.scrollWidth;
+let WGROUPS = [], WCOLS = [];
+function renderWorstBoard(groups) { $('worst').innerHTML = ''; }
+// 달력 맨 아래 「워스트 1~4」 4줄 — 날짜 칸과 같은 열에 호기 번호
+function worstRows() {
+  let h = '<tfoot>';
+  for (let r = 1; r <= 4; r++) {
+    h += '<tr class="wr' + r + '"><td class="mc"><span class="rk r' + r + '">' + r + '</span>워스트</td>';
+    WCOLS.forEach(k => {
+      const g = WGROUPS.find(x => x.k === k), x = g && g.list[r - 1];
+      if (!x) { h += '<td></td>'; return; }
+      const nx = issueOf(x.mc, k).none;
+      h += '<td class="wc r' + r + (nx ? ' nx' : '') + '" data-k="' + x.mc + '|' + k + '">' + x.mc.replace(/^DC0?/, '') + '</td>';
+    });
+    h += '<td></td></tr>';
+  }
+  return h + '</tfoot>';
 }
+// 인스펙터: 한 날짜(주)의 워스트 4 와 주요 이슈
+function worstPanel(k) {
+  const gi = WGROUPS.findIndex(x => x.k === k), g = WGROUPS[gi];
+  if (!g) return '<div class="empty">로스 기록이 없습니다</div>';
+  const w = VIEW === 'week' ? D.weeks.find(x => x.key === k) : null;
+  const ttl = w ? esc(w.label) + ' (' + md(w.start) + '~)' : md(k) + '(' + wd(k) + ')';
+  const pk = gi > 0 ? WGROUPS[gi - 1].k : '', nk = gi < WGROUPS.length - 1 ? WGROUPS[gi + 1].k : '';
+  return '<div class="sec wpan"><h3><span class="wnav"><button data-wk="' + pk + '"' + (pk ? '' : ' disabled') + '>‹</button>' +
+    '<b style="color:var(--ink);font-size:13px">' + ttl + ' 워스트 4</b><button data-wk="' + nk + '"' + (nk ? '' : ' disabled') + '>›</button></span>' +
+    '<span>4대 ' + fmtMin(g.list.reduce((a, x) => a + x.c.loss, 0)) + '</span></h3>' +
+    g.list.map((x, i) => {
+      const is = issueOf(x.mc, k);
+      return '<div class="wit" data-k="' + x.mc + '|' + k + '"><span class="rk r' + (i + 1) + '">' + (i + 1) + '</span><div>' +
+        '<div class="l1x"><b>' + x.mc + '</b>' + (is.code ? '<span class="sb">' + esc(is.code) + '</span>' : '') + '<span class="mn">' + (VIEW === 'week' ? hrs(x.c.loss) : fmtMin(x.c.loss)) + '</span></div>' +
+        '<div class="is' + (is.none ? ' no' : '') + '">' + (is.src ? '<span class="sb">[' + esc(is.src.replace('LINE ', '')) + ']</span>' : '⚠ ') +
+        esc(is.text) + (is.more ? ' <span class="sb">외 ' + is.more + '건</span>' : '') + '</div></div></div>';
+    }).join('') + '</div>';
+}
+function openWorst(k) {
+  if (!WGROUPS.find(x => x.k === k)) return;
+  SEL = null; document.querySelectorAll('td.sel').forEach(x => x.classList.remove('sel'));
+  $('it').innerHTML = '<button class="back" id="bk">‹ 요약</button> ' + (VIEW === 'week' ? '주별' : '일자별') + ' 워스트 4';
+  $('is').textContent = '항목을 누르면 그 칸의 상세 · 사진 · 메모가 열립니다';
+  $('ib').innerHTML = worstPanel(k);
+  const bk = $('bk'); if (bk) bk.onclick = showSummary;
+}
+document.addEventListener('click', e => {
+  const nb = e.target.closest('.wnav button[data-wk]');
+  if (nb) { if (nb.dataset.wk) { const keep = $('ib').querySelector('.wpan') && !$('it').querySelector('#bk') ? 'sum' : ''; keep ? ($('ib').querySelector('.wpan').outerHTML = worstPanel(nb.dataset.wk)) : openWorst(nb.dataset.wk); } return; }
+  const th = e.target.closest('thead th.colk'); if (th) { openWorst(th.dataset.col); return; }
+  const wc = e.target.closest('td.wc'); if (wc) { const td = document.querySelector('#cal td.c[data-k="' + wc.dataset.k + '"]'); if (td) td.click(); }
+});
 document.addEventListener('click', e => {
   const it = e.target.closest('.wit'); if (!it) return;
   const td = document.querySelector('#cal td.c[data-k="' + it.dataset.k + '"]');
@@ -444,7 +498,7 @@ function renderMonth() {
     '<th data-tip="' + md(d) + '(' + wd(d) + ') 전체 로스 ' + (byDay[d] ? fmtMin(byDay[d]) : '없음') + '"><div class="mb" style="height:' + ((byDay[d] || 0) / dmax * 26) + 'px"></div></th>').join('') + '<th></th></tr>';
   h += '<tr class="days"><th class="mc" style="text-align:left;padding-left:6px;color:var(--muted)">호기</th>' + days.map(d => {
     const w = new Date(d + 'T00:00:00').getDay();
-    return '<th class="' + (w === 0 || w === 6 ? 'we ' : '') + (d === td ? 'today' : '') + '"><span class="dn">' + (+d.slice(8)) + '</span>' + WD[w] + '</th>';
+    return '<th class="colk ' + (w === 0 || w === 6 ? 'we ' : '') + (d === td ? 'today' : '') + '" data-col="' + d + '" data-tip="누르면 ' + md(d) + ' 워스트 4 이슈"><span class="dn">' + (+d.slice(8)) + '</span>' + WD[w] + '</th>';
   }).join('') + '<th>합계</th></tr></thead><tbody>';
   const ms = machinesShown();
   const tots = {}; ms.forEach(mc => { tots[mc] = days.reduce((a, d) => a + ((D.cells[mc] && D.cells[mc][d]) ? D.cells[mc][d].loss : 0), 0); });
@@ -463,7 +517,7 @@ function renderMonth() {
     h += '<td class="tot">' + (tots[mc] ? fmtMin(tots[mc]) : '') + '</td></tr>';
   });
   $('cal').className = 'cal' + ($('tgDots').classList.contains('on') ? '' : ' nodots') + (FOCUS ? ' focus' : '') + (WORST_ON ? '' : ' noworst');
-  $('cal').innerHTML = h + '</tbody>';
+  $('cal').innerHTML = h + '</tbody>' + worstRows();
   renderWorstBoard(groups);
 }
 
@@ -474,7 +528,7 @@ function renderWeek() {
   let h = '<thead><tr class="mini"><th class="mc"></th>' + ws.map((w, i) =>
     '<th data-tip="' + esc(w.label) + ' 전체 로스 ' + (colTot[i] ? fmtMin(colTot[i]) : '없음') + '"><div class="mb" style="height:' + (colTot[i] / cmax * 26) + 'px"></div></th>').join('') + '<th></th></tr>';
   h += '<tr class="days"><th class="mc" style="text-align:left;padding-left:6px;color:var(--muted)">호기</th>' + ws.map(w =>
-    '<th><span class="dn">' + esc(w.label) + '</span>' + md(w.start) + '~</th>').join('') + '<th>합계</th></tr></thead><tbody>';
+    '<th class="colk" data-col="' + w.key + '" data-tip="누르면 ' + esc(w.label) + ' 워스트 4 이슈"><span class="dn">' + esc(w.label) + '</span>' + md(w.start) + '~</th>').join('') + '<th>합계</th></tr></thead><tbody>';
   const ms = machinesShown();
   const tots = {}; ms.forEach(mc => { tots[mc] = ws.reduce((a, w) => a + ((D.cells[mc] && D.cells[mc][w.key]) ? D.cells[mc][w.key].loss : 0), 0); });
   const tmax = Math.max(1, ...ms.map(m => tots[m]));
@@ -492,7 +546,7 @@ function renderWeek() {
   });
   h += '<tr class="sum"><td class="mc" style="color:var(--ink2);font-weight:600">전체</td>' + colTot.map(t => '<td>' + (t ? hrs(t) : '') + '</td>').join('') + '<td></td></tr>';
   $('cal').className = 'cal week' + ($('tgDots').classList.contains('on') ? '' : ' nodots') + (FOCUS ? ' focus' : '') + (WORST_ON ? '' : ' noworst');
-  $('cal').innerHTML = h + '</tbody>';
+  $('cal').innerHTML = h + '</tbody>' + worstRows();
   renderWorstBoard(groups);
 }
 
@@ -504,7 +558,7 @@ function showSummary() {
   $('is').textContent = '달력 칸을 누르면 그 날(주)의 로스 내역과 기록이 여기에 나옵니다';
   const ct = s.codeTop || [], cmax = ct.length ? ct[0][1] : 1;
   const tp = s.top || [], tmax = tp.length ? tp[0][1] : 1;
-  let h = '<div class="sec"><h3>정지 원인 Top 10 <span>전체 호기</span></h3>' + (ct.length ? ct.map(c =>
+  let h = (WORST_ON && WGROUPS.length ? worstPanel(WGROUPS[WGROUPS.length - 1].k) : '') + '<div class="sec"><h3>정지 원인 Top 10 <span>전체 호기</span></h3>' + (ct.length ? ct.map(c =>
     '<div class="hb" data-tip="' + esc(c[0]) + ' · ' + fmtMin(c[1]) + ' (' + (s.totalLoss ? Math.round(c[1] / s.totalLoss * 100) : 0) + '%)"><span>' + esc(c[0]) +
     '</span><div class="tr"><div class="fl" style="width:' + (c[1] / cmax * 100) + '%"></div></div><span class="vv">' + Math.round(c[1] / 60) + 'h</span></div>').join('') : '<div class="empty">데이터 없음</div>') + '</div>';
   h += '<div class="sec"><h3>로스 Top 5 호기 <span>누르면 해당 호기 강조</span></h3>' + (tp.length ? tp.map(t =>
@@ -610,7 +664,7 @@ function card(n) {
     '<div class="ko">' + esc(n.ko && n.ko !== '(번역 대기)' ? n.ko : n.text) + '</div>' +
     (n.ko && n.text && n.ko !== '(번역 대기)' ? '<details><summary>원문</summary>' + esc(n.text) + '</details>' : '') + photos(n) +
     (memos ? '<div class="memos">' + memos + '</div>' : '') +
-    (n.key ? '<div class="phbar"><button class="addph" data-key="' + esc(n.key) + '">📷 사진</button><button class="addmemo">💬 메모</button>' +
+    (n.key ? '<div class="phbar"><button class="addph" data-key="' + esc(n.key) + '" title="사진 고르기 · 카드 위로 끌어다 놓기 · 카드에 마우스를 올리고 Ctrl+V(캡처 붙여넣기)">📷 사진</button><button class="addmemo">💬 메모</button>' +
       '<span class="upmsg"></span><span class="gap"></span>' + (n.manual ? '<button class="addph del recdel">기록 삭제</button>' : '') + '</div><div class="mbox"></div>'
            : '<div class="phbar"><button class="addph" disabled>📷 사진</button><span class="upmsg err">Apps Script를 「새 버전」으로 배포하면 사용할 수 있습니다</span></div>') + '</div>';
 }
@@ -813,6 +867,24 @@ document.addEventListener('drop', e => {
   if (t.classList.contains('dz')) addRecFiles(e.dataTransfer.files);
   else uploadFiles(t.dataset.key, e.dataTransfer.files);
 });
+// ---------- 붙여넣기 (Ctrl+V) : 캡처한 화면을 바로 올리기 ----------
+let PASTE_KEY = null;   // 마지막으로 마우스를 올렸거나 누른 카드
+document.addEventListener('mouseover', e => { const n = e.target.closest('.note[data-key]'); if (n) PASTE_KEY = n.dataset.key; });
+document.addEventListener('mousedown', e => { const n = e.target.closest('.note[data-key]'); if (n) PASTE_KEY = n.dataset.key; });
+document.addEventListener('paste', e => {
+  if (e.target.closest && e.target.closest('textarea, input')) {           // 글 입력 중에는 사진일 때만 가로챔
+    if (![...(e.clipboardData.items || [])].some(i => i.type.startsWith('image/'))) return;
+  }
+  const files = [...(e.clipboardData.items || [])].filter(i => i.kind === 'file' && i.type.startsWith('image/'))
+    .map((i, n) => { const f = i.getAsFile(); return new File([f], 'capture_' + Date.now() + '_' + n + '.png', { type: f.type }); });
+  if (!files.length) return;
+  e.preventDefault();
+  if (document.querySelector('.rform')) { addRecFiles(files); return; }   // 기록 직접 추가 창이 열려 있으면 거기로
+  if (PASTE_KEY && boxOf(PASTE_KEY)) { uploadFiles(PASTE_KEY, files); return; }
+  const first = document.querySelector('.note[data-key]');
+  if (first) { setMsg(first.dataset.key, '붙여넣을 카드 위에 마우스를 올린 뒤 Ctrl+V 하세요', true); }
+});
+
 window.addEventListener('dragover', e => e.preventDefault());   // 사진을 빈 곳에 놓아도 새 탭으로 열리지 않게
 window.addEventListener('drop', e => e.preventDefault());
 
@@ -842,7 +914,7 @@ function openRecForm() {
     '<div><label>시각</label><input type="time" id="rTime" value="' + hm + '"></div></div>' +
     '<label>내용 · ' + esc(mc) + ' ' + md(d) + (top ? ' (OEE 주 원인: ' + esc(top[0]) + ' ' + top[1] + '분)' : '') + '</label>' +
     '<textarea id="rText" placeholder="무슨 문제였고 어떻게 조치했는지 적어 주세요"></textarea>' +
-    '<div class="dz"><span class="t">📷 사진을 여기로 끌어다 놓거나 눌러서 선택</span><div class="th"></div></div>' +
+    '<div class="dz"><span class="t">📷 사진을 끌어다 놓기 · 눌러서 선택 · 캡처 후 Ctrl+V</span><div class="th"></div></div>' +
     '<div class="fbtn"><span class="upmsg" id="rMsg"></span><button class="rno">취소</button><button class="ok rsave">저장</button></div></div>';
   $('rText').focus();
 }
@@ -913,6 +985,7 @@ $('tgFocus').onclick = toggleFocus;
 $('tgWorst').classList.toggle('on', WORST_ON);
 $('tgWorst').onclick = () => {
   WORST_ON = $('tgWorst').classList.toggle('on'); $('cal').classList.toggle('noworst', !WORST_ON);
+  if (!SEL && !$('bk')) showSummary();
   try { localStorage.setItem('lossWorst', WORST_ON ? '1' : '0'); } catch (e) {}
 };
 $('tgDots').onclick = () => { const on = $('tgDots').classList.toggle('on'); $('cal').classList.toggle('nodots', !on); };
