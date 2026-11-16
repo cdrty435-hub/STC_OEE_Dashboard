@@ -430,15 +430,15 @@ function rowHead(mc, tot, max) {
   return '<td class="mc"><div class="nm">' + mc + '</div><div class="tt"><i style="width:' + (max ? Math.max(2, tot / max * 44) : 0) + 'px"></i>' + (tot ? hrs(tot) : '') + '</div></td>';
 }
 
-// ---------- 열 폭 맞추기: 데이터 없는 날짜(입력 전)는 데이터 날짜의 절반 폭 ----------
+// ---------- 열 폭 맞추기: 모든 날짜 칸을 같은 폭으로 ----------
 function balanceCols() {
   const t = $('cal'); if (!t) return;
   const ths = [...t.querySelectorAll('thead tr.mini th')];
   if (ths.length < 3) return;
   const mid = ths.slice(1, -1), nar = mid.filter(x => x.classList.contains('nar'));
   const avail = t.clientWidth - 92 - 84 - 2 * (ths.length + 1);
-  const unit = avail / (mid.length - nar.length + nar.length * 0.5);
-  mid.forEach(x => { x.style.width = Math.floor(x.classList.contains('nar') ? unit * 0.5 : unit) + 'px'; });
+  const unit = avail / mid.length;                                   // 모든 날짜 칸 같은 폭 (데이터 없는 날 포함)
+  mid.forEach(x => { x.style.width = Math.floor(unit) + 'px'; });
   t.classList.toggle('wide', unit >= 48);
 }
 let BAL_T; window.addEventListener('resize', () => { clearTimeout(BAL_T); BAL_T = setTimeout(balanceCols, 120); });
