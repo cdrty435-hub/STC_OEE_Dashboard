@@ -950,7 +950,7 @@ body.only-layout .f2-wrap{display:block;} body.only-layout .f2-main{max-width:no
       noWeek:true → 그 페이지엔 주차 선택이 없으므로 주차 동기화를 시도하지 않는다.
    ========================================================================= */
 const PORTAL_BUILD = Date.now().toString(36);   /* 열 때마다 바뀌는 캐시 무효화 표식 */
-const GROUPS = ['all','fac1','fac2','sheet'];      /* 1. 종합(FAC1·FAC2)  2. FAC1 다이캐스팅  3. FAC2 MCT  4. 구글시트(OEE_RawData_APQ) */
+const GROUPS = ['all','fac1','fac2','sheet','line'];      /* 1. 종합(FAC1·FAC2)  2. FAC1 다이캐스팅  3. FAC2 MCT  4. 구글시트(OEE_RawData_APQ) */
 const TABS = [
   { id:'overview', g:'all',  src:null },
   { id:'focus',    g:'all',  src:null },
@@ -971,7 +971,8 @@ const TABS = [
   { id:'conv',     g:'fac1', src:'STC_OEE_DataConverter.html', tool:true },
   { id:'f2ov',     g:'fac2', src:null },
   { id:'conv2',    g:'fac2', src:'STC_FAC2_DataConverter.html', tool:true, noWeek:true },
-  { id:'gsheet',   g:'sheet', src:null }          /* 4. 원천 구글시트 OEE_RawData_APQ — renderGSheet() 가 그린다 */
+  { id:'gsheet',   g:'sheet', src:null },
+  { id:'linesheet', g:'line', src:null }      /* 5. LINE 수집기 구글시트 — renderLineSheet() 가 그린다 */          /* 4. 원천 구글시트 OEE_RawData_APQ — renderGSheet() 가 그린다 */
 ];
 
 /* =========================================================================
@@ -5770,6 +5771,26 @@ const gsT = k => (GS_TX[LANG]||GS_TX.ko)[k];
 Object.assign(I18N.ko, { 'grp.sheet':'구글시트 (원천 데이터)', 'tab.gsheet':'OEE_RawData_APQ' });
 Object.assign(I18N.en, { 'grp.sheet':'Google Sheet (source data)', 'tab.gsheet':'OEE_RawData_APQ' });
 Object.assign(I18N.th, { 'grp.sheet':'Google Sheet (ข้อมูลต้นทาง)', 'tab.gsheet':'OEE_RawData_APQ' });
+/* 5. LINE 수집기 구글시트 (LINE방 글·사진 → LOG · 불량이력 · 수리이력 · 조회회의록 · 사진추가 · 직접기록) */
+const LS_ID = '1N8djLhdHiJDLQmC5iufhhN3y4uKlSD2I1SQm9Vsrv8w', LS_GID = '1708323568';
+const LS_TX = { ko:{ title:'LINE 수집기 구글시트', sub:'LINE방 글·사진 수집 → 불량이력 · 수리이력 · 조회회의록 · 사진추가 · 직접기록', open:'새 창에서 열기', reload:'새로고침', hint:'안에서 편집이 안 되면(로그인 필요) 「새 창에서 열기」를 누르세요.' },
+                en:{ title:'LINE collector Google Sheet', sub:'LINE group messages & photos → defects · repairs · morning meetings · photos · manual records', open:'Open in new window', reload:'Reload', hint:'If editing is blocked here (sign-in needed), use “Open in new window”.' },
+                th:{ title:'Google Sheet ตัวเก็บข้อมูล LINE', sub:'ข้อความ·รูปจากกลุ่ม LINE → ของเสีย · การซ่อม · ประชุมเช้า', open:'เปิดหน้าต่างใหม่', reload:'โหลดใหม่', hint:'ถ้าแก้ไขในนี้ไม่ได้ (ต้องล็อกอิน) ให้กด “เปิดหน้าต่างใหม่”' } };
+const lsT = k => (LS_TX[LANG]||LS_TX.ko)[k];
+Object.assign(I18N.ko, { 'grp.line':'LINE 수집기 (구글시트)', 'tab.linesheet':'LINE수집기' });
+Object.assign(I18N.en, { 'grp.line':'LINE collector (Google Sheet)', 'tab.linesheet':'LINE collector' });
+Object.assign(I18N.th, { 'grp.line':'ตัวเก็บข้อมูล LINE (Google Sheet)', 'tab.linesheet':'LINE collector' });
+function renderLineSheet(force){
+  const host = document.getElementById('panel-linesheet'); if(!host) return;
+  const url = `https://docs.google.com/spreadsheets/d/${LS_ID}/edit?gid=${LS_GID}#gid=${LS_GID}`;
+  const old = host.querySelector('iframe');
+  if(old && !force){ const t = host.querySelector('[data-ls="t"]'); if(t){ t.textContent = lsT('title'); host.querySelector('[data-ls="s"]').textContent = lsT('sub'); } return; }
+  host.innerHTML = `<div class="ov"><div class="gs-bar"><div style="flex:1;min-width:220px"><b data-ls="t" style="font-size:14px">${lsT('title')}</b><br><small data-ls="s" style="color:var(--ink-muted)">${lsT('sub')}</small></div>
+      <button class="alt" onclick="renderLineSheet(true)">🔄 ${lsT('reload')}</button><a href="${url}" target="_blank" rel="noopener">↗ ${lsT('open')}</a></div>
+    <iframe class="gs-frame" src="${url}" title="LINE수집기" allow="clipboard-read; clipboard-write"></iframe>
+    <div class="foot" style="margin-top:6px">${lsT('hint')}</div></div>`;
+}
+
 function renderGSheet(force){
   const host = document.getElementById('panel-gsheet'); if(!host) return;
   const url = `https://docs.google.com/spreadsheets/d/${GS_ID}/edit?usp=sharing`;
@@ -5890,6 +5911,7 @@ function selectTab(id){
   if(t && t.src) ensureFrame(t);
   if(id==='f2ov') renderF2();
   if(id==='gsheet') renderGSheet();
+  if(id==='linesheet') renderLineSheet();
   if(id==='focus') renderFocus();
   if(id==='myboard') renderMyBoard();
 }
