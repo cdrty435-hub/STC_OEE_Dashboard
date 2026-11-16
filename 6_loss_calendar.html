@@ -171,6 +171,33 @@
   .addph:disabled { opacity: .5; cursor: wait; }
   .upmsg { font-size: 11.5px; color: var(--muted); }
   .upmsg.err { color: var(--critical); }
+  .b-man { background: var(--raise); color: var(--ink); border: 1px solid var(--line2); }
+  .note.drop { outline: 2px dashed var(--accent); outline-offset: -4px; background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
+  .phbar .gap { flex: 1; }
+  .phbar .addph.del { border-style: solid; }
+  .memos { margin-top: 8px; border-left: 3px solid var(--line2); padding-left: 8px; }
+  .memo { font-size: 12.5px; line-height: 1.45; margin: 4px 0; }
+  .memo .m { color: var(--muted); font-size: 11px; margin-left: 4px; }
+  .memo button { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 11px; padding: 0 2px; }
+  .memo button.armed, .x.armed, .addph.armed { color: var(--critical) !important; border-color: var(--critical) !important; }
+  .mform { margin-top: 8px; }
+  .mform textarea, .rform textarea, .rform select, .rform input[type=time] { width: 100%; box-sizing: border-box; border: 1px solid var(--line2); border-radius: 7px;
+    padding: 7px 9px; font: inherit; font-size: 13px; background: var(--surface); color: var(--ink); }
+  .mform textarea, .rform textarea { min-height: 64px; resize: vertical; }
+  .fbtn { display: flex; gap: 6px; justify-content: flex-end; margin-top: 6px; align-items: center; }
+  .fbtn button { padding: 5px 12px; border-radius: 6px; border: 1px solid var(--line2); background: transparent; font: inherit; font-size: 12px; cursor: pointer; }
+  .fbtn button.ok { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+  .fbtn .upmsg { margin-right: auto; }
+  .addrec { width: 100%; margin: 4px 0 10px; padding: 8px; border: 1px dashed var(--line2); border-radius: 8px; background: transparent;
+    color: var(--muted); font: inherit; font-size: 12.5px; cursor: pointer; }
+  .addrec:hover { color: var(--accent); border-color: var(--accent); }
+  .rform { border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 10px; background: var(--raise); }
+  .rform .row2 { display: grid; grid-template-columns: 1fr 1fr 90px; gap: 6px; margin-bottom: 6px; }
+  .rform label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 2px; }
+  .dz { margin-top: 6px; border: 1px dashed var(--line2); border-radius: 7px; padding: 10px; text-align: center; font-size: 12px; color: var(--muted); cursor: pointer; }
+  .dz.drop { border-color: var(--accent); color: var(--accent); }
+  .dz .th { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 6px; }
+  .dz .th img { width: 54px; height: 54px; object-fit: cover; border-radius: 5px; }
   #pinbox { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 60; }
   #pinbox .in { background: var(--surface); border-radius: 12px; padding: 20px 22px; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
   #pinbox h4 { margin: 0 0 12px; font-size: 15px; }
@@ -456,15 +483,18 @@ function openWeek(key) {
 function reveal() { if (window.innerWidth <= 1100) $('insp').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
 // ---------- 기록 필터 ----------
-const SRC = ['LINE 불량', 'LINE 수리', '아침조회'];
-const FILTER = { 'LINE 불량': true, 'LINE 수리': true, '아침조회': true, openOnly: false };
+const SRC = ['LINE 불량', 'LINE 수리', '아침조회', '직접 입력'];
+const FILTER = { 'LINE 불량': true, 'LINE 수리': true, '아침조회': true, '직접 입력': true, openOnly: false };
 try { Object.assign(FILTER, JSON.parse(localStorage.getItem('lossNoteFilter') || '{}')); } catch (e) {}
 let CUR = [], CUR_DATE = false;
 const grp = n => /^아침조회/.test(n.src) ? '아침조회' : n.src;
 const isOpen = n => /미해결|재발|진행|대기|미조치/.test(n.status || '');
 function notesSection(notes, showDate, title) {
   CUR = notes; CUR_DATE = showDate;
-  return '<div class="sec"><h3>' + title + ' <span>' + notes.length + '건</span></h3><div class="chips" id="chips"></div><div id="notelist"></div></div>';
+  const canAdd = !showDate && VIEW === 'month' && SEL;
+  return '<div class="sec"><h3>' + title + ' <span>' + notes.length + '건</span></h3>' +
+    (canAdd ? '<button class="addrec" id="addrec">＋ 기록 직접 추가 (내용·사진)</button><div id="rformBox"></div>' : '') +
+    '<div class="chips" id="chips"></div><div id="notelist"></div></div>';
 }
 function drawNotes() {
   const cnt = {}; CUR.forEach(n => { const g = grp(n); cnt[g] = (cnt[g] || 0) + 1; });
@@ -476,14 +506,19 @@ function drawNotes() {
 }
 function card(n) {
   const st = stColor(n.status), g = grp(n);
-  const bc = g === 'LINE 불량' ? 'b-def' : g === 'LINE 수리' ? 'b-rep' : 'b-mtg';
+  const bc = g === 'LINE 불량' ? 'b-def' : g === 'LINE 수리' ? 'b-rep' : g === '직접 입력' ? 'b-man' : 'b-mtg';
+  const memos = (n.memos || []).map(m => '<div class="memo">💬 ' + esc(m.text) + '<span class="m">' + esc(m.who || '') + ' ' + esc(m.at || '') + '</span>' +
+    '<button class="mdel" data-id="' + esc(m.id) + '" title="메모 지우기">지우기</button></div>').join('');
   return '<div class="note"' + (n.key ? ' data-key="' + esc(n.key) + '"' : '') + '><div class="top2"><span class="badge ' + bc + '">' + esc(n.src) + '</span>' +
     (CUR_DATE && n.date ? '<b>' + md(n.date) + '(' + wd(n.date) + ')</b>' : '') + (n.time ? '<span>' + esc(n.time) + '</span>' : '') +
-    (n.type ? '<span>· ' + esc(n.type) + '</span>' : '') + '<span class="st"><i style="background:' + st[0] + '"></i>' + esc(st[1]) + '</span></div>' +
+    (n.type ? '<span>· ' + esc(n.type) + '</span>' : '') + (n.manual && n.who ? '<span>· ' + esc(n.who) + '</span>' : '') +
+    '<span class="st"><i style="background:' + st[0] + '"></i>' + esc(st[1]) + '</span></div>' +
     '<div class="ko">' + esc(n.ko && n.ko !== '(번역 대기)' ? n.ko : n.text) + '</div>' +
     (n.ko && n.text && n.ko !== '(번역 대기)' ? '<details><summary>원문</summary>' + esc(n.text) + '</details>' : '') + photos(n) +
-    (n.key ? '<div class="phbar"><button class="addph" data-key="' + esc(n.key) + '">📷 사진 추가</button><span class="upmsg"></span></div>'
-           : '<div class="phbar"><button class="addph" disabled>📷 사진 추가</button><span class="upmsg err">Apps Script를 「새 버전」으로 배포하면 사용할 수 있습니다</span></div>') + '</div>';
+    (memos ? '<div class="memos">' + memos + '</div>' : '') +
+    (n.key ? '<div class="phbar"><button class="addph" data-key="' + esc(n.key) + '">📷 사진</button><button class="addmemo">💬 메모</button>' +
+      '<span class="upmsg"></span><span class="gap"></span>' + (n.manual ? '<button class="addph del recdel">기록 삭제</button>' : '') + '</div><div class="mbox"></div>'
+           : '<div class="phbar"><button class="addph" disabled>📷 사진</button><span class="upmsg err">Apps Script를 「새 버전」으로 배포하면 사용할 수 있습니다</span></div>') + '</div>';
 }
 function photos(n) {
   const ids = n.photos || [], added = n.added || [];
@@ -559,51 +594,197 @@ function setMsg(key, t, err) {
   const m = b.querySelector('.upmsg'); m.textContent = t; m.classList.toggle('err', !!err);
   b.querySelector('.addph').disabled = !err && /올리는/.test(t);
 }
-phInput.addEventListener('change', async () => {
-  const files = [...phInput.files], key = PH_KEY; phInput.value = '';
-  const n = noteByKey(key); if (!n || !files.length) return;
-  let pin = await getPin(); if (!pin) { setMsg(key, 'PIN 번호를 입력해야 올릴 수 있습니다', true); return; }
-  const who = getWho();
+// PIN 확인 후 서버 호출 (PIN이 틀리면 다시 물어봄)
+async function api(body) {
+  let pin = await getPin();
+  if (!pin) throw new Error('PIN 번호를 입력해야 합니다');
+  let r = await postApi(Object.assign({}, body, { pin, who: getWho() }));
+  if (!r.ok && /PIN/.test(r.error || '')) {
+    pin = await getPin(true, 'PIN 번호가 맞지 않습니다. 다시 입력하세요');
+    if (!pin) throw new Error('PIN 번호가 필요합니다');
+    r = await postApi(Object.assign({}, body, { pin, who: getWho() }));
+  }
+  return r;
+}
+async function uploadFiles(key, files) {
+  const n = noteByKey(key);
+  files = [...files].filter(f => /^image\//.test(f.type));
+  if (!n || !files.length) { if (n) setMsg(key, '사진 파일만 올릴 수 있습니다', true); return; }
   const dc = (SEL || '').split('|')[0];
   for (let i = 0; i < files.length; i++) {
     setMsg(key, '올리는 중… ' + (i + 1) + '/' + files.length);
     try {
       const data = await shrink(files[i]);
-      let r = await postApi({ action: 'addPhoto', pin, key, dc, date: n.date, src: n.src, text: n.ko || n.text, who, data });
-      if (!r.ok && /PIN/.test(r.error || '')) {
-        pin = await getPin(true, 'PIN 번호가 맞지 않습니다. 다시 입력하세요'); if (!pin) { setMsg(key, 'PIN 번호가 필요합니다', true); return; }
-        r = await postApi({ action: 'addPhoto', pin, key, dc, date: n.date, src: n.src, text: n.ko || n.text, who, data });
-      }
+      const r = await api({ action: 'addPhoto', key, dc, date: n.date, src: n.src, text: n.ko || n.text, data });
       if (!r.ok) { setMsg(key, '실패: ' + (r.error || ''), true); return; }
       n.photos = (n.photos || []).concat(r.id); n.added = (n.added || []).concat(r.id);
-    } catch (e) {
-      setMsg(key, '실패: ' + (e.message || e) + ' (Apps Script 새 버전 배포 확인)', true); return;
-    }
+    } catch (e) { setMsg(key, '실패: ' + (e.message || e), true); return; }
   }
   drawNotes(); setMsg(key, '✅ ' + files.length + '장 추가됨');
-});
+}
+phInput.addEventListener('change', () => { const f = [...phInput.files]; phInput.value = ''; uploadFiles(PH_KEY, f); });
+
+// 두 번 눌러야 지워지는 버튼 (브라우저 확인창 대신)
+function armed(btn, label) {
+  if (btn.classList.contains('armed')) return true;
+  const old = btn.textContent; btn.classList.add('armed'); btn.textContent = label || '한 번 더 누르면 삭제';
+  setTimeout(() => { btn.classList.remove('armed'); btn.textContent = old; }, 3000);
+  return false;
+}
+
 document.addEventListener('click', async e => {
-  const a = e.target.closest('.addph');
-  if (a) { PH_KEY = a.dataset.key; phInput.click(); return; }
-  const x = e.target.closest('.ph .x'); if (!x) return;
+  const a = e.target.closest('.addph:not(.del)');
+  if (a && a.dataset.key) { PH_KEY = a.dataset.key; phInput.click(); return; }
+  const box = e.target.closest('.note'), key = box && box.dataset.key, n = key && noteByKey(key);
+
+  // 💬 메모 쓰기
+  if (e.target.closest('.addmemo') && n) {
+    const mb = box.querySelector('.mbox');
+    if (mb.innerHTML) { mb.innerHTML = ''; return; }
+    mb.innerHTML = '<div class="mform"><textarea placeholder="원인, 조치 내용, 부품 등을 적어 주세요"></textarea>' +
+      '<div class="fbtn"><button class="mno">취소</button><button class="ok msave">저장</button></div></div>';
+    mb.querySelector('textarea').focus(); return;
+  }
+  if (e.target.closest('.mno')) { box.querySelector('.mbox').innerHTML = ''; return; }
+  if (e.target.closest('.msave') && n) {
+    const ta = box.querySelector('.mbox textarea'), text = ta.value.trim(); if (!text) return;
+    const b = e.target.closest('.msave'); b.disabled = true; b.textContent = '저장 중…';
+    try {
+      const r = await api({ action: 'addMemo', key, dc: (SEL || '').split('|')[0], date: n.date, text });
+      if (!r.ok) throw new Error(r.error);
+      n.memos = (n.memos || []).concat({ id: r.id, text, who: getWho(), at: r.at });
+      drawNotes(); setMsg(key, '✅ 메모 저장됨');
+    } catch (er) { b.disabled = false; b.textContent = '저장'; setMsg(key, '실패: ' + (er.message || er), true); }
+    return;
+  }
+  // 메모 지우기
+  const md_ = e.target.closest('.mdel');
+  if (md_ && n) {
+    if (!armed(md_, '정말 지우기')) return;
+    try {
+      const r = await api({ action: 'delManual', id: md_.dataset.id });
+      if (!r.ok) throw new Error(r.error);
+      n.memos = n.memos.filter(m => m.id !== md_.dataset.id); drawNotes();
+    } catch (er) { setMsg(key, '실패: ' + (er.message || er), true); }
+    return;
+  }
+  // 직접 넣은 기록 삭제
+  const rd = e.target.closest('.recdel');
+  if (rd && n) {
+    if (!armed(rd, '한 번 더 누르면 삭제')) return;
+    try {
+      const r = await api({ action: 'delManual', id: key });
+      if (!r.ok) throw new Error(r.error);
+      removeNote(key); refreshDay();
+    } catch (er) { setMsg(key, '실패: ' + (er.message || er), true); }
+    return;
+  }
+  // 사진 지우기
+  const x = e.target.closest('.ph .x');
+  if (x && n) {
+    e.preventDefault();
+    if (!armed(x, '?')) return;
+    const id = x.dataset.id; x.disabled = true;
+    try {
+      const r = await api({ action: 'delPhoto', key, id });
+      if (!r.ok) throw new Error(r.error);
+      n.photos = n.photos.filter(v => v !== id); n.added = n.added.filter(v => v !== id);
+      drawNotes(); setMsg(key, '사진을 지웠습니다');
+    } catch (er) { setMsg(key, '삭제 실패: ' + (er.message || er), true); x.disabled = false; }
+    return;
+  }
+  // ＋ 기록 직접 추가
+  if (e.target.closest('#addrec')) { openRecForm(); return; }
+  if (e.target.closest('.rno')) { $('rformBox').innerHTML = ''; $('addrec').style.display = ''; return; }
+  if (e.target.closest('.rsave')) { saveRecord(e.target.closest('.rsave')); return; }
+  if (e.target.closest('.dz')) { recInput.click(); return; }
+});
+
+// ---------- 끌어다 놓기 (카드·기록 추가 창) ----------
+document.addEventListener('dragover', e => {
+  const t = e.target.closest('.note[data-key], .dz');
+  if (!t || ![...(e.dataTransfer.types || [])].includes('Files')) return;
+  e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
+  document.querySelectorAll('.drop').forEach(x => x !== t && x.classList.remove('drop'));
+  t.classList.add('drop');
+});
+document.addEventListener('dragleave', e => {
+  const t = e.target.closest('.drop'); if (t && !t.contains(e.relatedTarget)) t.classList.remove('drop');
+});
+document.addEventListener('drop', e => {
+  const t = e.target.closest('.note[data-key], .dz');
+  document.querySelectorAll('.drop').forEach(x => x.classList.remove('drop'));
+  if (!t) { if (e.dataTransfer && e.dataTransfer.files.length) e.preventDefault(); return; }
   e.preventDefault();
-  const key = x.closest('.note').dataset.key, id = x.dataset.id, n = noteByKey(key);
-  if (!n || !confirm('이 사진을 지울까요?')) return;
-  const pin = await getPin(); if (!pin) return;
-  x.disabled = true;
+  if (t.classList.contains('dz')) addRecFiles(e.dataTransfer.files);
+  else uploadFiles(t.dataset.key, e.dataTransfer.files);
+});
+window.addEventListener('dragover', e => e.preventDefault());   // 사진을 빈 곳에 놓아도 새 탭으로 열리지 않게
+window.addEventListener('drop', e => e.preventDefault());
+
+// ---------- 기록 직접 추가 ----------
+const recInput = Object.assign(document.createElement('input'), { type: 'file', accept: 'image/*', multiple: true });
+recInput.style.display = 'none'; document.body.appendChild(recInput);
+recInput.addEventListener('change', () => { addRecFiles(recInput.files); recInput.value = ''; });
+let REC_FILES = [];
+function addRecFiles(files) {
+  [...files].filter(f => /^image\//.test(f.type)).forEach(f => REC_FILES.push(f));
+  const th = document.querySelector('.dz .th'); if (!th) return;
+  th.innerHTML = REC_FILES.map(f => '<img src="' + URL.createObjectURL(f) + '">').join('');
+  document.querySelector('.dz .t').textContent = '📷 사진 ' + REC_FILES.length + '장 (더 놓거나 눌러서 추가)';
+}
+function openRecForm() {
+  REC_FILES = [];
+  const [mc, d] = SEL.split('|');
+  const now = new Date(), isToday = d === today();
+  const hm = isToday ? ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2) : '';
+  const c = D.cells[mc] && D.cells[mc][d];
+  const top = c ? Object.entries(c.codes).sort((a, b) => b[1] - a[1])[0] : null;
+  $('addrec').style.display = 'none';
+  $('rformBox').innerHTML = '<div class="rform">' +
+    '<div class="row2"><div><label>분류</label><select id="rType">' +
+    ['설비수리', '금형', '전기', '품질·불량', '취출·스프레이', '전기로·래들', '기타'].map(t => '<option>' + t + '</option>').join('') + '</select></div>' +
+    '<div><label>상태</label><select id="rSt"><option>완료</option><option>진행·대기</option><option>미해결</option></select></div>' +
+    '<div><label>시각</label><input type="time" id="rTime" value="' + hm + '"></div></div>' +
+    '<label>내용 · ' + esc(mc) + ' ' + md(d) + (top ? ' (OEE 주 원인: ' + esc(top[0]) + ' ' + top[1] + '분)' : '') + '</label>' +
+    '<textarea id="rText" placeholder="무슨 문제였고 어떻게 조치했는지 적어 주세요"></textarea>' +
+    '<div class="dz"><span class="t">📷 사진을 여기로 끌어다 놓거나 눌러서 선택</span><div class="th"></div></div>' +
+    '<div class="fbtn"><span class="upmsg" id="rMsg"></span><button class="rno">취소</button><button class="ok rsave">저장</button></div></div>';
+  $('rText').focus();
+}
+async function saveRecord(btn) {
+  const [mc, d] = SEL.split('|'), text = $('rText').value.trim();
+  const msg = (t, err) => { $('rMsg').textContent = t; $('rMsg').classList.toggle('err', !!err); };
+  if (!text) { msg('내용을 입력하세요', true); return; }
+  btn.disabled = true;
   try {
-    const r = await postApi({ action: 'delPhoto', pin, key, id });
-    if (!r.ok) { setMsg(key, '삭제 실패: ' + (r.error || ''), true); if (/PIN/.test(r.error || '')) ls('photoPin', ''); x.disabled = false; return; }
-    n.photos = n.photos.filter(v => v !== id); n.added = n.added.filter(v => v !== id);
-    drawNotes(); setMsg(key, '사진을 지웠습니다');
-  } catch (er) { setMsg(key, '삭제 실패: ' + (er.message || er), true); x.disabled = false; }
-});
-document.addEventListener('click', e => {
-  const b = e.target.closest('.chip'); if (!b) return;
-  FILTER[b.dataset.g] = !FILTER[b.dataset.g];
-  try { localStorage.setItem('lossNoteFilter', JSON.stringify(FILTER)); } catch (er) {}
-  drawNotes();
-});
+    msg('저장 중…');
+    const rec = { dc: mc, date: d, type: $('rType').value, status: $('rSt').value, time: $('rTime').value, text };
+    const r = await api(Object.assign({ action: 'addRecord' }, rec));
+    if (!r.ok) throw new Error(r.error);
+    const n = { src: '직접 입력', key: r.id, date: d, time: rec.time, type: rec.type, status: rec.status, text, ko: '', who: getWho(), manual: true, photos: [], added: [] };
+    for (let i = 0; i < REC_FILES.length; i++) {
+      msg('사진 올리는 중… ' + (i + 1) + '/' + REC_FILES.length);
+      const data = await shrink(REC_FILES[i]);
+      const p = await api({ action: 'addPhoto', key: r.id, dc: mc, date: d, src: n.src, text, data });
+      if (p.ok) { n.photos.push(p.id); n.added.push(p.id); }
+    }
+    ((D.notes[mc] = D.notes[mc] || {})[d] = D.notes[mc][d] || []).push(n);
+    if (D.cells[mc] && D.cells[mc][d]) D.cells[mc][d].unexplained = false;
+    refreshDay();
+  } catch (er) { btn.disabled = false; msg('실패: ' + (er.message || er), true); }
+}
+function removeNote(key) {
+  const [mc, d] = SEL.split('|');
+  const list = (D.notes[mc] && D.notes[mc][d]) || [];
+  const i = list.findIndex(n => n.key === key); if (i >= 0) list.splice(i, 1);
+  if (D.cells[mc] && D.cells[mc][d]) D.cells[mc][d].unexplained = D.cells[mc][d].equip >= 120 && !list.length;
+}
+// 달력 점·빨간 테두리까지 다시 그리고 같은 칸을 다시 열기
+function refreshDay() {
+  const k = SEL; render(D);
+  const td = document.querySelector('td.c[data-k="' + k + '"]'); if (td) td.click();
+}
 
 // ---------- 상호작용 ----------
 const tip = $('tip');
