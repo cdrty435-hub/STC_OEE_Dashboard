@@ -49,7 +49,7 @@
   .upd { color: var(--muted); font-size: 11px; }
 
   /* ---------- KPI ---------- */
-  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 12px 18px 0; }
+  .kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; padding: 12px 18px 0; }
   .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow);
     display: flex; align-items: center; gap: 12px; min-width: 0; }
   .kpi .k { color: var(--ink2); font-size: 12px; }
@@ -189,7 +189,7 @@
   .hb .vv { text-align: right; color: var(--ink2); font-variant-numeric: tabular-nums; }
   .hb.click { cursor: pointer; border-radius: 4px; }
   .hb.click:hover { background: var(--s0); }
-  .stat3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; }
+  .stat3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 14px; }
   .stat3 > div { background: var(--raise); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; }
   .stat3 .k { font-size: 11px; color: var(--muted); }
   .stat3 .v { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -281,7 +281,8 @@
   .scroll { min-width: 0; }
   td.c, .cal.week td.c { width: auto; min-width: 0; }
   .cal .mc { min-width: 84px; padding-right: 6px; }
-  .cal td.tot { white-space: nowrap; font-size: 10.5px; }
+  .cal td.tot { white-space: nowrap; font-size: 10.5px; line-height: 1.25; }
+  .cal td.tot .tn { color: var(--ink2); font-weight: 600; }
   .board { min-width: 0; }
   table.cal { table-layout: fixed; }
   .cal thead tr.mini th.mc { width: 92px; }
@@ -306,6 +307,7 @@
 <div class="top">
   <div class="brand"><b>STC 로스 달력</b><span>OEE 로스 × LINE 기록 × 아침조회</span></div>
   <div class="seg"><button id="vMonth" class="on">월간</button><button id="vWeek">주간</button></div>
+  <div class="seg" title="달력 칸의 숫자·색 기준"><button id="mLoss" class="on">로스시간</button><button id="mNof">고장횟수</button></div>
   <div class="period">
     <button id="prev" aria-label="이전">‹</button>
     <div class="lbl" id="plbl">—</div>
@@ -353,6 +355,13 @@ function hrs(m) { return m >= 600 ? Math.round(m / 60) + 'h' : (m / 60).toFixed(
 function md(d) { return (+d.slice(5, 7)) + '/' + (+d.slice(8, 10)); }
 function wd(d) { return WD[new Date(d + 'T00:00:00').getDay()]; }
 function lvl(m) { const b = BINS[VIEW]; return m <= 0 ? 0 : m < b[0] ? 1 : m < b[1] ? 2 : m < b[2] ? 3 : 4; }
+// ---------- 로스시간 / 고장횟수 전환 ----------
+let MODE = (() => { try { return localStorage.getItem('lossMode') === 'nof' ? 'nof' : 'loss'; } catch (e) { return 'loss'; } })();
+const NBINS = { month: [2, 4, 6], week: [6, 16, 31] };       // 고장횟수 색 구간: 1 · 2–3 · 4–5 · 6+ (주간 1–5 · 6–15 · 16–30 · 31+)
+const val = c => !c ? 0 : MODE === 'nof' ? (c.nof || 0) : c.loss;
+function lvlV(v) { if (MODE !== 'nof') return lvl(v); const b = NBINS[VIEW]; return v <= 0 ? 0 : v < b[0] ? 1 : v < b[1] ? 2 : v < b[2] ? 3 : 4; }
+const fmtV = v => MODE === 'nof' ? Math.round(v) + '회' : fmtMin(v);
+const mttr = (equip, nof) => nof > 0 ? Math.round(equip / nof) + '분' : '—';
 function stColor(s) {
   s = s || '';
   if (/미해결|재발|미조치/.test(s)) return ['var(--critical)', s];
@@ -407,7 +416,9 @@ function renderKpis() {
     kpi('총 로스', Math.round(s.totalLoss / 60).toLocaleString() + '<small>시간</small>', '로스율 ' + rate.toFixed(1) + '% · 계획 ' + Math.round(s.totalPlan / 60).toLocaleString() + '시간', rate, 'var(--s3)') +
     kpi('로스 1위 호기', top ? top[0] + '<small>' + Math.round(top[1] / 60) + '시간</small>' : '—', cause ? '정지 원인 1위: ' + esc(cause[0]) + ' ' + Math.round(cause[1] / 60) + '시간' : '', null) +
     kpi('이유 기록 없는 큰 로스', s.unexplained + '<small>/ ' + s.bigLossCells + '칸</small>', pct + '% · 설비 로스 120분 이상인 날 기준', pct, 'var(--critical)', 'focus') +
-    kpi('미결 기록', s.open + '<small>건</small>', (s.openFrom ? md(s.openFrom) + ' 이후 ' : '') + '미조치·진행·미해결', null);
+    kpi('미결 기록', s.open + '<small>건</small>', (s.openFrom ? md(s.openFrom) + ' 이후 ' : '') + '미조치·진행·미해결', null) +
+    kpi('고장횟수 · MTTR', (s.totalNof != null ? Math.round(s.totalNof).toLocaleString() + '<small>회</small> <span style="font-size:15px;color:var(--ink2)">· ' + mttr(s.totalEquip || 0, s.totalNof || 0) + '</span>' : '—'),
+      s.nofTop && s.nofTop.length ? '고장횟수 1위 ' + s.nofTop[0][0] + ' ' + s.nofTop[0][1] + '회 · MTTR = 설비 로스 ÷ 고장횟수' : 'Apps Script 새 버전 배포 후 표시', null);
   const f = document.querySelector('.kpi[data-act="focus"]');
   if (f) f.onclick = () => toggleFocus();
 }
@@ -417,9 +428,9 @@ function kpi(k, v, sub, pct, color, act) {
 }
 
 function renderLegend() {
-  const b = BINS[VIEW], u = VIEW === 'week' ? '분/주' : '분/일';
-  $('legend').innerHTML = '<span>로스(' + u + ')</span>' +
-    '<span><i class="sw" style="background:var(--s1)"></i>1–' + (b[0] - 1) + '</span>' +
+  const b = MODE === 'nof' ? NBINS[VIEW] : BINS[VIEW], u = MODE === 'nof' ? (VIEW === 'week' ? '회/주' : '회/일') : (VIEW === 'week' ? '분/주' : '분/일');
+  $('legend').innerHTML = '<span>' + (MODE === 'nof' ? '고장횟수' : '로스') + '(' + u + ')</span>' +
+    '<span><i class="sw" style="background:var(--s1)"></i>' + (b[0] - 1 > 1 ? '1–' + (b[0] - 1) : '1') + '</span>' +
     '<span><i class="sw" style="background:var(--s2)"></i>' + b[0] + '–' + (b[1] - 1) + '</span>' +
     '<span><i class="sw" style="background:var(--s3)"></i>' + b[1] + '–' + (b[2] - 1) + '</span>' +
     '<span><i class="sw" style="background:var(--s4)"></i>' + b[2] + '+</span>' +
@@ -431,7 +442,12 @@ function machinesShown() {
   return D.machines.filter(mc => (D.cells[mc] && Object.keys(D.cells[mc]).length) || (D.notes[mc] && Object.keys(D.notes[mc]).length));
 }
 function rowHead(mc, tot, max) {
-  return '<td class="mc"><div class="nm">' + mc + '</div><div class="tt"><i style="width:' + (max ? Math.max(2, tot / max * 44) : 0) + 'px"></i>' + (tot ? hrs(tot) : '') + '</div></td>';
+  return '<td class="mc"><div class="nm">' + mc + '</div><div class="tt"><i style="width:' + (max ? Math.max(2, tot / max * 44) : 0) + 'px"></i>' + (tot ? (MODE === 'nof' ? Math.round(tot) + '회' : hrs(tot)) : '') + '</div></td>';
+}
+// 합계 열: 로스시간 · 고장횟수 함께
+function totCell(mc, keys) {
+  let l = 0, n = 0; keys.forEach(k => { const c = D.cells[mc] && D.cells[mc][k]; if (c) { l += c.loss; n += c.nof || 0; } });
+  return '<td class="tot">' + (l ? fmtMin(l) : '') + (n ? '<br><span class="tn">' + n + '회</span>' : '') + '</td>';
 }
 
 // ---------- 열 폭 맞추기: 데이터 없는 날짜(입력 전)는 데이터 날짜의 절반 폭 ----------
@@ -460,8 +476,8 @@ function calcWorst(cols) {
   WORST = {}; WCOLS = cols;
   const ms = machinesShown(), out = [];
   cols.forEach(k => {
-    const list = ms.map(mc => ({ mc, c: D.cells[mc] && D.cells[mc][k] })).filter(x => x.c && x.c.loss > 0)
-      .sort((a, b) => b.c.loss - a.c.loss).slice(0, 4);
+    const list = ms.map(mc => ({ mc, c: D.cells[mc] && D.cells[mc][k] })).filter(x => val(x.c) > 0)
+      .sort((a, b) => val(b.c) - val(a.c) || b.c.loss - a.c.loss).slice(0, 4);
     list.forEach((x, i) => { WORST[x.mc + '|' + k] = i + 1; });
     if (list.length) out.push({ k, list });
   });
@@ -508,11 +524,11 @@ function worstPanel(k) {
   const pk = gi > 0 ? WGROUPS[gi - 1].k : '', nk = gi < WGROUPS.length - 1 ? WGROUPS[gi + 1].k : '';
   return '<div class="sec wpan"><h3><span class="wnav"><button data-wk="' + pk + '"' + (pk ? '' : ' disabled') + '>‹</button>' +
     '<b style="color:var(--ink);font-size:13px">' + ttl + ' 워스트 4</b><button data-wk="' + nk + '"' + (nk ? '' : ' disabled') + '>›</button></span>' +
-    '<span>4대 ' + fmtMin(g.list.reduce((a, x) => a + x.c.loss, 0)) + '</span></h3>' +
+    '<span>' + (MODE === 'nof' ? '고장횟수 기준 · 4대 ' + g.list.reduce((a, x) => a + (x.c.nof || 0), 0) + '회' : '4대 ' + fmtMin(g.list.reduce((a, x) => a + x.c.loss, 0))) + '</span></h3>' +
     g.list.map((x, i) => {
       const is = issueOf(x.mc, k);
       return '<div class="wit" data-k="' + x.mc + '|' + k + '"><span class="rk r' + (i + 1) + '">' + (i + 1) + '</span><div>' +
-        '<div class="l1x"><b>' + x.mc + '</b>' + (is.code ? '<span class="sb">' + esc(is.code) + '</span>' : '') + '<span class="mn">' + (VIEW === 'week' ? hrs(x.c.loss) : fmtMin(x.c.loss)) + '</span></div>' +
+        '<div class="l1x"><b>' + x.mc + '</b>' + (is.code ? '<span class="sb">' + esc(is.code) + '</span>' : '') + '<span class="mn">' + (VIEW === 'week' ? hrs(x.c.loss) : fmtMin(x.c.loss)) + ' · ' + (x.c.nof || 0) + '회</span></div>' +
         '<div class="is' + (is.none ? ' no' : '') + '">' + (is.src ? '<span class="sb">[' + esc(is.src.replace('LINE ', '')) + ']</span>' : '⚠ ') +
         esc(is.text) + (is.more ? ' <span class="sb">외 ' + is.more + '건</span>' : '') + '</div></div></div>';
     }).join('') + '</div>';
@@ -538,33 +554,33 @@ document.addEventListener('click', e => {
 });
 
 function renderMonth() {
-  const days = D.days, byDay = D.summary.byDay || {};
+  const days = D.days, byDay = (MODE === 'nof' ? D.summary.byDayNof : D.summary.byDay) || {};
   const dmax = Math.max(1, ...days.map(d => byDay[d] || 0));
   const td = today();
   // OEE 데이터가 끝난 뒤 날짜(아직 입력 전·미래)는 좁게 → 데이터 있는 날짜가 넓게 보이도록
   const lastData = days.filter(d => byDay[d] > 0).pop() || '';
   const nar = d => false;   // 도래하지 않은 날짜도 같은 폭
   let h = '<thead><tr class="mini"><th class="mc"></th>' + days.map(d =>
-    '<th' + (nar(d) ? ' class="nar"' : '') + ' data-tip="' + md(d) + '(' + wd(d) + ') 전체 로스 ' + (byDay[d] ? fmtMin(byDay[d]) : '없음') + '"><div class="mb" style="height:' + ((byDay[d] || 0) / dmax * 26) + 'px"></div></th>').join('') + '<th></th></tr>';
+    '<th' + (nar(d) ? ' class="nar"' : '') + ' data-tip="' + md(d) + '(' + wd(d) + ') 전체 ' + (MODE === 'nof' ? '고장 ' : '로스 ') + (byDay[d] ? fmtV(byDay[d]) : '없음') + '"><div class="mb" style="height:' + ((byDay[d] || 0) / dmax * 26) + 'px"></div></th>').join('') + '<th></th></tr>';
   h += '<tr class="days"><th class="mc" style="text-align:left;padding-left:6px;color:var(--muted)">호기</th>' + days.map(d => {
     const w = new Date(d + 'T00:00:00').getDay();
     return '<th class="colk ' + (w === 0 || w === 6 ? 'we ' : '') + (d === td ? 'today' : '') + '" data-col="' + d + '" data-tip="누르면 ' + md(d) + ' 워스트 4 이슈"><span class="dn">' + (+d.slice(8)) + '</span>' + WD[w] + '</th>';
   }).join('') + '<th>합계</th></tr></thead><tbody>';
   const ms = machinesShown();
-  const tots = {}; ms.forEach(mc => { tots[mc] = days.reduce((a, d) => a + ((D.cells[mc] && D.cells[mc][d]) ? D.cells[mc][d].loss : 0), 0); });
+  const tots = {}; ms.forEach(mc => { tots[mc] = days.reduce((a, d) => a + val(D.cells[mc] && D.cells[mc][d]), 0); });
   const tmax = Math.max(1, ...ms.map(m => tots[m]));
   const groups = calcWorst(days);
   ms.forEach(mc => {
     h += '<tr>' + rowHead(mc, tots[mc], tmax);
     days.forEach(d => {
       const c = D.cells[mc] && D.cells[mc][d], n = (D.notes[mc] && D.notes[mc][d]) || [];
-      const loss = c ? c.loss : 0;
+      const loss = val(c);
       const wr = WORST[mc + '|' + d];
-      const cls = ['c', loss > 0 ? 'l' + lvl(loss) : (c ? '' : 'empty'), c && c.unexplained ? 'unx' : '', wr ? 'w' + wr : ''].join(' ');
+      const cls = ['c', loss > 0 ? 'l' + lvlV(loss) : (c ? '' : 'empty'), c && c.unexplained ? 'unx' : '', wr ? 'w' + wr : ''].join(' ');
       h += '<td class="' + cls + (nar(d) ? ' nar' : '') + '" data-k="' + mc + '|' + d + '">' + (loss > 0 ? Math.round(loss) : '') + wbadge(mc, d) +
         (n.length ? '<i class="d"></i>' : '') + (c && c.unexplained ? '<span class="q">?</span>' : '') + '</td>';
     });
-    h += '<td class="tot">' + (tots[mc] ? fmtMin(tots[mc]) : '') + '</td></tr>';
+    h += totCell(mc, days) + '</tr>';
   });
   $('cal').className = 'cal' + ($('tgDots').classList.contains('on') ? '' : ' nodots') + (FOCUS ? ' focus' : '') + (WORST_ON ? '' : ' noworst');
   $('cal').innerHTML = h + '</tbody>' + worstRows();
@@ -574,28 +590,28 @@ function renderMonth() {
 
 function renderWeek() {
   const ws = D.weeks;
-  const colTot = ws.map(w => Object.keys(D.cells).reduce((a, mc) => a + (D.cells[mc][w.key] ? D.cells[mc][w.key].loss : 0), 0));
+  const colTot = ws.map(w => Object.keys(D.cells).reduce((a, mc) => a + val(D.cells[mc][w.key]), 0));
   const cmax = Math.max(1, ...colTot);
   let h = '<thead><tr class="mini"><th class="mc"></th>' + ws.map((w, i) =>
-    '<th data-tip="' + esc(w.label) + ' 전체 로스 ' + (colTot[i] ? fmtMin(colTot[i]) : '없음') + '"><div class="mb" style="height:' + (colTot[i] / cmax * 26) + 'px"></div></th>').join('') + '<th></th></tr>';
+    '<th data-tip="' + esc(w.label) + ' 전체 ' + (MODE === 'nof' ? '고장 ' : '로스 ') + (colTot[i] ? fmtV(colTot[i]) : '없음') + '"><div class="mb" style="height:' + (colTot[i] / cmax * 26) + 'px"></div></th>').join('') + '<th></th></tr>';
   h += '<tr class="days"><th class="mc" style="text-align:left;padding-left:6px;color:var(--muted)">호기</th>' + ws.map(w =>
     '<th class="colk" data-col="' + w.key + '" data-tip="누르면 ' + esc(w.label) + ' 워스트 4 이슈"><span class="dn">' + esc(w.label) + '</span>' + md(w.start) + '~</th>').join('') + '<th>합계</th></tr></thead><tbody>';
   const ms = machinesShown();
-  const tots = {}; ms.forEach(mc => { tots[mc] = ws.reduce((a, w) => a + ((D.cells[mc] && D.cells[mc][w.key]) ? D.cells[mc][w.key].loss : 0), 0); });
+  const tots = {}; ms.forEach(mc => { tots[mc] = ws.reduce((a, w) => a + val(D.cells[mc] && D.cells[mc][w.key]), 0); });
   const tmax = Math.max(1, ...ms.map(m => tots[m]));
   const groups = calcWorst(ws.map(w => w.key));
   ms.forEach(mc => {
     h += '<tr>' + rowHead(mc, tots[mc], tmax);
     ws.forEach(w => {
       const c = D.cells[mc] && D.cells[mc][w.key], n = (D.notes[mc] && D.notes[mc][w.key]) || [];
-      const loss = c ? c.loss : 0, q = c ? c.unexplainedDays : 0;
+      const loss = val(c), q = c ? c.unexplainedDays : 0;
       const wr = WORST[mc + '|' + w.key];
-      h += '<td class="' + ['c', loss > 0 ? 'l' + lvl(loss) : (c ? '' : 'empty'), q ? 'unx' : '', wr ? 'w' + wr : ''].join(' ') + '" data-k="' + mc + '|' + w.key + '">' +
-        (loss > 0 ? hrs(loss) : '') + wbadge(mc, w.key) + (n.length ? '<i class="d"></i>' : '') + (q ? '<span class="q">?' + q + '</span>' : '') + '</td>';
+      h += '<td class="' + ['c', loss > 0 ? 'l' + lvlV(loss) : (c ? '' : 'empty'), q ? 'unx' : '', wr ? 'w' + wr : ''].join(' ') + '" data-k="' + mc + '|' + w.key + '">' +
+        (loss > 0 ? (MODE === 'nof' ? Math.round(loss) : hrs(loss)) : '') + wbadge(mc, w.key) + (n.length ? '<i class="d"></i>' : '') + (q ? '<span class="q">?' + q + '</span>' : '') + '</td>';
     });
-    h += '<td class="tot">' + (tots[mc] ? fmtMin(tots[mc]) : '') + '</td></tr>';
+    h += totCell(mc, ws.map(w => w.key)) + '</tr>';
   });
-  h += '<tr class="sum"><td class="mc" style="color:var(--ink2);font-weight:600">전체</td>' + colTot.map(t => '<td>' + (t ? hrs(t) : '') + '</td>').join('') + '<td></td></tr>';
+  h += '<tr class="sum"><td class="mc" style="color:var(--ink2);font-weight:600">전체</td>' + colTot.map(t => '<td>' + (t ? (MODE === 'nof' ? Math.round(t) : hrs(t)) : '') + '</td>').join('') + '<td></td></tr>';
   $('cal').className = 'cal week' + ($('tgDots').classList.contains('on') ? '' : ' nodots') + (FOCUS ? ' focus' : '') + (WORST_ON ? '' : ' noworst');
   $('cal').innerHTML = h + '</tbody>' + worstRows();
   renderWorstBoard(groups);
@@ -615,14 +631,17 @@ function showSummary() {
     '</span><div class="tr"><div class="fl" style="width:' + (c[1] / cmax * 100) + '%"></div></div><span class="vv">' + Math.round(c[1] / 60) + 'h</span></div>').join('') : '<div class="empty">데이터 없음</div>') + '</div>';
   h += '<div class="sec"><h3>로스 Top 5 호기 <span>누르면 해당 호기 강조</span></h3>' + (tp.length ? tp.map(t =>
     '<div class="hb click" data-mc="' + t[0] + '"><span><b>' + t[0] + '</b></span><div class="tr"><div class="fl" style="width:' + (t[1] / tmax * 100) + '%;background:var(--s4)"></div></div><span class="vv">' + Math.round(t[1] / 60) + 'h</span></div>').join('') : '<div class="empty">데이터 없음</div>') + '</div>';
+  const nt = s.nofTop || [], nmax = nt.length ? nt[0][1] : 1;
+  if (nt.length) h += '<div class="sec"><h3>고장횟수 Top 5 호기 <span>누르면 해당 호기 강조</span></h3>' + nt.map(t =>
+    '<div class="hb click" data-mc="' + t[0] + '"><span><b>' + t[0] + '</b></span><div class="tr"><div class="fl" style="width:' + (t[1] / nmax * 100) + '%;background:var(--s3)"></div></div><span class="vv">' + t[1] + '회</span></div>').join('') + '</div>';
   // 추세
   let pts;
-  if (D.view === 'week') pts = D.weeks.map(w => ({ t: w.label, v: Object.keys(D.cells).reduce((a, mc) => a + (D.cells[mc][w.key] ? D.cells[mc][w.key].loss : 0), 0) }));
-  else pts = D.days.map(d => ({ t: md(d) + '(' + wd(d) + ')', v: (s.byDay || {})[d] || 0 }));
+  if (D.view === 'week') pts = D.weeks.map(w => ({ t: w.label, v: Object.keys(D.cells).reduce((a, mc) => a + val(D.cells[mc][w.key]), 0) }));
+  else pts = D.days.map(d => ({ t: md(d) + '(' + wd(d) + ')', v: ((MODE === 'nof' ? s.byDayNof : s.byDay) || {})[d] || 0 }));
   const vmax = Math.max(1, ...pts.map(p => p.v)), wdat = pts.filter(p => p.v > 0);
   const avg = wdat.length ? wdat.reduce((a, p) => a + p.v, 0) / wdat.length : 0;
-  h += '<div class="sec"><h3>' + (D.view === 'week' ? '주별' : '일별') + ' 로스 추세 <span>평균 ' + Math.round(avg / 60) + 'h</span></h3><div class="trend">' +
-    pts.map(p => '<i data-tip="' + esc(p.t) + ' · ' + (p.v ? fmtMin(p.v) : '데이터 없음') + '" style="height:' + (p.v / vmax * 100) + '%"></i>').join('') + '</div></div>';
+  h += '<div class="sec"><h3>' + (D.view === 'week' ? '주별' : '일별') + (MODE === 'nof' ? ' 고장횟수' : ' 로스') + ' 추세 <span>평균 ' + (MODE === 'nof' ? Math.round(avg) + '회' : Math.round(avg / 60) + 'h') + '</span></h3><div class="trend">' +
+    pts.map(p => '<i data-tip="' + esc(p.t) + ' · ' + (p.v ? fmtV(p.v) : '데이터 없음') + '" style="height:' + (p.v / vmax * 100) + '%"></i>').join('') + '</div></div>';
   $('ib').innerHTML = h;
   $('ib').querySelectorAll('.hb.click').forEach(el => el.onclick = () => flashRow(el.dataset.mc));
 }
@@ -651,13 +670,15 @@ function openDay(key) {
   head(mc + ' · ' + md(d) + ' (' + wd(d) + ')', c ? '' : '이 날 OEE 기록 없음');
   let h = '';
   if (c) h += '<div class="stat3"><div><div class="k">로스</div><div class="v">' + fmtMin(c.loss) + '</div></div><div><div class="k">계획</div><div class="v">' + fmtMin(c.plan) +
-    '</div></div><div><div class="k">로스율</div><div class="v">' + (c.plan ? Math.round(c.loss / c.plan * 100) : 0) + '%</div></div></div>';
+    '</div></div><div><div class="k">로스율</div><div class="v">' + (c.plan ? Math.round(c.loss / c.plan * 100) : 0) + '%</div></div>' +
+    '<div><div class="k">고장횟수</div><div class="v">' + (c.nof || 0) + '회</div></div><div><div class="k">설비 로스</div><div class="v">' + fmtMin(c.equip) +
+    '</div></div><div data-tip="설비 로스 ÷ 고장횟수"><div class="k">1회 평균 정지</div><div class="v">' + mttr(c.equip, c.nof || 0) + '</div></div></div>';
   if (c && c.unexplained) h += '<div class="warn">⚠ 설비 관련 로스 ' + fmtMin(c.equip) + '인데 LINE·아침조회에 이유가 없습니다.</div>';
   if (c) {
     h += '<div class="sec"><h3>로스 내역 <span>OEE 정지 코드</span></h3>' + codeBars(c.codes) +
-      '<table class="sh"><tr><th>교대</th><th>계획</th><th>가동</th><th>로스</th><th>주요 원인</th></tr>' + c.shifts.map(s => {
+      '<table class="sh"><tr><th>교대</th><th>계획</th><th>가동</th><th>로스</th><th>고장</th><th>주요 원인</th></tr>' + c.shifts.map(s => {
         const t = Object.entries(s.codes).sort((a, b) => b[1] - a[1])[0];
-        return '<tr><td>' + esc(s.shift) + (s.kind && s.kind !== '정규' ? ' (' + esc(s.kind) + ')' : '') + '</td><td>' + s.plan + '</td><td>' + s.run + '</td><td>' + s.loss + '</td><td>' + (t ? esc(t[0]) : '') + '</td></tr>';
+        return '<tr><td>' + esc(s.shift) + (s.kind && s.kind !== '정규' ? ' (' + esc(s.kind) + ')' : '') + '</td><td>' + s.plan + '</td><td>' + s.run + '</td><td>' + s.loss + '</td><td>' + (s.nof != null ? s.nof : '') + '</td><td>' + (t ? esc(t[0]) : '') + '</td></tr>';
       }).join('') + '</table></div>';
   }
   h += notesSection(notes, false, '이 날의 기록') + '<div class="hint">※ 아침조회는 다음 날 아침 회의 내용을 전날 칸에 붙여서 보여줍니다.</div>';
@@ -669,13 +690,15 @@ function openWeek(key) {
   head(mc + ' · ' + w.label, md(w.start) + ' ~ ' + md(w.end) + (c ? '' : ' · OEE 기록 없음'));
   let h = '';
   if (c) h += '<div class="stat3"><div><div class="k">로스</div><div class="v">' + hrs(c.loss) + '</div></div><div><div class="k">계획</div><div class="v">' + hrs(c.plan) +
-    '</div></div><div><div class="k">로스율</div><div class="v">' + (c.plan ? Math.round(c.loss / c.plan * 100) : 0) + '%</div></div></div>';
+    '</div></div><div><div class="k">로스율</div><div class="v">' + (c.plan ? Math.round(c.loss / c.plan * 100) : 0) + '%</div></div>' +
+    '<div><div class="k">고장횟수</div><div class="v">' + (c.nof || 0) + '회</div></div><div><div class="k">설비 로스</div><div class="v">' + hrs(c.equip) +
+    '</div></div><div data-tip="설비 로스 ÷ 고장횟수"><div class="k">1회 평균 정지</div><div class="v">' + mttr(c.equip, c.nof || 0) + '</div></div></div>';
   if (c && c.unexplainedDays) h += '<div class="warn">⚠ 설비 로스 120분+ 인데 이유 기록이 없는 날이 ' + c.unexplainedDays + '일 있습니다.</div>';
   h += '<div class="sec"><h3>로스 내역 <span>주 합계</span></h3>' + (c ? codeBars(c.codes) : '<div class="empty">OEE 데이터 없음</div>') + '</div>';
-  h += '<div class="sec"><h3>요일별</h3><table class="sh"><tr><th>날짜</th><th>로스</th><th>설비</th><th>기록</th><th></th></tr>';
+  h += '<div class="sec"><h3>요일별</h3><table class="sh"><tr><th>날짜</th><th>로스</th><th>설비</th><th>고장</th><th>기록</th><th></th></tr>';
   for (let i = 0; i < 7; i++) {
     const d = addDays(w.start, i), x = c && c.daily[d];
-    h += '<tr><td>' + md(d) + ' (' + wd(d) + ')</td><td>' + (x ? x.loss : '') + '</td><td>' + (x ? x.equip : '') + '</td><td>' + (x && x.notes ? x.notes + '건' : '') + '</td><td class="q">' + (x && x.unexplained ? '?' : '') + '</td></tr>';
+    h += '<tr><td>' + md(d) + ' (' + wd(d) + ')</td><td>' + (x ? x.loss : '') + '</td><td>' + (x ? x.equip : '') + '</td><td>' + (x && x.nof != null ? x.nof : '') + '</td><td>' + (x && x.notes ? x.notes + '건' : '') + '</td><td class="q">' + (x && x.unexplained ? '?' : '') + '</td></tr>';
   }
   h += '</table></div>' + notesSection(notes, true, '이 주의 기록');
   $('ib').innerHTML = h; drawNotes(); $('ib').scrollTop = 0; reveal();
@@ -1013,7 +1036,7 @@ document.addEventListener('mousemove', e => {
     const c = D.cells[mc] && D.cells[mc][k], n = (D.notes[mc] && D.notes[mc][k]) || [];
     const top = c ? Object.entries(c.codes).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => esc(x[0]) + ' ' + x[1] + '분').join('<br>') : '';
     const ttl = VIEW === 'week' ? mc + ' · ' + esc((D.weeks.find(w => w.key === k) || {}).label) : mc + ' · ' + md(k) + '(' + wd(k) + ')';
-    tip.innerHTML = '<b>' + ttl + '</b><br>' + (c ? '로스 ' + fmtMin(c.loss) + (top ? '<br><span style="opacity:.75">' + top + '</span>' : '') : 'OEE 기록 없음') +
+    tip.innerHTML = '<b>' + ttl + '</b><br>' + (c ? '로스 ' + fmtMin(c.loss) + ' · 고장 ' + (c.nof || 0) + '회' + (top ? '<br><span style="opacity:.75">' + top + '</span>' : '') : 'OEE 기록 없음') +
       '<br>기록 ' + n.length + '건' + ((VIEW === 'week' ? c && c.unexplainedDays : c && c.unexplained) ? '<br>⚠ 이유 기록 없음' : '') +
       (WORST_ON && WORST[td.dataset.k] ? '<br><b style="color:var(--w3)">★ 워스트 ' + WORST[td.dataset.k] + '위</b> ' + esc(issueOf(mc, k).text.slice(0, 80)) : '');
   } else if (t) {
@@ -1053,6 +1076,16 @@ function move(delta) {
   else { const [y, m] = (YM || today().slice(0, 7)).split('-').map(Number); const d = new Date(y, m - 1 + delta, 1); YM = d.getFullYear() + '-' + pad(d.getMonth() + 1); }
   load();
 }
+function setMode(m) {
+  MODE = m; try { localStorage.setItem('lossMode', m); } catch (e) {}
+  $('mLoss').classList.toggle('on', m === 'loss'); $('mNof').classList.toggle('on', m === 'nof');
+  if (!D) return;
+  const k = SEL; render(D);
+  if (k) { const td = document.querySelector('td.c[data-k="' + k + '"]'); if (td) td.click(); }
+}
+$('mLoss').onclick = () => setMode('loss');
+$('mNof').onclick = () => setMode('nof');
+$('mLoss').classList.toggle('on', MODE === 'loss'); $('mNof').classList.toggle('on', MODE === 'nof');
 $('vMonth').onclick = () => setView('month');
 $('vWeek').onclick = () => setView('week');
 $('prev').onclick = () => move(-1);
