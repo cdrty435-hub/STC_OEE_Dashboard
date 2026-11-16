@@ -285,8 +285,11 @@
   table.cal { table-layout: fixed; }
   .cal thead tr.mini th.mc { width: 92px; }
   .cal thead tr.mini th:last-child { width: 84px; }
-  .cal thead tr.mini th.nar { width: 22px; }
   td.c.nar { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+  /* 칸이 넓어지면 높이·글자도 같이 키워 납작해 보이지 않게 */
+  .cal.wide td.c { height: 34px; font-size: 12px; }
+  .cal.wide td.wc { height: 30px; font-size: 11.5px; }
+  .cal.wide .mc .nm { font-size: 13px; }
   .cal tfoot td:empty { box-shadow: 0 0 0 2px var(--surface); }
   .insp { position: sticky; top: 12px; max-height: calc(100vh - 24px); }
   .ib, .insp { scrollbar-width: none; }
@@ -427,6 +430,19 @@ function rowHead(mc, tot, max) {
   return '<td class="mc"><div class="nm">' + mc + '</div><div class="tt"><i style="width:' + (max ? Math.max(2, tot / max * 44) : 0) + 'px"></i>' + (tot ? hrs(tot) : '') + '</div></td>';
 }
 
+// ---------- 열 폭 맞추기: 데이터 없는 날짜(입력 전)는 데이터 날짜의 절반 폭 ----------
+function balanceCols() {
+  const t = $('cal'); if (!t) return;
+  const ths = [...t.querySelectorAll('thead tr.mini th')];
+  if (ths.length < 3) return;
+  const mid = ths.slice(1, -1), nar = mid.filter(x => x.classList.contains('nar'));
+  const avail = t.clientWidth - 92 - 84 - 2 * (ths.length + 1);
+  const unit = avail / (mid.length - nar.length + nar.length * 0.5);
+  mid.forEach(x => { x.style.width = Math.floor(x.classList.contains('nar') ? unit * 0.5 : unit) + 'px'; });
+  t.classList.toggle('wide', unit >= 48);
+}
+let BAL_T; window.addEventListener('resize', () => { clearTimeout(BAL_T); BAL_T = setTimeout(balanceCols, 120); });
+
 // ---------- 일자(주)별 워스트 4 ----------
 let WORST = {};
 let WORST_ON = (() => { try { return localStorage.getItem('lossWorst') !== '0'; } catch (e) { return true; } })();          // 'DC08|2026-11-12' → 1..4
@@ -543,6 +559,7 @@ function renderMonth() {
   $('cal').className = 'cal' + ($('tgDots').classList.contains('on') ? '' : ' nodots') + (FOCUS ? ' focus' : '') + (WORST_ON ? '' : ' noworst');
   $('cal').innerHTML = h + '</tbody>' + worstRows();
   renderWorstBoard(groups);
+  balanceCols();
 }
 
 function renderWeek() {
@@ -572,6 +589,7 @@ function renderWeek() {
   $('cal').className = 'cal week' + ($('tgDots').classList.contains('on') ? '' : ' nodots') + (FOCUS ? ' focus' : '') + (WORST_ON ? '' : ' noworst');
   $('cal').innerHTML = h + '</tbody>' + worstRows();
   renderWorstBoard(groups);
+  balanceCols();
 }
 
 // ---------- 인스펙터: 요약 ----------
