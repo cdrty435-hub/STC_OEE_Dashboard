@@ -378,12 +378,19 @@ function stColor(s) {
 }
 
 // ---------- 불러오기 ----------
-function load() {
-  $('loading').style.display = 'block'; $('loading').textContent = '불러오는 중…';
-  $('cal').innerHTML = '';
+let LAST_LOAD = 0, LOADING = false;
+function load(silent) {
+  if (LOADING) return; LOADING = true; LAST_LOAD = Date.now();
+  if (!silent) { $('loading').style.display = 'block'; $('loading').textContent = '불러오는 중…'; $('cal').innerHTML = ''; }
+  const keep = silent ? SEL : null;
   const ym = YM || today().slice(0, 7), n = $('wn').value, end = weekEnd || today();
-  const ok = j => render(typeof j === 'string' ? JSON.parse(j) : j);
-  const fail = e => { $('loading').textContent = '불러오기 실패: ' + (e && e.message || e); };
+  const ok = j => {
+    LOADING = false;
+    if (silent && document.querySelector('.rform, .mform, #pinbox[style*="flex"]')) return;   // 입력 중이면 이번 자동 갱신은 건너뜀
+    render(typeof j === 'string' ? JSON.parse(j) : j);
+    if (keep) { const td = document.querySelector('td.c[data-k="' + keep + '"]'); if (td) td.click(); }
+  };
+  const fail = e => { LOADING = false; if (!silent) $('loading').textContent = '불러오기 실패: ' + (e && e.message || e); };
   if (window.google && google.script && google.script.run) {
     const r = google.script.run.withSuccessHandler(ok).withFailureHandler(fail);
     VIEW === 'week' ? r.getLossWeekly(n, end) : r.getLossCalendar(ym);
@@ -402,7 +409,7 @@ function render(data) {
   }
   D = data; SEL = null;
   $('loading').style.display = 'none';
-  $('upd').textContent = '갱신 ' + data.updated.slice(5);
+  $('upd').textContent = '갱신 ' + data.updated.slice(5) + ' ↻';
   if (data.view === 'week') {
     const ws = data.weeks;
     $('plbl').textContent = ws[0].label + ' – ' + ws[ws.length - 1].label + '  (' + md(ws[0].start) + '~' + md(ws[ws.length - 1].end) + ')';
@@ -1100,6 +1107,15 @@ $('vWeek').onclick = () => setView('week');
 $('prev').onclick = () => move(-1);
 $('next').onclick = () => move(1);
 $('wn').onchange = () => load();
+
+// ---------- 자동 갱신: 3분마다 · 다른 창에서 돌아왔을 때 (입력 중에는 건너뜀) ----------
+const AUTO_MS = 3 * 60 * 1000;
+setInterval(() => { if (document.visibilityState === 'visible') load(true); }, AUTO_MS);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && Date.now() - LAST_LOAD > 60 * 1000) load(true);
+});
+const upd = document.getElementById('upd');
+if (upd) { upd.style.cursor = 'pointer'; upd.title = '누르면 지금 새로고침 (3분마다 자동)'; upd.onclick = () => load(true); }
 
 load();
 </script>
