@@ -130,6 +130,11 @@
   td.c .nf { display: block; width: max-content; margin: 1px auto 0; padding: 0 4px; border-radius: 6px; font-size: 9px; line-height: 11px;
     font-weight: 700; color: #6d28d9; background: rgba(255,255,255,.9); }
   .legend .nfk { display: inline-block; padding: 0 4px; border-radius: 6px; font-size: 10px; font-weight: 700; color: #6d28d9; background: #f3e8ff; margin-right: 3px; }
+  /* 일요일: 머리 빨강 + 빈 칸 연한 빨강 바탕, 데이터 칸은 아래 빨간 줄 */
+  .cal thead tr.days th.sun, .cal thead tr.days th.sun .dn { color: #dc2626 !important; }
+  .cal thead tr.days th.sun { background: #fef2f2; border-radius: 6px 6px 0 0; }
+  td.c.sun:not(.l1):not(.l2):not(.l3):not(.l4) { background: #fef2f2; box-shadow: inset 0 0 0 1px #fecaca; }
+  td.c.sun.l1, td.c.sun.l2, td.c.sun.l3, td.c.sun.l4 { box-shadow: inset 0 -3px 0 #f87171; }
   .cal tfoot td { position: sticky; background: var(--surface); z-index: 2; box-shadow: 0 0 0 2px var(--surface); }
   .cal tfoot tr.wr1 td { bottom: 192px; } .cal tfoot tr.wr2 td { bottom: 160px; }
   .cal tfoot tr.wr3 td { bottom: 128px; } .cal tfoot tr.wr4 td { bottom: 96px; } .cal tfoot tr.wrs td { bottom: 64px; } .cal tfoot tr.wr5 td { bottom: 32px; } .cal tfoot tr.wro td { bottom: 0; }
@@ -668,6 +673,7 @@ function renderMonth() {
   const days = D.days, byDay = (MODE === 'nof' ? D.summary.byDayNof : D.summary.byDay) || {};
   const dmax = Math.max(1, ...days.map(d => byDay[d] || 0));
   const td = today();
+  const SUN = {}; days.forEach(d => { if (new Date(d + 'T00:00:00').getDay() === 0) SUN[d] = true; });
   // OEE 데이터가 끝난 뒤 날짜(아직 입력 전·미래)는 좁게 → 데이터 있는 날짜가 넓게 보이도록
   const lastData = days.filter(d => byDay[d] > 0).pop() || '';
   const nar = d => false;   // 도래하지 않은 날짜도 같은 폭
@@ -675,7 +681,7 @@ function renderMonth() {
     '<th' + (nar(d) ? ' class="nar"' : '') + ' data-tip="' + md(d) + '(' + wd(d) + ') 전체 ' + (MODE === 'nof' ? '고장 ' : '로스 ') + (byDay[d] ? fmtV(byDay[d]) : '없음') + '"><div class="mb" style="height:' + ((byDay[d] || 0) / dmax * 26) + 'px"></div></th>').join('') + '<th></th></tr>';
   h += '<tr class="days"><th class="mc" style="text-align:left;padding-left:6px;color:var(--muted)">호기</th>' + days.map(d => {
     const w = new Date(d + 'T00:00:00').getDay();
-    return '<th class="colk ' + (w === 0 || w === 6 ? 'we ' : '') + (d === td ? 'today' : '') + '" data-col="' + d + '" data-tip="누르면 ' + md(d) + ' 워스트 4 이슈"><span class="dn">' + (+d.slice(8)) + '</span>' + WD[w] + '</th>';
+    return '<th class="colk ' + (w === 0 || w === 6 ? 'we ' : '') + (w === 0 ? 'sun ' : '') + (d === td ? 'today' : '') + '" data-col="' + d + '" data-tip="누르면 ' + md(d) + ' 워스트 4 이슈"><span class="dn">' + (+d.slice(8)) + '</span>' + WD[w] + '</th>';
   }).join('') + '<th>합계</th></tr></thead><tbody>';
   const ms = machinesShown();
   const tots = {}; ms.forEach(mc => { tots[mc] = days.reduce((a, d) => a + val(D.cells[mc] && D.cells[mc][d]), 0); });
@@ -687,7 +693,7 @@ function renderMonth() {
       const c = D.cells[mc] && D.cells[mc][d], n = (D.notes[mc] && D.notes[mc][d]) || [];
       const loss = val(c);
       const wr = WORST[mc + '|' + d];
-      const cls = ['c', loss > 0 ? 'l' + lvlV(loss) : (c ? '' : 'empty'), c && c.unexplained ? 'unx' : '', wr ? 'w' + wr : ''].join(' ');
+      const cls = ['c', loss > 0 ? 'l' + lvlV(loss) : (c ? '' : 'empty'), c && c.unexplained ? 'unx' : '', wr ? 'w' + wr : '', SUN[d] ? 'sun' : ''].join(' ');
       h += '<td class="' + cls + (nar(d) ? ' nar' : '') + '" data-k="' + mc + '|' + d + '">' + (loss > 0 ? '<span class="lv">' + Math.round(loss) + '</span>' : '') + nfTag(c) + wbadge(mc, d) +
         (n.length ? '<i class="d"></i>' : '') + (c && c.unexplained ? '<span class="q">?</span>' : '') + '</td>';
     });
