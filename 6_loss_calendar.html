@@ -131,9 +131,12 @@
     font-weight: 700; color: #6d28d9; background: rgba(255,255,255,.9); }
   .legend .nfk { display: inline-block; padding: 0 4px; border-radius: 6px; font-size: 10px; font-weight: 700; color: #6d28d9; background: #f3e8ff; margin-right: 3px; }
   .cal tfoot td { position: sticky; background: var(--surface); z-index: 2; box-shadow: 0 0 0 2px var(--surface); }
-  .cal tfoot tr.wr1 td { bottom: 128px; } .cal tfoot tr.wr2 td { bottom: 96px; }
-  .cal tfoot tr.wr3 td { bottom: 64px; } .cal tfoot tr.wr4 td { bottom: 32px; } .cal tfoot tr.wro td { bottom: 0; }
-  .noworst tfoot tr.wro td { bottom: 0; }
+  .cal tfoot tr.wr1 td { bottom: 160px; } .cal tfoot tr.wr2 td { bottom: 128px; }
+  .cal tfoot tr.wr3 td { bottom: 96px; } .cal tfoot tr.wr4 td { bottom: 64px; } .cal tfoot tr.wrs td { bottom: 32px; } .cal tfoot tr.wro td { bottom: 0; }
+  td.oc.sf { background: #fef9c3; color: #713f12; outline: 1px solid #ca8a04; }
+  .cal tfoot td.mc .ok2.sf { background: #ca8a04; }
+  .b-sf { background: #fef9c3; color: #713f12; }
+  .noworst tfoot tr.wro td { bottom: 0; } .noworst tfoot tr.wrs td { bottom: 32px; }
   td.oc { height: 26px; border-radius: 5px; text-align: center; font-size: 10.5px; font-weight: 700; cursor: pointer; color: #334155;
     background: #eef2f7; outline: 1px dashed #94a3b8; outline-offset: -1px; }
   td.oc:hover { outline: 2px solid var(--ink2); }
@@ -539,72 +542,83 @@ function worstRows() {
     });
     h += '<td></td></tr>';
   }
-  // 기타: 호기를 알 수 없는 기록 (전기로·변압기·설비 미기재 등) → 누르면 목록, 호기로 이동 가능
-  const O = D.others || {};
-  h += '<tr class="wro"><td class="mc" data-tip="호기를 알 수 없는 기록(전기로·변압기·설비 미기재 등) — 눌러서 호기로 옮길 수 있음"><span class="ok2">기</span>기타</td>';
-  WCOLS.forEach(k => {
-    const L = O[k] || [];
-    if (!L.length) { h += '<td></td>'; return; }
-    const by = {}; L.forEach(n => { by[n.eq] = (by[n.eq] || 0) + 1; });
-    const tipTxt = Object.keys(by).map(e => e + ' ' + by[e]).join(' · ');
-    h += '<td class="oc" data-ok="' + k + '" data-tip="기타 ' + L.length + '건 — ' + esc(tipTxt) + '">' + L.length + '</td>';
-  });
-  return h + '<td></td></tr></tfoot>';
+  // 안전·전기 프로젝트(기타에서 옮긴 기록) · 기타(호기를 알 수 없는 기록)
+  const row = (kind, cls, icon, label, tipHead) => {
+    const O = D[kind] || {};
+    let r = '<tr class="' + cls + '"><td class="mc" data-tip="' + tipHead + '"><span class="ok2' + (kind === 'safety' ? ' sf' : '') + '">' + icon + '</span>' + label + '</td>';
+    WCOLS.forEach(k => {
+      const L = O[k] || [];
+      if (!L.length) { r += '<td></td>'; return; }
+      const by = {}; L.forEach(n => { by[n.eq] = (by[n.eq] || 0) + 1; });
+      r += '<td class="oc' + (kind === 'safety' ? ' sf' : '') + '" data-ok="' + k + '" data-kind="' + kind + '" data-tip="' + label + ' ' + L.length + '건 — ' +
+        esc(Object.keys(by).map(e => e + ' ' + by[e]).join(' · ')) + '">' + L.length + '</td>';
+    });
+    return r + '<td></td></tr>';
+  };
+  h += row('safety', 'wrs', '안', '안전·전기', '안전·전기 프로젝트로 옮긴 기록 — 눌러서 보기');
+  h += row('others', 'wro', '기', '기타', '호기를 알 수 없는 기록(전기로·변압기·설비 미기재 등) — 눌러서 호기나 안전·전기로 옮길 수 있음');
+  return h + '</tfoot>';
 }
 
-// ---------- 기타 기록 목록 · 호기로 이동 ----------
+// ---------- 기타 · 안전·전기 목록과 이동 ----------
 const DC_LIST = (() => { const a = []; for (let i = 1; i <= 23; i++) if (i !== 14) a.push('DC' + ('0' + i).slice(-2)); return a; })();
-let OTHERS_K = null;
-function mvBar(n, moved) {
+const SAFE = '안전·전기';
+let OTHERS_K = null, OTHERS_KIND = 'others';
+// ctx: 'others' (기타 목록) · 'safety' (안전·전기 목록) · 'moved' (호기 칸에서 본 옮긴 기록)
+function mvBar(n, ctx) {
   if (!n.key) return '';
-  if (moved) return '<div class="mvbar"><span>원래 설비: <span class="eqtag">' + esc(n.eq || '-') + '</span></span><span class="gap" style="flex:1"></span>' +
-    '<button class="un mvun" data-key="' + esc(n.key) + '">↩ 기타로 되돌리기</button></div>';
-  return '<div class="mvbar"><span>설비: <span class="eqtag">' + esc(n.eq || '-') + '</span></span><span style="flex:1"></span>' +
-    '<select class="mvsel"><option value="">호기 선택</option>' + DC_LIST.map(d => '<option>' + d + '</option>').join('') + '</select>' +
-    '<button class="mvgo" data-key="' + esc(n.key) + '">→ 이동</button></div>';
+  const eq = '<span>설비: <span class="eqtag">' + esc(n.eq || '-') + '</span></span><span style="flex:1"></span>';
+  if (ctx === 'moved') return '<div class="mvbar">' + eq + '<button class="un mvun" data-key="' + esc(n.key) + '">↩ 기타로 되돌리기</button></div>';
+  const opts = (ctx === 'others' ? '<option value="' + SAFE + '">★ 안전·전기 프로젝트</option>' : '') + DC_LIST.map(d => '<option>' + d + '</option>').join('');
+  return '<div class="mvbar">' + eq + '<select class="mvsel"><option value="">' + (ctx === 'others' ? '옮길 곳 선택' : '호기 선택') + '</option>' + opts + '</select>' +
+    '<button class="mvgo" data-key="' + esc(n.key) + '">→ 이동</button>' + (ctx === 'safety' ? '<button class="un mvun" data-key="' + esc(n.key) + '">↩ 기타로</button>' : '') + '</div>';
 }
-function openOthers(k) {
-  const L = (D.others || {})[k] || [];
-  OTHERS_K = k; SEL = null; document.querySelectorAll('td.sel').forEach(x => x.classList.remove('sel'));
+function openOthers(k, kind) {
+  kind = kind || OTHERS_KIND || 'others';
+  const L = (D[kind] || {})[k] || [];
+  OTHERS_K = k; OTHERS_KIND = kind; SEL = null; document.querySelectorAll('td.sel').forEach(x => x.classList.remove('sel'));
   const w = VIEW === 'week' ? D.weeks.find(x => x.key === k) : null;
-  $('it').innerHTML = '<button class="back" id="bk">‹ 요약</button> ' + (w ? esc(w.label) : md(k) + ' (' + wd(k) + ')') + ' · 기타 기록';
-  $('is').textContent = '호기를 알 수 없는 기록입니다. 해당 호기를 골라 「이동」하면 그 호기 칸으로 옮겨집니다.';
+  $('it').innerHTML = '<button class="back" id="bk">‹ 요약</button> ' + (w ? esc(w.label) : md(k) + ' (' + wd(k) + ')') + ' · ' + (kind === 'safety' ? '안전·전기 프로젝트' : '기타 기록');
+  $('is').textContent = kind === 'safety' ? '안전·전기 프로젝트로 옮긴 기록입니다. 호기로 다시 옮기거나 기타로 되돌릴 수 있습니다.'
+    : '호기를 알 수 없는 기록입니다. 「★ 안전·전기 프로젝트」나 호기를 골라 「이동」하세요.';
   CUR = L; CUR_DATE = VIEW === 'week';
-  $('ib').innerHTML = L.length ? L.map(n => card(n).replace(/<\/div>$/, mvBar(n, false) + '</div>')).join('')
-    : '<div class="empty">기타 기록이 없습니다</div>';
+  $('ib').innerHTML = L.length ? L.map(n => card(n).replace(/<\/div>$/, mvBar(n, kind) + '</div>')).join('')
+    : '<div class="empty">기록이 없습니다</div>';
   const bk = $('bk'); if (bk) bk.onclick = showSummary;
   $('ib').scrollTop = 0; reveal();
 }
 const colOf = d => VIEW === 'week' ? ((D.weeks.find(w => d >= w.start && d <= w.end) || {}).key || d) : d;
 document.addEventListener('click', async e => {
-  const oc = e.target.closest('td.oc'); if (oc) { openOthers(oc.dataset.ok); return; }
+  const oc = e.target.closest('td.oc'); if (oc) { openOthers(oc.dataset.ok, oc.dataset.kind); return; }
   const go = e.target.closest('.mvgo'), un = e.target.closest('.mvun');
   if (!go && !un) return;
   const key = (go || un).dataset.key, box = (go || un).closest('.note');
-  if (go) {
-    const dc = box.querySelector('.mvsel').value;
-    if (!dc) { setMsg(key, '옮길 호기를 고르세요', true); return; }
-    const k = OTHERS_K, L = (D.others || {})[k] || [], n = L.find(x => x.key === key); if (!n) return;
-    go.disabled = true;
-    try {
+  // 지금 보고 있는 목록에서 기록 찾기
+  let src = null, n = null, k = null;
+  if (!SEL && OTHERS_K) { k = OTHERS_K; src = (D[OTHERS_KIND] || {})[k] || []; n = src.find(x => x.key === key); }
+  else { const p = (SEL || '|').split('|'); k = p[1]; src = (D.notes[p[0]] && D.notes[p[0]][k]) || []; n = src.find(x => x.key === key); }
+  if (!n) return;
+  const btn = go || un; btn.disabled = true;
+  try {
+    if (go) {
+      const dc = box.querySelector('.mvsel').value;
+      if (!dc) { btn.disabled = false; setMsg(key, '옮길 곳을 고르세요', true); return; }
       const r = await api({ action: 'moveNote', key, date: n.date, dc, eq: n.eq });
       if (!r.ok) throw new Error(r.error);
-      L.splice(L.indexOf(n), 1); n.moved = true;
-      ((D.notes[dc] = D.notes[dc] || {})[k] = D.notes[dc][k] || []).push(n);
-      const c = D.cells[dc] && D.cells[dc][k]; if (c) { c.unexplained = false; if (c.unexplainedDays) c.unexplainedDays = 0; }
-      render(D); L.length ? openOthers(k) : showSummary();
-    } catch (er) { go.disabled = false; setMsg(key, '실패: ' + (er.message || er), true); }
-  } else {
-    const [mc, k] = (SEL || '|').split('|'), list = (D.notes[mc] && D.notes[mc][k]) || [], n = list.find(x => x.key === key); if (!n) return;
-    un.disabled = true;
-    try {
+      src.splice(src.indexOf(n), 1); n.moved = true;
+      if (dc === SAFE) ((D.safety = D.safety || {})[k] = D.safety[k] || []).push(n);
+      else {
+        ((D.notes[dc] = D.notes[dc] || {})[k] = D.notes[dc][k] || []).push(n);
+        const c = D.cells[dc] && D.cells[dc][k]; if (c) { c.unexplained = false; if (c.unexplainedDays) c.unexplainedDays = 0; }
+      }
+    } else {
       const r = await api({ action: 'unmoveNote', key });
       if (!r.ok) throw new Error(r.error);
-      list.splice(list.indexOf(n), 1); n.moved = false;
+      src.splice(src.indexOf(n), 1); n.moved = false;
       const ok = colOf(n.date); ((D.others = D.others || {})[ok] = D.others[ok] || []).push(n);
-      refreshDay();
-    } catch (er) { un.disabled = false; setMsg(key, '실패: ' + (er.message || er), true); }
-  }
+    }
+    if (SEL) refreshDay(); else { render(D); src.length ? openOthers(k, OTHERS_KIND) : showSummary(); }
+  } catch (er) { btn.disabled = false; setMsg(key, '실패: ' + (er.message || er), true); }
 });
 
 // 인스펙터: 한 날짜(주)의 워스트 4 와 주요 이슈
@@ -835,7 +849,7 @@ function card(n) {
     (n.key ? '<div class="phbar"><button class="addph" data-key="' + esc(n.key) + '" title="사진 고르기 · 카드 위로 끌어다 놓기 · 카드에 마우스를 올리고 Ctrl+V(캡처 붙여넣기)">📷 사진</button><button class="addmemo">💬 메모</button>' +
       '<span class="upmsg"></span><span class="gap"></span>' + (n.manual ? '<button class="addph del recdel">기록 삭제</button>' : '') + '</div><div class="mbox"></div>'
            : '<div class="phbar"><button class="addph" disabled>📷 사진</button><span class="upmsg err">Apps Script를 「새 버전」으로 배포하면 사용할 수 있습니다</span></div>') +
-    (n.moved && SEL ? mvBar(n, true) : '') + '</div>';
+    (n.moved && SEL ? mvBar(n, 'moved') : '') + '</div>';
 }
 function photos(n) {
   const ids = n.photos || [], added = n.added || [];
