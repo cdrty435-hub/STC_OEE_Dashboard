@@ -696,7 +696,7 @@ function openDay(key) {
         return '<tr><td>' + esc(s.shift) + (s.kind && s.kind !== '정규' ? ' (' + esc(s.kind) + ')' : '') + '</td><td>' + s.plan + '</td><td>' + s.run + '</td><td>' + s.loss + '</td><td>' + (s.nof != null ? s.nof : '') + '</td><td>' + (t ? esc(t[0]) : '') + '</td></tr>';
       }).join('') + '</table></div>';
   }
-  h += notesSection(notes, false, '이 날의 기록') + '<div class="hint">※ 아침조회는 다음 날 아침 회의 내용을 전날 칸에 붙여서 보여줍니다.</div>';
+  h += notesSection(notes, false, '이 날의 기록') + '<div class="hint">※ 아침조회는 회의록에 적힌 날짜 칸에 나옵니다.</div>';
   $('ib').innerHTML = h; drawNotes(); $('ib').scrollTop = 0; reveal();
 }
 function openWeek(key) {
