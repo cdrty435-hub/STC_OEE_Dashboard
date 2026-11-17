@@ -243,7 +243,7 @@
   .memo button { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 11px; padding: 0 2px; }
   .memo button.armed, .x.armed, .addph.armed { color: var(--critical) !important; border-color: var(--critical) !important; }
   .mform { margin-top: 8px; }
-  .mform textarea, .rform textarea, .rform select, .rform input[type=time] { width: 100%; box-sizing: border-box; border: 1px solid var(--line2); border-radius: 7px;
+  .mform textarea, .rform textarea, .rform select, .rform input[type=time], .rform input[list] { width: 100%; box-sizing: border-box; border: 1px solid var(--line2); border-radius: 7px;
     padding: 7px 9px; font: inherit; font-size: 13px; background: var(--surface); color: var(--ink); }
   .mform textarea, .rform textarea { min-height: 64px; resize: vertical; }
   .fbtn { display: flex; gap: 6px; justify-content: flex-end; margin-top: 6px; align-items: center; }
@@ -998,8 +998,8 @@ function openRecForm() {
   const top = c ? Object.entries(c.codes).sort((a, b) => b[1] - a[1])[0] : null;
   $('addrec').style.display = 'none';
   $('rformBox').innerHTML = '<div class="rform">' +
-    '<div class="row2"><div><label>분류</label><select id="rType">' +
-    ['설비수리', '금형', '전기', '품질·불량', '취출·스프레이', '전기로·래들', '기타'].map(t => '<option>' + t + '</option>').join('') + '</select></div>' +
+    '<div class="row2"><div><label>분류 (고르거나 직접 입력)</label><input id="rType" list="rTypes" autocomplete="off" placeholder="눌러서 고르기 · 예: 용접">' +
+    '<datalist id="rTypes">' + recTypes().map(t => '<option value="' + esc(t) + '">').join('') + '</datalist></div>' +
     '<div><label>상태</label><select id="rSt"><option>완료</option><option>진행·대기</option><option>미해결</option></select></div>' +
     '<div><label>시각</label><input type="time" id="rTime" value="' + hm + '"></div></div>' +
     '<label>내용 · ' + esc(mc) + ' ' + md(d) + (top ? ' (OEE 주 원인: ' + esc(top[0]) + ' ' + top[1] + '분)' : '') + '</label>' +
@@ -1008,6 +1008,16 @@ function openRecForm() {
     '<div class="fbtn"><span class="upmsg" id="rMsg"></span><button class="rno">취소</button><button class="ok rsave">저장</button></div></div>';
   $('rText').focus();
 }
+// 분류 목록: 기본 + 직접 입력했던 분류(이 PC에 기억)
+const REC_TYPES = ['설비수리', '금형', '전기', '용접', '배관·누유', '유압', '공압·에어', '냉각수', '품질·불량', '취출·스프레이', '전기로·래들', '안전', '기타'];
+function recTypes() {
+  let mine = []; try { mine = JSON.parse(localStorage.getItem('recTypes') || '[]'); } catch (e) {}
+  return REC_TYPES.concat(mine.filter(t => REC_TYPES.indexOf(t) < 0));
+}
+function rememberType(t) {
+  if (!t || REC_TYPES.indexOf(t) >= 0) return;
+  try { const mine = JSON.parse(localStorage.getItem('recTypes') || '[]'); if (mine.indexOf(t) < 0) { mine.push(t); localStorage.setItem('recTypes', JSON.stringify(mine.slice(-20))); } } catch (e) {}
+}
 async function saveRecord(btn) {
   const [mc, d] = SEL.split('|'), text = $('rText').value.trim();
   const msg = (t, err) => { $('rMsg').textContent = t; $('rMsg').classList.toggle('err', !!err); };
@@ -1015,7 +1025,8 @@ async function saveRecord(btn) {
   btn.disabled = true;
   try {
     msg('저장 중…');
-    const rec = { dc: mc, date: d, type: $('rType').value, status: $('rSt').value, time: $('rTime').value, text };
+    const rec = { dc: mc, date: d, type: ($('rType').value || '').trim() || '기타', status: $('rSt').value, time: $('rTime').value, text };
+    rememberType(rec.type);
     const r = await api(Object.assign({ action: 'addRecord' }, rec));
     if (!r.ok) throw new Error(r.error);
     const n = { src: '직접 입력', key: r.id, date: d, time: rec.time, type: rec.type, status: rec.status, text, ko: '', who: getWho(), manual: true, photos: [], added: [] };
