@@ -470,7 +470,7 @@ function renderLegend() {
 }
 
 function machinesShown() {
-  return D.machines.filter(mc => (D.cells[mc] && Object.keys(D.cells[mc]).length) || (D.notes[mc] && Object.keys(D.notes[mc]).length));
+  return D.machines;   // DC01~DC23 전부 + FAC C/D/E · TP 설비 (데이터 없어도 줄 표시)
 }
 function rowHead(mc, tot, max) {
   return '<td class="mc"><div class="nm">' + mc + '</div><div class="tt"><i style="width:' + (max ? Math.max(2, tot / max * 44) : 0) + 'px"></i>' + (tot ? (MODE === 'nof' ? Math.round(tot) + '회' : hrs(tot)) : '') + '</div></td>';
@@ -565,7 +565,7 @@ function worstRows() {
 }
 
 // ---------- 기타 · 안전·전기 목록과 이동 ----------
-const DC_LIST = (() => { const a = []; for (let i = 1; i <= 23; i++) if (i !== 14) a.push('DC' + ('0' + i).slice(-2)); return a; })();
+const DC_LIST = (() => { const a = []; for (let i = 1; i <= 23; i++) a.push('DC' + ('0' + i).slice(-2)); return a.concat(['FAC C', 'FAC D', 'FAC E', 'TP 설비']); })();
 const SAFE = '안전·전기', FIVE = '5S';
 const PJ_KIND = { '안전·전기': 'safety', '5S': 'fives' }, PJ_NAME = { safety: '안전·전기 프로젝트', fives: '5S' };
 let OTHERS_K = null, OTHERS_KIND = 'others';
