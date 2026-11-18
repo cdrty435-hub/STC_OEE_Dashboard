@@ -136,6 +136,7 @@
   td.c.sun:not(.l1):not(.l2):not(.l3):not(.l4) { background: #fef2f2; box-shadow: inset 0 0 0 1px #fecaca; }
   td.c.sun.l1, td.c.sun.l2, td.c.sun.l3, td.c.sun.l4 { box-shadow: inset 0 -3px 0 #f87171; }
   .cal tfoot td { position: sticky; background: var(--surface); z-index: 2; box-shadow: 0 0 0 2px var(--surface); }
+  .cal tfoot td { height: 30px; box-sizing: border-box; } .cal tfoot td.wc, .cal tfoot td.oc { height: 28px; }
   .cal tfoot tr.wr1 td { bottom: 192px; } .cal tfoot tr.wr2 td { bottom: 160px; }
   .cal tfoot tr.wr3 td { bottom: 128px; } .cal tfoot tr.wr4 td { bottom: 96px; } .cal tfoot tr.wrs td { bottom: 64px; } .cal tfoot tr.wr5 td { bottom: 32px; } .cal tfoot tr.wro td { bottom: 0; }
   td.oc.f5 { background: #dcfce7; color: #14532d; outline: 1px solid #16a34a; }
@@ -344,6 +345,7 @@
   <div class="toggles">
     <button class="tg" id="tgFocus" title="이유 기록이 없는 칸만 강조">? 미기록만 보기</button>
     <button class="tg on" id="tgDots" title="LINE·아침조회 기록 표시">● 기록 표시</button>
+    <div class="seg noi18n" id="langSeg" title="Language"><button data-l="ko">한국어</button><button data-l="en">EN</button><button data-l="th">ไทย</button></div>
     <button class="tg on" id="tgWorst" title="날짜(주)마다 로스가 가장 큰 4대를 표시하고 주요 이슈를 아래에 정리">★ 워스트 4</button>
   </div>
   <span class="upd" id="upd"></span>
@@ -364,6 +366,138 @@
 <div id="tip"></div>
 
 <script>
+// ============================================================
+//  언어 전환 (한국어 · English · ไทย)
+//  화면 글자는 그린 뒤 사전으로 바꾸고(.noi18n 안은 그대로),
+//  기록 내용은 언어별 필드(ko / en / 원문 text)를 골라서 그린다.
+// ============================================================
+let LANG = (() => { try { return localStorage.getItem('lossLang') || 'ko'; } catch (e) { return 'ko'; } })();
+// 기록 본문: 한국어 → 한국어 번역 / ไทย → 원문 / English → 번역봇 영어(없으면 원문)
+function mainTxt(n) {
+  const ko = n.ko && n.ko !== '(번역 대기)' ? n.ko : '';
+  if (LANG === 'th') return n.text || ko;
+  if (LANG === 'en') return n.en || n.text || ko;
+  return ko || n.text || '';
+}
+function altTxt(n) {          // 펼쳐 보기: 다른 언어
+  const ko = n.ko && n.ko !== '(번역 대기)' ? n.ko : '';
+  if (LANG === 'th') return ko && ko !== n.text ? ko : '';
+  if (LANG === 'en') return n.en && n.text !== n.en ? n.text : '';
+  return ko && n.text && ko !== n.text ? n.text : '';
+}
+const I18N = {
+  // ---- 화면 ----
+  '로스 달력': ['Loss Calendar', 'ปฏิทินการสูญเสีย'], 'OEE 로스 × LINE 기록 × 아침조회': ['OEE loss × LINE records × morning meeting', 'การสูญเสีย OEE × บันทึก LINE × ประชุมเช้า'],
+  '월간': ['Month', 'รายเดือน'], '주간': ['Week', 'รายสัปดาห์'], '함께': ['Both', 'ทั้งคู่'], '로스시간': ['Loss time', 'เวลาสูญเสีย'], '고장횟수': ['Failures', 'จำนวนเสีย'],
+  '미기록만 보기': ['Unexplained only', 'เฉพาะที่ไม่มีบันทึก'], '기록 표시': ['Show records', 'แสดงบันทึก'], '워스트 4': ['Worst 4', 'แย่สุด 4'], '워스트': ['Worst', 'แย่สุด'],
+  '갱신': ['Updated', 'อัปเดต'], '불러오는 중': ['Loading', 'กำลังโหลด'], '불러오기 실패': ['Load failed', 'โหลดไม่สำเร็จ'],
+  '총 로스': ['Total loss', 'การสูญเสียรวม'], '로스율': ['Loss rate', 'อัตราสูญเสีย'], '계획': ['Planned', 'แผน'], '가동': ['Run', 'เดินเครื่อง'],
+  '로스 1위 호기': ['Top loss machine', 'เครื่องสูญเสียสูงสุด'], '정지 원인 1위': ['Top stop cause', 'สาเหตุหยุดอันดับ 1'], '정지 원인': ['Stop cause', 'สาเหตุหยุด'],
+  '이유 기록 없는 큰 로스': ['Big losses without reason', 'สูญเสียมากแต่ไม่มีเหตุผล'], '설비 로스 120분 이상인 날 기준': ['days with equipment loss ≥120 min', 'วันที่สูญเสียเครื่อง ≥120 นาที'],
+  '미결 기록': ['Open records', 'บันทึกค้าง'], '미조치·진행·미해결': ['not done · in progress · unresolved', 'ยังไม่แก้ · กำลังทำ · ยังไม่จบ'], '이후': ['since', 'ตั้งแต่'],
+  '고장횟수 · MTTR': ['Failures · MTTR', 'จำนวนเสีย · MTTR'], '고장횟수 1위': ['Most failures', 'เสียบ่อยสุด'], '설비 로스 ÷ 고장횟수': ['equipment loss ÷ failures', 'สูญเสียเครื่อง ÷ จำนวนเสีย'],
+  '새 버전 배포 후 표시': ['shown after new deployment', 'แสดงหลังอัปเดตเวอร์ชันใหม่'],
+  '로스(분/일)': ['Loss (min/day)', 'สูญเสีย (นาที/วัน)'], '로스(분/주)': ['Loss (min/week)', 'สูญเสีย (นาที/สัปดาห์)'],
+  '고장횟수(회/일)': ['Failures (/day)', 'จำนวนเสีย (/วัน)'], '고장횟수(회/주)': ['Failures (/week)', 'จำนวนเสีย (/สัปดาห์)'],
+  'LINE·아침조회 기록 있음': ['LINE / meeting record', 'มีบันทึก LINE/ประชุมเช้า'], '설비 로스 120분+ 인데 이유 기록 없음': ['equip. loss 120 min+ with no reason', 'สูญเสียเครื่อง 120 นาที+ ไม่มีเหตุผล'],
+  '호기': ['Machine', 'เครื่อง'], '합계': ['Total', 'รวม'], '이번 달 요약': ['This month', 'สรุปเดือนนี้'], '요약': ['Summary', 'สรุป'],
+  '달력 칸을 누르면 그 날(주)의 로스 내역과 기록이 여기에 나옵니다': ['Click a cell to see that day’s losses and records here', 'คลิกช่องเพื่อดูการสูญเสียและบันทึกของวันนั้น'],
+  '정지 원인 Top 10': ['Stop causes Top 10', 'สาเหตุหยุด 10 อันดับ'], '전체 호기': ['all machines', 'ทุกเครื่อง'],
+  '로스 Top 5 호기': ['Top 5 machines by loss', 'เครื่องสูญเสีย 5 อันดับ'], '고장횟수 Top 5 호기': ['Top 5 machines by failures', 'เครื่องเสียบ่อย 5 อันดับ'],
+  '누르면 해당 호기 강조': ['click to highlight', 'คลิกเพื่อเน้น'], '일별 로스 추세': ['Daily loss trend', 'แนวโน้มสูญเสียรายวัน'], '주별 로스 추세': ['Weekly loss trend', 'แนวโน้มสูญเสียรายสัปดาห์'],
+  '일별 고장횟수 추세': ['Daily failure trend', 'แนวโน้มจำนวนเสียรายวัน'], '주별 고장횟수 추세': ['Weekly failure trend', 'แนวโน้มจำนวนเสียรายสัปดาห์'], '평균': ['avg', 'เฉลี่ย'],
+  '일자별 워스트 4': ['Daily worst 4', 'แย่สุด 4 รายวัน'], '주별 워스트 4': ['Weekly worst 4', 'แย่สุด 4 รายสัปดาห์'], '고장횟수 기준 · 4대': ['by failures · 4 machines', 'ตามจำนวนเสีย · 4 เครื่อง'], '4대': ['4 machines', '4 เครื่อง'],
+  '항목을 누르면 그 칸의 상세 · 사진 · 메모가 열립니다': ['Click an item for details, photos and notes', 'คลิกรายการเพื่อดูรายละเอียด รูป และโน้ต'],
+  '로스': ['Loss', 'สูญเสีย'], '로스 내역': ['Loss breakdown', 'รายละเอียดการสูญเสีย'], 'OEE 정지 코드': ['OEE stop codes', 'รหัสหยุด OEE'], '설비 로스': ['Equip. loss', 'สูญเสียเครื่อง'],
+  '1회 평균 정지': ['Avg stop / failure', 'หยุดเฉลี่ย/ครั้ง'], '교대': ['Shift', 'กะ'], '고장': ['Fail', 'เสีย'], '주요 원인': ['Main cause', 'สาเหตุหลัก'],
+  '이 날의 기록': ['Records this day', 'บันทึกวันนี้'], '이 주의 기록': ['Records this week', 'บันทึกสัปดาห์นี้'], '이 날 OEE 기록 없음': ['No OEE data this day', 'ไม่มีข้อมูล OEE วันนี้'], 'OEE 기록 없음': ['No OEE data', 'ไม่มีข้อมูล OEE'],
+  '이유 기록 없음': ['No reason recorded', 'ไม่มีบันทึกเหตุผล'], '기록 없음': ['no records', 'ไม่มีบันทึก'], '데이터 없음': ['no data', 'ไม่มีข้อมูล'], '기록': ['Records', 'บันทึก'],
+  '기록 직접 추가 (내용·사진)': ['Add record (text · photo)', 'เพิ่มบันทึก (ข้อความ · รูป)'], '미결만': ['Open only', 'เฉพาะค้าง'],
+  'LINE·아침조회 기록 없음': ['No LINE / meeting records', 'ไม่มีบันทึก LINE/ประชุมเช้า'], '선택한 조건에 맞는 기록이 없습니다': ['No records match the filter', 'ไม่มีบันทึกตามเงื่อนไข'],
+  '아침조회는 회의록에 적힌 날짜 칸에 나옵니다': ['Morning-meeting items appear on the date written in the minutes', 'ประชุมเช้าแสดงตามวันที่ในบันทึกการประชุม'],
+  'LINE 불량': ['LINE defect', 'LINE ของเสีย'], 'LINE 수리': ['LINE repair', 'LINE ซ่อม'], '아침조회': ['Morning mtg', 'ประชุมเช้า'], '직접 입력': ['Manual', 'บันทึกเอง'],
+  '원문': ['Original', 'ต้นฉบับ'], '번역': ['Translation', 'คำแปล'], '사진 보기': ['View photo', 'ดูรูป'], '사진 열기': ['Open photo', 'เปิดรูป'],
+  '사진': ['Photo', 'รูป'], '붙여넣기': ['Paste', 'วาง'], '메모': ['Note', 'โน้ต'], '이동': ['Move', 'ย้าย'], '기록 삭제': ['Delete record', 'ลบบันทึก'], '지우기': ['delete', 'ลบ'],
+  '취소': ['Cancel', 'ยกเลิก'], '저장': ['Save', 'บันทึก'], '확인': ['OK', 'ตกลง'], '저장 중': ['Saving', 'กำลังบันทึก'], '이동 중': ['Moving', 'กำลังย้าย'], '올리는 중': ['Uploading', 'กำลังอัปโหลด'],
+  '장 추가됨': ['photo(s) added', 'รูปเพิ่มแล้ว'], '메모 저장됨': ['Note saved', 'บันทึกโน้ตแล้ว'], '사진을 지웠습니다': ['Photo deleted', 'ลบรูปแล้ว'], '실패': ['Failed', 'ไม่สำเร็จ'], '삭제 실패': ['Delete failed', 'ลบไม่สำเร็จ'],
+  '한 번 더 누르면 삭제': ['Click again to delete', 'กดอีกครั้งเพื่อลบ'], '정말 지우기': ['Really delete', 'ลบจริง'],
+  '사진 추가': ['Add photo', 'เพิ่มรูป'], 'PIN 번호': ['PIN', 'รหัส PIN'], '올리는 사람 이름 (생략 가능)': ['Your name (optional)', 'ชื่อผู้อัปโหลด (ไม่บังคับ)'],
+  'PIN 번호가 맞지 않습니다. 다시 입력하세요': ['Wrong PIN. Try again', 'PIN ไม่ถูกต้อง ลองใหม่'], 'PIN 번호를 입력해야 올릴 수 있습니다': ['Enter the PIN to upload', 'ต้องใส่ PIN ก่อนอัปโหลด'],
+  '분류 (고르거나 직접 입력)': ['Category (pick or type)', 'หมวด (เลือกหรือพิมพ์)'], '눌러서 고르기 · 예: 용접': ['pick · e.g. welding', 'เลือก · เช่น งานเชื่อม'],
+  '상태': ['Status', 'สถานะ'], '시각': ['Time', 'เวลา'], '내용': ['Details', 'รายละเอียด'], 'OEE 주 원인': ['OEE main cause', 'สาเหตุหลัก OEE'],
+  '무슨 문제였고 어떻게 조치했는지 적어 주세요': ['What was the problem and what was done?', 'ปัญหาคืออะไร และแก้ไขอย่างไร'],
+  '원인, 조치 내용, 부품 등을 적어 주세요': ['Cause, action, parts…', 'สาเหตุ การแก้ไข อะไหล่ ฯลฯ'],
+  '사진을 끌어다 놓기 · 눌러서 선택 · 캡처 후': ['Drag photos here · click to pick · after capture', 'ลากรูปมาวาง · คลิกเลือก · หลังแคปหน้าจอ'], '내용을 입력하세요': ['Enter details', 'กรุณาใส่รายละเอียด'],
+  '옮길 곳 선택': ['Move to…', 'ย้ายไป…'], '호기 선택': ['Machine…', 'เลือกเครื่อง…'], '설비': ['Equip.', 'อุปกรณ์'], '원래 날짜': ['Original date', 'วันที่เดิม'], '원래대로': ['Restore', 'คืนค่าเดิม'],
+  '기타로': ['To Other', 'กลับไปอื่นๆ'], '이동됨': ['moved', 'ย้ายแล้ว'], '안전·전기 프로젝트': ['Safety·Electrical project', 'โครงการความปลอดภัย·ไฟฟ้า'], '안전·전기': ['Safety·Elec.', 'ปลอดภัย·ไฟฟ้า'],
+  '기타 기록': ['Other records', 'บันทึกอื่นๆ'], '기타': ['Other', 'อื่นๆ'], '기록이 없습니다': ['No records', 'ไม่มีบันทึก'], '로스 기록이 없습니다': ['No loss data', 'ไม่มีข้อมูลสูญเสีย'],
+  '호기를 알 수 없는 기록입니다. 「★ 안전·전기」, 「★ 5S」나 호기를 골라 「이동」하세요.': ['Machine unknown. Pick ★ Safety·Elec., ★ 5S or a machine and press Move.', 'ไม่ทราบเครื่อง เลือก ★ ปลอดภัย·ไฟฟ้า, ★ 5S หรือเครื่อง แล้วกดย้าย'],
+  '(으)로 옮긴 기록입니다. 호기로 다시 옮기거나 기타로 되돌릴 수 있습니다.': [' — moved records. You can move them to a machine or back to Other.', ' — บันทึกที่ย้ายมา ย้ายไปเครื่องหรือกลับไปอื่นๆ ได้'],
+  '날짜를 고르세요': ['Pick a date', 'เลือกวันที่'], '옮길 곳을 고르세요': ['Pick a destination', 'เลือกปลายทาง'], '지금과 같은 날짜·호기입니다': ['Same date and machine', 'วันที่และเครื่องเดิม'],
+  '복사된 사진이 없습니다': ['No copied image', 'ไม่มีรูปที่คัดลอก'], '사진 파일만 올릴 수 있습니다': ['Image files only', 'อัปโหลดได้เฉพาะรูป'],
+  '선택 기간': ['Selected period', 'ช่วงที่เลือก'], '요일별': ['By weekday', 'ตามวัน'], '날짜': ['Date', 'วันที่'], '주 합계': ['Week total', 'รวมสัปดาห์'], '전체': ['All', 'ทั้งหมด'],
+  '누르면 지금 새로고침 (3분마다 자동)': ['Click to refresh now (auto every 3 min)', 'คลิกเพื่อรีเฟรช (อัตโนมัติทุก 3 นาที)'],
+  // ---- 상태 ----
+  '미조치': ['Not done', 'ยังไม่แก้'], '미해결·재발': ['Unresolved·recurring', 'ยังไม่จบ·เกิดซ้ำ'], '미해결': ['Unresolved', 'ยังไม่จบ'], '진행·대기': ['In progress', 'กำลังทำ'],
+  '조치': ['Fixed', 'แก้แล้ว'], '완료': ['Done', 'เสร็จ'], '보고': ['Report', 'รายงาน'],
+  // ---- 분류 · 정지 코드 ----
+  '설비수리': ['Equip. repair', 'ซ่อมเครื่อง'], '금형수리': ['Mold repair', 'ซ่อมแม่พิมพ์'], '금형교체': ['Mold change', 'เปลี่ยนแม่พิมพ์'], '금형파손': ['Mold damage', 'แม่พิมพ์เสียหาย'],
+  '금형 소착': ['Die soldering', 'อะลูติดแม่พิมพ์'], '금형 크랙': ['Mold crack', 'แม่พิมพ์แตก'], '전기로회전': ['Furnace rotation', 'หมุนเตา'], '전기로·히터': ['Furnace·heater', 'เตา·ฮีตเตอร์'],
+  '탈산처리': ['Degassing', 'ไล่แก๊ส'], '조건변경': ['Condition change', 'เปลี่ยนเงื่อนไข'], '취출기수리': ['Extractor repair', 'ซ่อมแขนหยิบ'], '취출 핸드': ['Extractor hand', 'มือหยิบ'],
+  '스크랩용해': ['Scrap melting', 'หลอมเศษ'], '휴식': ['Break', 'พัก'], '설비교대': ['Shift change', 'เปลี่ยนกะ'], '로트마크': ['Lot mark', 'ล็อตมาร์ค'], '사상': ['Finishing', 'ตกแต่ง'],
+  '핀파손': ['Pin broken', 'พินหัก'], '핀 파손': ['Pin broken', 'พินหัก'], '핀 높이': ['Pin height', 'ความสูงพิน'], '팁교체': ['Tip change', 'เปลี่ยนทิป'], '미팅': ['Meeting', 'ประชุม'], '정전': ['Power cut', 'ไฟดับ'],
+  '전기': ['Electrical', 'ไฟฟ้า'], '금형': ['Mold', 'แม่พิมพ์'], '용접': ['Welding', 'งานเชื่อม'], '배관·누유': ['Piping·leak', 'ท่อ·รั่ว'], '유압': ['Hydraulic', 'ไฮดรอลิก'], '공압·에어': ['Pneumatic', 'ลม'],
+  '냉각수': ['Cooling water', 'น้ำหล่อเย็น'], '품질·불량': ['Quality·defect', 'คุณภาพ·ของเสีย'], '취출·스프레이': ['Extractor·spray', 'แขนหยิบ·สเปรย์'], '전기로·래들': ['Furnace·ladle', 'เตา·ทัพพี'], '안전': ['Safety', 'ความปลอดภัย'],
+  '스프레이': ['Spray', 'สเปรย์'], '기공': ['Porosity', 'รูพรุน'], '미성형': ['Short shot', 'ฉีดไม่เต็ม'], '끌림': ['Drag mark', 'รอยลาก'], '끌림 크랙': ['Drag crack', 'รอยลากแตก'], '박리': ['Peeling', 'ลอก'],
+  '인서트 파손': ['Insert broken', 'อินเสิร์ทแตก'], '트리밍 불량': ['Trimming NG', 'ทริมเสีย'], '센서': ['Sensor', 'เซนเซอร์'], '모터': ['Motor', 'มอเตอร์'], '펌프': ['Pump', 'ปั๊ม'], '전선': ['Cable', 'สายไฟ'],
+  '변압기': ['Transformer', 'หม้อแปลง'], '컴프레서': ['Compressor', 'คอมเพรสเซอร์'], '전기로': ['Furnace', 'เตา'], '설비 미기재': ['equip. not given', 'ไม่ระบุเครื่อง'],
+  '외': ['+', '+'], 'Apps Script를 「새 버전」으로 배포하면 사용할 수 있습니다': ['Available after deploying a new Apps Script version', 'ใช้ได้หลังอัปเดต Apps Script เวอร์ชันใหม่'],
+  '노즐막힘': ['Nozzle clog', 'หัวฉีดตัน'], '플런저오일막힘': ['Plunger oil clog', 'น้ำมันลูกสูบตัน'], '래들수리': ['Ladle repair', 'ซ่อมทัพพี'], '전기로수리': ['Furnace repair', 'ซ่อมเตา'],
+  '슬라이드코어수리': ['Slide core repair', 'ซ่อมสไลด์คอร์'], '스프레이수리': ['Spray repair', 'ซ่อมสเปรย์'], '요청': ['request', 'แจ้ง'],
+};
+const I18N_KEYS = Object.keys(I18N).sort((a, b) => b.length - a.length);
+const WD_T = { '일': ['Sun', 'อา'], '월': ['Mon', 'จ'], '화': ['Tue', 'อ'], '수': ['Wed', 'พ'], '목': ['Thu', 'พฤ'], '금': ['Fri', 'ศ'], '토': ['Sat', 'ส'] };
+const MON_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function trText(t) {
+  const L = LANG === 'en' ? 0 : 1;
+  const EX = { '안': ['S', 'ป'], '기': ['O', 'อ'], '시간': ['h', 'ชม.'], '건': ['', 'รายการ'], '칸': ['cells', 'ช่อง'], '회': ['×', 'ครั้ง'], '분': ['m', 'น.'] };
+  if (WD_T[t.trim()]) return t.replace(t.trim(), WD_T[t.trim()][L]);
+  if (EX[t.trim()]) return t.replace(t.trim(), EX[t.trim()][L]);
+  t = t.replace(/(\d{4})년\s*(\d{1,2})월/g, (m, y, mo) => L ? 'เดือน ' + mo + '/' + y : MON_EN[mo - 1] + ' ' + y);
+  for (const k of I18N_KEYS) if (t.indexOf(k) >= 0) t = t.split(k).join(I18N[k][L]);
+  t = t.replace(/\((일|월|화|수|목|금|토)\)/g, (m, d) => '(' + WD_T[d][L] + ')')
+    .replace(/(\d+)\s*시간\s*(\d+)\s*분/g, L ? '$1 ชม. $2 น.' : '$1h $2m')
+    .replace(/(\d[\d,.]*)\s*시간/g, L ? '$1 ชม.' : '$1h')
+    .replace(/(\d+)\s*분/g, L ? '$1 น.' : '$1m')
+    .replace(/(\d[\d,]*)\s*회/g, L ? '$1 ครั้ง' : '$1×')
+    .replace(/(\d[\d,]*)\s*건/g, L ? '$1 รายการ' : '$1')
+    .replace(/(\d[\d,]*)\s*칸/g, L ? '$1 ช่อง' : '$1 cells')
+    .replace(/(\d+)\s*장/g, L ? '$1 รูป' : '$1 photo')
+    .replace(/(\d+)\s*위/g, L ? 'อันดับ $1' : '#$1')
+    .replace(/(\d+)\s*대/g, L ? '$1 เครื่อง' : '$1 mc')
+    .replace(/(\d+)\s*주/g, L ? '$1 สัปดาห์' : '$1 wk');
+  return t;
+}
+function translateDom(root) {
+  if (LANG === 'ko') return;
+  const w = document.createTreeWalker(root || document.body, NodeFilter.SHOW_TEXT, {
+    acceptNode: n => /[가-힣]/.test(n.data) && !(n.parentElement && n.parentElement.closest('.noi18n, script, style, textarea')) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+  });
+  const list = []; while (w.nextNode()) list.push(w.currentNode);
+  list.forEach(n => { const t = trText(n.data); if (t !== n.data) n.data = t; });
+  (root || document.body).querySelectorAll('[title],[placeholder]').forEach(el => {
+    if (el.closest('.noi18n')) return;
+    ['title', 'placeholder'].forEach(a => { const v = el.getAttribute(a); if (v && /[가-힣]/.test(v)) el.setAttribute(a, trText(v)); });
+  });
+}
+let I18N_RAF = 0;
+function startI18n() {
+  if (LANG === 'ko') return;
+  document.documentElement.lang = LANG;
+  new MutationObserver(() => { if (!I18N_RAF) I18N_RAF = requestAnimationFrame(() => { I18N_RAF = 0; translateDom(); }); })
+    .observe(document.body, { subtree: true, childList: true, characterData: true });
+  translateDom();
+}
 // 데이터 주소: LINE수집기 웹앱 (Code.gs doGet 의 ?api=loss)
 const API_URL = 'https://script.google.com/macros/s/AKfycbzmKgVmd2fuGfDIJS2ImMxzGBXXjuodifGQH5XgmPnQva91_AO4SzrUBAr5d4vjQBpX/exec';
 const WD = ['일','월','화','수','목','금','토'];
@@ -528,7 +662,7 @@ function issueOf(mc, k) {
   const c = D.cells[mc] && D.cells[mc][k];
   const top = c ? Object.entries(c.codes).sort((a, b) => b[1] - a[1])[0] : null;
   if (ns.length) {
-    const n = ns[0], t = (n.ko && n.ko !== '(번역 대기)' ? n.ko : n.text) || '';
+    const n = ns[0], t = mainTxt(n) || '';
     return { src: grp(n), text: t.replace(/\s+/g, ' ').trim(), more: ns.length - 1, code: top ? top[0] : '' };
   }
   return { src: '', text: top ? top[0] + ' ' + top[1] + '분 — 이유 기록 없음' : '이유 기록 없음', none: true };
@@ -647,7 +781,7 @@ function worstPanel(k) {
       return '<div class="wit" data-k="' + x.mc + '|' + k + '"><span class="rk r' + (i + 1) + '">' + (i + 1) + '</span><div>' +
         '<div class="l1x"><b>' + x.mc + '</b>' + (is.code ? '<span class="sb">' + esc(is.code) + '</span>' : '') + '<span class="mn">' + (VIEW === 'week' ? hrs(x.c.loss) : fmtMin(x.c.loss)) + ' · ' + (x.c.nof || 0) + '회</span></div>' +
         '<div class="is' + (is.none ? ' no' : '') + '">' + (is.src ? '<span class="sb">[' + esc(is.src.replace('LINE ', '')) + ']</span>' : '⚠ ') +
-        esc(is.text) + (is.more ? ' <span class="sb">외 ' + is.more + '건</span>' : '') + '</div></div></div>';
+        (is.none ? esc(is.text) : '<span class="noi18n">' + esc(is.text) + '</span>') + (is.more ? ' <span class="sb">외 ' + is.more + '건</span>' : '') + '</div></div></div>';
     }).join('') + '</div>';
 }
 function openWorst(k) {
@@ -796,7 +930,9 @@ function openDay(key) {
     h += '<div class="sec"><h3>로스 내역 <span>OEE 정지 코드</span></h3>' + codeBars(c.codes) +
       '<table class="sh"><tr><th>교대</th><th>계획</th><th>가동</th><th>로스</th><th>고장</th><th>주요 원인</th></tr>' + c.shifts.map(s => {
         const t = Object.entries(s.codes).sort((a, b) => b[1] - a[1])[0];
-        return '<tr><td>' + esc(s.shift) + (s.kind && s.kind !== '정규' ? ' (' + esc(s.kind) + ')' : '') + '</td><td>' + s.plan + '</td><td>' + s.run + '</td><td>' + s.loss + '</td><td>' + (s.nof != null ? s.nof : '') + '</td><td>' + (t ? esc(t[0]) : '') + '</td></tr>';
+        const SH = { '주간': ['Day', 'กลางวัน'], '야간': ['Night', 'กลางคืน'] };
+        const shn = LANG !== 'ko' && SH[s.shift] ? SH[s.shift][LANG === 'en' ? 0 : 1] : s.shift;
+        return '<tr><td><span class="noi18n">' + esc(shn) + '</span>' + (s.kind && s.kind !== '정규' ? ' (' + esc(s.kind) + ')' : '') + '</td><td>' + s.plan + '</td><td>' + s.run + '</td><td>' + s.loss + '</td><td>' + (s.nof != null ? s.nof : '') + '</td><td>' + (t ? esc(t[0]) : '') + '</td></tr>';
       }).join('') + '</table></div>';
   }
   h += notesSection(notes, false, '이 날의 기록') + '<div class="hint">※ 아침조회는 회의록에 적힌 날짜 칸에 나옵니다.</div>';
@@ -849,14 +985,14 @@ function drawNotes() {
 function card(n) {
   const st = stColor(n.status), g = grp(n);
   const bc = g === 'LINE 불량' ? 'b-def' : g === 'LINE 수리' ? 'b-rep' : g === '직접 입력' ? 'b-man' : 'b-mtg';
-  const memos = (n.memos || []).map(m => '<div class="memo">💬 ' + esc(m.text) + '<span class="m">' + esc(m.who || '') + ' ' + esc(m.at || '') + '</span>' +
+  const memos = (n.memos || []).map(m => '<div class="memo">💬 <span class="noi18n">' + esc(m.text) + '</span>' + '<span class="m">' + esc(m.who || '') + ' ' + esc(m.at || '') + '</span>' +
     '<button class="mdel" data-id="' + esc(m.id) + '" title="메모 지우기">지우기</button></div>').join('');
   return '<div class="note"' + (n.key ? ' data-key="' + esc(n.key) + '"' : '') + '><div class="top2"><span class="badge ' + bc + '">' + esc(n.src) + '</span>' +
     (CUR_DATE && n.date ? '<b>' + md(n.date) + '(' + wd(n.date) + ')</b>' : '') + (n.time ? '<span>' + esc(n.time) + '</span>' : '') +
     (n.type ? '<span>· ' + esc(n.type) + '</span>' : '') + (n.manual && n.who ? '<span>· ' + esc(n.who) + '</span>' : '') + (n.moved ? '<span class="eqtag">이동됨</span>' : '') +
     '<span class="st"><i style="background:' + st[0] + '"></i>' + esc(st[1]) + '</span></div>' +
-    '<div class="ko">' + esc(n.ko && n.ko !== '(번역 대기)' ? n.ko : n.text) + '</div>' +
-    (n.ko && n.text && n.ko !== '(번역 대기)' ? '<details><summary>원문</summary>' + esc(n.text) + '</details>' : '') + photos(n) +
+    '<div class="ko noi18n">' + esc(mainTxt(n)) + '</div>' +
+    (altTxt(n) ? '<details><summary>' + (LANG === 'th' ? 'ภาษาเกาหลี' : '원문') + '</summary><span class="noi18n">' + esc(altTxt(n)) + '</span></details>' : '') + photos(n) +
     (memos ? '<div class="memos">' + memos + '</div>' : '') +
     (n.key ? '<div class="phbar"><button class="addph" data-key="' + esc(n.key) + '" title="사진 고르기 · 카드 위로 끌어다 놓기 · 카드에 마우스를 올리고 Ctrl+V(캡처 붙여넣기)">📷 사진</button><button class="addph paste" data-key="' + esc(n.key) + '" title="복사한 사진·캡처를 바로 넣기 (Ctrl+V 와 같음)">📋 붙여넣기</button><button class="addmemo">💬 메모</button>' +
       (SEL && VIEW === 'month' ? '<button class="addmemo mvday" title="다른 날짜·호기로 옮기기">📅 이동</button>' : '') +
@@ -1282,6 +1418,16 @@ document.addEventListener('visibilitychange', () => {
 });
 const upd = document.getElementById('upd');
 if (upd) { upd.style.cursor = 'pointer'; upd.title = '누르면 지금 새로고침 (3분마다 자동)'; upd.onclick = () => load(true); }
+
+// 언어 버튼
+(function () {
+  const seg = document.getElementById('langSeg'); if (!seg) return;
+  seg.querySelectorAll('button').forEach(b => {
+    b.classList.toggle('on', b.dataset.l === LANG);
+    b.onclick = () => { if (b.dataset.l === LANG) return; try { localStorage.setItem('lossLang', b.dataset.l); } catch (e) {} location.reload(); };
+  });
+})();
+startI18n();
 
 load();
 </script>
