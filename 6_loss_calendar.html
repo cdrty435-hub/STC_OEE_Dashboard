@@ -303,12 +303,16 @@
   .rk1 { display: inline-block; width: 16px; height: 16px; border-radius: 50%; color: #fff; text-align: center; line-height: 16px; font-size: 10px; font-weight: 800; }
   .rnone { color: #9ca3af; font-size: 11px; padding: 4px 0; }
   /* 간략 보기: 표 폭 고정, 글 2줄·분류 1줄로 자르고 사진은 1장 + 개수 */
-  .rt { table-layout: fixed; } .rt col.c-t { width: 40px; } .rt col.c-m { width: 52px; } .rt col.c-y { width: 92px; } .rt col.c-s { width: 64px; } .rt col.c-p { width: 74px; }
+  .rt { table-layout: fixed; } .rt col.c-t { width: 40px; } .rt col.c-m { width: 52px; } .rt col.c-y { width: 92px; } .rt col.c-s { width: 64px; } .rt col.c-p { width: 92px; }
   .rpage:not(.full) .rt td.tx, .rpage:not(.full) .rt td.ty { overflow: hidden; }
   .rpage:not(.full) .rt td.tx .cl { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .rpage:not(.full) .rt td.ty { white-space: nowrap; text-overflow: ellipsis; }
-  .rt td { padding: 4px 6px; } .rt .ph { white-space: nowrap; } .rt .ph img { width: 44px; height: 33px; vertical-align: middle; }
-  .rt .ph .more { font-size: 10px; color: #6b7280; margin-left: 2px; vertical-align: middle; }
+  .rt td { padding: 4px 6px; } .rt .rph { white-space: nowrap; overflow: hidden; display: table-cell; } .rt .rph a { display: inline-block; vertical-align: middle; }
+  /* 가로 배치: 2단 (수리 내역은 전체 폭) */
+  .rgrid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; align-items: start; }
+  .rgrid > .rsec.wide { grid-column: 1 / -1; }
+  .rgrid > .rsec.half .rt col.c-y { width: 70px; } .rt .rph img { width: 44px; height: 33px; object-fit: cover; border-radius: 3px; vertical-align: middle; display: inline-block; }
+  .rt .rph .more { font-size: 10px; color: #6b7280; margin-left: 2px; vertical-align: middle; }
   /* 메인 화면 안에 보고서 (달력 자리) */
   body.rep-mode .board { display: none; }
   body.rep-mode #report { display: block; position: static; inset: auto; z-index: auto; overflow: visible; background: transparent; min-width: 0; }
@@ -1548,8 +1552,9 @@ function reportHtml(J, d) {
     kp('수리', reps.length + '건') + kp('불량 알림', defs.length + '건', defs.some(x => isOpenN(x.n))) + kp('미결', openN + '건', openN > 0) + '</div>';
   // 워스트 4
   const w = cells.filter(x => x.c.loss > 0).sort((a, b) => b.c.loss - a.c.loss).slice(0, 4);
+  h += '<div class="rgrid">';
   if (secOn('worst')) {
-  h += '<div class="rsec"><h2>로스 워스트 4 <span>' + (cells.length ? '이유 기록 없는 큰 로스 ' + unx + '칸' : 'OEE 미입력') + '</span></h2>';
+  h += '<div class="rsec half"><h2>로스 워스트 4 <span>' + (cells.length ? '이유 기록 없는 큰 로스 ' + unx + '칸' : 'OEE 미입력') + '</span></h2>';
   if (w.length) {
     const col = ['var(--w1)', 'var(--w2)', 'var(--w3)', 'var(--w4)'];
     h += '<table class="rt"><colgroup><col style="width:36px"><col style="width:56px"><col style="width:84px"><col style="width:46px"><col style="width:150px"><col></colgroup><tr><th>순위</th><th>호기</th><th>로스</th><th>고장</th><th>주 원인</th><th>주요 이슈</th></tr>' + w.map((x, i) => {
@@ -1561,18 +1566,19 @@ function reportHtml(J, d) {
   } else h += '<div class="rnone">' + (cells.length ? '로스 없음' : 'OEE 데이터가 아직 입력되지 않았습니다') + '</div>';
   h += '</div>';
   }
-  const table = (title, list, withPh) => { withPh = withPh && secOn('photo'); return '<div class="rsec"><h2>' + title + ' <span>' + list.length + '건</span></h2>' + (list.length ?
+  const table = (title, list, withPh, wide) => { withPh = withPh && secOn('photo'); return '<div class="rsec ' + (wide ? 'wide' : 'half') + '"><h2>' + title + ' <span>' + list.length + '건</span></h2>' + (list.length ?
     '<table class="rt"><colgroup><col class="c-t"><col class="c-m"><col class="c-y"><col><col class="c-s">' + (withPh ? '<col class="c-p">' : '') + '</colgroup>' +
     '<tr><th>시각</th><th>호기</th><th>분류</th><th>내용</th><th>상태</th>' + (withPh ? '<th>사진</th>' : '') + '</tr>' +
     list.sort(byTime).map(x => '<tr' + (/^DC\d|^FAC|^TP/.test(x.mc) ? ' data-k="' + esc(x.mc) + '|' + d + '"' : '') + '><td class="nw">' + esc(x.n.time || '') + '</td><td class="nw"><b>' + esc(x.mc) + '</b></td><td class="ty" title="' + esc(x.n.type || '') + '">' + esc(full ? (x.n.type || '') : String(x.n.type || '').split(/,\s*/)[0]) + '</td><td class="tx">' + body(x.n) +
       ((x.n.memos || []).length && full ? '<div style="color:#6b7280;margin-top:2px">💬 <span class="noi18n">' + esc(x.n.memos.map(m => m.text).join(' / ')) + '</span></div>' : '') + '</td><td class="nw">' + stc(x.n.status) + '</td>' +
-      (withPh ? '<td class="ph">' + thumbs(x.n) + '</td>' : '') + '</tr>').join('') + '</table>' : '<div class="rnone">기록이 없습니다</div>') + '</div>'; };
-  if (secOn('repair')) h += table('수리 내역', reps, true);
+      (withPh ? '<td class="rph">' + thumbs(x.n) + '</td>' : '') + '</tr>').join('') + '</table>' : '<div class="rnone">기록이 없습니다</div>') + '</div>'; };
   if (secOn('defect')) h += table('불량 알림', defs, true);
+  if (secOn('repair')) h += table('수리 내역', reps, true, true);
   if (secOn('mtg')) h += table('아침조회', mtg, false);
   [['safety', '안전·전기', J.safety], ['fives', '5S', J.fives], ['others', '기타', J.others]].forEach(([k, t, o]) => {
     if (secOn(k)) h += table(t, ((o || {})[d] || []).map(n => ({ mc: n.eq || '', n })), true);
   });
+  h += '</div>';
   return h;
 }
 $('btnReport').onclick = () => document.body.classList.contains('rep-mode') ? closeReport() : openReport();
