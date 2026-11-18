@@ -1469,7 +1469,7 @@ if (upd) { upd.style.cursor = 'pointer'; upd.title = '누르면 지금 새로고
 // ============================================================
 const repBox = document.createElement('div'); repBox.id = 'report';
 document.querySelector('.board').after(repBox);   // 메인 화면에서 달력 자리에 보고서
-const REP_SECS = [['kpi', '요약'], ['worst', '워스트 4'], ['repair', '수리 내역'], ['defect', '불량 알림'], ['mtg', '아침조회'], ['proj', '안전·전기·5S·기타'], ['photo', '사진']];
+const REP_SECS = [['kpi', '요약'], ['worst', '워스트 4'], ['repair', '수리 내역'], ['defect', '불량 알림'], ['mtg', '아침조회'], ['safety', '안전·전기'], ['fives', '5S'], ['others', '기타'], ['photo', '사진']];
 let REP_ON = (() => { try { const v = JSON.parse(localStorage.getItem('repSecs') || 'null'); return v || {}; } catch (e) { return {}; } })();
 const secOn = k => REP_ON[k] !== false;
 let REP_D = null, REP_J = null;
@@ -1555,8 +1555,9 @@ function reportHtml(J, d) {
   if (secOn('repair')) h += table('수리 내역', reps, true);
   if (secOn('defect')) h += table('불량 알림', defs, true);
   if (secOn('mtg')) h += table('아침조회', mtg, false);
-  const ext = [['안전·전기', J.safety], ['5S', J.fives], ['기타', J.others]].map(([t, o]) => [t, ((o || {})[d] || []).map(n => ({ mc: n.eq || '', n }))]).filter(x => x[1].length);
-  if (secOn('proj')) ext.forEach(([t, l]) => { h += table(t, l, true); });
+  [['safety', '안전·전기', J.safety], ['fives', '5S', J.fives], ['others', '기타', J.others]].forEach(([k, t, o]) => {
+    if (secOn(k)) h += table(t, ((o || {})[d] || []).map(n => ({ mc: n.eq || '', n })), true);
+  });
   return h;
 }
 $('btnReport').onclick = () => document.body.classList.contains('rep-mode') ? closeReport() : openReport();
