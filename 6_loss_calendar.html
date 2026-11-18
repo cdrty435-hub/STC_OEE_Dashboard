@@ -282,6 +282,32 @@
   .dz.drop { border-color: var(--accent); color: var(--accent); }
   .dz .th { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 6px; }
   .dz .th img { width: 54px; height: 54px; object-fit: cover; border-radius: 5px; }
+  /* ---------- 일일 보고서 ---------- */
+  #report { position: fixed; inset: 0; background: #eef0f3; z-index: 50; overflow: auto; display: none; }
+  #report .rbar { position: sticky; top: 0; z-index: 2; display: flex; gap: 8px; align-items: center; padding: 10px 18px; background: var(--surface); border-bottom: 1px solid var(--line); }
+  #report .rbar input { border: 1px solid var(--line2); border-radius: 6px; padding: 4px 8px; font: inherit; }
+  #report .rbar button { border: 1px solid var(--line2); background: transparent; border-radius: 6px; padding: 4px 12px; cursor: pointer; font: inherit; }
+  #report .rbar button.ok { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+  .rpage { width: 210mm; min-height: 297mm; margin: 16px auto; background: #fff; padding: 14mm 13mm; box-sizing: border-box; box-shadow: 0 2px 10px rgba(0,0,0,.08); color: #111827; font-size: 11.5px; }
+  .rpage h1 { font-size: 20px; margin: 0; } .rpage .rsub { color: #6b7280; font-size: 11px; margin-top: 2px; }
+  .rhead { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #111827; padding-bottom: 8px; margin-bottom: 12px; }
+  .rkpi { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-bottom: 14px; }
+  .rkpi > div { border: 1px solid #e5e7eb; border-radius: 8px; padding: 7px 9px; } .rkpi .v { white-space: nowrap; } .rkpi .k { font-size: 10px; color: #6b7280; } .rkpi .v { font-size: 16px; font-weight: 800; }
+  .rkpi .v.bad { color: #b91c1c; }
+  .rsec { margin-bottom: 14px; break-inside: avoid; } .rsec h2 { font-size: 13px; margin: 0 0 6px; display: flex; gap: 8px; align-items: baseline; }
+  .rsec h2 span { font-size: 10.5px; color: #6b7280; font-weight: 400; }
+  .rt { width: 100%; border-collapse: collapse; } .rt th { background: #f3f4f6; font-size: 10.5px; text-align: left; padding: 4px 6px; border-bottom: 1px solid #d1d5db; }
+  .rt td { padding: 5px 6px; border-bottom: 1px solid #eef0f3; vertical-align: top; } .rt tr { break-inside: avoid; }
+  .rt .nw { white-space: nowrap; } .rt .ph img { width: 54px; height: 40px; object-fit: cover; border-radius: 3px; margin: 0 2px 2px 0; }
+  .rt .st i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 3px; }
+  .rk1 { display: inline-block; width: 16px; height: 16px; border-radius: 50%; color: #fff; text-align: center; line-height: 16px; font-size: 10px; font-weight: 800; }
+  .rnone { color: #9ca3af; font-size: 11px; padding: 4px 0; }
+  @media print {
+    @page { size: A4; margin: 0; } html, body { background: #fff !important; }
+    body > *:not(#report) { display: none !important; }
+    #report { position: static; display: block !important; background: #fff; overflow: visible; }
+    #report .rbar { display: none; } .rpage { margin: 0; box-shadow: none; width: auto; min-height: 0; }
+  }
   #pinbox { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 60; }
   #pinbox .in { background: var(--surface); border-radius: 12px; padding: 20px 22px; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
   #pinbox h4 { margin: 0 0 12px; font-size: 15px; }
@@ -345,6 +371,7 @@
   <div class="toggles">
     <button class="tg" id="tgFocus" title="이유 기록이 없는 칸만 강조">? 미기록만 보기</button>
     <button class="tg on" id="tgDots" title="LINE·아침조회 기록 표시">● 기록 표시</button>
+    <button class="tg" id="btnReport" title="하루 작업현황을 보고서로 보기·인쇄">📋 일일 보고서</button>
     <div class="seg noi18n" id="langSeg" title="Language"><button data-l="ko">한국어</button><button data-l="en">EN</button><button data-l="th">ไทย</button></div>
     <button class="tg on" id="tgWorst" title="날짜(주)마다 로스가 가장 큰 4대를 표시하고 주요 이슈를 아래에 정리">★ 워스트 4</button>
   </div>
@@ -451,7 +478,13 @@ const I18N = {
   '스프레이': ['Spray', 'สเปรย์'], '기공': ['Porosity', 'รูพรุน'], '미성형': ['Short shot', 'ฉีดไม่เต็ม'], '끌림': ['Drag mark', 'รอยลาก'], '끌림 크랙': ['Drag crack', 'รอยลากแตก'], '박리': ['Peeling', 'ลอก'],
   '인서트 파손': ['Insert broken', 'อินเสิร์ทแตก'], '트리밍 불량': ['Trimming NG', 'ทริมเสีย'], '센서': ['Sensor', 'เซนเซอร์'], '모터': ['Motor', 'มอเตอร์'], '펌프': ['Pump', 'ปั๊ม'], '전선': ['Cable', 'สายไฟ'],
   '변압기': ['Transformer', 'หม้อแปลง'], '컴프레서': ['Compressor', 'คอมเพรสเซอร์'], '전기로': ['Furnace', 'เตา'], '설비 미기재': ['equip. not given', 'ไม่ระบุเครื่อง'],
-  '외': ['+', '+'], 'Apps Script를 「새 버전」으로 배포하면 사용할 수 있습니다': ['Available after deploying a new Apps Script version', 'ใช้ได้หลังอัปเดต Apps Script เวอร์ชันใหม่'],
+  '외': ['+', '+'],
+  '일일 보고서': ['Daily report', 'รายงานประจำวัน'], 'STC 설비보전 일일 작업현황': ['STC Maintenance Daily Work Report', 'รายงานงานซ่อมบำรุงประจำวัน STC'],
+  'FAC1 다이캐스팅': ['FAC1 Die casting', 'FAC1 ไดคาสติ้ง'], '인쇄 · PDF 저장': ['Print · Save PDF', 'พิมพ์ · บันทึก PDF'], '닫기': ['Close', 'ปิด'], '작성': ['Created', 'สร้างเมื่อ'],
+  '로스 워스트 4': ['Loss worst 4', 'สูญเสียแย่สุด 4'], '수리 내역': ['Repairs', 'รายการซ่อม'], '불량 알림': ['Defect alerts', 'แจ้งของเสีย'], '순위': ['Rank', 'อันดับ'],
+  '주 원인': ['Main cause', 'สาเหตุหลัก'], '주요 이슈': ['Key issue', 'ประเด็นหลัก'], '분류': ['Type', 'ประเภท'], 'OEE 미입력': ['OEE not entered', 'ยังไม่ได้ป้อน OEE'],
+  'OEE 데이터가 아직 입력되지 않았습니다': ['OEE data not entered yet', 'ยังไม่ได้ป้อนข้อมูล OEE'], '로스 없음': ['No loss', 'ไม่มีการสูญเสีย'], '수리': ['Repairs', 'ซ่อม'],
+  '하루 작업현황을 보고서로 보기·인쇄': ['View/print the daily report', 'ดู/พิมพ์รายงานประจำวัน'], 'Apps Script를 「새 버전」으로 배포하면 사용할 수 있습니다': ['Available after deploying a new Apps Script version', 'ใช้ได้หลังอัปเดต Apps Script เวอร์ชันใหม่'],
   '노즐막힘': ['Nozzle clog', 'หัวฉีดตัน'], '플런저오일막힘': ['Plunger oil clog', 'น้ำมันลูกสูบตัน'], '래들수리': ['Ladle repair', 'ซ่อมทัพพี'], '전기로수리': ['Furnace repair', 'ซ่อมเตา'],
   '슬라이드코어수리': ['Slide core repair', 'ซ่อมสไลด์คอร์'], '스프레이수리': ['Spray repair', 'ซ่อมสเปรย์'], '요청': ['request', 'แจ้ง'],
 };
@@ -1418,6 +1451,75 @@ document.addEventListener('visibilitychange', () => {
 });
 const upd = document.getElementById('upd');
 if (upd) { upd.style.cursor = 'pointer'; upd.title = '누르면 지금 새로고침 (3분마다 자동)'; upd.onclick = () => load(true); }
+
+// ============================================================
+//  일일 작업현황 보고서 (?report=YYYY-MM-DD 로 바로 열기 가능)
+// ============================================================
+const repBox = document.createElement('div'); repBox.id = 'report'; document.body.appendChild(repBox);
+let REP_CACHE = {};
+function repData(ym) {
+  if (D && D.view === 'month' && D.ym === ym) return Promise.resolve(D);
+  if (REP_CACHE[ym]) return Promise.resolve(REP_CACHE[ym]);
+  if (window.SAMPLE && !API_URL) return Promise.resolve(window.SAMPLE);
+  if (window.SAMPLE) return Promise.resolve(window.SAMPLE);
+  return fetch(API_URL + '?api=loss&ym=' + ym).then(r => r.json()).then(j => (REP_CACHE[ym] = typeof j === 'string' ? JSON.parse(j) : j));
+}
+function openReport(d) {
+  d = d || (SEL && VIEW === 'month' ? SEL.split('|')[1] : today());
+  repBox.style.display = 'block'; document.body.style.overflow = 'hidden';
+  repBox.innerHTML = '<div class="rbar"><b>📋 일일 보고서</b><button id="rpPrev">‹</button><input type="date" id="rpDate" value="' + d + '"><button id="rpNext">›</button>' +
+    '<span style="flex:1"></span><button class="ok" id="rpPrint">🖨 인쇄 · PDF 저장</button><button id="rpClose">닫기 ✕</button></div><div class="rpage" id="rpPage">불러오는 중…</div>';
+  const go = x => openReport(x);
+  $('rpPrev').onclick = () => go(addDay(d, -1)); $('rpNext').onclick = () => go(addDay(d, 1));
+  $('rpDate').onchange = e => go(e.target.value); $('rpPrint').onclick = () => window.print();
+  $('rpClose').onclick = () => { repBox.style.display = 'none'; document.body.style.overflow = ''; history.replaceState(null, '', location.pathname); };
+  history.replaceState(null, '', location.pathname + '?report=' + d);
+  repData(d.slice(0, 7)).then(J => { $('rpPage').innerHTML = reportHtml(J, d); }).catch(e => { $('rpPage').textContent = '불러오기 실패: ' + (e.message || e); });
+}
+function addDay(d, n) { const t = new Date(d + 'T00:00:00'); t.setDate(t.getDate() + n); return t.getFullYear() + '-' + ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2); }
+function reportHtml(J, d) {
+  const all = []; Object.keys(J.notes || {}).forEach(mc => ((J.notes[mc] || {})[d] || []).forEach(n => all.push({ mc, n })));
+  const cells = Object.keys(J.cells || {}).map(mc => ({ mc, c: J.cells[mc][d] })).filter(x => x.c);
+  const loss = cells.reduce((a, x) => a + x.c.loss, 0), nof = cells.reduce((a, x) => a + (x.c.nof || 0), 0), eq = cells.reduce((a, x) => a + (x.c.equip || 0), 0);
+  const byG = g => all.filter(x => grp(x.n) === g);
+  const reps = byG('LINE 수리').concat(byG('직접 입력')), defs = byG('LINE 불량'), mtg = byG('아침조회');
+  const isOpenN = n => /미조치|미해결|진행|대기/.test(n.status || '');
+  const openN = all.filter(x => isOpenN(x.n)).length, unx = cells.filter(x => x.c.unexplained).length;
+  const stc = st => { const c = stColor(st); return '<span class="st"><i style="background:' + c[0] + '"></i>' + esc(c[1]) + '</span>'; };
+  const thumbs = n => (n.photos || []).slice(0, 3).map(id => '<img src="https://drive.google.com/thumbnail?id=' + esc(id) + '&sz=w200" onerror="this.remove()">').join('');
+  const body = n => '<span class="noi18n">' + esc(mainTxt(n)) + '</span>';
+  const byTime = (a, b) => (a.n.time || '99') < (b.n.time || '99') ? -1 : 1;
+  const kp = (k, v, bad) => '<div><div class="k">' + k + '</div><div class="v' + (bad ? ' bad' : '') + '">' + v + '</div></div>';
+  let h = '<div class="rhead"><div><h1>STC 설비보전 일일 작업현황</h1><div class="rsub">FAC1 다이캐스팅 · OEE 로스 × LINE 기록 × 아침조회</div></div>' +
+    '<div style="text-align:right"><div style="font-size:18px;font-weight:800">' + d.replace(/-/g, '.') + ' (' + wd(d) + ')</div><div class="rsub">작성 ' + (J.updated || '') + '</div></div></div>';
+  h += '<div class="rkpi">' + kp('총 로스', cells.length ? fmtMin(loss) : '—') + kp('고장횟수', cells.length ? nof + '회' : '—') + kp('1회 평균 정지', nof ? Math.round(eq / nof) + '분' : '—') +
+    kp('수리', reps.length + '건') + kp('불량 알림', defs.length + '건', defs.some(x => isOpenN(x.n))) + kp('미결', openN + '건', openN > 0) + '</div>';
+  // 워스트 4
+  const w = cells.filter(x => x.c.loss > 0).sort((a, b) => b.c.loss - a.c.loss).slice(0, 4);
+  h += '<div class="rsec"><h2>로스 워스트 4 <span>' + (cells.length ? '이유 기록 없는 큰 로스 ' + unx + '칸' : 'OEE 미입력') + '</span></h2>';
+  if (w.length) {
+    const col = ['var(--w1)', 'var(--w2)', 'var(--w3)', 'var(--w4)'];
+    h += '<table class="rt"><tr><th>순위</th><th>호기</th><th>로스</th><th>고장</th><th>주 원인</th><th>주요 이슈</th></tr>' + w.map((x, i) => {
+      const top = Object.entries(x.c.codes).sort((a, b) => b[1] - a[1])[0];
+      const ns = ((J.notes[x.mc] || {})[d] || []).slice().sort((a, b) => ISSUE_RANK(a) - ISSUE_RANK(b));
+      return '<tr><td><span class="rk1" style="background:' + col[i] + '">' + (i + 1) + '</span></td><td class="nw"><b>' + x.mc + '</b></td><td class="nw">' + fmtMin(x.c.loss) + '</td><td class="nw">' + (x.c.nof || 0) + '회</td>' +
+        '<td class="nw">' + (top ? esc(top[0]) + ' ' + top[1] + '분' : '') + '</td><td>' + (ns.length ? body(ns[0]) : '<span style="color:#b91c1c">⚠ 이유 기록 없음</span>') + '</td></tr>';
+    }).join('') + '</table>';
+  } else h += '<div class="rnone">' + (cells.length ? '로스 없음' : 'OEE 데이터가 아직 입력되지 않았습니다') + '</div>';
+  h += '</div>';
+  const table = (title, list, withPh) => '<div class="rsec"><h2>' + title + ' <span>' + list.length + '건</span></h2>' + (list.length ?
+    '<table class="rt"><tr><th>시각</th><th>호기</th><th>분류</th><th>내용</th><th>상태</th>' + (withPh ? '<th>사진</th>' : '') + '</tr>' +
+    list.sort(byTime).map(x => '<tr><td class="nw">' + esc(x.n.time || '') + '</td><td class="nw"><b>' + esc(x.mc) + '</b></td><td class="nw">' + esc(x.n.type || '') + '</td><td>' + body(x.n) +
+      ((x.n.memos || []).length ? '<div style="color:#6b7280;margin-top:2px">💬 <span class="noi18n">' + esc(x.n.memos.map(m => m.text).join(' / ')) + '</span></div>' : '') + '</td><td class="nw">' + stc(x.n.status) + '</td>' +
+      (withPh ? '<td class="ph">' + thumbs(x.n) + '</td>' : '') + '</tr>').join('') + '</table>' : '<div class="rnone">기록이 없습니다</div>') + '</div>';
+  h += table('수리 내역', reps, true) + table('불량 알림', defs, true) + table('아침조회', mtg, false);
+  const ext = [['안전·전기', J.safety], ['5S', J.fives], ['기타', J.others]].map(([t, o]) => [t, ((o || {})[d] || []).map(n => ({ mc: n.eq || '', n }))]).filter(x => x[1].length);
+  ext.forEach(([t, l]) => { h += table(t, l, true); });
+  return h;
+}
+$('btnReport').onclick = () => openReport();
+(function () { const m = location.search.match(/[?&]report=(\d{4}-\d{2}-\d{2})/); if (m) setTimeout(() => openReport(m[1]), 50); })();
+(function () { const m = location.search.match(/[?&]lang=(ko|en|th)/); if (m && m[1] !== LANG) { try { localStorage.setItem('lossLang', m[1]); } catch (e) {} location.replace(location.pathname + location.search.replace(/[?&]lang=\w+/, '').replace(/^&/, '?')); } })();
 
 // 언어 버튼
 (function () {
