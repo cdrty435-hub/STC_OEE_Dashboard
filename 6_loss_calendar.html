@@ -578,7 +578,8 @@ let OTHERS_K = null, OTHERS_KIND = 'others';
 function mvBar(n, ctx) {
   if (!n.key) return '';
   const eq = '<span>설비: <span class="eqtag">' + esc(n.eq || '-') + '</span></span><span style="flex:1"></span>';
-  if (ctx === 'moved') return '<div class="mvbar">' + eq + '<button class="un mvun" data-key="' + esc(n.key) + '">↩ 기타로 되돌리기</button></div>';
+  if (ctx === 'moved') return '<div class="mvbar">' + (n.origDate ? '<span>원래 날짜: <span class="eqtag">' + md(n.origDate) + '</span></span> ' : '') + eq +
+    '<button class="un mvun" data-key="' + esc(n.key) + '">↩ 원래대로</button></div>';
   const opts = (ctx === 'others' ? '<option value="' + SAFE + '">★ 안전·전기 프로젝트</option><option value="' + FIVE + '">★ 5S</option>' : '') + DC_LIST.map(d => '<option>' + d + '</option>').join('');
   return '<div class="mvbar">' + eq + '<select class="mvsel"><option value="">' + (ctx === 'others' ? '옮길 곳 선택' : '호기 선택') + '</option>' + opts + '</select>' +
     '<button class="mvgo" data-key="' + esc(n.key) + '">→ 이동</button>' + (ctx === 'safety' || ctx === 'fives' ? '<button class="un mvun" data-key="' + esc(n.key) + '">↩ 기타로</button>' : '') + '</div>';
@@ -627,7 +628,7 @@ document.addEventListener('click', async e => {
       src.splice(src.indexOf(n), 1); n.moved = false;
       const ok = colOf(n.date); ((D.others = D.others || {})[ok] = D.others[ok] || []).push(n);
     }
-    if (SEL) refreshDay(); else { render(D); src.length ? openOthers(k, OTHERS_KIND) : showSummary(); }
+    if (SEL) { refreshDay(); if (un) setTimeout(() => load(true), 1500); } else { render(D); src.length ? openOthers(k, OTHERS_KIND) : showSummary(); }
   } catch (er) { btn.disabled = false; setMsg(key, '실패: ' + (er.message || er), true); }
 });
 
@@ -858,6 +859,7 @@ function card(n) {
     (n.ko && n.text && n.ko !== '(번역 대기)' ? '<details><summary>원문</summary>' + esc(n.text) + '</details>' : '') + photos(n) +
     (memos ? '<div class="memos">' + memos + '</div>' : '') +
     (n.key ? '<div class="phbar"><button class="addph" data-key="' + esc(n.key) + '" title="사진 고르기 · 카드 위로 끌어다 놓기 · 카드에 마우스를 올리고 Ctrl+V(캡처 붙여넣기)">📷 사진</button><button class="addph paste" data-key="' + esc(n.key) + '" title="복사한 사진·캡처를 바로 넣기 (Ctrl+V 와 같음)">📋 붙여넣기</button><button class="addmemo">💬 메모</button>' +
+      (SEL && VIEW === 'month' ? '<button class="addmemo mvday" title="다른 날짜·호기로 옮기기">📅 이동</button>' : '') +
       '<span class="upmsg"></span><span class="gap"></span>' + (n.manual ? '<button class="addph del recdel">기록 삭제</button>' : '') + '</div><div class="mbox"></div>'
            : '<div class="phbar"><button class="addph" disabled>📷 사진</button><span class="upmsg err">Apps Script를 「새 버전」으로 배포하면 사용할 수 있습니다</span></div>') +
     (n.moved && SEL ? mvBar(n, 'moved') : '') + '</div>';
@@ -981,6 +983,37 @@ document.addEventListener('click', async e => {
   if (a && a.dataset.key) { PH_KEY = a.dataset.key; phInput.click(); return; }
   const box = e.target.closest('.note'), key = box && box.dataset.key, n = key && noteByKey(key);
 
+  // 📅 날짜·호기 이동
+  if (e.target.closest('.mvday') && n) {
+    const mb = box.querySelector('.mbox');
+    if (mb.innerHTML) { mb.innerHTML = ''; return; }
+    const cur = (SEL || '').split('|')[0];
+    mb.innerHTML = '<div class="mvbar" style="flex-wrap:wrap">📅 <input type="date" class="mvdate" value="' + esc(n.date) + '" style="border:1px solid var(--line2);border-radius:6px;padding:2px 6px;font:inherit;font-size:12px">' +
+      '<select class="mvdc">' + DC_LIST.map(d => '<option' + (d === cur ? ' selected' : '') + '>' + d + '</option>').join('') + '</select>' +
+      '<span style="flex:1"></span><button class="un mvno">취소</button><button class="mvdaygo">→ 이동</button></div>';
+    return;
+  }
+  if (e.target.closest('.mvno')) { box.querySelector('.mbox').innerHTML = ''; return; }
+  if (e.target.closest('.mvdaygo') && n) {
+    const b = e.target.closest('.mvdaygo'), to = box.querySelector('.mvdate').value, dc = box.querySelector('.mvdc').value;
+    const [cur, curD] = SEL.split('|');
+    if (!to) { setMsg(key, '날짜를 고르세요', true); return; }
+    if (to === curD && dc === cur) { setMsg(key, '지금과 같은 날짜·호기입니다', true); return; }
+    b.disabled = true; b.textContent = '이동 중…';
+    try {
+      const r = await api({ action: 'moveNote', key, date: n.origDate || n.date, dc, toDate: to, eq: n.eq || cur });
+      if (!r.ok) throw new Error(r.error);
+      const list = D.notes[cur][curD]; list.splice(list.indexOf(n), 1);
+      if (!n.origDate) n.origDate = n.date;
+      n.date = to; n.moved = true; if (!n.eq) n.eq = cur;
+      if (D.days.indexOf(to) >= 0) ((D.notes[dc] = D.notes[dc] || {})[to] = D.notes[dc][to] || []).push(n);
+      const c = D.cells[cur] && D.cells[cur][curD]; if (c) c.unexplained = c.equip >= 120 && !list.length;
+      const c2 = D.cells[dc] && D.cells[dc][to]; if (c2) c2.unexplained = false;
+      refreshDay();
+      setTimeout(() => load(true), 1500);   // 서버 기준으로 다시 맞춤
+    } catch (er) { b.disabled = false; b.textContent = '→ 이동'; setMsg(key, '실패: ' + (er.message || er), true); }
+    return;
+  }
   // 💬 메모 쓰기
   if (e.target.closest('.addmemo') && n) {
     const mb = box.querySelector('.mbox');
