@@ -393,6 +393,7 @@
   <div class="toggles">
     <button class="tg" id="tgFocus" title="이유 기록이 없는 칸만 강조">? 미기록만 보기</button>
     <button class="tg on" id="tgDots" title="LINE·아침조회 기록 표시">● 기록 표시</button>
+    <button class="tg" id="btnTrash" title="삭제한 기록 보기 · 복원">🗑 삭제함 <span id="trashN"></span></button>
     <button class="tg" id="btnReport" title="하루 작업현황을 보고서로 보기·인쇄">📋 일일 보고서</button>
     <div class="seg noi18n" id="langSeg" title="Language"><button data-l="ko">한국어</button><button data-l="en">EN</button><button data-l="th">ไทย</button></div>
     <button class="tg on" id="tgWorst" title="날짜(주)마다 로스가 가장 큰 4대를 표시하고 주요 이슈를 아래에 정리">★ 워스트 4</button>
@@ -466,7 +467,7 @@ const I18N = {
   '아침조회는 회의록에 적힌 날짜 칸에 나옵니다': ['Morning-meeting items appear on the date written in the minutes', 'ประชุมเช้าแสดงตามวันที่ในบันทึกการประชุม'],
   'LINE 불량': ['LINE defect', 'LINE ของเสีย'], 'LINE 수리': ['LINE repair', 'LINE ซ่อม'], '아침조회': ['Morning mtg', 'ประชุมเช้า'], '직접 입력': ['Manual', 'บันทึกเอง'],
   '원문': ['Original', 'ต้นฉบับ'], '번역': ['Translation', 'คำแปล'], '사진 보기': ['View photo', 'ดูรูป'], '사진 열기': ['Open photo', 'เปิดรูป'],
-  '사진': ['Photo', 'รูป'], '붙여넣기': ['Paste', 'วาง'], '메모': ['Note', 'โน้ต'], '이동': ['Move', 'ย้าย'], '기록 삭제': ['Delete record', 'ลบบันทึก'], '지우기': ['delete', 'ลบ'],
+  '사진': ['Photo', 'รูป'], '붙여넣기': ['Paste', 'วาง'], '메모': ['Note', 'โน้ต'], '이동': ['Move', 'ย้าย'], '기록 삭제': ['Delete record', 'ลบบันทึก'], '🗑 삭제': ['🗑 Delete', '🗑 ลบ'], '🗑 삭제함': ['🗑 Deleted', '🗑 ที่ลบ'], '↩ 복원': ['↩ Restore', '↩ กู้คืน'], '삭제한 기록이 없습니다': ['No deleted records', 'ไม่มีบันทึกที่ลบ'], '지우기': ['delete', 'ลบ'],
   '취소': ['Cancel', 'ยกเลิก'], '저장': ['Save', 'บันทึก'], '확인': ['OK', 'ตกลง'], '저장 중': ['Saving', 'กำลังบันทึก'], '이동 중': ['Moving', 'กำลังย้าย'], '올리는 중': ['Uploading', 'กำลังอัปโหลด'],
   '장 추가됨': ['photo(s) added', 'รูปเพิ่มแล้ว'], '메모 저장됨': ['Note saved', 'บันทึกโน้ตแล้ว'], '사진을 지웠습니다': ['Photo deleted', 'ลบรูปแล้ว'], '실패': ['Failed', 'ไม่สำเร็จ'], '삭제 실패': ['Delete failed', 'ลบไม่สำเร็จ'],
   '한 번 더 누르면 삭제': ['Click again to delete', 'กดอีกครั้งเพื่อลบ'], '정말 지우기': ['Really delete', 'ลบจริง'],
@@ -615,6 +616,7 @@ function load(silent) {
 
 // ---------- 그리기 ----------
 function render(data) {
+  setTimeout(updTrashN, 0);
   if (VIEW === 'week' && data.view !== 'week') {
     $('loading').textContent = '주간 데이터를 받지 못했습니다. Apps Script를 「새 버전」으로 다시 배포해 주세요.'; return;
   }
@@ -1052,7 +1054,7 @@ function card(n) {
     (memos ? '<div class="memos">' + memos + '</div>' : '') +
     (n.key ? '<div class="phbar"><button class="addph" data-key="' + esc(n.key) + '" title="사진 고르기 · 카드 위로 끌어다 놓기 · 카드에 마우스를 올리고 Ctrl+V(캡처 붙여넣기)">📷 사진</button><button class="addph paste" data-key="' + esc(n.key) + '" title="복사한 사진·캡처를 바로 넣기 (Ctrl+V 와 같음)">📋 붙여넣기</button><button class="addmemo">💬 메모</button>' +
       (SEL && VIEW === 'month' ? '<button class="addmemo mvday" title="다른 날짜·호기로 옮기기">📅 이동</button>' : '') +
-      '<span class="upmsg"></span><span class="gap"></span>' + (n.manual ? '<button class="addph del recdel">기록 삭제</button>' : '') + '</div><div class="mbox"></div>'
+      '<span class="upmsg"></span><span class="gap"></span>' + (n.manual ? '<button class="addph del recdel">기록 삭제</button>' : '<button class="addph del notedel" title="필요 없는 기록을 달력에서 뺍니다 (🗑 삭제함에서 복원 가능)">🗑 삭제</button>') + '</div><div class="mbox"></div>'
            : '<div class="phbar"><button class="addph" disabled>📷 사진</button><span class="upmsg err">Apps Script를 「새 버전」으로 배포하면 사용할 수 있습니다</span></div>') +
     (n.moved && SEL ? mvBar(n, 'moved') : '') + '</div>';
 }
@@ -1237,6 +1239,20 @@ document.addEventListener('click', async e => {
     } catch (er) { setMsg(key, '실패: ' + (er.message || er), true); }
     return;
   }
+  // LINE·아침조회 기록 삭제 (원본은 그대로 두고 달력에서만 뺌 → 삭제함에서 복원)
+  const nd = e.target.closest('.notedel');
+  if (nd && n) {
+    if (!armed(nd, '한 번 더 누르면 삭제')) return;
+    nd.disabled = true;
+    try {
+      const r = await api({ action: 'moveNote', key, date: n.origDate || n.date, dc: '삭제', eq: n.eq || (SEL || '').split('|')[0] || '' });
+      if (!r.ok) throw new Error(r.error);
+      dropNote(key); n.deleted = true; (D.trash = D.trash || []).push(n);
+      if (SEL) refreshDay(); else { render(D); OTHERS_K && ((D[OTHERS_KIND] || {})[OTHERS_K] || []).length ? openOthers(OTHERS_K, OTHERS_KIND) : showSummary(); }
+      setTimeout(() => load(true), 1500);
+    } catch (er) { nd.disabled = false; setMsg(key, '실패: ' + (er.message || er), true); }
+    return;
+  }
   // 직접 넣은 기록 삭제
   const rd = e.target.closest('.recdel');
   if (rd && n) {
@@ -1388,6 +1404,44 @@ async function saveRecord(btn) {
     refreshDay();
   } catch (er) { btn.disabled = false; msg('실패: ' + (er.message || er), true); }
 }
+// 모든 목록(호기·기타·안전·전기·5S)에서 기록 빼기
+function dropNote(key) {
+  const out = l => { const i = l.findIndex(x => x.key === key); if (i >= 0) l.splice(i, 1); };
+  Object.values(D.notes || {}).forEach(m => Object.values(m).forEach(out));
+  ['others', 'safety', 'fives'].forEach(b => Object.values(D[b] || {}).forEach(out));
+  out(CUR);
+  Object.keys(D.notes || {}).forEach(mc => Object.keys(D.notes[mc]).forEach(d => {
+    const c = D.cells[mc] && D.cells[mc][d]; if (c && 'equip' in c) c.unexplained = c.equip >= 120 && !D.notes[mc][d].length;
+  }));
+}
+// 🗑 삭제함: 이번 달(주) 삭제한 기록 · 복원
+function openTrash() {
+  const L = D.trash || [];
+  SEL = null; OTHERS_K = null; document.querySelectorAll('td.sel').forEach(x => x.classList.remove('sel'));
+  $('it').innerHTML = '<button class="back" id="bk">‹ 요약</button> 🗑 삭제함 · ' + L.length + '건';
+  $('is').textContent = '달력에서 뺀 기록입니다. 원본(LINE 시트)은 그대로 있으며 「↩ 복원」하면 원래 자리로 돌아갑니다.';
+  CUR = []; CUR_DATE = true;
+  $('ib').innerHTML = L.length ? L.map(n => '<div class="note trashed"><div class="top2"><span class="badge b-mtg">' + esc(n.src) + '</span><b>' + md(n.date) + '(' + wd(n.date) + ')</b>' +
+      (n.time ? '<span>' + esc(n.time) + '</span>' : '') + '<span>· <span class="eqtag">' + esc(n.eq || '-') + '</span></span></div>' +
+      '<div class="ko noi18n">' + esc(mainTxt(n)) + '</div>' +
+      '<div class="mvbar"><span style="flex:1"></span><span class="upmsg"></span><button class="un trres" data-key="' + esc(n.key) + '">↩ 복원</button></div></div>').join('')
+    : '<div class="empty">삭제한 기록이 없습니다</div>';
+  const bk = $('bk'); if (bk) bk.onclick = showSummary;
+  $('ib').scrollTop = 0; reveal();
+}
+document.addEventListener('click', async e => {
+  if (e.target.closest('#btnTrash')) { if (document.body.classList.contains('rep-mode')) closeReport(); openTrash(); return; }
+  const b = e.target.closest('.trres'); if (!b) return;
+  b.disabled = true; b.textContent = '복원 중…';
+  try {
+    const r = await api({ action: 'unmoveNote', key: b.dataset.key });
+    if (!r.ok) throw new Error(r.error);
+    D.trash = (D.trash || []).filter(x => x.key !== b.dataset.key);
+    b.closest('.note').remove(); updTrashN();
+    setTimeout(() => load(true), 800);
+  } catch (er) { b.disabled = false; b.textContent = '↩ 복원'; const m = b.parentNode.querySelector('.upmsg'); if (m) { m.textContent = '실패: ' + (er.message || er); m.classList.add('err'); } }
+});
+function updTrashN() { const t = $('trashN'); if (t) t.textContent = (D && D.trash && D.trash.length) ? D.trash.length : ''; }
 function removeNote(key) {
   const [mc, d] = SEL.split('|');
   const list = (D.notes[mc] && D.notes[mc][d]) || [];
