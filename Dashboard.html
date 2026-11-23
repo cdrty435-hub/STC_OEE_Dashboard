@@ -17,7 +17,7 @@
   --hold:#eda100;--hold-t:#8a5d00;--hold-bg:#fff7e1;
   --plan:#c3cad3;--plan-t:#4b5563;--plan-bg:#f1f3f5;
   --ext:#eb6834;
-  --c1:#2a78d6;--c2:#eb6834;--c3:#1baf7a;--c4:#eda100;--c5:#e87ba4;--c6:#008300;
+  --c1:#2a78d6;--c2:#eb6834;--c3:#1baf7a;--c4:#eda100;--c5:#e87ba4;--c6:#008300;--c7:#6250d6;--c8:#e34948;
   --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
   --r:10px;--sh:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06);
 }
@@ -391,8 +391,8 @@ ko:{title:'안전·전기 개선 대시보드',asof:'기준일',updated:'갱신'
  before:'개선 전',after:'개선 후',noPhoto:'사진 없음',inside:'내부',outside:'외부',close:'닫기',lbClose:'아무 곳이나 누르면 닫힘',
  dlNote:'시트를 누르면 그 시트만 .xlsx 로 받습니다. 태국어 화면에서 받으면 태국어로 번역된 파일이 됩니다.',all:'전체 파일',
  making:'엑셀 만드는 중…',saved:'내려받았습니다',fail:'실패',origLabel:'원문',
- r_quote:'견적 대기',r_supp:'업체 방문·확인 대기',r_appr:'승인 대기',r_mat:'자재·구매 대기',r_plan:'계획 일정 대기',r_lee:'Mr.Lee 확인 대기',r_hard:'진행 어려움·불가',r_prog:'진척 보고',r_other:'기타',
- openOnly:'미완료',baseWeek:'기준 주',c_chg:'변화',wline:'주간 기록일',sub:'STC · 설비보전팀',noWeek:'주간 기록 열이 없습니다. [일정] 시트 머리글에 날짜(예: 28/11/2026)를 넣은 열을 추가하세요.'},
+ r_quote:'견적 대기',r_supp:'업체 방문·확인 대기',r_appr:'승인 대기',r_mat:'자재·구매 대기',r_plan:'계획 일정 대기',r_lee:'Mr.Lee 확인 대기',r_hard:'진행 어려움·불가',r_prog:'진척 보고',r_other:'기타',r_none:'주간 기록 없음',
+ openOnly:'미완료',dateErr:'날짜 확인',dateErrTip:'계획 종료일이 시작일보다 빠릅니다. [계획] 시트의 날짜를 고쳐 주세요.',baseWeek:'기준 주',c_chg:'변화',wline:'주간 기록일',sub:'STC · 설비보전팀',noWeek:'주간 기록 열이 없습니다. [일정] 시트 머리글에 날짜(예: 28/11/2026)를 넣은 열을 추가하세요.'},
 th:{title:'แดชบอร์ดปรับปรุงความปลอดภัยและระบบไฟฟ้า',asof:'ข้อมูล ณ',updated:'อัปเดต',refresh:'รีเฟรช',loading:'กำลังโหลด…',
  v_ov:'ภาพรวม',v_wk:'ความคืบหน้ารายสัปดาห์',v_gt:'แผนงาน',v_ls:'รายการงาน',v_dl:'ดาวน์โหลด Excel',
  total:'งานทั้งหมด',done:'เสร็จแล้ว',doing:'กำลังทำ',late:'ล่าช้า',hold:'ระงับ',plan:'วางแผน',
@@ -410,8 +410,8 @@ th:{title:'แดชบอร์ดปรับปรุงความปลอ
  before:'ก่อนปรับปรุง',after:'หลังปรับปรุง',noPhoto:'ไม่มีรูป',inside:'ภายใน',outside:'ภายนอก',close:'ปิด',lbClose:'แตะที่ใดก็ได้เพื่อปิด',
  dlNote:'กดที่ชีตเพื่อดาวน์โหลดเฉพาะชีตนั้น (.xlsx) ถ้าดาวน์โหลดจากหน้าภาษาไทย ไฟล์จะถูกแปลเป็นภาษาไทย',all:'ทั้งไฟล์',
  making:'กำลังสร้างไฟล์ Excel…',saved:'ดาวน์โหลดแล้ว',fail:'ไม่สำเร็จ',origLabel:'ต้นฉบับ',
- r_quote:'รอใบเสนอราคา',r_supp:'รอซัพพลายเออร์เข้าตรวจ',r_appr:'รออนุมัติ',r_mat:'รออุปกรณ์·การจัดซื้อ',r_plan:'รอตามแผน',r_lee:'รอ Mr.Lee ตรวจสอบ',r_hard:'ทำได้ยาก·ทำไม่ได้',r_prog:'มีความคืบหน้า',r_other:'อื่นๆ',
- openOnly:'งานที่ยังไม่เสร็จ',baseWeek:'สัปดาห์ที่เลือก',c_chg:'การเปลี่ยนแปลง',wline:'วันบันทึกรายสัปดาห์',sub:'STC · ทีมซ่อมบำรุง',noWeek:'ยังไม่มีคอลัมน์บันทึกรายสัปดาห์'}
+ r_quote:'รอใบเสนอราคา',r_supp:'รอซัพพลายเออร์เข้าตรวจ',r_appr:'รออนุมัติ',r_mat:'รออุปกรณ์·การจัดซื้อ',r_plan:'รอตามแผน',r_lee:'รอ Mr.Lee ตรวจสอบ',r_hard:'ทำได้ยาก·ทำไม่ได้',r_prog:'มีความคืบหน้า',r_other:'อื่นๆ',r_none:'ไม่มีบันทึกรายสัปดาห์',
+ openOnly:'งานที่ยังไม่เสร็จ',dateErr:'ตรวจสอบวันที่',dateErrTip:'วันสิ้นสุดตามแผนอยู่ก่อนวันเริ่ม กรุณาแก้ไขวันที่ในชีตแผนงาน',baseWeek:'สัปดาห์ที่เลือก',c_chg:'การเปลี่ยนแปลง',wline:'วันบันทึกรายสัปดาห์',sub:'STC · ทีมซ่อมบำรุง',noWeek:'ยังไม่มีคอลัมน์บันทึกรายสัปดาห์'}
 };
 const ST=['done','doing','late','plan','hold'];
 const ST_KEY={'계획':'plan','진행':'doing','완료':'done','보류':'hold'};
@@ -441,7 +441,7 @@ function L(x,k){const b=x.tr&&x.tr[k];if(!b)return x[k]||'';return lang==='th'?(
 function wTxt(w){return lang==='th'?w.th:w.ko}
 function wOrig(w){if(!w.src||w.src===lang)return '';return lang==='th'?w.ko:w.th}
 function labelOf(k,field){const x=DATA.tasks.find(y=>y[field]===k);return x?L(x,field):k}
-function catIdx(c){const n=parseInt(c,10);return isNaN(n)?0:(n-1)%6}
+function catIdx(c){const n=parseInt(c,10);return isNaN(n)?7:(n-1)%8}
 function toast(m){const e=$('toast');e.textContent=m;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,2600)}
 function chip(x){return `<span class="chip ${x.eff}">${t('st_'+x.eff)}</span>`}
 function api(q){
@@ -457,9 +457,10 @@ function enrich(d){
   d.weeks=d.weeks||[];
   d.tasks.forEach(x=>{
     const s=pd(x.start),e=pd(x.end),k=ST_KEY[x.status]||'plan';
-    x.eff=k==='done'?'done':k==='hold'?'hold':(!isNaN(e)&&e<today?'late':k);
+    x.eff=k==='done'?'done':k==='hold'?'hold':(!isNaN(e)&&e<today&&!(e<s)?'late':k);
     x.act=k==='done'?1:Math.max(0,Math.min(1,x.ap||0));
-    x.pln=(isNaN(s)||isNaN(e))?0:Math.max(0,Math.min(1,(today-s+DAY)/(e-s+DAY)));
+    x.bad=!isNaN(s)&&!isNaN(e)&&e<s;
+    x.pln=(isNaN(s)||isNaN(e)||x.bad)?0:Math.max(0,Math.min(1,(today-s+DAY)/(e-s+DAY)));
     x.left=isNaN(e)?null:Math.round((e-today)/DAY);
     x.tr=x.tr||{};x.weekly=x.weekly||[];
     x.wmap={};x.weekly.forEach(w=>x.wmap[w.w]=w);
@@ -541,18 +542,20 @@ function renderTeams(){
     return `<div class="nm" title="${esc(labelOf(k,'own'))}">${esc(labelOf(k,'own'))}</div>${stack(a,max)}<div class="num">${dn}/${a.length}${lt?` <b style="color:var(--bad-t)">·${lt}</b>`:''}</div>`}).join('')+`</div>`;
 }
 function renderAtt(){
-  const a=DATA.tasks.filter(x=>x.eff==='late'||(x.eff==='doing'||x.eff==='plan')&&x.left!==null&&x.left>=0&&x.left<=7).sort((p,q)=>(p.left??999)-(q.left??999));
-  $('att').innerHTML=a.length?a.map(x=>{const d=x.left<0?`<span class="dd" style="color:var(--bad-t)">${-x.left} ${t('overdue')}</span>`:x.left===0?`<span class="dd" style="color:var(--hold-t)">${t('dueToday')}</span>`:`<span class="dd" style="color:var(--hold-t)">${x.left} ${t('dueIn')}</span>`;
-    return `<div class="it" data-open="${esc(x.id)}"><span class="mono" style="color:var(--muted)">${esc(x.id)}</span><div><span class="tt">${esc(L(x,'work'))}</span><span class="mt">${esc(L(x,'own'))} · ${md(x.start)}–${md(x.end)}${x.last?' · '+esc(wTxt(x.last)).split('\n')[0]:''}</span></div>${d}</div>`}).join(''):`<div class="empty">${t('nothing')}</div>`;
+  const bad=DATA.tasks.filter(x=>x.bad||(!x.start||!x.end)&&x.eff!=='done');
+  const badH=bad.map(x=>`<div class="it" data-open="${esc(x.id)}"><span class="mono" style="color:var(--muted)">${esc(x.id)}</span><div><span class="tt">${esc(L(x,'work'))}</span><span class="mt">${esc(L(x,'own'))} · ${t('c_period')} ${esc(x.start||'?')} → ${esc(x.end||'?')}</span></div><span class="chip late">${t('dateErr')}</span></div>`).join('');
+  const a=DATA.tasks.filter(x=>!x.bad&&(x.eff==='late'||(x.eff==='doing'||x.eff==='plan')&&x.left!==null&&x.left>=0&&x.left<=7)).sort((p,q)=>(p.left??999)-(q.left??999));
+  $('att').innerHTML=badH+(a.length?a.map(x=>{const d=x.left<0?`<span class="dd" style="color:var(--bad-t)">${-x.left} ${t('overdue')}</span>`:x.left===0?`<span class="dd" style="color:var(--hold-t)">${t('dueToday')}</span>`:`<span class="dd" style="color:var(--hold-t)">${x.left} ${t('dueIn')}</span>`;
+    return `<div class="it" data-open="${esc(x.id)}"><span class="mono" style="color:var(--muted)">${esc(x.id)}</span><div><span class="tt">${esc(L(x,'work'))}</span><span class="mt">${esc(L(x,'own'))} · ${md(x.start)}–${md(x.end)}${x.last?' · '+esc(wTxt(x.last)).split('\n')[0]:''}</span></div>${d}</div>`}).join(''):(bad.length?'':`<div class="empty">${t('nothing')}</div>`));
 }
 function reasonsOf(x){if(!x.last)return [];const s=x.last.ko+' '+x.last.th;return REASONS.filter(([,re])=>re.test(s)).map(([k])=>k)}
 function renderReasons(){
   const open=DATA.tasks.filter(x=>x.eff!=='done');
-  const cnt={};open.forEach(x=>{const r=reasonsOf(x);(r.length?r:['r_other']).forEach(k=>cnt[k]=(cnt[k]||0)+1)});
-  const rows=Object.entries(cnt).sort((a,b)=>(a[0]==='r_other')-(b[0]==='r_other')||b[1]-a[1]);const max=Math.max(1,...rows.map(r=>r[1]));
+  const cnt={};open.forEach(x=>{const r=reasonsOf(x);(r.length?r:[x.last?'r_other':'r_none']).forEach(k=>cnt[k]=(cnt[k]||0)+1)});
+  const rows=Object.entries(cnt).sort((a,b)=>(a[0]==='r_none')-(b[0]==='r_none')||(a[0]==='r_other')-(b[0]==='r_other')||b[1]-a[1]);const max=Math.max(1,...rows.map(r=>r[1]));
   const lw=DATA.weeks.length?md(DATA.weeks[DATA.weeks.length-1].date):'';
   $('reasonNote').textContent=t('reasonNoteT')+(lw?' ('+lw+')':'')+' · '+open.length+' '+t('cnt');
-  $('reasons').innerHTML=rows.length?`<div class="rb">`+rows.map(([k,n])=>`<div class="nm">${t(k)}</div><div class="bar" style="width:${n/max*100}%;${k==='r_prog'?'background:var(--c3)':k==='r_hard'?'background:var(--c2)':''}" data-tip="${t(k)}: ${n} ${t('cnt')}"></div><div class="num">${n}</div>`).join('')+`</div>`:`<div class="empty">${t('noItems')}</div>`;
+  $('reasons').innerHTML=rows.length?`<div class="rb">`+rows.map(([k,n])=>`<div class="nm">${t(k)}</div><div class="bar" style="width:${n/max*100}%;${k==='r_prog'?'background:var(--c3)':k==='r_hard'?'background:var(--c2)':k==='r_none'?'background:var(--plan)':''}" data-tip="${t(k)}: ${n} ${t('cnt')}"></div><div class="num">${n}</div>`).join('')+`</div>`:`<div class="empty">${t('noItems')}</div>`;
 }
 
 /* ---------- 주간 ---------- */
@@ -584,7 +587,7 @@ function renderWeekly(){
         return `<td class="note ${isCur?'cur s-'+s.k:''} ${n?'':'empty-c'}">${n?esc(wTxt(n))+(o?`<span class="o">${esc(o)}</span>`:''):'–'}</td>`}).join('');
       return `<tr class="task" data-open="${esc(x.id)}"><td class="id stick1">${esc(x.id)}</td><td class="wname stick2">${esc(L(x,'work'))}${x.area?`<span class="sub">${esc(L(x,'area'))}</span>`:''}</td>
         <td style="white-space:nowrap">${esc(L(x,'own'))}${x.io==='외부'?`<br><span class="chip ext" style="margin-top:3px">${t('outside')}</span>`:''}</td>
-        <td class="c">${chip(x)}</td><td class="per ${late?'late':''}">${md(x.start)}–${md(x.end)}</td>${cells}
+        <td class="c">${chip(x)}</td><td class="per ${late||x.bad?'late':''}">${md(x.start)}–${md(x.end)}${x.bad?'<br>⚠ '+t('dateErr'):''}</td>${cells}
         <td class="c"><span class="tag ${s.k}">${s.k==='fin'?t('st_done'):t('w_'+s.k)}</span></td></tr>`}).join('')).join('');
   $('wList').innerHTML=`<div class="card wtw"><table class="wt"><thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
 }
@@ -607,11 +610,12 @@ function renderGantt(){
   let h=`<div class="g" style="--tw:${tw}px;--lw:${lw}px"><div class="grow ghead"><div class="gl"></div><div class="wk">${wk}</div></div>`,last=null;
   list.forEach(x=>{
     if(x.cat!==last){last=x.cat;h+=`<div class="grow gcat"><div class="gl"><i class="sw" style="background:var(--c${catIdx(x.cat)+1})"></i>${esc(labelOf(x.cat,'cat'))}</div><div class="gt" style="${bg}"><div class="today" style="left:${tl}px"></div></div></div>`}
-    const l=X(x.start),w=Math.max(dw,(pd(x.end)-pd(x.start)+DAY)/DAY*dw);
-    const tip=`${x.id} ${L(x,'work')} · ${md(x.start)}–${md(x.end)} · ${t('st_'+x.eff)} · ${L(x,'own')}`+(x.last?`\n${md(x.last.w)}: ${wTxt(x.last)}`:'');
-    h+=`<div class="grow"><div class="gl" data-open="${esc(x.id)}"><span class="mono" style="color:var(--muted)">${esc(x.id)}</span><span class="t">${esc(L(x,'work'))}</span></div>
+    const a0=x.bad?x.end:x.start,a1=x.bad?x.start:x.end;
+    const l=X(a0),w=Math.max(dw,(pd(a1)-pd(a0)+DAY)/DAY*dw);
+    const tip=(x.bad?`⚠ ${t('dateErrTip')}\n`:'')+`${x.id} ${L(x,'work')} · ${md(x.start)}–${md(x.end)} · ${t('st_'+x.eff)} · ${L(x,'own')}`+(x.last?`\n${md(x.last.w)}: ${wTxt(x.last)}`:'');
+    h+=`<div class="grow"><div class="gl" data-open="${esc(x.id)}"><span class="mono" style="color:var(--muted)">${esc(x.id)}</span><span class="t">${esc(L(x,'work'))}</span>${x.bad?`<span class="chip late" style="margin-left:4px">${t('dateErr')}</span>`:''}</div>
       <div class="gt" style="${bg}">${wl}<div class="today" style="left:${tl}px"></div>
-      <div class="gb ${x.io==='외부'?'ext':''}" data-open="${esc(x.id)}" data-tip="${esc(tip)}" style="left:${l}px;width:${w}px;background:${ST_COL[x.eff]}"></div></div></div>`;
+      <div class="gb ${x.io==='외부'?'ext':''}" data-open="${esc(x.id)}" data-tip="${esc(tip)}" style="left:${l}px;width:${w}px;${x.bad?'background:repeating-linear-gradient(135deg,var(--bad-bg) 0 4px,#fff 4px 8px);border:2px dashed var(--bad)':'background:'+ST_COL[x.eff]}"></div></div></div>`;
   });
   $('gantt').innerHTML=h+'</div>';
 }
@@ -629,7 +633,7 @@ function renderTasks(){
     <td class="mono" data-label="${t('c_id')}"><i class="sw" style="display:inline-block;margin-right:6px;background:var(--c${catIdx(x.cat)+1})"></i>${esc(x.id)}</td>
     <td class="wk1" data-label="${t('c_work')}">${esc(L(x,'work'))}${x.area?`<span class="sub">${esc(L(x,'area'))}</span>`:''}</td>
     <td data-label="${t('c_own')}">${esc(L(x,'own'))}${x.io==='외부'?` <span class="chip ext">${t('outside')}</span>`:''}</td>
-    <td class="mono" data-label="${t('c_period')}" style="white-space:nowrap">${md(x.start)} – ${md(x.end)}</td>
+    <td class="mono" data-label="${t('c_period')}" style="white-space:nowrap${x.bad?';color:var(--bad-t);font-weight:700':''}">${md(x.start)} – ${md(x.end)}${x.bad?'<br>⚠ '+t('dateErr'):''}</td>
     <td class="c" data-label="${t('c_st')}">${chip(x)}</td>
     <td data-label="${t('c_prog')}"><div class="pbar"><div class="bt"><i style="width:${pct(x.act)};background:${ST_COL[x.eff==='late'?'late':x.eff==='done'?'done':'doing']}"></i><b style="left:calc(${pct(x.pln)} - 1px)"></b></div><span>${pct(x.act)}</span></div></td>
     <td data-label="${t('c_last')}">${x.last?`<div class="lastnote"><span class="mono" style="color:var(--muted)">${md(x.last.w)}</span> ${esc(wTxt(x.last))}</div>`:'<span style="color:var(--muted)">–</span>'}</td>
