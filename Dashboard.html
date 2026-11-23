@@ -368,6 +368,45 @@ table.rt{width:100%;border-collapse:collapse;font-size:12.5px}
 .merr{color:var(--bad-t)!important}
 @media print{.edbox{display:none!important}}
 
+/* 사진 */
+.side button b.cam{background:#e0f2fe;font-size:12px}
+.side button[aria-selected=true] b.cam{background:#ffffff26}
+.pslots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.pgrp{font-size:11.5px;font-weight:700;color:var(--ink2);margin-bottom:4px;display:flex;gap:6px}
+.pgrp .b{color:#c2410c}.pgrp .a{color:#15803d}
+.ps{position:relative;aspect-ratio:4/3;border:2px dashed #cbd5e1;border-radius:8px;background:#f8fafc;display:grid;place-items:center;cursor:pointer;overflow:hidden;color:#94a3b8;font-size:11.5px;text-align:center;line-height:1.35;transition:border-color .15s,background .15s}
+.ps.k-before{border-color:#fdba74;background:#fff7ed}.ps.k-after{border-color:#86efac;background:#f0fdf4}
+.ps.has{border-style:solid;border-color:var(--line);background:#000}
+.ps img{width:100%;height:100%;object-fit:cover;display:block}
+.ps .lb2{position:absolute;left:4px;top:4px;background:rgba(15,23,42,.72);color:#fff;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:4px}
+.ps .lb2.b{background:#c2410c}.ps .lb2.a{background:#15803d}
+.ps .x{position:absolute;right:4px;top:4px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:13px;line-height:1;display:none}
+.ps.has:hover .x{display:block}
+.ps .dt{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.65));color:#fff;font-size:10px;padding:8px 6px 3px;text-align:left}
+.ps.over{border-color:var(--run)!important;background:var(--run-bg)!important;color:var(--run-t)}
+.ps.busy::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.7) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='20' fill='none' stroke='%232a78d6' stroke-width='5' stroke-dasharray='90 40'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 25 25' to='360 25 25' dur='0.8s' repeatCount='indefinite'/%3E%3C/circle%3E%3C/svg%3E") center no-repeat}
+.ps.ro{cursor:zoom-in}
+.pslots.mini{grid-template-columns:repeat(4,38px);gap:4px}
+.pslots.mini .ps{aspect-ratio:1;border-width:1.5px;font-size:0;border-radius:6px}
+.pslots.mini .ps:not(.has)::before{content:'+';font-size:14px;color:inherit}
+.pslots.mini .ps .lb2,.pslots.mini .ps .dt{display:none}
+.pslots.mini .ps .x{width:16px;height:16px;font-size:10px;right:1px;top:1px}
+.wt td.phc{width:1%;white-space:nowrap}
+.phgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:14px}
+@media(max-width:700px){.phgrid{grid-template-columns:1fr}}
+.phc2{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh);padding:12px 14px}
+.phh{display:flex;gap:8px;align-items:flex-start;margin-bottom:10px;cursor:pointer}
+.phh .id{color:#3b6fb6;font-size:12.5px;white-space:nowrap;padding-top:1px}
+.phh .nm{font-weight:700;flex:1}
+.phh .nm small{display:block;font-weight:400;color:#8a94a3;font-size:12px}
+.phb{display:grid;grid-template-columns:1fr;gap:10px}
+.phw{border-top:1px solid var(--line2);padding-top:8px}
+.phw .e{display:grid;grid-template-columns:44px 1fr;gap:8px;font-size:12.5px;padding:3px 0}
+.phw .e b{color:var(--run-t);font-weight:700}
+.phw .e span{white-space:pre-line;color:#334155}
+.phw .e.old span{color:#94a3b8}
+.phw .none{font-size:12px;color:#cbd5e1}
+
 /* gantt */
 .gwrap{overflow-x:auto}
 .g{min-width:760px}
@@ -482,6 +521,7 @@ table.tt{width:100%;border-collapse:collapse;font-size:13px}
     <button role="tab" data-v="wk" aria-selected="false"><b>2</b><span data-i="v_wk">주간 진행</span></button>
     <button role="tab" data-v="gt" aria-selected="false"><b>3</b><span data-i="v_gt">일정</span></button>
     <button role="tab" data-v="ls" aria-selected="false"><b>4</b><span data-i="v_ls">작업 목록</span></button>
+    <button role="tab" data-v="ph" aria-selected="false"><b class="cam">📷</b><span data-i="v_ph">주간 진행·사진</span></button>
     <button role="tab" data-v="ed" aria-selected="false"><b class="pen">✎</b><span data-i="v_ed">부서별 기록</span></button>
     <button role="tab" data-v="dl" aria-selected="false"><b>5</b><span data-i="v_dl">엑셀 다운로드</span></button>
   </aside>
@@ -537,6 +577,13 @@ table.tt{width:100%;border-collapse:collapse;font-size:13px}
     <div class="card tw" id="tasks"></div>
   </section>
 
+  <!-- 주간 진행·사진 -->
+  <section class="view" id="v-ph" hidden>
+    <div class="fbar"><select id="phTeam"></select><select id="phCat"></select><label><input type="checkbox" id="phOnly"> <span data-i="phOnly">사진 있는 작업만</span></label><span class="sp" style="flex:1"></span><span class="note" id="phSum" style="font-size:12.5px;color:var(--ink2)"></span></div>
+    <div class="phgrid" id="phList"></div>
+  </section>
+  <input type="file" id="phFile" accept="image/*" hidden>
+
   <!-- 부서별 기록 -->
   <section class="view" id="v-ed" hidden><div id="edit"></div></section>
 
@@ -581,7 +628,7 @@ ko:{title:'안전·전기 개선 대시보드',cnt2:'작업 수',asof:'기준일
  dlNote:'시트를 누르면 그 시트만 .xlsx 로 받습니다. 태국어 화면에서 받으면 태국어로 번역된 파일이 됩니다.',all:'전체 파일',
  making:'엑셀 만드는 중…',saved:'내려받았습니다',fail:'실패',origLabel:'원문',
  r_quote:'견적 대기',r_supp:'업체 방문·확인 대기',r_appr:'승인 대기',r_mat:'자재·구매 대기',r_plan:'계획 일정 대기',r_lee:'Mr.Lee 확인 대기',r_hard:'진행 어려움·불가',r_prog:'진척 보고',r_other:'기타',r_none:'주간 기록 없음',
- openOnly:'미완료',rpScope:'집계는 전체 작업 기준 · 기간은 주간 기록·간트·작업 목록에 적용',allN:'전체 {a}',rpFiltered:'전체 {a}건 중 이 기간에 걸친 {b}건',v_ed:'부서별 기록',edDesc:'담당팀을 고르고 상태·진행률·이번 주 기록을 입력한 뒤 한 번에 저장 → [일정] 시트에 바로 기록',showDone:'완료 작업도 보기',newWeek:'새 주간 기록',recordTitle:'기록하기 → 구글시트 [일정]에 저장',stepHint:'0 미착수 · 25 준비 · 50 착수 · 75 마무리 · 100 완료(개선 후 사진)',notePh:'이번 주 진행 내용 (한국어 또는 태국어)',noteHint:'태국어로 써도 되고 한국어로 써도 됩니다. 저장 후 자동 번역됩니다.',saveSheet:'시트에 저장',saving:'저장 중…',savedSheet:'시트에 저장했습니다',noChange:'바뀐 내용이 없습니다',saveN:'변경 {n}건 시트에 저장',pinTitle:'기록 저장',pinDesc:'시트에 저장하려면 입력 비밀번호와 작성자 이름이 필요합니다. (이 PC에 기억됨)',pinLbl:'입력 비밀번호',userLbl:'작성자',cancel:'취소',saveBtn:'저장',pinWrong:'비밀번호가 맞지 않습니다.',cancelled:'취소됨',saveApiErr:'서버 응답 오류 — 서버 코드를 새 버전으로 배포했는지 확인하세요.',switchWarn:'저장하지 않은 주간 기록이 있습니다. 주차를 바꾸면 사라집니다. 계속할까요?',period:'분석 기간',q_all:'전체',q_month:'이번 달',q_last:'지난 달',q_p4:'최근 4주',q_p8:'최근 8주',q_n8:'앞으로 8주',q_pn:'최근 4주+앞 8주',pTasks:'간트·목록 표시 작업',pWeeks:'주간 기록',v_rp:'주간보고 (1장)',eyebrow:'STC · SAFETY & ELECTRICAL IMPROVEMENT',lead:'작업자 제기 안전·전기 이슈 개선 과제 · 구글시트 실시간 연동',rpEyebrow:'안전·전기 개선 주간보고',rpTitle:'안전·전기 개선 주간보고',print:'인쇄 (A4)',rp1:'분야별 진행 현황',rp2:'지연 · 마감 임박 Worst',rp4:'주간 기록 변화',rp5:'다음 주 확인 포인트',gap:'차이',sum:'합계',soon7:'7일 내 마감',rank:'순위',rankSfx:'위',c_e:'계획 종료',remain:'지연/잔여',dLate:'일 지남',dLeft:'일 남음',openTasks:'미완료',most:'최다',reason:'사유',share:'비중',pt_none:'기록 없음',pt_due:'2주 내 마감',pt_hard:'보류 검토',pt_start:'2주 내 착수',pt_bad:'날짜 확인',rpNote:'변화 = 기준 주 기록을 바로 앞 기록과 비교 · 대기 사유 = 최근 주간 기록의 키워드로 분류 · 행을 누르면 상세 내용',dateErr:'날짜 확인',dateErrTip:'계획 종료일이 시작일보다 빠릅니다. [계획] 시트의 날짜를 고쳐 주세요.',baseWeek:'기준',weekRange:'최근 4주',wNote:'변화 = 기준 주 기록을 바로 앞 기록과 비교 (▲ 변경 · ＋ 신규 · – 변화 없음 · ● 기록 없음). 행을 누르면 상세 내용과 사진이 열립니다.',c_chg:'변화',wline:'주간 기록일',sub:'STC · 설비보전팀',noWeek:'주간 기록 열이 없습니다. [일정] 시트 머리글에 날짜(예: 28/11/2026)를 넣은 열을 추가하세요.'},
+ openOnly:'미완료',v_ph:'주간 진행·사진',phOnly:'사진 있는 작업만',phSum:'사진 있는 작업 {a} / {b}건 · 사진 {c}장',sheetPhoto:'시트',dropHint:'끌어놓기 또는 클릭',dropHint2:'사진을 칸에 끌어놓거나 칸을 눌러 선택 (개선 전 2장 · 개선 후 2장)',delPhoto:'사진 삭제',replaceQ:'이 칸의 사진을 새 사진으로 바꿀까요?',delQ:'이 사진을 삭제할까요?',photoSaved:'사진을 저장했습니다',photoDeleted:'사진을 삭제했습니다',notImage:'사진 파일이 아닙니다',noWeekNote:'주간 기록 없음',rpScope:'집계는 전체 작업 기준 · 기간은 주간 기록·간트·작업 목록에 적용',allN:'전체 {a}',rpFiltered:'전체 {a}건 중 이 기간에 걸친 {b}건',v_ed:'부서별 기록',edDesc:'담당팀을 고르고 상태·진행률·이번 주 기록을 입력한 뒤 한 번에 저장 → [일정] 시트에 바로 기록',showDone:'완료 작업도 보기',newWeek:'새 주간 기록',recordTitle:'기록하기 → 구글시트 [일정]에 저장',stepHint:'0 미착수 · 25 준비 · 50 착수 · 75 마무리 · 100 완료(개선 후 사진)',notePh:'이번 주 진행 내용 (한국어 또는 태국어)',noteHint:'태국어로 써도 되고 한국어로 써도 됩니다. 저장 후 자동 번역됩니다.',saveSheet:'시트에 저장',saving:'저장 중…',savedSheet:'시트에 저장했습니다',noChange:'바뀐 내용이 없습니다',saveN:'변경 {n}건 시트에 저장',pinTitle:'기록 저장',pinDesc:'시트에 저장하려면 입력 비밀번호와 작성자 이름이 필요합니다. (이 PC에 기억됨)',pinLbl:'입력 비밀번호',userLbl:'작성자',cancel:'취소',saveBtn:'저장',pinWrong:'비밀번호가 맞지 않습니다.',cancelled:'취소됨',saveApiErr:'서버 응답 오류 — 서버 코드를 새 버전으로 배포했는지 확인하세요.',switchWarn:'저장하지 않은 주간 기록이 있습니다. 주차를 바꾸면 사라집니다. 계속할까요?',period:'분석 기간',q_all:'전체',q_month:'이번 달',q_last:'지난 달',q_p4:'최근 4주',q_p8:'최근 8주',q_n8:'앞으로 8주',q_pn:'최근 4주+앞 8주',pTasks:'간트·목록 표시 작업',pWeeks:'주간 기록',v_rp:'주간보고 (1장)',eyebrow:'STC · SAFETY & ELECTRICAL IMPROVEMENT',lead:'작업자 제기 안전·전기 이슈 개선 과제 · 구글시트 실시간 연동',rpEyebrow:'안전·전기 개선 주간보고',rpTitle:'안전·전기 개선 주간보고',print:'인쇄 (A4)',rp1:'분야별 진행 현황',rp2:'지연 · 마감 임박 Worst',rp4:'주간 기록 변화',rp5:'다음 주 확인 포인트',gap:'차이',sum:'합계',soon7:'7일 내 마감',rank:'순위',rankSfx:'위',c_e:'계획 종료',remain:'지연/잔여',dLate:'일 지남',dLeft:'일 남음',openTasks:'미완료',most:'최다',reason:'사유',share:'비중',pt_none:'기록 없음',pt_due:'2주 내 마감',pt_hard:'보류 검토',pt_start:'2주 내 착수',pt_bad:'날짜 확인',rpNote:'변화 = 기준 주 기록을 바로 앞 기록과 비교 · 대기 사유 = 최근 주간 기록의 키워드로 분류 · 행을 누르면 상세 내용',dateErr:'날짜 확인',dateErrTip:'계획 종료일이 시작일보다 빠릅니다. [계획] 시트의 날짜를 고쳐 주세요.',baseWeek:'기준',weekRange:'최근 4주',wNote:'변화 = 기준 주 기록을 바로 앞 기록과 비교 (▲ 변경 · ＋ 신규 · – 변화 없음 · ● 기록 없음). 행을 누르면 상세 내용과 사진이 열립니다.',c_chg:'변화',wline:'주간 기록일',sub:'STC · 설비보전팀',noWeek:'주간 기록 열이 없습니다. [일정] 시트 머리글에 날짜(예: 28/11/2026)를 넣은 열을 추가하세요.'},
 th:{title:'แดชบอร์ดปรับปรุงความปลอดภัยและระบบไฟฟ้า',asof:'ข้อมูล ณ',updated:'อัปเดต',refresh:'รีเฟรช',loading:'กำลังโหลด…',
  v_ov:'ภาพรวม',v_wk:'ความคืบหน้ารายสัปดาห์',v_gt:'แผนงาน',v_ls:'รายการงาน',v_dl:'ดาวน์โหลด Excel',
  total:'งานทั้งหมด',done:'เสร็จแล้ว',doing:'กำลังทำ',late:'ล่าช้า',hold:'ระงับ',plan:'วางแผน',
@@ -600,7 +647,7 @@ th:{title:'แดชบอร์ดปรับปรุงความปลอ
  dlNote:'กดที่ชีตเพื่อดาวน์โหลดเฉพาะชีตนั้น (.xlsx) ถ้าดาวน์โหลดจากหน้าภาษาไทย ไฟล์จะถูกแปลเป็นภาษาไทย',all:'ทั้งไฟล์',
  making:'กำลังสร้างไฟล์ Excel…',saved:'ดาวน์โหลดแล้ว',fail:'ไม่สำเร็จ',origLabel:'ต้นฉบับ',
  r_quote:'รอใบเสนอราคา',r_supp:'รอซัพพลายเออร์เข้าตรวจ',r_appr:'รออนุมัติ',r_mat:'รออุปกรณ์·การจัดซื้อ',r_plan:'รอตามแผน',r_lee:'รอ Mr.Lee ตรวจสอบ',r_hard:'ทำได้ยาก·ทำไม่ได้',r_prog:'มีความคืบหน้า',r_other:'อื่นๆ',r_none:'ไม่มีบันทึกรายสัปดาห์',
- openOnly:'งานที่ยังไม่เสร็จ',rpScope:'สรุปจากงานทั้งหมด · ช่วงเวลาใช้กับบันทึกรายสัปดาห์·แผนงาน·รายการงาน',allN:'ทั้งหมด {a}',rpFiltered:'{b} จากทั้งหมด {a} งานที่อยู่ในช่วงนี้',v_ed:'บันทึกตามแผนก',edDesc:'เลือกทีม แล้วกรอกสถานะ·ความคืบหน้า·บันทึกสัปดาห์นี้ จากนั้นกดบันทึกครั้งเดียว → บันทึกลงชีต [일정] ทันที',showDone:'แสดงงานที่เสร็จแล้วด้วย',newWeek:'บันทึกสัปดาห์ใหม่',recordTitle:'บันทึก → บันทึกลง Google Sheet [일정]',stepHint:'0 ยังไม่เริ่ม · 25 เตรียมการ · 50 เริ่มดำเนินการ · 75 ใกล้เสร็จ · 100 เสร็จ (มีรูปหลังปรับปรุง)',notePh:'ความคืบหน้าสัปดาห์นี้ (ภาษาไทยหรือเกาหลี)',noteHint:'เขียนเป็นภาษาไทยได้ ระบบจะแปลอัตโนมัติหลังบันทึก',saveSheet:'บันทึกลงชีต',saving:'กำลังบันทึก…',savedSheet:'บันทึกลงชีตแล้ว',noChange:'ไม่มีการเปลี่ยนแปลง',saveN:'บันทึก {n} รายการลงชีต',pinTitle:'บันทึกข้อมูล',pinDesc:'ต้องใส่รหัสผ่านและชื่อผู้บันทึกเพื่อบันทึกลงชีต (จำไว้ในเครื่องนี้)',pinLbl:'รหัสผ่าน',userLbl:'ผู้บันทึก',cancel:'ยกเลิก',saveBtn:'บันทึก',pinWrong:'รหัสผ่านไม่ถูกต้อง',cancelled:'ยกเลิกแล้ว',saveApiErr:'เซิร์ฟเวอร์ตอบกลับผิดพลาด',switchWarn:'มีบันทึกที่ยังไม่ได้บันทึก ถ้าเปลี่ยนสัปดาห์จะหายไป ต้องการดำเนินการต่อหรือไม่?',period:'ช่วงเวลา',q_all:'ทั้งหมด',q_month:'เดือนนี้',q_last:'เดือนที่แล้ว',q_p4:'4 สัปดาห์ล่าสุด',q_p8:'8 สัปดาห์ล่าสุด',q_n8:'8 สัปดาห์ข้างหน้า',q_pn:'ย้อน 4 + หน้า 8 สัปดาห์',pTasks:'งานในช่วง',pWeeks:'บันทึกรายสัปดาห์',v_rp:'รายงานประจำสัปดาห์',eyebrow:'STC · SAFETY & ELECTRICAL IMPROVEMENT',lead:'งานปรับปรุงความปลอดภัยและไฟฟ้าจากข้อเสนอของพนักงาน · เชื่อมกับ Google Sheet',rpEyebrow:'รายงานประจำสัปดาห์',rpTitle:'รายงานปรับปรุงความปลอดภัยและไฟฟ้า',print:'พิมพ์ (A4)',rp1:'ความคืบหน้าตามหมวด',rp2:'งานล่าช้า · ใกล้ครบกำหนด',rp4:'การเปลี่ยนแปลงของบันทึกรายสัปดาห์',rp5:'ประเด็นที่ต้องติดตามสัปดาห์หน้า',gap:'ส่วนต่าง',sum:'รวม',soon7:'ครบกำหนดใน 7 วัน',rank:'ลำดับ',rankSfx:'',c_e:'สิ้นสุดตามแผน',remain:'ล่าช้า/คงเหลือ',dLate:' วันเลยกำหนด',dLeft:' วันคงเหลือ',openTasks:'ยังไม่เสร็จ',most:'มากที่สุด',reason:'สาเหตุ',share:'สัดส่วน',pt_none:'ไม่มีบันทึก',pt_due:'ครบกำหนดใน 2 สัปดาห์',pt_hard:'พิจารณาระงับ',pt_start:'เริ่มใน 2 สัปดาห์',pt_bad:'ตรวจสอบวันที่',rpNote:'การเปลี่ยนแปลง = เทียบบันทึกสัปดาห์ที่เลือกกับครั้งก่อน · สาเหตุที่รอ = จัดกลุ่มจากคำในบันทึกล่าสุด · กดที่แถวเพื่อดูรายละเอียด',dateErr:'ตรวจสอบวันที่',dateErrTip:'วันสิ้นสุดตามแผนอยู่ก่อนวันเริ่ม กรุณาแก้ไขวันที่ในชีตแผนงาน',baseWeek:'ที่เลือก',weekRange:'4 สัปดาห์ล่าสุด',wNote:'การเปลี่ยนแปลง = เทียบบันทึกสัปดาห์ที่เลือกกับครั้งก่อน (▲ เปลี่ยน · ＋ ใหม่ · – ไม่เปลี่ยน · ● ไม่มีบันทึก) กดที่แถวเพื่อดูรายละเอียดและรูป',c_chg:'การเปลี่ยนแปลง',wline:'วันบันทึกรายสัปดาห์',sub:'STC · ทีมซ่อมบำรุง',noWeek:'ยังไม่มีคอลัมน์บันทึกรายสัปดาห์'}
+ openOnly:'งานที่ยังไม่เสร็จ',v_ph:'ความคืบหน้า·รูปภาพ',phOnly:'เฉพาะงานที่มีรูป',phSum:'งานที่มีรูป {a} / {b} · รูป {c} รูป',sheetPhoto:'ชีต',dropHint:'ลากมาวาง หรือกดเลือก',dropHint2:'ลากรูปมาวางในช่องหรือกดที่ช่อง (ก่อน 2 รูป · หลัง 2 รูป)',delPhoto:'ลบรูป',replaceQ:'แทนที่รูปในช่องนี้ด้วยรูปใหม่?',delQ:'ลบรูปนี้?',photoSaved:'บันทึกรูปแล้ว',photoDeleted:'ลบรูปแล้ว',notImage:'ไม่ใช่ไฟล์รูปภาพ',noWeekNote:'ไม่มีบันทึกรายสัปดาห์',rpScope:'สรุปจากงานทั้งหมด · ช่วงเวลาใช้กับบันทึกรายสัปดาห์·แผนงาน·รายการงาน',allN:'ทั้งหมด {a}',rpFiltered:'{b} จากทั้งหมด {a} งานที่อยู่ในช่วงนี้',v_ed:'บันทึกตามแผนก',edDesc:'เลือกทีม แล้วกรอกสถานะ·ความคืบหน้า·บันทึกสัปดาห์นี้ จากนั้นกดบันทึกครั้งเดียว → บันทึกลงชีต [일정] ทันที',showDone:'แสดงงานที่เสร็จแล้วด้วย',newWeek:'บันทึกสัปดาห์ใหม่',recordTitle:'บันทึก → บันทึกลง Google Sheet [일정]',stepHint:'0 ยังไม่เริ่ม · 25 เตรียมการ · 50 เริ่มดำเนินการ · 75 ใกล้เสร็จ · 100 เสร็จ (มีรูปหลังปรับปรุง)',notePh:'ความคืบหน้าสัปดาห์นี้ (ภาษาไทยหรือเกาหลี)',noteHint:'เขียนเป็นภาษาไทยได้ ระบบจะแปลอัตโนมัติหลังบันทึก',saveSheet:'บันทึกลงชีต',saving:'กำลังบันทึก…',savedSheet:'บันทึกลงชีตแล้ว',noChange:'ไม่มีการเปลี่ยนแปลง',saveN:'บันทึก {n} รายการลงชีต',pinTitle:'บันทึกข้อมูล',pinDesc:'ต้องใส่รหัสผ่านและชื่อผู้บันทึกเพื่อบันทึกลงชีต (จำไว้ในเครื่องนี้)',pinLbl:'รหัสผ่าน',userLbl:'ผู้บันทึก',cancel:'ยกเลิก',saveBtn:'บันทึก',pinWrong:'รหัสผ่านไม่ถูกต้อง',cancelled:'ยกเลิกแล้ว',saveApiErr:'เซิร์ฟเวอร์ตอบกลับผิดพลาด',switchWarn:'มีบันทึกที่ยังไม่ได้บันทึก ถ้าเปลี่ยนสัปดาห์จะหายไป ต้องการดำเนินการต่อหรือไม่?',period:'ช่วงเวลา',q_all:'ทั้งหมด',q_month:'เดือนนี้',q_last:'เดือนที่แล้ว',q_p4:'4 สัปดาห์ล่าสุด',q_p8:'8 สัปดาห์ล่าสุด',q_n8:'8 สัปดาห์ข้างหน้า',q_pn:'ย้อน 4 + หน้า 8 สัปดาห์',pTasks:'งานในช่วง',pWeeks:'บันทึกรายสัปดาห์',v_rp:'รายงานประจำสัปดาห์',eyebrow:'STC · SAFETY & ELECTRICAL IMPROVEMENT',lead:'งานปรับปรุงความปลอดภัยและไฟฟ้าจากข้อเสนอของพนักงาน · เชื่อมกับ Google Sheet',rpEyebrow:'รายงานประจำสัปดาห์',rpTitle:'รายงานปรับปรุงความปลอดภัยและไฟฟ้า',print:'พิมพ์ (A4)',rp1:'ความคืบหน้าตามหมวด',rp2:'งานล่าช้า · ใกล้ครบกำหนด',rp4:'การเปลี่ยนแปลงของบันทึกรายสัปดาห์',rp5:'ประเด็นที่ต้องติดตามสัปดาห์หน้า',gap:'ส่วนต่าง',sum:'รวม',soon7:'ครบกำหนดใน 7 วัน',rank:'ลำดับ',rankSfx:'',c_e:'สิ้นสุดตามแผน',remain:'ล่าช้า/คงเหลือ',dLate:' วันเลยกำหนด',dLeft:' วันคงเหลือ',openTasks:'ยังไม่เสร็จ',most:'มากที่สุด',reason:'สาเหตุ',share:'สัดส่วน',pt_none:'ไม่มีบันทึก',pt_due:'ครบกำหนดใน 2 สัปดาห์',pt_hard:'พิจารณาระงับ',pt_start:'เริ่มใน 2 สัปดาห์',pt_bad:'ตรวจสอบวันที่',rpNote:'การเปลี่ยนแปลง = เทียบบันทึกสัปดาห์ที่เลือกกับครั้งก่อน · สาเหตุที่รอ = จัดกลุ่มจากคำในบันทึกล่าสุด · กดที่แถวเพื่อดูรายละเอียด',dateErr:'ตรวจสอบวันที่',dateErrTip:'วันสิ้นสุดตามแผนอยู่ก่อนวันเริ่ม กรุณาแก้ไขวันที่ในชีตแผนงาน',baseWeek:'ที่เลือก',weekRange:'4 สัปดาห์ล่าสุด',wNote:'การเปลี่ยนแปลง = เทียบบันทึกสัปดาห์ที่เลือกกับครั้งก่อน (▲ เปลี่ยน · ＋ ใหม่ · – ไม่เปลี่ยน · ● ไม่มีบันทึก) กดที่แถวเพื่อดูรายละเอียดและรูป',c_chg:'การเปลี่ยนแปลง',wline:'วันบันทึกรายสัปดาห์',sub:'STC · ทีมซ่อมบำรุง',noWeek:'ยังไม่มีคอลัมน์บันทึกรายสัปดาห์'}
 };
 const ST=['done','doing','late','plan','hold'];
 const ST_KEY={'계획':'plan','진행':'doing','완료':'done','보류':'hold'};
@@ -799,12 +846,12 @@ function renderWeekly(){
   const ci=DATA.weeks.findIndex(w=>w.date===curWeek);
   const cols=DATA.weeks.slice(Math.max(0,ci-3),ci+1);
   const prevW=ci>0?DATA.weeks[ci-1].date:null;
-  const span=6+cols.length;
+  const span=7+cols.length;
   const sumH=`<span class="sum">${prevW?`<span class="mu">${md(prevW)}</span> → `:''}${md(curWeek)} · ${t('w_chg')} <span class="up">${c('chg')+c('new')}</span> / ${t('w_same')} <span class="mu">${c('same')}</span> / ${t('w_none')} <span class="dn">${c('none')}</span></span>`;
   const g=new Map();list.forEach(s=>{if(!g.has(s.x.cat))g.set(s.x.cat,[]);g.get(s.x.cat).push(s)});
   const chgTxt=s=>s.k==='fin'?t('st_done'):s.k==='chg'?'▲ '+t('w_chg'):s.k==='new'?'＋ '+t('w_new'):s.k==='none'?'● '+t('w_none'):'– '+t('w_same');
   const head=`<tr><th class="stick1">${t('c_id')}</th><th class="stick2">${t('c_work')} · ${t('s_area')}</th><th>${t('c_own')}</th><th>${t('c_st')}</th><th>${t('c_period')}</th>`+
-    cols.map(w=>`<th class="${w.date===curWeek?'cur':''}">${md(w.date)}<small>${w.date===curWeek?t('baseWeek'):t('week')}</small></th>`).join('')+`<th class="c">${t('c_chg')}</th></tr>`;
+    cols.map(w=>`<th class="${w.date===curWeek?'cur':''}">${md(w.date)}<small>${w.date===curWeek?t('baseWeek'):t('week')}</small></th>`).join('')+`<th class="c">${t('c_chg')}</th><th>${t('c_photo')}<small>${t('before')}·${t('after')}</small></th></tr>`;
   const rows=[...g.keys()].sort().map(k=>{const arr=g.get(k);const n=kk=>arr.filter(s=>kk.includes(s.k)).length;
     return `<tr class="grp"><td colspan="${span}"><i class="sw" style="display:inline-block;margin-right:8px;vertical-align:-1px;background:var(--c${catIdx(k)+1})"></i>${esc(labelOf(k,'cat'))}<em>${arr.length}${t('cnt')}</em>
       <span class="gs">${t('w_chg')} <b style="color:var(--ok-t)">${n(['chg','new'])}</b> · ${t('w_same')} <b>${n(['same'])}</b> · ${t('w_none')} <b style="color:var(--bad-t)">${n(['none'])}</b></span></td></tr>`+
@@ -816,10 +863,10 @@ function renderWeekly(){
         <td class="own">${esc(L(x,'own'))}${x.io==='외부'?`<span class="ex">${t('outside')}</span>`:''}</td>
         <td><span class="st ${x.eff}"><i style="background:${ST_COL[x.eff]}"></i>${t('st_'+x.eff)}</span></td>
         <td class="per ${x.eff==='late'||x.bad?'late':''}">${md(x.start)} – ${md(x.end)}${x.bad?'<br>⚠ '+t('dateErr'):''}</td>${cells}
-        <td class="c chg k-${s.k}">${chgTxt(s)}</td></tr>`}).join('')}).join('');
+        <td class="c chg k-${s.k}">${chgTxt(s)}</td><td class="phc">${slotsHTML(x,true)}</td></tr>`}).join('')}).join('');
   const foot=`<tr><td class="stick1"></td><td class="stick2">${t('total')}</td><td colspan="3">${list.length}${t('cnt')}</td>`+
     cols.map(w=>`<td>${list.filter(s=>s.x.wmap[w.date]).length}${t('cnt')} <span style="font-weight:500;color:#64748b">${t('w_cnt')}</span></td>`).join('')+
-    `<td class="c" style="color:var(--ok-t)">${list.filter(s=>s.k==='chg'||s.k==='new').length}</td></tr>`;
+    `<td class="c" style="color:var(--ok-t)">${list.filter(s=>s.k==='chg'||s.k==='new').length}</td><td></td></tr>`;
   $('wList').innerHTML=`<div class="wcard"><div class="wch"><h2>${t('v_wk')}<small>(${t('weekRange')})</small></h2><span class="sp"></span>${sumH}</div>`+
     (list.length?`<div class="wtw"><table class="wt"><thead>${head}</thead><tbody>${rows}</tbody><tfoot>${foot}</tfoot></table></div>`:`<div class="empty">${t('noItems')}</div>`)+
     `<div class="wnote">※ ${t('wNote')}</div></div>`;
@@ -977,13 +1024,16 @@ function askPin(force){
     $('pinC').onclick=()=>{$('pinM').hidden=true;rej(new Error(t('cancelled')))};
   });
 }
-async function postSave(items,retry){
+async function postApi(payload,retry){
   const cred=await askPin(retry);
-  if(window.SAMPLE_DATA){await new Promise(r=>setTimeout(r,300));return{saved:items.length,changes:items.length}}
-  const r=await fetch(API_URL,{method:'POST',body:JSON.stringify({pin:cred.pin,user:cred.user,items}),redirect:'follow'});
+  const r=await fetch(API_URL,{method:'POST',body:JSON.stringify({...payload,pin:cred.pin,user:cred.user}),redirect:'follow'});
   const txt=await r.text();let j;try{j=JSON.parse(txt)}catch(e){throw new Error(t('saveApiErr'))}
-  if(!j.ok){if(j.error==='PIN')return postSave(items,true);throw new Error(j.error)}
+  if(!j.ok){if(j.error==='PIN')return postApi(payload,true);throw new Error(j.error)}
   return j.result;
+}
+async function postSave(items){
+  if(window.SAMPLE_DATA){await askPin();await new Promise(r=>setTimeout(r,300));return{saved:items.length,changes:items.length}}
+  return postApi({items});
 }
 function editForm(x){
   const W=editWeekOptions(),cur=x.wmap[W.def];
@@ -1069,6 +1119,87 @@ function renderEdit(){
 }
 function confirmSwitch(){return window.confirm?confirm(t('switchWarn')):true}
 
+/* ---------- 사진 ---------- */
+const thumb=(u,w)=>/drive\.google\.com\/thumbnail/.test(u)?u.replace(/sz=w\d+/,'sz=w'+w):u;
+function photoArr(x){const p=x.photos||{before:[null,null],after:[null,null]};x.photos=p;return p}
+function slotHTML(x,kind,i,mini){
+  const p=photoArr(x)[kind][i];
+  const legacy=!p&&i===0&&(kind==='before'?x.before:x.after);
+  const lab=(kind==='before'?t('before'):t('after'))+' '+(i+1);
+  if(p)return `<div class="ps has k-${kind}" data-id="${esc(x.id)}" data-kind="${kind}" data-slot="${i+1}" title="${esc(lab)}"><img src="${esc(thumb(p.url,mini?120:640))}" alt="${esc(lab)}" loading="lazy" referrerpolicy="no-referrer" data-full="${esc(thumb(p.url,1600))}"><span class="lb2 ${kind[0]}">${esc(lab)}</span><button class="x" data-del="1" title="${t('delPhoto')}">×</button>${p.date?`<span class="dt">${esc(p.date)}${p.user?' · '+esc(p.user):''}</span>`:''}</div>`;
+  if(legacy)return `<div class="ps has ro k-${kind}" data-id="${esc(x.id)}" data-kind="${kind}" data-slot="${i+1}" title="${esc(lab)}"><img src="${esc(legacy)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-full="${esc(legacy)}"><span class="lb2 ${kind[0]}">${esc(lab)} · ${t('sheetPhoto')}</span></div>`;
+  return `<div class="ps k-${kind}" data-id="${esc(x.id)}" data-kind="${kind}" data-slot="${i+1}" title="${esc(lab)} — ${t('dropHint')}">${mini?'':`<span>＋ ${esc(lab)}<br>${t('dropHint')}</span>`}</div>`;
+}
+function slotsHTML(x,mini){
+  const row=k=>[0,1].map(i=>slotHTML(x,k,i,mini)).join('');
+  if(mini)return `<div class="pslots mini">${row('before')}${row('after')}</div>`;
+  return `<div class="pgrp"><span class="b" style="flex:1">▣ ${t('before')}</span><span class="a" style="flex:1">▣ ${t('after')}</span></div><div class="pslots">${row('before')}${row('after')}</div>`;
+}
+function resizeImage(file,max=1600,q=0.82){
+  return new Promise((res,rej)=>{
+    if(!/^image\//.test(file.type))return rej(new Error(t('notImage')));
+    const img=new Image(),url=URL.createObjectURL(file);
+    img.onload=()=>{let w=img.naturalWidth,h=img.naturalHeight;const r=Math.min(1,max/Math.max(w,h));w=Math.round(w*r);h=Math.round(h*r);
+      const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(url);
+      res(c.toDataURL('image/jpeg',q))};
+    img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error(t('notImage')))};img.src=url;
+  });
+}
+async function uploadPhoto(el,file){
+  const x=(ALL||DATA).tasks.find(y=>y.id===el.dataset.id);if(!x)return;
+  const kind=el.dataset.kind,slot=Number(el.dataset.slot);
+  if(photoArr(x)[kind][slot-1]&&!confirm(t('replaceQ')))return;
+  el.classList.add('busy');
+  try{
+    const dataUrl=await resizeImage(file);
+    let r;
+    if(window.SAMPLE_DATA){await askPin();await new Promise(z=>setTimeout(z,400));r={url:dataUrl,date:DATA.today,user:'test'}}
+    else r=await postApi({action:'photo_upload',id:x.id,kind,slot,name:file.name,mime:'image/jpeg',b64:dataUrl.split(',')[1]});
+    photoArr(x)[kind][slot-1]=r;toast(t('photoSaved'));refreshPhotoViews();
+  }catch(e){toast(t('fail')+': '+e.message)}finally{el.classList.remove('busy')}
+}
+async function deletePhoto(el){
+  const x=(ALL||DATA).tasks.find(y=>y.id===el.dataset.id);if(!x||!confirm(t('delQ')))return;
+  const kind=el.dataset.kind,slot=Number(el.dataset.slot);el.classList.add('busy');
+  try{if(!window.SAMPLE_DATA)await postApi({action:'photo_delete',id:x.id,kind,slot});else await askPin();
+    photoArr(x)[kind][slot-1]=null;toast(t('photoDeleted'));refreshPhotoViews()}
+  catch(e){toast(t('fail')+': '+e.message)}finally{el.classList.remove('busy')}
+}
+function refreshPhotoViews(){
+  renderPhotos();renderWeekly();
+  const d=$('drawer');if(!d.hidden&&d.dataset.id){const box=d.querySelector('#dPhotos');const x=(ALL||DATA).tasks.find(y=>y.id===d.dataset.id);if(box&&x)box.innerHTML=slotsHTML(x)}
+}
+let phTarget=null;
+$('phFile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f&&phTarget)uploadPhoto(phTarget,f)};
+// 끌어놓기·클릭·삭제 — 문서 전체에서 한 번만 연결
+document.addEventListener('dragover',e=>{const el=e.target.closest('.ps');if(el&&!el.classList.contains('ro')){e.preventDefault();el.classList.add('over')}});
+document.addEventListener('dragleave',e=>{const el=e.target.closest('.ps');if(el)el.classList.remove('over')});
+document.addEventListener('drop',e=>{const el=e.target.closest('.ps');if(!el)return;e.preventDefault();el.classList.remove('over');if(el.classList.contains('ro'))return;const f=e.dataTransfer.files&&e.dataTransfer.files[0];if(f)uploadPhoto(el,f)});
+document.addEventListener('click',e=>{
+  const el=e.target.closest('.ps');if(!el)return;e.stopPropagation();e.preventDefault();
+  if(e.target.closest('[data-del]'))return deletePhoto(el);
+  const img=el.querySelector('img');
+  if(img){$('lb').innerHTML=`<img src="${esc(img.dataset.full||img.src)}" alt="" referrerpolicy="no-referrer">`;$('lb').hidden=false;return}
+  phTarget=el;$('phFile').click();
+},true);
+function renderPhotos(){
+  if(!DATA)return;
+  const teams=teamKeys().map(k=>[k,labelOf(k,'own')]),cats=[...groups('cat').keys()].sort().map(k=>[k,labelOf(k,'cat')]);
+  fillSelect($('phTeam'),t('allTeams'),teams);fillSelect($('phCat'),t('allCats'),cats);
+  const team=$('phTeam').value,cat=$('phCat').value,only=$('phOnly').checked;
+  const has=x=>{const p=photoArr(x);return [...p.before,...p.after].some(Boolean)||x.before||x.after};
+  const base=(DATA.ptasks||DATA.tasks).filter(x=>(!team||x.own===team)&&(!cat||x.cat===cat));
+  const list=base.filter(x=>!only||has(x)).sort((a,b)=>a.cat.localeCompare(b.cat)||a.ord-b.ord);
+  const nPh=base.reduce((n,x)=>n+[...photoArr(x).before,...photoArr(x).after].filter(Boolean).length,0);
+  $('phSum').textContent=t('phSum').replace('{a}',base.filter(has).length).replace('{b}',base.length).replace('{c}',nPh);
+  $('phList').innerHTML=list.length?list.map(x=>{
+    const ws=x.weekly.slice().reverse().slice(0,3);
+    return `<div class="phc2"><div class="phh" data-open="${esc(x.id)}"><span class="id">${esc(x.id)}</span><i class="sw" style="margin-top:5px;background:var(--c${catIdx(x.cat)+1})"></i><div class="nm">${esc(L(x,'work'))}<small>${esc(L(x,'own'))} · ${md(x.start)}–${md(x.end)}</small></div>${chip(x)}</div>
+      <div class="phb"><div>${slotsHTML(x)}</div>
+      <div class="phw">${ws.length?ws.map((w,i)=>`<div class="e ${i?'old':''}"><b>${md(w.w)}</b><span>${esc(wTxt(w))}</span></div>`).join(''):`<div class="none">${t('noWeekNote')}</div>`}</div></div></div>`}).join(''):`<div class="card"><div class="empty">${t('noItems')}</div></div>`;
+}
+['phTeam','phCat','phOnly'].forEach(id=>$(id).onchange=renderPhotos);
+
 /* ---------- 진행률 기준 ---------- */
 const STD={ko:{title:'실제 진행률 기준 (5단계)',hint:'눌러서 펼치기',h:['진행률','단계','이 단계로 인정하는 조건'],
   rows:[['미착수','계획만 있고 아무 조치 없음'],['준비','현장 확인 완료 + 견적 요청·자재 신청·업체 연락 중 하나라도 진행'],['착수','견적 승인 또는 자재 입고 + 실제 작업 시작'],['마무리','작업 대부분 완료, 시운전·검수·일부 설비만 남음'],['완료','작업 완료 + 개선 후 사진 등록 + 상태 「완료」']],
@@ -1098,8 +1229,8 @@ function openTask(id){
    <div class="db">${editForm(x)}<div class="facts">${fact('f_cat',esc(L(x,'cat')))}${fact('f_own',esc(L(x,'own')))}${fact('f_period',md(x.start)+' – '+md(x.end))}${fact('f_done',x.done?md(x.done):'–')}
      ${fact('f_prog',pct(x.act)+' <span style="color:var(--muted);font-weight:400">/ '+t('planned')+' '+pct(x.pln)+'</span>')}${fact('f_io',x.io==='외부'?t('outside'):t('inside'))}</div>
      ${tl}${sec('s_iss',L(x,'iss'))}${sec('s_area',L(x,'area'))}${sec('s_note',L(x,'prog'))}
-     <div class="sec"><h4>${t('s_photo')}</h4><div class="photos">${ph(x.before,'before')}${ph(x.after,'after')}</div></div></div>`;
-  $('drawer').hidden=false;$('scrim').hidden=false;
+     <div class="sec"><h4>${t('s_photo')} <span style="font-weight:400;color:var(--muted)">— ${t('dropHint2')}</span></h4><div id="dPhotos">${slotsHTML(x)}</div></div></div>`;
+  $('drawer').dataset.id=x.id;$('drawer').hidden=false;$('scrim').hidden=false;
   $('dx').onclick=closeTask;bindEditForm(x);
   $('drawer').querySelectorAll('[data-lb]').forEach(i=>i.onclick=()=>{$('lb').innerHTML=`<img src="${esc(i.dataset.lb)}" alt="">`;$('lb').hidden=false});
 }
@@ -1135,7 +1266,7 @@ function download(b){
 /* ---------- 시작 ---------- */
 function renderAll(){
   applyI18n();$('asof').textContent=DATA.today;$('upd').textContent=DATA.updated;
-  renderPeriod();renderFilters();renderKpis();renderCats();renderTeams();renderAtt();renderReasons();renderStd();renderReport();renderEdit();renderWeekly();renderTasks();renderDl();
+  renderPeriod();renderFilters();renderKpis();renderCats();renderTeams();renderAtt();renderReasons();renderStd();renderReport();renderEdit();renderPhotos();renderWeekly();renderTasks();renderDl();
   $('loading').hidden=true;setView(view);
 }
 function load(){
