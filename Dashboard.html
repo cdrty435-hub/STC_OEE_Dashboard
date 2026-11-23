@@ -1,480 +1,676 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<base target="_top">
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>안전·전기 개선 대시보드</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+Thai:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#eef1f4; --surface:#fff; --sunk:#f6f8fa; --ink:#17202a; --muted:#5b6775; --line:#d6dce3; --line2:#e8ecf0;
-  --accent:#f2b705; --on-accent:#1b1500;
-  --ok:#15803d; --ok-bg:#dcf3e3; --run:#1d4ed8; --run-bg:#dde7fb; --bad:#c81e1e; --bad-bg:#fbe1e1; --idle:#5b6775; --idle-bg:#e8ecf0;
-  --plan:#93b4e8; --ext:#ea580c; --ext-bg:#ffedd5;
-  --c1:#c2410c; --c2:#2563eb; --c3:#7c3aed; --c4:#0f766e; --c5:#be185d; --c6:#4d7c0f;
-  --f:"IBM Plex Sans KR","Noto Sans Thai",system-ui,"Malgun Gothic",sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --bg:#f3f4f6;--surface:#fff;--sunk:#f8f9fa;--ink:#111827;--ink2:#4b5563;--muted:#8b95a1;--line:#e5e7eb;--line2:#f0f1f3;
+  --navy:#0f1d33;--navy2:#1b2d4a;
+  --ok:#16a34a;--ok-t:#15803d;--ok-bg:#ecfdf3;
+  --run:#2a78d6;--run-t:#1d5fb0;--run-bg:#eef5fe;
+  --bad:#d03b3b;--bad-t:#b42323;--bad-bg:#fdf0f0;
+  --hold:#eda100;--hold-t:#8a5d00;--hold-bg:#fff7e1;
+  --plan:#c3cad3;--plan-t:#4b5563;--plan-bg:#f1f3f5;
+  --ext:#eb6834;
+  --c1:#2a78d6;--c2:#eb6834;--c3:#1baf7a;--c4:#eda100;--c5:#e87ba4;--c6:#008300;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  --r:10px;--sh:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06);
 }
-@media (prefers-color-scheme:dark){:root{
-  --bg:#10151b; --surface:#19212a; --sunk:#141b22; --ink:#e6ebf0; --muted:#93a0ad; --line:#2c3743; --line2:#222c36;
-  --ok:#4ade80; --ok-bg:#163524; --run:#7aa5ff; --run-bg:#1b2b4a; --bad:#ff7373; --bad-bg:#3d1a1d; --idle:#93a0ad; --idle-bg:#242e38;
-  --plan:#4b6a9e; --ext:#fb8a3c; --ext-bg:#3a2414;
-  --c1:#fb7a3c; --c2:#6b9cff; --c3:#a98bff; --c4:#2fc4b2; --c5:#f06aa8; --c6:#9ccc4a; color-scheme:dark}}
 *{box-sizing:border-box}
-html,body{margin:0}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:14px;line-height:1.5}
-body.th{font-family:"Noto Sans Thai","IBM Plex Sans KR",system-ui,sans-serif}
-.wrap{max-width:1360px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-left)) 48px;display:flex;flex-direction:column;gap:16px}
-.hazard{height:8px;border-radius:2px;background:repeating-linear-gradient(-45deg,var(--accent) 0 12px,var(--ink) 12px 24px)}
-header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
-h1{margin:0;font-size:24px;line-height:1.25;text-wrap:balance}
-.sub{margin:2px 0 0;color:var(--muted);font-size:12px}
-.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-button{font:inherit;cursor:pointer}
-.seg{display:flex;background:var(--line2);padding:3px;border-radius:8px;gap:2px}
-.seg button{border:0;background:transparent;color:var(--muted);padding:6px 12px;border-radius:6px;font-weight:600;font-size:13px}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
-.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 12px;border-radius:6px;font-weight:500;font-size:13px}
-.btn:hover{border-color:var(--muted)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
-.btn:disabled{opacity:.55;cursor:wait}
-button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.kpi{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
-.kpi .k{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.04em}
-.kpi .v{font-family:var(--mono);font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
-.kpi .v small{font-size:12px;color:var(--muted);margin-left:4px;font-weight:500}
-.kpi.ok .v{color:var(--ok)} .kpi.run .v{color:var(--run)} .kpi.bad .v{color:var(--bad)} .kpi.idle .v{color:var(--idle)}
-.pvsa{display:flex;flex-direction:column;gap:4px;margin-top:4px}
-.pvsa .row{display:grid;grid-template-columns:44px 1fr 40px;gap:6px;align-items:center;font-size:11px;color:var(--muted)}
-.track{height:8px;background:var(--line2);border-radius:4px;overflow:hidden}
-.track i{display:block;height:100%}
-.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
-.card h2{margin:0;font-size:15px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.card h2 small{font-size:11px;color:var(--muted);font-weight:500}
-.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--muted)}
+html,body{margin:0}
+body{font:14px/1.5 'Noto Sans KR','Noto Sans Thai',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+body.th{font-family:'Noto Sans Thai','Noto Sans KR',system-ui,sans-serif}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+.mono{font-family:var(--mono);font-size:12px;letter-spacing:-.2px}
+
+/* header */
+header{background:var(--navy);color:#fff}
+.hwrap{max-width:1360px;margin:0 auto;padding:18px 24px 0;display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+.brand{flex:1;min-width:240px}
+.brand small{display:block;color:#9fb0c8;font-size:12px;letter-spacing:.3px}
+.brand h1{margin:2px 0 0;font-size:22px;font-weight:700;letter-spacing:-.3px}
+.hmeta{display:flex;gap:10px;align-items:center;padding-bottom:4px;flex-wrap:wrap}
+.stamp{font-size:12px;color:#b8c5d8}
+.stamp b{color:#fff;font-weight:500}
+.seg{display:inline-flex;background:var(--navy2);border-radius:8px;padding:3px}
+.seg button{border:0;background:transparent;color:#b8c5d8;padding:5px 12px;border-radius:6px;font-size:13px;font-weight:500}
+.seg button[aria-pressed=true]{background:#fff;color:var(--navy)}
+.hbtn{border:1px solid #33496b;background:transparent;color:#fff;border-radius:8px;padding:6px 12px;font-size:13px;display:inline-flex;gap:6px;align-items:center}
+.hbtn:disabled{opacity:.5;cursor:wait}
+nav{max-width:1360px;margin:14px auto 0;padding:0 24px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{border:0;background:transparent;color:#b8c5d8;padding:10px 14px;font-size:14px;font-weight:500;border-bottom:3px solid transparent;white-space:nowrap}
+nav button[aria-selected=true]{color:#fff;border-bottom-color:#5aa2ff}
+
+main{max-width:1360px;margin:0 auto;padding:20px 24px 48px}
+.view[hidden]{display:none}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1.15fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:1000px){.g2,.g3{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);min-width:0}
+.ch{display:flex;align-items:baseline;gap:10px;padding:14px 18px 0;flex-wrap:wrap}
+.ch h2{margin:0;font-size:15px;font-weight:700}
+.ch .note{color:var(--muted);font-size:12px}
+.ch .sp{flex:1}
+.cb{padding:12px 18px 16px}
+.empty{color:var(--muted);text-align:center;padding:28px 0;font-size:13px}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:1.6fr repeat(5,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.kpi.hero{grid-column:1/-1}}
+@media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:14px 16px;display:flex;flex-direction:column;gap:4px;position:relative;overflow:hidden}
+.kpi .k{font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.kpi .v{font-size:28px;font-weight:700;letter-spacing:-.5px;line-height:1.15}
+.kpi .v small{font-size:13px;font-weight:500;color:var(--muted);margin-left:6px}
+.kpi .dot{width:8px;height:8px;border-radius:50%}
+.kpi.hero .row{display:flex;align-items:baseline;gap:14px}
+.kpi.hero .gap{font-size:13px;font-weight:700;padding:2px 8px;border-radius:999px}
+.meter{position:relative;height:10px;background:var(--line2);border-radius:5px;margin-top:8px}
+.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--ok)}
+.meter b{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);border-radius:1px}
+.mleg{display:flex;gap:14px;font-size:11px;color:var(--ink2);margin-top:6px}
+.mleg span{display:inline-flex;align-items:center;gap:5px}
+.mleg i{width:10px;height:6px;border-radius:2px;background:var(--ok)}
+.mleg b{width:2px;height:10px;background:var(--ink)}
+
+/* bullet bars (분야) */
+.bl{display:grid;grid-template-columns:minmax(150px,1.3fr) 2fr 92px;gap:6px 14px;align-items:center}
+.bl .nm{font-size:13px;display:flex;gap:8px;align-items:center;min-width:0}
+.bl .nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bl .nm em{font-style:normal;color:var(--muted);font-size:12px;flex:none}
+.sw{width:10px;height:10px;border-radius:3px;flex:none}
+.bt{position:relative;height:14px;background:var(--line2);border-radius:4px}
+.bt i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--ok)}
+.bt b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);border-radius:1px}
+.bl .num{font-size:12px;color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums}
+.bl .num strong{color:var(--ink);font-size:13px}
+@media(max-width:560px){.bl{grid-template-columns:1fr 70px}.bl .nm{grid-column:1/-1}}
+
+/* stacked (팀) */
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
 .legend span{display:inline-flex;gap:5px;align-items:center}
-.legend i{width:12px;height:8px;border-radius:2px;display:inline-block}
-.bars{display:flex;flex-direction:column;gap:10px}
-.bar{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) 92px;gap:10px;align-items:center}
-.bar .name{font-size:12px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;gap:6px;align-items:center}
-.bar .name .sw{width:8px;height:8px;border-radius:2px;flex:none}
-.dual{display:flex;flex-direction:column;gap:3px}
-.dual .track{height:7px}
-.bar .num{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
-.stack{display:flex;height:14px;border-radius:3px;overflow:hidden;background:var(--line2)}
-.stack i{display:block;height:100%}
-.list{display:flex;flex-direction:column;gap:6px}
-.item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line2);border-radius:6px;background:var(--sunk)}
-.item .id{font-family:var(--mono);font-size:11px;color:var(--muted)}
-.item b{font-weight:500;font-size:13px;display:block;min-width:0}
-.item span.meta{font-size:11px;color:var(--muted)}
-.chip{font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;white-space:nowrap}
-.chip.plan{background:var(--idle-bg);color:var(--idle)} .chip.doing{background:var(--run-bg);color:var(--run)}
-.chip.done{background:var(--ok-bg);color:var(--ok)} .chip.late{background:var(--bad-bg);color:var(--bad)}
-.chip.hold{border:1px dashed var(--idle);color:var(--idle)} .chip.ext{background:var(--ext-bg);color:var(--ext)}
-.chip.soon{background:#fff3c4;color:#7a4e00}
-.empty{color:var(--muted);font-size:13px;padding:16px;text-align:center}
-.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-select,input[type=search]{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
+.legend i{width:10px;height:10px;border-radius:3px}
+.sl{display:grid;grid-template-columns:minmax(120px,1fr) 2fr 64px;gap:8px 14px;align-items:center;margin-top:12px}
+.sl .nm{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stk{display:flex;gap:2px;height:16px}
+.stk i{border-radius:3px;min-width:4px;position:relative}
+.stk i:first-child{border-radius:4px 3px 3px 4px}
+.sl .num{font-size:12px;color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums}
+
+/* reason bars */
+.rb{display:grid;grid-template-columns:minmax(120px,1fr) 2fr 36px;gap:8px 12px;align-items:center}
+.rb .nm{font-size:13px}
+.rb .bar{height:14px;border-radius:0 4px 4px 0;background:var(--c1)}
+.rb .num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:2px 9px;border-radius:999px;white-space:nowrap;line-height:1.6}
+.chip::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip.done{background:var(--ok-bg);color:var(--ok-t)}
+.chip.doing{background:var(--run-bg);color:var(--run-t)}
+.chip.late{background:var(--bad-bg);color:var(--bad-t)}
+.chip.hold{background:var(--hold-bg);color:var(--hold-t)}
+.chip.plan{background:var(--plan-bg);color:var(--plan-t)}
+.chip.ext{background:#fff1ea;color:#b4441a}
+.chip.ext::before{display:none}
+.chip.soon{background:var(--hold-bg);color:var(--hold-t)}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:4px;white-space:nowrap}
+.tag.new{background:#e8f1ff;color:#1d5fb0}
+.tag.chg{background:var(--ok-bg);color:var(--ok-t)}
+.tag.same{background:var(--plan-bg);color:var(--plan-t)}
+.tag.none{background:var(--bad-bg);color:var(--bad-t)}
+.tag.fin{background:var(--ok-bg);color:var(--ok-t)}
+
+/* attention list */
+.att{display:flex;flex-direction:column}
+.att .it{display:grid;grid-template-columns:46px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line2);cursor:pointer}
+.att .it:first-child{border-top:0}
+.att .it:hover .tt{color:var(--run-t)}
+.att .tt{font-weight:500;font-size:13px}
+.att .mt{display:block;color:var(--muted);font-size:12px}
+.dd{font-size:12px;font-weight:700;text-align:right;white-space:nowrap}
+
+/* filters */
+.fbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.fbar select,.fbar input[type=search]{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 10px;font-size:13px;min-width:0}
+.fbar input[type=search]{flex:1;min-width:180px}
+.fbar label{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--ink2);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pills button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:13px;font-weight:500;color:var(--ink2)}
+.pills button[aria-pressed=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+.pills button small{opacity:.7;margin-left:4px;font-weight:400}
+
+/* weekly */
+.wsum{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:700px){.wsum{grid-template-columns:repeat(2,1fr)}}
+.wsum div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px}
+.wsum span{display:block;font-size:12px;color:var(--ink2)}
+.wsum b{font-size:22px}
+.wgrp{margin-bottom:16px}
+.wgh{display:flex;align-items:center;gap:8px;padding:10px 18px;border-bottom:1px solid var(--line);font-weight:700;font-size:14px}
+.wgh em{font-style:normal;color:var(--muted);font-weight:400;font-size:12px}
+.wr{display:grid;grid-template-columns:52px minmax(200px,1.1fr) 2fr;gap:14px;padding:12px 18px;border-top:1px solid var(--line2);cursor:pointer}
+.wr:first-of-type{border-top:0}
+.wr:hover{background:var(--sunk)}
+.wr .w1{font-weight:500;font-size:13px}
+.wr .w1 .mt{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:5px;font-weight:400;color:var(--muted);font-size:12px}
+.note-now{font-size:13px;white-space:pre-line}
+.note-orig{font-size:12px;color:var(--muted);white-space:pre-line;margin-top:3px}
+.note-prev{font-size:12px;color:var(--muted);margin-top:6px;padding-left:10px;border-left:2px solid var(--line);white-space:pre-line}
+.note-prev b{font-weight:500;color:var(--ink2)}
+.nh{display:flex;gap:6px;align-items:center;margin-bottom:4px}
+@media(max-width:760px){.wr{grid-template-columns:44px 1fr}.wr .w2{grid-column:1/-1}}
+
 /* gantt */
-.gwrap{overflow:hidden;border:1px solid var(--line);border-radius:6px}
-.g{width:max-content;min-width:100%}
-.grow{display:grid;grid-template-columns:var(--lw,240px) var(--tw)}
-.gl{position:sticky;left:0;z-index:2;background:var(--surface);border-right:1px solid var(--line);padding:4px 10px;font-size:12px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
-.ghead{position:sticky;top:0;z-index:3;background:var(--surface);border-bottom:1px solid var(--line)}
-.ghead .gl{z-index:4;font-weight:600;color:var(--muted);font-size:11px}
-.wk{display:flex}
-.wk div{flex:none;border-left:1px solid var(--line2);font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;padding:4px 0}
-.wk div.now{background:var(--accent);color:var(--on-accent);font-weight:600}
-.gcat .gl,.gcat .gt{background:var(--sunk);font-weight:700}
-.gcat{border-top:1px solid var(--line)}
-.gt{position:relative;height:30px;border-top:1px solid var(--line2)}
-.gb{position:absolute;top:8px;height:14px;border-radius:3px}
-.today{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);z-index:1}
-/* tasks */
-.tabs{display:flex;flex-wrap:wrap;gap:6px}
-.tabs button{border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:6px 12px;border-radius:999px;font-weight:600;font-size:13px;display:inline-flex;gap:6px;align-items:center}
-.tabs button b{font-family:var(--mono);font-size:11px;background:var(--line2);color:var(--ink);padding:0 6px;border-radius:999px}
-.tabs button[aria-selected="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
-.tabs button[aria-selected="true"] b{background:var(--accent);color:var(--on-accent)}
-.tsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
-.tsum div{background:var(--sunk);padding:8px 10px;display:flex;flex-direction:column}
-.tsum span{font-size:11px;color:var(--muted);font-weight:600}
-.tsum b{font-family:var(--mono);font-size:20px;font-variant-numeric:tabular-nums}
-.twrap{border:1px solid var(--line);border-radius:6px;overflow:hidden}
-table.tt{border-collapse:collapse;font-size:12px;width:100%;table-layout:fixed}
-.tt th{background:#17202a;color:#fff;font-weight:700;padding:7px 4px;text-align:center;font-size:11px;line-height:1.3;word-break:keep-all}
-.tt th.b{background:#b45309}.tt th.a{background:#15803d}
-.tt td{border-bottom:1px solid var(--line2);border-right:1px solid var(--line2);padding:6px 5px;vertical-align:middle;background:var(--surface);overflow-wrap:anywhere;word-break:keep-all}
-.tt td.c,.tt th.c{text-align:center}
-.tt td.mono{font-family:var(--mono);font-size:10.5px;font-variant-numeric:tabular-nums}
-.tt .s2{font-weight:600}
-.tt td.pb{background:color-mix(in srgb,#b45309 7%,var(--surface))}.tt td.pa{background:color-mix(in srgb,#15803d 7%,var(--surface))}
-.thumb{display:block;width:100%;aspect-ratio:4/3;border-radius:4px;overflow:hidden;border:0;padding:0;background:var(--sunk);cursor:zoom-in}
-.thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.tt td.cat{font-size:11px;font-weight:700}
-@media (max-width:900px){
-  table.tt,.tt tbody{display:block}.tt thead{display:none}
-  .tt tr{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;padding:10px;border-bottom:6px solid var(--bg)}
-  .tt td{display:flex;flex-direction:column;gap:2px;border:0;padding:2px 0;background:transparent!important;text-align:left!important}
-  .tt td::before{content:attr(data-label);font-size:10px;font-weight:700;color:var(--muted)}
-  .tt td.s1,.tt td.s2,.tt td.iss,.tt td.prog,.tt td.cat,.tt td.area{grid-column:1/-1}
-  .tt td.s2{font-size:14px}.tt td:empty{display:none}
+.gwrap{overflow-x:auto}
+.g{min-width:760px}
+.grow{display:flex;align-items:stretch;border-top:1px solid var(--line2)}
+.ghead{position:sticky;top:0;background:var(--surface);z-index:2;border-top:0;border-bottom:1px solid var(--line)}
+.gl{width:var(--lw);flex:none;padding:6px 10px 6px 0;font-size:12.5px;display:flex;gap:6px;align-items:center;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+.gl span.t{overflow:hidden;text-overflow:ellipsis}
+.gt{position:relative;width:var(--tw);flex:none;height:30px}
+.wk{display:flex;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.wk div{padding:6px 0 6px 4px;border-left:1px solid var(--line2)}
+.wk div.now{color:var(--run-t);font-weight:700;background:var(--run-bg)}
+.gcat .gl{font-weight:700;font-size:12px;color:var(--ink2);padding-top:10px}
+.gcat .gt{height:30px}
+.gb{position:absolute;top:8px;height:14px;border-radius:4px;cursor:pointer}
+.gb.ext{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.45) 0 3px,transparent 3px 7px)!important}
+.gm{position:absolute;top:4px;width:2px;height:22px;background:var(--ink);opacity:.25}
+.today{position:absolute;top:0;bottom:0;width:2px;background:var(--bad);z-index:1}
+.gwl{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed #94a3b8}
+
+/* task table */
+.tw{overflow-x:auto}
+table.tt{width:100%;border-collapse:collapse;font-size:13px}
+.tt th{position:sticky;top:0;background:var(--sunk);text-align:left;font-size:12px;color:var(--ink2);font-weight:500;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tt td{padding:10px;border-bottom:1px solid var(--line2);vertical-align:top}
+.tt tbody tr{cursor:pointer}
+.tt tbody tr:hover td{background:var(--sunk)}
+.tt .c{text-align:center}
+.tt .wk1{font-weight:500}
+.tt .sub{display:block;color:var(--muted);font-size:12px;font-weight:400;margin-top:2px}
+.pbar{display:flex;align-items:center;gap:8px;min-width:90px}
+.pbar .bt{flex:1;height:8px}
+.pbar span{font-size:12px;width:34px;text-align:right;font-variant-numeric:tabular-nums}
+.ph2{display:flex;gap:4px}
+.ph2 img{width:36px;height:36px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.lastnote{white-space:pre-line;color:var(--ink2);max-width:420px}
+@media(max-width:760px){
+  .tt thead{display:none}
+  .tt,.tt tbody,.tt tr,.tt td{display:block;width:100%}
+  .tt tr{border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px;background:var(--surface)}
+  .tt td{border:0;padding:4px 12px}
+  .tt td:first-child{padding-top:10px}.tt td:last-child{padding-bottom:12px}
+  .tt tr{display:grid;grid-template-columns:1fr 1fr;padding:8px 0}
+  .tt td[data-label]::before{content:attr(data-label);display:block;font-size:11px;color:var(--muted)}
+  .tt td.c{text-align:left}
+  .tt td:nth-child(1)::before,.tt td:nth-child(2)::before{display:none!important}
+  .tt td:nth-child(1){grid-column:1/-1;padding-top:6px}
+  .tt td:nth-child(2){grid-column:1/-1;font-size:14px}
+  .tt td:nth-child(7){grid-column:1/-1}
+  .tt td:nth-child(8):has(.ph2 span){display:none}
 }
-.tasks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:12px}
-.task{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
-.task .top{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.task .ttl{font-weight:600;font-size:14px}
-.task .iss{font-size:12px;color:var(--muted)}
-.task .meta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
-.photos{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.ph{aspect-ratio:4/3;border-radius:5px;overflow:hidden;background:var(--sunk);border:1px solid var(--line2);position:relative;display:grid;place-items:center;font-size:11px;color:var(--muted);padding:0;width:100%}
-.ph img{width:100%;height:100%;object-fit:cover;display:block}
-.ph .lab{position:absolute;left:4px;top:4px;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;color:#fff}
-.ph .lab.b{background:#b45309} .ph .lab.a{background:#15803d}
-.prog{font-size:12px;border-left:3px solid var(--line);padding-left:8px;color:var(--ink)}
-.dlmsg{font-size:13px;padding:10px 12px;border-radius:6px;background:var(--bad-bg);color:var(--bad);overflow-wrap:anywhere}
-.dlmsg.ok{background:var(--ok-bg);color:var(--ok)}
-.dlmsg.wait{background:var(--run-bg);color:var(--run)}
-.dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
-.dl button{text-align:left;display:flex;justify-content:space-between;gap:8px;align-items:center;min-height:52px}
-.dl button .nm{display:flex;flex-direction:column;gap:1px;min-width:0;line-height:1.3}
-.dl button .nm b{font-weight:600;font-size:13px}
-.dl button .nm i{font-style:normal;font-size:12px;color:var(--muted);font-family:"Noto Sans Thai",sans-serif}
-.dl button.primary .nm i{color:var(--on-accent);opacity:.75}
-.dl button small{color:var(--muted);font-size:11px}
-.note{font-size:12px;color:var(--muted)}
-.loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);z-index:50;font-size:14px;color:var(--muted)}
-.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:6px;font-size:13px;z-index:60}
-.lb{position:fixed;inset:0;background:rgba(0,0,0,.88);display:grid;place-items:center;z-index:70;padding:16px}
-.lb img{max-width:100%;max-height:90vh;border-radius:4px}
-@media (max-width:640px){ h1{font-size:20px} .bar{grid-template-columns:1fr;gap:4px} .bar .num{text-align:left}}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--surface);z-index:41;box-shadow:-8px 0 24px rgba(0,0,0,.12);display:flex;flex-direction:column}
+.dh{padding:18px 20px 14px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+.dh h3{margin:0;font-size:17px;line-height:1.4}
+.dh .x{margin-left:auto;border:0;background:var(--line2);border-radius:8px;width:32px;height:32px;font-size:18px;flex:none}
+.db{padding:16px 20px 28px;overflow-y:auto}
+.facts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 16px;margin-bottom:18px}
+.facts div span{display:block;font-size:11px;color:var(--muted)}
+.facts div b{font-weight:500;font-size:13px}
+.sec{margin-bottom:18px}
+.sec h4{margin:0 0 6px;font-size:12px;color:var(--ink2);font-weight:700;text-transform:none}
+.sec p{margin:0;white-space:pre-line;font-size:13.5px}
+.tl{position:relative;padding-left:18px}
+.tl::before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.tl .e{position:relative;margin-bottom:14px}
+.tl .e::before{content:'';position:absolute;left:-17px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--surface);border:2px solid var(--run)}
+.tl .e.last::before{background:var(--run)}
+.tl .d{font-size:12px;font-weight:700;color:var(--run-t)}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.photos figure{margin:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--sunk)}
+.photos img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;cursor:zoom-in}
+.photos .np{aspect-ratio:4/3;display:grid;place-items:center;color:var(--muted);font-size:12px}
+.photos figcaption{font-size:12px;padding:5px 8px;font-weight:500}
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:60;display:grid;place-items:center;padding:20px}
+.lb img{max-width:100%;max-height:90vh;border-radius:6px}
+
+/* download */
+.dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.dl button{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:10px 12px}
+.dl button:hover{border-color:var(--run)}
+.dl button.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.dl button b{display:block;font-weight:500;font-size:13px}
+.dl button i{display:block;font-style:normal;font-size:12px;opacity:.65}
+.dl button small{font-family:var(--mono);font-size:11px;opacity:.7}
+.dl button:disabled{opacity:.5;cursor:wait}
+.dlmsg{font-size:13px;padding:10px 12px;border-radius:8px;margin-bottom:12px;background:var(--bad-bg);color:var(--bad-t);overflow-wrap:anywhere}
+.dlmsg.ok{background:var(--ok-bg);color:var(--ok-t)}.dlmsg.wait{background:var(--run-bg);color:var(--run-t)}
+
+.loading{padding:60px 20px;text-align:center;color:var(--ink2)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;z-index:70}
+.tip{position:fixed;z-index:80;pointer-events:none;background:var(--navy);color:#fff;font-size:12px;padding:6px 9px;border-radius:6px;max-width:300px;line-height:1.45}
+@media(max-width:640px){.hwrap,nav,main{padding-left:14px;padding-right:14px}.brand h1{font-size:18px}}
 </style>
 </head>
 <body>
-<div class="loading" id="loading">데이터를 불러오는 중… / กำลังโหลดข้อมูล…</div>
-<div class="wrap">
-  <div class="hazard"></div>
-  <header>
-    <div>
-      <h1 data-i="title"></h1>
-      <p class="sub"><span data-i="updated"></span> <span id="upd"></span></p>
+<header>
+  <div class="hwrap">
+    <div class="brand"><small data-i="sub">STC · 설비보전팀</small><h1 data-i="title">안전·전기 개선 대시보드</h1></div>
+    <div class="hmeta">
+      <span class="stamp"><span data-i="asof">기준일</span> <b id="asof">–</b> · <span data-i="updated">갱신</span> <b id="upd">–</b></span>
+      <div class="seg" role="group"><button id="lk" aria-pressed="true">한국어</button><button id="lt" aria-pressed="false">ไทย</button></div>
+      <button class="hbtn" id="refresh"><span aria-hidden="true">⟳</span><span data-i="refresh">새로고침</span></button>
     </div>
-    <div class="tools">
-      <div class="seg" role="group" aria-label="language">
-        <button type="button" id="lk" aria-pressed="true">한국어</button>
-        <button type="button" id="lt" aria-pressed="false">ไทย</button>
-      </div>
-      <button type="button" class="btn" id="refresh" data-i="refresh"></button>
-    </div>
-  </header>
-
-  <section class="kpis" id="kpis"></section>
-
-  <div class="grid2">
-    <section class="card">
-      <h2><span data-i="byCat"></span><small data-i="pvaNote"></small></h2>
-      <div class="legend"><span><i style="background:var(--plan)"></i><span data-i="planned"></span></span><span><i style="background:var(--ok)"></i><span data-i="actual"></span></span></div>
-      <div class="bars" id="cats"></div>
-    </section>
-    <section class="card">
-      <h2><span data-i="byTeam"></span><small data-i="teamNote"></small></h2>
-      <div class="legend" id="stackLegend"></div>
-      <div class="bars" id="teams"></div>
-      <h2 style="margin-top:6px"><span data-i="byIO"></span></h2>
-      <div class="bars" id="io"></div>
-    </section>
   </div>
+  <nav role="tablist" id="nav">
+    <button role="tab" data-v="ov" aria-selected="true" data-i="v_ov">개요</button>
+    <button role="tab" data-v="wk" aria-selected="false" data-i="v_wk">주간 진행</button>
+    <button role="tab" data-v="gt" aria-selected="false" data-i="v_gt">일정</button>
+    <button role="tab" data-v="ls" aria-selected="false" data-i="v_ls">작업 목록</button>
+    <button role="tab" data-v="dl" aria-selected="false" data-i="v_dl">엑셀 다운로드</button>
+  </nav>
+</header>
 
-  <section class="card">
-    <h2><span data-i="attention"></span><small data-i="attNote"></small></h2>
-    <div class="list" id="att"></div>
-  </section>
+<main>
+  <div class="loading" id="loading" data-i="loading">불러오는 중…</div>
 
-  <section class="card">
-    <h2><span data-i="gantt"></span></h2>
-    <div class="filters">
-      <select id="gTeam" aria-label="team"></select>
-      <select id="gCat" aria-label="category"></select>
+  <!-- 개요 -->
+  <section class="view" id="v-ov" hidden>
+    <div class="kpis" id="kpis"></div>
+    <div class="grid g2" style="margin-bottom:16px">
+      <div class="card"><div class="ch"><h2 data-i="byCat">분야별 진행률</h2><span class="note" data-i="byCatNote"></span></div><div class="cb" id="cats"></div></div>
+      <div class="card"><div class="ch"><h2 data-i="byTeam">담당팀별 현황</h2><span class="sp"></span><div class="legend" id="stLegend"></div></div><div class="cb" id="teams"></div></div>
     </div>
-    <div class="legend" id="gLegend"></div>
-    <div class="gwrap" id="gantt"></div>
-  </section>
-
-  <section class="card">
-    <h2><span data-i="teamList"></span><small id="tCount"></small></h2>
-    <div class="tabs" id="teamTabs" role="tablist"></div>
-    <div class="tsum" id="tSum"></div>
-    <div class="filters">
-      <select id="fCat" aria-label="category"></select>
-      <select id="fStat" aria-label="status"></select>
-      <input type="search" id="fq" data-ip="search">
+    <div class="grid g2">
+      <div class="card"><div class="ch"><h2 data-i="attention">확인 필요</h2><span class="note" data-i="attNote"></span></div><div class="cb"><div class="att" id="att"></div></div></div>
+      <div class="card"><div class="ch"><h2 data-i="reasons">대기 사유</h2><span class="note" id="reasonNote"></span></div><div class="cb" id="reasons"></div></div>
     </div>
-    <div class="twrap" id="tasks"></div>
   </section>
 
-  <section class="card">
-    <h2><span>엑셀 다운로드 · ดาวน์โหลด Excel</span></h2>
-    <p class="note">시트를 누르면 그 시트만 .xlsx 로 내려받습니다. 위에서 <b>한국어</b>를 고르면 한국어, <b>ไทย</b>를 고르면 태국어로 번역된 파일이 만들어집니다.<br>กดที่ชีตเพื่อดาวน์โหลดเป็นไฟล์ .xlsx — ถ้าเลือก <b>ไทย</b> ด้านบน ไฟล์จะถูกแปลเป็นภาษาไทย ถ้าเลือก <b>한국어</b> จะเป็นภาษาเกาหลี</p>
-    <div class="dlmsg" id="dlmsg" hidden></div>
-    <div class="dl" id="dl"></div>
+  <!-- 주간 진행 -->
+  <section class="view" id="v-wk" hidden>
+    <div class="fbar">
+      <div class="pills" id="wPills"></div>
+      <span style="flex:1"></span>
+      <select id="wTeam"></select>
+      <select id="wShow"></select>
+      <label><input type="checkbox" id="wOrig"> <span data-i="showOrig">원문 함께 보기</span></label>
+    </div>
+    <div class="wsum" id="wSum"></div>
+    <div id="wList"></div>
   </section>
-</div>
-<div class="toast" id="toast" hidden></div>
+
+  <!-- 일정 -->
+  <section class="view" id="v-gt" hidden>
+    <div class="fbar"><select id="gTeam"></select><select id="gCat"></select><span style="flex:1"></span><div class="legend" id="gLegend"></div></div>
+    <div class="card"><div class="cb gwrap" id="gantt"></div></div>
+  </section>
+
+  <!-- 작업 목록 -->
+  <section class="view" id="v-ls" hidden>
+    <div class="fbar"><select id="fTeam"></select><select id="fCat"></select><select id="fStat"></select><input type="search" id="fq" data-ip="search"><span class="note" id="fCount" style="color:var(--muted);font-size:12px"></span></div>
+    <div class="card tw" id="tasks"></div>
+  </section>
+
+  <!-- 다운로드 -->
+  <section class="view" id="v-dl" hidden>
+    <div class="card"><div class="ch"><h2 data-i="v_dl">엑셀 다운로드</h2><span class="note" data-i="dlNote"></span></div>
+      <div class="cb"><div class="dlmsg" id="dlmsg" hidden></div><div class="dl" id="dl"></div></div></div>
+  </section>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-modal="true" role="dialog"></aside>
 <div class="lb" id="lb" hidden></div>
+<div class="toast" id="toast" hidden></div>
+<div class="tip" id="tip" hidden></div>
 
 <script>
 // Apps Script 웹앱 주소 (새 배포로 주소가 바뀌면 여기만 고치면 됨)
 const API_URL='https://script.google.com/macros/s/AKfycbyWSr_Gy2Q-VEiz7VZzM6nIW3yHC_Q1pxc3UN6sHBDQrn2o2wjuIkr6uXi3aCKQAtrulA/exec';
-const IN_GAS=(typeof google!=='undefined'&&google.script&&google.script.run);
+
+const I18N={
+ko:{title:'안전·전기 개선 대시보드',asof:'기준일',updated:'갱신',refresh:'새로고침',loading:'불러오는 중…',
+ v_ov:'개요',v_wk:'주간 진행',v_gt:'일정',v_ls:'작업 목록',v_dl:'엑셀 다운로드',
+ total:'전체 작업',done:'완료',doing:'진행 중',late:'지연',hold:'보류',plan:'계획',
+ progress:'실제 진행률',planPct:'계획 진행률',vsPlan:'계획 대비',actual:'실적',planned:'계획 (오늘 기준)',
+ byCat:'분야별 진행률',byCatNote:'막대 = 실제 · 세로선 = 오늘까지의 계획',byTeam:'담당팀별 현황',
+ attention:'확인 필요',attNote:'지연 + 7일 안에 마감',reasons:'대기 사유',reasonNoteT:'미완료 작업의 최근 주간 기록 기준',
+ st_plan:'계획',st_doing:'진행',st_done:'완료',st_hold:'보류',st_late:'지연',
+ dueIn:'일 남음',overdue:'일 지남',dueToday:'오늘 마감',nothing:'확인할 작업이 없습니다.',noItems:'해당 작업이 없습니다.',
+ week:'주간 기록',prevWeek:'지난 기록',showOrig:'원문 함께 보기',allTeams:'모든 담당팀',allCats:'모든 분야',allStat:'모든 상태',
+ sh_all:'모두 보기',sh_chg:'변경·신규만',sh_same:'변화 없음만',sh_none:'기록 없음만',
+ w_new:'신규',w_chg:'변경',w_same:'변화 없음',w_none:'기록 없음',w_cnt:'기록한 작업',
+ search:'작업·설비·메모 검색',cnt:'건',c_id:'ID',c_work:'개선 작업',c_own:'담당',c_period:'계획 기간',c_st:'상태',c_prog:'진행률',c_last:'최근 주간 기록',c_photo:'사진',
+ f_cat:'분야',f_own:'담당(팀)',f_io:'내부/외부',f_period:'계획 기간',f_done:'실제 완료일',f_prog:'진행률',
+ s_iss:'이슈 내용 (작업자 제기)',s_area:'대상 설비·위치',s_note:'진행 사항 · 조치 내용',s_weekly:'주간 기록',s_photo:'개선 전·후 사진',
+ before:'개선 전',after:'개선 후',noPhoto:'사진 없음',inside:'내부',outside:'외부',close:'닫기',lbClose:'아무 곳이나 누르면 닫힘',
+ dlNote:'시트를 누르면 그 시트만 .xlsx 로 받습니다. 태국어 화면에서 받으면 태국어로 번역된 파일이 됩니다.',all:'전체 파일',
+ making:'엑셀 만드는 중…',saved:'내려받았습니다',fail:'실패',origLabel:'원문',
+ r_quote:'견적 대기',r_supp:'업체 방문·확인 대기',r_appr:'승인 대기',r_mat:'자재·구매 대기',r_plan:'계획 일정 대기',r_lee:'Mr.Lee 확인 대기',r_hard:'진행 어려움·불가',r_prog:'진척 보고',r_other:'기타',
+ openOnly:'미완료',wline:'주간 기록일',sub:'STC · 설비보전팀',noWeek:'주간 기록 열이 없습니다. [일정] 시트 머리글에 날짜(예: 28/11/2026)를 넣은 열을 추가하세요.'},
+th:{title:'แดชบอร์ดปรับปรุงความปลอดภัยและระบบไฟฟ้า',asof:'ข้อมูล ณ',updated:'อัปเดต',refresh:'รีเฟรช',loading:'กำลังโหลด…',
+ v_ov:'ภาพรวม',v_wk:'ความคืบหน้ารายสัปดาห์',v_gt:'แผนงาน',v_ls:'รายการงาน',v_dl:'ดาวน์โหลด Excel',
+ total:'งานทั้งหมด',done:'เสร็จแล้ว',doing:'กำลังทำ',late:'ล่าช้า',hold:'ระงับ',plan:'วางแผน',
+ progress:'ความคืบหน้าจริง',planPct:'ความคืบหน้าตามแผน',vsPlan:'เทียบแผน',actual:'ผลจริง',planned:'แผน (ถึงวันนี้)',
+ byCat:'ความคืบหน้าตามหมวด',byCatNote:'แถบ = ผลจริง · เส้นตั้ง = แผนถึงวันนี้',byTeam:'สถานะตามทีมผู้รับผิดชอบ',
+ attention:'ต้องติดตาม',attNote:'ล่าช้า + ครบกำหนดภายใน 7 วัน',reasons:'สาเหตุที่รอ',reasonNoteT:'จากบันทึกล่าสุดของงานที่ยังไม่เสร็จ',
+ st_plan:'วางแผน',st_doing:'กำลังทำ',st_done:'เสร็จแล้ว',st_hold:'ระงับ',st_late:'ล่าช้า',
+ dueIn:'วันก่อนครบกำหนด',overdue:'วันเลยกำหนด',dueToday:'ครบกำหนดวันนี้',nothing:'ไม่มีงานที่ต้องติดตาม',noItems:'ไม่มีงานที่ตรงเงื่อนไข',
+ week:'บันทึกรายสัปดาห์',prevWeek:'บันทึกครั้งก่อน',showOrig:'แสดงต้นฉบับ',allTeams:'ทุกทีม',allCats:'ทุกหมวด',allStat:'ทุกสถานะ',
+ sh_all:'แสดงทั้งหมด',sh_chg:'เฉพาะที่เปลี่ยน/ใหม่',sh_same:'เฉพาะที่ไม่เปลี่ยน',sh_none:'เฉพาะที่ไม่มีบันทึก',
+ w_new:'ใหม่',w_chg:'เปลี่ยนแปลง',w_same:'ไม่เปลี่ยน',w_none:'ไม่มีบันทึก',w_cnt:'งานที่มีบันทึก',
+ search:'ค้นหางาน·เครื่องจักร·บันทึก',cnt:'งาน',c_id:'ID',c_work:'งานปรับปรุง',c_own:'ผู้รับผิดชอบ',c_period:'ช่วงตามแผน',c_st:'สถานะ',c_prog:'ความคืบหน้า',c_last:'บันทึกล่าสุด',c_photo:'รูป',
+ f_cat:'หมวด',f_own:'ทีมผู้รับผิดชอบ',f_io:'ภายใน/ภายนอก',f_period:'ช่วงตามแผน',f_done:'วันที่เสร็จจริง',f_prog:'ความคืบหน้า',
+ s_iss:'ปัญหาที่พบ (จากพนักงาน)',s_area:'เครื่องจักร·จุดที่ทำ',s_note:'ความคืบหน้า·การดำเนินการ',s_weekly:'บันทึกรายสัปดาห์',s_photo:'รูปก่อน·หลังปรับปรุง',
+ before:'ก่อนปรับปรุง',after:'หลังปรับปรุง',noPhoto:'ไม่มีรูป',inside:'ภายใน',outside:'ภายนอก',close:'ปิด',lbClose:'แตะที่ใดก็ได้เพื่อปิด',
+ dlNote:'กดที่ชีตเพื่อดาวน์โหลดเฉพาะชีตนั้น (.xlsx) ถ้าดาวน์โหลดจากหน้าภาษาไทย ไฟล์จะถูกแปลเป็นภาษาไทย',all:'ทั้งไฟล์',
+ making:'กำลังสร้างไฟล์ Excel…',saved:'ดาวน์โหลดแล้ว',fail:'ไม่สำเร็จ',origLabel:'ต้นฉบับ',
+ r_quote:'รอใบเสนอราคา',r_supp:'รอซัพพลายเออร์เข้าตรวจ',r_appr:'รออนุมัติ',r_mat:'รออุปกรณ์·การจัดซื้อ',r_plan:'รอตามแผน',r_lee:'รอ Mr.Lee ตรวจสอบ',r_hard:'ทำได้ยาก·ทำไม่ได้',r_prog:'มีความคืบหน้า',r_other:'อื่นๆ',
+ openOnly:'งานที่ยังไม่เสร็จ',wline:'วันบันทึกรายสัปดาห์',sub:'STC · ทีมซ่อมบำรุง',noWeek:'ยังไม่มีคอลัมน์บันทึกรายสัปดาห์'}
+};
+const ST=['done','doing','late','plan','hold'];
+const ST_KEY={'계획':'plan','진행':'doing','완료':'done','보류':'hold'};
+const ST_COL={done:'var(--ok)',doing:'var(--run)',late:'var(--bad)',plan:'var(--plan)',hold:'var(--hold)'};
+const REASONS=[
+ ['r_quote',/견적|ใบเสนอราคา/],
+ ['r_supp',/공급업체|업체 방문|ซัพพลาย|ซัพลลาย|supplier/i],
+ ['r_appr',/승인|อนุมัติ/],
+ ['r_mat',/자재|구매|อุปกรณ์|ซื้อ|สั่งซื้อ/],
+ ['r_plan',/계획대로 진행 대기|계획 재정리|ตามแผน/],
+ ['r_lee',/Mr\.?\s?Lee/i],
+ ['r_hard',/불가|어려|ไม่สามารถ|ไม่น่าจะ|ติดปัญหา/],
+ ['r_prog',/완료|เรียบร้อย|แก้ไขแล้ว|ติดตั้งแล้ว|เพิ่มเติม/]
+];
+const DAY=864e5;
+let DATA=null,lang='ko',view='ov',curWeek=null;
+try{lang=localStorage.getItem('db_lang')||'ko';view=localStorage.getItem('db_view')||'ov'}catch(e){}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const t=k=>(I18N[lang]||I18N.ko)[k]??k;
+const pd=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||'');return m?Date.UTC(+m[1],m[2]-1,+m[3]):NaN};
+const md=s=>{const v=pd(s);if(isNaN(v))return '–';const d=new Date(v);return lang==='th'?d.getUTCDate()+'/'+(d.getUTCMonth()+1):(d.getUTCMonth()+1)+'/'+d.getUTCDate()};
+const pct=v=>Math.round((v||0)*100)+'%';
+const avg=a=>a.length?a.reduce((p,c)=>p+c,0)/a.length:0;
+const norm=s=>String(s||'').replace(/\s+/g,' ').trim();
+function L(x,k){const b=x.tr&&x.tr[k];if(!b)return x[k]||'';return lang==='th'?(b.th||b.ko):(b.ko||b.th)}
+function wTxt(w){return lang==='th'?w.th:w.ko}
+function wOrig(w){if(!w.src||w.src===lang)return '';return lang==='th'?w.ko:w.th}
+function labelOf(k,field){const x=DATA.tasks.find(y=>y[field]===k);return x?L(x,field):k}
+function catIdx(c){const n=parseInt(c,10);return isNaN(n)?0:(n-1)%6}
+function toast(m){const e=$('toast');e.textContent=m;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,2600)}
+function chip(x){return `<span class="chip ${x.eff}">${t('st_'+x.eff)}</span>`}
 function api(q){
   return fetch(API_URL+'?'+q+'&_='+Date.now(),{redirect:'follow',cache:'no-store'}).then(r=>r.text()).then(txt=>{
-    let j;try{j=JSON.parse(txt)}catch(e){throw new Error('API 응답을 읽을 수 없습니다. 웹앱 배포의 액세스 권한을 "모든 사용자"로 설정했는지 확인하세요.')}
+    let j;try{j=JSON.parse(txt)}catch(e){throw new Error('API 응답을 읽을 수 없습니다. 웹앱 배포 > 액세스 권한이 "모든 사용자"인지, 새 버전으로 배포했는지 확인하세요.')}
     if(!j.ok)throw new Error(j.error||'API error');return j;
   });
 }
-const I18N={
- ko:{title:'안전·전기 개선 대시보드',updated:'기준',refresh:'새로고침',total:'전체 작업',done:'완료',doing:'진행 중',late:'지연',unassigned:'담당 미정',ext:'외부 작업',
-  planned:'계획',actual:'실적',pva:'계획 대비 실적',byCat:'분야별 진행률',pvaNote:'오늘 기준 계획 진행률과 실제 진행률',byTeam:'담당팀별 현황',teamNote:'건수 기준',byIO:'내부 / 외부',
-  inside:'내부',outside:'외부',attention:'확인 필요',attNote:'지연 및 7일 안에 끝나야 할 작업',gantt:'간트 일정',tasks:'작업 목록',download:'엑셀 다운로드',
-  dlNote:'시트를 누르면 그 시트만 .xlsx 로 내려받습니다. 다른 시트를 참조하는 수식은 값으로 바뀝니다.',all:'전체 파일',allTeams:'모든 담당팀',allCats:'모든 분야',allStat:'모든 상태',
-  search:'작업·설비 검색',st_plan:'계획',st_doing:'진행',st_done:'완료',st_hold:'보류',st_late:'지연',soon:'마감 임박',before:'개선 전',after:'개선 후',noPhoto:'사진 없음',
-  owner:'담당',period:'기간',noItems:'해당 작업이 없습니다.',nothing:'확인할 작업이 없습니다.',making:'엑셀 만드는 중…',saved:'내려받았습니다',fail:'실패',
-  cnt:'건',today:'오늘',dueIn:'일 남음',overdue:'일 지남',area:'대상',lbClose:'아무 곳이나 누르면 닫힘',week:'주',task:'작업',teamList:'담당팀별 작업 목록',allTab:'전체',cnt2:'작업 수',extCnt:'외부 작업',actPct:'실제 진행률',c_id:'ID',c_work:'개선 작업',c_bef:'개선 전 사진',c_aft:'개선 후 사진',c_iss:'이슈 내용',c_cat:'분야',c_area:'대상 설비·위치',c_own:'담당(팀)',c_io:'내부/외부',c_s:'계획 시작',c_e:'계획 종료',c_st:'상태',c_ap:'실제 진행률',c_late:'지연',c_prog:'진행 사항'},
- th:{title:'แดชบอร์ดปรับปรุงความปลอดภัยและระบบไฟฟ้า',updated:'ข้อมูล ณ',refresh:'รีเฟรช',total:'งานทั้งหมด',done:'เสร็จแล้ว',doing:'กำลังทำ',late:'ล่าช้า',unassigned:'ยังไม่กำหนดผู้รับผิดชอบ',ext:'งานผู้รับเหมา',
-  planned:'แผน',actual:'ผลจริง',pva:'แผนเทียบผลจริง',byCat:'ความคืบหน้าตามหมวด',pvaNote:'ความคืบหน้าตามแผนเทียบกับผลจริง ณ วันนี้',byTeam:'สถานะตามทีมผู้รับผิดชอบ',teamNote:'จำนวนงาน',byIO:'ภายใน / ภายนอก',
-  inside:'ภายใน',outside:'ภายนอก',attention:'ต้องติดตาม',attNote:'งานล่าช้าและงานที่ต้องเสร็จภายใน 7 วัน',gantt:'แผนงาน (Gantt)',tasks:'รายการงาน',download:'ดาวน์โหลด Excel',
-  dlNote:'กดที่ชีตเพื่อดาวน์โหลดเฉพาะชีตนั้นเป็นไฟล์ .xlsx สูตรที่อ้างอิงชีตอื่นจะถูกแปลงเป็นค่า',all:'ทั้งไฟล์',allTeams:'ทุกทีม',allCats:'ทุกหมวด',allStat:'ทุกสถานะ',
-  search:'ค้นหางาน·เครื่องจักร',st_plan:'วางแผน',st_doing:'กำลังทำ',st_done:'เสร็จแล้ว',st_hold:'ระงับไว้',st_late:'ล่าช้า',soon:'ใกล้ครบกำหนด',before:'ก่อนปรับปรุง',after:'หลังปรับปรุง',noPhoto:'ไม่มีรูป',
-  owner:'ผู้รับผิดชอบ',period:'ระยะเวลา',noItems:'ไม่มีงานที่ตรงเงื่อนไข',nothing:'ไม่มีงานที่ต้องติดตาม',making:'กำลังสร้างไฟล์ Excel…',saved:'ดาวน์โหลดแล้ว',fail:'ไม่สำเร็จ',
-  cnt:'งาน',today:'วันนี้',dueIn:'วันก่อนครบกำหนด',overdue:'วันที่เลยกำหนด',area:'จุดที่ทำ',lbClose:'แตะที่ใดก็ได้เพื่อปิด',week:'สัปดาห์',task:'งาน',teamList:'รายการงานตามทีม',allTab:'ทั้งหมด',cnt2:'จำนวนงาน',extCnt:'งานผู้รับเหมา',actPct:'ความคืบหน้าจริง',c_id:'ID',c_work:'งานปรับปรุง',c_bef:'รูปก่อนปรับปรุง',c_aft:'รูปหลังปรับปรุง',c_iss:'ปัญหาที่พบ (จากพนักงาน)',c_cat:'หมวด',c_area:'เครื่องจักร·จุดที่ทำ',c_own:'ทีมผู้รับผิดชอบ',c_io:'ภายใน/ภายนอก',c_s:'เริ่มตามแผน',c_e:'สิ้นสุดตามแผน',c_st:'สถานะ',c_ap:'ความคืบหน้าจริง',c_late:'ล่าช้า',c_prog:'ความคืบหน้า·การดำเนินการ'}
-};
-const ST_KEY={'계획':'plan','진행':'doing','완료':'done','보류':'hold'};
-const CAT_COLOR=['--c1','--c2','--c3','--c4','--c5','--c6'];
-const DAY=86400000;
-let DATA=null, lang='ko';
-try{lang=localStorage.getItem('db_lang')||'ko'}catch(e){}
-const $=id=>document.getElementById(id);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const t=k=>(I18N[lang]||I18N.ko)[k]||k;
-const pd=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||'');return m?Date.UTC(+m[1],m[2]-1,+m[3]):NaN};
-const md=s=>{const v=pd(s);if(isNaN(v))return '–';const d=new Date(v);return (d.getUTCMonth()+1)+'/'+d.getUTCDate()};
-function tx(task,field){ if(lang==='th'&&task.th&&task.th[field]) return task.th[field]; return task[field]; }
-function teamName(k){ if(lang!=='th')return k; const tk=(DATA.tasks.find(x=>x.own===k)||{}).th; return (tk&&tk.own)||k; }
-function catName(k){ if(lang!=='th')return k; const tk=(DATA.tasks.find(x=>x.cat===k)||{}).th; return (tk&&tk.cat)||k; }
-function catIdx(c){const n=parseInt(c,10);return isNaN(n)?0:(n-1)%6}
-function toast(m){const e=$('toast');e.textContent=m;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,2600)}
 
+/* ---------- 데이터 가공 ---------- */
 function enrich(d){
   const today=pd(d.today);
+  d.weeks=d.weeks||[];
   d.tasks.forEach(x=>{
-    const s=pd(x.start),e=pd(x.end);
-    const k=ST_KEY[x.status]||'plan';
+    const s=pd(x.start),e=pd(x.end),k=ST_KEY[x.status]||'plan';
     x.eff=k==='done'?'done':k==='hold'?'hold':(!isNaN(e)&&e<today?'late':k);
     x.act=k==='done'?1:Math.max(0,Math.min(1,x.ap||0));
     x.pln=(isNaN(s)||isNaN(e))?0:Math.max(0,Math.min(1,(today-s+DAY)/(e-s+DAY)));
     x.left=isNaN(e)?null:Math.round((e-today)/DAY);
+    x.tr=x.tr||{};x.weekly=x.weekly||[];
+    x.wmap={};x.weekly.forEach(w=>x.wmap[w.w]=w);
+    x.last=x.weekly.length?x.weekly[x.weekly.length-1]:null;
   });
+  if(!curWeek||!d.weeks.some(w=>w.date===curWeek))curWeek=d.weeks.length?d.weeks[d.weeks.length-1].date:null;
   return d;
 }
-const avg=a=>a.length?a.reduce((p,c)=>p+c,0)/a.length:0;
-const pct=v=>Math.round(v*100)+'%';
+function groups(key,list){const m=new Map();(list||DATA.tasks).forEach(x=>{if(!m.has(x[key]))m.set(x[key],[]);m.get(x[key]).push(x)});return m}
+function weekState(x,wd){
+  const i=DATA.weeks.findIndex(w=>w.date===wd);const cur=x.wmap[wd];
+  let prev=null;for(let j=i-1;j>=0;j--){if(x.wmap[DATA.weeks[j].date]){prev=x.wmap[DATA.weeks[j].date];break}}
+  if(!cur)return{k:x.eff==='done'?'fin':'none',cur,prev};
+  if(!prev)return{k:i>0?'new':'new',cur,prev};
+  return{k:norm(cur.th)===norm(prev.th)&&norm(cur.ko)===norm(prev.ko)?'same':'chg',cur,prev};
+}
 
-/* ---------- render ---------- */
+/* ---------- 공통 ---------- */
 function applyI18n(){
-  document.documentElement.lang=lang; document.body.classList.toggle('th',lang==='th');
+  document.documentElement.lang=lang;document.body.classList.toggle('th',lang==='th');
+  document.title=t('title');
   document.querySelectorAll('[data-i]').forEach(el=>el.textContent=t(el.dataset.i));
   document.querySelectorAll('[data-ip]').forEach(el=>el.placeholder=t(el.dataset.ip));
-  $('lk').setAttribute('aria-pressed',lang==='ko'); $('lt').setAttribute('aria-pressed',lang==='th');
+  $('lk').setAttribute('aria-pressed',lang==='ko');$('lt').setAttribute('aria-pressed',lang==='th');
 }
+function setView(v){
+  view=v;try{localStorage.setItem('db_view',v)}catch(e){}
+  document.querySelectorAll('#nav button').forEach(b=>b.setAttribute('aria-selected',b.dataset.v===v));
+  if(!DATA)return;
+  document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!=='v-'+v);
+  if(v==='gt')renderGantt();
+}
+function fillSelect(el,allLabel,items){
+  const cur=el.value;
+  el.innerHTML=(allLabel?`<option value="">${esc(allLabel)}</option>`:'')+items.map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join('');
+  if(items.some(i=>i[0]===cur))el.value=cur;
+}
+function teamKeys(){const g=groups('own');return [...g.keys()].sort((a,b)=>(a==='미정')-(b==='미정')||g.get(b).length-g.get(a).length)}
+function renderFilters(){
+  const teams=teamKeys().map(k=>[k,labelOf(k,'own')]);
+  const cats=[...groups('cat').keys()].sort().map(k=>[k,labelOf(k,'cat')]);
+  ['wTeam','gTeam','fTeam'].forEach(id=>fillSelect($(id),t('allTeams'),teams));
+  ['gCat','fCat'].forEach(id=>fillSelect($(id),t('allCats'),cats));
+  fillSelect($('fStat'),t('allStat'),ST.map(k=>[k,t('st_'+k)]));
+  fillSelect($('wShow'),'',[['',t('sh_all')],['chg',t('sh_chg')],['same',t('sh_same')],['none',t('sh_none')]].map(([v,l])=>[v,l]));
+}
+// hover tooltip
+document.addEventListener('mouseover',e=>{const el=e.target.closest('[data-tip]');const tp=$('tip');if(!el){tp.hidden=true;return}tp.textContent=el.dataset.tip;tp.hidden=false});
+document.addEventListener('mousemove',e=>{const tp=$('tip');if(tp.hidden)return;const w=tp.offsetWidth;tp.style.left=Math.min(innerWidth-w-8,e.clientX+12)+'px';tp.style.top=(e.clientY+14)+'px'});
+
+/* ---------- 개요 ---------- */
 function renderKpis(){
-  const T=DATA.tasks, n=T.length, c=k=>T.filter(x=>x.eff===k).length;
-  const pl=avg(T.map(x=>x.pln)), ac=avg(T.map(x=>x.act));
-  $('kpis').innerHTML=`
-   <div class="kpi"><span class="k">${t('total')}</span><span class="v">${n}</span></div>
-   <div class="kpi ok"><span class="k">${t('done')}</span><span class="v">${c('done')}<small>${n?pct(c('done')/n):'0%'}</small></span></div>
-   <div class="kpi run"><span class="k">${t('doing')}</span><span class="v">${c('doing')}</span></div>
-   <div class="kpi bad"><span class="k">${t('late')}</span><span class="v">${c('late')}</span></div>
-   <div class="kpi idle"><span class="k">${t('unassigned')}</span><span class="v">${T.filter(x=>x.own==='미정').length}</span></div>
-   <div class="kpi"><span class="k">${t('pva')}</span>
-     <div class="pvsa"><div class="row"><span>${t('planned')}</span><div class="track"><i style="width:${pct(pl)};background:var(--plan)"></i></div><span>${pct(pl)}</span></div>
-     <div class="row"><span>${t('actual')}</span><div class="track"><i style="width:${pct(ac)};background:var(--ok)"></i></div><span>${pct(ac)}</span></div></div></div>`;
+  const T=DATA.tasks,n=T.length,c=k=>T.filter(x=>x.eff===k).length;
+  const pl=avg(T.map(x=>x.pln)),ac=avg(T.map(x=>x.act)),gap=Math.round((ac-pl)*100);
+  const gcol=gap>=0?'background:var(--ok-bg);color:var(--ok-t)':gap>-15?'background:var(--hold-bg);color:var(--hold-t)':'background:var(--bad-bg);color:var(--bad-t)';
+  const tile=(k,v,col,sub)=>`<div class="kpi"><span class="k"><i class="dot" style="background:${col}"></i>${k.includes(' ')?k:t(k)}</span><span class="v">${v}${sub?`<small>${sub}</small>`:''}</span></div>`;
+  $('kpis').innerHTML=`<div class="kpi hero"><span class="k">${t('progress')}</span>
+     <div class="row"><span class="v">${pct(ac)}</span><span class="gap" style="${gcol}">${t('vsPlan')} ${gap>0?'+':''}${gap}%p</span></div>
+     <div class="meter" data-tip="${t('actual')} ${pct(ac)} · ${t('planned')} ${pct(pl)}"><i style="width:${pct(ac)}"></i><b style="left:calc(${pct(pl)} - 1px)"></b></div>
+     <div class="mleg"><span><i></i>${t('actual')} ${pct(ac)}</span><span><b></b>${t('planned')} ${pct(pl)}</span></div></div>`+
+   `<div class="kpi"><span class="k">${t('total')}</span><span class="v">${n}</span></div>`+
+   tile('done',c('done'),ST_COL.done,n?pct(c('done')/n):'')+tile('doing',c('doing'),ST_COL.doing)+tile('late',c('late'),ST_COL.late)+
+   tile(t('plan')+' / '+t('hold'),c('plan')+c('hold'),ST_COL.plan,`${t('plan')} ${c('plan')} · ${t('hold')} ${c('hold')}`);
 }
-function groups(key){const m=new Map();DATA.tasks.forEach(x=>{if(!m.has(x[key]))m.set(x[key],[]);m.get(x[key]).push(x)});return m}
 function renderCats(){
-  let h='';
-  groups('cat').forEach((arr,k)=>{
-    const pl=avg(arr.map(x=>x.pln)),ac=avg(arr.map(x=>x.act));const ci=catIdx(k);
-    h+=`<div class="bar"><span class="name" title="${esc(catName(k))}"><i class="sw" style="background:var(${CAT_COLOR[ci]})"></i>${esc(catName(k))}</span>
-      <div class="dual"><div class="track"><i style="width:${pct(pl)};background:var(--plan)"></i></div><div class="track"><i style="width:${pct(ac)};background:var(--ok)"></i></div></div>
-      <span class="num">${pct(ac)} / ${pct(pl)}</span></div>`;
-  });
-  $('cats').innerHTML=h||`<div class="empty">${t('noItems')}</div>`;
+  const g=groups('cat');const keys=[...g.keys()].sort();
+  $('cats').innerHTML=`<div class="bl">`+keys.map(k=>{const a=g.get(k);const pl=avg(a.map(x=>x.pln)),ac=avg(a.map(x=>x.act));
+    return `<div class="nm"><i class="sw" style="background:var(--c${catIdx(k)+1})"></i><span title="${esc(labelOf(k,'cat'))}">${esc(labelOf(k,'cat'))}</span><em>${a.length}</em></div>
+     <div class="bt" data-tip="${esc(labelOf(k,'cat'))} — ${t('actual')} ${pct(ac)} · ${t('planned')} ${pct(pl)}"><i style="width:${pct(ac)};background:var(--c${catIdx(k)+1})"></i><b style="left:calc(${pct(pl)} - 1px)"></b></div>
+     <div class="num"><strong>${pct(ac)}</strong> / ${pct(pl)}</div>`}).join('')+`</div>`;
 }
-const STACK=[['done','var(--ok)'],['doing','var(--run)'],['late','var(--bad)'],['plan','var(--plan)'],['hold','var(--idle)']];
-function stackBar(arr,max){
-  return `<div class="stack" style="width:${Math.max(6,arr.length/max*100)}%">${STACK.map(([k,c])=>{const n=arr.filter(x=>x.eff===k).length;return n?`<i style="flex:${n};background:${c}" title="${t('st_'+k)} ${n}"></i>`:''}).join('')}</div>`;
+function stack(a,max){
+  return `<div class="stk" style="width:${Math.max(8,a.length/max*100)}%">${ST.map(k=>{const n=a.filter(x=>x.eff===k).length;return n?`<i style="flex:${n};background:${ST_COL[k]}" data-tip="${t('st_'+k)} ${n}"></i>`:''}).join('')}</div>`;
 }
 function renderTeams(){
-  $('stackLegend').innerHTML=STACK.map(([k,c])=>`<span><i style="background:${c}"></i>${t('st_'+k)}</span>`).join('');
-  const g=groups('own');const max=Math.max(1,...[...g.values()].map(a=>a.length));
-  const keys=[...g.keys()].sort((a,b)=>(a==='미정')-(b==='미정')||g.get(b).length-g.get(a).length);
-  $('teams').innerHTML=keys.map(k=>{const a=g.get(k);const dn=a.filter(x=>x.eff==='done').length,lt=a.filter(x=>x.eff==='late').length;
-    return `<div class="bar"><span class="name" title="${esc(teamName(k))}">${esc(teamName(k))}</span>${stackBar(a,max)}<span class="num">${dn}/${a.length}${lt?` · <b style="color:var(--bad)">${lt}</b>`:''}</span></div>`}).join('');
-  const io=groups('io');const imax=Math.max(1,...[...io.values()].map(a=>a.length));
-  $('io').innerHTML=['내부','외부'].filter(k=>io.has(k)).map(k=>{const a=io.get(k);return `<div class="bar"><span class="name">${k==='내부'?t('inside'):t('outside')}</span>${stackBar(a,imax)}<span class="num">${a.filter(x=>x.eff==='done').length}/${a.length} · ${pct(avg(a.map(x=>x.act)))}</span></div>`}).join('');
+  $('stLegend').innerHTML=ST.map(k=>`<span><i style="background:${ST_COL[k]}"></i>${t('st_'+k)}</span>`).join('');
+  const g=groups('own'),keys=teamKeys(),max=Math.max(1,...keys.map(k=>g.get(k).length));
+  $('teams').innerHTML=`<div class="sl">`+keys.map(k=>{const a=g.get(k);const dn=a.filter(x=>x.eff==='done').length,lt=a.filter(x=>x.eff==='late').length;
+    return `<div class="nm" title="${esc(labelOf(k,'own'))}">${esc(labelOf(k,'own'))}</div>${stack(a,max)}<div class="num">${dn}/${a.length}${lt?` <b style="color:var(--bad-t)">·${lt}</b>`:''}</div>`}).join('')+`</div>`;
 }
-function chip(x){return `<span class="chip ${x.eff}">${t('st_'+x.eff)}</span>`}
 function renderAtt(){
-  const a=DATA.tasks.filter(x=>x.eff==='late'||(x.eff!=='done'&&x.eff!=='hold'&&x.left!==null&&x.left>=0&&x.left<=7))
-    .sort((p,q)=>(p.left??999)-(q.left??999));
-  $('att').innerHTML=a.length?a.map(x=>`<div class="item"><span class="id">${esc(x.id)}</span><div><b>${esc(tx(x,'work'))}</b><span class="meta">${esc(teamName(x.own))} · ${md(x.start)}–${md(x.end)} · ${x.left<0?(-x.left)+' '+t('overdue'):x.left+' '+t('dueIn')}</span></div>${x.eff==='late'?chip(x):`<span class="chip soon">${t('soon')}</span>`}</div>`).join(''):`<div class="empty">${t('nothing')}</div>`;
+  const a=DATA.tasks.filter(x=>x.eff==='late'||(x.eff==='doing'||x.eff==='plan')&&x.left!==null&&x.left>=0&&x.left<=7).sort((p,q)=>(p.left??999)-(q.left??999));
+  $('att').innerHTML=a.length?a.map(x=>{const d=x.left<0?`<span class="dd" style="color:var(--bad-t)">${-x.left} ${t('overdue')}</span>`:x.left===0?`<span class="dd" style="color:var(--hold-t)">${t('dueToday')}</span>`:`<span class="dd" style="color:var(--hold-t)">${x.left} ${t('dueIn')}</span>`;
+    return `<div class="it" data-open="${esc(x.id)}"><span class="mono" style="color:var(--muted)">${esc(x.id)}</span><div><span class="tt">${esc(L(x,'work'))}</span><span class="mt">${esc(L(x,'own'))} · ${md(x.start)}–${md(x.end)}${x.last?' · '+esc(wTxt(x.last)).split('\n')[0]:''}</span></div>${d}</div>`}).join(''):`<div class="empty">${t('nothing')}</div>`;
 }
-function fillSelect(el,allKey,items,keep){
-  const cur=keep?el.value:'';
-  el.innerHTML=`<option value="">${t(allKey)}</option>`+items.map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join('');
-  if(cur&&items.some(i=>i[0]===cur))el.value=cur;
+function reasonsOf(x){if(!x.last)return [];const s=x.last.ko+' '+x.last.th;return REASONS.filter(([,re])=>re.test(s)).map(([k])=>k)}
+function renderReasons(){
+  const open=DATA.tasks.filter(x=>x.eff!=='done');
+  const cnt={};open.forEach(x=>{const r=reasonsOf(x);(r.length?r:['r_other']).forEach(k=>cnt[k]=(cnt[k]||0)+1)});
+  const rows=Object.entries(cnt).sort((a,b)=>(a[0]==='r_other')-(b[0]==='r_other')||b[1]-a[1]);const max=Math.max(1,...rows.map(r=>r[1]));
+  const lw=DATA.weeks.length?md(DATA.weeks[DATA.weeks.length-1].date):'';
+  $('reasonNote').textContent=t('reasonNoteT')+(lw?' ('+lw+')':'')+' · '+open.length+' '+t('cnt');
+  $('reasons').innerHTML=rows.length?`<div class="rb">`+rows.map(([k,n])=>`<div class="nm">${t(k)}</div><div class="bar" style="width:${n/max*100}%;${k==='r_prog'?'background:var(--c3)':k==='r_hard'?'background:var(--c2)':''}" data-tip="${t(k)}: ${n} ${t('cnt')}"></div><div class="num">${n}</div>`).join('')+`</div>`:`<div class="empty">${t('noItems')}</div>`;
 }
-function renderFilters(keep){
-  const teams=[...groups('own').keys()].map(k=>[k,teamName(k)]);
-  const cats=[...groups('cat').keys()].map(k=>[k,catName(k)]);
-  fillSelect($('gTeam'),'allTeams',teams,keep);fillSelect($('gCat'),'allCats',cats,keep);
-  fillSelect($('fCat'),'allCats',cats,keep);
-  fillSelect($('fStat'),'allStat',['plan','doing','late','done','hold'].map(k=>[k,t('st_'+k)]),keep);
+
+/* ---------- 주간 ---------- */
+function renderWeekly(){
+  if(!DATA.weeks.length){$('wPills').innerHTML='';$('wSum').innerHTML='';$('wList').innerHTML=`<div class="card"><div class="empty">${t('noWeek')}</div></div>`;return}
+  $('wPills').innerHTML=DATA.weeks.map(w=>{const n=DATA.tasks.filter(x=>x.wmap[w.date]).length;return `<button data-w="${w.date}" aria-pressed="${w.date===curWeek}">${md(w.date)}<small>${n}</small></button>`}).join('');
+  $('wPills').querySelectorAll('button').forEach(b=>b.onclick=()=>{curWeek=b.dataset.w;renderWeekly()});
+  const team=$('wTeam').value,show=$('wShow').value,orig=$('wOrig').checked;
+  const base=DATA.tasks.filter(x=>!team||x.own===team);
+  const st=base.map(x=>({x,...weekState(x,curWeek)}));
+  const c=k=>st.filter(s=>s.k===k).length;
+  $('wSum').innerHTML=`<div><span>${t('w_cnt')}</span><b>${base.length-c('none')-c('fin')}</b> <small style="color:var(--muted)">/ ${base.length}</small></div>
+    <div><span>${t('w_chg')} + ${t('w_new')}</span><b style="color:var(--ok-t)">${c('chg')+c('new')}</b></div>
+    <div><span>${t('w_same')}</span><b style="color:var(--ink2)">${c('same')}</b></div>
+    <div><span>${t('w_none')} <small>(${t('openOnly')})</small></span><b style="color:var(--bad-t)">${c('none')}</b></div>`;
+  const list=st.filter(s=>!show||(show==='chg'?(s.k==='chg'||s.k==='new'):s.k===show));
+  if(!list.length){$('wList').innerHTML=`<div class="card"><div class="empty">${t('noItems')}</div></div>`;return}
+  const g=new Map();list.forEach(s=>{if(!g.has(s.x.cat))g.set(s.x.cat,[]);g.get(s.x.cat).push(s)});
+  const tagK={new:'new',chg:'chg',same:'same',none:'none',fin:'fin'};
+  $('wList').innerHTML=[...g.keys()].sort().map(k=>`<div class="card wgrp"><div class="wgh"><i class="sw" style="background:var(--c${catIdx(k)+1})"></i>${esc(labelOf(k,'cat'))}<em>${g.get(k).length} ${t('cnt')}</em></div>`+
+    g.get(k).map(s=>{const x=s.x;const o=s.cur&&orig?wOrig(s.cur):'';
+      return `<div class="wr" data-open="${esc(x.id)}"><span class="mono" style="color:var(--muted)">${esc(x.id)}</span>
+      <div class="w1">${esc(L(x,'work'))}<div class="mt">${chip(x)}<span>${esc(L(x,'own'))}</span><span>· ${md(x.start)}–${md(x.end)}</span></div></div>
+      <div class="w2"><div class="nh"><span class="tag ${tagK[s.k]}">${s.k==='fin'?t('st_done'):t('w_'+s.k)}</span></div>
+        ${s.cur?`<div class="note-now">${esc(wTxt(s.cur))}</div>${o?`<div class="note-orig">${t('origLabel')}: ${esc(o)}</div>`:''}`:''}
+        ${s.prev&&s.k!=='same'?`<div class="note-prev"><b>${md(s.prev.w)}</b> ${esc(wTxt(s.prev))}</div>`:''}
+      </div></div>`}).join('')+`</div>`).join('');
 }
+
+/* ---------- 간트 ---------- */
 function renderGantt(){
   const team=$('gTeam').value,cat=$('gCat').value;
-  const list=DATA.tasks.filter(x=>(!team||x.own===team)&&(!cat||x.cat===cat)&&!isNaN(pd(x.start))&&!isNaN(pd(x.end)));
-  $('gLegend').innerHTML=STACK.map(([k,c])=>`<span><i style="background:${c}"></i>${t('st_'+k)}</span>`).join('')+`<span><i style="background:var(--accent);width:3px"></i>${t('today')}</span>`;
+  const list=DATA.tasks.filter(x=>(!team||x.own===team)&&(!cat||x.cat===cat)&&!isNaN(pd(x.start))&&!isNaN(pd(x.end))).sort((a,b)=>a.cat.localeCompare(b.cat)||a.ord-b.ord);
+  $('gLegend').innerHTML=ST.map(k=>`<span><i style="background:${ST_COL[k]}"></i>${t('st_'+k)}</span>`).join('')+
+    `<span><i style="background:repeating-linear-gradient(135deg,#94a3b8 0 2px,transparent 2px 4px)"></i>${t('outside')}</span><span><i style="background:var(--bad);width:2px"></i>${md(DATA.today)}</span><span><i style="width:0;border-left:1px dashed #94a3b8;border-radius:0"></i>${t('wline')}</span>`;
   if(!list.length){$('gantt').innerHTML=`<div class="empty">${t('noItems')}</div>`;return}
-  let s=Math.min(...list.map(x=>pd(x.start))),e=Math.max(...list.map(x=>pd(x.end)));
-  const dow=(new Date(s).getUTCDay()+6)%7;s-=dow*DAY;const weeks=Math.max(4,Math.ceil((e-s+DAY)/(7*DAY)));
-  const W=$('gantt').clientWidth||1000,lw=W<640?130:240,dw=Math.max(1.5,(W-lw-2)/(weeks*7)),wpx=dw*7,tw=weeks*wpx,today=pd(DATA.today);
-  let wk='';for(let i=0;i<weeks;i++){const ws=s+i*7*DAY;const now=today>=ws&&today<ws+7*DAY;wk+=`<div class="${now?'now':''}" style="width:${wpx}px;overflow:hidden">${wpx>=30||i%2===0?md(new Date(ws).toISOString()):''}</div>`}
-  const tl=(today-s)/DAY*dw;const showT=today>=s&&today<=s+weeks*7*DAY;
-  const col={done:'var(--ok)',doing:'var(--run)',late:'var(--bad)',plan:'var(--plan)',hold:'var(--idle)'};
-  let h=`<div class="g" style="--tw:${tw}px;--lw:${lw}px"><div class="grow ghead"><div class="gl">${t('task')}</div><div class="wk">${wk}</div></div>`;
-  let last=null;
+  let s=Math.min(...list.map(x=>pd(x.start)),pd(DATA.today)),e=Math.max(...list.map(x=>pd(x.end)));
+  s-=((new Date(s).getUTCDay()+6)%7)*DAY;const weeks=Math.max(4,Math.ceil((e-s+DAY)/(7*DAY)));
+  const W=Math.max(760,$('gantt').clientWidth-36),lw=W<900?200:300,dw=Math.max(2,(W-lw)/(weeks*7)),wpx=dw*7,tw=weeks*wpx,today=pd(DATA.today);
+  let wk='';for(let i=0;i<weeks;i++){const ws=s+i*7*DAY;const now=today>=ws&&today<ws+7*DAY;wk+=`<div class="${now?'now':''}" style="width:${wpx}px">${wpx>=34||i%2===0?md(new Date(ws).toISOString()):''}</div>`}
+  const X=d=>(pd(d)-s)/DAY*dw;
+  const tl=(today-s)/DAY*dw;
+  const bg=`background-image:repeating-linear-gradient(90deg,var(--line2) 0 1px,transparent 1px ${wpx}px)`;
+  const wl=DATA.weeks.map(w=>`<div class="gwl" style="left:${X(w.date)+dw/2}px"></div>`).join('');
+  let h=`<div class="g" style="--tw:${tw}px;--lw:${lw}px"><div class="grow ghead"><div class="gl"></div><div class="wk">${wk}</div></div>`,last=null;
   list.forEach(x=>{
-    if(x.cat!==last){last=x.cat;h+=`<div class="grow gcat"><div class="gl"><i style="width:8px;height:8px;border-radius:2px;background:var(${CAT_COLOR[catIdx(x.cat)]});flex:none"></i>${esc(catName(x.cat))}</div><div class="gt" style="height:26px;background-image:repeating-linear-gradient(90deg,var(--line2) 0 1px,transparent 1px ${wpx}px)">${showT?`<div class="today" style="left:${tl}px"></div>`:''}</div></div>`}
-    const l=(pd(x.start)-s)/DAY*dw,w=Math.max(dw,(pd(x.end)-pd(x.start)+DAY)/DAY*dw);
-    h+=`<div class="grow"><div class="gl" title="${esc(tx(x,'work'))}"><span class="id" style="font-family:var(--mono);font-size:10px;color:var(--muted)">${esc(x.id)}</span>${esc(tx(x,'work'))}</div>
-      <div class="gt" style="background-image:repeating-linear-gradient(90deg,var(--line2) 0 1px,transparent 1px ${wpx}px)">${showT?`<div class="today" style="left:${tl}px"></div>`:''}
-      <div class="gb" style="left:${l}px;width:${w}px;background:${col[x.eff]};${x.io==='외부'?'box-shadow:inset 0 -3px 0 var(--ext)':''}" title="${esc(tx(x,'work'))} · ${md(x.start)}–${md(x.end)} · ${t('st_'+x.eff)} · ${teamName(x.own)}"></div></div></div>`;
+    if(x.cat!==last){last=x.cat;h+=`<div class="grow gcat"><div class="gl"><i class="sw" style="background:var(--c${catIdx(x.cat)+1})"></i>${esc(labelOf(x.cat,'cat'))}</div><div class="gt" style="${bg}"><div class="today" style="left:${tl}px"></div></div></div>`}
+    const l=X(x.start),w=Math.max(dw,(pd(x.end)-pd(x.start)+DAY)/DAY*dw);
+    const tip=`${x.id} ${L(x,'work')} · ${md(x.start)}–${md(x.end)} · ${t('st_'+x.eff)} · ${L(x,'own')}`+(x.last?`\n${md(x.last.w)}: ${wTxt(x.last)}`:'');
+    h+=`<div class="grow"><div class="gl" data-open="${esc(x.id)}"><span class="mono" style="color:var(--muted)">${esc(x.id)}</span><span class="t">${esc(L(x,'work'))}</span></div>
+      <div class="gt" style="${bg}">${wl}<div class="today" style="left:${tl}px"></div>
+      <div class="gb ${x.io==='외부'?'ext':''}" data-open="${esc(x.id)}" data-tip="${esc(tip)}" style="left:${l}px;width:${w}px;background:${ST_COL[x.eff]}"></div></div></div>`;
   });
   $('gantt').innerHTML=h+'</div>';
 }
-function photo(url,kind){
-  const lab=kind==='b'?t('before'):t('after');
-  return url?`<button type="button" class="ph" data-lb="${esc(url)}"><img src="${esc(url)}" alt="${esc(lab)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"><span class="lab ${kind}">${esc(lab)}</span></button>`
-            :`<div class="ph"><span class="lab ${kind}">${esc(lab)}</span>${t('noPhoto')}</div>`;
-}
-let curTeam=null;
-function teamOrder(){
-  const g=groups('own');const keys=[...g.keys()];
-  return keys.sort((a,b)=>(a==='미정')-(b==='미정'));
-}
-function renderTabs(){
-  const keys=teamOrder();
-  if(curTeam===null||(curTeam!==''&&!keys.includes(curTeam)))curTeam=keys.find(k=>k!=='미정')??'';
-  const cnt=k=>DATA.tasks.filter(x=>x.own===k).length;
-  $('teamTabs').innerHTML=keys.map(k=>`<button type="button" role="tab" data-team="${esc(k)}" aria-selected="${curTeam===k}">${esc(teamName(k))}<b>${cnt(k)}</b></button>`).join('')+
-    `<button type="button" role="tab" data-team="" aria-selected="${curTeam===''}">${t('allTab')}<b>${DATA.tasks.length}</b></button>`;
-  $('teamTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{curTeam=b.dataset.team;renderTabs();renderTasks()});
-}
-function thumb(url,lab){return url?`<button type="button" class="thumb" data-lb="${esc(url)}" aria-label="${esc(lab)}"><img src="${esc(url)}" alt="${esc(lab)}" loading="lazy" referrerpolicy="no-referrer"></button>`:''}
+
+/* ---------- 작업 목록 ---------- */
 function renderTasks(){
-  const cat=$('fCat').value,st=$('fStat').value,q=$('fq').value.trim().toLowerCase();
-  const base=DATA.tasks.filter(x=>curTeam===''||x.own===curTeam);
-  const list=base.filter(x=>(!cat||x.cat===cat)&&(!st||x.eff===st)&&
-    (!q||[x.id,x.work,x.iss,x.area,x.prog,x.th&&x.th.work,x.th&&x.th.area,x.th&&x.th.iss].join(' ').toLowerCase().includes(q)));
-  const c=k=>base.filter(x=>x.eff===k).length;
-  $('tSum').innerHTML=`<div><span>${t('cnt2')}</span><b>${base.length}</b></div><div><span>${t('done')}</span><b style="color:var(--ok)">${c('done')}</b></div>
-    <div><span>${t('doing')}</span><b style="color:var(--run)">${c('doing')}</b></div><div><span>${t('late')}</span><b style="color:var(--bad)">${c('late')}</b></div>
-    <div><span>${t('actPct')}</span><b>${pct(avg(base.map(x=>x.act)))}</b></div><div><span>${t('extCnt')}</span><b style="color:var(--ext)">${base.filter(x=>x.io==='외부').length}</b></div>`;
-  $('tCount').textContent=list.length+' '+t('cnt');
+  const team=$('fTeam').value,cat=$('fCat').value,st=$('fStat').value,q=$('fq').value.trim().toLowerCase();
+  const list=DATA.tasks.filter(x=>(!team||x.own===team)&&(!cat||x.cat===cat)&&(!st||x.eff===st)&&
+    (!q||[x.id,x.work,x.iss,x.area,x.prog,...Object.values(x.tr).map(b=>b.th),...x.weekly.map(w=>w.ko+' '+w.th)].join(' ').toLowerCase().includes(q)))
+    .sort((a,b)=>a.cat.localeCompare(b.cat)||a.ord-b.ord);
+  $('fCount').textContent=list.length+' '+t('cnt');
   if(!list.length){$('tasks').innerHTML=`<div class="empty">${t('noItems')}</div>`;return}
-  const H=[['c_id','c s1'],['c_work','s2'],['c_bef','b'],['c_aft','a'],['c_iss',''],['c_cat',''],['c_area',''],['c_own',''],['c_io','c'],['c_s','c'],['c_e','c'],['c_st','c'],['c_ap','c'],['c_late','c'],['c_prog','']];
-  const CW=[3.5,12,7,7,11,8,8,7,4.5,6,6,5,4.5,3.5,7];
-  $('tasks').innerHTML=`<table class="tt"><colgroup>${CW.map(w=>`<col style="width:${w}%">`).join('')}</colgroup><thead><tr>${H.map(([k,cl])=>`<th class="${cl}">${t(k)}</th>`).join('')}</tr></thead><tbody>`+
-   list.map(x=>{const ci=CAT_COLOR[catIdx(x.cat)];return `<tr>
-    <td class="c mono s1" data-label="${t('c_id')}">${esc(x.id)}</td>
-    <td class="s2" data-label="${t('c_work')}">${esc(tx(x,'work'))}</td>
-    <td class="pb" data-label="${t('c_bef')}">${thumb(x.before,t('before'))}</td>
-    <td class="pa" data-label="${t('c_aft')}">${thumb(x.after,t('after'))}</td>
-    <td class="iss" data-label="${t('c_iss')}">${esc(tx(x,'iss'))}</td>
-    <td class="cat" data-label="${t('c_cat')}" style="background:color-mix(in srgb,var(${ci}) 12%,var(--surface))">${esc(catName(x.cat))}</td>
-    <td class="area" data-label="${t('c_area')}">${esc(tx(x,'area'))}</td>
-    <td data-label="${t('c_own')}">${esc(teamName(x.own))}</td>
-    <td class="c" data-label="${t('c_io')}">${x.io==='외부'?`<span class="chip ext">${t('outside')}</span>`:x.io?t('inside'):''}</td>
-    <td class="c mono" data-label="${t('c_s')}">${esc(x.start)}</td><td class="c mono" data-label="${t('c_e')}">${esc(x.end)}</td>
+  $('tasks').innerHTML=`<table class="tt"><thead><tr><th>${t('c_id')}</th><th>${t('c_work')}</th><th>${t('c_own')}</th><th>${t('c_period')}</th><th class="c">${t('c_st')}</th><th>${t('c_prog')}</th><th>${t('c_last')}</th><th>${t('c_photo')}</th></tr></thead><tbody>`+
+   list.map(x=>`<tr data-open="${esc(x.id)}">
+    <td class="mono" data-label="${t('c_id')}"><i class="sw" style="display:inline-block;margin-right:6px;background:var(--c${catIdx(x.cat)+1})"></i>${esc(x.id)}</td>
+    <td class="wk1" data-label="${t('c_work')}">${esc(L(x,'work'))}${x.area?`<span class="sub">${esc(L(x,'area'))}</span>`:''}</td>
+    <td data-label="${t('c_own')}">${esc(L(x,'own'))}${x.io==='외부'?` <span class="chip ext">${t('outside')}</span>`:''}</td>
+    <td class="mono" data-label="${t('c_period')}" style="white-space:nowrap">${md(x.start)} – ${md(x.end)}</td>
     <td class="c" data-label="${t('c_st')}">${chip(x)}</td>
-    <td class="c mono" data-label="${t('c_ap')}">${pct(x.act)}</td>
-    <td class="c" data-label="${t('c_late')}">${x.eff==='late'?`<span class="chip late">${t('st_late')}</span>`:''}</td>
-    <td class="prog" data-label="${t('c_prog')}">${esc(tx(x,'prog'))}</td></tr>`}).join('')+'</tbody></table>';
-  $('tasks').querySelectorAll('[data-lb]').forEach(b=>b.onclick=()=>{const lb=$('lb');lb.innerHTML=`<img src="${esc(b.dataset.lb)}" alt=""><p style="color:#fff;font-size:12px;margin:8px 0 0;text-align:center">${t('lbClose')}</p>`;lb.hidden=false;lb.onclick=()=>lb.hidden=true});
+    <td data-label="${t('c_prog')}"><div class="pbar"><div class="bt"><i style="width:${pct(x.act)};background:${ST_COL[x.eff==='late'?'late':x.eff==='done'?'done':'doing']}"></i><b style="left:calc(${pct(x.pln)} - 1px)"></b></div><span>${pct(x.act)}</span></div></td>
+    <td data-label="${t('c_last')}">${x.last?`<div class="lastnote"><span class="mono" style="color:var(--muted)">${md(x.last.w)}</span> ${esc(wTxt(x.last))}</div>`:'<span style="color:var(--muted)">–</span>'}</td>
+    <td data-label="${t('c_photo')}"><div class="ph2">${x.before?`<img src="${esc(x.before)}" alt="${t('before')}" loading="lazy" referrerpolicy="no-referrer">`:''}${x.after?`<img src="${esc(x.after)}" alt="${t('after')}" loading="lazy" referrerpolicy="no-referrer">`:''}${!x.before&&!x.after?'<span style="color:var(--muted)">–</span>':''}</div></td>
+   </tr>`).join('')+'</tbody></table>';
 }
-function sheetTh(s){
-  if(s.th)return s.th;
-  const tk=DATA.tasks.find(x=>x.own===s.name);return (tk&&tk.th&&tk.th.own)||'';
+
+/* ---------- 상세 창 ---------- */
+function openTask(id){
+  const x=DATA.tasks.find(y=>y.id===id);if(!x)return;
+  const fact=(k,v)=>`<div><span>${t(k)}</span><b>${v}</b></div>`;
+  const sec=(k,v)=>v?`<div class="sec"><h4>${t(k)}</h4><p>${esc(v)}</p></div>`:'';
+  const tl=x.weekly.length?`<div class="sec"><h4>${t('s_weekly')}</h4><div class="tl">`+x.weekly.slice().reverse().map((w,i)=>{const o=wOrig(w);
+    return `<div class="e ${i===0?'last':''}"><div class="d">${md(w.w)}</div><p style="margin:2px 0 0;white-space:pre-line;font-size:13.5px">${esc(wTxt(w))}</p>${o?`<div class="note-orig">${t('origLabel')}: ${esc(o)}</div>`:''}</div>`}).join('')+`</div></div>`:'';
+  const ph=(u,k)=>`<figure>${u?`<img src="${esc(u)}" alt="${t(k)}" data-lb="${esc(u)}" referrerpolicy="no-referrer">`:`<div class="np">${t('noPhoto')}</div>`}<figcaption>${t(k)}</figcaption></figure>`;
+  $('drawer').innerHTML=`<div class="dh"><div><span class="mono" style="color:var(--muted)">${esc(x.id)}</span><h3>${esc(L(x,'work'))}</h3>
+     <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${chip(x)}${x.io==='외부'?`<span class="chip ext">${t('outside')}</span>`:''}</div></div>
+     <button class="x" id="dx" aria-label="${t('close')}">×</button></div>
+   <div class="db"><div class="facts">${fact('f_cat',esc(L(x,'cat')))}${fact('f_own',esc(L(x,'own')))}${fact('f_period',md(x.start)+' – '+md(x.end))}${fact('f_done',x.done?md(x.done):'–')}
+     ${fact('f_prog',pct(x.act)+' <span style="color:var(--muted);font-weight:400">/ '+t('planned')+' '+pct(x.pln)+'</span>')}${fact('f_io',x.io==='외부'?t('outside'):t('inside'))}</div>
+     ${tl}${sec('s_iss',L(x,'iss'))}${sec('s_area',L(x,'area'))}${sec('s_note',L(x,'prog'))}
+     <div class="sec"><h4>${t('s_photo')}</h4><div class="photos">${ph(x.before,'before')}${ph(x.after,'after')}</div></div></div>`;
+  $('drawer').hidden=false;$('scrim').hidden=false;
+  $('dx').onclick=closeTask;
+  $('drawer').querySelectorAll('[data-lb]').forEach(i=>i.onclick=()=>{$('lb').innerHTML=`<img src="${esc(i.dataset.lb)}" alt="">`;$('lb').hidden=false});
 }
+function closeTask(){$('drawer').hidden=true;$('scrim').hidden=true}
+$('scrim').onclick=closeTask;$('lb').onclick=()=>$('lb').hidden=true;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('lb').hidden)$('lb').hidden=true;else closeTask()}});
+document.addEventListener('click',e=>{const el=e.target.closest('[data-open]');if(el&&!e.target.closest('.drawer')){$('tip').hidden=true;openTask(el.dataset.open)}});
+
+/* ---------- 다운로드 ---------- */
 function renderDl(){
-  const btn=(attrs,cls,ko,th)=>`<button type="button" class="btn ${cls}" ${attrs} data-ko="${esc(ko)}" data-th="${esc(th)}"><span class="nm"><b>${esc(ko)}</b>${th&&th!==ko?`<i>${esc(th)}</i>`:''}</span><small>.xlsx</small></button>`;
-  $('dl').innerHTML=btn('data-all="1"','primary','전체 파일','ทั้งไฟล์')+DATA.sheets.map(s=>btn(`data-sheet="${esc(s.name)}"`,'',s.name,sheetTh(s))).join('');
+  const btn=(attrs,cls,ko,th)=>`<button type="button" class="${cls}" ${attrs} data-ko="${esc(ko)}" data-th="${esc(th)}"><span><b>${esc(lang==='th'?th||ko:ko)}</b>${th&&th!==ko?`<i>${esc(lang==='th'?ko:th)}</i>`:''}</span><small>.xlsx</small></button>`;
+  $('dl').innerHTML=btn('data-all="1"','primary','전체 파일','ทั้งไฟล์')+(DATA.sheets||[]).map(s=>btn(`data-sheet="${esc(s.name)}"`,'',s.name,s.th||'')).join('');
   $('dl').querySelectorAll('button').forEach(b=>b.onclick=()=>download(b));
 }
 function saveB64(r){
   if(!r||!r.b64)throw new Error('empty file');
   const bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
   const blob=new Blob([u],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  if(window.navigator&&navigator.msSaveOrOpenBlob){navigator.msSaveOrOpenBlob(blob,r.filename);return}
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=r.filename;a.rel='noopener';a.style.display='none';
+  if(navigator.msSaveOrOpenBlob){navigator.msSaveOrOpenBlob(blob,r.filename);return}
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=r.filename;a.style.display='none';
   document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},8000);
 }
 function dlMsg(txt,cls){const m=$('dlmsg');m.textContent=txt;m.className='dlmsg '+(cls||'');m.hidden=!txt}
 function download(b){
-  const label=b.dataset.ko+(b.dataset.th&&b.dataset.th!==b.dataset.ko?' · '+b.dataset.th:'');
-  const both=k=>I18N.ko[k]+' · '+I18N.th[k];
-  $('dl').querySelectorAll('button').forEach(x=>x.disabled=true);
-  dlMsg(label+' — '+both('making')+(lang==='th'?' [ภาษาไทย]':' [한국어]'),'wait');
-  const done=r=>{$('dl').querySelectorAll('button').forEach(x=>x.disabled=false);
-    try{saveB64(r);dlMsg(label+' — '+both('saved')+' ('+r.filename+')','ok')}catch(e){dlMsg(both('fail')+': '+e.message)}};
-  const fail=e=>{$('dl').querySelectorAll('button').forEach(x=>x.disabled=false);dlMsg(both('fail')+': '+((e&&e.message)||e))};
-  if(!IN_GAS){
-    api('api=xlsx&lang='+lang+(b.dataset.all?'':'&sheet='+encodeURIComponent(b.dataset.sheet))).then(j=>done(j.file)).catch(fail);
-    return;
-  }
-  const run=google.script.run.withSuccessHandler(done).withFailureHandler(fail);
-  b.dataset.all?run.exportAllXlsx(lang):run.exportSheetXlsx(b.dataset.sheet,lang);
+  const label=lang==='th'?(b.dataset.th||b.dataset.ko):b.dataset.ko;
+  $('dl').querySelectorAll('button').forEach(x=>x.disabled=true);dlMsg(label+' — '+t('making'),'wait');
+  const end=()=>$('dl').querySelectorAll('button').forEach(x=>x.disabled=false);
+  api('api=xlsx&lang='+lang+(b.dataset.all?'':'&sheet='+encodeURIComponent(b.dataset.sheet)))
+    .then(j=>{end();saveB64(j.file);dlMsg(label+' — '+t('saved')+' ('+j.file.filename+')','ok')})
+    .catch(e=>{end();dlMsg(t('fail')+': '+((e&&e.message)||e))});
 }
-function renderAll(keep){
-  applyI18n();$('upd').textContent=DATA.updated;
-  renderKpis();renderCats();renderTeams();renderAtt();renderFilters(keep);renderGantt();renderTabs();renderTasks();renderDl();
+
+/* ---------- 시작 ---------- */
+function renderAll(){
+  applyI18n();$('asof').textContent=DATA.today;$('upd').textContent=DATA.updated;
+  renderFilters();renderKpis();renderCats();renderTeams();renderAtt();renderReasons();renderWeekly();renderTasks();renderDl();
+  $('loading').hidden=true;setView(view);
 }
 function load(){
   $('refresh').disabled=true;
-  const ok=d=>{window.__lastLoad=Date.now();DATA=enrich(d);$('loading').hidden=true;$('refresh').disabled=false;renderAll(true)};
-  const bad=e=>{$('loading').textContent=(e&&e.message)||String(e);$('refresh').disabled=false};
-  if(window.SAMPLE_DATA)ok(window.SAMPLE_DATA);
-  else if(IN_GAS)google.script.run.withSuccessHandler(ok).withFailureHandler(bad).getDashboardData();
+  const ok=d=>{window.__last=Date.now();DATA=enrich(d);$('refresh').disabled=false;renderAll()};
+  const bad=e=>{$('loading').hidden=false;$('loading').textContent=(e&&e.message)||String(e);$('refresh').disabled=false};
+  if(window.SAMPLE_DATA)ok(JSON.parse(JSON.stringify(window.SAMPLE_DATA)));
   else api('api=data').then(j=>ok(j.data)).catch(bad);
 }
-function setLang(l){lang=l;try{localStorage.setItem('db_lang',l)}catch(e){};if(DATA)renderAll(true);else applyI18n()}
+function setLang(l){lang=l;try{localStorage.setItem('db_lang',l)}catch(e){};if(DATA)renderAll();else applyI18n()}
 $('lk').onclick=()=>setLang('ko');$('lt').onclick=()=>setLang('th');$('refresh').onclick=load;
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>setView(b.dataset.v));
+['wTeam','wShow','wOrig'].forEach(id=>$(id).onchange=renderWeekly);
 ['gTeam','gCat'].forEach(id=>$(id).onchange=renderGantt);
-['fCat','fStat'].forEach(id=>$(id).onchange=renderTasks);$('fq').oninput=renderTasks;
-document.addEventListener('keydown',e=>{if(e.key==='Escape')$('lb').hidden=true});
-let _rz;window.addEventListener('resize',()=>{clearTimeout(_rz);_rz=setTimeout(()=>{if(DATA)renderGantt()},200)});
+['fTeam','fCat','fStat'].forEach(id=>$(id).onchange=renderTasks);$('fq').oninput=renderTasks;
+let _rz;addEventListener('resize',()=>{clearTimeout(_rz);_rz=setTimeout(()=>{if(DATA&&view==='gt')renderGantt()},200)});
 applyI18n();load();
-// 5분마다 자동 새로고침 (화면이 보이는 동안만)
-setInterval(()=>{if(!document.hidden&&!$('refresh').disabled)load()},5*60*1000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&DATA&&Date.now()-(window.__lastLoad||0)>60000)load()});
+setInterval(()=>{if(!document.hidden&&!$('refresh').disabled&&$('drawer').hidden)load()},5*60*1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&DATA&&Date.now()-(window.__last||0)>60000&&$('drawer').hidden)load()});
 </script>
 </body>
 </html>
