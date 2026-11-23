@@ -185,8 +185,10 @@ main{min-width:0}
 .wch .sp{flex:1}
 .wch .sum{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap}
 .wch .sum .up{color:var(--ok-t)}.wch .sum .dn{color:var(--bad-t)}.wch .sum .mu{color:var(--muted);font-weight:500}
-.wtw{overflow:auto;max-height:calc(100vh - 210px)}
-table.wt{border-collapse:separate;border-spacing:0;font-size:13px;width:100%;min-width:980px}
+.wtw{overflow:visible}
+@media(max-width:900px){.wtw{overflow-x:auto}}
+table.wt{border-collapse:separate;border-spacing:0;font-size:13px;width:100%}
+@media(max-width:900px){table.wt{min-width:900px}}
 .wt th{position:sticky;top:0;z-index:3;background:#f6f8fb;color:#64748b;font-weight:500;font-size:12px;text-align:left;padding:8px 12px;white-space:nowrap;border-bottom:1px solid #e2e8f0}
 .wt th.r,.wt td.r{text-align:right}
 .wt th.c,.wt td.c{text-align:center}
@@ -199,23 +201,23 @@ table.wt{border-collapse:separate;border-spacing:0;font-size:13px;width:100%;min
 .wt .stick2{position:sticky;left:64px;z-index:2}
 .wt th.stick1,.wt th.stick2{z-index:4}
 .wt td.id{width:64px;min-width:64px;white-space:nowrap;color:#3b6fb6;font-size:12.5px;font-variant-numeric:tabular-nums;padding-top:11px}
-.wt td.wname{min-width:230px;max-width:300px}
+.wt td.wname{min-width:170px;max-width:260px}
 .wt td.wname .nm{display:flex;gap:8px;align-items:flex-start;font-weight:700;color:var(--ink)}
 .wt td.wname .nm i{width:10px;height:10px;border-radius:2px;flex:none;margin-top:5px}
 .wt td.wname .sub{display:block;font-weight:400;color:#8a94a3;font-size:12px;margin:2px 0 0 18px}
-.wt td.own{white-space:nowrap;color:var(--ink2)}
+.wt td.own{white-space:nowrap;width:1%;color:var(--ink2)}
 .wt td.own .ex{display:block;color:#c2410c;font-size:11.5px}
 .st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;white-space:nowrap}
 .st i{width:8px;height:8px;border-radius:2px}
 .st.done{color:var(--ok-t)}.st.doing{color:var(--run-t)}.st.late{color:var(--bad-t)}.st.plan{color:#64748b}.st.hold{color:var(--hold-t)}
-.wt td.per{font-size:12.5px;white-space:nowrap;color:var(--ink2);font-variant-numeric:tabular-nums}
+.wt td.per{font-size:12.5px;white-space:nowrap;width:1%;color:var(--ink2);font-variant-numeric:tabular-nums}
 .wt td.per.late{color:var(--bad-t);font-weight:700}
-.wt td.note{white-space:pre-line;min-width:250px;line-height:1.5;color:#334155}
+.wt td.note{white-space:pre-line;min-width:160px;line-height:1.5;color:#334155}
 .wt td.note.cur{background:#f7faff;color:var(--ink)}
 .wt tr.task:hover td.note.cur{background:#eef4fd}
 .wt td.note .o{display:block;color:#94a3b8;font-size:12px;margin-top:3px}
 .wt td.note.nil{color:#cbd5e1}
-.wt td.chg{white-space:nowrap;font-weight:700;font-size:12.5px}
+.wt td.chg{white-space:nowrap;width:1%;font-weight:700;font-size:12.5px}
 .chg.k-chg,.chg.k-new{color:var(--ok-t)}.chg.k-same{color:#94a3b8;font-weight:500}.chg.k-none{color:var(--bad-t)}.chg.k-fin{color:var(--ok-t);font-weight:500}
 .wt tr.grp td{background:var(--surface);padding:14px 12px 6px;border-bottom:1px solid #e2e8f0;font-size:13px;font-weight:700;color:#1e3a5f}
 .wt tr.grp td em{font-style:normal;font-weight:500;color:#94a3b8;font-size:12px;margin-left:6px}
@@ -224,6 +226,8 @@ table.wt{border-collapse:separate;border-spacing:0;font-size:13px;width:100%;min
 .wt tfoot td{position:sticky;bottom:0;background:#f1f4f8;font-weight:700;border-top:1px solid #e2e8f0;border-bottom:0;padding:10px 12px;z-index:2}
 .wnote{font-size:12px;color:#64748b;margin-top:10px}
 @media(max-width:760px){.wt .stick2{position:static}.wt td.wname{min-width:180px}}
+
+@media(max-width:1250px) and (min-width:901px){.wt th{white-space:normal}.wt td.own,.wt td.per{white-space:normal}.wt td.wname{min-width:130px}.wt td.note{min-width:120px}.wt td,.wt th{padding:8px 8px}.wt .stick2{left:56px}.wt td.id{width:56px;min-width:56px}}
 
 /* 진행률 기준 */
 details.std{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:14px}
@@ -342,14 +346,15 @@ table.rt{width:100%;border-collapse:collapse;font-size:12.5px}
 .etabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 13px;font-size:13px;font-weight:500;color:var(--ink2)}
 .etabs button[aria-pressed=true]{background:#0f1d33;border-color:#0f1d33;color:#fff}
 .etabs button small{opacity:.7;margin-left:4px}
-.et{width:100%;border-collapse:collapse;font-size:13px;min-width:980px}
+.et{width:100%;border-collapse:collapse;font-size:13px}
+@media(max-width:900px){.et{min-width:900px}}
 .et th{background:#f6f8fb;color:#64748b;font-weight:500;font-size:12px;text-align:left;padding:8px 10px;border-bottom:1px solid #e2e8f0;white-space:nowrap;position:sticky;top:0;z-index:1}
 .et td{padding:8px 10px;border-bottom:1px solid #eef1f5;vertical-align:top}
 .et tr.dirty td{background:#fffbeb}
 .et td.id{color:#3b6fb6;white-space:nowrap;font-size:12.5px}
-.et td.wn{min-width:220px;max-width:300px;font-weight:700}
+.et td.wn{min-width:170px;max-width:260px;font-weight:700}
 .et td.wn .sub{display:block;font-weight:400;color:#8a94a3;font-size:12px}
-.et textarea{min-height:58px;resize:vertical;min-width:240px}
+.et textarea{min-height:58px;resize:vertical;min-width:180px}
 .et .prev{font-size:12px;color:#94a3b8;white-space:pre-line;max-width:260px}
 .esave{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 0 2px;display:flex;align-items:center;gap:10px;margin-top:8px}
 .modal{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:90;display:grid;place-items:center;padding:16px}
@@ -576,7 +581,7 @@ ko:{title:'안전·전기 개선 대시보드',cnt2:'작업 수',asof:'기준일
  dlNote:'시트를 누르면 그 시트만 .xlsx 로 받습니다. 태국어 화면에서 받으면 태국어로 번역된 파일이 됩니다.',all:'전체 파일',
  making:'엑셀 만드는 중…',saved:'내려받았습니다',fail:'실패',origLabel:'원문',
  r_quote:'견적 대기',r_supp:'업체 방문·확인 대기',r_appr:'승인 대기',r_mat:'자재·구매 대기',r_plan:'계획 일정 대기',r_lee:'Mr.Lee 확인 대기',r_hard:'진행 어려움·불가',r_prog:'진척 보고',r_other:'기타',r_none:'주간 기록 없음',
- openOnly:'미완료',allN:'전체 {a}',rpFiltered:'전체 {a}건 중 이 기간에 걸친 {b}건',v_ed:'부서별 기록',edDesc:'담당팀을 고르고 상태·진행률·이번 주 기록을 입력한 뒤 한 번에 저장 → [일정] 시트에 바로 기록',showDone:'완료 작업도 보기',newWeek:'새 주간 기록',recordTitle:'기록하기 → 구글시트 [일정]에 저장',stepHint:'0 미착수 · 25 준비 · 50 착수 · 75 마무리 · 100 완료(개선 후 사진)',notePh:'이번 주 진행 내용 (한국어 또는 태국어)',noteHint:'태국어로 써도 되고 한국어로 써도 됩니다. 저장 후 자동 번역됩니다.',saveSheet:'시트에 저장',saving:'저장 중…',savedSheet:'시트에 저장했습니다',noChange:'바뀐 내용이 없습니다',saveN:'변경 {n}건 시트에 저장',pinTitle:'기록 저장',pinDesc:'시트에 저장하려면 입력 비밀번호와 작성자 이름이 필요합니다. (이 PC에 기억됨)',pinLbl:'입력 비밀번호',userLbl:'작성자',cancel:'취소',saveBtn:'저장',pinWrong:'비밀번호가 맞지 않습니다.',cancelled:'취소됨',saveApiErr:'서버 응답 오류 — 서버 코드를 새 버전으로 배포했는지 확인하세요.',switchWarn:'저장하지 않은 주간 기록이 있습니다. 주차를 바꾸면 사라집니다. 계속할까요?',period:'분석 기간',q_all:'전체',q_month:'이번 달',q_last:'지난 달',q_p4:'최근 4주',q_p8:'최근 8주',q_n8:'앞으로 8주',q_pn:'최근 4주+앞 8주',pTasks:'기간 내 작업',pWeeks:'주간 기록',v_rp:'주간보고 (1장)',eyebrow:'STC · SAFETY & ELECTRICAL IMPROVEMENT',lead:'작업자 제기 안전·전기 이슈 개선 과제 · 구글시트 실시간 연동',rpEyebrow:'안전·전기 개선 주간보고',rpTitle:'안전·전기 개선 주간보고',print:'인쇄 (A4)',rp1:'분야별 진행 현황',rp2:'지연 · 마감 임박 Worst',rp4:'주간 기록 변화',rp5:'다음 주 확인 포인트',gap:'차이',sum:'합계',soon7:'7일 내 마감',rank:'순위',rankSfx:'위',c_e:'계획 종료',remain:'지연/잔여',dLate:'일 지남',dLeft:'일 남음',openTasks:'미완료',most:'최다',reason:'사유',share:'비중',pt_none:'기록 없음',pt_due:'2주 내 마감',pt_hard:'보류 검토',pt_start:'2주 내 착수',pt_bad:'날짜 확인',rpNote:'변화 = 기준 주 기록을 바로 앞 기록과 비교 · 대기 사유 = 최근 주간 기록의 키워드로 분류 · 행을 누르면 상세 내용',dateErr:'날짜 확인',dateErrTip:'계획 종료일이 시작일보다 빠릅니다. [계획] 시트의 날짜를 고쳐 주세요.',baseWeek:'기준',weekRange:'최근 4주',wNote:'변화 = 기준 주 기록을 바로 앞 기록과 비교 (▲ 변경 · ＋ 신규 · – 변화 없음 · ● 기록 없음). 행을 누르면 상세 내용과 사진이 열립니다.',c_chg:'변화',wline:'주간 기록일',sub:'STC · 설비보전팀',noWeek:'주간 기록 열이 없습니다. [일정] 시트 머리글에 날짜(예: 28/11/2026)를 넣은 열을 추가하세요.'},
+ openOnly:'미완료',rpScope:'집계는 전체 작업 기준 · 기간은 주간 기록·간트·작업 목록에 적용',allN:'전체 {a}',rpFiltered:'전체 {a}건 중 이 기간에 걸친 {b}건',v_ed:'부서별 기록',edDesc:'담당팀을 고르고 상태·진행률·이번 주 기록을 입력한 뒤 한 번에 저장 → [일정] 시트에 바로 기록',showDone:'완료 작업도 보기',newWeek:'새 주간 기록',recordTitle:'기록하기 → 구글시트 [일정]에 저장',stepHint:'0 미착수 · 25 준비 · 50 착수 · 75 마무리 · 100 완료(개선 후 사진)',notePh:'이번 주 진행 내용 (한국어 또는 태국어)',noteHint:'태국어로 써도 되고 한국어로 써도 됩니다. 저장 후 자동 번역됩니다.',saveSheet:'시트에 저장',saving:'저장 중…',savedSheet:'시트에 저장했습니다',noChange:'바뀐 내용이 없습니다',saveN:'변경 {n}건 시트에 저장',pinTitle:'기록 저장',pinDesc:'시트에 저장하려면 입력 비밀번호와 작성자 이름이 필요합니다. (이 PC에 기억됨)',pinLbl:'입력 비밀번호',userLbl:'작성자',cancel:'취소',saveBtn:'저장',pinWrong:'비밀번호가 맞지 않습니다.',cancelled:'취소됨',saveApiErr:'서버 응답 오류 — 서버 코드를 새 버전으로 배포했는지 확인하세요.',switchWarn:'저장하지 않은 주간 기록이 있습니다. 주차를 바꾸면 사라집니다. 계속할까요?',period:'분석 기간',q_all:'전체',q_month:'이번 달',q_last:'지난 달',q_p4:'최근 4주',q_p8:'최근 8주',q_n8:'앞으로 8주',q_pn:'최근 4주+앞 8주',pTasks:'간트·목록 표시 작업',pWeeks:'주간 기록',v_rp:'주간보고 (1장)',eyebrow:'STC · SAFETY & ELECTRICAL IMPROVEMENT',lead:'작업자 제기 안전·전기 이슈 개선 과제 · 구글시트 실시간 연동',rpEyebrow:'안전·전기 개선 주간보고',rpTitle:'안전·전기 개선 주간보고',print:'인쇄 (A4)',rp1:'분야별 진행 현황',rp2:'지연 · 마감 임박 Worst',rp4:'주간 기록 변화',rp5:'다음 주 확인 포인트',gap:'차이',sum:'합계',soon7:'7일 내 마감',rank:'순위',rankSfx:'위',c_e:'계획 종료',remain:'지연/잔여',dLate:'일 지남',dLeft:'일 남음',openTasks:'미완료',most:'최다',reason:'사유',share:'비중',pt_none:'기록 없음',pt_due:'2주 내 마감',pt_hard:'보류 검토',pt_start:'2주 내 착수',pt_bad:'날짜 확인',rpNote:'변화 = 기준 주 기록을 바로 앞 기록과 비교 · 대기 사유 = 최근 주간 기록의 키워드로 분류 · 행을 누르면 상세 내용',dateErr:'날짜 확인',dateErrTip:'계획 종료일이 시작일보다 빠릅니다. [계획] 시트의 날짜를 고쳐 주세요.',baseWeek:'기준',weekRange:'최근 4주',wNote:'변화 = 기준 주 기록을 바로 앞 기록과 비교 (▲ 변경 · ＋ 신규 · – 변화 없음 · ● 기록 없음). 행을 누르면 상세 내용과 사진이 열립니다.',c_chg:'변화',wline:'주간 기록일',sub:'STC · 설비보전팀',noWeek:'주간 기록 열이 없습니다. [일정] 시트 머리글에 날짜(예: 28/11/2026)를 넣은 열을 추가하세요.'},
 th:{title:'แดชบอร์ดปรับปรุงความปลอดภัยและระบบไฟฟ้า',asof:'ข้อมูล ณ',updated:'อัปเดต',refresh:'รีเฟรช',loading:'กำลังโหลด…',
  v_ov:'ภาพรวม',v_wk:'ความคืบหน้ารายสัปดาห์',v_gt:'แผนงาน',v_ls:'รายการงาน',v_dl:'ดาวน์โหลด Excel',
  total:'งานทั้งหมด',done:'เสร็จแล้ว',doing:'กำลังทำ',late:'ล่าช้า',hold:'ระงับ',plan:'วางแผน',
@@ -595,7 +600,7 @@ th:{title:'แดชบอร์ดปรับปรุงความปลอ
  dlNote:'กดที่ชีตเพื่อดาวน์โหลดเฉพาะชีตนั้น (.xlsx) ถ้าดาวน์โหลดจากหน้าภาษาไทย ไฟล์จะถูกแปลเป็นภาษาไทย',all:'ทั้งไฟล์',
  making:'กำลังสร้างไฟล์ Excel…',saved:'ดาวน์โหลดแล้ว',fail:'ไม่สำเร็จ',origLabel:'ต้นฉบับ',
  r_quote:'รอใบเสนอราคา',r_supp:'รอซัพพลายเออร์เข้าตรวจ',r_appr:'รออนุมัติ',r_mat:'รออุปกรณ์·การจัดซื้อ',r_plan:'รอตามแผน',r_lee:'รอ Mr.Lee ตรวจสอบ',r_hard:'ทำได้ยาก·ทำไม่ได้',r_prog:'มีความคืบหน้า',r_other:'อื่นๆ',r_none:'ไม่มีบันทึกรายสัปดาห์',
- openOnly:'งานที่ยังไม่เสร็จ',allN:'ทั้งหมด {a}',rpFiltered:'{b} จากทั้งหมด {a} งานที่อยู่ในช่วงนี้',v_ed:'บันทึกตามแผนก',edDesc:'เลือกทีม แล้วกรอกสถานะ·ความคืบหน้า·บันทึกสัปดาห์นี้ จากนั้นกดบันทึกครั้งเดียว → บันทึกลงชีต [일정] ทันที',showDone:'แสดงงานที่เสร็จแล้วด้วย',newWeek:'บันทึกสัปดาห์ใหม่',recordTitle:'บันทึก → บันทึกลง Google Sheet [일정]',stepHint:'0 ยังไม่เริ่ม · 25 เตรียมการ · 50 เริ่มดำเนินการ · 75 ใกล้เสร็จ · 100 เสร็จ (มีรูปหลังปรับปรุง)',notePh:'ความคืบหน้าสัปดาห์นี้ (ภาษาไทยหรือเกาหลี)',noteHint:'เขียนเป็นภาษาไทยได้ ระบบจะแปลอัตโนมัติหลังบันทึก',saveSheet:'บันทึกลงชีต',saving:'กำลังบันทึก…',savedSheet:'บันทึกลงชีตแล้ว',noChange:'ไม่มีการเปลี่ยนแปลง',saveN:'บันทึก {n} รายการลงชีต',pinTitle:'บันทึกข้อมูล',pinDesc:'ต้องใส่รหัสผ่านและชื่อผู้บันทึกเพื่อบันทึกลงชีต (จำไว้ในเครื่องนี้)',pinLbl:'รหัสผ่าน',userLbl:'ผู้บันทึก',cancel:'ยกเลิก',saveBtn:'บันทึก',pinWrong:'รหัสผ่านไม่ถูกต้อง',cancelled:'ยกเลิกแล้ว',saveApiErr:'เซิร์ฟเวอร์ตอบกลับผิดพลาด',switchWarn:'มีบันทึกที่ยังไม่ได้บันทึก ถ้าเปลี่ยนสัปดาห์จะหายไป ต้องการดำเนินการต่อหรือไม่?',period:'ช่วงเวลา',q_all:'ทั้งหมด',q_month:'เดือนนี้',q_last:'เดือนที่แล้ว',q_p4:'4 สัปดาห์ล่าสุด',q_p8:'8 สัปดาห์ล่าสุด',q_n8:'8 สัปดาห์ข้างหน้า',q_pn:'ย้อน 4 + หน้า 8 สัปดาห์',pTasks:'งานในช่วง',pWeeks:'บันทึกรายสัปดาห์',v_rp:'รายงานประจำสัปดาห์',eyebrow:'STC · SAFETY & ELECTRICAL IMPROVEMENT',lead:'งานปรับปรุงความปลอดภัยและไฟฟ้าจากข้อเสนอของพนักงาน · เชื่อมกับ Google Sheet',rpEyebrow:'รายงานประจำสัปดาห์',rpTitle:'รายงานปรับปรุงความปลอดภัยและไฟฟ้า',print:'พิมพ์ (A4)',rp1:'ความคืบหน้าตามหมวด',rp2:'งานล่าช้า · ใกล้ครบกำหนด',rp4:'การเปลี่ยนแปลงของบันทึกรายสัปดาห์',rp5:'ประเด็นที่ต้องติดตามสัปดาห์หน้า',gap:'ส่วนต่าง',sum:'รวม',soon7:'ครบกำหนดใน 7 วัน',rank:'ลำดับ',rankSfx:'',c_e:'สิ้นสุดตามแผน',remain:'ล่าช้า/คงเหลือ',dLate:' วันเลยกำหนด',dLeft:' วันคงเหลือ',openTasks:'ยังไม่เสร็จ',most:'มากที่สุด',reason:'สาเหตุ',share:'สัดส่วน',pt_none:'ไม่มีบันทึก',pt_due:'ครบกำหนดใน 2 สัปดาห์',pt_hard:'พิจารณาระงับ',pt_start:'เริ่มใน 2 สัปดาห์',pt_bad:'ตรวจสอบวันที่',rpNote:'การเปลี่ยนแปลง = เทียบบันทึกสัปดาห์ที่เลือกกับครั้งก่อน · สาเหตุที่รอ = จัดกลุ่มจากคำในบันทึกล่าสุด · กดที่แถวเพื่อดูรายละเอียด',dateErr:'ตรวจสอบวันที่',dateErrTip:'วันสิ้นสุดตามแผนอยู่ก่อนวันเริ่ม กรุณาแก้ไขวันที่ในชีตแผนงาน',baseWeek:'ที่เลือก',weekRange:'4 สัปดาห์ล่าสุด',wNote:'การเปลี่ยนแปลง = เทียบบันทึกสัปดาห์ที่เลือกกับครั้งก่อน (▲ เปลี่ยน · ＋ ใหม่ · – ไม่เปลี่ยน · ● ไม่มีบันทึก) กดที่แถวเพื่อดูรายละเอียดและรูป',c_chg:'การเปลี่ยนแปลง',wline:'วันบันทึกรายสัปดาห์',sub:'STC · ทีมซ่อมบำรุง',noWeek:'ยังไม่มีคอลัมน์บันทึกรายสัปดาห์'}
+ openOnly:'งานที่ยังไม่เสร็จ',rpScope:'สรุปจากงานทั้งหมด · ช่วงเวลาใช้กับบันทึกรายสัปดาห์·แผนงาน·รายการงาน',allN:'ทั้งหมด {a}',rpFiltered:'{b} จากทั้งหมด {a} งานที่อยู่ในช่วงนี้',v_ed:'บันทึกตามแผนก',edDesc:'เลือกทีม แล้วกรอกสถานะ·ความคืบหน้า·บันทึกสัปดาห์นี้ จากนั้นกดบันทึกครั้งเดียว → บันทึกลงชีต [일정] ทันที',showDone:'แสดงงานที่เสร็จแล้วด้วย',newWeek:'บันทึกสัปดาห์ใหม่',recordTitle:'บันทึก → บันทึกลง Google Sheet [일정]',stepHint:'0 ยังไม่เริ่ม · 25 เตรียมการ · 50 เริ่มดำเนินการ · 75 ใกล้เสร็จ · 100 เสร็จ (มีรูปหลังปรับปรุง)',notePh:'ความคืบหน้าสัปดาห์นี้ (ภาษาไทยหรือเกาหลี)',noteHint:'เขียนเป็นภาษาไทยได้ ระบบจะแปลอัตโนมัติหลังบันทึก',saveSheet:'บันทึกลงชีต',saving:'กำลังบันทึก…',savedSheet:'บันทึกลงชีตแล้ว',noChange:'ไม่มีการเปลี่ยนแปลง',saveN:'บันทึก {n} รายการลงชีต',pinTitle:'บันทึกข้อมูล',pinDesc:'ต้องใส่รหัสผ่านและชื่อผู้บันทึกเพื่อบันทึกลงชีต (จำไว้ในเครื่องนี้)',pinLbl:'รหัสผ่าน',userLbl:'ผู้บันทึก',cancel:'ยกเลิก',saveBtn:'บันทึก',pinWrong:'รหัสผ่านไม่ถูกต้อง',cancelled:'ยกเลิกแล้ว',saveApiErr:'เซิร์ฟเวอร์ตอบกลับผิดพลาด',switchWarn:'มีบันทึกที่ยังไม่ได้บันทึก ถ้าเปลี่ยนสัปดาห์จะหายไป ต้องการดำเนินการต่อหรือไม่?',period:'ช่วงเวลา',q_all:'ทั้งหมด',q_month:'เดือนนี้',q_last:'เดือนที่แล้ว',q_p4:'4 สัปดาห์ล่าสุด',q_p8:'8 สัปดาห์ล่าสุด',q_n8:'8 สัปดาห์ข้างหน้า',q_pn:'ย้อน 4 + หน้า 8 สัปดาห์',pTasks:'งานในช่วง',pWeeks:'บันทึกรายสัปดาห์',v_rp:'รายงานประจำสัปดาห์',eyebrow:'STC · SAFETY & ELECTRICAL IMPROVEMENT',lead:'งานปรับปรุงความปลอดภัยและไฟฟ้าจากข้อเสนอของพนักงาน · เชื่อมกับ Google Sheet',rpEyebrow:'รายงานประจำสัปดาห์',rpTitle:'รายงานปรับปรุงความปลอดภัยและไฟฟ้า',print:'พิมพ์ (A4)',rp1:'ความคืบหน้าตามหมวด',rp2:'งานล่าช้า · ใกล้ครบกำหนด',rp4:'การเปลี่ยนแปลงของบันทึกรายสัปดาห์',rp5:'ประเด็นที่ต้องติดตามสัปดาห์หน้า',gap:'ส่วนต่าง',sum:'รวม',soon7:'ครบกำหนดใน 7 วัน',rank:'ลำดับ',rankSfx:'',c_e:'สิ้นสุดตามแผน',remain:'ล่าช้า/คงเหลือ',dLate:' วันเลยกำหนด',dLeft:' วันคงเหลือ',openTasks:'ยังไม่เสร็จ',most:'มากที่สุด',reason:'สาเหตุ',share:'สัดส่วน',pt_none:'ไม่มีบันทึก',pt_due:'ครบกำหนดใน 2 สัปดาห์',pt_hard:'พิจารณาระงับ',pt_start:'เริ่มใน 2 สัปดาห์',pt_bad:'ตรวจสอบวันที่',rpNote:'การเปลี่ยนแปลง = เทียบบันทึกสัปดาห์ที่เลือกกับครั้งก่อน · สาเหตุที่รอ = จัดกลุ่มจากคำในบันทึกล่าสุด · กดที่แถวเพื่อดูรายละเอียด',dateErr:'ตรวจสอบวันที่',dateErrTip:'วันสิ้นสุดตามแผนอยู่ก่อนวันเริ่ม กรุณาแก้ไขวันที่ในชีตแผนงาน',baseWeek:'ที่เลือก',weekRange:'4 สัปดาห์ล่าสุด',wNote:'การเปลี่ยนแปลง = เทียบบันทึกสัปดาห์ที่เลือกกับครั้งก่อน (▲ เปลี่ยน · ＋ ใหม่ · – ไม่เปลี่ยน · ● ไม่มีบันทึก) กดที่แถวเพื่อดูรายละเอียดและรูป',c_chg:'การเปลี่ยนแปลง',wline:'วันบันทึกรายสัปดาห์',sub:'STC · ทีมซ่อมบำรุง',noWeek:'ยังไม่มีคอลัมน์บันทึกรายสัปดาห์'}
 };
 const ST=['done','doing','late','plan','hold'];
 const ST_KEY={'계획':'plan','진행':'doing','완료':'done','보류':'hold'};
@@ -683,7 +688,7 @@ function renderPeriod(){
   $('pQuick').innerHTML=QUICK.map(q=>`<button data-q="${q}" aria-pressed="${RANGE.q===q}">${t('q_'+q)}</button>`).join('');
   $('pQuick').querySelectorAll('button').forEach(b=>b.onclick=()=>{const r=quickRange(b.dataset.q);setRange(r.from,r.to,b.dataset.q)});
   $('pFrom').value=RANGE.from||'';$('pTo').value=RANGE.to||'';
-  if(ALL)$('pSum').innerHTML=`${t('pTasks')} <b>${DATA.tasks.length}</b> / ${ALL.tasks.length}${t('cnt')} · ${t('pWeeks')} <b>${DATA.weeks.length}</b>`;
+  if(ALL)$('pSum').innerHTML=`${t('pTasks')} <b>${DATA.ptasks.length}</b> / ${ALL.tasks.length}${t('cnt')} · ${t('pWeeks')} <b>${DATA.weeks.length}</b>`;
 }
 function setRange(from,to,q){
   if(from&&to&&from>to){const x=from;from=to;to=x}
@@ -693,7 +698,8 @@ function setRange(from,to,q){
 function applyRange(){
   if(RANGE.q&&RANGE.q!=='custom'&&RANGE.q!=='all'){const r=quickRange(RANGE.q);RANGE.from=r.from;RANGE.to=r.to}   // 빠른 버튼은 오늘 기준으로 다시 계산
   const f=RANGE.from?pd(RANGE.from):-Infinity,tt=RANGE.to?pd(RANGE.to):Infinity;
-  DATA.tasks=ALL.tasks.filter(x=>{const s=pd(x.start),e=pd(x.end);if(isNaN(s)&&isNaN(e))return true;const a=Math.min(isNaN(s)?e:s,isNaN(e)?s:e),b=Math.max(isNaN(s)?e:s,isNaN(e)?s:e);return b>=f&&a<=tt});
+  DATA.tasks=ALL.tasks;
+  DATA.ptasks=ALL.tasks.filter(x=>{const s=pd(x.start),e=pd(x.end);if(isNaN(s)&&isNaN(e))return true;const a=Math.min(isNaN(s)?e:s,isNaN(e)?s:e),b=Math.max(isNaN(s)?e:s,isNaN(e)?s:e);return b>=f&&a<=tt});
   DATA.weeks=ALL.weeks.filter(w=>{const v=pd(w.date);return v>=f&&v<=tt});
   if(!DATA.weeks.some(w=>w.date===curWeek))curWeek=DATA.weeks.length?DATA.weeks[DATA.weeks.length-1].date:null;
 }
@@ -785,7 +791,7 @@ function renderWeekly(){
   $('wPills').innerHTML=DATA.weeks.map(w=>{const n=DATA.tasks.filter(x=>x.wmap[w.date]).length;return `<button data-w="${w.date}" aria-pressed="${w.date===curWeek}">${md(w.date)}<small>${n}</small></button>`}).join('');
   $('wPills').querySelectorAll('button').forEach(b=>b.onclick=()=>{curWeek=b.dataset.w;renderWeekly();renderReport()});
   const team=$('wTeam').value,show=$('wShow').value,orig=$('wOrig').checked;
-  const base=DATA.tasks.filter(x=>!team||x.own===team);
+  const base=(DATA.ptasks||DATA.tasks).filter(x=>!team||x.own===team);
   const st=base.map(x=>({x,...weekState(x,curWeek)}));
   const c=k=>st.filter(s=>s.k===k).length;
   $('wSum').innerHTML='';
@@ -822,7 +828,7 @@ function renderWeekly(){
 /* ---------- 간트 ---------- */
 function renderGantt(){
   const team=$('gTeam').value,cat=$('gCat').value;
-  const list=DATA.tasks.filter(x=>(!team||x.own===team)&&(!cat||x.cat===cat)&&!isNaN(pd(x.start))&&!isNaN(pd(x.end))).sort((a,b)=>a.cat.localeCompare(b.cat)||a.ord-b.ord);
+  const list=(DATA.ptasks||DATA.tasks).filter(x=>(!team||x.own===team)&&(!cat||x.cat===cat)&&!isNaN(pd(x.start))&&!isNaN(pd(x.end))).sort((a,b)=>a.cat.localeCompare(b.cat)||a.ord-b.ord);
   $('gLegend').innerHTML=ST.map(k=>`<span><i style="background:${ST_COL[k]}"></i>${t('st_'+k)}</span>`).join('')+
     `<span><i style="background:repeating-linear-gradient(135deg,#94a3b8 0 2px,transparent 2px 4px)"></i>${t('outside')}</span><span><i style="background:var(--bad);width:2px"></i>${md(DATA.today)}</span><span><i style="width:0;border-left:1px dashed #94a3b8;border-radius:0"></i>${t('wline')}</span>`;
   if(!list.length){$('gantt').innerHTML=`<div class="empty">${t('noItems')}</div>`;return}
@@ -850,7 +856,7 @@ function renderGantt(){
 /* ---------- 작업 목록 ---------- */
 function renderTasks(){
   const team=$('fTeam').value,cat=$('fCat').value,st=$('fStat').value,q=$('fq').value.trim().toLowerCase();
-  const list=DATA.tasks.filter(x=>(!team||x.own===team)&&(!cat||x.cat===cat)&&(!st||x.eff===st)&&
+  const list=(DATA.ptasks||DATA.tasks).filter(x=>(!team||x.own===team)&&(!cat||x.cat===cat)&&(!st||x.eff===st)&&
     (!q||[x.id,x.work,x.iss,x.area,x.prog,...Object.values(x.tr).map(b=>b.th),...x.weekly.map(w=>w.ko+' '+w.th)].join(' ').toLowerCase().includes(q)))
     .sort((a,b)=>a.cat.localeCompare(b.cat)||a.ord-b.ord);
   $('fCount').textContent=list.length+' '+t('cnt');
@@ -886,7 +892,7 @@ function renderReport(){
   const recCur=cw?T.filter(x=>x.wmap[cw]).length:0,recPrev=pw?T.filter(x=>x.wmap[pw]).length:0;
   const sgn=v=>v>0?'+'+v:''+v;
   const head=`<div class="rph"><div class="t"><small>STC · ${t('rpEyebrow')}</small><h2>${t('rpTitle')} · <span>${cw?wl(cw)+' ('+md(cw)+')':''}</span></h2>
-    <div class="rper">${t('period')}: <b>${RANGE.from||RANGE.to?(RANGE.from?md(RANGE.from):'…')+' – '+(RANGE.to?md(RANGE.to):'…'):t('q_all')}</b>${ALL&&DATA.tasks.length!==ALL.tasks.length?` · ${t('rpFiltered').replace('{a}',ALL.tasks.length).replace('{b}',DATA.tasks.length)}`:''}</div></div><span class="sp"></span>
+    <div class="rper">${t('period')}: <b>${RANGE.from||RANGE.to?(RANGE.from?md(RANGE.from):'…')+' – '+(RANGE.to?md(RANGE.to):'…'):t('q_all')}</b>${RANGE.from||RANGE.to?` · ${t('rpScope')}`:''}</div></div><span class="sp"></span>
     ${DATA.weeks.length?`<select id="rpWeek">${DATA.weeks.map(w=>`<option value="${w.date}" ${w.date===cw?'selected':''}>${wl(w.date)} · ${md(w.date)}</option>`).join('')}</select>`:''}
     <button class="pbtn" id="rpPrint">🖨 ${t('print')}</button></div>`;
   const kpi=`<div class="rkpi">
