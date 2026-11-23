@@ -328,6 +328,7 @@ table.rt{width:100%;border-collapse:collapse;font-size:12.5px}
 .sg button[aria-pressed=true]{background:#0f1d33;color:#fff}
 .ef textarea,.ef input[type=date],.ef select,.et textarea,.et select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:13px;background:#fff;width:100%;font-family:inherit}
 .ef textarea{min-height:64px;resize:vertical}
+.eorig{font-size:11.5px;color:#94a3b8;margin-top:4px;white-space:pre-line;max-width:420px}
 .ef .hint{grid-column:2;font-size:11.5px;color:var(--muted);margin-top:-4px}
 .ebtn{border:0;background:#16a34a;color:#fff;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700}
 .ebtn:disabled{opacity:.5;cursor:default}
@@ -950,6 +951,8 @@ function renderReport(){
 /* ---------- 시트에 기록 ---------- */
 const STEPS=[0,25,50,75,100],STS=['계획','진행','완료','보류'],STK={'계획':'plan','진행':'doing','완료':'done','보류':'hold'};
 function origOf(w){return w?(w.src==='ko'?w.ko:w.th):''}
+function editTxt(w){return w?wTxt(w):''}
+function origLine(w){const o=w?wOrig(w):'';return o?`<div class="eorig">${t('origLabel')}: ${esc(o)}</div>`:''}
 function editWeekOptions(){
   const ws=(ALL||DATA).weeks.map(w=>w.date),td=DATA.today;
   const last=ws[ws.length-1];
@@ -983,7 +986,7 @@ function editForm(x){
    <div class="ef"><span>${t('progress')}</span><div class="sg" id="eAp">${STEPS.map(v=>`<button type="button" data-v="${v}" aria-pressed="${Math.round((x.status==='완료'?1:x.ap||0)*100)===v}">${v}%</button>`).join('')}</div><div class="hint">${t('stepHint')}</div></div>
    <div class="ef"><span>${t('f_done')}</span><input type="date" id="eDone" value="${esc(x.done||'')}"></div>
    <div class="ef"><span>${t('s_weekly')}</span><select id="eWk">${W.opts.map(([v,l])=>`<option value="${v}" ${v===W.def?'selected':''}>${esc(l)}</option>`).join('')}</select></div>
-   <div class="ef"><span></span><textarea id="eNote" placeholder="${t('notePh')}">${esc(origOf(cur))}</textarea><div class="hint">${t('noteHint')}</div></div>
+   <div class="ef"><span></span><div><textarea id="eNote" placeholder="${t('notePh')}">${esc(editTxt(cur))}</textarea><div id="eOrig">${origLine(cur)}</div></div><div class="hint">${t('noteHint')}</div></div>
    <div class="ef"><span>${t('s_note')}</span><textarea id="eProg">${esc(x.prog||'')}</textarea></div>
    <div><button type="button" class="ebtn" id="eSave">${t('saveSheet')}</button><span class="emsg" id="eMsg"></span></div></div>`;
 }
@@ -991,7 +994,7 @@ function bindEditForm(x){
   const box=$('edbox');if(!box)return;
   const seg=id=>box.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{box.querySelectorAll('#'+id+' button').forEach(o=>o.setAttribute('aria-pressed',o===b));if(id==='eSt'&&b.dataset.v==='완료'){box.querySelectorAll('#eAp button').forEach(o=>o.setAttribute('aria-pressed',o.dataset.v==='100'));if(!$('eDone').value)$('eDone').value=DATA.today}});
   seg('eSt');seg('eAp');
-  $('eWk').onchange=()=>{$('eNote').value=origOf(x.wmap[$('eWk').value])};
+  $('eWk').onchange=()=>{const w=x.wmap[$('eWk').value];$('eNote').value=editTxt(w);$('eOrig').innerHTML=origLine(w)};
   $('eSave').onclick=async()=>{
     const f={},sel=id=>{const b=box.querySelector('#'+id+' button[aria-pressed=true]');return b?b.dataset.v:null};
     const st=sel('eSt'),ap=sel('eAp');
@@ -999,7 +1002,7 @@ function bindEditForm(x){
     if(ap!==null&&Number(ap)!==Math.round((x.ap||0)*100))f.ap=Number(ap);
     if(($('eDone').value||'')!==(x.done||''))f.done=$('eDone').value;
     if($('eProg').value!==(x.prog||''))f.prog=$('eProg').value;
-    const wk=$('eWk').value;if($('eNote').value.trim()!==origOf(x.wmap[wk]).trim()){f.note=$('eNote').value.trim();f.week=wk}
+    const wk=$('eWk').value;if($('eNote').value.trim()!==editTxt(x.wmap[wk]).trim()){f.note=$('eNote').value.trim();f.week=wk}
     if(!Object.keys(f).length){$('eMsg').className='emsg';$('eMsg').textContent=t('noChange');return}
     $('eSave').disabled=true;$('eMsg').className='emsg';$('eMsg').textContent=t('saving');
     try{const r=await postSave([{id:x.id,fields:f}]);$('eMsg').className='emsg ok';$('eMsg').textContent=t('savedSheet')+' ('+r.changes+')';toast(t('savedSheet'));setTimeout(()=>{closeTask();load()},700)}
@@ -1025,13 +1028,13 @@ function renderEdit(){
    <details class="std" id="stdEd"></details>
    <div class="wtw"><table class="et"><thead><tr><th>ID</th><th>${t('c_work')}</th><th>${t('c_st')}</th><th>${t('progress')}</th><th>${t('f_done')}</th><th>${prevW?wl(prevW)+' '+md(prevW):t('prevWeek')}</th><th>${wl(edWeek)} ${md(edWeek)} ${t('s_weekly')}</th></tr></thead><tbody>`+
    (list.length?list.map(x=>{const cur=x.wmap[edWeek],pv=prevW?x.wmap[prevW]:null,d=DIRTY[x.id]||{};
-     const stv=d.status??x.status,apv=d.ap??Math.round((x.status==='완료'?1:x.ap||0)*100),dnv=d.done??(x.done||''),nv=d.note??origOf(cur);
+     const stv=d.status??x.status,apv=d.ap??Math.round((x.status==='완료'?1:x.ap||0)*100),dnv=d.done??(x.done||''),nv=d.note??editTxt(cur);
      return `<tr data-id="${esc(x.id)}" class="${DIRTY[x.id]?'dirty':''}"><td class="id">${esc(x.id)}</td><td class="wn">${esc(L(x,'work'))}<span class="sub">${md(x.start)} – ${md(x.end)}${x.area?' · '+esc(L(x,'area')):''}</span></td>
       <td><select data-f="status">${STS.map(v=>`<option value="${v}" ${v===stv?'selected':''}>${t('st_'+STK[v])}</option>`).join('')}</select></td>
       <td><select data-f="ap">${STEPS.map(v=>`<option value="${v}" ${v===apv?'selected':''}>${v}%</option>`).join('')}</select></td>
       <td><input type="date" data-f="done" value="${esc(dnv)}" style="border:1px solid var(--line);border-radius:8px;padding:5px 6px;font-size:12.5px"></td>
       <td class="prev">${pv?esc(wTxt(pv)):'–'}</td>
-      <td><textarea data-f="note" placeholder="${t('notePh')}">${esc(nv)}</textarea></td></tr>`}).join(''):`<tr><td colspan="7"><div class="empty">${t('noItems')}</div></td></tr>`)+
+      <td><textarea data-f="note" placeholder="${t('notePh')}">${esc(nv)}</textarea>${d.note===undefined?origLine(cur):''}</td></tr>`}).join(''):`<tr><td colspan="7"><div class="empty">${t('noItems')}</div></td></tr>`)+
    `</tbody></table></div><div class="esave"><button class="ebtn" id="edSave" ${Object.keys(DIRTY).length?'':'disabled'}>${t('saveN').replace('{n}',Object.keys(DIRTY).length)}</button><span class="emsg" id="edMsg"></span></div></div>`;
   renderStd();
   $('edit').querySelectorAll('.etabs button').forEach(b=>b.onclick=()=>{edTeam=b.dataset.k;renderEdit()});
@@ -1041,7 +1044,7 @@ function renderEdit(){
     const x=T.find(y=>y.id===tr.dataset.id);
     tr.querySelectorAll('[data-f]').forEach(el=>{el.oninput=el.onchange=()=>{
       const f=el.dataset.f,d=DIRTY[x.id]=DIRTY[x.id]||{};
-      const base={status:x.status,ap:Math.round((x.status==='완료'?1:x.ap||0)*100),done:x.done||'',note:origOf(x.wmap[edWeek])}[f];
+      const base={status:x.status,ap:Math.round((x.status==='완료'?1:x.ap||0)*100),done:x.done||'',note:editTxt(x.wmap[edWeek])}[f];
       let v=el.value;if(f==='ap')v=Number(v);
       if(f==='status'&&v==='완료'){tr.querySelector('[data-f=ap]').value='100';d.ap=100;const dd=tr.querySelector('[data-f=done]');if(!dd.value){dd.value=DATA.today;d.done=DATA.today}}
       if(String(v).trim()===String(base).trim())delete d[f];else d[f]=v;
