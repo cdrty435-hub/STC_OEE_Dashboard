@@ -218,6 +218,22 @@ table.wt{border-collapse:separate;border-spacing:0;font-size:13px;width:100%;min
 .wnote{font-size:12px;color:#64748b;margin-top:10px}
 @media(max-width:760px){.wt .stick2{position:static}.wt td.wname{min-width:180px}}
 
+/* 진행률 기준 */
+details.std{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:14px}
+details.std summary{cursor:pointer;padding:10px 16px;font-weight:700;font-size:13px;color:#1e3a5f;list-style:none;display:flex;gap:8px;align-items:center}
+details.std summary::-webkit-details-marker{display:none}
+details.std summary::before{content:'▸';color:var(--muted);transition:transform .15s}
+details.std[open] summary::before{transform:rotate(90deg)}
+details.std summary small{font-weight:400;color:var(--muted)}
+.stdt{width:100%;border-collapse:collapse;font-size:13px}
+.stdt th{white-space:nowrap;background:#f6f8fb;color:#64748b;font-weight:500;font-size:12px;text-align:left;padding:8px 14px;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0}
+.stdt td{padding:9px 14px;border-bottom:1px solid #eef1f5;vertical-align:top}
+.stdt td.p{font-weight:700;width:120px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.stdt td.s{font-weight:700;width:120px;white-space:nowrap}
+.stdt .sb{display:inline-block;width:40px;height:6px;border-radius:3px;background:var(--line2);vertical-align:middle;margin-right:8px;position:relative;overflow:hidden}
+.stdt .sb i{position:absolute;left:0;top:0;bottom:0;background:var(--ok)}
+.stdr{margin:0;padding:10px 16px 14px 34px;font-size:12.5px;color:var(--ink2);line-height:1.7}
+
 /* gantt */
 .gwrap{overflow-x:auto}
 .g{min-width:760px}
@@ -358,6 +374,7 @@ table.tt{width:100%;border-collapse:collapse;font-size:13px}
       <select id="wShow"></select>
       <label><input type="checkbox" id="wOrig"> <span data-i="showOrig">원문 함께 보기</span></label>
     </div>
+    <details class="std" id="stdWk"></details>
     <div class="wsum" id="wSum"></div>
     <div id="wList"></div>
   </section>
@@ -371,6 +388,7 @@ table.tt{width:100%;border-collapse:collapse;font-size:13px}
   <!-- 작업 목록 -->
   <section class="view" id="v-ls" hidden>
     <div class="fbar"><select id="fTeam"></select><select id="fCat"></select><select id="fStat"></select><input type="search" id="fq" data-ip="search"><span class="note" id="fCount" style="color:var(--muted);font-size:12px"></span></div>
+    <details class="std" id="stdLs"></details>
     <div class="card tw" id="tasks"></div>
   </section>
 
@@ -654,7 +672,7 @@ function renderTasks(){
   if(!list.length){$('tasks').innerHTML=`<div class="empty">${t('noItems')}</div>`;return}
   $('tasks').innerHTML=`<table class="tt"><thead><tr><th>${t('c_id')}</th><th>${t('c_work')}</th><th>${t('c_own')}</th><th>${t('c_period')}</th><th class="c">${t('c_st')}</th><th>${t('c_prog')}</th><th>${t('c_last')}</th><th>${t('c_photo')}</th></tr></thead><tbody>`+
    list.map(x=>`<tr data-open="${esc(x.id)}">
-    <td class="mono" data-label="${t('c_id')}"><i class="sw" style="display:inline-block;margin-right:6px;background:var(--c${catIdx(x.cat)+1})"></i>${esc(x.id)}</td>
+    <td class="mono" data-label="${t('c_id')}" style="white-space:nowrap"><i class="sw" style="display:inline-block;margin-right:6px;background:var(--c${catIdx(x.cat)+1})"></i>${esc(x.id)}</td>
     <td class="wk1" data-label="${t('c_work')}">${esc(L(x,'work'))}${x.area?`<span class="sub">${esc(L(x,'area'))}</span>`:''}</td>
     <td data-label="${t('c_own')}">${esc(L(x,'own'))}${x.io==='외부'?` <span class="chip ext">${t('outside')}</span>`:''}</td>
     <td class="mono" data-label="${t('c_period')}" style="white-space:nowrap${x.bad?';color:var(--bad-t);font-weight:700':''}">${md(x.start)} – ${md(x.end)}${x.bad?'<br>⚠ '+t('dateErr'):''}</td>
@@ -663,6 +681,21 @@ function renderTasks(){
     <td data-label="${t('c_last')}">${x.last?`<div class="lastnote"><span class="mono" style="color:var(--muted)">${md(x.last.w)}</span> ${esc(wTxt(x.last))}</div>`:'<span style="color:var(--muted)">–</span>'}</td>
     <td data-label="${t('c_photo')}"><div class="ph2">${x.before?`<img src="${esc(x.before)}" alt="${t('before')}" loading="lazy" referrerpolicy="no-referrer">`:''}${x.after?`<img src="${esc(x.after)}" alt="${t('after')}" loading="lazy" referrerpolicy="no-referrer">`:''}${!x.before&&!x.after?'<span style="color:var(--muted)">–</span>':''}</div></td>
    </tr>`).join('')+'</tbody></table>';
+}
+
+/* ---------- 진행률 기준 ---------- */
+const STD={ko:{title:'실제 진행률 기준 (5단계)',hint:'눌러서 펼치기',h:['진행률','단계','이 단계로 인정하는 조건'],
+  rows:[['미착수','계획만 있고 아무 조치 없음'],['준비','현장 확인 완료 + 견적 요청·자재 신청·업체 연락 중 하나라도 진행'],['착수','견적 승인 또는 자재 입고 + 실제 작업 시작'],['마무리','작업 대부분 완료, 시운전·검수·일부 설비만 남음'],['완료','작업 완료 + 개선 후 사진 등록 + 상태 「완료」']],
+  rules:['중간값(30%, 60% 등)은 쓰지 않고 5단계 중 하나만 고른다.','단계를 올릴 때는 근거를 주간 기록에 적는다. (25% 견적 요청 · 50% 승인/입고 · 100% 개선 후 사진)','여러 설비에 걸친 작업은 끝낸 설비 수의 비율로 고른다. (예: 10대 중 6대 → 50%)','진행 불가·어려움이면 진행률을 올리지 않고 상태를 「보류」로 바꾼다.','주간 기록을 쓸 때 실제 진행률도 함께 갱신한다.']},
+ th:{title:'เกณฑ์ความคืบหน้าจริง (5 ขั้น)',hint:'กดเพื่อเปิด',h:['ความคืบหน้า','ขั้น','เงื่อนไข'],
+  rows:[['ยังไม่เริ่ม','มีแค่แผน ยังไม่มีการดำเนินการใดๆ'],['เตรียมการ','ตรวจหน้างานแล้ว + ขอใบเสนอราคา / ขอวัสดุ / ติดต่อผู้รับเหมา อย่างใดอย่างหนึ่ง'],['เริ่มดำเนินการ','อนุมัติใบเสนอราคาหรือของเข้าแล้ว + เริ่มทำงานจริง'],['ใกล้เสร็จ','งานส่วนใหญ่เสร็จแล้ว เหลือทดสอบ / ตรวจรับ / บางเครื่อง'],['เสร็จสมบูรณ์','งานเสร็จ + ลงรูปหลังปรับปรุง + เปลี่ยนสถานะเป็น 「เสร็จแล้ว」']],
+  rules:['ห้ามใส่ค่าระหว่างกลาง (เช่น 30%, 60%) ให้เลือก 1 ใน 5 ขั้นเท่านั้น','เมื่อเลื่อนขั้นต้องเขียนหลักฐานในบันทึกรายสัปดาห์ (25% ขอใบเสนอราคา · 50% อนุมัติ/ของเข้า · 100% รูปหลังปรับปรุง)','งานที่ทำหลายเครื่อง ให้เลือกขั้นตามสัดส่วนเครื่องที่เสร็จ (เช่น เสร็จ 6 จาก 10 เครื่อง → 50%)','ถ้าทำไม่ได้/ติดปัญหา ไม่ต้องเพิ่มความคืบหน้า ให้เปลี่ยนสถานะเป็น 「ระงับ」','ทุกครั้งที่เขียนบันทึกรายสัปดาห์ ให้อัปเดตความคืบหน้าจริงด้วย']}};
+function renderStd(){
+  const S=STD[lang]||STD.ko,P=[0,25,50,75,100];
+  const html=`<summary>${S.title} <small>${S.hint}</small></summary><table class="stdt"><thead><tr>${S.h.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`+
+    S.rows.map((r,i)=>`<tr><td class="p"><span class="sb"><i style="width:${P[i]}%"></i></span>${P[i]}%</td><td class="s">${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('')+
+    `</tbody></table><ol class="stdr">${S.rules.map(r=>`<li>${esc(r)}</li>`).join('')}</ol>`;
+  ['stdLs','stdWk'].forEach(id=>{const el=$(id);const open=el.open;el.innerHTML=html;el.open=open});
 }
 
 /* ---------- 상세 창 ---------- */
@@ -716,7 +749,7 @@ function download(b){
 /* ---------- 시작 ---------- */
 function renderAll(){
   applyI18n();$('asof').textContent=DATA.today;$('upd').textContent=DATA.updated;
-  renderFilters();renderKpis();renderCats();renderTeams();renderAtt();renderReasons();renderWeekly();renderTasks();renderDl();
+  renderFilters();renderKpis();renderCats();renderTeams();renderAtt();renderReasons();renderStd();renderWeekly();renderTasks();renderDl();
   $('loading').hidden=true;setView(view);
 }
 function load(){
