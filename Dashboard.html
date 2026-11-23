@@ -170,35 +170,53 @@ main{max-width:1360px;margin:0 auto;padding:20px 24px 48px}
 .nh{display:flex;gap:6px;align-items:center;margin-bottom:4px}
 @media(max-width:760px){.wr{grid-template-columns:44px 1fr}.wr .w2{grid-column:1/-1}}
 
-/* weekly table */
-.wtw{overflow:auto;max-height:calc(100vh - 230px)}
-table.wt{border-collapse:separate;border-spacing:0;font-size:13px;width:100%;min-width:900px}
-.wt th{position:sticky;top:0;z-index:3;background:var(--navy);color:#fff;font-weight:500;font-size:12px;text-align:left;padding:9px 10px;white-space:nowrap;border-right:1px solid #2a3d5c}
-.wt th.wcol{min-width:240px}
-.wt th.cur{background:#1d5fb0}
-.wt th small{display:block;font-weight:400;opacity:.7;font-size:11px}
-.wt td{padding:8px 10px;border-bottom:1px solid var(--line);border-right:1px solid var(--line2);vertical-align:top;background:var(--surface)}
+/* weekly table (밝은 보고서형) */
+.wcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh);padding:16px 18px 14px}
+.wch{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.wch h2{margin:0;font-size:17px;font-weight:700;color:#1e3a5f}
+.wch h2 small{font-weight:500;color:var(--ink2);font-size:14px;margin-left:4px}
+.wch .sp{flex:1}
+.wch .sum{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap}
+.wch .sum .up{color:var(--ok-t)}.wch .sum .dn{color:var(--bad-t)}.wch .sum .mu{color:var(--muted);font-weight:500}
+.wtw{overflow:auto;max-height:calc(100vh - 210px)}
+table.wt{border-collapse:separate;border-spacing:0;font-size:13px;width:100%;min-width:980px}
+.wt th{position:sticky;top:0;z-index:3;background:#f6f8fb;color:#64748b;font-weight:500;font-size:12px;text-align:left;padding:8px 12px;white-space:nowrap;border-bottom:1px solid #e2e8f0}
+.wt th.r,.wt td.r{text-align:right}
+.wt th.c,.wt td.c{text-align:center}
+.wt th.cur{color:var(--run-t);font-weight:700}
+.wt th small{font-weight:400;margin-left:4px;color:#94a3b8}
+.wt td{padding:10px 12px;border-bottom:1px solid #eef1f5;vertical-align:top;background:var(--surface)}
 .wt tr.task{cursor:pointer}
-.wt tr.task:hover td{background:#f6f9fd}
+.wt tr.task:hover td{background:#f8fafc}
 .wt .stick1{position:sticky;left:0;z-index:2}
-.wt .stick2{position:sticky;left:58px;z-index:2;box-shadow:1px 0 0 var(--line)}
+.wt .stick2{position:sticky;left:64px;z-index:2}
 .wt th.stick1,.wt th.stick2{z-index:4}
-.wt td.id{width:58px;min-width:58px;font-family:var(--mono);font-size:12px;color:var(--muted)}
-.wt td.wname{min-width:220px;max-width:280px;font-weight:500}
-.wt td.wname .sub{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
-.wt tr.grp td{background:var(--sunk);font-weight:700;font-size:13px;padding:8px 10px;border-bottom:1px solid var(--line)}
-.wt tr.grp td em{font-style:normal;font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}
-.wt td.note{white-space:pre-line;min-width:240px;line-height:1.45}
-.wt td.note .o{display:block;color:var(--muted);font-size:12px;margin-top:3px}
-.wt td.note.empty-c{color:var(--plan)}
-.wt td.note.cur{box-shadow:inset 3px 0 0 var(--run)}
-.wt td.note.cur.s-chg,.wt td.note.cur.s-new{background:#f0fbf4}
-.wt td.note.cur.s-same{background:#f7f8f9}
-.wt td.note.cur.s-none{background:#fdf3f3}
-.wt td.c{text-align:center;white-space:nowrap}
-.wt td.per{font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--ink2)}
+.wt td.id{width:64px;min-width:64px;white-space:nowrap;color:#3b6fb6;font-size:12.5px;font-variant-numeric:tabular-nums;padding-top:11px}
+.wt td.wname{min-width:230px;max-width:300px}
+.wt td.wname .nm{display:flex;gap:8px;align-items:flex-start;font-weight:700;color:var(--ink)}
+.wt td.wname .nm i{width:10px;height:10px;border-radius:2px;flex:none;margin-top:5px}
+.wt td.wname .sub{display:block;font-weight:400;color:#8a94a3;font-size:12px;margin:2px 0 0 18px}
+.wt td.own{white-space:nowrap;color:var(--ink2)}
+.wt td.own .ex{display:block;color:#c2410c;font-size:11.5px}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;white-space:nowrap}
+.st i{width:8px;height:8px;border-radius:2px}
+.st.done{color:var(--ok-t)}.st.doing{color:var(--run-t)}.st.late{color:var(--bad-t)}.st.plan{color:#64748b}.st.hold{color:var(--hold-t)}
+.wt td.per{font-size:12.5px;white-space:nowrap;color:var(--ink2);font-variant-numeric:tabular-nums}
 .wt td.per.late{color:var(--bad-t);font-weight:700}
-@media(max-width:760px){.wt .stick2{position:static;box-shadow:none}.wt td.wname{min-width:170px}}
+.wt td.note{white-space:pre-line;min-width:250px;line-height:1.5;color:#334155}
+.wt td.note.cur{background:#f7faff;color:var(--ink)}
+.wt tr.task:hover td.note.cur{background:#eef4fd}
+.wt td.note .o{display:block;color:#94a3b8;font-size:12px;margin-top:3px}
+.wt td.note.nil{color:#cbd5e1}
+.wt td.chg{white-space:nowrap;font-weight:700;font-size:12.5px}
+.chg.k-chg,.chg.k-new{color:var(--ok-t)}.chg.k-same{color:#94a3b8;font-weight:500}.chg.k-none{color:var(--bad-t)}.chg.k-fin{color:var(--ok-t);font-weight:500}
+.wt tr.grp td{background:var(--surface);padding:14px 12px 6px;border-bottom:1px solid #e2e8f0;font-size:13px;font-weight:700;color:#1e3a5f}
+.wt tr.grp td em{font-style:normal;font-weight:500;color:#94a3b8;font-size:12px;margin-left:6px}
+.wt tr.grp td .gs{float:right;font-weight:500;font-size:12px;color:#64748b}
+.wt tr.grp td .gs b{font-weight:700}
+.wt tfoot td{position:sticky;bottom:0;background:#f1f4f8;font-weight:700;border-top:1px solid #e2e8f0;border-bottom:0;padding:10px 12px;z-index:2}
+.wnote{font-size:12px;color:#64748b;margin-top:10px}
+@media(max-width:760px){.wt .stick2{position:static}.wt td.wname{min-width:180px}}
 
 /* gantt */
 .gwrap{overflow-x:auto}
@@ -392,7 +410,7 @@ ko:{title:'안전·전기 개선 대시보드',asof:'기준일',updated:'갱신'
  dlNote:'시트를 누르면 그 시트만 .xlsx 로 받습니다. 태국어 화면에서 받으면 태국어로 번역된 파일이 됩니다.',all:'전체 파일',
  making:'엑셀 만드는 중…',saved:'내려받았습니다',fail:'실패',origLabel:'원문',
  r_quote:'견적 대기',r_supp:'업체 방문·확인 대기',r_appr:'승인 대기',r_mat:'자재·구매 대기',r_plan:'계획 일정 대기',r_lee:'Mr.Lee 확인 대기',r_hard:'진행 어려움·불가',r_prog:'진척 보고',r_other:'기타',r_none:'주간 기록 없음',
- openOnly:'미완료',dateErr:'날짜 확인',dateErrTip:'계획 종료일이 시작일보다 빠릅니다. [계획] 시트의 날짜를 고쳐 주세요.',baseWeek:'기준 주',c_chg:'변화',wline:'주간 기록일',sub:'STC · 설비보전팀',noWeek:'주간 기록 열이 없습니다. [일정] 시트 머리글에 날짜(예: 28/11/2026)를 넣은 열을 추가하세요.'},
+ openOnly:'미완료',dateErr:'날짜 확인',dateErrTip:'계획 종료일이 시작일보다 빠릅니다. [계획] 시트의 날짜를 고쳐 주세요.',baseWeek:'기준',weekRange:'최근 4주',wNote:'변화 = 기준 주 기록을 바로 앞 기록과 비교 (▲ 변경 · ＋ 신규 · – 변화 없음 · ● 기록 없음). 행을 누르면 상세 내용과 사진이 열립니다.',c_chg:'변화',wline:'주간 기록일',sub:'STC · 설비보전팀',noWeek:'주간 기록 열이 없습니다. [일정] 시트 머리글에 날짜(예: 28/11/2026)를 넣은 열을 추가하세요.'},
 th:{title:'แดชบอร์ดปรับปรุงความปลอดภัยและระบบไฟฟ้า',asof:'ข้อมูล ณ',updated:'อัปเดต',refresh:'รีเฟรช',loading:'กำลังโหลด…',
  v_ov:'ภาพรวม',v_wk:'ความคืบหน้ารายสัปดาห์',v_gt:'แผนงาน',v_ls:'รายการงาน',v_dl:'ดาวน์โหลด Excel',
  total:'งานทั้งหมด',done:'เสร็จแล้ว',doing:'กำลังทำ',late:'ล่าช้า',hold:'ระงับ',plan:'วางแผน',
@@ -411,7 +429,7 @@ th:{title:'แดชบอร์ดปรับปรุงความปลอ
  dlNote:'กดที่ชีตเพื่อดาวน์โหลดเฉพาะชีตนั้น (.xlsx) ถ้าดาวน์โหลดจากหน้าภาษาไทย ไฟล์จะถูกแปลเป็นภาษาไทย',all:'ทั้งไฟล์',
  making:'กำลังสร้างไฟล์ Excel…',saved:'ดาวน์โหลดแล้ว',fail:'ไม่สำเร็จ',origLabel:'ต้นฉบับ',
  r_quote:'รอใบเสนอราคา',r_supp:'รอซัพพลายเออร์เข้าตรวจ',r_appr:'รออนุมัติ',r_mat:'รออุปกรณ์·การจัดซื้อ',r_plan:'รอตามแผน',r_lee:'รอ Mr.Lee ตรวจสอบ',r_hard:'ทำได้ยาก·ทำไม่ได้',r_prog:'มีความคืบหน้า',r_other:'อื่นๆ',r_none:'ไม่มีบันทึกรายสัปดาห์',
- openOnly:'งานที่ยังไม่เสร็จ',dateErr:'ตรวจสอบวันที่',dateErrTip:'วันสิ้นสุดตามแผนอยู่ก่อนวันเริ่ม กรุณาแก้ไขวันที่ในชีตแผนงาน',baseWeek:'สัปดาห์ที่เลือก',c_chg:'การเปลี่ยนแปลง',wline:'วันบันทึกรายสัปดาห์',sub:'STC · ทีมซ่อมบำรุง',noWeek:'ยังไม่มีคอลัมน์บันทึกรายสัปดาห์'}
+ openOnly:'งานที่ยังไม่เสร็จ',dateErr:'ตรวจสอบวันที่',dateErrTip:'วันสิ้นสุดตามแผนอยู่ก่อนวันเริ่ม กรุณาแก้ไขวันที่ในชีตแผนงาน',baseWeek:'ที่เลือก',weekRange:'4 สัปดาห์ล่าสุด',wNote:'การเปลี่ยนแปลง = เทียบบันทึกสัปดาห์ที่เลือกกับครั้งก่อน (▲ เปลี่ยน · ＋ ใหม่ · – ไม่เปลี่ยน · ● ไม่มีบันทึก) กดที่แถวเพื่อดูรายละเอียดและรูป',c_chg:'การเปลี่ยนแปลง',wline:'วันบันทึกรายสัปดาห์',sub:'STC · ทีมซ่อมบำรุง',noWeek:'ยังไม่มีคอลัมน์บันทึกรายสัปดาห์'}
 };
 const ST=['done','doing','late','plan','hold'];
 const ST_KEY={'계획':'plan','진행':'doing','완료':'done','보류':'hold'};
@@ -567,29 +585,35 @@ function renderWeekly(){
   const base=DATA.tasks.filter(x=>!team||x.own===team);
   const st=base.map(x=>({x,...weekState(x,curWeek)}));
   const c=k=>st.filter(s=>s.k===k).length;
-  $('wSum').innerHTML=`<div><span>${t('w_cnt')}</span><b>${base.length-c('none')-c('fin')}</b> <small style="color:var(--muted)">/ ${base.length}</small></div>
-    <div><span>${t('w_chg')} + ${t('w_new')}</span><b style="color:var(--ok-t)">${c('chg')+c('new')}</b></div>
-    <div><span>${t('w_same')}</span><b style="color:var(--ink2)">${c('same')}</b></div>
-    <div><span>${t('w_none')} <small>(${t('openOnly')})</small></span><b style="color:var(--bad-t)">${c('none')}</b></div>`;
+  $('wSum').innerHTML='';
   const list=st.filter(s=>!show||(show==='chg'?(s.k==='chg'||s.k==='new'):s.k===show));
-  if(!list.length){$('wList').innerHTML=`<div class="card"><div class="empty">${t('noItems')}</div></div>`;return}
-  // 기준 주까지 최근 4주를 열로
   const ci=DATA.weeks.findIndex(w=>w.date===curWeek);
   const cols=DATA.weeks.slice(Math.max(0,ci-3),ci+1);
-  const g=new Map();list.forEach(s=>{if(!g.has(s.x.cat))g.set(s.x.cat,[]);g.get(s.x.cat).push(s)});
+  const prevW=ci>0?DATA.weeks[ci-1].date:null;
   const span=6+cols.length;
-  const head=`<tr><th class="stick1">${t('c_id')}</th><th class="stick2">${t('c_work')}</th><th>${t('c_own')}</th><th class="c">${t('c_st')}</th><th>${t('c_period')}</th>`+
-    cols.map(w=>`<th class="wcol ${w.date===curWeek?'cur':''}">${md(w.date)}<small>${w.date===curWeek?t('baseWeek'):t('week')}</small></th>`).join('')+`<th class="c">${t('c_chg')}</th></tr>`;
-  const rows=[...g.keys()].sort().map(k=>`<tr class="grp"><td colspan="${span}"><i class="sw" style="display:inline-block;margin-right:8px;vertical-align:-1px;background:var(--c${catIdx(k)+1})"></i>${esc(labelOf(k,'cat'))}<em>${g.get(k).length} ${t('cnt')}</em></td></tr>`+
-    g.get(k).map(s=>{const x=s.x;
-      const late=x.eff==='late';
-      const cells=cols.map(w=>{const n=x.wmap[w.date];const isCur=w.date===curWeek;const o=n&&orig?wOrig(n):'';
-        return `<td class="note ${isCur?'cur s-'+s.k:''} ${n?'':'empty-c'}">${n?esc(wTxt(n))+(o?`<span class="o">${esc(o)}</span>`:''):'–'}</td>`}).join('');
-      return `<tr class="task" data-open="${esc(x.id)}"><td class="id stick1">${esc(x.id)}</td><td class="wname stick2">${esc(L(x,'work'))}${x.area?`<span class="sub">${esc(L(x,'area'))}</span>`:''}</td>
-        <td style="white-space:nowrap">${esc(L(x,'own'))}${x.io==='외부'?`<br><span class="chip ext" style="margin-top:3px">${t('outside')}</span>`:''}</td>
-        <td class="c">${chip(x)}</td><td class="per ${late||x.bad?'late':''}">${md(x.start)}–${md(x.end)}${x.bad?'<br>⚠ '+t('dateErr'):''}</td>${cells}
-        <td class="c"><span class="tag ${s.k}">${s.k==='fin'?t('st_done'):t('w_'+s.k)}</span></td></tr>`}).join('')).join('');
-  $('wList').innerHTML=`<div class="card wtw"><table class="wt"><thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
+  const sumH=`<span class="sum">${prevW?`<span class="mu">${md(prevW)}</span> → `:''}${md(curWeek)} · ${t('w_chg')} <span class="up">${c('chg')+c('new')}</span> / ${t('w_same')} <span class="mu">${c('same')}</span> / ${t('w_none')} <span class="dn">${c('none')}</span></span>`;
+  const g=new Map();list.forEach(s=>{if(!g.has(s.x.cat))g.set(s.x.cat,[]);g.get(s.x.cat).push(s)});
+  const chgTxt=s=>s.k==='fin'?t('st_done'):s.k==='chg'?'▲ '+t('w_chg'):s.k==='new'?'＋ '+t('w_new'):s.k==='none'?'● '+t('w_none'):'– '+t('w_same');
+  const head=`<tr><th class="stick1">${t('c_id')}</th><th class="stick2">${t('c_work')} · ${t('s_area')}</th><th>${t('c_own')}</th><th>${t('c_st')}</th><th>${t('c_period')}</th>`+
+    cols.map(w=>`<th class="${w.date===curWeek?'cur':''}">${md(w.date)}<small>${w.date===curWeek?t('baseWeek'):t('week')}</small></th>`).join('')+`<th class="c">${t('c_chg')}</th></tr>`;
+  const rows=[...g.keys()].sort().map(k=>{const arr=g.get(k);const n=kk=>arr.filter(s=>kk.includes(s.k)).length;
+    return `<tr class="grp"><td colspan="${span}"><i class="sw" style="display:inline-block;margin-right:8px;vertical-align:-1px;background:var(--c${catIdx(k)+1})"></i>${esc(labelOf(k,'cat'))}<em>${arr.length}${t('cnt')}</em>
+      <span class="gs">${t('w_chg')} <b style="color:var(--ok-t)">${n(['chg','new'])}</b> · ${t('w_same')} <b>${n(['same'])}</b> · ${t('w_none')} <b style="color:var(--bad-t)">${n(['none'])}</b></span></td></tr>`+
+    arr.map(s=>{const x=s.x;
+      const cells=cols.map(w=>{const nn=x.wmap[w.date];const isCur=w.date===curWeek;const o=nn&&orig?wOrig(nn):'';
+        return `<td class="note ${isCur?'cur':''} ${nn?'':'nil'}">${nn?esc(wTxt(nn))+(o?`<span class="o">${esc(o)}</span>`:''):'–'}</td>`}).join('');
+      return `<tr class="task" data-open="${esc(x.id)}"><td class="id stick1">${esc(x.id)}</td>
+        <td class="wname stick2"><div class="nm"><i style="background:var(--c${catIdx(x.cat)+1})"></i><span>${esc(L(x,'work'))}</span></div>${x.area?`<span class="sub">${esc(L(x,'area'))}</span>`:''}</td>
+        <td class="own">${esc(L(x,'own'))}${x.io==='외부'?`<span class="ex">${t('outside')}</span>`:''}</td>
+        <td><span class="st ${x.eff}"><i style="background:${ST_COL[x.eff]}"></i>${t('st_'+x.eff)}</span></td>
+        <td class="per ${x.eff==='late'||x.bad?'late':''}">${md(x.start)} – ${md(x.end)}${x.bad?'<br>⚠ '+t('dateErr'):''}</td>${cells}
+        <td class="c chg k-${s.k}">${chgTxt(s)}</td></tr>`}).join('')}).join('');
+  const foot=`<tr><td class="stick1"></td><td class="stick2">${t('total')}</td><td colspan="3">${list.length}${t('cnt')}</td>`+
+    cols.map(w=>`<td>${list.filter(s=>s.x.wmap[w.date]).length}${t('cnt')} <span style="font-weight:500;color:#64748b">${t('w_cnt')}</span></td>`).join('')+
+    `<td class="c" style="color:var(--ok-t)">${list.filter(s=>s.k==='chg'||s.k==='new').length}</td></tr>`;
+  $('wList').innerHTML=`<div class="wcard"><div class="wch"><h2>${t('v_wk')}<small>(${t('weekRange')})</small></h2><span class="sp"></span>${sumH}</div>`+
+    (list.length?`<div class="wtw"><table class="wt"><thead>${head}</thead><tbody>${rows}</tbody><tfoot>${foot}</tfoot></table></div>`:`<div class="empty">${t('noItems')}</div>`)+
+    `<div class="wnote">※ ${t('wNote')}</div></div>`;
 }
 
 /* ---------- 간트 ---------- */
