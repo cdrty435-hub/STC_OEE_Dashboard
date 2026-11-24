@@ -137,14 +137,16 @@
   td.c.sun.l1, td.c.sun.l2, td.c.sun.l3, td.c.sun.l4 { box-shadow: inset 0 -3px 0 #f87171; }
   .cal tfoot td { position: sticky; background: var(--surface); z-index: 2; box-shadow: 0 0 0 2px var(--surface); }
   .cal tfoot td { height: 30px; box-sizing: border-box; } .cal tfoot td.wc, .cal tfoot td.oc { height: 28px; }
-  .cal tfoot tr.wr1 td { bottom: 192px; } .cal tfoot tr.wr2 td { bottom: 160px; }
-  .cal tfoot tr.wr3 td { bottom: 128px; } .cal tfoot tr.wr4 td { bottom: 96px; } .cal tfoot tr.wrs td { bottom: 64px; } .cal tfoot tr.wr5 td { bottom: 32px; } .cal tfoot tr.wro td { bottom: 0; }
+  .cal tfoot tr.wr1 td { bottom: 256px; } .cal tfoot tr.wr2 td { bottom: 224px; }
+  .cal tfoot tr.wr3 td { bottom: 192px; } .cal tfoot tr.wr4 td { bottom: 160px; } .cal tfoot tr.wrs td { bottom: 128px; } .cal tfoot tr.wrp td { bottom: 96px; } .cal tfoot tr.wrk td { bottom: 64px; } .cal tfoot tr.wr5 td { bottom: 32px; } .cal tfoot tr.wro td { bottom: 0; }
   td.oc.f5 { background: #dcfce7; color: #14532d; outline: 1px solid #16a34a; }
   .cal tfoot td.mc .ok2.f5 { background: #16a34a; width: auto; padding: 0 3px; }
   td.oc.sf { background: #fef9c3; color: #713f12; outline: 1px solid #ca8a04; }
   .cal tfoot td.mc .ok2.sf { background: #ca8a04; }
   .b-sf { background: #fef9c3; color: #713f12; }
-  .noworst tfoot tr.wro td { bottom: 0; } .noworst tfoot tr.wr5 td { bottom: 32px; } .noworst tfoot tr.wrs td { bottom: 64px; }
+  .noworst tfoot tr.wro td { bottom: 0; } .noworst tfoot tr.wr5 td { bottom: 32px; } .noworst tfoot tr.wrk td { bottom: 64px; } .noworst tfoot tr.wrp td { bottom: 96px; } .noworst tfoot tr.wrs td { bottom: 128px; }
+  td.oc.pm { background: #dbeafe; color: #1e3a8a; outline: 1px solid #2563eb; } .cal tfoot td.mc .ok2.pm { background: #2563eb; width: auto; padding: 0 3px; }
+  td.oc.kz { background: #f3e8ff; color: #581c87; outline: 1px solid #9333ea; } .cal tfoot td.mc .ok2.kz { background: #9333ea; }
   td.oc { height: 26px; border-radius: 5px; text-align: center; font-size: 10.5px; font-weight: 700; cursor: pointer; color: #334155;
     background: #eef2f7; outline: 1px dashed #94a3b8; outline-offset: -1px; }
   td.oc:hover { outline: 2px solid var(--ink2); }
@@ -479,7 +481,7 @@ const I18N = {
   '원인, 조치 내용, 부품 등을 적어 주세요': ['Cause, action, parts…', 'สาเหตุ การแก้ไข อะไหล่ ฯลฯ'],
   '사진을 끌어다 놓기 · 눌러서 선택 · 캡처 후': ['Drag photos here · click to pick · after capture', 'ลากรูปมาวาง · คลิกเลือก · หลังแคปหน้าจอ'], '내용을 입력하세요': ['Enter details', 'กรุณาใส่รายละเอียด'],
   '옮길 곳 선택': ['Move to…', 'ย้ายไป…'], '호기 선택': ['Machine…', 'เลือกเครื่อง…'], '설비': ['Equip.', 'อุปกรณ์'], '원래 날짜': ['Original date', 'วันที่เดิม'], '원래대로': ['Restore', 'คืนค่าเดิม'],
-  '기타로': ['To Other', 'กลับไปอื่นๆ'], '이동됨': ['moved', 'ย้ายแล้ว'], '안전·전기 프로젝트': ['Safety·Electrical project', 'โครงการความปลอดภัย·ไฟฟ้า'], '안전·전기': ['Safety·Elec.', 'ปลอดภัย·ไฟฟ้า'],
+  '기타로': ['To Other', 'กลับไปอื่นๆ'], '이동됨': ['moved', 'ย้ายแล้ว'], '안전·전기 프로젝트': ['Safety·Electrical project', 'โครงการความปลอดภัย·ไฟฟ้า'], '안전·전기': ['Safety·Elec.', 'ปลอดภัย·ไฟฟ้า'], '개선': ['Kaizen', 'ปรับปรุง'], '★ 개선': ['★ Kaizen', '★ ปรับปรุง'], '★ PM': ['★ PM', '★ PM'], '★ 안전·전기 프로젝트': ['★ Safety·Electrical project', '★ โครงการความปลอดภัย·ไฟฟ้า'], '↩ 원래대로': ['↩ Restore', '↩ คืนที่เดิม'],
   '기타 기록': ['Other records', 'บันทึกอื่นๆ'], '기타': ['Other', 'อื่นๆ'], '기록이 없습니다': ['No records', 'ไม่มีบันทึก'], '로스 기록이 없습니다': ['No loss data', 'ไม่มีข้อมูลสูญเสีย'],
   '호기를 알 수 없는 기록입니다. 「★ 안전·전기」, 「★ 5S」나 호기를 골라 「이동」하세요.': ['Machine unknown. Pick ★ Safety·Elec., ★ 5S or a machine and press Move.', 'ไม่ทราบเครื่อง เลือก ★ ปลอดภัย·ไฟฟ้า, ★ 5S หรือเครื่อง แล้วกดย้าย'],
   '(으)로 옮긴 기록입니다. 호기로 다시 옮기거나 기타로 되돌릴 수 있습니다.': [' — moved records. You can move them to a machine or back to Other.', ' — บันทึกที่ย้ายมา ย้ายไปเครื่องหรือกลับไปอื่นๆ ได้'],
@@ -744,7 +746,7 @@ function worstRows() {
   // 안전·전기 프로젝트(기타에서 옮긴 기록) · 기타(호기를 알 수 없는 기록)
   const row = (kind, cls, icon, label, tipHead) => {
     const O = D[kind] || {};
-    const ex = kind === 'safety' ? ' sf' : kind === 'fives' ? ' f5' : '';
+    const ex = { safety: ' sf', fives: ' f5', pm: ' pm', kaizen: ' kz' }[kind] || '';
     let r = '<tr class="' + cls + '"><td class="mc" data-tip="' + tipHead + '"><span class="ok2' + ex + '">' + icon + '</span>' + label + '</td>';
     WCOLS.forEach(k => {
       const L = O[k] || [];
@@ -756,6 +758,8 @@ function worstRows() {
     return r + '<td></td></tr>';
   };
   h += row('safety', 'wrs', '안', '안전·전기', '안전·전기 프로젝트로 옮긴 기록 — 눌러서 보기');
+  h += row('pm', 'wrp', 'PM', 'PM', 'PM(예방보전·계획정지 정비)으로 옮긴 기록 — 눌러서 보기');
+  h += row('kaizen', 'wrk', '개', '개선', '개선 과제로 옮긴 기록 — 눌러서 보기');
   h += row('fives', 'wr5', '5S', '5S', '5S(정리·정돈·청소·청결·습관)로 옮긴 기록 — 눌러서 보기');
   h += row('others', 'wro', '기', '기타', '호기를 알 수 없는 기록(전기로·변압기·설비 미기재 등) — 눌러서 호기나 안전·전기로 옮길 수 있음');
   return h + '</tfoot>';
@@ -764,7 +768,8 @@ function worstRows() {
 // ---------- 기타 · 안전·전기 목록과 이동 ----------
 const DC_LIST = (() => { const a = []; for (let i = 1; i <= 23; i++) a.push('DC' + ('0' + i).slice(-2)); return a.concat(['FAC C', 'FAC D', 'FAC E', 'TP 설비']); })();
 const SAFE = '안전·전기', FIVE = '5S';
-const PJ_KIND = { '안전·전기': 'safety', '5S': 'fives' }, PJ_NAME = { safety: '안전·전기 프로젝트', fives: '5S' };
+const PJ_KIND = { '안전·전기': 'safety', 'PM': 'pm', '개선': 'kaizen', '5S': 'fives' }, PJ_NAME = { safety: '안전·전기 프로젝트', pm: 'PM', kaizen: '개선', fives: '5S' };
+const PJ_OPTS = '<option value="안전·전기">★ 안전·전기 프로젝트</option><option value="PM">★ PM</option><option value="개선">★ 개선</option><option value="5S">★ 5S</option>';
 let OTHERS_K = null, OTHERS_KIND = 'others';
 // ctx: 'others' (기타 목록) · 'safety' (안전·전기 목록) · 'moved' (호기 칸에서 본 옮긴 기록)
 function mvBar(n, ctx) {
@@ -772,9 +777,9 @@ function mvBar(n, ctx) {
   const eq = '<span>설비: <span class="eqtag">' + esc(n.eq || '-') + '</span></span><span style="flex:1"></span>';
   if (ctx === 'moved') return '<div class="mvbar">' + (n.origDate ? '<span>원래 날짜: <span class="eqtag">' + md(n.origDate) + '</span></span> ' : '') + eq +
     '<button class="un mvun" data-key="' + esc(n.key) + '">↩ 원래대로</button></div>';
-  const opts = (ctx === 'others' ? '<option value="' + SAFE + '">★ 안전·전기 프로젝트</option><option value="' + FIVE + '">★ 5S</option>' : '') + DC_LIST.map(d => '<option>' + d + '</option>').join('');
-  return '<div class="mvbar">' + eq + '<select class="mvsel"><option value="">' + (ctx === 'others' ? '옮길 곳 선택' : '호기 선택') + '</option>' + opts + '</select>' +
-    '<button class="mvgo" data-key="' + esc(n.key) + '">→ 이동</button>' + (ctx === 'safety' || ctx === 'fives' ? '<button class="un mvun" data-key="' + esc(n.key) + '">↩ 기타로</button>' : '') + '</div>';
+  const opts = PJ_OPTS + DC_LIST.map(d => '<option>' + d + '</option>').join('');
+  return '<div class="mvbar">' + eq + '<select class="mvsel"><option value="">' + '옮길 곳 선택' + '</option>' + opts + '</select>' +
+    '<button class="mvgo" data-key="' + esc(n.key) + '">→ 이동</button>' + (PJ_NAME[ctx] ? '<button class="un mvun" data-key="' + esc(n.key) + '">↩ 원래대로</button>' : '') + '</div>';
 }
 function openOthers(k, kind) {
   kind = kind || OTHERS_KIND || 'others';
@@ -782,8 +787,8 @@ function openOthers(k, kind) {
   OTHERS_K = k; OTHERS_KIND = kind; SEL = null; document.querySelectorAll('td.sel').forEach(x => x.classList.remove('sel'));
   const w = VIEW === 'week' ? D.weeks.find(x => x.key === k) : null;
   $('it').innerHTML = '<button class="back" id="bk">‹ 요약</button> ' + (w ? esc(w.label) : md(k) + ' (' + wd(k) + ')') + ' · ' + (PJ_NAME[kind] || '기타 기록');
-  $('is').textContent = PJ_NAME[kind] ? PJ_NAME[kind] + '(으)로 옮긴 기록입니다. 호기로 다시 옮기거나 기타로 되돌릴 수 있습니다.'
-    : '호기를 알 수 없는 기록입니다. 「★ 안전·전기」, 「★ 5S」나 호기를 골라 「이동」하세요.';
+  $('is').textContent = PJ_NAME[kind] ? PJ_NAME[kind] + '(으)로 옮긴 기록입니다. 다른 곳으로 옮기거나 원래 자리로 되돌릴 수 있습니다.'
+    : '호기를 알 수 없는 기록입니다. 「★ 안전·전기·PM·개선·5S」나 호기를 골라 「이동」하세요.';
   CUR = L; CUR_DATE = VIEW === 'week';
   $('ib').innerHTML = L.length ? L.map(n => card(n).replace(/<\/div>$/, mvBar(n, kind) + '</div>')).join('')
     : '<div class="empty">기록이 없습니다</div>';
@@ -820,7 +825,8 @@ document.addEventListener('click', async e => {
       src.splice(src.indexOf(n), 1); n.moved = false;
       const ok = colOf(n.date); ((D.others = D.others || {})[ok] = D.others[ok] || []).push(n);
     }
-    if (SEL) { refreshDay(); if (un) setTimeout(() => load(true), 1500); } else { render(D); src.length ? openOthers(k, OTHERS_KIND) : showSummary(); }
+    if (un) setTimeout(() => load(true), 1500);
+    if (SEL) { refreshDay(); } else { render(D); src.length ? openOthers(k, OTHERS_KIND) : showSummary(); }
   } catch (er) { btn.disabled = false; setMsg(key, '실패: ' + (er.message || er), true); }
 });
 
@@ -1183,7 +1189,7 @@ document.addEventListener('click', async e => {
     if (mb.innerHTML) { mb.innerHTML = ''; return; }
     const cur = (SEL || '').split('|')[0];
     mb.innerHTML = '<div class="mvbar" style="flex-wrap:wrap">📅 <input type="date" class="mvdate" value="' + esc(n.date) + '" style="border:1px solid var(--line2);border-radius:6px;padding:2px 6px;font:inherit;font-size:12px">' +
-      '<select class="mvdc">' + DC_LIST.map(d => '<option' + (d === cur ? ' selected' : '') + '>' + d + '</option>').join('') + '</select>' +
+      '<select class="mvdc">' + PJ_OPTS + DC_LIST.map(d => '<option' + (d === cur ? ' selected' : '') + '>' + d + '</option>').join('') + '</select>' +
       '<span style="flex:1"></span><button class="un mvno">취소</button><button class="mvdaygo">→ 이동</button></div>';
     return;
   }
@@ -1200,7 +1206,8 @@ document.addEventListener('click', async e => {
       const list = D.notes[cur][curD]; list.splice(list.indexOf(n), 1);
       if (!n.origDate) n.origDate = n.date;
       n.date = to; n.moved = true; if (!n.eq) n.eq = cur;
-      if (D.days.indexOf(to) >= 0) ((D.notes[dc] = D.notes[dc] || {})[to] = D.notes[dc][to] || []).push(n);
+      if (PJ_KIND[dc]) { const b = PJ_KIND[dc], ck = colOf(to); ((D[b] = D[b] || {})[ck] = D[b][ck] || []).push(n); }
+      else if (D.days.indexOf(to) >= 0) ((D.notes[dc] = D.notes[dc] || {})[to] = D.notes[dc][to] || []).push(n);
       const c = D.cells[cur] && D.cells[cur][curD]; if (c) c.unexplained = c.equip >= 120 && !list.length;
       const c2 = D.cells[dc] && D.cells[dc][to]; if (c2) c2.unexplained = false;
       refreshDay();
@@ -1408,7 +1415,7 @@ async function saveRecord(btn) {
 function dropNote(key) {
   const out = l => { const i = l.findIndex(x => x.key === key); if (i >= 0) l.splice(i, 1); };
   Object.values(D.notes || {}).forEach(m => Object.values(m).forEach(out));
-  ['others', 'safety', 'fives'].forEach(b => Object.values(D[b] || {}).forEach(out));
+  ['others', 'safety', 'pm', 'kaizen', 'fives'].forEach(b => Object.values(D[b] || {}).forEach(out));
   out(CUR);
   Object.keys(D.notes || {}).forEach(mc => Object.keys(D.notes[mc]).forEach(d => {
     const c = D.cells[mc] && D.cells[mc][d]; if (c && 'equip' in c) c.unexplained = c.equip >= 120 && !D.notes[mc][d].length;
@@ -1534,7 +1541,7 @@ if (upd) { upd.style.cursor = 'pointer'; upd.title = '누르면 지금 새로고
 // ============================================================
 const repBox = document.createElement('div'); repBox.id = 'report';
 document.querySelector('.board').after(repBox);   // 메인 화면에서 달력 자리에 보고서
-const REP_SECS = [['kpi', '요약'], ['worst', '워스트 4'], ['repair', '수리 내역'], ['defect', '불량 알림'], ['mtg', '아침조회'], ['safety', '안전·전기'], ['fives', '5S'], ['others', '기타'], ['photo', '사진'], ['detail', '상세(전체 글)']];
+const REP_SECS = [['kpi', '요약'], ['worst', '워스트 4'], ['repair', '수리 내역'], ['defect', '불량 알림'], ['mtg', '아침조회'], ['safety', '안전·전기'], ['pm', 'PM'], ['kaizen', '개선'], ['fives', '5S'], ['others', '기타'], ['photo', '사진'], ['detail', '상세(전체 글)']];
 let REP_ON = (() => { try { const v = JSON.parse(localStorage.getItem('repSecs') || 'null'); return v || { detail: false }; } catch (e) { return { detail: false }; } })();
 if (REP_ON.detail === undefined) REP_ON.detail = false;
 const secOn = k => REP_ON[k] !== false;
@@ -1629,7 +1636,7 @@ function reportHtml(J, d) {
   if (secOn('defect')) h += table('불량 알림', defs, true);
   if (secOn('repair')) h += table('수리 내역', reps, true, true);
   if (secOn('mtg')) h += table('아침조회', mtg, false);
-  [['safety', '안전·전기', J.safety], ['fives', '5S', J.fives], ['others', '기타', J.others]].forEach(([k, t, o]) => {
+  [['safety', '안전·전기', J.safety], ['pm', 'PM', J.pm], ['kaizen', '개선', J.kaizen], ['fives', '5S', J.fives], ['others', '기타', J.others]].forEach(([k, t, o]) => {
     if (secOn(k)) h += table(t, ((o || {})[d] || []).map(n => ({ mc: n.eq || '', n })), true);
   });
   h += '</div>';
