@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>STC 통역 회의 · ประชุมแปลสด</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
 <style>
   :root { --bg:#f6f7f9; --surface:#fff; --ink:#111827; --ink2:#4b5563; --ink3:#9ca3af; --line:#e5e7eb; --line2:#d1d5db;
     --ko:#2563eb; --th:#0f9d76; --warn:#b45309; --warnbg:#fef3c7; --red:#dc2626; --redbg:#fee2e2; --okbg:#dcfce7; --ok:#15803d; }
@@ -57,11 +58,16 @@
   .row-btn { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap; }
   .msg { font-size:13px; color:var(--ink2); margin-top:6px; } .msg.err { color:var(--red); }
   .notice { font-size:12px; color:var(--ink2); background:#f3f4f6; border-radius:8px; padding:8px 10px; }
+  .home-btn { background:var(--ink); color:#fff; border-color:var(--ink); text-decoration:none; padding:7px 14px; border-radius:8px; font-size:13px; white-space:nowrap; }
+  .mode { display:inline-flex; border:1px solid var(--line2); border-radius:10px; overflow:hidden; margin:14px 0 4px; }
+  .mode button { border:0; border-radius:0; padding:8px 16px; } .mode button.on { background:var(--ko); color:#fff; }
+  .badge { font-size:11px; padding:2px 8px; border-radius:6px; background:#eef2ff; color:#3730a3; }
 </style>
 </head>
 <body>
 <header class="top">
-  <div><h1>🎙 통역 회의 <span style="font-weight:400;color:var(--ink3)">· ประชุมแปลสด</span></h1><div class="sub">한국어 ⇄ ไทย 자동 감지 · 끝나면 회의록 자동 정리</div></div>
+  <a class="home-btn" href="6_loss_calendar.html">📅 로스 달력</a>
+  <div><h1>🎙 통역 회의 <span style="font-weight:400;color:var(--ink3)">· ประชุมแปลสด</span></h1><div class="sub">한국어 ⇄ ไทย 자동 감지 · 녹음으로 화자 자동 구분 · 회의록 자동 정리</div></div>
   <span class="sp"></span>
   <span id="stPill" class="pill hidden"></span>
   <span id="lvl" class="lvl hidden"><b></b><b></b><b></b><b></b><b></b></span>
@@ -69,21 +75,21 @@
   <label class="muted" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="tts"> 🔊 읽어주기</label>
   <label class="muted" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="tv"> 📺 TV 자막</label>
   <button id="btnStop" class="hidden">■ 종료 · จบ</button>
-  <a href="6_loss_calendar.html" class="muted" style="text-decoration:none">← 로스 달력</a>
 </header>
 
 <!-- 시작 화면 -->
 <div id="vHome" class="wrap">
-  <div class="card" style="text-align:center;padding:28px 16px">
+  <div class="card" style="text-align:center;padding:24px 16px">
     <button id="btnStart" class="pri big">🎙 회의 시작 · เริ่มประชุม</button>
-    <div class="muted" style="margin-top:10px">마이크 권한을 허용해 주세요. 한 사람씩 말하면 1~2초 뒤 번역이 나옵니다.</div>
+    <div><span class="mode" id="modeSeg"><button data-m="fast">⚡ 빠른 통역</button><button data-m="acc">📘 용어집 통역</button></span></div>
+    <div class="muted" id="modeTip"></div>
+    <div class="muted" style="margin-top:6px">자유롭게 대화하세요. 회의 전체가 녹음되고, 끝나면 <b>목소리로 말한 사람을 자동으로 나눠</b> 회의록을 만듭니다.</div>
     <div id="homeMsg" class="msg"></div>
   </div>
   <div class="card"><h2>⏳ 미결 항목 <span class="muted">최근 10일, 호기별 마지막 상태</span></h2><div id="openList" class="muted">불러오는 중…</div></div>
   <div class="card"><h2>📋 지난 회의</h2><div id="mtgList" class="list muted">불러오는 중…</div></div>
-  <div class="card"><h2>👥 참석자 버튼</h2>
-    <div class="muted">회의 중 말하는 사람을 눌러 두면 줄에 이름이 붙습니다. 쉼표로 구분해서 고치세요.</div>
-    <input id="whoList" style="width:100%;margin-top:6px">
+  <div class="card"><h2>👥 참석자 <span class="muted">(선택) 회의록에서 말한 사람 이름을 찾을 때 참고만 합니다</span></h2>
+    <input id="whoList" style="width:100%" placeholder="팀장, Nanat, NIPON, Rangsan">
   </div>
 </div>
 
@@ -92,7 +98,6 @@
   <div id="liveOpen" class="open hidden"></div>
   <div id="lines"></div>
 </div>
-<div id="whoBar" class="who-bar hidden"></div>
 
 <!-- 회의록 -->
 <div id="vMin" class="wrap hidden">
@@ -100,7 +105,9 @@
     <h2 id="minTitle">회의록</h2>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
       <span class="seg" id="minLang"><button data-l="ko" class="on">한국어</button><button data-l="th">ไทย</button></span>
+      <span id="minBadge"></span>
       <span class="sp" style="flex:1"></span>
+      <a id="audioLink" class="muted hidden" target="_blank">🎧 녹음 듣기</a>
       <button id="btnRemake">↻ 다시 정리</button>
       <button id="btnAddRow">＋ 줄 추가</button>
     </div>
@@ -112,7 +119,7 @@
     </div>
     <div id="minMsg" class="msg"></div>
   </div>
-  <div class="card"><h2>💬 대화 기록 <span class="muted">줄을 눌러 수정</span></h2><div id="minLines" style="display:flex;flex-direction:column;gap:8px"></div></div>
+  <div class="card"><h2>💬 대화 기록 <span class="muted" id="linesNote">줄을 눌러 수정</span></h2><div id="minLines" style="display:flex;flex-direction:column;gap:8px"></div></div>
 </div>
 
 <div id="modal" class="modal hidden"><div class="box" id="modalBox"></div></div>
@@ -127,6 +134,7 @@ const pad = n => String(n).padStart(2, '0');
 const nowHM = () => { const d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); };
 const todayYmd = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
 const langOf = t => /[฀-๿]/.test(t) ? 'th' : /[가-힣]/.test(t) ? 'ko' : (/[a-z]/i.test(t) ? 'en' : '');
+const clean = t => String(t || '').replace(/<[^>]*>|\{[^}]*\}/g, ' ').replace(/\s+/g, ' ').trim();
 
 // ---------- 서버 ----------
 function postApi(body) {
@@ -152,38 +160,57 @@ function askPin(msg) {
 }
 function openModal(h) { $('modalBox').innerHTML = h; $('modal').classList.remove('hidden'); }
 function closeModal() { $('modal').classList.add('hidden'); $('modalBox').innerHTML = ''; }
+function armed(btn, label) {   // 두 번 눌러야 실행
+  if (btn.classList.contains('armed')) return true;
+  const old = btn.textContent; btn.classList.add('armed'); btn.textContent = label;
+  setTimeout(() => { btn.classList.remove('armed'); btn.textContent = old; }, 3000);
+  return false;
+}
 
 // ---------- 상태 ----------
-const S = { id: '', date: '', start: '', lines: [], cur: null, who: '', running: false, ws: null, model: 0, models: [], instruction: '',
-  handle: '', setupDone: false, lastSaved: -1, saveTimer: null, clockTimer: null, t0: 0, playUntil: 0, reconnects: 0 };
-const WHO_DEFAULT = '팀장, Nanat, NIPON, Rangsan, 생산, 품질';
-function show(v) { ['vHome', 'vLive', 'vMin'].forEach(x => $(x).classList.toggle('hidden', x !== v)); $('whoBar').classList.toggle('hidden', v !== 'vLive'); }
+const S = { id: '', date: '', start: '', end: '', lines: [], running: false, t0: 0, lastSaved: -1, saveTimer: null, clockTimer: null, playUntil: 0, audioUrl: '' };
+let MODE = ls('liveMode') === 'acc' ? 'acc' : 'fast';
+function show(v) { ['vHome', 'vLive', 'vMin'].forEach(x => $(x).classList.toggle('hidden', x !== v)); }
 function setPill(kind, txt) { const p = $('stPill'); p.className = 'pill ' + kind; p.innerHTML = (kind === 'rec' ? '<i></i>' : '') + esc(txt); p.classList.toggle('hidden', !kind); }
 
 // ---------- 시작 화면 ----------
-$('whoList').value = ls('liveWho') || WHO_DEFAULT;
+$('whoList').value = ls('liveWho') || '';
 $('whoList').onchange = () => ls('liveWho', $('whoList').value);
 $('tts').checked = ls('liveTts') === '1'; $('tts').onchange = () => ls('liveTts', $('tts').checked ? '1' : '0');
 $('tv').checked = ls('liveTv') === '1'; document.body.classList.toggle('tv', $('tv').checked);
 $('tv').onchange = () => { ls('liveTv', $('tv').checked ? '1' : '0'); document.body.classList.toggle('tv', $('tv').checked); };
+function drawMode() {
+  $('modeSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === MODE));
+  $('modeTip').textContent = MODE === 'fast' ? '번역 전용 모델 · 가장 빠름 (용어집은 회의록 정리 때 적용)' : '일반 모델 + 현장 용어집 · 용어가 더 정확하지만 조금 느림';
+}
+$('modeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) return; MODE = b.dataset.m; ls('liveMode', MODE); drawMode(); };
+drawMode();
 let OPEN = [];
 async function loadHome() {
   show('vHome');
   try {
     const [o, l] = await Promise.all([api({ action: 'liveOpen' }), api({ action: 'liveList' })]);
     OPEN = o.ok ? o.items : [];
-    $('openList').innerHTML = OPEN.length ? '<ul style="margin:0;padding-left:18px">' + OPEN.map(x => '<li><b>' + esc(x.dc) + '</b> ' + esc(x.ko) + ' <span class="muted">' + esc(x.date.slice(5)) + ' · ' + esc(x.status) + '</span></li>').join('') + '</ul>' : '미결 항목이 없습니다';
-    if (!o.ok) $('openList').textContent = o.error || '불러오기 실패';
+    $('openList').innerHTML = !o.ok ? esc(o.error || '불러오기 실패') : OPEN.length ? '<ul style="margin:0;padding-left:18px">' + OPEN.map(x => '<li><b>' + esc(x.dc) + '</b> ' + esc(x.ko) + ' <span class="muted">' + esc(x.date.slice(5)) + ' · ' + esc(x.status) + '</span></li>').join('') + '</ul>' : '미결 항목이 없습니다';
     const L = l.ok ? l.list : [];
-    $('mtgList').innerHTML = L.length ? L.map(m => '<div class="row" data-id="' + esc(m.id) + '"><b>' + esc(m.date) + '</b><span>' + esc(m.start) + (m.end ? '~' + esc(m.end) : '') + '</span><span class="muted">' + esc(m.min || '') + '분 · ' + esc(m.n || 0) + '줄</span><span class="sp" style="flex:1"></span><span class="tag ' + esc(m.status) + '">' + esc(m.status) + '</span></div>').join('') : '아직 회의가 없습니다';
-    if (!l.ok) $('mtgList').textContent = l.error || '불러오기 실패';
+    $('mtgList').innerHTML = !l.ok ? esc(l.error || '불러오기 실패') : L.length ? L.map(m => '<div class="row" data-id="' + esc(m.id) + '"><b>' + esc(m.date) + '</b><span>' + esc(m.start) + (m.end ? '~' + esc(m.end) : '') + '</span><span class="muted">' + esc(m.min || '') + '분 · ' + esc(m.n || 0) + '줄</span><span class="sp" style="flex:1"></span><span class="tag ' + esc(m.status) + '">' + esc(m.status) + '</span>' +
+      '<button class="mdel" data-id="' + esc(m.id) + '" style="padding:2px 8px;font-size:12px;color:var(--red)">삭제</button></div>').join('') : '아직 회의가 없습니다';
   } catch (e) { $('openList').textContent = $('mtgList').textContent = '불러오기 실패: ' + (e.message || e); }
 }
 $('mtgList').onclick = async e => {
+  const d = e.target.closest('.mdel');
+  if (d) {
+    e.stopPropagation();
+    if (!armed(d, '정말 삭제?')) return;
+    d.disabled = true;
+    try { const r = await api({ action: 'liveDelete', id: d.dataset.id }); if (!r.ok) throw new Error(r.error); d.closest('.row').remove(); }
+    catch (er) { d.disabled = false; alert('삭제 실패: ' + (er.message || er)); }
+    return;
+  }
   const r = e.target.closest('.row'); if (!r) return;
   try { const g = await api({ action: 'liveGet', id: r.dataset.id }); if (!g.ok) throw new Error(g.error);
-    const m = g.meeting; S.id = m.id; S.date = m.date; S.start = m.start; S.end = m.end; S.lines = m.lines; MIN = m.minutes;
-    if (MIN) showMinutes(); else { showMinutes(); remake(); }
+    const m = g.meeting; Object.assign(S, { id: m.id, date: m.date, start: m.start, end: m.end, lines: m.lines, t0: 0, audioUrl: m.audio ? 'https://drive.google.com/file/d/' + m.audio + '/view' : '' });
+    MIN = m.minutes; showMinutes(); if (!MIN) remake();
   } catch (er) { alert('열기 실패: ' + (er.message || er)); }
 };
 
@@ -192,27 +219,21 @@ $('btnStart').onclick = async () => {
   $('homeMsg').textContent = ''; $('homeMsg').classList.remove('err');
   try {
     await startMic();
-    const d = new Date(); S.date = todayYmd(); S.start = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    const d = new Date(); S.date = todayYmd(); S.start = pad(d.getHours()) + ':' + pad(d.getMinutes()); S.end = '';
     S.id = 'M' + S.date.replace(/-/g, '') + '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
-    S.lines = []; S.cur = null; S.handle = ''; S.model = 0; S.urlMode = 0; S.everUp = false; S.running = true; S.t0 = Date.now(); S.lastSaved = -1; S.reconnects = 0;
-    renderWho(); renderOpenBar(); $('lines').innerHTML = ''; show('vLive');
+    Object.assign(S, { lines: [], running: true, t0: Date.now(), lastSaved: -1, audioUrl: '' });
+    renderOpenBar(); $('lines').innerHTML = ''; show('vLive');
     $('btnStop').classList.remove('hidden'); $('lvl').classList.remove('hidden');
     S.clockTimer = setInterval(() => { const s = Math.floor((Date.now() - S.t0) / 1000); $('clock').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60); }, 1000);
     S.saveTimer = setInterval(() => saveLines(), 30000);
-    await connect();
-  } catch (e) { stopMic(); S.running = false; show('vHome'); $('homeMsg').textContent = '시작 실패: ' + (e.message || e); $('homeMsg').classList.add('err'); }
+    startRec();
+    await startSessions();
+  } catch (e) { stopAll(); show('vHome'); $('homeMsg').textContent = '시작 실패: ' + (e.message || e); $('homeMsg').classList.add('err'); }
 };
 function renderOpenBar() {
-  const b = $('liveOpen');
-  b.classList.toggle('hidden', !OPEN.length);
+  const b = $('liveOpen'); b.classList.toggle('hidden', !OPEN.length);
   b.innerHTML = '<b>⏳ 미결 ' + OPEN.length + '건</b> — ' + OPEN.slice(0, 6).map(x => esc(x.dc) + ' ' + esc(x.ko.slice(0, 30))).join(' / ');
 }
-function renderWho() {
-  const names = ($('whoList').value || WHO_DEFAULT).split(/[,，]/).map(s => s.trim()).filter(Boolean);
-  $('whoBar').innerHTML = '<span class="muted">말하는 사람:</span>' + names.map(n => '<button class="chip' + (n === S.who ? ' on' : '') + '" data-w="' + esc(n) + '">' + esc(n) + '</button>').join('') +
-    '<button class="chip' + (!S.who ? ' on' : '') + '" data-w="">지정 안 함</button>';
-}
-$('whoBar').onclick = e => { const c = e.target.closest('.chip'); if (!c) return; S.who = c.dataset.w; renderWho(); if (S.cur) S.cur.who = S.who; };
 
 // ---------- 마이크 (16kHz PCM) ----------
 const MIC = { ctx: null, stream: null, node: null, src: null };
@@ -239,10 +260,29 @@ function onPcm(buf) {
   const a = new Int16Array(buf); let m = 0; for (let i = 0; i < a.length; i += 8) m = Math.max(m, Math.abs(a[i]));
   const lv = Math.min(5, Math.round(m / 3000));
   $('lvl').querySelectorAll('b').forEach((b, i) => b.style.height = (i < lv ? 6 + i * 3 : 3) + 'px');
-  if (!S.ws || S.ws.readyState !== 1 || !S.setupDone) return;
-  if (Date.now() < S.playUntil) return;            // 번역을 읽어주는 동안은 마이크를 보내지 않음 (되울림 방지)
-  S.ws.send(JSON.stringify({ realtimeInput: { audio: { data: b64(buf), mimeType: 'audio/pcm;rate=16000' } } }));
+  recPcm(a);                                        // 회의 전체 녹음 (화자 구분용)
+  if (Date.now() < S.playUntil) return;             // 번역을 읽어주는 동안은 마이크를 보내지 않음 (되울림 방지)
+  const msg = JSON.stringify({ realtimeInput: { audio: { data: b64(buf), mimeType: 'audio/pcm;rate=16000' } } });
+  SES.forEach(x => { if (x.ws && x.ws.readyState === 1 && x.up) x.ws.send(msg); });
 }
+
+// ---------- 녹음 (MP3 16kHz · 32kbps ≈ 1시간 14MB) ----------
+const REC = { enc: null, parts: [], mr: null, chunks: [], mime: '' };
+function startRec() {
+  REC.parts = []; REC.chunks = []; REC.enc = null; REC.mr = null;
+  if (window.lamejs) { try { REC.enc = new lamejs.Mp3Encoder(1, 16000, 32); REC.mime = 'audio/mpeg'; return; } catch (e) {} }
+  try { REC.mr = new MediaRecorder(MIC.stream, { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 32000 }); REC.mime = 'audio/webm';
+    REC.mr.ondataavailable = e => e.data.size && REC.chunks.push(e.data); REC.mr.start(10000); } catch (e) { REC.mr = null; }
+}
+function recPcm(a) { if (REC.enc) { const o = REC.enc.encodeBuffer(a); if (o.length) REC.parts.push(new Uint8Array(o)); } }
+function stopRec() {
+  return new Promise(res => {
+    if (REC.enc) { const o = REC.enc.flush(); if (o.length) REC.parts.push(new Uint8Array(o)); REC.enc = null; return res(REC.parts.length ? new Blob(REC.parts, { type: 'audio/mpeg' }) : null); }
+    if (REC.mr && REC.mr.state !== 'inactive') { REC.mr.onstop = () => res(REC.chunks.length ? new Blob(REC.chunks, { type: 'audio/webm' }) : null); REC.mr.stop(); return; }
+    res(null);
+  });
+}
+function blobB64(blob) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); }); }
 
 // ---------- 번역 음성 재생 (24kHz) ----------
 const OUT = { ctx: null, t: 0 };
@@ -258,82 +298,131 @@ function playPcm(b64data) {
 }
 
 // ---------- Gemini 실시간 연결 ----------
-let TOKEN = null;
+// 빠른 통역: 번역 전용 모델 2개를 동시에 연결 (→태국어 / →한국어). 같은 언어는 조용히 넘어감
+// 용어집 통역: 일반 실시간 모델 1개 + 현장 용어집 지시
+let SES = [];
 async function getToken() {
-  setPill('conn', '연결 중…');
   const r = await api({ action: 'liveToken' });
   if (!r.ok) throw new Error(r.error || '토큰 발급 실패');
-  TOKEN = r; S.models = r.models; S.instruction = r.instruction;
   return r;
 }
-async function connect() {
+async function startSessions() {
+  setPill('conn', '연결 중…');
+  SES = MODE === 'fast'
+    ? [{ kind: 'fast', target: 'th', v: 0 }, { kind: 'fast', target: 'ko', v: 0 }]
+    : [{ kind: 'acc', v: 0, model: 0 }];
+  SES.forEach(x => Object.assign(x, { inBuf: '', outBuf: '', t: '', segs: [], everUp: false, handle: '', reconnects: 0 }));
+  await Promise.all(SES.map(x => connect(x)));
+}
+const FAST_VARIANTS = 3, ACC_VARIANTS = 3;
+async function connect(x) {
   if (!S.running) return;
-  await getToken();
-  const model = S.models[Math.min(S.model, S.models.length - 1)];
-  const url = WS_BASE + (S.urlMode ? 'BidiGenerateContent' : 'BidiGenerateContentConstrained') + '?access_token=' + encodeURIComponent(TOKEN.token);
-  S.setupDone = false;
-  const ws = new WebSocket(url); S.ws = ws;
-  ws.onopen = () => {
-    const setup = { model, generationConfig: { responseModalities: ['AUDIO'] },
-      systemInstruction: { parts: [{ text: S.instruction + recentContext() }] },
-      inputAudioTranscription: {}, outputAudioTranscription: {},
-      contextWindowCompression: { slidingWindow: {} }, sessionResumption: S.handle ? { handle: S.handle } : {} };
-    ws.send(JSON.stringify({ setup }));
-  };
+  const tk = await getToken();
+  let model, setup, path = 'BidiGenerateContentConstrained';
+  if (x.kind === 'fast') {
+    model = tk.fast || 'models/gemini-3.5-live-translate-preview';
+    const tr = { targetLanguageCode: x.target, echoTargetLanguage: false };
+    if (x.v === 0) setup = { model, generationConfig: { responseModalities: ['AUDIO'], inputAudioTranscription: {}, outputAudioTranscription: {}, translationConfig: tr } };
+    else setup = { model, generationConfig: { responseModalities: ['AUDIO'], translationConfig: tr }, inputAudioTranscription: {}, outputAudioTranscription: {} };
+    if (x.v === 2) path = 'BidiGenerateContent';
+  } else {
+    const ms = tk.models || ['models/gemini-3.8-live'];
+    model = ms[Math.min(x.model, ms.length - 1)];
+    setup = { model, generationConfig: { responseModalities: ['AUDIO'] }, systemInstruction: { parts: [{ text: tk.instruction + recentContext() }] },
+      inputAudioTranscription: {}, outputAudioTranscription: {}, contextWindowCompression: { slidingWindow: {} }, sessionResumption: x.handle ? { handle: x.handle } : {} };
+    if (x.v === 0) setup.realtimeInputConfig = { activityHandling: 'NO_INTERRUPTION', automaticActivityDetection: { silenceDurationMs: 500 } };
+    if (x.v === 2) path = 'BidiGenerateContent';
+  }
+  x.up = false;
+  const ws = new WebSocket(WS_BASE + path + '?access_token=' + encodeURIComponent(tk.token)); x.ws = ws;
+  ws.onopen = () => ws.send(JSON.stringify({ setup }));
   ws.onmessage = async ev => {
     let d = ev.data; if (d instanceof Blob) d = await d.text(); else if (d instanceof ArrayBuffer) d = new TextDecoder().decode(d);
     let m; try { m = JSON.parse(d); } catch (e) { return; }
-    onServer(m);
+    onServer(x, m);
   };
   ws.onclose = ev => {
-    if (S.ws !== ws) return;
-    S.setupDone = false;
+    if (x.ws !== ws) return;
+    x.up = false;
     if (!S.running) return;
-    if (!S.everUp) {   // 한 번도 연결되지 않았으면 다음 모델로
-      S.lastErr = ev.code + ' ' + (ev.reason || '');
-      if (!S.urlMode) S.urlMode = 1; else { S.urlMode = 0; S.model++; }   // 주소 방식 → 다음 모델 순서로 시도
-      if (S.model >= S.models.length) { failLive('Gemini 실시간 연결 실패 (' + S.lastErr + ')'); return; }
-    } else if (S.reconnects > 30) { failLive('재연결이 너무 많습니다 (' + ev.code + ' ' + (ev.reason || '') + ')'); return; }
-    S.reconnects++;
-    setPill('conn', '재연결 중… 잠시 말을 멈춰 주세요');
-    setTimeout(() => connect().catch(e => failLive(e.message || e)), 600);
+    if (!x.everUp) {   // 처음부터 안 되면 다른 설정 → 다른 모델 → (빠른 통역 실패 시) 용어집 통역으로
+      x.lastErr = ev.code + ' ' + (ev.reason || '');
+      x.v++;
+      if (x.kind === 'fast' && x.v >= FAST_VARIANTS) { fallbackToAcc(x.lastErr); return; }
+      if (x.kind === 'acc' && x.v >= ACC_VARIANTS) { x.v = 0; x.model++; if (x.model >= 3) { failLive('Gemini 실시간 연결 실패 (' + x.lastErr + ')'); return; } }
+    } else if (++x.reconnects > 40) { failLive('재연결이 너무 많습니다'); return; }
+    setPill('conn', '재연결 중…');
+    setTimeout(() => connect(x).catch(e => failLive(e.message || e)), 500);
   };
-  ws.onerror = () => {};
 }
-function recentContext() {   // 재연결할 때 직전 대화 몇 줄을 알려 줘서 문맥 유지
+let FELL = false;
+function fallbackToAcc(err) {
+  if (FELL) return; FELL = true;
+  SES.forEach(s => { const w = s.ws; s.ws = null; try { w && w.close(); } catch (e) {} });
+  note('⚡ 빠른 통역 모델에 연결하지 못해 용어집 통역으로 바꿨습니다 (' + err + ')');
+  MODE = 'acc';
+  SES = [{ kind: 'acc', v: 0, model: 0, inBuf: '', outBuf: '', segs: [], everUp: false, handle: '', reconnects: 0 }];
+  connect(SES[0]).catch(e => failLive(e.message || e));
+}
+function recentContext() {
   const L = S.lines.slice(-6); if (!L.length) return '';
-  return '\n\n(참고: 직전 대화)\n' + L.map(l => (l.who ? l.who + ': ' : '') + l.src + ' => ' + l.tr).join('\n');
+  return '\n\n(참고: 직전 대화)\n' + L.map(l => l.src + ' => ' + l.tr).join('\n');
 }
-function failLive(msg) {
-  setPill('conn', '연결 끊김'); const p = $('stPill'); p.title = msg;
-  const d = document.createElement('div'); d.className = 'notice'; d.textContent = '⚠ ' + msg + ' — 종료를 눌러 지금까지 내용을 회의록으로 정리할 수 있습니다.';
-  $('lines').appendChild(d);
-}
-function onServer(m) {
-  if (m.setupComplete) { S.setupDone = true; S.everUp = true; setPill('rec', '통역 중 · ' + (S.models[S.model] || '').replace('models/', '')); return; }
-  if (m.sessionResumptionUpdate && m.sessionResumptionUpdate.resumable !== false && m.sessionResumptionUpdate.newHandle) S.handle = m.sessionResumptionUpdate.newHandle;
-  if (m.goAway) { setPill('conn', '곧 재연결…'); setTimeout(() => { try { S.ws && S.ws.close(); } catch (e) {} }, 300); return; }
+function note(t) { const d = document.createElement('div'); d.className = 'notice'; d.textContent = t; $('lines').appendChild(d); }
+function failLive(msg) { setPill('conn', '연결 끊김'); note('⚠ ' + msg + ' — 녹음은 계속됩니다. 종료를 누르면 녹음으로 회의록을 만듭니다.'); }
+
+function onServer(x, m) {
+  if (m.setupComplete) {
+    x.up = true; x.everUp = true;
+    setPill('rec', (x.kind === 'fast' ? '⚡ 빠른 통역 중' : '📘 용어집 통역 중') + ' · 녹음 중'); return;
+  }
+  if (m.sessionResumptionUpdate && m.sessionResumptionUpdate.resumable !== false && m.sessionResumptionUpdate.newHandle) x.handle = m.sessionResumptionUpdate.newHandle;
+  if (m.goAway) { setTimeout(() => { try { x.ws && x.ws.close(); } catch (e) {} }, 300); return; }
   const c = m.serverContent; if (!c) return;
-  if (c.inputTranscription && c.inputTranscription.text) {
-    if (!S.cur || S.cur.done) S.cur = { t: nowHM(), who: S.who, src: '', tr: '', lang: '' };
-    if (S.cur.tr && S.cur.trDone) { finishCur(); S.cur = { t: nowHM(), who: S.who, src: '', tr: '', lang: '' }; }
-    S.cur.src += c.inputTranscription.text;
-  }
-  if (c.outputTranscription && c.outputTranscription.text) {
-    if (!S.cur) S.cur = { t: nowHM(), who: S.who, src: '', tr: '', lang: '' };
-    S.cur.tr += c.outputTranscription.text;
-  }
   if (c.modelTurn && c.modelTurn.parts) c.modelTurn.parts.forEach(p => { if (p.inlineData && p.inlineData.data && /audio/.test(p.inlineData.mimeType || 'audio')) playPcm(p.inlineData.data); });
-  if (c.interrupted) { if (OUT.ctx) { OUT.t = 0; } }
-  if (c.turnComplete || c.generationComplete) { if (S.cur && S.cur.tr) S.cur.trDone = true; if (c.turnComplete) finishCur(); }
+  const now = Date.now();
+  if (x.kind === 'fast') {
+    // 번역이 1.2초 멈추면 한 줄로 확정
+    if (c.inputTranscription && c.inputTranscription.text) { if (!x.inBuf) x.t = nowHM(); x.inBuf = (x.inBuf + c.inputTranscription.text).slice(-600); }
+    if (c.outputTranscription && c.outputTranscription.text) { if (!x.t) x.t = nowHM(); x.outBuf += c.outputTranscription.text; clearTimeout(x.tm); x.tm = setTimeout(() => fastFlush(x), 1200); }
+    if (c.turnComplete && clean(x.outBuf)) { clearTimeout(x.tm); fastFlush(x); }
+  } else {
+    if (c.inputTranscription && c.inputTranscription.text) {
+      let g = x.segs[x.segs.length - 1];
+      if (!g || g.inClosed) { g = { t: nowHM(), src: '', tr: '' }; x.segs.push(g); }
+      g.src += c.inputTranscription.text; g.lastIn = now;
+    }
+    if (c.outputTranscription && c.outputTranscription.text) {
+      let g = x.segs.find(s => !s.outDone);
+      if (!g) { g = { t: nowHM(), src: '', tr: '' }; x.segs.push(g); }
+      g.tr += c.outputTranscription.text; g.inClosed = true; g.lastOut = now;
+    }
+    if (c.turnComplete) { const g = x.segs.find(s => !s.outDone); if (g) { g.outDone = true; g.inClosed = true; } accFlush(x); }
+  }
   drawPending();
 }
-function clean(t) { return String(t || '').replace(/\s+/g, ' ').trim(); }
-function finishCur() {
-  const c = S.cur; if (!c) return;
+function fastFlush(x) {
+  const tr = clean(x.outBuf); if (!tr) return;
+  const src = clean(x.inBuf);
+  pushLine({ t: x.t || nowHM(), src, tr, lang: x.target === 'th' ? (langOf(src) === 'en' ? 'en' : 'ko') : 'th' });
+  SES.forEach(s => { if (s === x || !clean(s.outBuf)) { s.inBuf = ''; if (s === x) s.outBuf = ''; s.t = ''; } });   // 같은 말을 다른 세션이 다시 쓰지 않게
+  drawPending();
+}
+function accFlush(x) { while (x.segs.length && x.segs[0].outDone) { const g = x.segs.shift(); pushLine({ t: g.t, src: clean(g.src), tr: clean(g.tr) }); } }
+setInterval(() => {   // 번역이 안 나오는 말(맞장구·잡음) 정리
+  if (!S.running) return;
+  const now = Date.now();
+  SES.forEach(x => {
+    if (x.kind === 'fast') { if (!clean(x.outBuf) && x.inBuf && SES.every(s => !clean(s.outBuf))) { x.idle = (x.idle || 0) + 1; if (x.idle > 10) { x.inBuf = ''; x.idle = 0; drawPending(); } } else x.idle = 0; return; }
+    const g = x.segs[0]; if (!g) return;
+    if ((!g.tr && g.lastIn && now - g.lastIn > 9000) || (g.tr && g.lastOut && now - g.lastOut > 12000)) { g.outDone = true; accFlush(x); drawPending(); }
+  });
+}, 1000);
+function pushLine(c) {
   c.src = clean(c.src); c.tr = clean(c.tr);
-  if (c.src || c.tr) { c.lang = langOf(c.src) || (langOf(c.tr) === 'th' ? 'ko' : 'th'); delete c.done; delete c.trDone; S.lines.push(c); appendLine(c, S.lines.length - 1); }
-  S.cur = null; drawPending();
+  if (!c.src && !c.tr) return;
+  c.lang = c.lang || langOf(c.src) || (langOf(c.tr) === 'th' ? 'ko' : 'th');
+  S.lines.push(c); appendLine(c, S.lines.length - 1);
 }
 function lineHtml(l, i, pending) {
   return '<div class="ln ' + (l.lang === 'th' ? 'th' : '') + (pending ? ' pending' : '') + (l.edited ? ' edited' : '') + '"' + (pending ? '' : ' data-i="' + i + '"') + '>' +
@@ -341,40 +430,59 @@ function lineHtml(l, i, pending) {
     '<div class="src">' + esc(clean(l.src)) + '</div><div class="tr">' + (esc(clean(l.tr)) || '<span class="muted">…</span>') + '</div></div>';
 }
 function appendLine(l, i) {
-  const p = $('pendingLn'); if (p) p.remove();
+  document.querySelectorAll('#lines .ln.pending').forEach(x => x.remove());
   $('lines').insertAdjacentHTML('beforeend', lineHtml(l, i));
   window.scrollTo(0, document.body.scrollHeight);
+  drawPending();
 }
-let IDLE = null;
 function drawPending() {
-  clearTimeout(IDLE);
-  if (S.cur && S.cur.src && !S.cur.tr) IDLE = setTimeout(() => { if (S.cur && !S.cur.tr) finishCur(); }, 7000);   // 번역 없이 끝난 짧은 말
-  let p = $('pendingLn');
-  if (!S.cur || !(S.cur.src || S.cur.tr)) { if (p) p.remove(); return; }
-  const c = Object.assign({}, S.cur, { lang: langOf(S.cur.src) || 'ko' });
-  const h = lineHtml(c, -1, true).replace('<div class="ln', '<div id="pendingLn" class="ln');
-  if (p) p.outerHTML = h; else { $('lines').insertAdjacentHTML('beforeend', h); window.scrollTo(0, document.body.scrollHeight); }
+  document.querySelectorAll('#lines .ln.pending').forEach(x => x.remove());
+  let P = [];
+  if (MODE === 'fast' || SES.some(x => x.kind === 'fast')) {
+    const src = SES.map(x => clean(x.inBuf)).sort((a, b) => b.length - a.length)[0] || '';
+    const tr = SES.map(x => clean(x.outBuf)).filter(Boolean).join(' ');
+    if (src || tr) P = [{ t: nowHM(), src, tr }];
+  } else SES.forEach(x => x.segs.forEach(g => { if (clean(g.src) || clean(g.tr)) P.push(g); }));
+  if (!P.length) return;
+  $('lines').insertAdjacentHTML('beforeend', P.map(g => lineHtml(Object.assign({}, g, { lang: langOf(g.src) || 'ko' }), -1, true)).join(''));
+  window.scrollTo(0, document.body.scrollHeight);
 }
 
 // ---------- 저장 · 종료 ----------
 function payload(extra) {
-  const min = Math.max(1, Math.round((Date.now() - S.t0) / 60000));
-  return Object.assign({ id: S.id, date: S.date, start: S.start, min: S.t0 ? min : undefined, lines: S.lines.map(l => ({ t: l.t, who: l.who, lang: l.lang, src: l.src, tr: l.tr })) }, extra || {});
+  const min = S.t0 ? Math.max(1, Math.round((Date.now() - S.t0) / 60000)) : undefined;
+  return Object.assign({ id: S.id, date: S.date, start: S.start, end: S.end, min, people: $('whoList').value,
+    lines: S.lines.map(l => ({ t: l.t, who: l.who || '', lang: l.lang, src: l.src, tr: l.tr })) }, extra || {});
 }
 async function saveLines(force) {
   if (!S.id || (!force && S.lastSaved === S.lines.length)) return;
   const n = S.lines.length;
   try { const r = await api(Object.assign({ action: 'liveSave' }, payload({ status: S.running ? '진행' : '대기' }))); if (r.ok) S.lastSaved = n; } catch (e) {}
 }
+function stopAll() {
+  S.running = false;
+  SES.forEach(x => { clearTimeout(x.tm); const w = x.ws; x.ws = null; try { w && w.close(); } catch (e) {} });
+  stopMic(); clearInterval(S.saveTimer); clearInterval(S.clockTimer);
+  $('btnStop').classList.add('hidden'); $('lvl').classList.add('hidden'); setPill('', ''); $('clock').textContent = '';
+}
 $('btnStop').onclick = async () => {
   if (!S.running) return;
-  S.running = false; finishCur();
-  try { S.ws && S.ws.close(); } catch (e) {} S.ws = null;
-  stopMic(); clearInterval(S.saveTimer); clearInterval(S.clockTimer);
-  $('btnStop').classList.add('hidden'); $('lvl').classList.add('hidden'); setPill('', '');
+  SES.forEach(x => { if (x.kind === 'fast') { clearTimeout(x.tm); fastFlush(x); } else { x.segs.forEach(g => g.outDone = true); accFlush(x); } });
+  stopAll();
   const d = new Date(); S.end = pad(d.getHours()) + ':' + pad(d.getMinutes());
-  MIN = null; showMinutes(); await remake();
+  MIN = null; showMinutes();
+  $('minBody').innerHTML = '<div class="muted">💾 녹음 올리는 중…</div>';
+  let audioId = '';
+  try {
+    const blob = await stopRec();
+    if (blob && blob.size > 2000) {
+      const r = await api({ action: 'liveAudio', id: S.id, mime: blob.type, data: await blobB64(blob) });
+      if (r.ok) { audioId = r.fileId; S.audioUrl = r.url; drawAudioLink(); } else note2('녹음 저장 실패: ' + r.error);
+    }
+  } catch (e) { note2('녹음 저장 실패: ' + (e.message || e)); }
+  await remake(audioId);
 };
+function note2(t) { $('minMsg').textContent = t; $('minMsg').classList.add('err'); }
 window.addEventListener('beforeunload', e => { if (S.running) { e.preventDefault(); e.returnValue = ''; } });
 
 // ---------- 회의록 ----------
@@ -382,19 +490,25 @@ let MIN = null, MLANG = 'ko';
 const STS = ['진행·대기', '미해결·재발', '완료', '보고'];
 function showMinutes() {
   show('vMin');
-  $('minTitle').textContent = '📝 회의록 · ' + S.date + ' ' + (S.start || '') + (S.end ? '~' + S.end : '');
-  drawMinutes(); drawMinLines();
+  $('minTitle').innerHTML = '📝 회의록 · ' + esc(S.date) + ' ' + esc(S.start || '') + (S.end ? '~' + esc(S.end) : '') +
+    ' <button id="btnDelMtg" style="margin-left:auto;padding:3px 10px;font-size:12px;color:var(--red)">🗑 회의 삭제</button>';
+  $('minMsg').textContent = ''; $('minMsg').classList.remove('err');
+  drawAudioLink(); drawMinutes(); drawMinLines();
 }
-async function remake() {
-  $('minBody').innerHTML = '<div class="muted">🤖 대화 ' + S.lines.length + '줄을 회의록으로 정리하는 중… (10~30초)</div>';
-  $('minMsg').textContent = '';
+function drawAudioLink() { const a = $('audioLink'); a.classList.toggle('hidden', !S.audioUrl); if (S.audioUrl) a.href = S.audioUrl; }
+async function remake(audioId) {
+  $('minBody').innerHTML = '<div class="muted">🤖 ' + (audioId || S.audioUrl ? '녹음을 듣고 말한 사람을 나눠서 ' : '대화 ' + S.lines.length + '줄을 ') + '회의록으로 정리하는 중… (회의 길이에 따라 30초~3분)</div>';
   try {
-    const r = await api(Object.assign({ action: 'liveMinutes' }, payload({ end: S.end })));
+    const r = await api(Object.assign({ action: 'liveMinutes', audioId: audioId || '' }, payload()));
     if (!r.ok) throw new Error(r.error);
-    MIN = r.minutes; drawMinutes();
-  } catch (e) { $('minBody').innerHTML = '<div class="msg err">정리 실패: ' + esc(e.message || e) + ' — 「↻ 다시 정리」를 눌러 주세요. 대화는 저장되어 있습니다.</div>'; }
+    MIN = r.minutes;
+    if (r.lines && r.lines.length) { S.lines = r.lines; S.lastSaved = S.lines.length; }
+    drawMinutes(); drawMinLines();
+    if (MIN.audioErr) note2('녹음으로 정리하지 못해 실시간 기록으로 정리했습니다: ' + MIN.audioErr);
+  } catch (e) { $('minBody').innerHTML = '<div class="msg err">정리 실패: ' + esc(e.message || e) + ' — 「↻ 다시 정리」를 눌러 주세요. 대화와 녹음은 저장되어 있습니다.</div>'; }
 }
 function drawMinutes() {
+  $('minBadge').innerHTML = MIN && MIN.fromAudio ? '<span class="badge">🎧 녹음으로 화자 구분됨</span>' : '';
   if (!MIN) return;
   const L = MLANG, it = MIN.items || [];
   const ce = (k, v) => '<div contenteditable="true" data-k="' + k + '">' + esc(v || '') + '</div>';
@@ -419,18 +533,27 @@ $('btnAddRow').onclick = () => { if (!MIN) MIN = { items: [] }; MIN.items.push({
 $('minLang').onclick = e => { const b = e.target.closest('button'); if (!b) return; MLANG = b.dataset.l; $('minLang').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); drawMinutes(); };
 $('btnRemake').onclick = () => remake();
 $('btnHome').onclick = () => loadHome();
+$('minTitle').addEventListener('click', async e => {
+  const b = e.target.closest('#btnDelMtg'); if (!b) return;
+  if (!armed(b, '한 번 더 누르면 녹음·대화까지 삭제')) return;
+  b.disabled = true;
+  try { const r = await api({ action: 'liveDelete', id: S.id }); if (!r.ok) throw new Error(r.error); S.id = ''; MIN = null; loadHome(); }
+  catch (er) { b.disabled = false; note2('삭제 실패: ' + (er.message || er)); }
+});
 $('btnConfirm').onclick = async () => {
-  if (!MIN || !(MIN.items || []).length) { $('minMsg').textContent = '확정할 항목이 없습니다'; $('minMsg').classList.add('err'); return; }
+  if (!MIN || !(MIN.items || []).length) { note2('확정할 항목이 없습니다'); return; }
   const b = $('btnConfirm'); b.disabled = true; b.textContent = '저장 중…';
   try {
+    if (S.lastSaved !== S.lines.length) await saveLines(true);
     const r = await api({ action: 'liveConfirm', id: S.id, date: S.date, minutes: MIN, sendLine: $('sendLine').checked });
     if (!r.ok) throw new Error(r.error);
     $('minMsg').classList.remove('err');
     $('minMsg').innerHTML = '✅ 확정했습니다. 조회회의록에 ' + r.n + '건 추가 → 로스 달력에 반영됩니다' + (r.line ? ' · ' + esc(r.line) : '') + ' <a href="6_loss_calendar.html">달력 보기</a>';
-  } catch (e) { $('minMsg').textContent = '실패: ' + (e.message || e); $('minMsg').classList.add('err'); }
+  } catch (e) { note2('실패: ' + (e.message || e)); }
   b.disabled = false; b.textContent = '✓ 확정 · ยืนยัน';
 };
 function drawMinLines() {
+  $('linesNote').textContent = MIN && MIN.fromAudio ? '녹음으로 다시 정리한 대화 · 줄을 눌러 수정' : '줄을 눌러 수정';
   $('minLines').innerHTML = S.lines.length ? S.lines.map((l, i) => lineHtml(l, i)).join('') : '<div class="muted">대화가 없습니다</div>';
 }
 
@@ -439,6 +562,7 @@ document.addEventListener('click', e => {
   const ln = e.target.closest('.ln[data-i]'); if (!ln) return;
   const i = +ln.dataset.i, l = S.lines[i]; if (!l) return;
   openModal('<h3>줄 수정 · ' + esc(l.t) + '</h3>' +
+    '<label>말한 사람</label><input id="eWho" style="width:100%" value="' + esc(l.who || '') + '">' +
     '<label>원문 (들은 말)</label><textarea id="eSrc" rows="2">' + esc(l.src) + '</textarea>' +
     '<label>번역</label><textarea id="eTr" rows="2">' + esc(l.tr) + '</textarea>' +
     '<div class="row-btn" style="justify-content:flex-start"><button id="eToKo">↻ 한국어로 재번역</button><button id="eToTh">↻ ไทย 재번역</button></div>' +
@@ -449,9 +573,9 @@ document.addEventListener('click', e => {
   const re = async to => { msg('번역 중…'); try { const r = await api({ action: 'liveTranslate', text: $('eSrc').value, to }); if (!r.ok) throw new Error(r.error); $('eTr').value = r.text; msg('재번역했습니다. 저장을 누르세요'); } catch (er) { msg('실패: ' + (er.message || er), true); } };
   $('eToKo').onclick = () => re('ko'); $('eToTh').onclick = () => re('th');
   $('eNo').onclick = closeModal;
-  $('eDel').onclick = () => { S.lines.splice(i, 1); closeModal(); redrawAll(); };
+  $('eDel').onclick = () => { S.lines.splice(i, 1); closeModal(); redrawAll(); S.lastSaved = -1; if (!S.running) saveLines(true); };
   $('eOk').onclick = async () => {
-    l.src = $('eSrc').value.trim(); l.tr = $('eTr').value.trim(); l.lang = langOf(l.src) || l.lang; l.edited = true;
+    l.who = $('eWho').value.trim(); l.src = $('eSrc').value.trim(); l.tr = $('eTr').value.trim(); l.lang = langOf(l.src) || l.lang; l.edited = true;
     const ko = $('gKo').value.trim(), th = $('gTh').value.trim();
     if (ko || th) { msg('용어집에 추가 중…'); try { const r = await api({ action: 'liveAddTerm', ko, th }); if (!r.ok) throw new Error(r.error); } catch (er) { msg('용어 추가 실패: ' + (er.message || er), true); return; } }
     closeModal(); redrawAll(); S.lastSaved = -1; if (!S.running) saveLines(true);
