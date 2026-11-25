@@ -624,7 +624,7 @@ function onServer(x, m) {
     if (c.inputTranscription && c.inputTranscription.text) {
       // →태국어 세션은 한국어·영어만, →한국어 세션은 태국어만 원문으로 모음 (두 세션 원문이 섞이지 않게)
       const tx = c.inputTranscription.text, lg = langOf(tx);
-      if (!lg || (x.target === 'th' ? lg !== 'th' : lg === 'th')) { if (!x.inq.length) x.t = nowHM(); x.inq.push({ at: now, text: tx }); setInBuf(x); }
+      if (!lg || (x.target === 'th' ? lg !== 'th' : lg !== 'ko')) { if (!x.inq.length) x.t = nowHM(); x.inq.push({ at: now, text: tx }); setInBuf(x); }
     }
     if (c.outputTranscription && c.outputTranscription.text) { if (!x.t) x.t = nowHM(); x.outBuf += c.outputTranscription.text; x.lastOutAt = now; clearTimeout(x.tm);
       // 번역은 짧은 조각으로 나오므로 문장 단위로 모아서 한 줄로: 문장 끝(. ? !)이면 0.4초, 아니면 1.3초 쉬면 확정, 140자 넘으면 바로
@@ -652,8 +652,13 @@ function fastFlush(x) {
   // 마지막 번역 조각까지 들어온 말만 이 줄의 원문 · 그 뒤에 들어온 말은 다음 줄로
   const T = x.lastOutAt || Date.now();
   const src = clean(x.inq.filter(q => q.at <= T).map(q => q.text).join(''));
-  if (x.target === 'ko' && !src) { x.outBuf = ''; drawPending(); return; }   // 태국어가 아닌 말(영어 등)은 →태국어 줄 하나로만
-  pushLine({ t: x.t || nowHM(), src, tr, lang: x.target === 'th' ? (langOf(src) === 'en' ? 'en' : 'ko') : 'th' });
+  const lg = langOf(src) === 'en' ? 'en' : (x.target === 'th' ? 'ko' : 'th');
+  if (x.target === 'ko' && !src) { x.outBuf = ''; drawPending(); return; }
+  if (lg === 'en') {   // 영어는 →태국어·→한국어 두 번역이 따로 나옴 → 6초 안의 영어 줄과 합침
+    const m = S.lines.slice(-3).reverse().find(l => l.lang === 'en' && Date.now() - (l.at || 0) < 6000 && (x.target === 'th' ? !l.trTh : !(l.tx && l.tx.ko)));
+    if (m) { if (x.target === 'th') { m.tr = tr; m.trTh = true; } else { m.tx = Object.assign(m.tx || {}, { ko: tr }); } if (src.length > m.src.length) m.src = src; redrawLine(m); }
+    else pushLine({ t: x.t || nowHM(), src, tr: x.target === 'th' ? tr : '', tx: x.target === 'ko' ? { ko: tr } : null, trTh: x.target === 'th', lang: 'en', at: Date.now() });
+  } else pushLine({ t: x.t || nowHM(), src, tr, lang: lg });
   SES.forEach(s => { if (s === x || !clean(s.outBuf)) { s.inq = s.inq.filter(q => q.at > T); setInBuf(s); s.t = s.inq.length ? nowHM() : ''; } });
   x.outBuf = '';
   drawPending();
@@ -677,31 +682,46 @@ function pushLine(c) {
 }
 // ---------- 문맥 보정: 빠른 통역 줄을 확정 후 1~3초 안에 앞뒤 문맥·용어집으로 다듬어 교체 ----------
 const RQ = { busy: 0, q: [] };
+// 두 문장이 거의 같은지 (글자 2개씩 묶어 겹치는 비율) — 원문 보정이 문장을 새로 쓰는 것을 막음
+function similar(a, b) {
+  a = String(a || '').replace(/\s+/g, ''); b = String(b || '').replace(/\s+/g, '');
+  if (!a || !b) return false; if (a === b) return true;
+  if (Math.abs(a.length - b.length) > Math.max(6, a.length * 0.25)) return false;
+  const bg = t => { const m = {}; for (let i = 0; i < t.length - 1; i++) { const k = t.substr(i, 2); m[k] = (m[k] || 0) + 1; } return m; };
+  const A = bg(a), B = bg(b); let hit = 0, tot = 0;
+  Object.keys(A).forEach(k => { tot += A[k]; hit += Math.min(A[k], B[k] || 0); });
+  return tot ? hit / tot >= 0.7 : false;
+}
 function refineQ(l) {
-  if (l.refining) return;
+  if (l.refining || RQ.q.includes(l)) return;
   l.refining = true; redrawLine(l); RQ.q.push(l);
-  // 말이 계속 이어져 보정이 밀리면 오래된 줄은 건너뛰고 최신 줄을 먼저 (회의록 정리 때 다시 다듬어짐)
-  if (!extraLangs().length) while (RQ.q.length > 3) { const o = RQ.q.shift(); o.refining = false; redrawLine(o); }
+  while (RQ.q.length > 24) { const o = RQ.q.shift(); o.refining = false; redrawLine(o); }   // 너무 밀리면 아주 오래된 줄만 포기
   pumpRefine();
 }
+// 대기 중인 줄을 최대 6줄씩 묶어서 한 번에 번역·보정 (줄마다 따로 부르면 밀림)
 async function pumpRefine() {
-  while (RQ.busy < 3 && RQ.q.length) {
-    const l = RQ.q.shift(); RQ.busy++;
+  while (RQ.busy < 2 && RQ.q.length) {
+    const batch = RQ.q.splice(0, 6); RQ.busy++;
     (async () => {
       try {
-        const i = S.lines.indexOf(l);
         const fix = MODE === 'fast' && $('refine').checked, langs = ['ko', 'th'].concat(extraLangs());
-        const r = await api({ action: 'liveLangs', line: { src: l.src, tr: l.tr, lang: l.lang }, langs, context: S.lines.slice(Math.max(0, i - 8), i).map(x => ({ src: x.src, tr: x.tr })) });
-        if (r.ok) {
-          const tx = r.tx || {};
+        const i0 = S.lines.indexOf(batch[0]);
+        const r = await api({ action: 'liveLangsBatch', langs,
+          lines: batch.map(l => ({ src: l.src, tr: l.tr, lang: l.lang })),
+          context: S.lines.slice(Math.max(0, i0 - 6), Math.max(0, i0)).map(x => ({ src: x.src })) });
+        if (r.ok) (r.items || []).forEach((tx, k) => {
+          const l = batch[k]; if (!l || !tx) return;
           if (fix && !l.edited) {
-            const ns = clean(r.src) || l.src, nt = clean(l.lang === 'th' ? tx.ko : tx.th) || l.tr;
+            const ns = similar(l.src, clean(tx.src)) ? clean(tx.src) : l.src, nt = clean(l.lang === 'th' ? tx.ko : tx.th) || l.tr;
             if (ns !== l.src || nt !== l.tr) { l.src = ns; l.tr = nt; l.refined = true; } else l.checked = true;
-            l.tx = Object.assign(l.tx || {}, tx);
-          } else { l.tx = Object.assign(l.tx || {}); ['en', 'hi'].forEach(k => { if (tx[k]) l.tx[k] = tx[k]; }); }
-        }
+          }
+          if (l.lang === 'en' && tx.th && (!l.tr || fix)) { l.tr = clean(tx.th); l.trTh = true; }
+          l.tx = l.tx || {};
+          LORD.forEach(k2 => { if (tx[k2] && (fix || !l.tx[k2] || k2 === 'en' || k2 === 'hi')) l.tx[k2] = clean(tx[k2]); });
+        });
       } catch (e) {}
-      l.refining = false; redrawLine(l); RQ.busy--; pumpRefine();
+      batch.forEach(l => { l.refining = false; redrawLine(l); });
+      RQ.busy--; pumpRefine();
     })();
   }
 }
@@ -730,6 +750,7 @@ document.addEventListener('click', e => {
 const flag = g => (LANGS[g] || ['EN'])[0];
 function textIn(l, L) {
   if (l.lang === L) return l.src;
+  if (l.out && l.out[L]) return l.out[L];
   if (l.tx && l.tx[L]) return l.tx[L];
   if ((L === 'ko' && l.lang === 'th') || (L === 'th' && l.lang !== 'th')) return l.tr;
   return '';
@@ -747,8 +768,9 @@ function curPending() {
   let P = null;
   if (SES.some(x => x.kind === 'fast')) {
     const src = SES.map(x => clean(x.inBuf)).sort((a, b) => b.length - a.length)[0] || '';
-    const tr = SES.map(x => clean(x.outBuf)).filter(Boolean).join(' ');
-    if (src || tr) P = { t: nowHM(), src, tr };
+    const out = {}; SES.forEach(x => { if (x.target && clean(x.outBuf)) out[x.target] = clean(x.outBuf); });
+    const lg = langOf(src) || 'ko', tr = lg === 'th' ? (out.ko || '') : (out.th || out.ko || '');
+    if (src || tr) P = { t: nowHM(), src, tr, out };
   } else SES.forEach(x => x.segs.forEach(g => { if (clean(g.src) || clean(g.tr)) P = { t: g.t, src: g.src, tr: g.tr }; }));
   if (P) P.lang = langOf(P.src) || (langOf(P.tr) === 'th' ? 'ko' : 'th');
   return P;
