@@ -1091,6 +1091,7 @@
   <div class="layout">
   <nav class="tabbar" id="tabBar">
     <button class="tabbtn active" data-tab="tab-weekly"><span class="no">★</span><span class="tx">주간보고 (1장)</span></button>
+    <button class="tabbtn" data-tab="tab-monthly1"><span class="no">★</span><span class="tx">월간보고 (1장)</span></button>
     <button class="tabbtn" data-tab="tab-daily"><span class="no">★</span><span class="tx">일일보고</span></button>
     <button class="tabbtn" data-tab="tab-monthly"><span class="no">★</span><span class="tx">월간보고</span></button>
     <button class="tabbtn" data-tab="tab-hero"><span class="no">1</span><span class="tx">설비별 MTTR/MTBF</span></button>
@@ -1351,6 +1352,19 @@
   </section>
 
   <!-- ===== 월간보고 : 1. 지표 요약 + 2. 워스트 세부사항 ===== -->
+  <section id="tab-monthly1" class="tabpane">
+    <div class="wk-bar">
+      <label>보고 월</label><select id="km1Month" style="width:120px"></select>
+      <label>작성</label><input id="km1Who" style="width:130px" placeholder="공무팀 / 작성자">
+      <button class="wk-print" id="km1Print">인쇄 / PDF 저장</button>
+      <span style="color:#5a6674;font-size:11.5px;margin-left:auto">주간보고(1장)와 같은 구성을 월 단위로 · 비교 = 전월 · 목표·원인·사진은 월별로 따로 저장됩니다</span>
+    </div>
+    <div class="wk-sheet">
+      <div id="km1Cover"></div>
+      <div id="kwMonthly1" class="kw-host"></div>
+    </div>
+  </section>
+
   <section id="tab-monthly" class="tabpane">
     <div class="wk-bar">
       <label>보고 월</label><select id="kwmMonth" style="width:120px"></select>
@@ -7546,7 +7560,7 @@ TH_UI.push(...[["지표 주간 추이 · 목표 설정", "แนวโน้ม�
 TH_UI.sort((a,b)=>b[0].length-a[0].length);
 
 /* ---------- MTTR/MTBF 보고서 표지 제목 (일일 / 주간 / 월간 · 품질보고와 같은 형식) ---------- */
-function mtCoverHtml(kind, period, note, who, dept, seq){
+function mtCoverHtml(kind, period, note, who, dept, seq, big){
   const T = { weekly:['설비보전 MTTR / MTBF 주간 보고서','MC MTTR / MTBF Weekly Report'],
               daily:['설비보전 MTTR / MTBF 일일 보고서','MC MTTR / MTBF Daily Report'],
               monthly:['설비보전 MTTR / MTBF 월간 보고서','MC MTTR / MTBF Monthly Report'] }[kind];
@@ -7558,6 +7572,7 @@ function mtCoverHtml(kind, period, note, who, dept, seq){
       '<div class="per">' + e(period) + (note ? '<span>' + e(note) + '</span>' : '') + '</div>' +
     '</div>' +
     /* 주간 보고서 — 가운데에 주차를 크게 (W40) */
+    (big ? '<div class="wk"><span>MONTH</span><b>' + e(big) + '</b></div>' : '') +
     (kind === 'weekly' && /W\d+/.test(String(period)) ? (()=>{ const m = String(period).match(/W\d+(?:\s*[–~-]\s*W\d+)?/)[0]; const rg = /[–~-]/.test(m);
       return '<div class="wk' + (rg ? ' rg' : '') + '"><span>' + (rg ? 'WEEKS' : 'WEEK') + '</span><b>' + e(m.replace(/\s*[–~-]\s*/,'–')) + '</b></div>'; })() : '') +
     '<div class="side"><b>STC Co., Ltd.</b><br>다이캐스팅 DC1~DC23 · 공무팀<br>' +
@@ -7833,7 +7848,10 @@ loadData();
   const MACHINES = Array.from({length:23},(_,i)=>i+1).filter(n=>n!==14);
   const norm = s => String(s==null?'':s).replace(/\s+/g,'').trim();
   const CODESET = new Set(CODES.map(norm));
-  const LS = k => { try{ return localStorage.getItem(k); }catch(e){ return null; } };
+  /* 월간보고(1장) — 주간보고와 같은 화면을 '월' 단위로 그린다 (목표값은 주간과 따로 저장 : 키 뒤에 _m) */
+  let MON = false;
+  const TK = k => MON && /^stc_target_(loss|cnt|cost|cost_mc)$/.test(k) ? k + '_m' : k;
+  const LS = k => { try{ return localStorage.getItem(TK(k)); }catch(e){ return null; } };
   /* 로스코드 → 고장유형(4계통) · 주간보고 항목별 고장유형 설정 (stc_rep_types_v1) */
   const TYPE4 = { '설비-전기':['설비수리','취출기수리','스프레이수리','전기로회전','전기로수리','래들수리','펌프이상','컨베이어수리','진공설비','히터수리'],
     '설비-라인':['조건변경','팁교체','스크랩용해','스프레이조정','노즐막힘','플런저오일막힘','바가지교체','탈산처리','설비냉각수'],
@@ -7843,7 +7861,7 @@ loadData();
   const udtOkK = (c0, t, i) => !c0.std || !TYPE4[t].some(x=>c0.udt.has(norm(x))) || c0.udt.has(norm(i));
   function repTypesK(k){ let o=null; try{ o = JSON.parse(LS('stc_rep_types_v1')||'null'); }catch(e){}
     const a = o && Array.isArray(o[k]) ? o[k].filter(x=>TYPE4[x]) : []; return a.length ? new Set(a) : null; }
-  window.stcSetMcTarget = v => { const n = parseFloat(v); try{ if(isFinite(n) && n > 0) localStorage.setItem('stc_target_cost_mc', String(n)); else localStorage.removeItem('stc_target_cost_mc'); }catch(e){} if(typeof renderWeekly==='function') renderWeekly(); };
+  window.stcSetMcTarget = (v, sf) => { const n = parseFloat(v), k = 'stc_target_cost_mc' + (sf||''); try{ if(isFinite(n) && n > 0) localStorage.setItem(k, String(n)); else localStorage.removeItem(k); }catch(e){} if(sf){ if(window.kwMonthly1) kwMonthly1(); } else if(typeof renderWeekly==='function') renderWeekly(); };
   function repRk(){ let o=null; try{ o = JSON.parse(LS('stc_rep_types_v1')||'null'); }catch(e){} return (o && o.rk) || '4'; }
 
   /* ---------------- 설정 (대시보드와 같은 저장값) ---------------- */
@@ -7926,7 +7944,7 @@ loadData();
   }
 
   /* ---------------- 기간 ---------------- */
-  const wkNo = w => { const m = String(w||'').match(/(\d+)/); return m ? +m[1] : 0; };
+  const wkNo = w => { const s = String(w||''), y = s.match(/^(\d{4})-(\d{2})$/); if (y) return +y[1]*100 + +y[2]; const m = s.match(/(\d+)/); return m ? +m[1] : 0; };
   const addDays = (s,n) => { const d = new Date(s+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
   const dayDiff = (a,b) => Math.round((new Date(b+'T00:00:00Z') - new Date(a+'T00:00:00Z'))/86400000);
   function prevYm(ym){ let [y,m] = ym.split('-').map(Number); m--; if (!m){ m=12; y--; } return `${y}-${String(m).padStart(2,'0')}`; }
@@ -8376,6 +8394,16 @@ loadData();
       const d = c-p; if (Math.abs(d) < Math.pow(10,-dp)/2) return '<span class="eq">±0</span>';
       const good = goodUp ? d>0 : d<0; return `<span class="${good?'dn':'up'}">${sgn(d,dp)}${dp===1&&goodUp?'%p':''}</span>`; };
     let h = `<div class="kw">`;
+    if (opt._mon){
+      const dl = (a, b, up, dp, u) => { if (b==null || !isFinite(b)) return ''; const d = a - b, good = up ? d >= 0 : d <= 0;
+        return `<div class="d" style="color:${good?'#15803d':'#c0392b'};font-weight:800;font-size:12px">${d>=0?'▲':'▼'} ${dp?f1(Math.abs(d),dp):f0(Math.abs(d))}${u||''}</div>`; };
+      const K = [['MTTR (평균 수리시간)', f1(S.mttr,2), 'h/건', dl(S.mttr, Q&&Q.mttr, false, 2)],
+                 ['MTBF (평균 무고장시간)', f1(S.mtbf,2), 'h/건', dl(S.mtbf, Q&&Q.mtbf, true, 2)],
+                 ['로스시간 / 고장횟수', f1(S.lossH,1), `h / ${S.n}건`, dl(S.lossH, Q&&Q.lossH, false, 1, 'h')],
+                 ['F-COST 손실비용', f0(S.cost), 'THB', dl(S.cost, Q&&Q.cost, false, 0)]];
+      h += `<h4 class="kw-h">주간 요약 <small>${esc(P.cur.label)} · 비교 ${esc(pl)} · 고장유형 ${T4_ ? esc([...T4_].join(' + ')) : C.std ? '계획외 고장(UDT)' : '전체 로스'}</small></h4>`
+         + `<div class="wk-kpi">${K.map(k=>`<div class="wk-k"><div class="l">${k[0]}</div><div class="v">${k[1]}<span class="u">${k[2]}</span></div>${k[3]}</div>`).join('')}</div>`;
+    }
     h += `<h4 class="kw-h">1. 지표 요약 <small>금기간 ${esc(P.cur.label)} · 비교 ${esc(pl)} · ${T4_ ? '고장유형 <b>'+esc([...T4_].join(' + '))+'</b>' : C.std ? '계획외 고장(UDT)' : '<b style="color:#dc2626">⚠ 전체 로스 기준 — 휴식·금형교체 등 계획정지 포함 (상단 [지표 산출 기준]에서 국제표준 선택 시 UDT만)</b>'} · 최소정지 ${C.minStop}분 · 목표 MTTR ≤ ${f1(C.tMttr,2)} / MTBF ≥ ${f1(C.tMtbf,2)} h/건</small></h4>`;
     /* 간소화 : Worst 1·2·3 칸을 빼고 목표 · 판정 칸 추가 — 주요 원인은 오른쪽 한 칸에 한 줄씩 */
     const TG = { mttr:C.tMttr, mtbf:C.tMtbf, lossH:parseFloat(LS('stc_target_loss')), n:parseFloat(LS('stc_target_cnt')), cost:parseFloat(LS('stc_target_cost')) };
@@ -8565,9 +8593,9 @@ loadData();
       const KS = [
         ['MTTR','mttr','h/건',2,false,'stc_target_mttr',1.5],
         ['MTBF','mtbf','h/건',2,true,'stc_target_mtbf',10],
-        ['로스시간','lossH','h',1,false,'stc_target_loss',null],
-        ['고장건수','n','건',0,false,'stc_target_cnt',null],
-        ['F-COST','cost','THB',0,false,'stc_target_cost',null]
+        ['로스시간','lossH','h',1,false,TK('stc_target_loss'),null],
+        ['고장건수','n','건',0,false,TK('stc_target_cnt'),null],
+        ['F-COST','cost','THB',0,false,TK('stc_target_cost'),null]
       ];
       const fx = (v,dp) => dp ? f1(v,dp) : f0(v);
       const rnd = (v,dp) => { const m = Math.pow(10,dp); return Math.round(v*m)/m; };
@@ -8677,7 +8705,7 @@ loadData();
         if (!MS2.length) return '';
         const act = MACHINES.filter(m=>CUR.s.mc[m] && CUR.s.mc[m].runH>0).length || MS2.length;
         /* 설비당 목표 — 사내 관리 기준 : 설비별 주간 60,000 THB 이하 (입력칸에서 바꾸면 그 값) */
-        const MC_DEF = 60000, perSet0 = parseFloat(LS('stc_target_cost_mc')), perSet = isFinite(perSet0) && perSet0 > 0 ? perSet0 : MC_DEF, perAuto = null;
+        const MC_DEF = MON ? 260000 : 60000, perSet0 = parseFloat(LS('stc_target_cost_mc')), perSet = isFinite(perSet0) && perSet0 > 0 ? perSet0 : MC_DEF, perAuto = null;
         const per = perSet;
         const cv = m => CUR.s.mc[m] ? CUR.s.mc[m].cost : 0, pv = m => PREV && PREV.s.mc[m] ? PREV.s.mc[m].cost : 0;
         const W = 600, H = 205, Lm = 46, Rm = 8, Tm = 36, Bm = 24, pw = W-Lm-Rm, ph = H-Tm-Bm;
@@ -8704,7 +8732,7 @@ loadData();
                    : `<b class="r">${esc(opt.week)} 목표 미달</b> — 합계 ${f0(curV)} / 목표 ${f0(tg)} · <b>${f0(curV-tg)}</b> 초과`)
              + ` · 설비당 목표 ${f0(per)} 초과 <b>${ov.length}대</b>${ov.length?': '+ov.slice(0,6).map(m=>`DC${m} ${f0(cv(m))}`).join(' · ')+(ov.length>6?' …':''):''}`;
         }
-        const inp = `<label class="mct">설비당 목표 <input type="number" min="0" step="500" value="${perSet}" placeholder="60000" onchange="window.stcSetMcTarget && stcSetMcTarget(this.value)" title="설비별 주간 F-COST 관리 기준 (기본 60,000 · 비우면 기본값)"> THB / 주</label>`;
+        const inp = `<label class="mct">설비당 목표 <input type="number" min="0" step="500" value="${perSet}" placeholder="60000" onchange="window.stcSetMcTarget && stcSetMcTarget(this.value${MON?",'_m'":''})" title="설비별 주간 F-COST 관리 기준 (기본 60,000 · 비우면 기본값)"> THB / 주</label>`;
         return `<div class="kw-fc"><div class="h"><b>F-COST 설비별 · 목표 달성</b>`
           + `<small>${inp}<span class="pill ${over.length?'ng':'ok'}">설비별 ${over.length?'✖ 초과 '+over.length+'대':'✔ 전 설비 이내'}</span>${tg!=null?` <span class="pill ${ok?'ok':'ng'}">${esc(opt.week)} ${ok?'✔ 달성':'✖ 미달'} · ${f0(curV)} / 목표 ${f0(tg)}</span>`:''}</small>`
           + `</div>${g}<div class="lg"><span><i style="background:#cbd5e1"></i>${esc(PREV?PREV.w:'전주')}</span><span><i style="background:#16a34a"></i>${esc(opt.week)} 설비당 목표 이내</span><span><i style="background:#dc2626"></i>${esc(opt.week)} 초과</span><span><i class="ln"></i>설비당 목표${per!=null?' '+f0(per):''}</span></div>`
@@ -9052,6 +9080,36 @@ loadData();
         im.onerror = rej; im.src = fr.result; };
       fr.onerror = rej; fr.readAsDataURL(file); });
   }
+  /* 월간보고(1장) : 데이터의 '주차'를 '월'로 바꿔 주간보고 화면을 그대로 그린 뒤 글자를 월 기준으로 */
+  const MONCACHE = new WeakMap();
+  function monTxt(x){
+    let t = String(x).replace(/전주/g,'전월').replace(/금주/g,'금월').replace(/주간/g,'월간').replace(/주차/g,'월')
+      .replace(/주평균/g,'월평균').replace(/매주/g,'매월').replace(/주별/g,'월별').replace(/THB \/ 주/g,'THB / 월')
+      .replace(/Weekly/g,'Monthly').replace(/>WEEK</g,'>MONTH<').replace(/(\d+)주(?= 평균| 합산|\)|·|<|\s*$)/g,'$1개월')
+      .replace(/(\d{4})-(\d{2})(?![-\d])/g, (m,y,mm)=>`${y}.${mm}`);
+    /* 섹션 순서·숨김 = 주간보고(1장)에서 정한 그대로 (b0 = 요약 카드 · k0~k5 = 공통 블록) */
+    const HD = '<h4 class="kw-h">', parts = t.split(HD);
+    if (parts.length === 8 && /^<div class="kw">\s*$/.test(parts[0])){
+      const body = parts.slice(1).map(x=>HD + x); body[6] = body[6].replace(/<\/div>\s*$/, '');
+      const ids = ['b0','k0','k1','k2','k3','k4','k5'];
+      let ord = (window.__wkOrder || []).filter(x=>ids.includes(x)); ['b0','k0','k3','k5','k4','k1','k2'].forEach(x=>{ if(!ord.includes(x)) ord.push(x); });
+      let hid = []; try{ hid = JSON.parse(localStorage.getItem('stc_wk_hide_v1')||'[]') || []; }catch(e){}
+      t = '<div class="kw">' + ord.filter(x=>!hid.includes(x)).map(x=>body[ids.indexOf(x)]).join('') + '</div>';
+    }
+    let n = 0; t = t.replace(/<h4 class="kw-h">(?:\d{1,2}\.\s+)?/g, ()=>`<h4 class="kw-h">${++n}. `);
+    return t;
+  }
+  function buildAny(opt, data){
+    if (opt.mode !== 'mon1') return build(opt, data);
+    let d2 = MONCACHE.get(data);
+    if (!d2){ const mo = x => Object.assign({}, x, { w: x.d.slice(0,7) });
+      d2 = Object.assign({}, data, { run: data.run.map(mo), loss: data.loss.map(mo) }); MONCACHE.set(data, d2); }
+    MON = true;
+    try{ const r = build({ mode:'week', week: opt.ym, _mon:true }, d2);
+      if (typeof r === 'string') return monTxt(r);
+      return { html: monTxt(r.html), key: r.key }; }
+    finally{ MON = false; }
+  }
   function wire(host, key){
     const save = fn => { const o = notesGet(key); fn(o); notesSet(key, o); };
     const redraw = () => { if (host._kwOpt){ const y = window.scrollY; mount(host, host._kwOpt).then(()=>window.scrollTo(0,y)); } };
@@ -9167,7 +9225,7 @@ loadData();
     host.querySelectorAll('[data-kwtgsug]').forEach(el=>el.addEventListener('click', ()=>{
       host.querySelectorAll('input[data-kwtg]').forEach(i=>{ if (i.value==='' && i.placeholder) try{ localStorage.setItem(i.dataset.kwtg, i.placeholder); }catch(e){} }); redraw(); }));
     host.querySelectorAll('[data-kwtgclr]').forEach(el=>el.addEventListener('click', ()=>{
-      ['stc_target_loss','stc_target_cnt','stc_target_cost'].forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} }); redraw(); }));
+      ['stc_target_loss','stc_target_cnt','stc_target_cost'].map(k=>k+(host._kwOpt && host._kwOpt.mode==='mon1'?'_m':'')).forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} }); redraw(); }));
     /* 3번 판정 */
     host.querySelectorAll('select[data-kwchk]').forEach(el=>{
       el.addEventListener('change', ()=>{
@@ -9187,12 +9245,12 @@ loadData();
     try{
       const data = await load();
       if (host._kwSeq !== my) return;          // 그사이 다른 기간으로 다시 그렸으면 버린다
-      const r = build(opt, data);
+      const r = buildAny(opt, data);
       if (typeof r === 'string'){ host.innerHTML = r; return; }
       host.innerHTML = r.html; wire(host, r.key);
       /* 설비별 손실금액 표(⑧)를 지표 요약 아래로 합친다 */
       const slot = host.querySelector('#kwMtxSlot'), box = document.getElementById('wkMtxBox');
-      if (slot && box){ slot.appendChild(box); const b = document.getElementById('wkMtxTable'); const bk = b && b.closest('.wk-blk'); if (bk) bk.classList.add('wk-merged'); }
+      if (slot && box && opt.mode === 'week'){ slot.appendChild(box); const b = document.getElementById('wkMtxTable'); const bk = b && b.closest('.wk-blk'); if (bk) bk.classList.add('wk-merged'); }
     }catch(e){
       host.innerHTML = `<div class="kw"><div class="kw-empty">⚠ 지표 요약을 불러오지 못했습니다: ${esc(e && e.message || e)}<br>OEE_RawData_APQ › A_가동률 탭이 웹에 게시되어 있는지 확인하세요.</div></div>`;
     }
@@ -9288,10 +9346,33 @@ loadData();
   }
   ['kwmMonth','kwmWho'].forEach(id=>{ const el = $(id); if (el) el.addEventListener('change', kwMonthly); });
 
+  /* --- 월간보고 (1장) : 주간보고(1장)과 같은 구성을 월 단위로 --- */
+  const M1KEY = 'stc_kw_monthly1_ym';
+  function kwMonthly1(){
+    if (typeof RUN === 'undefined' || !RUN.length) return;
+    const sel = $('km1Month'); if (!sel) return;
+    const ms = [...new Set(RUN.map(r=>r.d.slice(0,7)))].sort();
+    const cur = ms.join('|');
+    if (sel.getAttribute('data-ms') !== cur){
+      const keep = sel.value || localStorage.getItem(M1KEY);
+      sel.setAttribute('data-ms', cur);
+      sel.innerHTML = ms.map(m=>`<option value="${m}">${m.slice(0,4)}년 ${+m.slice(5,7)}월</option>`).join('');
+      sel.value = ms.includes(keep) ? keep : ms[ms.length-1];
+    }
+    const ym = sel.value; if (!ym) return;
+    try{ localStorage.setItem(M1KEY, ym); }catch(e){}
+    const days = RUN.filter(r=>r.d.slice(0,7)===ym).map(r=>r.d).sort();
+    const who = ($('km1Who')||{}).value || '';
+    $('km1Cover').innerHTML = mtCoverHtml('monthly', `${ym.slice(0,4)}년 ${+ym.slice(5,7)}월`, `${days[0]||'-'} ~ ${days[days.length-1]||'-'}`, who, null, null, `${+ym.slice(5,7)}월`);
+    STCKW.mount('kwMonthly1', { mode:'mon1', ym });
+  }
+  window.kwMonthly1 = kwMonthly1;
+  ['km1Month','km1Who'].forEach(id=>{ const el = $(id); if (el) el.addEventListener('change', kwMonthly1); });
+
   /* --- 데이터가 새로 들어올 때마다 같이 다시 그린다 --- */
   const _render = render;
-  render = function(){ const r = _render.apply(this, arguments); try{ kwDaily(); kwMonthly(); }catch(e){ console.error(e); } return r; };
-  if (typeof RUN !== 'undefined' && RUN.length){ try{ kwWeekly(); kwDaily(); kwMonthly(); }catch(e){} }
+  render = function(){ const r = _render.apply(this, arguments); try{ kwDaily(); kwMonthly(); kwMonthly1(); }catch(e){ console.error(e); } return r; };
+  if (typeof RUN !== 'undefined' && RUN.length){ try{ kwWeekly(); kwDaily(); kwMonthly(); kwMonthly1(); }catch(e){} }
 
   /* --- 인쇄 : 지금 열린 보고서만 --- */
   function printTab(id, cls){
@@ -9301,6 +9382,7 @@ loadData();
   }
   $('kwdPrint').addEventListener('click', ()=>printTab('tab-daily','kw-print-daily'));
   $('kwmPrint').addEventListener('click', ()=>printTab('tab-monthly','kw-print-monthly'));
+  $('km1Print').addEventListener('click', ()=>printTab('tab-monthly1', null));
   window.addEventListener('beforeprint', ()=>{
     const d = $('tab-daily'), m = $('tab-monthly');
     document.body.classList.toggle('kw-print-daily', !!(d && d.classList.contains('show')));
