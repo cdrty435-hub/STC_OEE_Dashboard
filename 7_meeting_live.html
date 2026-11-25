@@ -32,13 +32,24 @@
   .open ul { margin:4px 0 0; padding-left:18px; } .open li { margin:2px 0; }
   .hidden { display:none !important; }
   /* 통역 줄 */
-  #lines { display:flex; flex-direction:column; gap:10px; padding-bottom:90px; }
+  #lines { display:flex; flex-direction:column; gap:10px; }
+  /* 회의 중: 화면 고정 · 위는 지난 대화(스크롤) · 아래는 지금 통역 창 */
+  body.live-on { overflow:hidden; }
+  #vLive:not(.hidden) { display:flex; flex-direction:column; gap:10px; height:calc(100vh - var(--hdr, 64px)); height:calc(100dvh - var(--hdr, 64px)); padding-top:10px; padding-bottom:10px; }
+  #histWrap { flex:1; min-height:0; position:relative; }
+  #vLive #lines { height:100%; overflow-y:auto; padding-right:4px; }
+  #toBottom { position:absolute; right:12px; bottom:10px; background:var(--ko); color:#fff; border-color:var(--ko); border-radius:999px; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+  #nowBox { flex:0 0 auto; min-height:120px; max-height:42%; overflow-y:auto; background:var(--surface); border:2px solid var(--ko); border-radius:14px; padding:10px 14px; }
+  #nowBox .lbl { font-size:11px; color:var(--ko); font-weight:700; margin-bottom:2px; }
+  #nowBox .ln { border:0; padding:0; box-shadow:none; cursor:default; } #nowBox .ln .tr { font-size:24px; } #nowBox .ln .src { font-size:15px; }
+  #nowBox .idle { color:var(--ink3); font-size:14px; }
+  body.tv #nowBox .ln .tr { font-size:40px; } body.tv #nowBox .ln .src { font-size:20px; } body.tv #nowBox { max-height:60%; }
   .ln { background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--ko); border-radius:0 10px 10px 0; padding:8px 12px; cursor:pointer; }
   .ln.th { border-left-color:var(--th); } .ln.pending { border-color:#93c5fd; box-shadow:0 0 0 2px #dbeafe; } .ln.pending .meta::after { content:'번역 중…'; color:var(--ko); }
   .ln .meta { font-size:11px; color:var(--ink3); display:flex; gap:8px; } .ln .meta .who { color:var(--ink2); font-weight:600; }
   .ln .src { font-size:13px; color:var(--ink2); margin-top:2px; } .ln .tr { font-size:18px; margin-top:2px; line-height:1.45; }
   .ln.edited .meta::after { content:'수정됨'; color:var(--warn); }
-  body.tv .ln .tr { font-size:30px; } body.tv .ln .src { font-size:17px; } body.tv #lines .ln:not(:nth-last-child(-n+4)) { display:none; }
+  body.tv .ln .tr { font-size:30px; } body.tv .ln .src { font-size:17px; } 
   .who-bar { position:fixed; left:0; right:0; bottom:0; background:var(--surface); border-top:1px solid var(--line); padding:8px 16px; display:flex; gap:6px; flex-wrap:wrap; align-items:center; z-index:5; }
   .chip { border-radius:999px; padding:4px 12px; font-size:13px; } .chip.on { background:var(--ko); color:#fff; border-color:var(--ko); }
   /* 회의록 */
@@ -104,7 +115,8 @@
 
 <!-- 회의 중 -->
 <div id="vLive" class="wrap hidden">
-  <div id="lines"></div>
+  <div id="histWrap"><div id="lines"></div><button id="toBottom" class="hidden">↓ 최신 대화</button></div>
+  <div id="nowBox"><div class="lbl">🎙 지금 통역 · กำลังแปล</div><div id="nowBody"><div class="idle">말씀하세요… · พูดได้เลย</div></div></div>
 </div>
 
 <!-- 회의록 -->
@@ -178,7 +190,10 @@ function armed(btn, label) {   // 두 번 눌러야 실행
 // ---------- 상태 ----------
 const S = { id: '', date: '', start: '', end: '', lines: [], running: false, t0: 0, lastSaved: -1, saveTimer: null, clockTimer: null, playUntil: 0, audioUrl: '' };
 let MODE = ls('liveMode') === 'acc' ? 'acc' : 'fast';
-function show(v) { ['vHome', 'vLive', 'vMin'].forEach(x => $(x).classList.toggle('hidden', x !== v)); }
+function show(v) { ['vHome', 'vLive', 'vMin'].forEach(x => $(x).classList.toggle('hidden', x !== v)); document.body.classList.toggle('live-on', v === 'vLive'); fitHdr(); }
+function fitHdr() { const h = document.querySelector('header.top'); if (h) document.documentElement.style.setProperty('--hdr', h.offsetHeight + 'px'); }
+window.addEventListener('resize', fitHdr);
+try { new ResizeObserver(fitHdr).observe(document.querySelector('header.top')); } catch (e) {}
 function setPill(kind, txt) { const p = $('stPill'); p.className = 'pill ' + kind; p.innerHTML = (kind === 'rec' ? '<i></i>' : '') + esc(txt); p.classList.toggle('hidden', !kind); }
 
 // ---------- 시작 화면 ----------
@@ -226,8 +241,8 @@ $('btnStart').onclick = async () => {
     await startMic();
     const d = new Date(); S.date = todayYmd(); S.start = pad(d.getHours()) + ':' + pad(d.getMinutes()); S.end = '';
     S.id = 'M' + S.date.replace(/-/g, '') + '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
-    Object.assign(S, { lines: [], running: true, t0: Date.now(), lastSaved: -1, audioUrl: '' });
-    $('lines').innerHTML = ''; show('vLive');
+    LAST = null; Object.assign(S, { lines: [], running: true, t0: Date.now(), lastSaved: -1, audioUrl: '' });
+    $('lines').innerHTML = ''; $('nowBody').innerHTML = '<div class="idle">말씀하세요… · พูดได้เลย</div>'; show('vLive');
     $('btnStop').classList.remove('hidden'); $('lvl').classList.remove('hidden');
     S.clockTimer = setInterval(() => { const s = Math.floor((Date.now() - S.t0) / 1000); $('clock').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60); }, 1000);
     S.saveTimer = setInterval(() => saveLines(), 30000);
@@ -312,7 +327,7 @@ async function startSessions() {
   SES = MODE === 'fast'
     ? [{ kind: 'fast', target: 'th', v: 0 }, { kind: 'fast', target: 'ko', v: 0 }]
     : [{ kind: 'acc', v: 0, model: 0 }];
-  SES.forEach(x => Object.assign(x, { inBuf: '', outBuf: '', t: '', segs: [], everUp: false, handle: '', reconnects: 0 }));
+  SES.forEach(x => Object.assign(x, { inBuf: '', inq: [], outBuf: '', t: '', segs: [], everUp: false, handle: '', reconnects: 0 }));
   await Promise.all(SES.map(x => connect(x)));
 }
 const FAST_VARIANTS = 3, ACC_VARIANTS = 3;
@@ -362,7 +377,7 @@ function fallbackToAcc(err) {
   SES.forEach(s => { const w = s.ws; s.ws = null; try { w && w.close(); } catch (e) {} });
   note('⚡ 빠른 통역 모델에 연결하지 못해 용어집 통역으로 바꿨습니다 (' + err + ')');
   MODE = 'acc';
-  SES = [{ kind: 'acc', v: 0, model: 0, inBuf: '', outBuf: '', segs: [], everUp: false, handle: '', reconnects: 0 }];
+  SES = [{ kind: 'acc', v: 0, model: 0, inBuf: '', inq: [], outBuf: '', segs: [], everUp: false, handle: '', reconnects: 0 }];
   connect(SES[0]).catch(e => failLive(e.message || e));
 }
 function recentContext() {
@@ -384,8 +399,15 @@ function onServer(x, m) {
   const now = Date.now();
   if (x.kind === 'fast') {
     // 번역이 1.2초 멈추면 한 줄로 확정
-    if (c.inputTranscription && c.inputTranscription.text) { if (!x.inBuf) x.t = nowHM(); x.inBuf = (x.inBuf + c.inputTranscription.text).slice(-600); }
-    if (c.outputTranscription && c.outputTranscription.text) { if (!x.t) x.t = nowHM(); x.outBuf += c.outputTranscription.text; clearTimeout(x.tm); x.tm = setTimeout(() => fastFlush(x), 700); }
+    if (c.inputTranscription && c.inputTranscription.text) {
+      // →태국어 세션은 한국어·영어만, →한국어 세션은 태국어만 원문으로 모음 (두 세션 원문이 섞이지 않게)
+      const tx = c.inputTranscription.text, lg = langOf(tx);
+      if (!lg || (x.target === 'th' ? lg !== 'th' : lg === 'th')) { if (!x.inq.length) x.t = nowHM(); x.inq.push({ at: now, text: tx }); setInBuf(x); }
+    }
+    if (c.outputTranscription && c.outputTranscription.text) { if (!x.t) x.t = nowHM(); x.outBuf += c.outputTranscription.text; x.lastOutAt = now; clearTimeout(x.tm);
+      // 번역은 짧은 조각으로 나오므로 문장 단위로 모아서 한 줄로: 문장 끝(. ? !)이면 0.6초, 아니면 2초 쉬면 확정, 너무 길면 바로
+      const o = clean(x.outBuf), end = /[.?!。？！]$/.test(o) && o.length > 25;
+      x.tm = setTimeout(() => fastFlush(x), o.length > 220 ? 200 : end ? 600 : 2000); }
     if (c.turnComplete && clean(x.outBuf)) { clearTimeout(x.tm); fastFlush(x); }
   } else {
     if (c.inputTranscription && c.inputTranscription.text) {
@@ -402,11 +424,15 @@ function onServer(x, m) {
   }
   drawPending();
 }
+function setInBuf(x) { while (x.inq.length > 80) x.inq.shift(); x.inBuf = x.inq.map(q => q.text).join(''); }
 function fastFlush(x) {
   const tr = clean(x.outBuf); if (!tr) return;
-  const src = clean(x.inBuf);
+  // 마지막 번역 조각까지 들어온 말만 이 줄의 원문 · 그 뒤에 들어온 말은 다음 줄로
+  const T = x.lastOutAt || Date.now();
+  const src = clean(x.inq.filter(q => q.at <= T).map(q => q.text).join(''));
   pushLine({ t: x.t || nowHM(), src, tr, lang: x.target === 'th' ? (langOf(src) === 'en' ? 'en' : 'ko') : 'th' });
-  SES.forEach(s => { if (s === x || !clean(s.outBuf)) { s.inBuf = ''; if (s === x) s.outBuf = ''; s.t = ''; } });   // 같은 말을 다른 세션이 다시 쓰지 않게
+  SES.forEach(s => { if (s === x || !clean(s.outBuf)) { s.inq = s.inq.filter(q => q.at > T); setInBuf(s); s.t = s.inq.length ? nowHM() : ''; } });
+  x.outBuf = '';
   drawPending();
 }
 function accFlush(x) { while (x.segs.length && x.segs[0].outDone) { const g = x.segs.shift(); pushLine({ t: g.t, src: clean(g.src), tr: clean(g.tr) }); } }
@@ -414,7 +440,7 @@ setInterval(() => {   // 번역이 안 나오는 말(맞장구·잡음) 정리
   if (!S.running) return;
   const now = Date.now();
   SES.forEach(x => {
-    if (x.kind === 'fast') { if (!clean(x.outBuf) && x.inBuf && SES.every(s => !clean(s.outBuf))) { x.idle = (x.idle || 0) + 1; if (x.idle > 10) { x.inBuf = ''; x.idle = 0; drawPending(); } } else x.idle = 0; return; }
+    if (x.kind === 'fast') { if (!clean(x.outBuf) && x.inBuf && SES.every(s => !clean(s.outBuf))) { x.idle = (x.idle || 0) + 1; if (x.idle > 10) { x.inq = []; setInBuf(x); x.idle = 0; drawPending(); } } else x.idle = 0; return; }
     const g = x.segs[0]; if (!g) return;
     if ((!g.tr && g.lastIn && now - g.lastIn > 9000) || (g.tr && g.lastOut && now - g.lastOut > 12000)) { g.outDone = true; accFlush(x); drawPending(); }
   });
@@ -430,23 +456,30 @@ function lineHtml(l, i, pending) {
     '<div class="meta"><span>' + (l.lang === 'th' ? '🇹🇭' : l.lang === 'en' ? 'EN' : '🇰🇷') + ' ' + esc(l.t) + '</span>' + (l.who ? '<span class="who">' + esc(l.who) + '</span>' : '') + '</div>' +
     '<div class="src">' + esc(clean(l.src)) + '</div><div class="tr">' + (esc(clean(l.tr)) || '<span class="muted">…</span>') + '</div></div>';
 }
+// 지난 대화: 맨 아래를 보고 있을 때만 자동으로 따라감 (위로 올려 보는 중이면 그대로 두고 버튼 표시)
+const atBottom = () => { const L = $('lines'); return L.scrollHeight - L.scrollTop - L.clientHeight < 60; };
 function appendLine(l, i) {
-  document.querySelectorAll('#lines .ln.pending').forEach(x => x.remove());
+  const follow = atBottom();
   $('lines').insertAdjacentHTML('beforeend', lineHtml(l, i));
-  window.scrollTo(0, document.body.scrollHeight);
-  drawPending();
+  if (follow) $('lines').scrollTop = $('lines').scrollHeight; else $('toBottom').classList.remove('hidden');
+  LAST = l; drawPending();
 }
+$('lines').addEventListener('scroll', () => { if (atBottom()) $('toBottom').classList.add('hidden'); });
+$('toBottom').onclick = () => { $('lines').scrollTop = $('lines').scrollHeight; $('toBottom').classList.add('hidden'); };
+let LAST = null;
+// 지금 통역 창: 번역 중인 말 → 없으면 방금 확정된 줄
 function drawPending() {
-  document.querySelectorAll('#lines .ln.pending').forEach(x => x.remove());
   let P = [];
   if (MODE === 'fast' || SES.some(x => x.kind === 'fast')) {
     const src = SES.map(x => clean(x.inBuf)).sort((a, b) => b.length - a.length)[0] || '';
     const tr = SES.map(x => clean(x.outBuf)).filter(Boolean).join(' ');
     if (src || tr) P = [{ t: nowHM(), src, tr }];
   } else SES.forEach(x => x.segs.forEach(g => { if (clean(g.src) || clean(g.tr)) P.push(g); }));
-  if (!P.length) return;
-  $('lines').insertAdjacentHTML('beforeend', P.map(g => lineHtml(Object.assign({}, g, { lang: langOf(g.src) || 'ko' }), -1, true)).join(''));
-  window.scrollTo(0, document.body.scrollHeight);
+  const nb = $('nowBody'); if (!nb) return;
+  if (P.length) nb.innerHTML = P.map(g => lineHtml(Object.assign({}, g, { lang: langOf(g.src) || 'ko' }), -1, true)).join('');
+  else if (LAST) nb.innerHTML = lineHtml(LAST, -1).replace(' data-i="-1"', '');
+  else nb.innerHTML = '<div class="idle">말씀하세요… · พูดได้เลย</div>';
+  nb.parentNode.scrollTop = nb.parentNode.scrollHeight;
 }
 
 // ---------- 저장 · 종료 ----------
@@ -607,7 +640,7 @@ document.addEventListener('click', e => {
   };
 });
 function redrawAll() {
-  if (!$('vLive').classList.contains('hidden')) { $('lines').innerHTML = S.lines.map((l, i) => lineHtml(l, i)).join(''); drawPending(); }
+  if (!$('vLive').classList.contains('hidden')) { $('lines').innerHTML = S.lines.map((l, i) => lineHtml(l, i)).join(''); LAST = S.lines[S.lines.length - 1] || null; drawPending(); }
   if (!$('vMin').classList.contains('hidden')) drawMinLines();
 }
 $('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
