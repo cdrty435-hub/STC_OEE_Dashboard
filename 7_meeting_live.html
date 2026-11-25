@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>STC 통역 회의 · ประชุมแปลสด</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root { --bg:#f6f7f9; --surface:#fff; --ink:#111827; --ink2:#4b5563; --ink3:#9ca3af; --line:#e5e7eb; --line2:#d1d5db;
     --ko:#2563eb; --th:#0f9d76; --warn:#b45309; --warnbg:#fef3c7; --red:#dc2626; --redbg:#fee2e2; --okbg:#dcfce7; --ok:#15803d; }
@@ -36,7 +37,14 @@
   /* 회의 중: 화면 전체 폭의 통역창 하나 · 안에서 아래로 계속 이어지고 스크롤로 지난 내용 보기 */
   body.live-on { overflow:hidden; }
   #vLive:not(.hidden) { max-width:none; height:calc(100vh - var(--hdr, 64px)); height:calc(100dvh - var(--hdr, 64px)); padding:8px 12px; }
-  #vLive:not(.hidden) { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; }
+  #vLive:not(.hidden) { display:flex; flex-direction:column; gap:10px; }
+  #vBody { flex:1; min-height:0; display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); gap:10px; }
+  #stage { flex:0 0 auto; background:var(--surface); border:2px solid var(--ko); border-radius:14px; padding:10px 18px 12px; min-height:118px; }
+  #stage .sbar { display:flex; gap:10px; align-items:center; font-size:12px; color:var(--ink3); }
+  #stState { padding:1px 10px; border-radius:999px; font-weight:600; } #stState.wait { background:#fef3c7; color:#92400e; } #stState.listen { background:#dcfce7; color:#166534; } #stState.done { background:#f3f4f6; color:var(--ink3); }
+  #stSrc { font-size:15px; color:var(--ink2); margin-top:4px; min-height:20px; }
+  #stTr { font-size:28px; font-weight:600; line-height:1.35; margin-top:2px; min-height:38px; color:var(--ink); }
+  #stage.old #stTr { color:var(--ink2); }
   #histWrap { height:100%; min-height:0; position:relative; background:var(--surface); border:1px solid var(--line2); border-radius:14px; overflow:hidden; }
   #vLive #lines { height:100%; overflow-y:scroll; padding:10px 16px 24px; gap:0; }
   #vLive #lines::-webkit-scrollbar { width:12px; } #vLive #lines::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:6px; border:3px solid var(--surface); }
@@ -52,12 +60,12 @@
   #side .tabs { display:flex; border-bottom:1px solid var(--line); } #side .tabs button { flex:1; border:0; border-radius:0; padding:9px 4px; font-size:13px; color:var(--ink2); background:transparent; }
   #side .tabs button.on { color:var(--ink); font-weight:700; box-shadow:inset 0 -3px 0 var(--ko); }
   #sideBody { flex:1; min-height:0; overflow-y:auto; padding:10px 14px; font-size:13px; }
-  #sideBody .it { padding:7px 0; border-bottom:1px solid var(--line); } #sideBody .it b { display:inline-block; min-width:46px; }
+  #sideBody .it { padding:7px 0; border-bottom:1px solid var(--line); } #sideBody .it .tag { margin-right:4px; }
   #sideBody .it .th { color:var(--ink2); font-size:12px; } #sideBody .it .st { float:right; font-size:11px; }
   #sideBody .dcg { margin-bottom:10px; } #sideBody .dcg h4 { margin:0 0 4px; font-size:13px; } #sideBody .dcg div { font-size:12px; color:var(--ink2); padding:2px 0 2px 8px; border-left:2px solid var(--line2); cursor:pointer; }
   #memo { width:100%; height:calc(100% - 30px); min-height:200px; font-size:14px; resize:none; }
-  @media (max-width:900px) { #vLive:not(.hidden) { grid-template-columns:1fr; } #side { display:none; } }
-  body.big #side, body.disp #side { display:none !important; } body.big #vLive:not(.hidden) { grid-template-columns:1fr; }
+  @media (max-width:900px) { #vBody { grid-template-columns:1fr; } #side { display:none; } #stTr { font-size:22px; } }
+  body.big #side, body.disp #side { display:none !important; } body.big #vBody, body.disp #vBody { grid-template-columns:1fr; }
   #toBottom { position:absolute; right:22px; top:10px; background:var(--ko); color:#fff; border-color:var(--ko); border-radius:999px; box-shadow:0 2px 8px rgba(0,0,0,.2); }
   .ln { background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--ko); border-radius:0 10px 10px 0; padding:8px 12px; cursor:pointer; }
   .ln.th { border-left-color:var(--th); } .ln.pending { border-color:#93c5fd; box-shadow:0 0 0 2px #dbeafe; } .ln.pending .meta::after { content:'번역 중…'; color:var(--ko); }
@@ -100,7 +108,10 @@
   /* 큰 화면 (이 창 전체 화면) · 모니터 창 공통: 어두운 배경 · 큰 글씨 */
   body.big header.top { display:none; }
   body.big, body.disp { background:#0b1220; }
-  body.big #vLive:not(.hidden) { height:100vh; height:100dvh; padding:0; }
+  body.big #vLive:not(.hidden) { height:100vh; height:100dvh; padding:0; gap:0; }
+  body.big #stage, body.disp #stage { background:#0b1220; border:0; border-bottom:1px solid #1f2937; border-radius:0; padding:18px 28px 22px; }
+  body.big #stTr, body.disp #stTr { font-size:calc(var(--fs, 44px) * 1.15); color:#f8fafc; } body.big #stSrc, body.disp #stSrc { font-size:calc(var(--fs, 44px) * .5); color:#94a3b8; }
+  body.big #stage.old #stTr, body.disp #stage.old #stTr { color:#cbd5e1; }
   body.big #histWrap, body.disp #histWrap { background:#0b1220; border:0; border-radius:0; }
   body.big #vLive .ln, body.disp #vLive .ln { background:transparent; border-bottom:1px solid #1f2937; padding:10px 24px; }
   body.big #vLive .ln .tr, body.disp #vLive .ln .tr { font-size:var(--fs, 44px); color:#f8fafc; line-height:1.35; }
@@ -112,7 +123,7 @@
   #bigBar:hover { opacity:1; } body.big #bigBar, body.disp #bigBar { display:flex; }
   #bigBar button { background:#1f2937; color:#e5e7eb; border-color:#374151; }
   body.disp #vHome, body.disp #vMin, body.disp header.top { display:none !important; }
-  body.disp #vLive { display:block !important; max-width:none; height:100vh; height:100dvh; padding:0; }
+  body.disp #vLive { display:flex !important; flex-direction:column; max-width:none; height:100vh; height:100dvh; padding:0; }
   #dropCard.over { border-color:var(--ko); background:#eff6ff; }
   .bar { height:6px; background:var(--line); border-radius:3px; overflow:hidden; margin-top:8px; } .bar i { display:block; height:100%; background:var(--ko); width:0; transition:width .2s; }
   @media print {
@@ -120,6 +131,45 @@
     body { background:#fff; } .card { border:0; padding:0; } .wrap { max-width:none; padding:0; }
     table.mt select { border:0; appearance:none; -webkit-appearance:none; } .ln { break-inside:avoid; }
   }
+  /* 시작 화면 */
+  .tiles { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; margin-bottom:14px; }
+  .tile { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px 20px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; }
+  .tile .tic { font-size:34px; line-height:1; } .tile h3 { margin:0; font-size:18px; } .tile p { margin:0; color:var(--ink2); font-size:13px; line-height:1.6; }
+  .tile .opt { display:flex; align-items:center; gap:8px; } .tile .ol { font-size:12px; color:var(--ink3); width:30px; text-align:right; }
+  .tile .big { margin-top:6px; width:100%; max-width:320px; }
+  .tile.drop { border:2px dashed var(--line2); cursor:pointer; justify-content:center; } .tile.drop:hover, #dropCard.over { border-color:var(--ko); background:#eff6ff; }
+  .tile .dz { margin-top:6px; padding:14px 28px; border-radius:12px; background:var(--bg); color:var(--ink2); font-weight:600; }
+  @media (max-width:760px) { .tiles { grid-template-columns:1fr; } }
+  body:not(.live-on) header .lv { display:none !important; }
+  body.live-on header.top .sub { display:none; } body.live-on header.top { gap:8px; padding:8px 12px; } body.live-on header.top button { padding:5px 10px; font-size:13px; } body.live-on header.top h1 { font-size:16px; }
+  .seg.paneSeg button { padding:4px 9px; }
+  /* 언어별 분할 */
+  #paneWrap { display:none; }
+  body.split #histWrap, body.split #side { display:none !important; }
+  body.split #vBody { grid-template-columns:1fr; }
+  body.split #paneWrap { display:grid; grid-template-columns:repeat(var(--np, 2), minmax(0,1fr)); gap:10px; height:100%; min-height:0; }
+  .pane { display:flex; flex-direction:column; min-height:0; background:var(--surface); border:1px solid var(--line2); border-radius:14px; overflow:hidden; }
+  .pane .ph { padding:8px 14px; font-weight:700; border-bottom:1px solid var(--line); font-size:14px; }
+  .pane .pb { flex:1; min-height:0; overflow-y:auto; padding:4px 14px 20px; }
+  .pl { padding:6px 0; border-bottom:1px solid var(--line); } .pl .meta { font-size:10.5px; color:var(--ink3); } .pl .tx { font-size:18px; line-height:1.45; }
+  .pl.pending { background:#eff6ff; margin:0 -14px; padding:6px 14px; } .pl.pending .tx { color:#1e3a8a; } .pl.org .tx { color:var(--ink2); }
+  body.big .pane, body.disp .pane { background:#0b1220; border-color:#1f2937; } body.big .pane .ph, body.disp .pane .ph { color:#94a3b8; border-color:#1f2937; }
+  body.big .pl, body.disp .pl { border-color:#1f2937; } body.big .pl .tx, body.disp .pl .tx { font-size:var(--fs, 44px); color:#f8fafc; line-height:1.35; }
+  body.big .pl.pending, body.disp .pl.pending { background:#13203a; } body.big .pl.pending .tx, body.disp .pl.pending .tx { color:#93c5fd; }
+  body.big.split #vLive:not(.hidden) { padding:0; } body.big #paneWrap { gap:0; }
+  body.disp.dl #histWrap { display:none !important; } body.disp.dl #paneWrap { display:grid; grid-template-columns:1fr; height:100%; } body.disp.dl #stage { display:none; }
+  /* 말한 사람 이름 */
+  #spkBox .spk { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:12px; padding:10px 12px; background:#f8fafc; border-radius:10px; font-size:13px; }
+  #spkBox .spk input { width:110px; padding:4px 6px; }
+  /* 휴대폰 자막 */
+  body.watch header.top, body.watch #vHome, body.watch #vLive, body.watch #vMin { display:none !important; }
+  #vWatch { max-width:900px; margin:0 auto; padding:10px 12px 40px; }
+  #vWatch .wtop { display:flex; gap:8px; align-items:center; flex-wrap:wrap; position:sticky; top:0; background:var(--bg); padding:6px 0; z-index:3; }
+  #vWatch .wtop .seg button { padding:5px 10px; font-size:13px; }
+  #wNow { background:var(--surface); border:2px solid var(--ko); border-radius:14px; padding:12px 14px; margin:8px 0 12px; min-height:90px; }
+  #wNowTx { font-size:24px; font-weight:600; line-height:1.4; margin-top:4px; }
+  #wList .w { padding:8px 2px; border-bottom:1px solid var(--line); } #wList .w .m { font-size:11px; color:var(--ink3); } #wList .w .t { font-size:17px; line-height:1.45; } #wList .w .o { font-size:12.5px; color:var(--ink3); margin-top:2px; }
+  #qrBox { display:flex; justify-content:center; margin:10px 0; } #qrBox img, #qrBox canvas { width:260px; height:260px; }
   .badge { font-size:11px; padding:2px 8px; border-radius:6px; background:#eef2ff; color:#3730a3; }
 </style>
 </head>
@@ -131,41 +181,50 @@
   <span id="stPill" class="pill hidden"></span>
   <span id="lvl" class="lvl hidden"><b></b><b></b><b></b><b></b><b></b></span>
   <span id="clock" class="muted"></span>
-  <label class="muted" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="tts"> 🔊 읽어주기</label>
-  <label class="muted" style="display:flex;align-items:center;gap:4px" title="빠른 통역 줄을 1~3초 뒤 앞뒤 문맥과 용어집으로 다듬어 바꿉니다"><input type="checkbox" id="refine"> 🧠 문맥 보정</label>
-  <button id="btnBig" title="이 창을 전체 화면 · 큰 글씨로 (Esc 로 나가기)">🖥 큰 화면</button>
-  <button id="btnDisp" title="모니터에 띄울 자막 창을 따로 엽니다. 새 창을 모니터로 끌어다 놓고 전체 화면을 누르세요">🪟 모니터 창</button>
+  <span class="seg paneSeg lv" title="언어별로 화면을 나눠 보기 (여러 개 선택)"><button data-p="">기본</button><button data-p="ko">🇰🇷</button><button data-p="th">🇹🇭</button><button data-p="en">🇬🇧</button><button data-p="hi">🇮🇳</button></span>
+  <label class="muted lv" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="tts"> 🔊 읽어주기</label>
+  <label class="muted lv" style="display:flex;align-items:center;gap:4px" title="빠른 통역 줄을 1~3초 뒤 앞뒤 문맥과 용어집으로 다듬어 바꿉니다"><input type="checkbox" id="refine"> 🧠 문맥 보정</label>
+  <button id="btnQr" class="lv" title="참석자가 휴대폰으로 QR을 찍어 자기 언어 자막을 봅니다">📱 휴대폰 자막 <span id="vwN"></span></button>
+  <button id="btnBig" class="lv" title="이 창을 전체 화면 · 큰 글씨로 (Esc 로 나가기)">🖥 큰 화면</button>
+  <button id="btnDisp" class="lv" title="모니터에 띄울 자막 창을 언어별로 따로 엽니다">🪟 모니터 창</button>
   <button id="btnStop" class="hidden">■ 종료 · จบ</button>
 </header>
 
 <!-- 시작 화면 -->
 <div id="vHome" class="wrap">
-  <div class="card" style="text-align:center;padding:24px 16px">
-    <button id="btnStart" class="pri big">🎙 회의 시작 · เริ่มประชุม</button>
-    <div><span class="mode" id="modeSeg"><button data-m="fast">⚡ 빠른 통역</button><button data-m="acc">📘 용어집 통역</button></span></div>
-    <div class="muted" id="modeTip"></div>
-    <div class="muted" style="margin-top:6px">자유롭게 대화하세요. 회의 전체가 녹음되고, 끝나면 <b>목소리로 말한 사람을 자동으로 나눠</b> 회의록을 만듭니다.</div>
-    <div id="homeMsg" class="msg"></div>
-  </div>
-  <div class="card" id="dropCard" style="text-align:center;border:2px dashed var(--line2);cursor:pointer">
-    <div style="font-size:15px;font-weight:700">🎧 녹음 파일로 회의록 만들기</div>
-    <div class="muted" style="margin-top:4px">휴대폰·녹음기로 녹음한 파일을 여기에 끌어다 놓거나 눌러서 고르세요 (mp3 · m4a · wav · 동영상 소리도 가능)<br>말한 사람을 나누고 번역·요약해서 회의록 보고서를 만듭니다</div>
-    <input type="file" id="audioFile" accept="audio/*,video/*,.m4a,.mp3,.wav,.aac,.ogg,.webm,.mp4" class="hidden">
-    <div id="dropMsg" class="msg"></div>
+  <div class="tiles">
+    <div class="tile">
+      <div class="tic">🎙</div>
+      <h3>실시간 통역 회의</h3>
+      <p>한국어 ⇄ ไทย 자동 감지 · 끝나면 말한 사람을 나눠 회의록 작성</p>
+      <div class="opt"><span class="ol">통역</span><span class="seg" id="modeSeg"><button data-m="fast" title="말하는 도중에도 번역이 흘러나옴 · 가장 빠름">⚡ 동시</button><button data-m="acc" title="말하고 멈추면 문맥·용어집으로 정확하게 번역 · 주고받는 회의에 적합">🗣 순차</button></span></div>
+      <div class="opt"><span class="ol">화면</span><span class="seg paneSeg"><button data-p="">기본</button><button data-p="ko">🇰🇷</button><button data-p="th">🇹🇭</button><button data-p="en">🇬🇧</button><button data-p="hi">🇮🇳</button></span></div>
+      <button id="btnStart" class="pri big">회의 시작 · เริ่มประชุม</button>
+      <div id="homeMsg" class="msg"></div>
+    </div>
+    <div class="tile drop" id="dropCard">
+      <div class="tic">🎧</div>
+      <h3>녹음 파일로 회의록</h3>
+      <p>휴대폰·녹음기 파일을 여기에 끌어다 놓거나 눌러서 선택<br><span class="muted">mp3 · m4a · wav · 동영상 소리</span></p>
+      <div class="dz">⬇ 파일 놓기</div>
+      <input type="file" id="audioFile" accept="audio/*,video/*,.m4a,.mp3,.wav,.aac,.ogg,.webm,.mp4" class="hidden">
+      <div id="dropMsg" class="msg"></div>
+    </div>
   </div>
   <div class="card"><h2>📋 지난 회의</h2><div id="mtgList" class="list muted">불러오는 중…</div></div>
-  <div class="card"><h2>👥 참석자 <span class="muted">(선택) 회의록에서 말한 사람 이름을 찾을 때 참고만 합니다</span></h2>
-    <input id="whoList" style="width:100%" placeholder="팀장, Nanat, NIPON, Rangsan">
-  </div>
 </div>
 
 <!-- 회의 중 -->
 <div id="vLive" class="wrap hidden">
+  <div id="stage"><div class="sbar"><span id="stWho">🎙 말씀하세요 · พูดได้เลย</span><span id="stState"></span></div><div id="stSrc"></div><div id="stTr"></div></div>
+  <div id="vBody">
   <div id="histWrap"><div id="lines"></div><button id="toBottom" class="hidden">↑ 최신 대화</button></div>
+  <div id="paneWrap"></div>
   <aside id="side">
-    <div class="tabs"><button data-t="sum" class="on">🤖 실시간 요약</button><button data-t="dc">🔧 호기별</button><button data-t="memo">📝 메모</button></div>
+    <div class="tabs"><button data-t="sum" class="on">🤖 실시간 요약</button><button data-t="memo">📝 메모</button></div>
     <div id="sideBody"></div>
   </aside>
+  </div>
 </div>
 
 <!-- 회의록 -->
@@ -182,6 +241,7 @@
       <button id="btnAddRow">＋ 줄 추가</button>
     </div>
     <div id="minBody"></div>
+    <div id="spkBox"></div>
     <div class="row-btn" style="align-items:center">
       <label class="muted" style="display:flex;gap:4px;align-items:center"><input type="checkbox" id="sendLine" checked> LINE 방에 요약 보내기</label>
       <button id="btnHome">목록으로</button>
@@ -192,6 +252,13 @@
   <div class="card"><h2>💬 대화 기록 <span class="muted" id="linesNote">줄을 눌러 수정</span></h2><div id="minLines" style="display:flex;flex-direction:column;gap:8px"></div></div>
 </div>
 
+<!-- 휴대폰 자막 (참석자용) -->
+<div id="vWatch" class="hidden">
+  <div class="wtop"><b>🎙 STC 통역 자막</b><span id="wState" class="muted"></span><span style="flex:1"></span>
+    <span class="seg" id="wLang"><button data-l="ko">🇰🇷 한국어</button><button data-l="th">🇹🇭 ไทย</button><button data-l="en">🇬🇧 EN</button><button data-l="hi">🇮🇳 हिन्दी</button></span></div>
+  <div id="wNow"><div id="wNowMeta" class="muted"></div><div id="wNowTx"></div></div>
+  <div id="wList"></div>
+</div>
 <div id="bigBar"><button id="fsMinus">A−</button><button id="fsPlus">A＋</button><button id="fsFull">⛶ 전체 화면</button><button id="bigExit">✕ 나가기</button></div>
 <div id="modal" class="modal hidden"><div class="box" id="modalBox"></div></div>
 
@@ -248,8 +315,6 @@ try { new ResizeObserver(fitHdr).observe(document.querySelector('header.top')); 
 function setPill(kind, txt) { const p = $('stPill'); p.className = 'pill ' + kind; p.innerHTML = (kind === 'rec' ? '<i></i>' : '') + esc(txt); p.classList.toggle('hidden', !kind); }
 
 // ---------- 시작 화면 ----------
-$('whoList').value = ls('liveWho') || '';
-$('whoList').onchange = () => ls('liveWho', $('whoList').value);
 $('refine').checked = ls('liveRefine') !== '0'; $('refine').onchange = () => ls('liveRefine', $('refine').checked ? '1' : '0');
 $('tts').checked = ls('liveTts') === '1'; $('tts').onchange = () => ls('liveTts', $('tts').checked ? '1' : '0');
 // ---------- 큰 화면 · 모니터 창 ----------
@@ -264,30 +329,51 @@ $('bigExit').onclick = () => { if (DISP) { window.close(); return; } document.bo
 $('btnBig').onclick = () => { document.body.classList.add('big'); document.documentElement.requestFullscreen().catch(() => {}); setTimeout(() => { $('lines').scrollTop = 0; }, 200); };
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && !DISP) { document.body.classList.remove('big'); fitHdr(); } });
 document.addEventListener('keydown', e => { if (!(document.body.classList.contains('big') || DISP)) return; if (e.key === '+' || e.key === '=') setFs(curFs() + 6); if (e.key === '-') setFs(curFs() - 6); });
-$('btnDisp').onclick = () => { const w = window.open(location.pathname + '?display=1', 'stcLiveDisplay', 'width=1280,height=720'); if (!w) alert('팝업이 막혔습니다. 주소창 오른쪽의 팝업 허용을 눌러 주세요.'); setTimeout(sendDisp, 800); };
+$('btnDisp').onclick = () => {
+  openModal('<h3>🪟 모니터 창 열기</h3><div class="muted">열린 창을 모니터로 끌어다 놓고 ⛶ 전체 화면을 누르세요. 언어마다 창을 하나씩 열 수 있습니다.</div>' +
+    '<div class="row-btn" style="justify-content:flex-start;flex-wrap:wrap"><button data-dl="">원문 + 번역</button><button data-dl="ko">🇰🇷 한국어</button><button data-dl="th">🇹🇭 ไทย</button><button data-dl="en">🇬🇧 English</button><button data-dl="hi">🇮🇳 हिन्दी</button></div>' +
+    '<div class="row-btn"><button id="dlNo">닫기</button></div>');
+  $('dlNo').onclick = closeModal;
+  $('modalBox').querySelectorAll('[data-dl]').forEach(b => b.onclick = () => {
+    const L = b.dataset.dl, w = window.open(location.pathname + '?display=1' + (L ? '&lang=' + L : ''), 'stcLiveDisplay_' + (L || 'all'), 'width=1280,height=720');
+    if (!w) { alert('팝업이 막혔습니다. 주소창 오른쪽의 팝업 허용을 눌러 주세요.'); return; }
+    if (L === 'en' || L === 'hi') { DLANGS[L] = Date.now(); S.lines.slice(-6).forEach(l => { if (needTx(l)) refineQ(l); }); }
+    closeModal(); setTimeout(sendDisp, 800);
+  });
+};
 // 메인 창 → 모니터 창으로 지금 대화 보내기
 function sendDisp() {
   if (!BC || DISP) return;
   const pr = $('pendingRow');
-  BC.postMessage({ type: 'state', html: (pr ? pr.innerHTML : '') + S.lines.slice(-60).reverse().map(l => lineHtml(l, -1)).join(''), running: S.running });
+  BC.postMessage({ type: 'state', html: (pr ? pr.innerHTML : '') + S.lines.slice(-60).reverse().map(l => lineHtml(l, -1)).join(''), running: S.running,
+    lines: S.lines.slice(-80).map(l => ({ t: l.t, lang: l.lang, src: l.src, tr: l.tr, tx: l.tx || null, who: l.who || '' })), pending: (typeof curPending === 'function' && SES.length) ? curPending() : null });
 }
-if (BC && !DISP) BC.onmessage = e => { if (e.data && e.data.type === 'hello') sendDisp(); };
+if (BC && !DISP) BC.onmessage = e => { const d = e.data || {}; if (d.type === 'hello') { if (d.lang) DLANGS[d.lang] = Date.now(); sendDisp(); } };
 if (DISP) {
   document.body.classList.add('disp'); document.title = '자막 · STC 통역 회의';
   $('lines').innerHTML = '<div class="idle">🎙 회의 자막이 여기에 나옵니다 · ⛶ 전체 화면을 누르세요 · A−/A＋ 로 글자 크기</div>';
-  if (BC) { BC.onmessage = e => { const d = e.data || {}; if (d.type !== 'state') return; const L = $('lines'), follow = L.scrollTop < 80; L.innerHTML = d.html || '<div class="idle">🎙 말씀하세요…</div>'; if (follow) L.scrollTop = 0; }; BC.postMessage({ type: 'hello' }); }
+  const DL = (location.search.match(/[?&]lang=(ko|th|en|hi)/) || [])[1] || '';
+  if (DL) { document.body.classList.add('dl'); document.title = '자막 · ' + ({ ko: '한국어', th: 'ไทย', en: 'English', hi: 'हिन्दी' })[DL]; }
+  if (BC) {
+    BC.onmessage = e => {
+      const d = e.data || {}; if (d.type !== 'state') return;
+      if (DL) { const pb = $('pb-' + DL), top = pb ? pb.scrollTop : 0; $('paneWrap').innerHTML = panesHtml(d.lines || [], [DL], d.pending); const nb = $('pb-' + DL); if (nb && top > 80) nb.scrollTop = top; return; }
+      const L = $('lines'), follow = L.scrollTop < 80; L.innerHTML = d.html || '<div class="idle">🎙 말씀하세요…</div>'; if (follow) L.scrollTop = 0;
+      drawStage(d.pending, (d.lines || [])[(d.lines || []).length - 1] || null);
+    };
+    BC.postMessage({ type: 'hello', lang: DL }); setInterval(() => BC.postMessage({ type: 'hello', lang: DL }), 10000);
+  }
   else $('lines').innerHTML = '<div class="idle">이 브라우저는 모니터 창을 지원하지 않습니다. 메인 창의 「🖥 큰 화면」을 쓰세요.</div>';
 }
 function drawMode() {
   $('modeSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === MODE));
-  $('modeTip').textContent = MODE === 'fast' ? '번역 전용 모델 · 가장 빠름 (용어집은 회의록 정리 때 적용)' : '일반 모델 + 현장 용어집 · 용어가 더 정확하지만 조금 느림';
 }
 $('modeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) return; MODE = b.dataset.m; ls('liveMode', MODE); drawMode(); };
 drawMode();
 async function loadHome() {
   show('vHome');
   try {
-    const l = await api({ action: 'liveList' });
+    const l = await api({ action: 'liveList' }); if (l.fb && !ls('liveFb')) S.fb = l.fb; prefetchToken();
     const L = l.ok ? l.list : [];
     $('mtgList').innerHTML = !l.ok ? esc(l.error || '불러오기 실패') : L.length ? L.map(m => '<div class="row" data-id="' + esc(m.id) + '"><b>' + esc(m.date) + '</b><span>' + esc(m.start) + (m.end ? '~' + esc(m.end) : '') + '</span><span class="muted">' + esc(m.min || '') + '분 · ' + esc(m.n || 0) + '줄</span><span class="sp" style="flex:1"></span><span class="tag ' + esc(m.status) + '">' + esc(m.status) + '</span>' +
       '<button class="mdel" data-id="' + esc(m.id) + '" style="padding:2px 8px;font-size:12px;color:var(--red)">삭제</button></div>').join('') : '아직 회의가 없습니다';
@@ -314,16 +400,20 @@ $('mtgList').onclick = async e => {
 $('btnStart').onclick = async () => {
   $('homeMsg').textContent = ''; $('homeMsg').classList.remove('err');
   try {
-    await startMic();
+    const micP = startMic(); prefetchToken();
+    await micP;
     const d = new Date(); S.date = todayYmd(); S.start = pad(d.getHours()) + ':' + pad(d.getMinutes()); S.end = '';
     S.id = 'M' + S.date.replace(/-/g, '') + '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
-    LAST = null; MEMO = ''; DIG = { items: [], summary: '', at: '', n: -1, busy: false }; SIDE = 'sum'; $('side').querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.t === 'sum')); $('sideBody').innerHTML = ''; drawSide();
+    LAST = null; MEMO = ''; DIG = { points: [], summary: '', at: '', n: -1, busy: false }; SIDE = 'sum'; $('side').querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.t === 'sum')); $('sideBody').innerHTML = ''; drawSide();
+    $('paneWrap').innerHTML = ''; 
     Object.assign(S, { lines: [], running: true, t0: Date.now(), lastSaved: -1, audioUrl: '' });
     $('lines').innerHTML = '<div class="idle" id="idleMsg">🎙 말씀하세요… · พูดได้เลย</div>'; show('vLive');
     $('btnStop').classList.remove('hidden'); $('lvl').classList.remove('hidden');
     S.clockTimer = setInterval(() => { const s = Math.floor((Date.now() - S.t0) / 1000); $('clock').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60); }, 1000);
     S.saveTimer = setInterval(() => saveLines(), 30000);
     startRec(); keepAwake();
+    renderPanes(); drawStage();
+    if (fbBase()) { S.room = newRoom(); watchViewers(); pubRoom(true); } else S.room = '';
     await startSessions();
   } catch (e) { stopAll(); show('vHome'); $('homeMsg').textContent = '시작 실패: ' + (e.message || e); $('homeMsg').classList.add('err'); }
 };
@@ -438,10 +528,21 @@ function playPcm(b64data) {
 // 빠른 통역: 번역 전용 모델 2개를 동시에 연결 (→태국어 / →한국어). 같은 언어는 조용히 넘어감
 // 용어집 통역: 일반 실시간 모델 1개 + 현장 용어집 지시
 let SES = [];
-async function getToken() {
+// 토큰은 미리 받아 두고(시작 화면에서), 연결 3번까지 재사용 → 시작·재연결이 빨라짐
+const TK = { r: null, at: 0, used: 0, p: null };
+async function fetchToken() {
   const r = await api({ action: 'liveToken' });
   if (!r.ok) throw new Error(r.error || '토큰 발급 실패');
+  Object.assign(TK, { r, at: Date.now(), used: 0 });
+  if (r.fb && !ls('liveFb')) S.fb = r.fb;
   return r;
+}
+function prefetchToken() { if (!TK.p && (!TK.r || Date.now() - TK.at > 80000)) TK.p = fetchToken().catch(() => null).finally(() => { TK.p = null; }); return TK.p; }
+async function getToken() {
+  if (TK.p) await TK.p;
+  if (!TK.r || Date.now() - TK.at > 90000 || TK.used >= 3) await fetchToken();   // 새 연결은 발급 후 2분 안에 시작해야 함
+  TK.used++;
+  return TK.r;
 }
 async function startSessions() {
   setPill('conn', '연결 중…');
@@ -511,7 +612,7 @@ function failLive(msg) { setPill('conn', '연결 끊김'); note('⚠ ' + msg + '
 function onServer(x, m) {
   if (m.setupComplete) {
     x.up = true; x.everUp = true;
-    setPill('rec', (x.kind === 'fast' ? '⚡ 빠른 통역 중' : '📘 용어집 통역 중') + ' · 녹음 중'); return;
+    setPill('rec', (x.kind === 'fast' ? '⚡ 동시통역 중' : '🗣 순차통역 중') + ' · 녹음 중'); return;
   }
   if (m.sessionResumptionUpdate && m.sessionResumptionUpdate.resumable !== false && m.sessionResumptionUpdate.newHandle) x.handle = m.sessionResumptionUpdate.newHandle;
   if (m.goAway) { setTimeout(() => { try { x.ws && x.ws.close(); } catch (e) {} }, 300); return; }
@@ -551,6 +652,7 @@ function fastFlush(x) {
   // 마지막 번역 조각까지 들어온 말만 이 줄의 원문 · 그 뒤에 들어온 말은 다음 줄로
   const T = x.lastOutAt || Date.now();
   const src = clean(x.inq.filter(q => q.at <= T).map(q => q.text).join(''));
+  if (x.target === 'ko' && !src) { x.outBuf = ''; drawPending(); return; }   // 태국어가 아닌 말(영어 등)은 →태국어 줄 하나로만
   pushLine({ t: x.t || nowHM(), src, tr, lang: x.target === 'th' ? (langOf(src) === 'en' ? 'en' : 'ko') : 'th' });
   SES.forEach(s => { if (s === x || !clean(s.outBuf)) { s.inq = s.inq.filter(q => q.at > T); setInBuf(s); s.t = s.inq.length ? nowHM() : ''; } });
   x.outBuf = '';
@@ -571,14 +673,15 @@ function pushLine(c) {
   if (!c.src && !c.tr) return;
   c.lang = c.lang || langOf(c.src) || (langOf(c.tr) === 'th' ? 'ko' : 'th');
   S.lines.push(c); appendLine(c, S.lines.length - 1);
-  if (MODE === 'fast' && c.src && c.tr && $('refine').checked) refineQ(c);
+  if (c.src && needTx(c)) refineQ(c);
 }
 // ---------- 문맥 보정: 빠른 통역 줄을 확정 후 1~3초 안에 앞뒤 문맥·용어집으로 다듬어 교체 ----------
 const RQ = { busy: 0, q: [] };
 function refineQ(l) {
+  if (l.refining) return;
   l.refining = true; redrawLine(l); RQ.q.push(l);
   // 말이 계속 이어져 보정이 밀리면 오래된 줄은 건너뛰고 최신 줄을 먼저 (회의록 정리 때 다시 다듬어짐)
-  while (RQ.q.length > 3) { const o = RQ.q.shift(); o.refining = false; redrawLine(o); }
+  if (!extraLangs().length) while (RQ.q.length > 3) { const o = RQ.q.shift(); o.refining = false; redrawLine(o); }
   pumpRefine();
 }
 async function pumpRefine() {
@@ -587,8 +690,16 @@ async function pumpRefine() {
     (async () => {
       try {
         const i = S.lines.indexOf(l);
-        const r = await api({ action: 'liveRefine', line: { src: l.src, tr: l.tr, lang: l.lang }, context: S.lines.slice(Math.max(0, i - 8), i).map(x => ({ src: x.src, tr: x.tr })) });
-        if (r.ok && !l.edited) { if (r.changed || r.tr !== l.tr || r.src !== l.src) { l.src = clean(r.src); l.tr = clean(r.tr); l.refined = true; } else l.checked = true; }
+        const fix = MODE === 'fast' && $('refine').checked, langs = ['ko', 'th'].concat(extraLangs());
+        const r = await api({ action: 'liveLangs', line: { src: l.src, tr: l.tr, lang: l.lang }, langs, context: S.lines.slice(Math.max(0, i - 8), i).map(x => ({ src: x.src, tr: x.tr })) });
+        if (r.ok) {
+          const tx = r.tx || {};
+          if (fix && !l.edited) {
+            const ns = clean(r.src) || l.src, nt = clean(l.lang === 'th' ? tx.ko : tx.th) || l.tr;
+            if (ns !== l.src || nt !== l.tr) { l.src = ns; l.tr = nt; l.refined = true; } else l.checked = true;
+            l.tx = Object.assign(l.tx || {}, tx);
+          } else { l.tx = Object.assign(l.tx || {}); ['en', 'hi'].forEach(k => { if (tx[k]) l.tx[k] = tx[k]; }); }
+        }
       } catch (e) {}
       l.refining = false; redrawLine(l); RQ.busy--; pumpRefine();
     })();
@@ -597,12 +708,92 @@ async function pumpRefine() {
 function redrawLine(l) {
   const i = S.lines.indexOf(l); if (i < 0) return;
   const el = document.querySelector('#lines .ln[data-i="' + i + '"]'); if (!el) return;
-  el.outerHTML = lineHtml(l, i); sendDisp();
+  el.outerHTML = lineHtml(l, i); renderPanes(); drawStage(); sendDisp(); pubRoom();
 }
+// ---------- 언어별 분할 화면 ----------
+const LANGS = { ko: ['🇰🇷', '한국어'], th: ['🇹🇭', 'ไทย'], en: ['🇬🇧', 'English'], hi: ['🇮🇳', 'हिन्दी'] };
+const LORD = Object.keys(LANGS);
+let PANES = []; try { PANES = JSON.parse(ls('livePanes') || '[]').filter(x => LANGS[x]); } catch (e) {}
+const DLANGS = {};   // 열려 있는 모니터 창 언어 → 마지막 신호 시각
+function drawPaneSeg() {
+  document.querySelectorAll('.paneSeg button').forEach(b => b.classList.toggle('on', b.dataset.p ? PANES.includes(b.dataset.p) : !PANES.length));
+  document.body.classList.toggle('split', PANES.length > 0 && !DISP);
+  document.documentElement.style.setProperty('--np', PANES.length || 1);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.paneSeg button'); if (!b) return;
+  const p = b.dataset.p;
+  PANES = !p ? [] : PANES.includes(p) ? PANES.filter(x => x !== p) : PANES.concat(p).sort((a, c) => LORD.indexOf(a) - LORD.indexOf(c));
+  ls('livePanes', JSON.stringify(PANES)); drawPaneSeg(); renderPanes();
+  if (S.running) S.lines.slice(-6).forEach(l => { if (needTx(l)) refineQ(l); });   // 새로 켠 언어는 최근 줄부터 번역
+});
+const flag = g => (LANGS[g] || ['EN'])[0];
+function textIn(l, L) {
+  if (l.lang === L) return l.src;
+  if (l.tx && l.tx[L]) return l.tx[L];
+  if ((L === 'ko' && l.lang === 'th') || (L === 'th' && l.lang !== 'th')) return l.tr;
+  return '';
+}
+function paneLineHtml(l, L, pending) {
+  const t = textIn(l, L), org = l.lang === L;
+  return '<div class="pl' + (pending ? ' pending' : '') + (org ? ' org' : '') + '"><div class="meta">' + flag(l.lang) + ' ' + esc(l.t || '') + (l.who ? ' · ' + esc(l.who) : '') + (org ? ' · 원문' : '') + '</div>' +
+    '<div class="tx">' + (esc(clean(t)) || '<span class="muted">' + (pending ? '…' : '번역 중…') + '</span>') + '</div></div>';
+}
+function panesHtml(lines, langs, P) {
+  return langs.map(L => '<div class="pane"><div class="ph">' + LANGS[L][0] + ' ' + LANGS[L][1] + '</div><div class="pb" id="pb-' + L + '"><div id="pp-' + L + '">' + (P ? paneLineHtml(P, L, true) : '') + '</div>' +
+    lines.slice(-80).reverse().map(l => paneLineHtml(l, L)).join('') + '</div></div>').join('');
+}
+function curPending() {
+  let P = null;
+  if (SES.some(x => x.kind === 'fast')) {
+    const src = SES.map(x => clean(x.inBuf)).sort((a, b) => b.length - a.length)[0] || '';
+    const tr = SES.map(x => clean(x.outBuf)).filter(Boolean).join(' ');
+    if (src || tr) P = { t: nowHM(), src, tr };
+  } else SES.forEach(x => x.segs.forEach(g => { if (clean(g.src) || clean(g.tr)) P = { t: g.t, src: g.src, tr: g.tr }; }));
+  if (P) P.lang = langOf(P.src) || (langOf(P.tr) === 'th' ? 'ko' : 'th');
+  return P;
+}
+function renderPanes() {
+  if (!PANES.length || DISP) return;
+  const st = {}; PANES.forEach(L => { const b = $('pb-' + L); if (b) st[L] = b.scrollTop; });
+  $('paneWrap').innerHTML = panesHtml(S.lines, PANES, curPending());
+  PANES.forEach(L => { const b = $('pb-' + L); if (b && st[L] > 60) b.scrollTop = st[L]; });
+}
+function drawPanePending() { if (!PANES.length) return; const P = curPending(); PANES.forEach(L => { const el = $('pp-' + L); if (el) el.innerHTML = P ? paneLineHtml(P, L, true) : ''; }); }
+function extraLangs() {
+  const set = new Set(PANES.filter(x => x === 'en' || x === 'hi'));
+  Object.keys(DLANGS).forEach(L => { if (Date.now() - DLANGS[L] < 30000 && (L === 'en' || L === 'hi')) set.add(L); });
+  if (typeof liveViewers === 'function') liveViewers().forEach(v => { if (v.lang === 'en' || v.lang === 'hi') set.add(v.lang); });
+  return [...set];
+}
+function needTx(l) { const ex = extraLangs(); return l.src && ((MODE === 'fast' && $('refine').checked && !l.refined && !l.checked) || ex.some(L => !(l.tx && l.tx[L]))); }
+
+// ---------- 자막 무대: 지금 말하는 문장 (없으면 방금 끝난 문장) ----------
+let STAGE_T = 0;
+function drawStage(Pin, lastIn) {
+  if (!$('stage')) return;
+  const ext = arguments.length > 0, LAST_ = ext ? lastIn : LAST;
+  const P = ext ? Pin : ((typeof curPending === 'function' && SES.length) ? curPending() : null), st = $('stState');
+  let src = '', tr = '', who = '', state = '', cls = '';
+  if (P && (clean(P.src) || clean(P.tr))) {
+    src = clean(P.src); tr = clean(P.tr); who = flag(P.lang) + ' 지금 말하는 중';
+    if (!tr) { state = MODE === 'acc' ? '번역 중 · 잠시 기다려 주세요' : '듣는 중…'; cls = MODE === 'acc' ? 'wait' : 'listen'; }
+    else { state = '번역 중'; cls = 'listen'; }
+    STAGE_T = Date.now();
+  } else if (LAST_) {
+    src = clean(LAST_.src); tr = clean(LAST_.tr); who = flag(LAST_.lang) + ' ' + (LAST_.t || '') + (LAST_.who ? ' · ' + LAST_.who : '');
+    state = '방금'; cls = 'done';
+  } else who = '🎙 말씀하세요 · พูดได้เลย';
+  $('stWho').textContent = who; st.textContent = state; st.className = cls;
+  $('stSrc').textContent = src; $('stTr').textContent = tr || (P ? '…' : '');
+  $('stage').classList.toggle('old', !P);
+}
+
 function lineHtml(l, i, pending) {
   return '<div class="ln ' + (l.lang === 'th' ? 'th' : '') + (pending ? ' pending' : '') + (l.edited ? ' edited' : '') + '"' + (pending ? '' : ' data-i="' + i + '"') + '>' +
     '<div class="meta"><span>' + (l.lang === 'th' ? '🇹🇭' : l.lang === 'en' ? 'EN' : '🇰🇷') + ' ' + esc(l.t) + '</span>' + (l.who ? '<span class="who">' + esc(l.who) + '</span>' : '') + (l.refining ? '<span style="color:var(--ink3)">· 문맥 보정 중…</span>' : l.refined ? '<span style="color:var(--th)">✓ 문맥 보정</span>' : l.checked ? '<span style="color:var(--ink3)">✓ 확인</span>' : '') + '</div>' +
-    '<div class="src">' + esc(clean(l.src)) + '</div><div class="tr">' + (esc(clean(l.tr)) || '<span class="muted">…</span>') + '</div></div>';
+    '<div class="src">' + esc(clean(l.src)) + '</div><div class="tr">' + (esc(clean(l.tr)) || '<span class="muted">…</span>') + '</div>' +
+    (l.lang === 'en' && l.tx && l.tx.ko ? '<div class="tr">' + esc(clean(l.tx.ko)) + '</div>' : '') + '</div>';
 }
 // 지난 대화: 맨 아래를 보고 있을 때만 자동으로 따라감 (위로 올려 보는 중이면 그대로 두고 버튼 표시)
 // 최신 대화가 맨 위 · 아래로 갈수록 지난 대화
@@ -611,7 +802,7 @@ function appendLine(l, i) {
   const follow = atBottom(), pr = $('pendingRow'), im = $('idleMsg'); if (im) im.remove();
   const h = lineHtml(l, i);
   if (pr) pr.insertAdjacentHTML('afterend', h); else $('lines').insertAdjacentHTML('afterbegin', h);
-  LAST = l; drawPending(follow);
+  LAST = l; renderPanes(); drawPending(follow);
 }
 $('lines').addEventListener('scroll', () => { if (atBottom()) $('toBottom').classList.add('hidden'); });
 $('toBottom').onclick = () => { $('lines').scrollTop = 0; $('toBottom').classList.add('hidden'); };
@@ -633,11 +824,11 @@ function drawPending(follow) {
     pr.innerHTML = h;
   }
   if (follow) $('lines').scrollTop = 0; else if (P.length || LAST) $('toBottom').classList.remove('hidden');
-  sendDisp();
+  drawPanePending(); drawStage(); sendDisp(); pubRoom();
 }
 
 // ---------- 오른쪽 패널: 실시간 요약 · 호기별 · 메모 ----------
-let SIDE = 'sum', DIG = { items: [], summary: '', at: '', n: -1, busy: false }, MEMO = '';
+let SIDE = 'sum', DIG = { points: [], summary: '', at: '', n: -1, busy: false }, MEMO = '';
 $('side').querySelector('.tabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; SIDE = b.dataset.t; $('side').querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b)); drawSide(); };
 function drawSide() {
   const B = $('sideBody'); if (!B) return;
@@ -645,20 +836,9 @@ function drawSide() {
     if (!$('memo')) { B.innerHTML = '<div class="muted" style="margin-bottom:6px">진행자 메모 · 회의록 정리 때 함께 반영됩니다</div><textarea id="memo" placeholder="결정 사항, 지시, 기한 등을 자유롭게 적으세요"></textarea>'; $('memo').value = MEMO; $('memo').oninput = () => { MEMO = $('memo').value; }; }
     return;
   }
-  if (SIDE === 'dc') {
-    const g = {};
-    S.lines.forEach((l, i) => { const txt = l.src + ' ' + l.tr; const m = txt.match(/(?:DC|MC|D\/C)\s*-?\s*0*(\d{1,2})(?!\d)/gi) || [];
-      [...new Set(m.map(x => 'DC' + String(+x.replace(/\D/g, '')).padStart(2, '0')))].forEach(k => (g[k] = g[k] || []).push(i)); });
-    const ks = Object.keys(g).sort();
-    B.innerHTML = ks.length ? ks.map(k => '<div class="dcg"><h4>' + k + ' <span class="muted">' + g[k].length + '번 언급</span></h4>' +
-      g[k].slice(-4).reverse().map(i => '<div data-go="' + i + '">' + esc(S.lines[i].lang === 'th' ? S.lines[i].tr : S.lines[i].src).slice(0, 90) + '</div>').join('') + '</div>').join('')
-      : '<div class="muted">대화에 호기 번호(DC12, MC12 등)가 나오면 여기에 모입니다</div>';
-    return;
-  }
-  const st = x => '<span class="st st-' + esc(x) + '">' + esc(x) + '</span>';
-  B.innerHTML = '<div class="muted" style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><span style="flex:1">' + (DIG.busy ? '🤖 정리 중…' : DIG.at ? DIG.at + ' 기준 · 1분마다 자동 갱신' : '대화가 쌓이면 1분마다 안건을 자동으로 정리합니다') + '</span><button id="digNow" style="padding:2px 8px;font-size:12px">↻ 지금</button></div>' +
-    (DIG.summary ? '<div class="notice" style="margin-bottom:6px">' + esc(DIG.summary) + '</div>' : '') +
-    DIG.items.map(x => '<div class="it">' + st(x.status || '') + '<b>' + esc(x.dc || '·') + '</b> ' + esc(x.ko || '') + (x.owner ? ' <span class="muted">· ' + esc(x.owner) + '</span>' : '') + (x.th ? '<div class="th">' + esc(x.th) + '</div>' : '') + '</div>').join('');
+  B.innerHTML = '<div class="muted" style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><span style="flex:1">' + (DIG.busy ? '🤖 정리 중…' : DIG.at ? DIG.at + ' 기준 · 1분마다 자동 갱신' : '대화가 쌓이면 1분마다 대화 내용을 자동으로 요약합니다') + '</span><button id="digNow" style="padding:2px 8px;font-size:12px">↻ 지금</button></div>' +
+    (DIG.summary ? '<div class="notice" style="margin:6px 0">' + esc(DIG.summary) + (DIG.summaryTh ? '<div style="margin-top:4px;color:var(--ink3)">' + esc(DIG.summaryTh) + '</div>' : '') + '</div>' : '') +
+    DIG.points.map(x => '<div class="it"><span class="muted" style="font-size:11px">' + esc(x.t || '') + '</span> ' + esc(x.ko || '') + (x.th ? '<div class="th">' + esc(x.th) + '</div>' : '') + '</div>').join('');
 }
 document.addEventListener('click', e => {
   if (e.target.id === 'digNow') { digest(true); return; }
@@ -669,16 +849,100 @@ async function digest(force) {
   DIG.busy = true; if (SIDE === 'sum') drawSide();
   const n = S.lines.length;
   try { const r = await api({ action: 'liveDigest', lines: S.lines.slice(-120).map(l => ({ t: l.t, src: l.src, tr: l.tr })) });
-    if (r.ok) { DIG.items = r.items || []; DIG.summary = r.summary_ko || ''; DIG.n = n; DIG.at = nowHM().slice(0, 5); } } catch (e) {}
+    if (r.ok) { DIG.points = r.points || []; DIG.summary = r.summary_ko || ''; DIG.summaryTh = r.summary_th || ''; DIG.n = n; DIG.at = nowHM().slice(0, 5); } } catch (e) {}
   DIG.busy = false; if (SIDE === 'sum') drawSide();
 }
-setInterval(() => { if (S.running) { if (S.lines.length >= 2) digest(); if (SIDE === 'dc') drawSide(); } }, 60000);
-setInterval(() => { if (S.running && SIDE === 'dc') drawSide(); }, 5000);
+setInterval(() => { if (S.running && S.lines.length >= 2) digest(); }, 60000);
+
+// ---------- 휴대폰 자막: Firebase Realtime Database 로 중계 ----------
+S.fb = ls('liveFb') || '';
+const fbBase = () => String(S.fb || '').replace(/\/+$/, '');
+let PUB_T = 0, PUB_TM = null, PUB_ERR = false, VIEW = {}, VIEWT = {}, VES = null;
+function newRoom() { const a = 'abcdefghjkmnpqrstuvwxyz23456789'; let r = ''; for (let i = 0; i < 12; i++) r += a[Math.floor(Math.random() * a.length)]; return r; }
+function watchUrl() { return location.origin + location.pathname + '?watch=' + S.room + '&db=' + encodeURIComponent(fbBase()); }
+function pubRoom(now) {
+  if (!S.room || !fbBase()) return;
+  const wait = 350 - (Date.now() - PUB_T);
+  if (!now && wait > 0) { if (!PUB_TM) PUB_TM = setTimeout(() => { PUB_TM = null; pubRoom(true); }, wait); return; }
+  PUB_T = Date.now();
+  const st = { at: Date.now(), live: S.running, date: S.date,
+    lines: S.lines.slice(-25).map(l => ({ t: l.t, lang: l.lang, src: l.src, tr: l.tr, tx: l.tx || null, who: l.who || '' })),
+    pending: (SES.length && S.running) ? curPending() : null };
+  fetch(fbBase() + '/rooms/' + S.room + '/state.json', { method: 'PUT', body: JSON.stringify(st) })
+    .then(r => { if (!r.ok && !PUB_ERR) { PUB_ERR = true; note('📱 휴대폰 자막 중계 실패 (' + r.status + ') — Firebase 규칙을 확인하세요'); } })
+    .catch(() => {});
+}
+function watchViewers() {
+  try { VES && VES.close(); } catch (e) {}
+  VIEW = {}; VIEWT = {};
+  if (!S.room || !fbBase() || !window.EventSource) return;
+  VES = new EventSource(fbBase() + '/rooms/' + S.room + '/viewers.json');
+  const on = e => { try { const d = JSON.parse(e.data); if (!d) return;
+    if (d.path === '/') { VIEW = d.data || {}; Object.keys(VIEW).forEach(k => VIEWT[k] = Date.now()); }
+    else { const k = d.path.replace(/^\//, '').split('/')[0]; if (d.data) { VIEW[k] = Object.assign(VIEW[k] || {}, d.data); VIEWT[k] = Date.now(); } else delete VIEW[k]; }
+    drawViewers(); } catch (er) {} };
+  VES.addEventListener('put', on); VES.addEventListener('patch', on);
+}
+function liveViewers() { return Object.keys(VIEW).filter(k => Date.now() - (VIEWT[k] || 0) < 60000).map(k => VIEW[k]); }
+function drawViewers() {
+  const v = liveViewers(), c = {}; v.forEach(x => c[x.lang] = (c[x.lang] || 0) + 1);
+  $('vwN').textContent = v.length ? '· ' + v.length + '명' : '';
+  const q = $('qrViewers'); if (q) q.textContent = v.length ? '보는 중: ' + Object.keys(c).map(L => flag(L) + ' ' + c[L]).join('  ') : '아직 접속한 사람이 없습니다';
+  if (v.some(x => x.lang === 'en' || x.lang === 'hi')) S.lines.slice(-4).forEach(l => { if (needTx(l)) refineQ(l); });
+}
+setInterval(() => { if (S.running) drawViewers(); }, 15000);
+$('btnQr').onclick = () => {
+  if (!fbBase()) {
+    openModal('<h3>📱 휴대폰 자막 설정</h3><div class="muted">휴대폰 중계에 쓸 Firebase Realtime Database 주소가 필요합니다 (처음 한 번). Apps Script 스크립트 속성 <b>FIREBASE_DB_URL</b> 에 넣으면 모든 PC에서 자동으로 쓰입니다.</div>' +
+      '<label>Database 주소</label><input id="fbIn" style="width:100%" placeholder="https://stc-live-default-rtdb.asia-southeast1.firebasedatabase.app">' +
+      '<div class="row-btn"><button id="fbNo">닫기</button><button id="fbOk" class="pri">저장</button></div>');
+    $('fbNo').onclick = closeModal;
+    $('fbOk').onclick = () => { const v = $('fbIn').value.trim().replace(/\/+$/, ''); if (!/^https:\/\/.+(firebaseio\.com|firebasedatabase\.app)$/.test(v)) { alert('주소 형식이 맞지 않습니다'); return; } ls('liveFb', v); S.fb = v; closeModal(); if (S.running && !S.room) { S.room = newRoom(); watchViewers(); pubRoom(true); } $('btnQr').click(); };
+    return;
+  }
+  if (!S.room) { S.room = newRoom(); watchViewers(); pubRoom(true); }
+  const url = watchUrl();
+  openModal('<h3>📱 휴대폰으로 자막 보기</h3><div class="muted">휴대폰 카메라로 QR을 찍고 언어를 고르세요. 앱 설치는 필요 없습니다.</div><div id="qrBox"></div>' +
+    '<div style="font-size:12px;word-break:break-all;text-align:center"><a href="' + esc(url) + '" target="_blank">' + esc(url) + '</a></div>' +
+    '<div id="qrViewers" class="msg" style="text-align:center"></div><div class="row-btn"><button id="qrCopy">주소 복사</button><button id="qrNo" class="pri">닫기</button></div>');
+  try { new QRCode($('qrBox'), { text: url, width: 520, height: 520, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { $('qrBox').textContent = 'QR을 만들 수 없습니다 · 주소를 공유하세요'; }
+  $('qrNo').onclick = closeModal; $('qrCopy').onclick = () => { try { navigator.clipboard.writeText(url); $('qrCopy').textContent = '복사됨'; } catch (e) {} };
+  drawViewers();
+};
+
+// ---------- 참석자 휴대폰 화면 (?watch=방&db=주소) ----------
+const WATCH = (location.search.match(/[?&]watch=([a-z0-9]{6,20})/) || [])[1] || '';
+function startWatch() {
+  const db = decodeURIComponent((location.search.match(/[?&]db=([^&]+)/) || [])[1] || '');
+  document.body.classList.add('watch'); $('vWatch').classList.remove('hidden'); document.title = 'STC 통역 자막';
+  let L = ls('watchLang') || ((navigator.language || '').startsWith('ko') ? 'ko' : (navigator.language || '').startsWith('th') ? 'th' : (navigator.language || '').startsWith('hi') ? 'hi' : 'th');
+  let ST = null;
+  const vid = ls('watchId') || (() => { const v = newRoom(); ls('watchId', v); return v; })();
+  const beat = () => fetch(db + '/rooms/' + WATCH + '/viewers/' + vid + '.json', { method: 'PUT', body: JSON.stringify({ lang: L, at: { '.sv': 'timestamp' } }) }).catch(() => {});
+  const drawLang = () => $('wLang').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.l === L));
+  const draw = () => {
+    if (!ST) { $('wState').textContent = '연결 중…'; return; }
+    $('wState').textContent = ST.live ? '● 회의 중' : '회의가 끝났습니다';
+    const P = ST.pending, lines = ST.lines || [], last = lines[lines.length - 1];
+    const cur = P && (clean(P.src) || clean(P.tr)) ? P : last;
+    $('wNowMeta').textContent = cur ? (flag(cur.lang) + ' ' + (cur === P ? '지금 말하는 중' : (cur.t || '')) + (cur.who ? ' · ' + cur.who : '')) : '대화를 기다리는 중…';
+    $('wNowTx').textContent = cur ? (clean(textIn(cur, L)) || (cur === P ? '…' : '번역 중…')) : '';
+    $('wList').innerHTML = lines.slice().reverse().map(l => { const t = clean(textIn(l, L)); return '<div class="w"><div class="m">' + flag(l.lang) + ' ' + esc(l.t || '') + (l.who ? ' · ' + esc(l.who) : '') + '</div><div class="t">' + (esc(t) || '<span class="muted">번역 중…</span>') + '</div>' + (l.lang !== L ? '<div class="o">' + esc(clean(l.src)) + '</div>' : '') + '</div>'; }).join('');
+  };
+  $('wLang').onclick = e => { const b = e.target.closest('button'); if (!b) return; L = b.dataset.l; ls('watchLang', L); drawLang(); draw(); beat(); };
+  drawLang(); draw(); beat(); setInterval(beat, 20000);
+  if (!window.EventSource) { $('wState').textContent = '이 브라우저는 실시간 자막을 지원하지 않습니다'; return; }
+  const es = new EventSource(db + '/rooms/' + WATCH + '/state.json');
+  const on = e => { try { const d = JSON.parse(e.data); if (!d) return; if (d.path === '/') ST = d.data; else if (ST) { const k = d.path.replace(/^\//, ''); ST[k] = d.data; } draw(); } catch (er) {} };
+  es.addEventListener('put', on); es.addEventListener('patch', on);
+  es.onerror = () => { $('wState').textContent = '다시 연결 중…'; };
+  try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {}); } catch (e) {}
+}
 
 // ---------- 저장 · 종료 ----------
 function payload(extra) {
   const min = S.t0 ? Math.max(1, Math.round((Date.now() - S.t0) / 60000)) : undefined;
-  return Object.assign({ id: S.id, date: S.date, start: S.start, end: S.end, min, people: $('whoList').value, memo: MEMO,
+  return Object.assign({ id: S.id, date: S.date, start: S.start, end: S.end, min, memo: MEMO,
     lines: S.lines.map(l => ({ t: l.t, who: l.who || '', lang: l.lang, src: l.src, tr: l.tr })) }, extra || {});
 }
 async function saveLines(force) {
@@ -691,7 +955,7 @@ let WAKE = null;
 async function keepAwake() { try { WAKE = await navigator.wakeLock.request('screen'); } catch (e) {} }
 document.addEventListener('visibilitychange', () => { if (S.running && document.visibilityState === 'visible') keepAwake(); });
 function stopAll() {
-  S.running = false; try { WAKE && WAKE.release(); } catch (e) {} WAKE = null;
+  S.running = false; try { pubRoom(true); VES && VES.close(); } catch (e) {} try { WAKE && WAKE.release(); } catch (e) {} WAKE = null;
   SES.forEach(x => { clearTimeout(x.tm); const w = x.ws; x.ws = null; try { w && w.close(); } catch (e) {} });
   stopMic(); clearInterval(S.saveTimer); clearInterval(S.clockTimer);
   $('btnStop').classList.add('hidden'); $('lvl').classList.add('hidden'); setPill('', ''); $('clock').textContent = '';
@@ -763,10 +1027,17 @@ function drawMinutes() {
   if (!MIN) return;
   const L = MLANG, it = MIN.items || [];
   const ce = (k, v) => '<div contenteditable="true" data-k="' + k + '">' + esc(v || '') + '</div>';
-  $('minBody').innerHTML = '<div class="notice" style="margin-bottom:10px">' + esc(MIN['summary_' + L] || MIN.summary_ko || '') + '</div>' +
-    '<table class="mt"><colgroup><col style="width:72px"><col><col><col style="width:80px"><col style="width:70px"><col style="width:96px"><col style="width:28px"></colgroup>' +
-    '<tr class="hd"><th>호기</th><th>내용</th><th>조치 · 다음 할 일</th><th>담당</th><th>기한</th><th>상태</th><th></th></tr>' +
-    it.map((x, i) => '<tr data-i="' + i + '"><td data-l="호기">' + ce('dc', x.dc) + '</td><td data-l="내용">' + ce('content_' + L, x['content_' + L]) + '</td><td data-l="조치">' + ce('action_' + L, x['action_' + L]) + '</td><td data-l="담당">' + ce('owner', x.owner) + '</td><td data-l="기한">' + ce('due', x.due) + '</td>' +
+  const tp = MIN.topics || [];
+  $('minBody').innerHTML =
+    '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">' + (MIN.meeting_type ? '<span class="badge" style="background:#fef3c7;color:#92400e">' + esc(MIN.meeting_type) + '</span>' : '') +
+      '<b contenteditable="true" data-top="title_' + L + '" style="font-size:16px">' + esc(MIN['title_' + L] || MIN.title_ko || '') + '</b></div>' +
+    '<div class="notice" style="margin-bottom:10px">' + esc(MIN['summary_' + L] || MIN.summary_ko || '') + '</div>' +
+    (tp.length ? '<div style="margin-bottom:12px"><b>🗂 주제별 정리</b>' + tp.map(t => '<div style="margin:6px 0 0 4px"><b style="font-weight:600">■ ' + esc(t['topic_' + L] || t.topic_ko || '') + '</b><ul style="margin:2px 0 0;padding-left:20px">' +
+      (t['points_' + L] || t.points_ko || []).map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></div>').join('') + '</div>' : '') +
+    '<b>📌 할 일 · 조치</b>' +
+    '<table class="mt"><colgroup><col style="width:70px"><col style="width:70px"><col><col><col style="width:80px"><col style="width:70px"><col style="width:96px"><col style="width:28px"></colgroup>' +
+    '<tr class="hd"><th>분류</th><th>설비</th><th>내용</th><th>조치 · 다음 할 일</th><th>담당</th><th>기한</th><th>상태</th><th></th></tr>' +
+    it.map((x, i) => '<tr data-i="' + i + '"><td data-l="분류">' + ce('topic', x.topic) + '</td><td data-l="설비">' + ce('dc', x.dc) + '</td><td data-l="내용">' + ce('content_' + L, x['content_' + L]) + '</td><td data-l="조치">' + ce('action_' + L, x['action_' + L]) + '</td><td data-l="담당">' + ce('owner', x.owner) + '</td><td data-l="기한">' + ce('due', x.due) + '</td>' +
       '<td data-l="상태"><select data-k="status" class="st-' + esc(x.status) + '">' + STS.map(s => '<option' + (s === x.status ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></td><td class="x"><button class="delrow" title="줄 삭제" style="padding:2px 6px">✕</button></td></tr>').join('') + '</table>' +
     '<div style="margin-top:10px"><b>✅ 결정</b><div contenteditable="true" data-list="decisions_' + L + '" style="padding:4px;border-radius:4px">' + esc((MIN['decisions_' + L] || []).join(' / ')) + '</div></div>' +
     '<div style="margin-top:6px"><b>⏳ 미결</b><div contenteditable="true" data-list="open_' + L + '" style="padding:4px;border-radius:4px">' + esc((MIN['open_' + L] || []).join(' / ')) + '</div></div>' +
@@ -775,12 +1046,13 @@ function drawMinutes() {
 $('minBody').addEventListener('input', e => {
   if (!MIN) return;
   const lst = e.target.closest('[data-list]'); if (lst) { MIN[lst.dataset.list] = lst.textContent.split(/\s*\/\s*/).filter(Boolean); return; }
+  const tt = e.target.closest('[data-top]'); if (tt) { MIN[tt.dataset.top] = tt.textContent.trim(); DIRTY = true; return; }
   const tr = e.target.closest('tr[data-i]'), k = e.target.dataset.k; if (!tr || !k) return;
   MIN.items[+tr.dataset.i][k] = e.target.tagName === 'SELECT' ? e.target.value : e.target.textContent.trim(); DIRTY = true;
 });
 $('minBody').addEventListener('change', e => { if (e.target.tagName === 'SELECT') { const tr = e.target.closest('tr[data-i]'); MIN.items[+tr.dataset.i].status = e.target.value; e.target.className = 'st-' + e.target.value; } });
 $('minBody').addEventListener('click', e => { const b = e.target.closest('.delrow'); if (!b) return; MIN.items.splice(+b.closest('tr').dataset.i, 1); DIRTY = true; drawMinutes(); });
-$('btnAddRow').onclick = () => { if (!MIN) MIN = { items: [] }; MIN.items.push({ dc: '', status: '진행·대기' }); drawMinutes(); };
+$('btnAddRow').onclick = () => { if (!MIN) MIN = { items: [] }; MIN.items.push({ topic: '', dc: '', status: '진행·대기' }); drawMinutes(); };
 $('minLang').onclick = e => { const b = e.target.closest('button'); if (!b) return; MLANG = b.dataset.l; $('minLang').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); drawMinutes(); };
 $('btnRemake').onclick = () => remake();
 $('btnPrint').onclick = () => window.print();
@@ -800,11 +1072,26 @@ $('btnConfirm').onclick = async () => {
     const r = await api({ action: 'liveConfirm', id: S.id, date: S.date, minutes: MIN, sendLine: $('sendLine').checked });
     if (!r.ok) throw new Error(r.error);
     $('minMsg').classList.remove('err');
-    $('minMsg').innerHTML = '✅ 확정했습니다. 조회회의록에 ' + r.n + '건 추가 → 로스 달력에 반영됩니다' + (r.line ? ' · ' + esc(r.line) : '') + ' <a href="6_loss_calendar.html">달력 보기</a>';
+    $('minMsg').innerHTML = '✅ 확정했습니다. 회의록이 저장됐습니다' + (r.n ? ' · 설비 관련 ' + r.n + '건은 로스 달력에도 반영 <a href="6_loss_calendar.html">달력 보기</a>' : '') + (r.line ? ' · ' + esc(r.line) : '');
   } catch (e) { note2('실패: ' + (e.message || e)); }
   b.disabled = false; b.textContent = '✓ 확정 · ยืนยัน';
 };
+function drawSpk() {
+  const sp = [...new Set(S.lines.map(l => l.who).filter(Boolean))];
+  if (!sp.length) { $('spkBox').innerHTML = ''; return; }
+  $('spkBox').innerHTML = '<div class="spk"><b>👥 말한 사람 이름</b><span class="muted">녹음으로 나눈 화자에 실제 이름을 넣고 적용하세요</span><span style="flex-basis:100%"></span>' +
+    sp.map((n, i) => '<label>' + esc(n) + ' → <input data-old="' + esc(n) + '" value="' + esc(n) + '"></label>').join('') + '<button id="spkApply" style="padding:4px 10px">적용</button></div>';
+}
+document.addEventListener('click', e => {
+  if (e.target.id !== 'spkApply') return;
+  const map = [...document.querySelectorAll('#spkBox input')].map(x => [x.dataset.old, x.value.trim()]).filter(m => m[1] && m[1] !== m[0]).sort((a, b) => b[0].length - a[0].length);
+  if (!map.length) return;
+  S.lines.forEach(l => { map.forEach(([o, n]) => { if (l.who === o) l.who = n; }); });
+  if (MIN) { let j = JSON.stringify(MIN); map.forEach(([o, n]) => { j = j.split(o).join(n); }); MIN = JSON.parse(j); DIRTY = true; drawMinutes(); }
+  drawMinLines(); S.lastSaved = -1; saveLines(true);
+});
 function drawMinLines() {
+  drawSpk();
   $('linesNote').textContent = MIN && MIN.fromAudio ? '녹음으로 다시 정리한 대화 · 줄을 눌러 수정' : '줄을 눌러 수정';
   $('minLines').innerHTML = S.lines.length ? S.lines.map((l, i) => lineHtml(l, i)).join('') : '<div class="muted">대화가 없습니다</div>';
 }
@@ -827,19 +1114,21 @@ document.addEventListener('click', e => {
   $('eNo').onclick = closeModal;
   $('eDel').onclick = () => { S.lines.splice(i, 1); closeModal(); redrawAll(); S.lastSaved = -1; if (!S.running) saveLines(true); };
   $('eOk').onclick = async () => {
-    l.who = $('eWho').value.trim(); l.src = $('eSrc').value.trim(); l.tr = $('eTr').value.trim(); l.lang = langOf(l.src) || l.lang; l.edited = true;
+    l.who = $('eWho').value.trim(); l.src = $('eSrc').value.trim(); l.tr = $('eTr').value.trim(); l.lang = langOf(l.src) || l.lang; l.edited = true; l.tx = {};
+    if (S.running && extraLangs().length) refineQ(l);
     const ko = $('gKo').value.trim(), th = $('gTh').value.trim();
     if (ko || th) { msg('용어집에 추가 중…'); try { const r = await api({ action: 'liveAddTerm', ko, th }); if (!r.ok) throw new Error(r.error); } catch (er) { msg('용어 추가 실패: ' + (er.message || er), true); return; } }
     closeModal(); redrawAll(); S.lastSaved = -1; if (!S.running) saveLines(true);
   };
 });
 function redrawAll() {
-  if (!$('vLive').classList.contains('hidden')) { $('lines').innerHTML = S.lines.map((l, i) => lineHtml(l, i)).reverse().join(''); LAST = S.lines[S.lines.length - 1] || null; drawPending(true); }
+  if (!$('vLive').classList.contains('hidden')) { $('lines').innerHTML = S.lines.map((l, i) => lineHtml(l, i)).reverse().join(''); LAST = S.lines[S.lines.length - 1] || null; renderPanes(); drawPending(true); }
   if (!$('vMin').classList.contains('hidden')) drawMinLines();
 }
 $('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
 
-if (!DISP) loadHome();
+drawPaneSeg();
+if (WATCH) startWatch(); else if (!DISP) loadHome();
 </script>
 </body>
 </html>
