@@ -703,7 +703,8 @@ function similar(a, b) {
   Object.keys(A).forEach(k => { tot += A[k]; hit += Math.min(A[k], B[k] || 0); });
   return tot ? hit / tot >= 0.7 : false;
 }
-function rqErr(m) { const e = $('rqErr'); if (!e) return; e.style.display = m ? '' : 'none'; e.textContent = m ? '⚠ 번역 서버 오류: ' + String(m).slice(0, 120) : ''; }
+function qInfo() { const e = $('rqErr'); if (!e || e.dataset.err) return; const n = RQ.q.length; e.style.display = n > 3 ? '' : 'none'; e.style.color = '#b45309'; e.textContent = n > 3 ? '번역 대기 ' + n + '줄' : ''; }
+function rqErr(m) { const e = $('rqErr'); if (!e) return; e.dataset.err = m ? '1' : ''; e.style.color = '#dc2626'; e.style.display = m ? '' : 'none'; e.textContent = m ? '⚠ 번역 서버 오류: ' + String(m).slice(0, 120) : ''; }
 function refineQ(l) {
   if (l.refining || RQ.q.includes(l)) return;
   l.refining = true; redrawLine(l); RQ.q.push(l);
@@ -712,8 +713,11 @@ function refineQ(l) {
 }
 // 대기 중인 줄을 최대 6줄씩 묶어서 한 번에 번역·보정 (줄마다 따로 부르면 밀림)
 async function pumpRefine() {
-  while (RQ.busy < 2 && RQ.q.length) {
-    const batch = RQ.q.splice(0, 6); RQ.busy++;
+  const now = Date.now();
+  RQ.q = RQ.q.filter(l => { if (now - (l.at || now) > 90000 && l.tries) { l.refining = false; return false; } return true; });
+  while (RQ.busy < 3 && RQ.q.length) {
+    RQ.q.sort((a, b) => (b.at || 0) - (a.at || 0));   // 방금 한 말부터 번역
+    const batch = RQ.q.splice(0, 6).reverse(); RQ.busy++; qInfo();
     (async () => {
       try {
         const fix = MODE === 'fast' && $('refine').checked, langs = ['ko', 'th'].concat(extraLangs());
@@ -734,7 +738,7 @@ async function pumpRefine() {
         });
       } catch (e) { rqErr(e.message || String(e)); }
       batch.forEach(l => { l.refining = false; l.tries = (l.tries || 0) + 1; l.lastTry = Date.now(); redrawLine(l); });
-      RQ.busy--; pumpRefine();
+      RQ.busy--; qInfo(); pumpRefine();
     })();
   }
 }
