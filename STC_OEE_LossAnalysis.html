@@ -222,7 +222,8 @@ const Store = {
   async set(key, value){
     const str = JSON.stringify(value);
     if (window.storage) { try { await window.storage.set(key, str); return true; } catch(e){} }
-    try { localStorage.setItem(key, str); return true; } catch(e){ return false; }
+    try { localStorage.setItem(key, str); return true; }
+    catch(e){ try { localStorage.removeItem(key); } catch(_){} return false; }   /* 용량 초과로 저장 실패 → 옛 캐시를 지워 다른 탭이 지난 주차에 멈추지 않게 */
   }
 };
 const STORE_KEY = 'stc_oee_dashboard_v1'; // shared with the main OEE dashboard
@@ -873,7 +874,7 @@ function dataDateRange(rows){
 }
 
 // 데이터 범위를 input[type=date]의 min/max로 걸어두고, 최초 1회만 기본값(최근 2주)을 채운다
-let _dateInit = false;
+let _dateInit = false, _lastMax = null;
 function populateWeekControls(rows){
   const sEl = document.getElementById('startDate');
   const eEl = document.getElementById('endDate');
@@ -883,6 +884,9 @@ function populateWeekControls(rows){
   sEl.min = eEl.min = min;
   sEl.max = eEl.max = max;
 
+  /* 새 데이터로 최신일이 늘었고, 종료일이 예전 최신일 그대로면 → 최근 14일로 다시 맞춤 */
+  if (_dateInit && _lastMax && max > _lastMax && eEl.value === _lastMax) _dateInit = false;
+  _lastMax = max;
   if (!_dateInit || !sEl.value || !eEl.value) {
     eEl.value = max;
     sEl.value = addDays(max, -13) < min ? min : addDays(max, -13);   // 기본: 최근 14일
@@ -1169,7 +1173,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     LAST_A = SHARED_DATA.rawA;
     normalizeEquipNames(LAST_A.rows);
     renderAll();
-    setStatus(`대시보드와 공유된 캐시를 불러왔습니다 (${new Date(LAST_A.fetchedAt).toLocaleString('ko-KR')} 기준). 최신 상태로 다시 확인하려면 새로고침을 눌러주세요.`);
+    setStatus(`캐시(${new Date(LAST_A.fetchedAt).toLocaleString('ko-KR')} 기준)로 먼저 표시 — 구글시트에서 최신 데이터를 불러오는 중...`);
+    await onRefreshClick();          /* 캐시가 오래됐을 수 있으므로 항상 최신으로 다시 불러온다 */
   } else {
     setStatus('공유 캐시가 없습니다 (대시보드를 먼저 열어 동기화하면 이 페이지도 같은 데이터를 씁니다). 지금 구글시트에서 직접 불러옵니다...');
     await onRefreshClick();

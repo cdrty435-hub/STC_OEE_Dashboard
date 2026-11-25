@@ -311,7 +311,8 @@ const Store = {
     if (window.storage) {
       try { await window.storage.set(key, str); return true; } catch(e){ /* fall through */ }
     }
-    try { localStorage.setItem(key, str); return true; } catch(e){ return false; }
+    try { localStorage.setItem(key, str); return true; }
+    catch(e){ try { localStorage.removeItem(key); } catch(_){} return false; }   /* 용량 초과로 저장 실패 → 옛 캐시를 지워 다른 탭이 지난 주차에 멈추지 않게 */
   },
   async delete(key){
     if (window.storage) { try { await window.storage.delete(key); } catch(e){} }
