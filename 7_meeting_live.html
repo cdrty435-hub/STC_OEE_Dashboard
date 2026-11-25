@@ -384,7 +384,7 @@ function onServer(x, m) {
   if (x.kind === 'fast') {
     // 번역이 1.2초 멈추면 한 줄로 확정
     if (c.inputTranscription && c.inputTranscription.text) { if (!x.inBuf) x.t = nowHM(); x.inBuf = (x.inBuf + c.inputTranscription.text).slice(-600); }
-    if (c.outputTranscription && c.outputTranscription.text) { if (!x.t) x.t = nowHM(); x.outBuf += c.outputTranscription.text; clearTimeout(x.tm); x.tm = setTimeout(() => fastFlush(x), 1200); }
+    if (c.outputTranscription && c.outputTranscription.text) { if (!x.t) x.t = nowHM(); x.outBuf += c.outputTranscription.text; clearTimeout(x.tm); x.tm = setTimeout(() => fastFlush(x), 700); }
     if (c.turnComplete && clean(x.outBuf)) { clearTimeout(x.tm); fastFlush(x); }
   } else {
     if (c.inputTranscription && c.inputTranscription.text) {
@@ -470,18 +470,38 @@ $('btnStop').onclick = async () => {
   SES.forEach(x => { if (x.kind === 'fast') { clearTimeout(x.tm); fastFlush(x); } else { x.segs.forEach(g => g.outDone = true); accFlush(x); } });
   stopAll();
   const d = new Date(); S.end = pad(d.getHours()) + ':' + pad(d.getMinutes());
-  MIN = null; showMinutes();
-  $('minBody').innerHTML = '<div class="muted">💾 녹음 올리는 중…</div>';
-  let audioId = '';
-  try {
-    const blob = await stopRec();
-    if (blob && blob.size > 2000) {
+  MIN = null; DIRTY = false; showMinutes();
+  // 1) 녹음 올리기를 시작해 두고  2) 실시간 기록으로 회의록을 바로 만들고  3) 녹음으로 화자를 나눈 판이 오면 바꿔 끼움
+  const up = (async () => {
+    try {
+      const blob = await stopRec();
+      if (!blob || blob.size < 2000) return '';
       const r = await api({ action: 'liveAudio', id: S.id, mime: blob.type, data: await blobB64(blob) });
-      if (r.ok) { audioId = r.fileId; S.audioUrl = r.url; drawAudioLink(); } else note2('녹음 저장 실패: ' + r.error);
-    }
-  } catch (e) { note2('녹음 저장 실패: ' + (e.message || e)); }
-  await remake(audioId);
+      if (!r.ok) throw new Error(r.error);
+      S.audioUrl = r.url; drawAudioLink(); return r.fileId;
+    } catch (e) { note2('녹음 저장 실패: ' + (e.message || e)); return ''; }
+  })();
+  if (S.lines.length) await remake('', true);
+  const audioId = await up;
+  if (audioId) await audioPass(audioId);
+  else if (!S.lines.length) $('minBody').innerHTML = '<div class="muted">대화가 없습니다</div>';
 };
+// 녹음 기준 정리 (뒤에서 진행, 끝나면 교체)
+async function audioPass(audioId) {
+  const id = S.id;
+  $('minBadge').innerHTML = '<span class="badge">🎧 녹음으로 말한 사람 나누는 중… (30초~3분)</span>';
+  try {
+    const r = await api(Object.assign({ action: 'liveMinutes', audioId }, payload()));
+    if (S.id !== id) return;
+    if (!r.ok) throw new Error(r.error);
+    if (r.lines && r.lines.length) { S.lines = r.lines; S.lastSaved = S.lines.length; drawMinLines(); }
+    if (!MIN || !DIRTY) { MIN = r.minutes; drawMinutes(); }
+    else { AUDIO_MIN = r.minutes; $('minBadge').innerHTML = '<span class="badge">🎧 녹음 기준 회의록 준비됨</span> <button id="useAudio" style="padding:2px 8px;font-size:12px">적용 (지금 고친 내용 대신)</button>'; }
+    if (r.minutes.audioErr) note2('녹음으로 정리하지 못했습니다: ' + r.minutes.audioErr);
+  } catch (e) { $('minBadge').innerHTML = ''; note2('녹음 정리 실패: ' + (e.message || e) + ' — 실시간 기록 회의록은 그대로 쓸 수 있습니다.'); }
+}
+let DIRTY = false, AUDIO_MIN = null;
+document.addEventListener('click', e => { if (e.target.id === 'useAudio' && AUDIO_MIN) { MIN = AUDIO_MIN; AUDIO_MIN = null; DIRTY = false; drawMinutes(); } });
 function note2(t) { $('minMsg').textContent = t; $('minMsg').classList.add('err'); }
 window.addEventListener('beforeunload', e => { if (S.running) { e.preventDefault(); e.returnValue = ''; } });
 
@@ -496,10 +516,10 @@ function showMinutes() {
   drawAudioLink(); drawMinutes(); drawMinLines();
 }
 function drawAudioLink() { const a = $('audioLink'); a.classList.toggle('hidden', !S.audioUrl); if (S.audioUrl) a.href = S.audioUrl; }
-async function remake(audioId) {
-  $('minBody').innerHTML = '<div class="muted">🤖 ' + (audioId || S.audioUrl ? '녹음을 듣고 말한 사람을 나눠서 ' : '대화 ' + S.lines.length + '줄을 ') + '회의록으로 정리하는 중… (회의 길이에 따라 30초~3분)</div>';
+async function remake(audioId, quick) {
+  $('minBody').innerHTML = '<div class="muted">🤖 ' + (quick ? '대화 ' + S.lines.length + '줄로 회의록 정리 중… (10~20초)' : (audioId || S.audioUrl ? '녹음을 듣고 말한 사람을 나눠서 회의록 정리 중… (30초~3분)' : '대화 ' + S.lines.length + '줄로 회의록 정리 중…')) + '</div>';
   try {
-    const r = await api(Object.assign({ action: 'liveMinutes', audioId: audioId || '' }, payload()));
+    const r = await api(Object.assign({ action: 'liveMinutes', audioId: audioId || '', quick: !!quick }, payload()));
     if (!r.ok) throw new Error(r.error);
     MIN = r.minutes;
     if (r.lines && r.lines.length) { S.lines = r.lines; S.lastSaved = S.lines.length; }
@@ -508,7 +528,7 @@ async function remake(audioId) {
   } catch (e) { $('minBody').innerHTML = '<div class="msg err">정리 실패: ' + esc(e.message || e) + ' — 「↻ 다시 정리」를 눌러 주세요. 대화와 녹음은 저장되어 있습니다.</div>'; }
 }
 function drawMinutes() {
-  $('minBadge').innerHTML = MIN && MIN.fromAudio ? '<span class="badge">🎧 녹음으로 화자 구분됨</span>' : '';
+  if (MIN && MIN.fromAudio) $('minBadge').innerHTML = '<span class="badge">🎧 녹음으로 화자 구분됨</span>';
   if (!MIN) return;
   const L = MLANG, it = MIN.items || [];
   const ce = (k, v) => '<div contenteditable="true" data-k="' + k + '">' + esc(v || '') + '</div>';
@@ -525,10 +545,10 @@ $('minBody').addEventListener('input', e => {
   if (!MIN) return;
   const lst = e.target.closest('[data-list]'); if (lst) { MIN[lst.dataset.list] = lst.textContent.split(/\s*\/\s*/).filter(Boolean); return; }
   const tr = e.target.closest('tr[data-i]'), k = e.target.dataset.k; if (!tr || !k) return;
-  MIN.items[+tr.dataset.i][k] = e.target.tagName === 'SELECT' ? e.target.value : e.target.textContent.trim();
+  MIN.items[+tr.dataset.i][k] = e.target.tagName === 'SELECT' ? e.target.value : e.target.textContent.trim(); DIRTY = true;
 });
 $('minBody').addEventListener('change', e => { if (e.target.tagName === 'SELECT') { const tr = e.target.closest('tr[data-i]'); MIN.items[+tr.dataset.i].status = e.target.value; e.target.className = 'st-' + e.target.value; } });
-$('minBody').addEventListener('click', e => { const b = e.target.closest('.delrow'); if (!b) return; MIN.items.splice(+b.closest('tr').dataset.i, 1); drawMinutes(); });
+$('minBody').addEventListener('click', e => { const b = e.target.closest('.delrow'); if (!b) return; MIN.items.splice(+b.closest('tr').dataset.i, 1); DIRTY = true; drawMinutes(); });
 $('btnAddRow').onclick = () => { if (!MIN) MIN = { items: [] }; MIN.items.push({ dc: '', status: '진행·대기' }); drawMinutes(); };
 $('minLang').onclick = e => { const b = e.target.closest('button'); if (!b) return; MLANG = b.dataset.l; $('minLang').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); drawMinutes(); };
 $('btnRemake').onclick = () => remake();
