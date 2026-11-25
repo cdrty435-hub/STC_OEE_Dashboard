@@ -61,6 +61,16 @@
   .home-btn { background:var(--ink); color:#fff; border-color:var(--ink); text-decoration:none; padding:7px 14px; border-radius:8px; font-size:13px; white-space:nowrap; }
   .mode { display:inline-flex; border:1px solid var(--line2); border-radius:10px; overflow:hidden; margin:14px 0 4px; }
   .mode button { border:0; border-radius:0; padding:8px 16px; } .mode button.on { background:var(--ko); color:#fff; }
+  @media (max-width:640px) {
+    header.top { padding:8px 10px; gap:8px; } header.top .sub { display:none; } header.top h1 { font-size:15px; }
+    .wrap { padding:10px; } .ln .tr { font-size:17px; }
+    table.mt, table.mt tbody, table.mt tr, table.mt td { display:block; width:100%; } table.mt colgroup, table.mt tr.hd { display:none; }
+    table.mt tr { border:1px solid var(--line); border-radius:10px; padding:6px 8px; margin-bottom:8px; position:relative; }
+    table.mt td { border:0; padding:2px 0; display:flex; gap:8px; align-items:flex-start; }
+    table.mt td::before { content:attr(data-l); flex:0 0 52px; font-size:11px; color:var(--ink3); padding-top:4px; }
+    table.mt td > div, table.mt td > select { flex:1; }
+    table.mt td.x { position:absolute; right:6px; top:4px; width:auto; } table.mt td.x::before { display:none; }
+  }
   .badge { font-size:11px; padding:2px 8px; border-radius:6px; background:#eef2ff; color:#3730a3; }
 </style>
 </head>
@@ -226,7 +236,7 @@ $('btnStart').onclick = async () => {
     $('btnStop').classList.remove('hidden'); $('lvl').classList.remove('hidden');
     S.clockTimer = setInterval(() => { const s = Math.floor((Date.now() - S.t0) / 1000); $('clock').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60); }, 1000);
     S.saveTimer = setInterval(() => saveLines(), 30000);
-    startRec();
+    startRec(); keepAwake();
     await startSessions();
   } catch (e) { stopAll(); show('vHome'); $('homeMsg').textContent = '시작 실패: ' + (e.message || e); $('homeMsg').classList.add('err'); }
 };
@@ -459,8 +469,12 @@ async function saveLines(force) {
   const n = S.lines.length;
   try { const r = await api(Object.assign({ action: 'liveSave' }, payload({ status: S.running ? '진행' : '대기' }))); if (r.ok) S.lastSaved = n; } catch (e) {}
 }
+// 휴대폰 화면이 꺼지면 마이크가 멈추므로 회의 중에는 화면을 켜 둠
+let WAKE = null;
+async function keepAwake() { try { WAKE = await navigator.wakeLock.request('screen'); } catch (e) {} }
+document.addEventListener('visibilitychange', () => { if (S.running && document.visibilityState === 'visible') keepAwake(); });
 function stopAll() {
-  S.running = false;
+  S.running = false; try { WAKE && WAKE.release(); } catch (e) {} WAKE = null;
   SES.forEach(x => { clearTimeout(x.tm); const w = x.ws; x.ws = null; try { w && w.close(); } catch (e) {} });
   stopMic(); clearInterval(S.saveTimer); clearInterval(S.clockTimer);
   $('btnStop').classList.add('hidden'); $('lvl').classList.add('hidden'); setPill('', ''); $('clock').textContent = '';
@@ -534,9 +548,9 @@ function drawMinutes() {
   const ce = (k, v) => '<div contenteditable="true" data-k="' + k + '">' + esc(v || '') + '</div>';
   $('minBody').innerHTML = '<div class="notice" style="margin-bottom:10px">' + esc(MIN['summary_' + L] || MIN.summary_ko || '') + '</div>' +
     '<table class="mt"><colgroup><col style="width:72px"><col><col><col style="width:80px"><col style="width:70px"><col style="width:96px"><col style="width:28px"></colgroup>' +
-    '<tr><th>호기</th><th>내용</th><th>조치 · 다음 할 일</th><th>담당</th><th>기한</th><th>상태</th><th></th></tr>' +
-    it.map((x, i) => '<tr data-i="' + i + '"><td>' + ce('dc', x.dc) + '</td><td>' + ce('content_' + L, x['content_' + L]) + '</td><td>' + ce('action_' + L, x['action_' + L]) + '</td><td>' + ce('owner', x.owner) + '</td><td>' + ce('due', x.due) + '</td>' +
-      '<td><select data-k="status" class="st-' + esc(x.status) + '">' + STS.map(s => '<option' + (s === x.status ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></td><td><button class="delrow" title="줄 삭제" style="padding:2px 6px">✕</button></td></tr>').join('') + '</table>' +
+    '<tr class="hd"><th>호기</th><th>내용</th><th>조치 · 다음 할 일</th><th>담당</th><th>기한</th><th>상태</th><th></th></tr>' +
+    it.map((x, i) => '<tr data-i="' + i + '"><td data-l="호기">' + ce('dc', x.dc) + '</td><td data-l="내용">' + ce('content_' + L, x['content_' + L]) + '</td><td data-l="조치">' + ce('action_' + L, x['action_' + L]) + '</td><td data-l="담당">' + ce('owner', x.owner) + '</td><td data-l="기한">' + ce('due', x.due) + '</td>' +
+      '<td data-l="상태"><select data-k="status" class="st-' + esc(x.status) + '">' + STS.map(s => '<option' + (s === x.status ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></td><td class="x"><button class="delrow" title="줄 삭제" style="padding:2px 6px">✕</button></td></tr>').join('') + '</table>' +
     '<div style="margin-top:10px"><b>✅ 결정</b><div contenteditable="true" data-list="decisions_' + L + '" style="padding:4px;border-radius:4px">' + esc((MIN['decisions_' + L] || []).join(' / ')) + '</div></div>' +
     '<div style="margin-top:6px"><b>⏳ 미결</b><div contenteditable="true" data-list="open_' + L + '" style="padding:4px;border-radius:4px">' + esc((MIN['open_' + L] || []).join(' / ')) + '</div></div>' +
     (L === 'th' ? '<div class="muted" style="margin-top:6px">태국어를 고치면 태국어 줄에만 반영됩니다. 확정 시 한국어·태국어 둘 다 저장됩니다.</div>' : '');
