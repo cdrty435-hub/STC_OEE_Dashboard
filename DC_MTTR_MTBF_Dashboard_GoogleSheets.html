@@ -8012,6 +8012,7 @@ loadData();
 .kw .w3ban .c{text-align:center;} .kw .w3ban .c .k{color:#f5b800;} .kw .w3ban .c .w{font-size:34px;font-weight:900;color:#f5b800;line-height:1.05;}
 .kw .w3ban .r{text-align:right;} .kw .w3ban .r .co{font-size:17px;font-weight:900;} .kw .w3ban .r .d{font-size:12px;font-weight:800;color:#f5b800;}
 .kw .w3sum{font-size:12px;color:#e8611a;margin-top:6px;}
+.kw .w3ban.kw-tcban{border-radius:6px;margin:6px 0 8px;}
 .kw table.kw-w3{font-size:13px;} .kw table.kw-w3 thead th{background:#2a9d8f;color:#fff;font-size:14px;padding:8px 6px;border-color:#2a9d8f;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 .kw table.kw-w3 td{border:1px solid #d9dde3;vertical-align:top;padding:10px 10px;}
 .kw table.kw-w3 td.mc{text-align:center;vertical-align:middle;} .kw table.kw-w3 td.mc .rk{color:#d62828;font-weight:800;font-size:15px;} .kw table.kw-w3 td.mc .nm{font-size:24px;font-weight:900;color:#1f2937;line-height:1.2;} .kw table.kw-w3 td.mc .ty{color:#6b7280;font-size:12px;}
@@ -8340,6 +8341,10 @@ loadData();
     if (!S.days.length) return `<div class="kw"><div class="kw-empty">선택한 기간(${esc(P.cur.label)})에 가동 기록이 없습니다.</div></div>`;
     const W = worst(S), qm = m => Q ? Q.mc[m] : null;
     const pl = P.prev ? P.prev.label : '비교 없음';
+    const w3Banner = (right, cls) => { const d0 = S.days[0]||'', d1 = S.days[S.days.length-1]||'', td = new Date(), tds = `${td.getFullYear()}-${String(td.getMonth()+1).padStart(2,'0')}-${String(td.getDate()).padStart(2,'0')}`;
+      return `<div class="w3ban${cls?' '+cls:''}"><div class="l"><div class="k">MAINTENANCE REPORT</div><div class="t">설비보전 MTTR / MTBF 주간 보고서</div><div class="s">MC MTTR / MTBF Weekly Report · ${esc(P.cur.label)} ${esc(d0)} ~ ${esc(d1)} · ${T4_ ? esc([...T4_].join(' + ')) : C.std ? 'UDT' : '전체 로스'} 기준</div></div>`
+           + `<div class="c"><div class="k">WEEK</div><div class="w">${esc(P.cur.label)}</div></div>`
+           + `<div class="r"><div class="co">STC Co., Ltd.</div><div class="s">${esc(right)}</div><div class="d">보고 ${tds}</div></div></div>`; };
 
     /* --- 세부사항 문구 (자동) --- */
     const topTxt = x => x.top[0] ? `${x.top[0].c} ${f1(x.top[0].h)}h/${x.top[0].n}건` : '';
@@ -8739,6 +8744,7 @@ loadData();
         return `<div class="kw-tc"><div class="hd"><b>${t.name}</b> <span>${t.u} · ${t.up?'높을수록 좋음':'낮을수록 좋음'}</span></div>${s}`
           + `<div class="lg"><span><i style="border-top:2px dashed #64748b"></i>평균 ${fx(t.avg,t.dp)}</span>${t.tg!=null?`<span><i style="border-top:2px dashed #dc2626"></i>목표 ${fx(t.tg,t.dp)}</span>`:'<span style="color:#94a3b8">목표 미설정</span>'}<span><i class="o"></i>금주</span></div></div>`;
       };
+      h += w3Banner('다이캐스팅 DC1~DC23 · 공무팀', 'kw-tcban');
       h += `<div class="kw-tcs">${T.map(chart).join('')}</div>`;
       h += `<div class="kw-note">※ 지난 달 = 월별 칸(MTTR·MTBF 는 그 달 전체 기준 · 로스시간·고장건수·F-COST 는 주평균) · 이번 달 = 주차별 · 변화 = 전주 대비 가장 크게 늘고 준 원인 (초록 = 감소 · 빨강 = 증가) · 각 주차는 1번 지표 요약과 같은 기준(${C.std?'계획외 고장 UDT':'전체 로스'} · 최소정지 ${C.minStop}분)으로 다시 집계 · 평균은 부분 주차를 뺀 ${FULL.length}주 기준 · 제안 = 평균에서 10% 개선 (MTBF 는 +10%, 나머지는 −10%) · 빨강 칸 = 목표 미달 주 · MTTR/MTBF 목표은 상단 목표값과 같은 저장값 · 이 브라우저에 저장</div>`;
 
@@ -8999,10 +9005,7 @@ loadData();
       h += `<h4 class="kw-h">${esc(P.cur.label)} MTTR Worst 3 — ${hd||'고장 없음'} <small>순위 = 고장 로스시간 · 비교 ${esc(pl)} · 경과 = OEE 로스 기록 자동 · 원인·대책·사진은 직접 입력 (자동 저장)</small></h4>`;
       if (!W3.length) h += `<div class="kw-empty">이번 기간 고장 기록 없음</div>`;
       else {
-        { const d0 = S.days[0]||'', d1 = S.days[S.days.length-1]||'', td = new Date(), tds = `${td.getFullYear()}-${String(td.getMonth()+1).padStart(2,'0')}-${String(td.getDate()).padStart(2,'0')}`;
-          h += `<div class="w3ban"><div class="l"><div class="k">MAINTENANCE REPORT</div><div class="t">설비보전 MTTR / MTBF 주간 보고서</div><div class="s">MC MTTR / MTBF Weekly Report · ${esc(P.cur.label)} ${esc(d0)} ~ ${esc(d1)} · ${T4_ ? esc([...T4_].join(' + ')) : C.std ? 'UDT' : '전체 로스'} 기준</div></div>`
-             + `<div class="c"><div class="k">WEEK</div><div class="w">${esc(P.cur.label)}</div></div>`
-             + `<div class="r"><div class="co">STC Co., Ltd.</div><div class="s">다이캐스팅 ${W3.map(x=>DC(x.m)).join(' · ')} · 공무팀</div><div class="d">보고 ${tds}</div></div></div>`; }
+        h += w3Banner(`다이캐스팅 ${W3.map(x=>DC(x.m)).join(' · ')} · 공무팀`);
         h += `<table class="kw-w3"><colgroup><col style="width:8%"><col style="width:14%"><col style="width:34%"><col style="width:25%"><col style="width:19%"></colgroup>`;
         h += `<thead><tr><th>설비</th><th>로스·비용</th><th>경과</th><th>원인 · 대책</th><th>사진</th></tr></thead><tbody>`;
         W3.forEach((x,i)=>{
@@ -9474,7 +9477,7 @@ loadData();
     /* 지표별 작은 그래프 묶음 — 제목 줄을 붙여 한 덩어리로 */
     u.querySelectorAll('.kw-tcs').forEach(e=>{ if(e.parentElement.classList.contains('wk-subw')) return;
       const w = document.createElement('div'); w.className = 'wk-subw'; const t = document.createElement('div'); t.className = 'wk-subt'; t.textContent = '지표별 주차 그래프';
-      e.before(w); w.appendChild(t); w.appendChild(e); });
+      e.before(w); const bn = w.previousElementSibling; if(bn && bn.classList.contains('kw-tcban')) w.appendChild(bn); w.appendChild(t); w.appendChild(e); });
     u.querySelectorAll('.wk-subw').forEach(w=>push(w, w.querySelector(':scope > .wk-subt')));
     return out.sort((a,b)=>a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
   }
