@@ -33,17 +33,19 @@
   .hidden { display:none !important; }
   /* 통역 줄 */
   #lines { display:flex; flex-direction:column; gap:10px; }
-  /* 회의 중: 화면 고정 · 위는 지난 대화(스크롤) · 아래는 지금 통역 창 */
+  /* 회의 중: 화면 전체 폭의 통역창 하나 · 안에서 아래로 계속 이어지고 스크롤로 지난 내용 보기 */
   body.live-on { overflow:hidden; }
-  #vLive:not(.hidden) { display:flex; flex-direction:column; gap:10px; height:calc(100vh - var(--hdr, 64px)); height:calc(100dvh - var(--hdr, 64px)); padding-top:10px; padding-bottom:10px; }
-  #histWrap { flex:1; min-height:0; position:relative; }
-  #vLive #lines { height:100%; overflow-y:auto; padding-right:4px; }
-  #toBottom { position:absolute; right:12px; bottom:10px; background:var(--ko); color:#fff; border-color:var(--ko); border-radius:999px; box-shadow:0 2px 8px rgba(0,0,0,.2); }
-  #nowBox { flex:0 0 auto; min-height:120px; max-height:42%; overflow-y:auto; background:var(--surface); border:2px solid var(--ko); border-radius:14px; padding:10px 14px; }
-  #nowBox .lbl { font-size:11px; color:var(--ko); font-weight:700; margin-bottom:2px; }
-  #nowBox .ln { border:0; padding:0; box-shadow:none; cursor:default; } #nowBox .ln .tr { font-size:24px; } #nowBox .ln .src { font-size:15px; }
-  #nowBox .idle { color:var(--ink3); font-size:14px; }
-  body.tv #nowBox .ln .tr { font-size:40px; } body.tv #nowBox .ln .src { font-size:20px; } body.tv #nowBox { max-height:60%; }
+  #vLive:not(.hidden) { max-width:none; height:calc(100vh - var(--hdr, 64px)); height:calc(100dvh - var(--hdr, 64px)); padding:8px 12px; }
+  #histWrap { height:100%; position:relative; background:var(--surface); border:1px solid var(--line2); border-radius:14px; overflow:hidden; }
+  #vLive #lines { height:100%; overflow-y:scroll; padding:10px 16px 24px; gap:0; }
+  #vLive #lines::-webkit-scrollbar { width:12px; } #vLive #lines::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:6px; border:3px solid var(--surface); }
+  #vLive .ln { border:0; border-left:4px solid var(--ko); border-radius:0; padding:6px 12px; margin:0 0 2px; border-bottom:1px solid var(--line); }
+  #vLive .ln.th { border-left-color:var(--th); }
+  #vLive .ln .tr { font-size:21px; } #vLive .ln .src { font-size:13px; }
+  #vLive .ln.pending { background:#eff6ff; box-shadow:none; } #vLive .ln.pending .tr { color:#1e3a8a; }
+  #vLive .idle { color:var(--ink3); padding:10px 12px; }
+  #toBottom { position:absolute; right:22px; bottom:14px; background:var(--ko); color:#fff; border-color:var(--ko); border-radius:999px; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+  body.tv #vLive .ln .tr { font-size:34px; } body.tv #vLive .ln .src { font-size:18px; }
   .ln { background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--ko); border-radius:0 10px 10px 0; padding:8px 12px; cursor:pointer; }
   .ln.th { border-left-color:var(--th); } .ln.pending { border-color:#93c5fd; box-shadow:0 0 0 2px #dbeafe; } .ln.pending .meta::after { content:'번역 중…'; color:var(--ko); }
   .ln .meta { font-size:11px; color:var(--ink3); display:flex; gap:8px; } .ln .meta .who { color:var(--ink2); font-weight:600; }
@@ -116,7 +118,6 @@
 <!-- 회의 중 -->
 <div id="vLive" class="wrap hidden">
   <div id="histWrap"><div id="lines"></div><button id="toBottom" class="hidden">↓ 최신 대화</button></div>
-  <div id="nowBox"><div class="lbl">🎙 지금 통역 · กำลังแปล</div><div id="nowBody"><div class="idle">말씀하세요… · พูดได้เลย</div></div></div>
 </div>
 
 <!-- 회의록 -->
@@ -242,7 +243,7 @@ $('btnStart').onclick = async () => {
     const d = new Date(); S.date = todayYmd(); S.start = pad(d.getHours()) + ':' + pad(d.getMinutes()); S.end = '';
     S.id = 'M' + S.date.replace(/-/g, '') + '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
     LAST = null; Object.assign(S, { lines: [], running: true, t0: Date.now(), lastSaved: -1, audioUrl: '' });
-    $('lines').innerHTML = ''; $('nowBody').innerHTML = '<div class="idle">말씀하세요… · พูดได้เลย</div>'; show('vLive');
+    $('lines').innerHTML = '<div class="idle" id="idleMsg">🎙 말씀하세요… · พูดได้เลย</div>'; show('vLive');
     $('btnStop').classList.remove('hidden'); $('lvl').classList.remove('hidden');
     S.clockTimer = setInterval(() => { const s = Math.floor((Date.now() - S.t0) / 1000); $('clock').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60); }, 1000);
     S.saveTimer = setInterval(() => saveLines(), 30000);
@@ -384,7 +385,7 @@ function recentContext() {
   const L = S.lines.slice(-6); if (!L.length) return '';
   return '\n\n(참고: 직전 대화)\n' + L.map(l => l.src + ' => ' + l.tr).join('\n');
 }
-function note(t) { const d = document.createElement('div'); d.className = 'notice'; d.textContent = t; $('lines').appendChild(d); }
+function note(t) { const d = document.createElement('div'); d.className = 'notice'; d.textContent = t; const pr = $('pendingRow'); if (pr) $('lines').insertBefore(d, pr); else $('lines').appendChild(d); }
 function failLive(msg) { setPill('conn', '연결 끊김'); note('⚠ ' + msg + ' — 녹음은 계속됩니다. 종료를 누르면 녹음으로 회의록을 만듭니다.'); }
 
 function onServer(x, m) {
@@ -405,9 +406,9 @@ function onServer(x, m) {
       if (!lg || (x.target === 'th' ? lg !== 'th' : lg === 'th')) { if (!x.inq.length) x.t = nowHM(); x.inq.push({ at: now, text: tx }); setInBuf(x); }
     }
     if (c.outputTranscription && c.outputTranscription.text) { if (!x.t) x.t = nowHM(); x.outBuf += c.outputTranscription.text; x.lastOutAt = now; clearTimeout(x.tm);
-      // 번역은 짧은 조각으로 나오므로 문장 단위로 모아서 한 줄로: 문장 끝(. ? !)이면 0.6초, 아니면 2초 쉬면 확정, 너무 길면 바로
+      // 번역은 짧은 조각으로 나오므로 문장 단위로 모아서 한 줄로: 문장 끝(. ? !)이면 0.4초, 아니면 1.3초 쉬면 확정, 140자 넘으면 바로
       const o = clean(x.outBuf), end = /[.?!。？！]$/.test(o) && o.length > 25;
-      x.tm = setTimeout(() => fastFlush(x), o.length > 220 ? 200 : end ? 600 : 2000); }
+      x.tm = setTimeout(() => fastFlush(x), o.length > 140 ? 150 : end ? 400 : 1300); }
     if (c.turnComplete && clean(x.outBuf)) { clearTimeout(x.tm); fastFlush(x); }
   } else {
     if (c.inputTranscription && c.inputTranscription.text) {
@@ -459,27 +460,31 @@ function lineHtml(l, i, pending) {
 // 지난 대화: 맨 아래를 보고 있을 때만 자동으로 따라감 (위로 올려 보는 중이면 그대로 두고 버튼 표시)
 const atBottom = () => { const L = $('lines'); return L.scrollHeight - L.scrollTop - L.clientHeight < 60; };
 function appendLine(l, i) {
-  const follow = atBottom();
-  $('lines').insertAdjacentHTML('beforeend', lineHtml(l, i));
-  if (follow) $('lines').scrollTop = $('lines').scrollHeight; else $('toBottom').classList.remove('hidden');
-  LAST = l; drawPending();
+  const follow = atBottom(), pr = $('pendingRow'), im = $('idleMsg'); if (im) im.remove();
+  const h = lineHtml(l, i);
+  if (pr) pr.insertAdjacentHTML('beforebegin', h); else $('lines').insertAdjacentHTML('beforeend', h);
+  LAST = l; drawPending(follow);
 }
 $('lines').addEventListener('scroll', () => { if (atBottom()) $('toBottom').classList.add('hidden'); });
 $('toBottom').onclick = () => { $('lines').scrollTop = $('lines').scrollHeight; $('toBottom').classList.add('hidden'); };
 let LAST = null;
-// 지금 통역 창: 번역 중인 말 → 없으면 방금 확정된 줄
-function drawPending() {
+// 번역 중인 말은 통역창 맨 아래 줄에서 실시간으로 이어짐
+function drawPending(follow) {
+  if (follow === undefined) follow = atBottom();
   let P = [];
   if (MODE === 'fast' || SES.some(x => x.kind === 'fast')) {
     const src = SES.map(x => clean(x.inBuf)).sort((a, b) => b.length - a.length)[0] || '';
     const tr = SES.map(x => clean(x.outBuf)).filter(Boolean).join(' ');
     if (src || tr) P = [{ t: nowHM(), src, tr }];
   } else SES.forEach(x => x.segs.forEach(g => { if (clean(g.src) || clean(g.tr)) P.push(g); }));
-  const nb = $('nowBody'); if (!nb) return;
-  if (P.length) nb.innerHTML = P.map(g => lineHtml(Object.assign({}, g, { lang: langOf(g.src) || 'ko' }), -1, true)).join('');
-  else if (LAST) nb.innerHTML = lineHtml(LAST, -1).replace(' data-i="-1"', '');
-  else nb.innerHTML = '<div class="idle">말씀하세요… · พูดได้เลย</div>';
-  nb.parentNode.scrollTop = nb.parentNode.scrollHeight;
+  let pr = $('pendingRow');
+  if (!P.length) { if (pr) pr.remove(); }
+  else {
+    const h = P.map(g => lineHtml(Object.assign({}, g, { lang: langOf(g.src) || 'ko' }), -1, true)).join('');
+    if (!pr) { $('lines').insertAdjacentHTML('beforeend', '<div id="pendingRow"></div>'); pr = $('pendingRow'); const im = $('idleMsg'); if (im) im.remove(); }
+    pr.innerHTML = h;
+  }
+  if (follow) $('lines').scrollTop = $('lines').scrollHeight; else if (P.length || LAST) $('toBottom').classList.remove('hidden');
 }
 
 // ---------- 저장 · 종료 ----------
@@ -640,7 +645,7 @@ document.addEventListener('click', e => {
   };
 });
 function redrawAll() {
-  if (!$('vLive').classList.contains('hidden')) { $('lines').innerHTML = S.lines.map((l, i) => lineHtml(l, i)).join(''); LAST = S.lines[S.lines.length - 1] || null; drawPending(); }
+  if (!$('vLive').classList.contains('hidden')) { $('lines').innerHTML = S.lines.map((l, i) => lineHtml(l, i)).join(''); LAST = S.lines[S.lines.length - 1] || null; drawPending(true); }
   if (!$('vMin').classList.contains('hidden')) drawMinLines();
 }
 $('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
