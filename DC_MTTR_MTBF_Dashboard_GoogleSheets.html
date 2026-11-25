@@ -8587,6 +8587,7 @@ loadData();
       const COLS = MONS.map(m=>{ const ws = WS.filter(x=>wMon(x.w)===m).map(x=>x.w);
           return { m:true, nw:ws.length, lbl:(+m.slice(5))+'월', sub: (ws.length>1 ? ws[0]+'~'+ws[ws.length-1] : ws[0]), s: stats(data, r=>ws.includes(r.w), C), part:false }; })
         .concat(WS.filter(x=>wMon(x.w)===curM).map(x=>({ m:false, lbl:x.w, w:x.w, x, s:x.s, part:x.part })));
+      if (opt._mon){ COLS.length = 0; WS.forEach(x=>COLS.push({ m:false, lbl:x.w, w:x.w, x, s:x.s, part:x.part })); }   /* 월간(1장) : 모든 칸이 월 */
       const iCur = WS.findIndex(x=>x.w===opt.week), PREV = iCur>0 ? WS[iCur-1] : null, CUR = WS[iCur] || null;
       /* 비교 기준(평균 · 지난 달 · 전전주 이전)은 글자를 연한 회색으로 — 전주·금주만 진하게 */
       const oldC = c => c.m || (c.w !== opt.week && !(PREV && c.w === PREV.w));
@@ -9086,13 +9087,15 @@ loadData();
     let t = String(x).replace(/전주/g,'전월').replace(/금주/g,'금월').replace(/주간/g,'월간').replace(/주차/g,'월')
       .replace(/주평균/g,'월평균').replace(/매주/g,'매월').replace(/주별/g,'월별').replace(/THB \/ 주/g,'THB / 월')
       .replace(/Weekly/g,'Monthly').replace(/>WEEK</g,'>MONTH<').replace(/(\d+)주(?= 평균| 합산|\)|·|<|\s*$)/g,'$1개월')
-      .replace(/(\d{4})-(\d{2})(?![-\d])/g, (m,y,mm)=>`${y}.${mm}`);
+      .replace(/(\d{4})-(\d{2})(?![-\d])/g, (m,y,mm)=>`${+mm}월`);
     /* 섹션 순서·숨김 = 주간보고(1장)에서 정한 그대로 (b0 = 요약 카드 · k0~k5 = 공통 블록) */
     const HD = '<h4 class="kw-h">', parts = t.split(HD);
     if (parts.length === 8 && /^<div class="kw">\s*$/.test(parts[0])){
       const body = parts.slice(1).map(x=>HD + x); body[6] = body[6].replace(/<\/div>\s*$/, '');
       const ids = ['b0','k0','k1','k2','k3','k4','k5'];
-      let ord = (window.__wkOrder || []).filter(x=>ids.includes(x)); ['b0','k0','k3','k5','k4','k1','k2'].forEach(x=>{ if(!ord.includes(x)) ord.push(x); });
+      let sv = []; try{ sv = JSON.parse(localStorage.getItem('stc_wk_order_v1')||'[]') || []; }catch(e){}
+      if (!sv.some(x=>/^k/.test(x))) sv = (window.__wkOrder || []).some(x=>/^k/.test(x)) ? window.__wkOrder : [];
+      let ord = sv.filter(x=>ids.includes(x)); ['b0','k0','k3','k5','k4','k1','k2'].forEach(x=>{ if(!ord.includes(x)) ord.push(x); });
       let hid = []; try{ hid = JSON.parse(localStorage.getItem('stc_wk_hide_v1')||'[]') || []; }catch(e){}
       t = '<div class="kw">' + ord.filter(x=>!hid.includes(x)).map(x=>body[ids.indexOf(x)]).join('') + '</div>';
     }
@@ -9248,6 +9251,7 @@ loadData();
       const r = buildAny(opt, data);
       if (typeof r === 'string'){ host.innerHTML = r; return; }
       host.innerHTML = r.html; wire(host, r.key);
+      if (opt.mode === 'mon1' && window.km1Sub) try{ window.km1Sub(); }catch(e){}
       /* 설비별 손실금액 표(⑧)를 지표 요약 아래로 합친다 */
       const slot = host.querySelector('#kwMtxSlot'), box = document.getElementById('wkMtxBox');
       if (slot && box && opt.mode === 'week'){ slot.appendChild(box); const b = document.getElementById('wkMtxTable'); const bk = b && b.closest('.wk-blk'); if (bk) bk.classList.add('wk-merged'); }
@@ -9364,7 +9368,23 @@ loadData();
     const days = RUN.filter(r=>r.d.slice(0,7)===ym).map(r=>r.d).sort();
     const who = ($('km1Who')||{}).value || '';
     $('km1Cover').innerHTML = mtCoverHtml('monthly', `${ym.slice(0,4)}년 ${+ym.slice(5,7)}월`, `${days[0]||'-'} ~ ${days[days.length-1]||'-'}`, who, null, null, `${+ym.slice(5,7)}월`);
-    STCKW.mount('kwMonthly1', { mode:'mon1', ym });
+    Promise.resolve(STCKW.mount('kwMonthly1', { mode:'mon1', ym })).then(km1Sub).catch(()=>{});
+  }
+  /* 하위 항목 번호 (2-1. 2-2. …) — 주간보고(1장)과 같은 방식 */
+  window.km1Sub = km1Sub;
+  function km1Sub(){
+    const host = $('kwMonthly1'); if (!host) return;
+    host.querySelectorAll('.kw-tcs').forEach(e=>{ if (e.parentElement.classList.contains('wk-subw')) return;
+      const w = document.createElement('div'); w.className = 'wk-subw'; const t = document.createElement('div'); t.className = 'wk-subt'; t.textContent = '지표별 월 그래프';
+      e.before(w); const bn = w.previousElementSibling; if (bn && bn.classList.contains('kw-tcban')) w.appendChild(bn); w.appendChild(t); w.appendChild(e); });
+    const sel = 'h4.kw-h, .kw-fc > .h > b, .kw-l2 .dnc > .h > b, .wk-subt, .kw-exp > .eh > b, h5';
+    let base = 0, k = 0;
+    host.querySelectorAll(sel).forEach(h=>{
+      if (h.matches('h4.kw-h')){ base = parseInt(h.textContent, 10) || base; k = 0; return; }
+      if (h.closest('.kw-exp .ec') || h.closest('td')) return;
+      let sp = h.querySelector(':scope > .wk-sno'); if (!sp){ sp = document.createElement('span'); sp.className = 'wk-sno'; h.insertBefore(sp, h.firstChild); }
+      sp.textContent = base ? base + '-' + (++k) + '. ' : '';
+    });
   }
   window.kwMonthly1 = kwMonthly1;
   ['km1Month','km1Who'].forEach(id=>{ const el = $(id); if (el) el.addEventListener('change', kwMonthly1); });
