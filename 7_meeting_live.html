@@ -165,7 +165,7 @@
   body.watch header.top, body.watch #vHome, body.watch #vLive, body.watch #vMin { display:none !important; }
   #vWatch { max-width:900px; margin:0 auto; padding:10px 12px 40px; }
   #vWatch .wtop { display:flex; gap:8px; align-items:center; flex-wrap:wrap; position:sticky; top:0; background:var(--bg); padding:6px 0; z-index:3; }
-  #vWatch .wtop .seg button { padding:5px 10px; font-size:13px; }
+  #vWatch .wtop .seg button { padding:5px 10px; font-size:13px; } #wInd { font-size:13px; padding:5px 6px; }
   #wNow { background:var(--surface); border:2px solid var(--ko); border-radius:14px; padding:12px 14px; margin:8px 0 12px; min-height:90px; }
   #wNowTx { font-size:24px; font-weight:600; line-height:1.4; margin-top:4px; }
   #wList .w { padding:8px 2px; border-bottom:1px solid var(--line); } #wList .w .m { font-size:11px; color:var(--ink3); } #wList .w .t { font-size:17px; line-height:1.45; } #wList .w .o { font-size:12.5px; color:var(--ink3); margin-top:2px; }
@@ -181,7 +181,7 @@
   <span id="stPill" class="pill hidden"></span>
   <span id="lvl" class="lvl hidden"><b></b><b></b><b></b><b></b><b></b></span>
   <span id="clock" class="muted"></span>
-  <span class="seg paneSeg lv" title="언어별로 화면을 나눠 보기 (여러 개 선택)"><button data-p="">기본</button><button data-p="ko">🇰🇷</button><button data-p="th">🇹🇭</button><button data-p="en">🇬🇧</button><button data-p="hi">🇮🇳</button></span>
+  <span class="seg paneSeg lv" title="언어별로 화면을 나눠 보기 (여러 개 선택)"><button data-p="">기본</button><button data-p="ko">🇰🇷</button><button data-p="th">🇹🇭</button><button data-p="en">🇬🇧</button><button data-p="ind" class="indBtn">🇮🇳</button></span>
   <label class="muted lv" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="tts"> 🔊 읽어주기</label>
   <label class="muted lv" style="display:flex;align-items:center;gap:4px" title="빠른 통역 줄을 1~3초 뒤 앞뒤 문맥과 용어집으로 다듬어 바꿉니다"><input type="checkbox" id="refine"> 🧠 문맥 보정</label>
   <button id="btnQr" class="lv" title="참석자가 휴대폰으로 QR을 찍어 자기 언어 자막을 봅니다">📱 휴대폰 자막 <span id="vwN"></span></button>
@@ -198,7 +198,8 @@
       <h3>실시간 통역 회의</h3>
       <p>한국어 ⇄ ไทย 자동 감지 · 끝나면 말한 사람을 나눠 회의록 작성</p>
       <div class="opt"><span class="ol">통역</span><span class="seg" id="modeSeg"><button data-m="fast" title="말하는 도중에도 번역이 흘러나옴 · 가장 빠름">⚡ 동시</button><button data-m="acc" title="말하고 멈추면 문맥·용어집으로 정확하게 번역 · 주고받는 회의에 적합">🗣 순차</button></span></div>
-      <div class="opt"><span class="ol">화면</span><span class="seg paneSeg"><button data-p="">기본</button><button data-p="ko">🇰🇷</button><button data-p="th">🇹🇭</button><button data-p="en">🇬🇧</button><button data-p="hi">🇮🇳</button></span></div>
+      <div class="opt"><span class="ol">인도</span><select id="indSel" title="인도 참석자의 언어"></select></div>
+      <div class="opt"><span class="ol">화면</span><span class="seg paneSeg"><button data-p="">기본</button><button data-p="ko">🇰🇷</button><button data-p="th">🇹🇭</button><button data-p="en">🇬🇧</button><button data-p="ind" class="indBtn">🇮🇳</button></span></div>
       <button id="btnStart" class="pri big">회의 시작 · เริ่มประชุม</button>
       <div id="homeMsg" class="msg"></div>
     </div>
@@ -255,7 +256,7 @@
 <!-- 휴대폰 자막 (참석자용) -->
 <div id="vWatch" class="hidden">
   <div class="wtop"><b>🎙 STC 통역 자막</b><span id="wState" class="muted"></span><span style="flex:1"></span>
-    <span class="seg" id="wLang"><button data-l="ko">🇰🇷 한국어</button><button data-l="th">🇹🇭 ไทย</button><button data-l="en">🇬🇧 EN</button><button data-l="hi">🇮🇳 हिन्दी</button></span></div>
+    <span class="seg" id="wLang"><button data-l="ko">🇰🇷 한국어</button><button data-l="th">🇹🇭 ไทย</button><button data-l="en">🇬🇧 EN</button></span><select id="wInd"><option value="">🇮🇳 인도 언어</option></select></div>
   <div id="wNow"><div id="wNowMeta" class="muted"></div><div id="wNowTx"></div></div>
   <div id="wList"></div>
 </div>
@@ -331,13 +332,13 @@ document.addEventListener('fullscreenchange', () => { if (!document.fullscreenEl
 document.addEventListener('keydown', e => { if (!(document.body.classList.contains('big') || DISP)) return; if (e.key === '+' || e.key === '=') setFs(curFs() + 6); if (e.key === '-') setFs(curFs() - 6); });
 $('btnDisp').onclick = () => {
   openModal('<h3>🪟 모니터 창 열기</h3><div class="muted">열린 창을 모니터로 끌어다 놓고 ⛶ 전체 화면을 누르세요. 언어마다 창을 하나씩 열 수 있습니다.</div>' +
-    '<div class="row-btn" style="justify-content:flex-start;flex-wrap:wrap"><button data-dl="">원문 + 번역</button><button data-dl="ko">🇰🇷 한국어</button><button data-dl="th">🇹🇭 ไทย</button><button data-dl="en">🇬🇧 English</button><button data-dl="hi">🇮🇳 हिन्दी</button></div>' +
+    '<div class="row-btn" style="justify-content:flex-start;flex-wrap:wrap"><button data-dl="">원문 + 번역</button><button data-dl="ko">🇰🇷 한국어</button><button data-dl="th">🇹🇭 ไทย</button><button data-dl="en">🇬🇧 English</button>' + Object.keys(IND).map(c => '<button data-dl="' + c + '">🇮🇳 ' + IND[c] + '</button>').join('') + '</div>' +
     '<div class="row-btn"><button id="dlNo">닫기</button></div>');
   $('dlNo').onclick = closeModal;
   $('modalBox').querySelectorAll('[data-dl]').forEach(b => b.onclick = () => {
     const L = b.dataset.dl, w = window.open(location.pathname + '?display=1' + (L ? '&lang=' + L : ''), 'stcLiveDisplay_' + (L || 'all'), 'width=1280,height=720');
     if (!w) { alert('팝업이 막혔습니다. 주소창 오른쪽의 팝업 허용을 눌러 주세요.'); return; }
-    if (L === 'en' || L === 'hi') { DLANGS[L] = Date.now(); S.lines.slice(-6).forEach(l => { if (needTx(l)) refineQ(l); }); }
+    if (L && L !== 'ko' && L !== 'th') { DLANGS[L] = Date.now(); S.lines.slice(-6).forEach(l => { if (needTx(l)) refineQ(l); }); }
     closeModal(); setTimeout(sendDisp, 800);
   });
 };
@@ -352,8 +353,8 @@ if (BC && !DISP) BC.onmessage = e => { const d = e.data || {}; if (d.type === 'h
 if (DISP) {
   document.body.classList.add('disp'); document.title = '자막 · STC 통역 회의';
   $('lines').innerHTML = '<div class="idle">🎙 회의 자막이 여기에 나옵니다 · ⛶ 전체 화면을 누르세요 · A−/A＋ 로 글자 크기</div>';
-  const DL = (location.search.match(/[?&]lang=(ko|th|en|hi)/) || [])[1] || '';
-  if (DL) { document.body.classList.add('dl'); document.title = '자막 · ' + ({ ko: '한국어', th: 'ไทย', en: 'English', hi: 'हिन्दी' })[DL]; }
+  const DL = (location.search.match(/[?&]lang=([a-z]{2})/) || [])[1] || '';
+  if (DL) { document.body.classList.add('dl'); setTimeout(() => { document.title = '자막 · ' + ((LANGS[DL] || [])[1] || DL); }, 0); }
   if (BC) {
     BC.onmessage = e => {
       const d = e.data || {}; if (d.type !== 'state') return;
@@ -655,7 +656,7 @@ function fastFlush(x) {
   const lg = langOf(src) === 'en' ? 'en' : (x.target === 'th' ? 'ko' : 'th');
   if (x.target === 'ko' && !src) { x.outBuf = ''; drawPending(); return; }
   if (lg === 'en') {   // 영어는 →태국어·→한국어 두 번역이 따로 나옴 → 6초 안의 영어 줄과 합침
-    const m = S.lines.slice(-3).reverse().find(l => l.lang === 'en' && Date.now() - (l.at || 0) < 6000 && (x.target === 'th' ? !l.trTh : !(l.tx && l.tx.ko)));
+    const m = S.lines.slice(-4).reverse().find(l => l.lang === 'en' && Date.now() - (l.at || 0) < 12000 && (x.target === 'th' ? !l.trTh : !(l.tx && l.tx.ko)));
     if (m) { if (x.target === 'th') { m.tr = tr; m.trTh = true; } else { m.tx = Object.assign(m.tx || {}, { ko: tr }); } if (src.length > m.src.length) m.src = src; redrawLine(m); }
     else pushLine({ t: x.t || nowHM(), src, tr: x.target === 'th' ? tr : '', tx: x.target === 'ko' ? { ko: tr } : null, trTh: x.target === 'th', lang: 'en', at: Date.now() });
   } else pushLine({ t: x.t || nowHM(), src, tr, lang: lg });
@@ -673,7 +674,17 @@ setInterval(() => {   // 번역이 안 나오는 말(맞장구·잡음) 정리
     if ((!g.tr && g.lastIn && now - g.lastIn > 9000) || (g.tr && g.lastOut && now - g.lastOut > 12000)) { g.outDone = true; accFlush(x); drawPending(); }
   });
 }, 1000);
+setInterval(() => {   // '번역 중…'으로 남은 줄(영어 줄 한쪽 번역 누락·서버 오류)을 다시 번역
+  if (!S.running && !S.lines.length) return;
+  const now = Date.now();
+  S.lines.slice(-20).forEach(l => {
+    if (!l.src || l.refining || RQ.q.includes(l) || (l.tries || 0) >= 4) return;
+    if (now - (l.at || l.lastTry || 0) < 4000 || now - (l.lastTry || 0) < 4000) return;
+    if (missCore(l) || extraLangs().some(L => L !== l.lang && !(l.tx && l.tx[L]))) refineQ(l);
+  });
+}, 3000);
 function pushLine(c) {
+  c.at = c.at || Date.now();
   c.src = clean(c.src); c.tr = clean(c.tr);
   if (!c.src && !c.tr) return;
   c.lang = c.lang || langOf(c.src) || (langOf(c.tr) === 'th' ? 'ko' : 'th');
@@ -717,10 +728,10 @@ async function pumpRefine() {
           }
           if (l.lang === 'en' && tx.th && (!l.tr || fix)) { l.tr = clean(tx.th); l.trTh = true; }
           l.tx = l.tx || {};
-          LORD.forEach(k2 => { if (tx[k2] && (fix || !l.tx[k2] || k2 === 'en' || k2 === 'hi')) l.tx[k2] = clean(tx[k2]); });
+          LORD.forEach(k2 => { if (tx[k2] && (fix || !l.tx[k2] || (k2 !== 'ko' && k2 !== 'th'))) l.tx[k2] = clean(tx[k2]); });
         });
       } catch (e) {}
-      batch.forEach(l => { l.refining = false; redrawLine(l); });
+      batch.forEach(l => { l.refining = false; l.tries = (l.tries || 0) + 1; l.lastTry = Date.now(); redrawLine(l); });
       RQ.busy--; pumpRefine();
     })();
   }
@@ -731,18 +742,21 @@ function redrawLine(l) {
   el.outerHTML = lineHtml(l, i); renderPanes(); drawStage(); sendDisp(); pubRoom();
 }
 // ---------- 언어별 분할 화면 ----------
-const LANGS = { ko: ['🇰🇷', '한국어'], th: ['🇹🇭', 'ไทย'], en: ['🇬🇧', 'English'], hi: ['🇮🇳', 'हिन्दी'] };
+// 인도 언어: 지역마다 다르므로 골라서 씀
+const IND = { hi: 'हिन्दी 힌디', ta: 'தமிழ் 타밀', te: 'తెలుగు 텔루구', kn: 'ಕನ್ನಡ 칸나다', ml: 'മലയാളം 말라얄람', mr: 'मराठी 마라티', bn: 'বাংলা 벵골', gu: 'ગુજરાતી 구자라트', pa: 'ਪੰਜਾਬੀ 펀자브', ur: 'اردو 우르두', or: 'ଓଡ଼ିଆ 오디아' };
+let INDC = IND[ls('liveInd')] ? ls('liveInd') : 'hi';
+const LANGS = Object.assign({ ko: ['🇰🇷', '한국어'], th: ['🇹🇭', 'ไทย'], en: ['🇬🇧', 'English'] }, Object.fromEntries(Object.keys(IND).map(c => [c, ['🇮🇳', IND[c]]])));
 const LORD = Object.keys(LANGS);
-let PANES = []; try { PANES = JSON.parse(ls('livePanes') || '[]').filter(x => LANGS[x]); } catch (e) {}
+let PANES = []; try { PANES = JSON.parse(ls('livePanes') || '[]').filter(x => LANGS[x]).map(x => IND[x] ? INDC : x).filter((x, i, a) => a.indexOf(x) === i); } catch (e) {}
 const DLANGS = {};   // 열려 있는 모니터 창 언어 → 마지막 신호 시각
 function drawPaneSeg() {
-  document.querySelectorAll('.paneSeg button').forEach(b => b.classList.toggle('on', b.dataset.p ? PANES.includes(b.dataset.p) : !PANES.length));
+  document.querySelectorAll('.paneSeg button').forEach(b => { const p = b.dataset.p === 'ind' ? INDC : b.dataset.p; b.classList.toggle('on', p ? PANES.includes(p) : !PANES.length); if (b.dataset.p === 'ind') b.title = IND[INDC]; });
   document.body.classList.toggle('split', PANES.length > 0 && !DISP);
   document.documentElement.style.setProperty('--np', PANES.length || 1);
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('.paneSeg button'); if (!b) return;
-  const p = b.dataset.p;
+  const p = b.dataset.p === 'ind' ? INDC : b.dataset.p;
   PANES = !p ? [] : PANES.includes(p) ? PANES.filter(x => x !== p) : PANES.concat(p).sort((a, c) => LORD.indexOf(a) - LORD.indexOf(c));
   ls('livePanes', JSON.stringify(PANES)); drawPaneSeg(); renderPanes();
   if (S.running) S.lines.slice(-6).forEach(l => { if (needTx(l)) refineQ(l); });   // 새로 켠 언어는 최근 줄부터 번역
@@ -783,12 +797,14 @@ function renderPanes() {
 }
 function drawPanePending() { if (!PANES.length) return; const P = curPending(); PANES.forEach(L => { const el = $('pp-' + L); if (el) el.innerHTML = P ? paneLineHtml(P, L, true) : ''; }); }
 function extraLangs() {
-  const set = new Set(PANES.filter(x => x === 'en' || x === 'hi'));
-  Object.keys(DLANGS).forEach(L => { if (Date.now() - DLANGS[L] < 30000 && (L === 'en' || L === 'hi')) set.add(L); });
-  if (typeof liveViewers === 'function') liveViewers().forEach(v => { if (v.lang === 'en' || v.lang === 'hi') set.add(v.lang); });
+  const ext = L => LANGS[L] && L !== 'ko' && L !== 'th';
+  const set = new Set(PANES.filter(ext));
+  Object.keys(DLANGS).forEach(L => { if (Date.now() - DLANGS[L] < 30000 && ext(L)) set.add(L); });
+  if (typeof liveViewers === 'function') liveViewers().forEach(v => { if (ext(v.lang)) set.add(v.lang); });
   return [...set];
 }
-function needTx(l) { const ex = extraLangs(); return l.src && ((MODE === 'fast' && $('refine').checked && !l.refined && !l.checked) || ex.some(L => !(l.tx && l.tx[L]))); }
+function missCore(l) { return ['ko', 'th'].some(L => L !== l.lang && !clean(textIn(l, L))); }
+function needTx(l) { const ex = extraLangs(); return l.src && ((MODE === 'fast' && $('refine').checked && !l.refined && !l.checked) || missCore(l) || ex.some(L => !(l.tx && l.tx[L]))); }
 
 // ---------- 자막 무대: 지금 말하는 문장 (없으면 방금 끝난 문장) ----------
 let STAGE_T = 0;
@@ -910,7 +926,7 @@ function drawViewers() {
   const v = liveViewers(), c = {}; v.forEach(x => c[x.lang] = (c[x.lang] || 0) + 1);
   $('vwN').textContent = v.length ? '· ' + v.length + '명' : '';
   const q = $('qrViewers'); if (q) q.textContent = v.length ? '보는 중: ' + Object.keys(c).map(L => flag(L) + ' ' + c[L]).join('  ') : '아직 접속한 사람이 없습니다';
-  if (v.some(x => x.lang === 'en' || x.lang === 'hi')) S.lines.slice(-4).forEach(l => { if (needTx(l)) refineQ(l); });
+  if (v.some(x => x.lang && x.lang !== 'ko' && x.lang !== 'th')) S.lines.slice(-4).forEach(l => { if (needTx(l)) refineQ(l); });
 }
 setInterval(() => { if (S.running) drawViewers(); }, 15000);
 $('btnQr').onclick = () => {
@@ -937,11 +953,13 @@ const WATCH = (location.search.match(/[?&]watch=([a-z0-9]{6,20})/) || [])[1] || 
 function startWatch() {
   const db = decodeURIComponent((location.search.match(/[?&]db=([^&]+)/) || [])[1] || '');
   document.body.classList.add('watch'); $('vWatch').classList.remove('hidden'); document.title = 'STC 통역 자막';
-  let L = ls('watchLang') || ((navigator.language || '').startsWith('ko') ? 'ko' : (navigator.language || '').startsWith('th') ? 'th' : (navigator.language || '').startsWith('hi') ? 'hi' : 'th');
+  let L = ls('watchLang') || ((navigator.language || '').startsWith('ko') ? 'ko' : (navigator.language || '').startsWith('th') ? 'th' : IND[(navigator.language || '').slice(0, 2)] ? (navigator.language || '').slice(0, 2) : 'th');
   let ST = null;
   const vid = ls('watchId') || (() => { const v = newRoom(); ls('watchId', v); return v; })();
   const beat = () => fetch(db + '/rooms/' + WATCH + '/viewers/' + vid + '.json', { method: 'PUT', body: JSON.stringify({ lang: L, at: { '.sv': 'timestamp' } }) }).catch(() => {});
-  const drawLang = () => $('wLang').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.l === L));
+  $('wInd').innerHTML = '<option value="">🇮🇳 인도 언어</option>' + Object.keys(IND).map(c => '<option value="' + c + '">' + IND[c] + '</option>').join('');
+  const drawLang = () => { $('wLang').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.l === L)); $('wInd').value = IND[L] ? L : ''; };
+  $('wInd').onchange = () => { if (!$('wInd').value) return; L = $('wInd').value; ls('watchLang', L); drawLang(); draw(); beat(); };
   const draw = () => {
     if (!ST) { $('wState').textContent = '연결 중…'; return; }
     $('wState').textContent = ST.live ? '● 회의 중' : '회의가 끝났습니다';
@@ -1149,6 +1167,11 @@ function redrawAll() {
 }
 $('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
 
+(function () {
+  const sel = $('indSel'); if (!sel) return;
+  sel.innerHTML = Object.keys(IND).map(c => '<option value="' + c + '"' + (c === INDC ? ' selected' : '') + '>' + IND[c] + '</option>').join('');
+  sel.onchange = () => { const old = INDC; INDC = sel.value; ls('liveInd', INDC); PANES = PANES.map(x => x === old ? INDC : x); ls('livePanes', JSON.stringify(PANES)); drawPaneSeg(); renderPanes(); };
+})();
 drawPaneSeg();
 if (WATCH) startWatch(); else if (!DISP) loadHome();
 </script>
