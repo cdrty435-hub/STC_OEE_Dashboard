@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STC 통역 회의 · ประชุมแปลสด</title>
+<style>
+  :root { --bg:#f6f7f9; --surface:#fff; --ink:#111827; --ink2:#4b5563; --ink3:#9ca3af; --line:#e5e7eb; --line2:#d1d5db;
+    --ko:#2563eb; --th:#0f9d76; --warn:#b45309; --warnbg:#fef3c7; --red:#dc2626; --redbg:#fee2e2; --okbg:#dcfce7; --ok:#15803d; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: "Malgun Gothic","Apple SD Gothic Neo","Noto Sans Thai","Leelawadee UI",system-ui,sans-serif; background:var(--bg); color:var(--ink); font-size:14px; }
+  button { font:inherit; cursor:pointer; border:1px solid var(--line2); background:var(--surface); border-radius:8px; padding:6px 12px; color:var(--ink); }
+  button:hover { border-color:var(--ink3); } button:disabled { opacity:.5; cursor:default; }
+  button.pri { background:var(--ink); color:#fff; border-color:var(--ink); }
+  button.big { font-size:18px; padding:14px 28px; border-radius:12px; }
+  input, textarea, select { font:inherit; border:1px solid var(--line2); border-radius:8px; padding:6px 8px; background:#fff; color:var(--ink); }
+  textarea { width:100%; resize:vertical; }
+  .wrap { max-width:1100px; margin:0 auto; padding:16px; }
+  header.top { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:12px 16px; background:var(--surface); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; }
+  header.top h1 { font-size:18px; margin:0; font-weight:700; } header.top .sub { color:var(--ink3); font-size:12px; }
+  header.top .sp { flex:1; }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:14px; }
+  .card h2 { font-size:15px; margin:0 0 10px; display:flex; align-items:center; gap:8px; }
+  .muted { color:var(--ink3); font-size:12px; }
+  .pill { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600; }
+  .rec { background:var(--redbg); color:var(--red); } .rec i { width:8px; height:8px; border-radius:50%; background:var(--red); animation:blink 1s infinite; }
+  .conn { background:var(--warnbg); color:var(--warn); }
+  @keyframes blink { 50% { opacity:.2 } }
+  .lvl { display:inline-flex; gap:2px; align-items:flex-end; height:18px; } .lvl b { width:4px; background:var(--th); border-radius:2px; height:3px; transition:height .08s; }
+  .open { background:var(--warnbg); color:#7c2d12; border-radius:10px; padding:8px 12px; margin-bottom:10px; font-size:13px; }
+  .open ul { margin:4px 0 0; padding-left:18px; } .open li { margin:2px 0; }
+  .hidden { display:none !important; }
+  /* 통역 줄 */
+  #lines { display:flex; flex-direction:column; gap:10px; padding-bottom:90px; }
+  .ln { background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--ko); border-radius:0 10px 10px 0; padding:8px 12px; cursor:pointer; }
+  .ln.th { border-left-color:var(--th); } .ln.pending { opacity:.75; border-style:dashed; border-left-style:solid; }
+  .ln .meta { font-size:11px; color:var(--ink3); display:flex; gap:8px; } .ln .meta .who { color:var(--ink2); font-weight:600; }
+  .ln .src { font-size:13px; color:var(--ink2); margin-top:2px; } .ln .tr { font-size:18px; margin-top:2px; line-height:1.45; }
+  .ln.edited .meta::after { content:'수정됨'; color:var(--warn); }
+  body.tv .ln .tr { font-size:30px; } body.tv .ln .src { font-size:17px; } body.tv #lines .ln:not(:nth-last-child(-n+4)) { display:none; }
+  .who-bar { position:fixed; left:0; right:0; bottom:0; background:var(--surface); border-top:1px solid var(--line); padding:8px 16px; display:flex; gap:6px; flex-wrap:wrap; align-items:center; z-index:5; }
+  .chip { border-radius:999px; padding:4px 12px; font-size:13px; } .chip.on { background:var(--ko); color:#fff; border-color:var(--ko); }
+  /* 회의록 */
+  table.mt { width:100%; border-collapse:collapse; font-size:13px; table-layout:fixed; }
+  table.mt th { text-align:left; color:var(--ink2); font-weight:600; padding:6px; border-bottom:1px solid var(--line2); }
+  table.mt td { padding:4px; border-bottom:1px solid var(--line); vertical-align:top; }
+  table.mt td [contenteditable] { min-height:20px; padding:3px 4px; border-radius:4px; outline:none; } table.mt td [contenteditable]:focus { background:#eff6ff; }
+  table.mt select { width:100%; font-size:12px; padding:3px; }
+  .st-완료 { color:var(--ok); } .st-진행·대기 { color:var(--warn); } .st-미해결·재발 { color:var(--red); }
+  .seg { display:inline-flex; border:1px solid var(--line2); border-radius:8px; overflow:hidden; } .seg button { border:0; border-radius:0; padding:4px 12px; } .seg button.on { background:var(--ink); color:#fff; }
+  .list .row { display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); cursor:pointer; } .list .row:hover { background:#f9fafb; }
+  .tag { font-size:11px; padding:2px 8px; border-radius:6px; background:#f3f4f6; color:var(--ink2); }
+  .tag.대기 { background:var(--warnbg); color:var(--warn); } .tag.확정 { background:var(--okbg); color:var(--ok); } .tag.진행 { background:var(--redbg); color:var(--red); }
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:20; padding:16px; }
+  .modal .box { background:var(--surface); border-radius:14px; padding:16px; width:min(560px,100%); max-height:90vh; overflow:auto; }
+  .modal .box h3 { margin:0 0 10px; font-size:16px; } .modal label { display:block; font-size:12px; color:var(--ink2); margin:8px 0 3px; }
+  .row-btn { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap; }
+  .msg { font-size:13px; color:var(--ink2); margin-top:6px; } .msg.err { color:var(--red); }
+  .notice { font-size:12px; color:var(--ink2); background:#f3f4f6; border-radius:8px; padding:8px 10px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div><h1>🎙 통역 회의 <span style="font-weight:400;color:var(--ink3)">· ประชุมแปลสด</span></h1><div class="sub">한국어 ⇄ ไทย 자동 감지 · 끝나면 회의록 자동 정리</div></div>
+  <span class="sp"></span>
+  <span id="stPill" class="pill hidden"></span>
+  <span id="lvl" class="lvl hidden"><b></b><b></b><b></b><b></b><b></b></span>
+  <span id="clock" class="muted"></span>
+  <label class="muted" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="tts"> 🔊 읽어주기</label>
+  <label class="muted" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="tv"> 📺 TV 자막</label>
+  <button id="btnStop" class="hidden">■ 종료 · จบ</button>
+  <a href="6_loss_calendar.html" class="muted" style="text-decoration:none">← 로스 달력</a>
+</header>
+
+<!-- 시작 화면 -->
+<div id="vHome" class="wrap">
+  <div class="card" style="text-align:center;padding:28px 16px">
+    <button id="btnStart" class="pri big">🎙 회의 시작 · เริ่มประชุม</button>
+    <div class="muted" style="margin-top:10px">마이크 권한을 허용해 주세요. 한 사람씩 말하면 1~2초 뒤 번역이 나옵니다.</div>
+    <div id="homeMsg" class="msg"></div>
+  </div>
+  <div class="card"><h2>⏳ 미결 항목 <span class="muted">최근 10일, 호기별 마지막 상태</span></h2><div id="openList" class="muted">불러오는 중…</div></div>
+  <div class="card"><h2>📋 지난 회의</h2><div id="mtgList" class="list muted">불러오는 중…</div></div>
+  <div class="card"><h2>👥 참석자 버튼</h2>
+    <div class="muted">회의 중 말하는 사람을 눌러 두면 줄에 이름이 붙습니다. 쉼표로 구분해서 고치세요.</div>
+    <input id="whoList" style="width:100%;margin-top:6px">
+  </div>
+</div>
+
+<!-- 회의 중 -->
+<div id="vLive" class="wrap hidden">
+  <div id="liveOpen" class="open hidden"></div>
+  <div id="lines"></div>
+</div>
+<div id="whoBar" class="who-bar hidden"></div>
+
+<!-- 회의록 -->
+<div id="vMin" class="wrap hidden">
+  <div class="card">
+    <h2 id="minTitle">회의록</h2>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+      <span class="seg" id="minLang"><button data-l="ko" class="on">한국어</button><button data-l="th">ไทย</button></span>
+      <span class="sp" style="flex:1"></span>
+      <button id="btnRemake">↻ 다시 정리</button>
+      <button id="btnAddRow">＋ 줄 추가</button>
+    </div>
+    <div id="minBody"></div>
+    <div class="row-btn" style="align-items:center">
+      <label class="muted" style="display:flex;gap:4px;align-items:center"><input type="checkbox" id="sendLine" checked> LINE 방에 요약 보내기</label>
+      <button id="btnHome">목록으로</button>
+      <button id="btnConfirm" class="pri">✓ 확정 · ยืนยัน</button>
+    </div>
+    <div id="minMsg" class="msg"></div>
+  </div>
+  <div class="card"><h2>💬 대화 기록 <span class="muted">줄을 눌러 수정</span></h2><div id="minLines" style="display:flex;flex-direction:column;gap:8px"></div></div>
+</div>
+
+<div id="modal" class="modal hidden"><div class="box" id="modalBox"></div></div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbzmKgVmd2fuGfDIJS2ImMxzGBXXjuodifGQH5XgmPnQva91_AO4SzrUBAr5d4vjQBpX/exec';
+const WS_BASE = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+const pad = n => String(n).padStart(2, '0');
+const nowHM = () => { const d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); };
+const todayYmd = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const langOf = t => /[฀-๿]/.test(t) ? 'th' : /[가-힣]/.test(t) ? 'ko' : (/[a-z]/i.test(t) ? 'en' : '');
+
+// ---------- 서버 ----------
+function postApi(body) {
+  return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) }).then(r => r.json());
+}
+async function api(body) {
+  let pin = ls('photoPin') || await askPin();
+  if (!pin) throw new Error('PIN 번호가 필요합니다');
+  let r = await postApi(Object.assign({}, body, { pin, who: ls('photoWho') || '' }));
+  if (!r.ok && /PIN/.test(r.error || '')) { pin = await askPin('PIN 번호가 맞지 않습니다'); if (!pin) throw new Error('PIN 번호가 필요합니다'); r = await postApi(Object.assign({}, body, { pin, who: ls('photoWho') || '' })); }
+  return r;
+}
+function askPin(msg) {
+  return new Promise(res => {
+    openModal('<h3>PIN 번호</h3><div class="muted">' + esc(msg || '로스 달력 사진 추가와 같은 PIN 입니다 (처음 한 번만)') + '</div>' +
+      '<label>PIN</label><input id="pinIn" type="password" inputmode="numeric" style="width:100%">' +
+      '<label>이름</label><input id="pinWho" style="width:100%" value="' + esc(ls('photoWho') || '') + '">' +
+      '<div class="row-btn"><button id="pinNo">취소</button><button id="pinOk" class="pri">확인</button></div>');
+    $('pinIn').focus();
+    $('pinOk').onclick = () => { const p = $('pinIn').value.trim(); ls('photoPin', p); ls('photoWho', $('pinWho').value.trim()); closeModal(); res(p); };
+    $('pinNo').onclick = () => { closeModal(); res(''); };
+  });
+}
+function openModal(h) { $('modalBox').innerHTML = h; $('modal').classList.remove('hidden'); }
+function closeModal() { $('modal').classList.add('hidden'); $('modalBox').innerHTML = ''; }
+
+// ---------- 상태 ----------
+const S = { id: '', date: '', start: '', lines: [], cur: null, who: '', running: false, ws: null, model: 0, models: [], instruction: '',
+  handle: '', setupDone: false, lastSaved: -1, saveTimer: null, clockTimer: null, t0: 0, playUntil: 0, reconnects: 0 };
+const WHO_DEFAULT = '팀장, Nanat, NIPON, Rangsan, 생산, 품질';
+function show(v) { ['vHome', 'vLive', 'vMin'].forEach(x => $(x).classList.toggle('hidden', x !== v)); $('whoBar').classList.toggle('hidden', v !== 'vLive'); }
+function setPill(kind, txt) { const p = $('stPill'); p.className = 'pill ' + kind; p.innerHTML = (kind === 'rec' ? '<i></i>' : '') + esc(txt); p.classList.toggle('hidden', !kind); }
+
+// ---------- 시작 화면 ----------
+$('whoList').value = ls('liveWho') || WHO_DEFAULT;
+$('whoList').onchange = () => ls('liveWho', $('whoList').value);
+$('tts').checked = ls('liveTts') === '1'; $('tts').onchange = () => ls('liveTts', $('tts').checked ? '1' : '0');
+$('tv').checked = ls('liveTv') === '1'; document.body.classList.toggle('tv', $('tv').checked);
+$('tv').onchange = () => { ls('liveTv', $('tv').checked ? '1' : '0'); document.body.classList.toggle('tv', $('tv').checked); };
+let OPEN = [];
+async function loadHome() {
+  show('vHome');
+  try {
+    const [o, l] = await Promise.all([api({ action: 'liveOpen' }), api({ action: 'liveList' })]);
+    OPEN = o.ok ? o.items : [];
+    $('openList').innerHTML = OPEN.length ? '<ul style="margin:0;padding-left:18px">' + OPEN.map(x => '<li><b>' + esc(x.dc) + '</b> ' + esc(x.ko) + ' <span class="muted">' + esc(x.date.slice(5)) + ' · ' + esc(x.status) + '</span></li>').join('') + '</ul>' : '미결 항목이 없습니다';
+    if (!o.ok) $('openList').textContent = o.error || '불러오기 실패';
+    const L = l.ok ? l.list : [];
+    $('mtgList').innerHTML = L.length ? L.map(m => '<div class="row" data-id="' + esc(m.id) + '"><b>' + esc(m.date) + '</b><span>' + esc(m.start) + (m.end ? '~' + esc(m.end) : '') + '</span><span class="muted">' + esc(m.min || '') + '분 · ' + esc(m.n || 0) + '줄</span><span class="sp" style="flex:1"></span><span class="tag ' + esc(m.status) + '">' + esc(m.status) + '</span></div>').join('') : '아직 회의가 없습니다';
+    if (!l.ok) $('mtgList').textContent = l.error || '불러오기 실패';
+  } catch (e) { $('openList').textContent = $('mtgList').textContent = '불러오기 실패: ' + (e.message || e); }
+}
+$('mtgList').onclick = async e => {
+  const r = e.target.closest('.row'); if (!r) return;
+  try { const g = await api({ action: 'liveGet', id: r.dataset.id }); if (!g.ok) throw new Error(g.error);
+    const m = g.meeting; S.id = m.id; S.date = m.date; S.start = m.start; S.end = m.end; S.lines = m.lines; MIN = m.minutes;
+    if (MIN) showMinutes(); else { showMinutes(); remake(); }
+  } catch (er) { alert('열기 실패: ' + (er.message || er)); }
+};
+
+// ---------- 회의 시작 ----------
+$('btnStart').onclick = async () => {
+  $('homeMsg').textContent = ''; $('homeMsg').classList.remove('err');
+  try {
+    await startMic();
+    const d = new Date(); S.date = todayYmd(); S.start = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    S.id = 'M' + S.date.replace(/-/g, '') + '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+    S.lines = []; S.cur = null; S.handle = ''; S.model = 0; S.urlMode = 0; S.everUp = false; S.running = true; S.t0 = Date.now(); S.lastSaved = -1; S.reconnects = 0;
+    renderWho(); renderOpenBar(); $('lines').innerHTML = ''; show('vLive');
+    $('btnStop').classList.remove('hidden'); $('lvl').classList.remove('hidden');
+    S.clockTimer = setInterval(() => { const s = Math.floor((Date.now() - S.t0) / 1000); $('clock').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60); }, 1000);
+    S.saveTimer = setInterval(() => saveLines(), 30000);
+    await connect();
+  } catch (e) { stopMic(); S.running = false; show('vHome'); $('homeMsg').textContent = '시작 실패: ' + (e.message || e); $('homeMsg').classList.add('err'); }
+};
+function renderOpenBar() {
+  const b = $('liveOpen');
+  b.classList.toggle('hidden', !OPEN.length);
+  b.innerHTML = '<b>⏳ 미결 ' + OPEN.length + '건</b> — ' + OPEN.slice(0, 6).map(x => esc(x.dc) + ' ' + esc(x.ko.slice(0, 30))).join(' / ');
+}
+function renderWho() {
+  const names = ($('whoList').value || WHO_DEFAULT).split(/[,，]/).map(s => s.trim()).filter(Boolean);
+  $('whoBar').innerHTML = '<span class="muted">말하는 사람:</span>' + names.map(n => '<button class="chip' + (n === S.who ? ' on' : '') + '" data-w="' + esc(n) + '">' + esc(n) + '</button>').join('') +
+    '<button class="chip' + (!S.who ? ' on' : '') + '" data-w="">지정 안 함</button>';
+}
+$('whoBar').onclick = e => { const c = e.target.closest('.chip'); if (!c) return; S.who = c.dataset.w; renderWho(); if (S.cur) S.cur.who = S.who; };
+
+// ---------- 마이크 (16kHz PCM) ----------
+const MIC = { ctx: null, stream: null, node: null, src: null };
+const WORKLET = `class P extends AudioWorkletProcessor{constructor(){super();this.b=new Int16Array(1600);this.i=0}
+process(inp){const c=inp[0]&&inp[0][0];if(!c)return true;for(let k=0;k<c.length;k++){let s=Math.max(-1,Math.min(1,c[k]));this.b[this.i++]=s<0?s*0x8000:s*0x7fff;
+if(this.i===this.b.length){this.port.postMessage(this.b.buffer.slice(0));this.i=0}}return true}}registerProcessor('pcm16',P);`;
+async function startMic() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('이 브라우저는 마이크를 쓸 수 없습니다 (https 주소의 크롬에서 여세요)');
+  MIC.stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+  MIC.ctx = new AudioContext({ sampleRate: 16000 });
+  await MIC.ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET], { type: 'application/javascript' })));
+  MIC.src = MIC.ctx.createMediaStreamSource(MIC.stream);
+  MIC.node = new AudioWorkletNode(MIC.ctx, 'pcm16');
+  MIC.node.port.onmessage = e => onPcm(e.data);
+  MIC.src.connect(MIC.node);
+}
+function stopMic() {
+  try { MIC.stream && MIC.stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+  try { MIC.ctx && MIC.ctx.close(); } catch (e) {}
+  MIC.ctx = MIC.stream = MIC.node = MIC.src = null;
+}
+function b64(buf) { const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
+function onPcm(buf) {
+  const a = new Int16Array(buf); let m = 0; for (let i = 0; i < a.length; i += 8) m = Math.max(m, Math.abs(a[i]));
+  const lv = Math.min(5, Math.round(m / 3000));
+  $('lvl').querySelectorAll('b').forEach((b, i) => b.style.height = (i < lv ? 6 + i * 3 : 3) + 'px');
+  if (!S.ws || S.ws.readyState !== 1 || !S.setupDone) return;
+  if (Date.now() < S.playUntil) return;            // 번역을 읽어주는 동안은 마이크를 보내지 않음 (되울림 방지)
+  S.ws.send(JSON.stringify({ realtimeInput: { audio: { data: b64(buf), mimeType: 'audio/pcm;rate=16000' } } }));
+}
+
+// ---------- 번역 음성 재생 (24kHz) ----------
+const OUT = { ctx: null, t: 0 };
+function playPcm(b64data) {
+  if (!$('tts').checked) return;
+  if (!OUT.ctx) OUT.ctx = new AudioContext({ sampleRate: 24000 });
+  const bin = atob(b64data), n = bin.length >> 1, f = new Float32Array(n);
+  for (let i = 0; i < n; i++) { let v = bin.charCodeAt(2 * i) | (bin.charCodeAt(2 * i + 1) << 8); if (v >= 0x8000) v -= 0x10000; f[i] = v / 0x8000; }
+  const buf = OUT.ctx.createBuffer(1, n, 24000); buf.copyToChannel(f, 0);
+  const s = OUT.ctx.createBufferSource(); s.buffer = buf; s.connect(OUT.ctx.destination);
+  const at = Math.max(OUT.ctx.currentTime, OUT.t); s.start(at); OUT.t = at + buf.duration;
+  S.playUntil = Date.now() + (OUT.t - OUT.ctx.currentTime) * 1000 + 400;
+}
+
+// ---------- Gemini 실시간 연결 ----------
+let TOKEN = null;
+async function getToken() {
+  setPill('conn', '연결 중…');
+  const r = await api({ action: 'liveToken' });
+  if (!r.ok) throw new Error(r.error || '토큰 발급 실패');
+  TOKEN = r; S.models = r.models; S.instruction = r.instruction;
+  return r;
+}
+async function connect() {
+  if (!S.running) return;
+  await getToken();
+  const model = S.models[Math.min(S.model, S.models.length - 1)];
+  const url = WS_BASE + (S.urlMode ? 'BidiGenerateContent' : 'BidiGenerateContentConstrained') + '?access_token=' + encodeURIComponent(TOKEN.token);
+  S.setupDone = false;
+  const ws = new WebSocket(url); S.ws = ws;
+  ws.onopen = () => {
+    const setup = { model, generationConfig: { responseModalities: ['AUDIO'] },
+      systemInstruction: { parts: [{ text: S.instruction + recentContext() }] },
+      inputAudioTranscription: {}, outputAudioTranscription: {},
+      contextWindowCompression: { slidingWindow: {} }, sessionResumption: S.handle ? { handle: S.handle } : {} };
+    ws.send(JSON.stringify({ setup }));
+  };
+  ws.onmessage = async ev => {
+    let d = ev.data; if (d instanceof Blob) d = await d.text(); else if (d instanceof ArrayBuffer) d = new TextDecoder().decode(d);
+    let m; try { m = JSON.parse(d); } catch (e) { return; }
+    onServer(m);
+  };
+  ws.onclose = ev => {
+    if (S.ws !== ws) return;
+    S.setupDone = false;
+    if (!S.running) return;
+    if (!S.everUp) {   // 한 번도 연결되지 않았으면 다음 모델로
+      S.lastErr = ev.code + ' ' + (ev.reason || '');
+      if (!S.urlMode) S.urlMode = 1; else { S.urlMode = 0; S.model++; }   // 주소 방식 → 다음 모델 순서로 시도
+      if (S.model >= S.models.length) { failLive('Gemini 실시간 연결 실패 (' + S.lastErr + ')'); return; }
+    } else if (S.reconnects > 30) { failLive('재연결이 너무 많습니다 (' + ev.code + ' ' + (ev.reason || '') + ')'); return; }
+    S.reconnects++;
+    setPill('conn', '재연결 중… 잠시 말을 멈춰 주세요');
+    setTimeout(() => connect().catch(e => failLive(e.message || e)), 600);
+  };
+  ws.onerror = () => {};
+}
+function recentContext() {   // 재연결할 때 직전 대화 몇 줄을 알려 줘서 문맥 유지
+  const L = S.lines.slice(-6); if (!L.length) return '';
+  return '\n\n(참고: 직전 대화)\n' + L.map(l => (l.who ? l.who + ': ' : '') + l.src + ' => ' + l.tr).join('\n');
+}
+function failLive(msg) {
+  setPill('conn', '연결 끊김'); const p = $('stPill'); p.title = msg;
+  const d = document.createElement('div'); d.className = 'notice'; d.textContent = '⚠ ' + msg + ' — 종료를 눌러 지금까지 내용을 회의록으로 정리할 수 있습니다.';
+  $('lines').appendChild(d);
+}
+function onServer(m) {
+  if (m.setupComplete) { S.setupDone = true; S.everUp = true; setPill('rec', '통역 중 · ' + (S.models[S.model] || '').replace('models/', '')); return; }
+  if (m.sessionResumptionUpdate && m.sessionResumptionUpdate.resumable !== false && m.sessionResumptionUpdate.newHandle) S.handle = m.sessionResumptionUpdate.newHandle;
+  if (m.goAway) { setPill('conn', '곧 재연결…'); setTimeout(() => { try { S.ws && S.ws.close(); } catch (e) {} }, 300); return; }
+  const c = m.serverContent; if (!c) return;
+  if (c.inputTranscription && c.inputTranscription.text) {
+    if (!S.cur || S.cur.done) S.cur = { t: nowHM(), who: S.who, src: '', tr: '', lang: '' };
+    if (S.cur.tr && S.cur.trDone) { finishCur(); S.cur = { t: nowHM(), who: S.who, src: '', tr: '', lang: '' }; }
+    S.cur.src += c.inputTranscription.text;
+  }
+  if (c.outputTranscription && c.outputTranscription.text) {
+    if (!S.cur) S.cur = { t: nowHM(), who: S.who, src: '', tr: '', lang: '' };
+    S.cur.tr += c.outputTranscription.text;
+  }
+  if (c.modelTurn && c.modelTurn.parts) c.modelTurn.parts.forEach(p => { if (p.inlineData && p.inlineData.data && /audio/.test(p.inlineData.mimeType || 'audio')) playPcm(p.inlineData.data); });
+  if (c.interrupted) { if (OUT.ctx) { OUT.t = 0; } }
+  if (c.turnComplete || c.generationComplete) { if (S.cur && S.cur.tr) S.cur.trDone = true; if (c.turnComplete) finishCur(); }
+  drawPending();
+}
+function clean(t) { return String(t || '').replace(/\s+/g, ' ').trim(); }
+function finishCur() {
+  const c = S.cur; if (!c) return;
+  c.src = clean(c.src); c.tr = clean(c.tr);
+  if (c.src || c.tr) { c.lang = langOf(c.src) || (langOf(c.tr) === 'th' ? 'ko' : 'th'); delete c.done; delete c.trDone; S.lines.push(c); appendLine(c, S.lines.length - 1); }
+  S.cur = null; drawPending();
+}
+function lineHtml(l, i, pending) {
+  return '<div class="ln ' + (l.lang === 'th' ? 'th' : '') + (pending ? ' pending' : '') + (l.edited ? ' edited' : '') + '"' + (pending ? '' : ' data-i="' + i + '"') + '>' +
+    '<div class="meta"><span>' + (l.lang === 'th' ? '🇹🇭' : l.lang === 'en' ? 'EN' : '🇰🇷') + ' ' + esc(l.t) + '</span>' + (l.who ? '<span class="who">' + esc(l.who) + '</span>' : '') + '</div>' +
+    '<div class="src">' + esc(clean(l.src)) + '</div><div class="tr">' + (esc(clean(l.tr)) || '<span class="muted">…</span>') + '</div></div>';
+}
+function appendLine(l, i) {
+  const p = $('pendingLn'); if (p) p.remove();
+  $('lines').insertAdjacentHTML('beforeend', lineHtml(l, i));
+  window.scrollTo(0, document.body.scrollHeight);
+}
+let IDLE = null;
+function drawPending() {
+  clearTimeout(IDLE);
+  if (S.cur && S.cur.src && !S.cur.tr) IDLE = setTimeout(() => { if (S.cur && !S.cur.tr) finishCur(); }, 7000);   // 번역 없이 끝난 짧은 말
+  let p = $('pendingLn');
+  if (!S.cur || !(S.cur.src || S.cur.tr)) { if (p) p.remove(); return; }
+  const c = Object.assign({}, S.cur, { lang: langOf(S.cur.src) || 'ko' });
+  const h = lineHtml(c, -1, true).replace('<div class="ln', '<div id="pendingLn" class="ln');
+  if (p) p.outerHTML = h; else { $('lines').insertAdjacentHTML('beforeend', h); window.scrollTo(0, document.body.scrollHeight); }
+}
+
+// ---------- 저장 · 종료 ----------
+function payload(extra) {
+  const min = Math.max(1, Math.round((Date.now() - S.t0) / 60000));
+  return Object.assign({ id: S.id, date: S.date, start: S.start, min: S.t0 ? min : undefined, lines: S.lines.map(l => ({ t: l.t, who: l.who, lang: l.lang, src: l.src, tr: l.tr })) }, extra || {});
+}
+async function saveLines(force) {
+  if (!S.id || (!force && S.lastSaved === S.lines.length)) return;
+  const n = S.lines.length;
+  try { const r = await api(Object.assign({ action: 'liveSave' }, payload({ status: S.running ? '진행' : '대기' }))); if (r.ok) S.lastSaved = n; } catch (e) {}
+}
+$('btnStop').onclick = async () => {
+  if (!S.running) return;
+  S.running = false; finishCur();
+  try { S.ws && S.ws.close(); } catch (e) {} S.ws = null;
+  stopMic(); clearInterval(S.saveTimer); clearInterval(S.clockTimer);
+  $('btnStop').classList.add('hidden'); $('lvl').classList.add('hidden'); setPill('', '');
+  const d = new Date(); S.end = pad(d.getHours()) + ':' + pad(d.getMinutes());
+  MIN = null; showMinutes(); await remake();
+};
+window.addEventListener('beforeunload', e => { if (S.running) { e.preventDefault(); e.returnValue = ''; } });
+
+// ---------- 회의록 ----------
+let MIN = null, MLANG = 'ko';
+const STS = ['진행·대기', '미해결·재발', '완료', '보고'];
+function showMinutes() {
+  show('vMin');
+  $('minTitle').textContent = '📝 회의록 · ' + S.date + ' ' + (S.start || '') + (S.end ? '~' + S.end : '');
+  drawMinutes(); drawMinLines();
+}
+async function remake() {
+  $('minBody').innerHTML = '<div class="muted">🤖 대화 ' + S.lines.length + '줄을 회의록으로 정리하는 중… (10~30초)</div>';
+  $('minMsg').textContent = '';
+  try {
+    const r = await api(Object.assign({ action: 'liveMinutes' }, payload({ end: S.end })));
+    if (!r.ok) throw new Error(r.error);
+    MIN = r.minutes; drawMinutes();
+  } catch (e) { $('minBody').innerHTML = '<div class="msg err">정리 실패: ' + esc(e.message || e) + ' — 「↻ 다시 정리」를 눌러 주세요. 대화는 저장되어 있습니다.</div>'; }
+}
+function drawMinutes() {
+  if (!MIN) return;
+  const L = MLANG, it = MIN.items || [];
+  const ce = (k, v) => '<div contenteditable="true" data-k="' + k + '">' + esc(v || '') + '</div>';
+  $('minBody').innerHTML = '<div class="notice" style="margin-bottom:10px">' + esc(MIN['summary_' + L] || MIN.summary_ko || '') + '</div>' +
+    '<table class="mt"><colgroup><col style="width:72px"><col><col><col style="width:80px"><col style="width:70px"><col style="width:96px"><col style="width:28px"></colgroup>' +
+    '<tr><th>호기</th><th>내용</th><th>조치 · 다음 할 일</th><th>담당</th><th>기한</th><th>상태</th><th></th></tr>' +
+    it.map((x, i) => '<tr data-i="' + i + '"><td>' + ce('dc', x.dc) + '</td><td>' + ce('content_' + L, x['content_' + L]) + '</td><td>' + ce('action_' + L, x['action_' + L]) + '</td><td>' + ce('owner', x.owner) + '</td><td>' + ce('due', x.due) + '</td>' +
+      '<td><select data-k="status" class="st-' + esc(x.status) + '">' + STS.map(s => '<option' + (s === x.status ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></td><td><button class="delrow" title="줄 삭제" style="padding:2px 6px">✕</button></td></tr>').join('') + '</table>' +
+    '<div style="margin-top:10px"><b>✅ 결정</b><div contenteditable="true" data-list="decisions_' + L + '" style="padding:4px;border-radius:4px">' + esc((MIN['decisions_' + L] || []).join(' / ')) + '</div></div>' +
+    '<div style="margin-top:6px"><b>⏳ 미결</b><div contenteditable="true" data-list="open_' + L + '" style="padding:4px;border-radius:4px">' + esc((MIN['open_' + L] || []).join(' / ')) + '</div></div>' +
+    (L === 'th' ? '<div class="muted" style="margin-top:6px">태국어를 고치면 태국어 줄에만 반영됩니다. 확정 시 한국어·태국어 둘 다 저장됩니다.</div>' : '');
+}
+$('minBody').addEventListener('input', e => {
+  if (!MIN) return;
+  const lst = e.target.closest('[data-list]'); if (lst) { MIN[lst.dataset.list] = lst.textContent.split(/\s*\/\s*/).filter(Boolean); return; }
+  const tr = e.target.closest('tr[data-i]'), k = e.target.dataset.k; if (!tr || !k) return;
+  MIN.items[+tr.dataset.i][k] = e.target.tagName === 'SELECT' ? e.target.value : e.target.textContent.trim();
+});
+$('minBody').addEventListener('change', e => { if (e.target.tagName === 'SELECT') { const tr = e.target.closest('tr[data-i]'); MIN.items[+tr.dataset.i].status = e.target.value; e.target.className = 'st-' + e.target.value; } });
+$('minBody').addEventListener('click', e => { const b = e.target.closest('.delrow'); if (!b) return; MIN.items.splice(+b.closest('tr').dataset.i, 1); drawMinutes(); });
+$('btnAddRow').onclick = () => { if (!MIN) MIN = { items: [] }; MIN.items.push({ dc: '', status: '진행·대기' }); drawMinutes(); };
+$('minLang').onclick = e => { const b = e.target.closest('button'); if (!b) return; MLANG = b.dataset.l; $('minLang').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); drawMinutes(); };
+$('btnRemake').onclick = () => remake();
+$('btnHome').onclick = () => loadHome();
+$('btnConfirm').onclick = async () => {
+  if (!MIN || !(MIN.items || []).length) { $('minMsg').textContent = '확정할 항목이 없습니다'; $('minMsg').classList.add('err'); return; }
+  const b = $('btnConfirm'); b.disabled = true; b.textContent = '저장 중…';
+  try {
+    const r = await api({ action: 'liveConfirm', id: S.id, date: S.date, minutes: MIN, sendLine: $('sendLine').checked });
+    if (!r.ok) throw new Error(r.error);
+    $('minMsg').classList.remove('err');
+    $('minMsg').innerHTML = '✅ 확정했습니다. 조회회의록에 ' + r.n + '건 추가 → 로스 달력에 반영됩니다' + (r.line ? ' · ' + esc(r.line) : '') + ' <a href="6_loss_calendar.html">달력 보기</a>';
+  } catch (e) { $('minMsg').textContent = '실패: ' + (e.message || e); $('minMsg').classList.add('err'); }
+  b.disabled = false; b.textContent = '✓ 확정 · ยืนยัน';
+};
+function drawMinLines() {
+  $('minLines').innerHTML = S.lines.length ? S.lines.map((l, i) => lineHtml(l, i)).join('') : '<div class="muted">대화가 없습니다</div>';
+}
+
+// ---------- 줄 수정 · 재번역 · 용어집 ----------
+document.addEventListener('click', e => {
+  const ln = e.target.closest('.ln[data-i]'); if (!ln) return;
+  const i = +ln.dataset.i, l = S.lines[i]; if (!l) return;
+  openModal('<h3>줄 수정 · ' + esc(l.t) + '</h3>' +
+    '<label>원문 (들은 말)</label><textarea id="eSrc" rows="2">' + esc(l.src) + '</textarea>' +
+    '<label>번역</label><textarea id="eTr" rows="2">' + esc(l.tr) + '</textarea>' +
+    '<div class="row-btn" style="justify-content:flex-start"><button id="eToKo">↻ 한국어로 재번역</button><button id="eToTh">↻ ไทย 재번역</button></div>' +
+    '<label>📘 용어집에 추가 (자주 틀리는 말)</label><div style="display:flex;gap:6px"><input id="gKo" placeholder="한국어" style="flex:1"><input id="gTh" placeholder="ไทย" style="flex:1"></div>' +
+    '<div id="eMsg" class="msg"></div>' +
+    '<div class="row-btn"><button id="eDel" style="color:var(--red)">줄 삭제</button><span style="flex:1"></span><button id="eNo">닫기</button><button id="eOk" class="pri">저장</button></div>');
+  const msg = (t, err) => { $('eMsg').textContent = t; $('eMsg').classList.toggle('err', !!err); };
+  const re = async to => { msg('번역 중…'); try { const r = await api({ action: 'liveTranslate', text: $('eSrc').value, to }); if (!r.ok) throw new Error(r.error); $('eTr').value = r.text; msg('재번역했습니다. 저장을 누르세요'); } catch (er) { msg('실패: ' + (er.message || er), true); } };
+  $('eToKo').onclick = () => re('ko'); $('eToTh').onclick = () => re('th');
+  $('eNo').onclick = closeModal;
+  $('eDel').onclick = () => { S.lines.splice(i, 1); closeModal(); redrawAll(); };
+  $('eOk').onclick = async () => {
+    l.src = $('eSrc').value.trim(); l.tr = $('eTr').value.trim(); l.lang = langOf(l.src) || l.lang; l.edited = true;
+    const ko = $('gKo').value.trim(), th = $('gTh').value.trim();
+    if (ko || th) { msg('용어집에 추가 중…'); try { const r = await api({ action: 'liveAddTerm', ko, th }); if (!r.ok) throw new Error(r.error); } catch (er) { msg('용어 추가 실패: ' + (er.message || er), true); return; } }
+    closeModal(); redrawAll(); S.lastSaved = -1; if (!S.running) saveLines(true);
+  };
+});
+function redrawAll() {
+  if (!$('vLive').classList.contains('hidden')) { $('lines').innerHTML = S.lines.map((l, i) => lineHtml(l, i)).join(''); drawPending(); }
+  if (!$('vMin').classList.contains('hidden')) drawMinLines();
+}
+$('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
+
+loadHome();
+</script>
+</body>
+</html>
