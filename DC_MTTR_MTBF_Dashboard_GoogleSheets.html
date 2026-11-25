@@ -8007,6 +8007,28 @@ loadData();
     const s = document.createElement('style'); s.id = 'stckw-css';
     s.textContent = `
 .kw{font-family:'Malgun Gothic','Apple SD Gothic Neo',Arial,sans-serif;color:#1f2733;margin:14px 0 6px;}
+.kw .w3ban{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;background:#1e2a44;color:#fff;padding:12px 18px;border-radius:6px 6px 0 0;margin-top:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.kw .w3ban .k{font-size:11px;font-weight:800;color:#aeb6c4;letter-spacing:.3px;} .kw .w3ban .t{font-size:26px;font-weight:900;line-height:1.25;} .kw .w3ban .s{font-size:12px;color:#c9d0db;}
+.kw .w3ban .c{text-align:center;} .kw .w3ban .c .k{color:#f5b800;} .kw .w3ban .c .w{font-size:34px;font-weight:900;color:#f5b800;line-height:1.05;}
+.kw .w3ban .r{text-align:right;} .kw .w3ban .r .co{font-size:17px;font-weight:900;} .kw .w3ban .r .d{font-size:12px;font-weight:800;color:#f5b800;}
+.kw .w3sum{font-size:12px;color:#e8611a;margin-top:6px;}
+.kw table.kw-w3{font-size:13px;} .kw table.kw-w3 thead th{background:#1e2a44;color:#fff;font-size:14px;padding:8px 6px;border-color:#1e2a44;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.kw table.kw-w3 td{border:1px solid #d9dde3;vertical-align:top;padding:10px 10px;}
+.kw table.kw-w3 td.mc{text-align:center;vertical-align:middle;} .kw table.kw-w3 td.mc .rk{color:#d62828;font-weight:800;font-size:15px;} .kw table.kw-w3 td.mc .nm{font-size:24px;font-weight:900;color:#1f2937;line-height:1.2;} .kw table.kw-w3 td.mc .ty{color:#6b7280;font-size:12px;}
+.kw table.kw-w3 td.ls .lh{font-size:26px;font-weight:900;color:#e8611a;line-height:1.15;} .kw table.kw-w3 td.ls .lh .dh{font-size:13px;color:#d62828;font-weight:800;}
+.kw table.kw-w3 td.ls .fc{font-size:16px;font-weight:800;color:#1f2937;margin-top:2px;} .kw table.kw-w3 td.ls .dc{font-size:11.5px;color:#d62828;} .kw table.kw-w3 td.ls .sm{font-size:11.5px;color:#6b7280;margin-top:2px;}
+.kw table.kw-w3 td.ev ul{list-style:none;margin:0;padding:0;} .kw table.kw-w3 td.ev li{display:grid;grid-template-columns:14px 78px 1fr;gap:4px;align-items:baseline;margin:3px 0 8px;font-size:13px;color:#1f2937;}
+.kw table.kw-w3 td.ev li::before{content:'';width:10px;height:10px;border-radius:50%;background:#222;transform:translateY(1px);-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.kw table.kw-w3 td.ev li b{font-weight:800;} .kw table.kw-w3 td.ev li.r{color:#d62828;font-weight:700;} .kw table.kw-w3 td.ev li.r::before{background:#d62828;} .kw table.kw-w3 td.ev li.g{color:#6b7280;}
+.kw table.kw-w3 td.cz .u1{font-weight:800;font-size:13px;} .kw table.kw-w3 td.cz .u2{font-size:12px;color:#334155;margin:2px 0 6px;}
+.kw table.kw-w3 td.cz textarea{width:100%;box-sizing:border-box;min-height:64px;font:inherit;font-size:13px;font-weight:700;color:#1f2937;border:1px dashed #cbd5e1;border-radius:6px;padding:5px 6px;resize:vertical;background:#fffdf7;}
+.kw .w3phs{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.kw .w3ph{position:relative;aspect-ratio:3/4;border:1.5px dashed #cbd5e1;border-radius:6px;background:#f4f5f7;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;outline:none;}
+.kw .w3ph .e{font-size:10.5px;color:#9aa1ab;text-align:center;line-height:1.4;padding:4px;} .kw .w3ph:focus,.kw .w3ph.drag{border-color:#2563eb;background:#eff6ff;} .kw .w3ph:focus .e{color:#2563eb;}
+.kw .w3ph img{width:100%;height:100%;object-fit:cover;display:block;} .kw .w3ph.has{border-style:solid;border-color:#d9dde3;background:#fff;} .kw .w3ph.has .e{display:none;}
+.kw .w3ph button{position:absolute;top:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(15,23,42,.65);color:#fff;font-size:11px;cursor:pointer;display:none;padding:0;}
+.kw .w3ph .pk{left:3px;} .kw .w3ph .dl{right:3px;} .kw .w3ph:hover button,.kw .w3ph:focus button{display:block;} .kw .w3ph:not(.has) .dl{display:none !important;}
+@media print{ .kw .w3ph:not(.has){border:1px solid #e5e7eb;background:#fff;} .kw .w3ph:not(.has) .e{display:none;} .kw table.kw-w3 td.cz textarea{border:0;background:none;} }
 .kw h4.kw-h{margin:14px 0 6px;font-size:14.5px;color:#1f3864;border-left:4px solid #e8a33d;padding-left:8px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;}
 .kw h4.kw-h small{font-size:11px;color:#5a6674;font-weight:600;}
 .kw table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;}
@@ -8946,10 +8968,89 @@ loadData();
             <div class="fk-tri"><div><div class="lb">MTTR (Hr)</div><div class="vl" style="color:${col}">${g.mttr==null?'-':f1(g.mttr,1)}</div></div><div><div class="lb">MTBF (Hr)</div><div class="vl" style="color:${col}">${g.mtbf==null?'-':f1(g.mtbf,1)}</div></div><div><div class="lb">가용률 (%)</div><div class="vl" style="color:${col}">${f1(g.a,1)}</div></div></div></div></div>`; });
       h += `</div><div class="kw-note">※ 고장 기준 = 지표 산출 기준 › 주간보고 항목별 고장유형에서 따로 관리 (지금 ${esc(KLBL)} · 최소정지 ${C.minStop}분 이상 · 설비 KPI 페이지 설정과 무관) · 누적 1위 = 보고 주차까지 ${repRk()==='all'?'전체 주차':repRk()+'주'} · 계통 막대 = 최소정지 이상 전체 로스를 4분류 · 누적 순위 = 주마다 FAC 가용률 순위 (칸에 마우스 = 주차·가용률)</div>`;
     }
+    /* --- MTTR Worst 3 · 경과 · 원인 · 사진 (주간보고 · 데이터에서 매주 자동 작성) ---
+       순위 = 고장(UDT) 로스시간 · 경과 = OEE 로스 기록(일자별) 자동 요약 · 원인·대책 = 직접 입력(저장)
+       사진 = 칸 클릭 후 Ctrl+V 붙여넣기 / 파일 선택 / 끌어놓기 — 이 PC 브라우저(IndexedDB)에 저장 */
+    if (opt.mode === 'week'){
+      const failF = C.failOverride ? C.failOverride : data.isFail ? data.isFail : (x => (!C.std || C.udt.has(norm(x.i))) && x.l >= C.minStop);
+      const W3 = W.loss.slice(0,3), NT = notesGet(P.cur.key), W3N = NT._w3 || {};
+      const md = d => d.slice(5).replace('-','/');
+      const evOf = m => {
+        const LL = data.loss.filter(P.cur.f).filter(x=>x.m===m), byD = {};
+        LL.forEach(x=>{ const o = byD[x.d] = byD[x.d] || {u:{}, o:{}, um:0}; if (failF(x)){ o.u[x.i]=(o.u[x.i]||0)+x.l; o.um+=x.l; } else o.o[x.i]=(o.o[x.i]||0)+x.l; });
+        const top = (mp, k, min) => Object.entries(mp).filter(e=>e[1]>=min).sort((a,b)=>b[1]-a[1]).slice(0,k);
+        /* 같은 고장이 짧게 여러 번 반복되면 한 줄로 */
+        const FF = LL.filter(failF), rep = {};
+        FF.forEach(x=>{ (rep[x.i] = rep[x.i] || []).push(x); });
+        const lines = [];
+        Object.entries(rep).forEach(([c,a])=>{ if (a.length>=4){ const ds=a.map(x=>x.d).sort(), ls=a.map(x=>x.l);
+          if (Math.max(...ls) < 120) lines.push({d:ds[0], t:`${md(ds[0])}~${md(ds[ds.length-1]).slice(-2)}`, x:`${c} ${a.length}건 (${Math.round(Math.min(...ls))}~${Math.round(Math.max(...ls))}분) 반복`, red:true, sc:9e5, rep:c}); } });
+        const repC = new Set(lines.map(l=>l.rep));
+        Object.keys(byD).forEach(d=>{ const o = byD[d];
+          const uu = top(o.u, 2, 10).filter(e=>!repC.has(e[0]) || e[1]>=120), oo = top(o.o, 1, 120);
+          if (!uu.length && !oo.length) return;
+          const um = uu.reduce((s,e)=>s+e[1],0);
+          const x = uu.map(e=>`${e[0]} ${Math.round(e[1])}분`).concat(oo.map(e=>`${e[0]} ${Math.round(e[1])}분`)).join(' · ');
+          lines.push({d, t:md(d), x, red: um>=180, sc: um + oo.reduce((s,e)=>s+e[1],0)*0.3, gray: !uu.length});
+        });
+        return lines.sort((a,b)=>b.sc-a.sc).slice(0,5).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
+      };
+      const hd = W3.map(x=>`${DC(x.m)} ${x.top[0]?esc(x.top[0].c)+' '+f1(x.top[0].h)+'h':f1(x.lossH)+'h'}`).join(' · ');
+      h += `<h4 class="kw-h">${esc(P.cur.label)} MTTR Worst 3 — ${hd||'고장 없음'} <small>순위 = 고장 로스시간 · 비교 ${esc(pl)} · 경과 = OEE 로스 기록 자동 · 원인·대책·사진은 직접 입력 (자동 저장)</small></h4>`;
+      if (!W3.length) h += `<div class="kw-empty">이번 기간 고장 기록 없음</div>`;
+      else {
+        { const d0 = S.days[0]||'', d1 = S.days[S.days.length-1]||'', td = new Date(), tds = `${td.getFullYear()}-${String(td.getMonth()+1).padStart(2,'0')}-${String(td.getDate()).padStart(2,'0')}`;
+          h += `<div class="w3ban"><div class="l"><div class="k">MAINTENANCE REPORT</div><div class="t">설비보전 MTTR / MTBF 주간 보고서</div><div class="s">MC MTTR / MTBF Weekly Report · ${esc(P.cur.label)} ${esc(d0)} ~ ${esc(d1)} · ${T4_ ? esc([...T4_].join(' + ')) : C.std ? 'UDT' : '전체 로스'} 기준</div></div>`
+             + `<div class="c"><div class="k">WEEK</div><div class="w">${esc(P.cur.label)}</div></div>`
+             + `<div class="r"><div class="co">STC Co., Ltd.</div><div class="s">다이캐스팅 ${W3.map(x=>DC(x.m)).join(' · ')} · 공무팀</div><div class="d">보고 ${tds}</div></div></div>`; }
+        h += `<table class="kw-w3"><colgroup><col style="width:8%"><col style="width:14%"><col style="width:34%"><col style="width:25%"><col style="width:19%"></colgroup>`;
+        h += `<thead><tr><th>설비</th><th>로스·비용</th><th>경과</th><th>원인 · 대책</th><th>사진</th></tr></thead><tbody>`;
+        W3.forEach((x,i)=>{
+          const p = Q ? Q.mc[x.m] : null, share = S.lossH ? x.lossH/S.lossH*100 : 0;
+          const avl = x.planH ? x.runH/x.planH*100 : 0, ty = x.top[0] ? x.top[0].c.replace(/수리$/,'') : '';
+          const dl = p ? `<span class="dh">${sgn(x.lossH-p.lossH,1)}h</span>` : '';
+          const dc = p ? `<div class="dc">${sgn(x.cost-p.cost,0)} (${esc(pl)} 대비)</div>` : '';
+          const ev = evOf(x.m).map(e=>`<li class="${e.red?'r':''}${e.gray?' g':''}"><b>${e.t}</b><span>${esc(e.x)}</span></li>`).join('') || '<li class="g"><b>–</b><span>기록 없음</span></li>';
+          const uz = x.top.slice(0,3).map((t,j)=>j===0?`<div class="u1">UDT: ${esc(t.c)} ${f1(t.h)}h / ${t.n}건 (${f1(t.p*100,0)}%)</div>`:'').join('')
+                   + (x.top.length>1 ? `<div class="u2">${x.top.slice(1,4).map(t=>`${esc(t.c)} ${f1(t.h)}h / ${t.n}건`).join(' · ')}</div>` : '');
+          const ph = [0,1].map(k=>`<div class="w3ph" tabindex="0" data-w3ph="${x.m}|${k}"><div class="e">📷 클릭 후 <b>Ctrl+V</b><br>또는 끌어놓기</div><button type="button" class="pk kw-noprint" title="파일에서 선택">📁</button><button type="button" class="dl kw-noprint" title="사진 지우기">✕</button></div>`).join('');
+          h += `<tr><td class="mc"><div class="rk">${i+1}위</div><div class="nm">${DC(x.m)}</div><div class="ty">${esc(ty)}</div></td>`
+             + `<td class="ls"><div class="lh">${f1(x.lossH)}h ${dl}</div><div class="fc">${f0(x.cost)} THB</div>${dc}<div class="sm">고장 ${x.n}건 · MTTR ${f1(x.mttr,2)}h/건</div><div class="sm">가동률 ${f1(avl)}% · 로스 비중 ${f1(share,0)}%</div></td>`
+             + `<td class="ev"><ul>${ev}</ul></td>`
+             + `<td class="cz">${uz}<textarea data-kww3="${x.m}" placeholder="원인 → 대책 입력 (LINE 수리·아침조회 기준)">${esc(W3N[x.m]||'')}</textarea></td>`
+             + `<td class="ph"><div class="w3phs">${ph}</div></td></tr>`;
+        });
+        h += `</tbody></table><input type="file" accept="image/*" class="w3file" style="display:none">`;
+        { const stop = Q ? Object.values(Q.mc).filter(x=>x.active && !(S.mc[x.m]||{}).active).map(x=>DC(x.m)) : [];
+          h += `<div class="w3sum">※ ${esc(P.cur.label)} 전체 고장 ${f1(S.lossH)}h / ${S.n}건` + (Q ? ` (${esc(pl)} ${f1(Q.lossH)}h / ${Q.n}건)` : '')
+             + (stop.length ? ` · ${stop.join('·')} 정지(가동 기록 없음)로 집계 제외 — 지표가 좋아 보일 수 있음` : '') + `</div>`; }
+        h += `<div class="kw-note">※ 경과 = 일자별 고장(UDT) 상위 2건 + 120분 이상 기타 로스 · 빨강 = 하루 고장 180분 이상 또는 같은 고장 4회 이상 반복 · 가동률 = 가동 ÷ 계획 · F-COST = 고장시간 × 설비별 M/C Rate · 사진은 이 PC 브라우저에 저장됩니다 (다른 PC에서는 다시 넣어야 함)</div>`;
+      }
+    }
     h += `</div>`;
     return { html:h, key:P.cur.key };
   }
 
+  /* Worst 3 사진 저장소 — IndexedDB (사진은 localStorage 용량을 넘기 쉬워 따로) */
+  function w3DB(op, k, v){
+    return new Promise((res, rej)=>{
+      let rq; try{ rq = indexedDB.open('stc_kw_photos', 1); }catch(e){ return rej(e); }
+      rq.onupgradeneeded = () => rq.result.createObjectStore('p');
+      rq.onerror = () => rej(rq.error);
+      rq.onsuccess = () => { const db = rq.result, tx = db.transaction('p', op==='get'?'readonly':'readwrite'), st = tx.objectStore('p');
+        const r = op==='get' ? st.get(k) : op==='put' ? st.put(v, k) : st.delete(k);
+        r.onsuccess = () => res(op==='get' ? r.result : true); r.onerror = () => rej(r.error); tx.oncomplete = () => db.close(); };
+    });
+  }
+  /* 사진은 긴 변 1200px · JPEG 로 줄여서 저장 */
+  function w3Shrink(file){
+    return new Promise((res, rej)=>{ const fr = new FileReader();
+      fr.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, 1200/Math.max(im.width, im.height));
+        const c = document.createElement('canvas'); c.width = Math.round(im.width*k); c.height = Math.round(im.height*k);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', 0.85)); };
+        im.onerror = rej; im.src = fr.result; };
+      fr.onerror = rej; fr.readAsDataURL(file); });
+  }
   function wire(host, key){
     const save = fn => { const o = notesGet(key); fn(o); notesSet(key, o); };
     const redraw = () => { if (host._kwOpt){ const y = window.scrollY; mount(host, host._kwOpt).then(()=>window.scrollTo(0,y)); } };
@@ -8959,6 +9060,36 @@ loadData();
       el.addEventListener('input', ()=>grow(el));
       el.addEventListener('keydown', e=>{ if (e.key==='Enter') e.stopPropagation(); });
     });
+    /* Worst 3 원인·대책 저장 */
+    host.querySelectorAll('textarea[data-kww3]').forEach(el=>{
+      el.addEventListener('input', ()=>save(o=>{ o._w3 = o._w3 || {}; o._w3[el.dataset.kww3] = el.value; }));
+    });
+    /* Worst 3 사진 — 붙여넣기 · 파일 선택 · 끌어놓기 (IndexedDB, 주차·설비·칸별) */
+    const slots = [...host.querySelectorAll('[data-w3ph]')];
+    if (slots.length){
+      const fin = host.querySelector('.w3file'); let act = null, pick = null;
+      const idOf = el => key + '|' + el.dataset.w3ph;
+      const show = (el, url) => { let im = el.querySelector('img'); if (url){ if(!im){ im = document.createElement('img'); el.insertBefore(im, el.firstChild); } im.src = url; el.classList.add('has'); } else { if(im) im.remove(); el.classList.remove('has'); } };
+      const put = async (el, file) => { if (!file || !/^image\//.test(file.type)) return; const url = await w3Shrink(file); await w3DB('put', idOf(el), url); show(el, url); };
+      slots.forEach(el=>{
+        w3DB('get', idOf(el)).then(u=>{ if(u) show(el, u); }).catch(()=>{});
+        el.addEventListener('focus', ()=>{ act = el; });
+        el.addEventListener('click', e=>{ const b = e.target.closest('button');
+          if (b && b.classList.contains('dl')){ e.stopPropagation(); w3DB('del', idOf(el)).then(()=>show(el, null)); return; }
+          if (b && b.classList.contains('pk') || !el.classList.contains('has') && e.detail >= 2){ e.stopPropagation(); pick = el; fin.value = ''; fin.click(); return; }
+          el.focus(); });
+        el.addEventListener('dragover', e=>{ e.preventDefault(); el.classList.add('drag'); });
+        el.addEventListener('dragleave', ()=>el.classList.remove('drag'));
+        el.addEventListener('drop', e=>{ e.preventDefault(); el.classList.remove('drag'); const fl = e.dataTransfer && e.dataTransfer.files; if (fl && fl[0]) put(el, fl[0]); });
+        el._w3put = file => put(el, file);
+      });
+      if (fin) fin.addEventListener('change', ()=>{ if (pick && fin.files[0]) put(pick, fin.files[0]); });
+      /* 칸을 클릭(선택)한 상태에서 Ctrl+V → 그 칸에 사진 */
+      if (!window.__w3Paste){ window.__w3Paste = true;
+        document.addEventListener('paste', e=>{ const a = document.activeElement; if (!a || !a.matches || !a.matches('[data-w3ph]')) return;
+          const it = [...((e.clipboardData||{}).items||[])].find(i=>i.type && i.type.startsWith('image/')); if (!it) return;
+          e.preventDefault(); if (a._w3put) a._w3put(it.getAsFile()); }, true); }
+    }
     /* 3번 조치 내용 · 담당 (설비별) */
     host.querySelectorAll('textarea[data-kw]').forEach(el=>{
       el.addEventListener('input', ()=>{
@@ -9399,7 +9530,7 @@ loadData();
     const U = units(); if(!U.length) return;
     const saved = getOrder(), ids = U.map(u=>u.dataset.unit);
     /* 저장된 순서 + 새로 생긴 섹션은 원래 위치 뒤에 */
-    const def = ['b0','k0','k3','k4','k1','k2'].concat(ids.filter(x=>x!=='b0' && !/^k/.test(x)));
+    const def = ['b0','k0','k3','k5','k4','k1','k2'].concat(ids.filter(x=>x!=='b0' && !/^k/.test(x)));
     let order = saved.filter(x=>ids.includes(x)); def.forEach(x=>{ if(ids.includes(x) && !order.includes(x)){ const i = def.indexOf(x), prev = def.slice(0,i).reverse().find(p=>order.includes(p)); order.splice(prev ? order.indexOf(prev)+1 : 0, 0, x); } });
     /* 숨김 — 처음 한 번: 그때 화면 기준 10번 이후 항목을 모두 숨긴다 (요청: 10번부터 아래 삭제) */
     let H = getHide();
