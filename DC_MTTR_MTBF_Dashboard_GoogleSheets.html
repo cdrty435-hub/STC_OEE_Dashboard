@@ -42,7 +42,7 @@
   }
   .wrap{max-width:1400px; margin:0 auto; padding:32px 28px 70px;}
   /* 주간·일일·월간 보고는 화면 폭을 넓게 쓴다 (PM 플랜 간트 등 넓은 표) */
-  .wrap:has(#tab-weekly.show), .wrap:has(#tab-daily.show), .wrap:has(#tab-monthly.show){max-width:1900px;}
+  .wrap:has(#tab-weekly.show), .wrap:has(#tab-daily.show), .wrap:has(#tab-monthly.show), .wrap:has(#tab-monthly1.show){max-width:1900px;}
 
   header{display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:20px;}
   .title-block .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.16em; color:var(--amber); text-transform:uppercase; margin-bottom:8px; font-weight:600;}
@@ -725,7 +725,7 @@
   .mx-czs .mx-cz:first-child i{background:#e7a1ad;} .mx-czs .mx-cz em{font-style:normal;font-weight:800;color:#0f172a;font-variant-numeric:tabular-nums;}
   .mx-czs .mx-more{white-space:nowrap;}
   table.wk-t.mx-t tr.rest td{background:#fafafa;color:#64748b;} table.wk-t.mx-t tr.rest td.mc small{white-space:normal;}
-  #wkSheet table.wk-t.mx-t td{padding:4px 6px;} .mx-none{color:#94a3b8;font-size:11px;}
+  #wkSheet table.wk-t.mx-t td, #km1Sheet table.wk-t.mx-t td{padding:4px 6px;} .mx-none{color:#94a3b8;font-size:11px;}
   table.wk-t.mx-t tfoot td{background:#f1f5f9;font-weight:800;}
   .mx-full{margin-top:8px;} .mx-full summary{cursor:pointer;font-size:12px;font-weight:700;color:#1e3c72;padding:4px 0;} .mx-full[open] summary{margin-bottom:4px;}
   @media print{ .mx-full{display:none;} }
@@ -1010,6 +1010,54 @@
     #wkSheet .wkc-w{font-size:12.5px;}
     #wkSheet .wk-memo{font-size:13.5px;min-height:70px;}
     #wkSheet .wk-foot{font-size:12px;}
+  }
+  /* 월간보고(1장) — 주간보고(1장)과 같은 크기 (위 블록을 그대로 복사) */
+  @media screen{
+    #km1Sheet{font-size:14px;}
+    #km1Sheet .wk-hd h3{font-size:19px;} #km1Sheet .wk-hd .meta{font-size:12.5px;}
+    #km1Sheet .wk-blk{margin-top:18px;}
+    #km1Sheet .wk-blk > h4{font-size:16px;margin-bottom:9px;padding-left:9px;}
+    /* 표 제목 — 모든 섹션(주간 요약 · 지표 요약 · 워스트 · 액션 · ②…⑬) 같은 글꼴·크기·굵기 */
+    #km1Sheet .wk-blk h4, #km1Sheet .kw h4.kw-h{font-family:var(--sans) !important;font-size:19px !important;font-weight:900 !important;
+      color:#14284b !important;letter-spacing:-.01em;line-height:1.35;border-left:5px solid #e8a33d;padding-left:10px;margin:0 0 10px !important;}
+    #km1Sheet .kw h4.kw-h{margin-top:18px !important;}
+    #km1Sheet .wk-blk h4 .wk-no, #km1Sheet .kw h4.kw-h .wk-no{font-weight:900;}
+    #km1Sheet .wk-blk h4 .wk-catbar, #km1Sheet .wk-blk h4 .wk-tgt, #km1Sheet .kw h4.kw-h small{font-family:var(--sans);font-size:12.5px !important;font-weight:600 !important;letter-spacing:0;}
+    #km1Sheet .wk-tgt, #km1Sheet .wk-catbar{font-size:12px;}
+    #km1Sheet .wk-catbar select{font-size:12.5px;}
+    #km1Sheet .wk-kpi{gap:10px;}
+    #km1Sheet .wk-k{padding:12px 14px;}
+    #km1Sheet .wk-k .l{font-size:13px;} #km1Sheet .wk-k .info{font-size:11px;}
+    #km1Sheet .wk-k .v{font-size:28px;} #km1Sheet .wk-k .v .u{font-size:13.5px;}
+    #km1Sheet .wk-k .d{font-size:13.5px;}
+    #km1Sheet .wk-verdict{font-size:14px;line-height:1.8;padding:11px 14px;}
+    #km1Sheet .wk-avail-note{font-size:13px;} #km1Sheet .wk-avail-note h5{font-size:13.5px;}
+    #km1Sheet .wk-avail-note table{font-size:12.5px;}
+    #km1Sheet .wk-canv h5{font-size:13.5px;}
+    #km1Sheet .wk-issue{gap:10px;}
+    #km1Sheet .wk-issue .ic{padding:10px 13px;}
+    #km1Sheet .wk-issue .ic .nm{font-size:15px;}
+    #km1Sheet .wk-issue .ic .vd{font-size:11.5px;padding:2px 8px;}
+    #km1Sheet .wk-issue .ic .mt{font-size:12.5px;margin-top:5px;}
+    #km1Sheet .wk-issue .ic .is{font-size:13px;line-height:1.7;margin-top:5px;color:#1f2937;}
+    #km1Sheet table.wk-t{font-size:13.5px;}
+    #km1Sheet table.wk-t th{font-size:13px;padding:9px 8px;color:#1f2937;}
+    #km1Sheet table.wk-t td{padding:8px 8px;color:#1f2937;}
+    #km1Sheet table.wk-t.mini th, #km1Sheet table.wk-t.mini td{font-size:13px;padding:8px 7px;}
+    #km1Sheet table.wk-t input.act, #km1Sheet table.wk-t.down input, #km1Sheet table.wk-t.down select,
+    #km1Sheet table.wk-t.down textarea{font-size:13px;}
+    #km1Sheet .wk-ppt-note{font-size:12px;}
+    #km1Sheet .wkw-band, #km1Sheet .wkc-band, #km1Sheet .hw-sub{font-size:12px;}
+    #km1Sheet .wkw-h .mc{font-size:16px;} #km1Sheet .wkw-h .rk{font-size:11px;}
+    #km1Sheet .wkw-v{font-size:12.5px;} #km1Sheet .wkw-m{font-size:12px;}
+    #km1Sheet .wkw-card ul{font-size:12.5px;line-height:1.6;}
+    #km1Sheet .wkw-card textarea, #km1Sheet .wkw-card input{font-size:12.5px;}
+    #km1Sheet .wkc-k .l{font-size:11px;} #km1Sheet .wkc-k .v{font-size:18px;} #km1Sheet .wkc-k .d{font-size:11.5px;}
+    #km1Sheet .wkc-bar .lb, #km1Sheet .wkc-bar label, #km1Sheet .wkc-bar select{font-size:12.5px;}
+    #km1Sheet .wkc-c .n{font-size:13px;} #km1Sheet .wkc-c .m{font-size:12.5px;} #km1Sheet .wkc-c .s{font-size:11.5px;}
+    #km1Sheet .wkc-w{font-size:12.5px;}
+    #km1Sheet .wk-memo{font-size:13.5px;min-height:70px;}
+    #km1Sheet .wk-foot{font-size:12px;}
   }
 </style>
 </head>
@@ -1359,8 +1407,9 @@
       <button class="wk-print" id="km1Print">인쇄 / PDF 저장</button>
       <span style="color:#5a6674;font-size:11.5px;margin-left:auto">주간보고(1장)와 같은 구성을 월 단위로 · 비교 = 전월 · 목표·원인·사진은 월별로 따로 저장됩니다</span>
     </div>
-    <div class="wk-sheet">
+    <div class="wk-sheet" id="km1Sheet">
       <div id="km1Cover"></div>
+      <div class="wk-foot"><span>STC Co., Ltd. · Die Casting · 공무팀</span><span id="km1FootR"></span></div>
       <div id="kwMonthly1" class="kw-host"></div>
     </div>
   </section>
@@ -8396,7 +8445,7 @@ loadData();
     let h = `<div class="kw">`;
     if (opt._mon){
       const dl = (a, b, up, dp, u) => { if (b==null || !isFinite(b)) return ''; const d = a - b, good = up ? d >= 0 : d <= 0;
-        return `<div class="d" style="color:${good?'#15803d':'#c0392b'};font-weight:800;font-size:12px">${d>=0?'▲':'▼'} ${dp?f1(Math.abs(d),dp):f0(Math.abs(d))}${u||''}</div>`; };
+        return `<span class="d ${good?'wk-dn':'wk-up'}">${d>=0?'▲':'▼'} ${dp?f1(Math.abs(d),dp):f0(Math.abs(d))}${u||''}</span>`; };
       const K = [['MTTR (평균 수리시간)', f1(S.mttr,2), 'h/건', dl(S.mttr, Q&&Q.mttr, false, 2)],
                  ['MTBF (평균 무고장시간)', f1(S.mtbf,2), 'h/건', dl(S.mtbf, Q&&Q.mtbf, true, 2)],
                  ['로스시간 / 고장횟수', f1(S.lossH,1), `h / ${S.n}건`, dl(S.lossH, Q&&Q.lossH, false, 1, 'h')],
@@ -9368,6 +9417,7 @@ loadData();
     const days = RUN.filter(r=>r.d.slice(0,7)===ym).map(r=>r.d).sort();
     const who = ($('km1Who')||{}).value || '';
     $('km1Cover').innerHTML = mtCoverHtml('monthly', `${ym.slice(0,4)}년 ${+ym.slice(5,7)}월`, `${days[0]||'-'} ~ ${days[days.length-1]||'-'}`, who, null, null, `${+ym.slice(5,7)}월`);
+    if ($('km1FootR')) $('km1FootR').textContent = `${ym.slice(0,4)}년 ${+ym.slice(5,7)}월 (${days[0]||'-'} ~ ${days[days.length-1]||'-'}) · 원천: OEE 원본(A_가동률) 자동집계 · 비교: 전월`;
     Promise.resolve(STCKW.mount('kwMonthly1', { mode:'mon1', ym })).then(km1Sub).catch(()=>{});
   }
   /* 하위 항목 번호 (2-1. 2-2. …) — 주간보고(1장)과 같은 방식 */
