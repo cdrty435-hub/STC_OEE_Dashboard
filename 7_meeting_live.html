@@ -45,13 +45,12 @@
   #vLive .ln.pending { background:#eff6ff; box-shadow:none; } #vLive .ln.pending .tr { color:#1e3a8a; }
   #vLive .idle { color:var(--ink3); padding:10px 12px; }
   #toBottom { position:absolute; right:22px; bottom:14px; background:var(--ko); color:#fff; border-color:var(--ko); border-radius:999px; box-shadow:0 2px 8px rgba(0,0,0,.2); }
-  body.tv #vLive .ln .tr { font-size:34px; } body.tv #vLive .ln .src { font-size:18px; }
   .ln { background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--ko); border-radius:0 10px 10px 0; padding:8px 12px; cursor:pointer; }
   .ln.th { border-left-color:var(--th); } .ln.pending { border-color:#93c5fd; box-shadow:0 0 0 2px #dbeafe; } .ln.pending .meta::after { content:'번역 중…'; color:var(--ko); }
   .ln .meta { font-size:11px; color:var(--ink3); display:flex; gap:8px; } .ln .meta .who { color:var(--ink2); font-weight:600; }
   .ln .src { font-size:13px; color:var(--ink2); margin-top:2px; } .ln .tr { font-size:18px; margin-top:2px; line-height:1.45; }
   .ln.edited .meta::after { content:'수정됨'; color:var(--warn); }
-  body.tv .ln .tr { font-size:30px; } body.tv .ln .src { font-size:17px; } 
+
   .who-bar { position:fixed; left:0; right:0; bottom:0; background:var(--surface); border-top:1px solid var(--line); padding:8px 16px; display:flex; gap:6px; flex-wrap:wrap; align-items:center; z-index:5; }
   .chip { border-radius:999px; padding:4px 12px; font-size:13px; } .chip.on { background:var(--ko); color:#fff; border-color:var(--ko); }
   /* 회의록 */
@@ -84,6 +83,22 @@
     table.mt td > div, table.mt td > select { flex:1; }
     table.mt td.x { position:absolute; right:6px; top:4px; width:auto; } table.mt td.x::before { display:none; }
   }
+  /* 큰 화면 (이 창 전체 화면) · 모니터 창 공통: 어두운 배경 · 큰 글씨 */
+  body.big header.top { display:none; }
+  body.big, body.disp { background:#0b1220; }
+  body.big #vLive:not(.hidden) { height:100vh; height:100dvh; padding:0; }
+  body.big #histWrap, body.disp #histWrap { background:#0b1220; border:0; border-radius:0; }
+  body.big #vLive .ln, body.disp #vLive .ln { background:transparent; border-bottom:1px solid #1f2937; padding:10px 24px; }
+  body.big #vLive .ln .tr, body.disp #vLive .ln .tr { font-size:var(--fs, 44px); color:#f8fafc; line-height:1.35; }
+  body.big #vLive .ln .src, body.disp #vLive .ln .src { font-size:calc(var(--fs, 44px) * .45); color:#94a3b8; }
+  body.big #vLive .ln .meta, body.disp #vLive .ln .meta { font-size:13px; color:#64748b; }
+  body.big #vLive .ln.pending, body.disp #vLive .ln.pending { background:#13203a; } body.big #vLive .ln.pending .tr, body.disp #vLive .ln.pending .tr { color:#93c5fd; }
+  body.big #vLive .idle, body.disp #vLive .idle { color:#64748b; font-size:24px; padding:24px; }
+  #bigBar { position:fixed; right:14px; top:10px; z-index:30; display:none; gap:6px; opacity:.25; transition:opacity .2s; }
+  #bigBar:hover { opacity:1; } body.big #bigBar, body.disp #bigBar { display:flex; }
+  #bigBar button { background:#1f2937; color:#e5e7eb; border-color:#374151; }
+  body.disp #vHome, body.disp #vMin, body.disp header.top { display:none !important; }
+  body.disp #vLive { display:block !important; max-width:none; height:100vh; height:100dvh; padding:0; }
   .badge { font-size:11px; padding:2px 8px; border-radius:6px; background:#eef2ff; color:#3730a3; }
 </style>
 </head>
@@ -96,7 +111,9 @@
   <span id="lvl" class="lvl hidden"><b></b><b></b><b></b><b></b><b></b></span>
   <span id="clock" class="muted"></span>
   <label class="muted" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="tts"> 🔊 읽어주기</label>
-  <label class="muted" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="tv"> 📺 TV 자막</label>
+  <label class="muted" style="display:flex;align-items:center;gap:4px" title="빠른 통역 줄을 1~3초 뒤 앞뒤 문맥과 용어집으로 다듬어 바꿉니다"><input type="checkbox" id="refine"> 🧠 문맥 보정</label>
+  <button id="btnBig" title="이 창을 전체 화면 · 큰 글씨로 (Esc 로 나가기)">🖥 큰 화면</button>
+  <button id="btnDisp" title="모니터에 띄울 자막 창을 따로 엽니다. 새 창을 모니터로 끌어다 놓고 전체 화면을 누르세요">🪟 모니터 창</button>
   <button id="btnStop" class="hidden">■ 종료 · จบ</button>
 </header>
 
@@ -143,6 +160,7 @@
   <div class="card"><h2>💬 대화 기록 <span class="muted" id="linesNote">줄을 눌러 수정</span></h2><div id="minLines" style="display:flex;flex-direction:column;gap:8px"></div></div>
 </div>
 
+<div id="bigBar"><button id="fsMinus">A−</button><button id="fsPlus">A＋</button><button id="fsFull">⛶ 전체 화면</button><button id="bigExit">✕ 나가기</button></div>
 <div id="modal" class="modal hidden"><div class="box" id="modalBox"></div></div>
 
 <script>
@@ -200,9 +218,34 @@ function setPill(kind, txt) { const p = $('stPill'); p.className = 'pill ' + kin
 // ---------- 시작 화면 ----------
 $('whoList').value = ls('liveWho') || '';
 $('whoList').onchange = () => ls('liveWho', $('whoList').value);
+$('refine').checked = ls('liveRefine') !== '0'; $('refine').onchange = () => ls('liveRefine', $('refine').checked ? '1' : '0');
 $('tts').checked = ls('liveTts') === '1'; $('tts').onchange = () => ls('liveTts', $('tts').checked ? '1' : '0');
-$('tv').checked = ls('liveTv') === '1'; document.body.classList.toggle('tv', $('tv').checked);
-$('tv').onchange = () => { ls('liveTv', $('tv').checked ? '1' : '0'); document.body.classList.toggle('tv', $('tv').checked); };
+// ---------- 큰 화면 · 모니터 창 ----------
+const DISP = /[?&]display=1/.test(location.search);       // 모니터 창 (자막만 보여 주는 창)
+const BC = ('BroadcastChannel' in window) ? new BroadcastChannel('stc-live-interp') : null;
+function setFs(v) { v = Math.max(20, Math.min(110, v)); document.documentElement.style.setProperty('--fs', v + 'px'); ls(DISP ? 'liveFsDisp' : 'liveFs', String(v)); }
+setFs(+(ls(DISP ? 'liveFsDisp' : 'liveFs') || 44));
+const curFs = () => parseInt(getComputedStyle(document.documentElement).getPropertyValue('--fs')) || 44;
+$('fsMinus').onclick = () => setFs(curFs() - 6); $('fsPlus').onclick = () => setFs(curFs() + 6);
+$('fsFull').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {}); };
+$('bigExit').onclick = () => { if (DISP) { window.close(); return; } document.body.classList.remove('big'); if (document.fullscreenElement) document.exitFullscreen(); fitHdr(); };
+$('btnBig').onclick = () => { document.body.classList.add('big'); document.documentElement.requestFullscreen().catch(() => {}); setTimeout(() => { $('lines').scrollTop = $('lines').scrollHeight; }, 200); };
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && !DISP) { document.body.classList.remove('big'); fitHdr(); } });
+document.addEventListener('keydown', e => { if (!(document.body.classList.contains('big') || DISP)) return; if (e.key === '+' || e.key === '=') setFs(curFs() + 6); if (e.key === '-') setFs(curFs() - 6); });
+$('btnDisp').onclick = () => { const w = window.open(location.pathname + '?display=1', 'stcLiveDisplay', 'width=1280,height=720'); if (!w) alert('팝업이 막혔습니다. 주소창 오른쪽의 팝업 허용을 눌러 주세요.'); setTimeout(sendDisp, 800); };
+// 메인 창 → 모니터 창으로 지금 대화 보내기
+function sendDisp() {
+  if (!BC || DISP) return;
+  const pr = $('pendingRow');
+  BC.postMessage({ type: 'state', html: S.lines.slice(-60).map((l, i) => lineHtml(l, -1)).join('') + (pr ? pr.innerHTML : ''), running: S.running });
+}
+if (BC && !DISP) BC.onmessage = e => { if (e.data && e.data.type === 'hello') sendDisp(); };
+if (DISP) {
+  document.body.classList.add('disp'); document.title = '자막 · STC 통역 회의';
+  $('lines').innerHTML = '<div class="idle">🎙 회의 자막이 여기에 나옵니다 · ⛶ 전체 화면을 누르세요 · A−/A＋ 로 글자 크기</div>';
+  if (BC) { BC.onmessage = e => { const d = e.data || {}; if (d.type !== 'state') return; const L = $('lines'), follow = L.scrollHeight - L.scrollTop - L.clientHeight < 80; L.innerHTML = d.html || '<div class="idle">🎙 말씀하세요…</div>'; if (follow) L.scrollTop = L.scrollHeight; }; BC.postMessage({ type: 'hello' }); }
+  else $('lines').innerHTML = '<div class="idle">이 브라우저는 모니터 창을 지원하지 않습니다. 메인 창의 「🖥 큰 화면」을 쓰세요.</div>';
+}
 function drawMode() {
   $('modeSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === MODE));
   $('modeTip').textContent = MODE === 'fast' ? '번역 전용 모델 · 가장 빠름 (용어집은 회의록 정리 때 적용)' : '일반 모델 + 현장 용어집 · 용어가 더 정확하지만 조금 느림';
@@ -451,10 +494,32 @@ function pushLine(c) {
   if (!c.src && !c.tr) return;
   c.lang = c.lang || langOf(c.src) || (langOf(c.tr) === 'th' ? 'ko' : 'th');
   S.lines.push(c); appendLine(c, S.lines.length - 1);
+  if (MODE === 'fast' && c.src && c.tr && $('refine').checked) refineQ(c);
+}
+// ---------- 문맥 보정: 빠른 통역 줄을 확정 후 1~3초 안에 앞뒤 문맥·용어집으로 다듬어 교체 ----------
+const RQ = { busy: 0, q: [] };
+function refineQ(l) { l.refining = true; redrawLine(l); RQ.q.push(l); pumpRefine(); }
+async function pumpRefine() {
+  while (RQ.busy < 2 && RQ.q.length) {
+    const l = RQ.q.shift(); RQ.busy++;
+    (async () => {
+      try {
+        const i = S.lines.indexOf(l);
+        const r = await api({ action: 'liveRefine', line: { src: l.src, tr: l.tr, lang: l.lang }, context: S.lines.slice(Math.max(0, i - 8), i).map(x => ({ src: x.src, tr: x.tr })) });
+        if (r.ok && !l.edited) { if (r.changed || r.tr !== l.tr || r.src !== l.src) { l.src = clean(r.src); l.tr = clean(r.tr); l.refined = true; } }
+      } catch (e) {}
+      l.refining = false; redrawLine(l); RQ.busy--; pumpRefine();
+    })();
+  }
+}
+function redrawLine(l) {
+  const i = S.lines.indexOf(l); if (i < 0) return;
+  const el = document.querySelector('#lines .ln[data-i="' + i + '"]'); if (!el) return;
+  el.outerHTML = lineHtml(l, i); sendDisp();
 }
 function lineHtml(l, i, pending) {
   return '<div class="ln ' + (l.lang === 'th' ? 'th' : '') + (pending ? ' pending' : '') + (l.edited ? ' edited' : '') + '"' + (pending ? '' : ' data-i="' + i + '"') + '>' +
-    '<div class="meta"><span>' + (l.lang === 'th' ? '🇹🇭' : l.lang === 'en' ? 'EN' : '🇰🇷') + ' ' + esc(l.t) + '</span>' + (l.who ? '<span class="who">' + esc(l.who) + '</span>' : '') + '</div>' +
+    '<div class="meta"><span>' + (l.lang === 'th' ? '🇹🇭' : l.lang === 'en' ? 'EN' : '🇰🇷') + ' ' + esc(l.t) + '</span>' + (l.who ? '<span class="who">' + esc(l.who) + '</span>' : '') + (l.refining ? '<span style="color:var(--ink3)">· 문맥 보정 중…</span>' : l.refined ? '<span style="color:var(--th)">✓ 문맥 보정</span>' : '') + '</div>' +
     '<div class="src">' + esc(clean(l.src)) + '</div><div class="tr">' + (esc(clean(l.tr)) || '<span class="muted">…</span>') + '</div></div>';
 }
 // 지난 대화: 맨 아래를 보고 있을 때만 자동으로 따라감 (위로 올려 보는 중이면 그대로 두고 버튼 표시)
@@ -485,6 +550,7 @@ function drawPending(follow) {
     pr.innerHTML = h;
   }
   if (follow) $('lines').scrollTop = $('lines').scrollHeight; else if (P.length || LAST) $('toBottom').classList.remove('hidden');
+  sendDisp();
 }
 
 // ---------- 저장 · 종료 ----------
@@ -650,7 +716,7 @@ function redrawAll() {
 }
 $('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
 
-loadHome();
+if (!DISP) loadHome();
 </script>
 </body>
 </html>
