@@ -96,7 +96,6 @@
     <div class="muted" style="margin-top:6px">자유롭게 대화하세요. 회의 전체가 녹음되고, 끝나면 <b>목소리로 말한 사람을 자동으로 나눠</b> 회의록을 만듭니다.</div>
     <div id="homeMsg" class="msg"></div>
   </div>
-  <div class="card"><h2>⏳ 미결 항목 <span class="muted">최근 10일, 호기별 마지막 상태</span></h2><div id="openList" class="muted">불러오는 중…</div></div>
   <div class="card"><h2>📋 지난 회의</h2><div id="mtgList" class="list muted">불러오는 중…</div></div>
   <div class="card"><h2>👥 참석자 <span class="muted">(선택) 회의록에서 말한 사람 이름을 찾을 때 참고만 합니다</span></h2>
     <input id="whoList" style="width:100%" placeholder="팀장, Nanat, NIPON, Rangsan">
@@ -105,7 +104,6 @@
 
 <!-- 회의 중 -->
 <div id="vLive" class="wrap hidden">
-  <div id="liveOpen" class="open hidden"></div>
   <div id="lines"></div>
 </div>
 
@@ -195,17 +193,14 @@ function drawMode() {
 }
 $('modeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) return; MODE = b.dataset.m; ls('liveMode', MODE); drawMode(); };
 drawMode();
-let OPEN = [];
 async function loadHome() {
   show('vHome');
   try {
-    const [o, l] = await Promise.all([api({ action: 'liveOpen' }), api({ action: 'liveList' })]);
-    OPEN = o.ok ? o.items : [];
-    $('openList').innerHTML = !o.ok ? esc(o.error || '불러오기 실패') : OPEN.length ? '<ul style="margin:0;padding-left:18px">' + OPEN.map(x => '<li><b>' + esc(x.dc) + '</b> ' + esc(x.ko) + ' <span class="muted">' + esc(x.date.slice(5)) + ' · ' + esc(x.status) + '</span></li>').join('') + '</ul>' : '미결 항목이 없습니다';
+    const l = await api({ action: 'liveList' });
     const L = l.ok ? l.list : [];
     $('mtgList').innerHTML = !l.ok ? esc(l.error || '불러오기 실패') : L.length ? L.map(m => '<div class="row" data-id="' + esc(m.id) + '"><b>' + esc(m.date) + '</b><span>' + esc(m.start) + (m.end ? '~' + esc(m.end) : '') + '</span><span class="muted">' + esc(m.min || '') + '분 · ' + esc(m.n || 0) + '줄</span><span class="sp" style="flex:1"></span><span class="tag ' + esc(m.status) + '">' + esc(m.status) + '</span>' +
       '<button class="mdel" data-id="' + esc(m.id) + '" style="padding:2px 8px;font-size:12px;color:var(--red)">삭제</button></div>').join('') : '아직 회의가 없습니다';
-  } catch (e) { $('openList').textContent = $('mtgList').textContent = '불러오기 실패: ' + (e.message || e); }
+  } catch (e) { $('mtgList').textContent = '불러오기 실패: ' + (e.message || e); }
 }
 $('mtgList').onclick = async e => {
   const d = e.target.closest('.mdel');
@@ -232,7 +227,7 @@ $('btnStart').onclick = async () => {
     const d = new Date(); S.date = todayYmd(); S.start = pad(d.getHours()) + ':' + pad(d.getMinutes()); S.end = '';
     S.id = 'M' + S.date.replace(/-/g, '') + '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
     Object.assign(S, { lines: [], running: true, t0: Date.now(), lastSaved: -1, audioUrl: '' });
-    renderOpenBar(); $('lines').innerHTML = ''; show('vLive');
+    $('lines').innerHTML = ''; show('vLive');
     $('btnStop').classList.remove('hidden'); $('lvl').classList.remove('hidden');
     S.clockTimer = setInterval(() => { const s = Math.floor((Date.now() - S.t0) / 1000); $('clock').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60); }, 1000);
     S.saveTimer = setInterval(() => saveLines(), 30000);
@@ -240,10 +235,6 @@ $('btnStart').onclick = async () => {
     await startSessions();
   } catch (e) { stopAll(); show('vHome'); $('homeMsg').textContent = '시작 실패: ' + (e.message || e); $('homeMsg').classList.add('err'); }
 };
-function renderOpenBar() {
-  const b = $('liveOpen'); b.classList.toggle('hidden', !OPEN.length);
-  b.innerHTML = '<b>⏳ 미결 ' + OPEN.length + '건</b> — ' + OPEN.slice(0, 6).map(x => esc(x.dc) + ' ' + esc(x.ko.slice(0, 30))).join(' / ');
-}
 
 // ---------- 마이크 (16kHz PCM) ----------
 const MIC = { ctx: null, stream: null, node: null, src: null };
