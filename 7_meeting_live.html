@@ -34,7 +34,7 @@
   /* 통역 줄 */
   #lines { display:flex; flex-direction:column; gap:10px; padding-bottom:90px; }
   .ln { background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--ko); border-radius:0 10px 10px 0; padding:8px 12px; cursor:pointer; }
-  .ln.th { border-left-color:var(--th); } .ln.pending { opacity:.75; border-style:dashed; border-left-style:solid; }
+  .ln.th { border-left-color:var(--th); } .ln.pending { border-color:#93c5fd; box-shadow:0 0 0 2px #dbeafe; } .ln.pending .meta::after { content:'번역 중…'; color:var(--ko); }
   .ln .meta { font-size:11px; color:var(--ink3); display:flex; gap:8px; } .ln .meta .who { color:var(--ink2); font-weight:600; }
   .ln .src { font-size:13px; color:var(--ink2); margin-top:2px; } .ln .tr { font-size:18px; margin-top:2px; line-height:1.45; }
   .ln.edited .meta::after { content:'수정됨'; color:var(--warn); }
@@ -237,7 +237,7 @@ function renderOpenBar() {
 
 // ---------- 마이크 (16kHz PCM) ----------
 const MIC = { ctx: null, stream: null, node: null, src: null };
-const WORKLET = `class P extends AudioWorkletProcessor{constructor(){super();this.b=new Int16Array(1600);this.i=0}
+const WORKLET = `class P extends AudioWorkletProcessor{constructor(){super();this.b=new Int16Array(640);this.i=0}
 process(inp){const c=inp[0]&&inp[0][0];if(!c)return true;for(let k=0;k<c.length;k++){let s=Math.max(-1,Math.min(1,c[k]));this.b[this.i++]=s<0?s*0x8000:s*0x7fff;
 if(this.i===this.b.length){this.port.postMessage(this.b.buffer.slice(0));this.i=0}}return true}}registerProcessor('pcm16',P);`;
 async function startMic() {
