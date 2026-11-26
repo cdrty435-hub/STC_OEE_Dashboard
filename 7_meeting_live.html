@@ -213,6 +213,11 @@
   body.watch header.top, body.watch #vHome, body.watch #vLive, body.watch #vMin { display:none !important; }
   #vWatch { max-width:900px; margin:0 auto; padding:10px 12px 40px; }
   #vWatch .wtop { display:flex; gap:8px; align-items:center; flex-wrap:wrap; position:sticky; top:0; background:var(--bg); padding:6px 0; z-index:3; }
+  #wTalk { position:fixed; left:0; right:0; bottom:0; z-index:5; display:grid; grid-template-columns:110px 1fr; gap:8px; padding:10px 12px calc(10px + env(safe-area-inset-bottom)); background:rgba(255,255,255,.96); border-top:1px solid var(--line); }
+  #wTalk input { font-size:15px; padding:8px; } #wMicMsg { grid-column:1 / -1; font-size:13px; color:var(--ink2); min-height:16px; text-align:center; }
+  #wMic { font-size:18px; font-weight:800; padding:12px; border-radius:14px; background:#1f3864; color:#fff; border:0; user-select:none; -webkit-user-select:none; touch-action:none; } #wMic small { font-weight:500; font-size:12px; opacity:.85; }
+  #wMic.rec { background:#dc2626; animation:pulse 1s infinite; } @keyframes pulse { 50% { opacity:.75; } }
+  body.watch #vWatch { padding-bottom:130px; }
   #vWatch .wtop .seg button { padding:5px 10px; font-size:13px; } #wInd { font-size:13px; padding:5px 6px; }
   #wNow { background:var(--surface); border:2px solid var(--ko); border-radius:14px; padding:12px 14px; margin:8px 0 12px; min-height:90px; }
   #wNowTx { font-size:24px; font-weight:600; line-height:1.4; margin-top:4px; }
@@ -319,6 +324,7 @@
     <span class="seg" id="wLang"><button data-l="ko">🇰🇷 한국어</button><button data-l="th">🇹🇭 ไทย</button><button data-l="en">🇬🇧 EN</button></span><select id="wInd"><option value="">🇮🇳 인도 언어</option></select></div>
   <div id="wNow"><div id="wNowMeta" class="muted"></div><div id="wNowTx"></div></div>
   <div id="wList"></div>
+  <div id="wTalk"><input id="wWho" placeholder="이름 · ชื่อ" maxlength="20"><button id="wMic">🎤 누르고 말하기<br><small>กดค้างไว้แล้วพูด</small></button><div id="wMicMsg"></div></div>
 </div>
 <div id="bigBar"><button id="fsMinus">A−</button><button id="fsPlus">A＋</button><button id="fsFull">⛶ 전체 화면</button><button id="bigExit">✕ 나가기</button></div>
 <div id="modal" class="modal hidden"><div class="box" id="modalBox"></div></div>
@@ -1112,7 +1118,13 @@ setInterval(() => { if (S.running && S.lines.length - (DIG.n || 0) >= 6) digest(
 // ---------- 휴대폰 자막: Firebase Realtime Database 로 중계 ----------
 S.fb = ls('liveFb') || '';
 const fbBase = () => String(S.fb || '').replace(/\/+$/, '');
-let PUB_T = 0, PUB_TM = null, PUB_ERR = false, VIEW = {}, VIEWT = {}, VES = null;
+let PUB_T = 0, PUB_TM = null, PUB_ERR = false, VIEW = {}, VIEWT = {}, VES = null, VSAY = null, SAYSEEN = {};
+function addGuest(k, g) {   // QR 참석자가 자기 휴대폰으로 한 말 → 회의 대화에 넣음
+  if (!k || SAYSEEN[k] || !g || !g.src || !S.running) return; SAYSEEN[k] = 1;
+  const l = { t: g.t || nowHM(), who: '📱 ' + (g.who || '참석자'), lang: g.lang || 'th', src: g.src, tr: (g.lang === 'th' ? g.ko : g.th) || '',
+    tx: { ko: g.ko || '', th: g.th || '', en: g.en || '' }, guest: true, refined: true, rel: Math.max(0, Math.round((Date.now() - S.t0) / 1000)), at: Date.now() };
+  pushLine(l); pubRoom();
+}
 function newRoom() { const a = 'abcdefghjkmnpqrstuvwxyz23456789'; let r = ''; for (let i = 0; i < 12; i++) r += a[Math.floor(Math.random() * a.length)]; return r; }
 function watchUrl() { return location.origin + location.pathname + '?watch=' + S.room + '&db=' + encodeURIComponent(fbBase()); }
 function pubRoom(now) {
@@ -1137,6 +1149,12 @@ function watchViewers() {
     else { const k = d.path.replace(/^\//, '').split('/')[0]; if (d.data) { VIEW[k] = Object.assign(VIEW[k] || {}, d.data); VIEWT[k] = Date.now(); } else delete VIEW[k]; }
     drawViewers(); } catch (er) {} };
   VES.addEventListener('put', on); VES.addEventListener('patch', on);
+  try { VSAY && VSAY.close(); } catch (e) {}
+  SAYSEEN = {};
+  VSAY = new EventSource(fbBase() + '/rooms/' + S.room + '/say.json');
+  const onS = e => { try { const d = JSON.parse(e.data); if (!d || !d.data) return;
+    if (d.path === '/') Object.keys(d.data).forEach(k => addGuest(k, d.data[k])); else addGuest(d.path.replace(/^\//, '').split('/')[0], d.data); } catch (er) {} };
+  VSAY.addEventListener('put', onS); VSAY.addEventListener('patch', onS);
 }
 function liveViewers() { return Object.keys(VIEW).filter(k => Date.now() - (VIEWT[k] || 0) < 60000).map(k => VIEW[k]); }
 function drawViewers() {
@@ -1194,6 +1212,34 @@ function startWatch() {
   es.addEventListener('put', on); es.addEventListener('patch', on);
   es.onerror = () => { $('wState').textContent = '다시 연결 중…'; };
   try { navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {}); } catch (e) {}
+  // 🎤 참석자도 자기 휴대폰으로 말하기: 누르고 있는 동안 녹음 → 떼면 받아쓰기·번역 → 회의 화면과 모든 자막에 올라감
+  $('wWho').value = ls('watchWho') || ''; $('wWho').onchange = () => ls('watchWho', $('wWho').value.trim());
+  let MR = null, chunks = [], stream = null, t0 = 0;
+  const msg = t => { $('wMicMsg').textContent = t; };
+  const start = async e => {
+    e.preventDefault(); if (MR) return;
+    if (!ST || !ST.live) { msg('회의가 진행 중일 때만 말할 수 있습니다 · พูดได้เฉพาะระหว่างประชุม'); return; }
+    try { stream = stream || await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+    catch (er) { msg('마이크 권한을 허용해 주세요 · กรุณาอนุญาตไมโครโฟน'); return; }
+    chunks = []; MR = new MediaRecorder(stream); MR.ondataavailable = ev => { if (ev.data.size) chunks.push(ev.data); }; MR.onstop = send; MR.start(); t0 = Date.now();
+    $('wMic').classList.add('rec'); msg('🔴 말씀하세요… 손을 떼면 보냅니다 · ปล่อยนิ้วเพื่อส่ง'); MR.tm = setTimeout(stop, 60000);
+  };
+  const stop = () => { if (!MR || MR.state !== 'recording') return; clearTimeout(MR.tm); MR.stop(); $('wMic').classList.remove('rec'); };
+  const send = async () => {
+    const mr = MR; MR = null;
+    if (Date.now() - t0 < 700) { msg('버튼을 누른 채로 말하세요 · กดค้างไว้ระหว่างพูด'); return; }
+    msg('⏳ 번역 중… · กำลังแปล');
+    try {
+      const blob = new Blob(chunks, { type: mr.mimeType || 'audio/webm' });
+      const mp3 = await fileToMp3(blob, () => {});
+      const r = await postApi({ action: 'liveGuestSay', room: WATCH, data: await blobB64(mp3.blob), mime: 'audio/mpeg', who: $('wWho').value.trim() || '참석자', t: nowHM() });
+      if (!r.ok) throw new Error(r.error);
+      msg(r.empty ? '말소리를 듣지 못했습니다 · ไม่ได้ยินเสียง' : '✅ 보냈습니다 · ส่งแล้ว');
+    } catch (er) { msg('실패: ' + (er.message || er)); }
+  };
+  $('wMic').addEventListener('pointerdown', start);
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => $('wMic').addEventListener(ev, stop));
+  $('wMic').addEventListener('contextmenu', e => e.preventDefault());
 }
 
 // ---------- 저장 · 종료 ----------
@@ -1213,7 +1259,7 @@ async function keepAwake() { try { WAKE = await navigator.wakeLock.request('scre
 document.addEventListener('visibilitychange', () => { if (S.running && document.visibilityState === 'visible') keepAwake(); });
 function stopAll() {
   document.body.classList.remove('reconly');
-  S.running = false; try { pubRoom(true); VES && VES.close(); } catch (e) {} try { WAKE && WAKE.release(); } catch (e) {} WAKE = null;
+  S.running = false; try { pubRoom(true); VES && VES.close(); VSAY && VSAY.close(); } catch (e) {} try { WAKE && WAKE.release(); } catch (e) {} WAKE = null;
   SES.forEach(x => { clearTimeout(x.tm); const w = x.ws; x.ws = null; try { w && w.close(); } catch (e) {} });
   stopMic(); clearInterval(S.saveTimer); clearInterval(S.clockTimer);
   $('btnStop').classList.add('hidden'); $('lvl').classList.add('hidden'); setPill('', ''); $('clock').textContent = '';
@@ -1247,7 +1293,12 @@ async function audioPass(audioId) {
     const r = await api(Object.assign({ action: 'liveMinutes', audioId }, payload()));
     if (S.id !== id) return;
     if (!r.ok) throw new Error(r.error);
-    if (r.lines && r.lines.length) { S.lines = r.lines; S.lastSaved = S.lines.length; drawMinLines(); }
+    if (r.lines && r.lines.length) {
+      const guests = S.lines.filter(l => l.guest || /^📱/.test(l.who || ''));
+      const sec = t => { const p = String(t || '').split(':').map(Number); return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : (p[0] || 0) * 60 + (p[1] || 0); };
+      S.lines = r.lines.map(l => ({ l, s: sec(l.t) })).concat(guests.map(g => ({ l: Object.assign({}, g, { t: fmtT(g.rel || 0) }), s: g.rel || 0 }))).sort((a, b) => a.s - b.s).map(x => x.l);
+      S.lastSaved = -1; drawMinLines(); saveLines(true);
+    }
     if (!MIN || !DIRTY) { MIN = r.minutes; drawMinutes(); }
     else { AUDIO_MIN = r.minutes; $('minBadge').innerHTML = '<span class="badge">🎧 녹음 기준 회의록 준비됨</span> <button id="useAudio" style="padding:2px 8px;font-size:12px">적용 (지금 고친 내용 대신)</button>'; }
     if (r.minutes.audioErr) note2('녹음으로 정리하지 못했습니다: ' + r.minutes.audioErr);
@@ -1411,7 +1462,9 @@ $('foreignOn').checked = FOREIGN;
 $('foreignOn').onchange = () => { if (S.running) { $('foreignOn').checked = FOREIGN; alert('회의 중에는 바꿀 수 없습니다. 종료 후 바꿔 주세요'); return; } FOREIGN = $('foreignOn').checked; ls('liveForeign', FOREIGN ? '1' : '0'); };
 drawPaneSeg(); setSum(); fitHome();
 if (WATCH) startWatch();
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('meeting_sw.js').catch(() => {}); else if (!DISP) loadHome();
+else if (!DISP) loadHome();
+// 휴대폰 앱 설치용
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('meeting_sw.js').catch(() => {});
 </script>
 </body>
 </html>
