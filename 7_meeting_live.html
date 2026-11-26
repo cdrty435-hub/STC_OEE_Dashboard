@@ -139,6 +139,36 @@
     table.mt select { border:0; appearance:none; -webkit-appearance:none; } .ln { break-inside:avoid; }
   }
   /* 시작 화면 */
+  /* ---- 시작 화면 ---- */
+  .home { max-width:1180px; }
+  .hero { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:8px 2px 16px; }
+  .hero h2 { margin:0; font-size:26px; letter-spacing:-.3px; } .hero p { margin:4px 0 0; color:var(--ink2); font-size:15px; }
+  .hstat { font-size:14px; color:var(--ink2); text-align:right; }
+  .modes { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px; }
+  .mode { all:unset; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; gap:6px; padding:24px 22px 20px; border-radius:18px; background:var(--surface); border:1px solid var(--line2); min-height:230px; transition:transform .12s, box-shadow .12s; }
+  .mode:hover, .mode:focus-visible { transform:translateY(-2px); box-shadow:0 10px 24px rgba(15,23,42,.10); }
+  .mode .mi { font-size:34px; line-height:1; margin-bottom:6px; }
+  .mode .mt { font-size:21px; font-weight:800; color:var(--ink); } .mode .ms { font-size:14px; color:var(--ink2); }
+  .mode .md { font-size:14.5px; line-height:1.6; color:var(--ink2); margin-top:6px; flex:1; }
+  .mode .mf { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:12px; }
+  .mode .tag2 { font-size:12.5px; padding:4px 10px; border-radius:999px; background:#eef2f7; color:#334155; font-weight:600; } .mode .tag2.save { background:#dcfce7; color:#166534; }
+  .mode .go { font-weight:800; font-size:15px; }
+  .mode.m1 { background:linear-gradient(135deg,#1f3864,#274b8a); border-color:#1f3864; } .mode.m1 .mt, .mode.m1 .go { color:#fff; } .mode.m1 .ms, .mode.m1 .md { color:#cfdcf2; } .mode.m1 .tag2 { background:rgba(255,255,255,.16); color:#fff; }
+  .mode.m2 { border-color:#86efac; } .mode.m2 .go { color:#15803d; }
+  .mode.m3 { border:2px dashed #94a3b8; } .mode.m3 .go { color:#1d4ed8; }
+  .mode.m3:hover, #dropCard.over { border-color:var(--ko); background:#eff6ff; }
+  .setbar { margin:16px 0 0; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:12px 16px; }
+  .setbar summary { cursor:pointer; font-size:15px; list-style:none; } .setbar summary::-webkit-details-marker { display:none; }
+  .setbar summary::after { content:'▾ 펼치기'; float:right; font-size:13px; color:var(--ink3); } .setbar[open] summary::after { content:'▴ 접기'; }
+  .setrow { display:flex; flex-wrap:wrap; gap:14px 28px; margin-top:12px; }
+  .setrow .opt { display:flex; align-items:center; gap:8px; font-size:14px; } .setrow .ol { font-size:13px; color:var(--ink2); font-weight:600; }
+  .mlist { margin-top:16px; } .mlh { display:flex; align-items:center; gap:10px; } .mlh h2 { flex:1; margin:0; } .mlh input { width:220px; padding:7px 10px; font-size:14px; }
+  .list .row.mrow { display:grid; grid-template-columns:62px 1fr auto; gap:14px; align-items:center; padding:12px 6px; border-bottom:1px solid var(--line); cursor:pointer; } .mrow:hover { background:#f8fafc; }
+  .mdate { text-align:center; border-radius:10px; background:#f1f5f9; padding:6px 0; line-height:1.15; } .mdate b { display:block; font-size:18px; } .mdate span { font-size:11.5px; color:var(--ink2); }
+  .mtx { min-width:0; } .mtx .t1 { font-size:15.5px; font-weight:700; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .mtx .t2 { font-size:13px; color:var(--ink2); margin-top:2px; }
+  .mact { display:flex; gap:6px; align-items:center; } .mact a, .mact button { font-size:12.5px; padding:4px 10px; border-radius:8px; }
+  .mact a { border:1px solid #bfdbfe; background:#eff6ff; color:#1d4ed8; text-decoration:none; }
+  @media (max-width:860px) { .modes { grid-template-columns:1fr; } .mode { min-height:0; } .hero { flex-direction:column; align-items:flex-start; } .mlh input { width:130px; } }
   .tiles { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; margin-bottom:14px; }
   .tile { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px 20px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; }
   .tile .tic { font-size:34px; line-height:1; } .tile h3 { margin:0; font-size:18px; } .tile p { margin:0; color:var(--ink2); font-size:13px; line-height:1.6; }
@@ -208,30 +238,37 @@
 </header>
 
 <!-- 시작 화면 -->
-<div id="vHome" class="wrap">
-  <div class="tiles">
-    <div class="tile">
-      <div class="tic">🎙</div>
-      <h3>실시간 통역 회의</h3>
-      <p>한국어 ⇄ ไทย 자동 감지 · 끝나면 말한 사람을 나눠 회의록 작성</p>
-      <div class="opt"><span class="ol">통역</span><span class="seg" id="modeSeg"><button data-m="fast" title="말하는 도중에도 번역이 흘러나옴 · 가장 빠름">⚡ 동시</button><button data-m="acc" title="말하고 멈추면 문맥·용어집으로 정확하게 번역 · 주고받는 회의에 적합">🗣 순차</button></span></div>
-      <div class="opt"><label title="끄면: 한국어가 아닌 말은 모두 태국어로 봅니다 (태국어가 베트남어 등으로 잘못 인식되는 것 방지)" style="display:flex;align-items:center;gap:4px;font-size:13px"><input type="checkbox" id="foreignOn"> 🌐 영어·외국어 참석자 있음</label></div>
-      <div class="opt"><span class="ol">인도</span><select id="indSel" title="인도 참석자의 언어"></select></div>
-      <div class="opt"><span class="ol">화면</span><span class="seg paneSeg"><button data-p="">기본</button><button data-p="ko">🇰🇷</button><button data-p="th">🇹🇭</button><button data-p="en">🇬🇧</button><button data-p="ind" class="indBtn">🇮🇳</button></span></div>
-      <button id="btnStart" class="pri big">회의 시작 · เริ่มประชุม</button>
-      <button id="btnRecOnly" class="big" style="margin-top:8px" title="실시간 통역 없이 녹음만 → 끝나면 녹음을 듣고 말한 사람을 나눠 한국어·태국어 회의록 작성 · 비용이 훨씬 적음">🎙 녹음만 · 통역 없이 회의록<br><span class="muted">비용 절약 · บันทึกเสียงอย่างเดียว</span></button>
-      <div id="homeMsg" class="msg"></div>
-    </div>
-    <div class="tile drop" id="dropCard">
-      <div class="tic">🎧</div>
-      <h3>녹음 · 동영상으로 회의록</h3>
-      <p>녹음 파일이나 회의 동영상을 끌어다 놓거나 눌러서 선택<br><span class="muted">mp3 · m4a · wav · mp4 (동영상은 소리로 정리)</span></p>
-      <div class="dz">⬇ 파일 놓기</div>
+<div id="vHome" class="wrap home">
+  <div class="hero"><div><h2>회의를 어떻게 기록할까요?</h2><p>จะบันทึกการประชุมแบบไหน · 세 가지 중 하나를 고르세요</p></div><div class="hstat" id="homeStats"></div></div>
+  <div class="modes">
+    <button class="mode m1" id="btnStart">
+      <span class="mi">⚡</span><span class="mt">실시간 통역 회의</span><span class="ms">ประชุมพร้อมล่าม</span>
+      <span class="md">말하는 동안 한국어 ⇄ 태국어 자막 · 휴대폰 자막 · 끝나면 회의록</span>
+      <span class="mf"><span class="tag2">통역 + 회의록</span><span class="go">시작 →</span></span>
+    </button>
+    <button class="mode m2" id="btnRecOnly">
+      <span class="mi">🎙</span><span class="mt">녹음만 하고 회의록</span><span class="ms">บันทึกเสียงอย่างเดียว</span>
+      <span class="md">회의 중엔 녹음만 · 끝나면 말한 사람을 나눠 한국어·태국어 회의록</span>
+      <span class="mf"><span class="tag2 save">💰 비용 절약</span><span class="go">녹음 시작 →</span></span>
+    </button>
+    <div class="mode m3" id="dropCard" role="button" tabindex="0">
+      <span class="mi">📁</span><span class="mt">파일로 회의록</span><span class="ms">สร้างจากไฟล์เสียง / วิดีโอ</span>
+      <span class="md">휴대폰 녹음 · 회의 동영상을 끌어다 놓거나 눌러서 선택<br>동영상은 발표 자료 화면까지 정리</span>
+      <span class="mf"><span class="tag2">mp3 · m4a · wav · mp4</span><span class="go">파일 선택 →</span></span>
       <input type="file" id="audioFile" accept="audio/*,video/*,.m4a,.mp3,.wav,.aac,.ogg,.webm,.mp4" class="hidden">
-      <div id="dropMsg" class="msg"></div>
     </div>
   </div>
-  <div class="card"><h2>📋 지난 회의</h2><div id="mtgList" class="list muted">불러오는 중…</div></div>
+  <div id="homeMsg" class="msg"></div><div id="dropMsg" class="msg"></div>
+  <details class="setbar" id="setBar">
+    <summary><b>⚙ 통역 설정</b> <span id="setSum" class="muted"></span></summary>
+    <div class="setrow">
+      <div class="opt"><span class="ol">통역 방식</span><span class="seg" id="modeSeg"><button data-m="fast" title="말하는 도중에도 번역이 흘러나옴 · 가장 빠름">⚡ 동시</button><button data-m="acc" title="말하고 멈추면 문맥·용어집으로 정확하게 번역 · 주고받는 회의에 적합">🗣 순차</button></span></div>
+      <div class="opt"><span class="ol">참석자</span><label title="끄면: 한국어가 아닌 말은 모두 태국어로 봅니다 (태국어가 베트남어 등으로 잘못 인식되는 것 방지)" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="foreignOn"> 🌐 영어·외국어 참석자 있음</label></div>
+      <div class="opt"><span class="ol">인도 언어</span><select id="indSel" title="인도 참석자의 언어"></select></div>
+      <div class="opt"><span class="ol">화면 나누기</span><span class="seg paneSeg"><button data-p="">기본</button><button data-p="ko">🇰🇷</button><button data-p="th">🇹🇭</button><button data-p="en">🇬🇧</button><button data-p="ind" class="indBtn">🇮🇳</button></span></div>
+    </div>
+  </details>
+  <div class="card mlist"><div class="mlh"><h2>📋 지난 회의</h2><input id="mtgQ" type="search" placeholder="🔍 제목·날짜 검색"></div><div id="mtgList" class="list muted">불러오는 중…</div></div>
 </div>
 
 <!-- 회의 중 -->
@@ -401,10 +438,27 @@ async function loadHome() {
   try {
     const l = await api({ action: 'liveList' }); if (l.fb && !ls('liveFb')) S.fb = l.fb; prefetchToken();
     const L = l.ok ? l.list : [];
-    $('mtgList').innerHTML = !l.ok ? esc(l.error || '불러오기 실패') : L.length ? L.map(m => '<div class="row" data-id="' + esc(m.id) + '"><b>' + esc(m.date) + '</b><span>' + esc(m.start) + (m.end ? '~' + esc(m.end) : '') + '</span><span class="muted">' + esc(m.min || '') + '분 · ' + esc(m.n || 0) + '줄</span>' + (m.title ? '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40%">' + esc(m.title) + '</span>' : '') + '<span class="sp" style="flex:1"></span>' + (m.pdf ? '<a class="mpdf" target="_blank" href="https://drive.google.com/file/d/' + esc(m.pdf) + '/view" style="font-size:12px;text-decoration:none">📄 PDF</a>' : '') + '<span class="tag ' + esc(m.status) + '">' + esc(m.status) + '</span>' +
-      '<button class="mdel" data-id="' + esc(m.id) + '" style="padding:2px 8px;font-size:12px;color:var(--red)">삭제</button></div>').join('') : '아직 회의가 없습니다';
+    HOMEL = L; drawMtgList();
+    const ym = todayYmd().slice(0, 7), mon = L.filter(m => String(m.date).slice(0, 7) === ym);
+    $('homeStats').innerHTML = '이번 달 회의 <b>' + mon.length + '</b>회 · ' + mon.reduce((a, m) => a + (+m.min || 0), 0) + '분' + (mon.filter(m => m.status === '확정').length ? ' · 확정 ' + mon.filter(m => m.status === '확정').length : '');
+    if (!l.ok) $('mtgList').textContent = l.error || '불러오기 실패';
   } catch (e) { $('mtgList').textContent = '불러오기 실패: ' + (e.message || e); }
 }
+var HOMEL = [];
+const WD = ['일', '월', '화', '수', '목', '금', '토'];
+function drawMtgList() {
+  const q = ($('mtgQ').value || '').trim().toLowerCase();
+  const L = HOMEL.filter(m => !q || (m.date + ' ' + (m.title || '')).toLowerCase().includes(q));
+  $('mtgList').classList.toggle('muted', !L.length);
+  $('mtgList').innerHTML = L.length ? L.map(m => { const d = new Date(m.date + 'T00:00:00');
+    return '<div class="row mrow" data-id="' + esc(m.id) + '"><div class="mdate"><b>' + esc(String(m.date).slice(5).replace('-', '/')) + '</b><span>' + (isNaN(d) ? '' : WD[d.getDay()] + '요일') + '</span></div>' +
+      '<div class="mtx"><div class="t1">' + esc(m.title || '제목 없음 (열어서 회의록 정리)') + '</div><div class="t2">' + esc(m.start) + (m.end ? ' ~ ' + esc(m.end) : '') + ' · ' + esc(m.min || 0) + '분 · ' + esc(m.n || 0) + '줄</div></div>' +
+      '<div class="mact"><span class="tag ' + esc(m.status) + '">' + esc(m.status) + '</span>' + (m.pdf ? '<a class="mpdf" target="_blank" href="https://drive.google.com/file/d/' + esc(m.pdf) + '/view">📄 PDF</a>' : '') +
+      '<button class="mdel" data-id="' + esc(m.id) + '" style="color:var(--red)">삭제</button></div></div>'; }).join('') : (q ? '검색 결과가 없습니다' : '아직 회의가 없습니다');
+}
+$('mtgQ').oninput = drawMtgList;
+function setSum() { const pn = PANES.length ? PANES.map(p => (LANGS[p] || [''])[0]).join(' ') : '기본'; $('setSum').textContent = '· ' + (MODE === 'acc' ? '🗣 순차' : '⚡ 동시') + ' · ' + (FOREIGN ? '외국어 참석자 있음' : '태국어 기준') + ' · 화면 ' + pn; }
+$('setBar').addEventListener('click', () => setTimeout(setSum, 0)); $('setBar').addEventListener('change', () => setTimeout(setSum, 0));
 $('mtgList').onclick = async e => {
   const d = e.target.closest('.mdel');
   if (d) {
@@ -416,7 +470,7 @@ $('mtgList').onclick = async e => {
     return;
   }
   if (e.target.closest('.mpdf')) return;
-  const r = e.target.closest('.row'); if (!r) return;
+  const r = e.target.closest('.mrow'); if (!r) return;
   try { const g = await api({ action: 'liveGet', id: r.dataset.id }); if (!g.ok) throw new Error(g.error);
     const m = g.meeting; Object.assign(S, { doc: m.doc || '', pdf: m.pdf || '', id: m.id, date: m.date, start: m.start, end: m.end, lines: m.lines, t0: 0, audioUrl: m.audio ? 'https://drive.google.com/file/d/' + m.audio + '/view' : '' });
     S.frames = (m.minutes && m.minutes.frames) || []; MIN = m.minutes; showMinutes(); if (!MIN) remake();
@@ -592,6 +646,7 @@ async function fromFile(file) {
   } catch (e) { msg('실패: ' + esc(e.message || e) + (/decode/i.test(String(e)) ? ' (이 파일 형식은 브라우저에서 읽을 수 없습니다. mp3·m4a·wav 로 바꿔서 넣어 주세요)' : ''), true); }
 }
 $('dropCard').onclick = e => { if (e.target.id !== 'audioFile') $('audioFile').click(); };
+$('dropCard').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('audioFile').click(); } };
 $('audioFile').onchange = () => { const f = $('audioFile').files[0]; $('audioFile').value = ''; fromFile(f); };
 ['dragenter', 'dragover'].forEach(t => document.addEventListener(t, e => { if ($('vHome').classList.contains('hidden')) return; e.preventDefault(); $('dropCard').classList.add('over'); }));
 ['dragleave', 'drop'].forEach(t => document.addEventListener(t, e => { $('dropCard').classList.remove('over'); }));
@@ -1319,7 +1374,7 @@ $('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
 })();
 $('foreignOn').checked = FOREIGN;
 $('foreignOn').onchange = () => { if (S.running) { $('foreignOn').checked = FOREIGN; alert('회의 중에는 바꿀 수 없습니다. 종료 후 바꿔 주세요'); return; } FOREIGN = $('foreignOn').checked; ls('liveForeign', FOREIGN ? '1' : '0'); };
-drawPaneSeg();
+drawPaneSeg(); setSum();
 if (WATCH) startWatch();
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('meeting_sw.js').catch(() => {}); else if (!DISP) loadHome();
 </script>
