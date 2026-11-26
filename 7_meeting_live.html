@@ -214,6 +214,7 @@
       <h3>실시간 통역 회의</h3>
       <p>한국어 ⇄ ไทย 자동 감지 · 끝나면 말한 사람을 나눠 회의록 작성</p>
       <div class="opt"><span class="ol">통역</span><span class="seg" id="modeSeg"><button data-m="fast" title="말하는 도중에도 번역이 흘러나옴 · 가장 빠름">⚡ 동시</button><button data-m="acc" title="말하고 멈추면 문맥·용어집으로 정확하게 번역 · 주고받는 회의에 적합">🗣 순차</button></span></div>
+      <div class="opt"><label title="끄면: 한국어가 아닌 말은 모두 태국어로 봅니다 (태국어가 베트남어 등으로 잘못 인식되는 것 방지)" style="display:flex;align-items:center;gap:4px;font-size:13px"><input type="checkbox" id="foreignOn"> 🌐 영어·외국어 참석자 있음</label></div>
       <div class="opt"><span class="ol">인도</span><select id="indSel" title="인도 참석자의 언어"></select></div>
       <div class="opt"><span class="ol">화면</span><span class="seg paneSeg"><button data-p="">기본</button><button data-p="ko">🇰🇷</button><button data-p="th">🇹🇭</button><button data-p="en">🇬🇧</button><button data-p="ind" class="indBtn">🇮🇳</button></span></div>
       <button id="btnStart" class="pri big">회의 시작 · เริ่มประชุม</button>
@@ -718,8 +719,10 @@ function setInBuf(x) { while (x.inq.length > 80) x.inq.shift(); x.inBuf = x.inq.
 // 태국어를 음성 인식이 베트남어로 잘못 받아 적는 경우가 있음 (성조 언어끼리 헷갈림)
 // → 베트남어로 적힌 줄은 '태국어 쪽 결과'를 원문으로 보고, 한국어 결과를 번역으로 씀
 const VI_RE = /[ăđơưạảấầẩẫậắằẳẵặẹẻẽếềểễệịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]/i;
+let FOREIGN = ls('liveForeign') === '1';
 function viFix(l) {
-  if (!l || !VI_RE.test(l.orig || l.src || '')) return;
+  // 외국어 참석자 없음(기본): 한국어가 아닌 말은 모두 태국어로 봄 · 있음: 베트남어 글자일 때만
+  if (!l || !(FOREIGN ? VI_RE.test(l.orig || l.src || '') : l.vi || langOf(l.orig || l.src || '') === 'en')) return;
   if (!l.vi) { if (!l.trTh || !clean(l.tr)) return; l.vi = true; l.orig = l.src; l.src = l.tr; l.lang = 'th'; l.trTh = true; }
   l.tr = (l.tx && l.tx.ko) || '';
 }
@@ -864,8 +867,9 @@ function curPending() {
   if (SES.some(x => x.kind === 'fast')) {
     const src = SES.map(x => clean(x.inBuf)).sort((a, b) => b.length - a.length)[0] || '';
     const out = {}; SES.forEach(x => { if (x.target && clean(x.outBuf)) out[x.target] = clean(x.outBuf); });
-    const lg = langOf(src) || 'ko', tr = lg === 'th' ? (out.ko || '') : (out.th || out.ko || '');
-    if (src || tr) P = { t: nowHM(), src, tr, out };
+    let lg = langOf(src) || 'ko', tr = lg === 'th' ? (out.ko || '') : (out.th || out.ko || ''), s2 = src;
+    if (lg === 'en' && (!FOREIGN || VI_RE.test(src)) && out.th) { s2 = out.th; tr = out.ko || ''; lg = 'th'; }
+    if (s2 || tr) P = { t: nowHM(), src: s2, tr, out };
   } else SES.forEach(x => x.segs.forEach(g => { if (clean(g.src) || clean(g.tr)) P = { t: g.t, src: g.src, tr: g.tr }; }));
   if (P) P.lang = langOf(P.src) || (langOf(P.tr) === 'th' ? 'ko' : 'th');
   return P;
@@ -1270,6 +1274,8 @@ $('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
   sel.innerHTML = Object.keys(IND).map(c => '<option value="' + c + '"' + (c === INDC ? ' selected' : '') + '>' + IND[c] + '</option>').join('');
   sel.onchange = () => { const old = INDC; INDC = sel.value; ls('liveInd', INDC); PANES = PANES.map(x => x === old ? INDC : x); ls('livePanes', JSON.stringify(PANES)); drawPaneSeg(); renderPanes(); };
 })();
+$('foreignOn').checked = FOREIGN;
+$('foreignOn').onchange = () => { FOREIGN = $('foreignOn').checked; ls('liveForeign', FOREIGN ? '1' : '0'); };
 drawPaneSeg();
 if (WATCH) startWatch();
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('meeting_sw.js').catch(() => {}); else if (!DISP) loadHome();
