@@ -902,7 +902,7 @@ function drawStage(Pin, lastIn) {
 
 function lineHtml(l, i, pending) {
   return '<div class="ln ' + (l.lang === 'th' ? 'th' : '') + (pending ? ' pending' : '') + (l.edited ? ' edited' : '') + '"' + (pending ? '' : ' data-i="' + i + '"') + '>' +
-    '<div class="meta"><span>' + (l.lang === 'th' ? '🇹🇭' : l.lang === 'en' ? 'EN' : '🇰🇷') + ' ' + esc(l.t) + '</span>' + (l.who ? '<span class="who">' + esc(l.who) + '</span>' : '') + (l.refining ? '<span style="color:var(--ink3)">· 문맥 보정 중…</span>' : l.refined ? '<span style="color:var(--th)">✓ 문맥 보정</span>' : l.checked ? '<span style="color:var(--ink3)">✓ 확인</span>' : '') + '</div>' +
+    '<div class="meta"><span>' + (l.lang === 'th' ? '🇹🇭' : l.lang === 'en' ? (/[ăđơưạảấầẩẫậắằẳẵặẹẻẽếềểễệịọỏốồổỗộớờởỡợụủứừửữự]/i.test(l.src || '') ? 'VI' : 'EN') : '🇰🇷') + ' ' + esc(l.t) + '</span>' + (l.who ? '<span class="who">' + esc(l.who) + '</span>' : '') + (l.refining ? '<span style="color:var(--ink3)">· 문맥 보정 중…</span>' : l.refined ? '<span style="color:var(--th)">✓ 문맥 보정</span>' : l.checked ? '<span style="color:var(--ink3)">✓ 확인</span>' : '') + '</div>' +
     '<div class="src">' + esc(clean(l.src)) + '</div><div class="tr">' + (esc(clean(l.tr)) || '<span class="muted">…</span>') + '</div>' +
     (l.lang === 'en' && l.tx && l.tx.ko ? '<div class="tr">' + esc(clean(l.tx.ko)) + '</div>' : '') + '</div>';
 }
