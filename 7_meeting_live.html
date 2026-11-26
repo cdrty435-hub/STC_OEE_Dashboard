@@ -470,9 +470,15 @@ function onPcm(buf) {
   $('lvl').querySelectorAll('b').forEach((b, i) => b.style.height = (i < lv ? 6 + i * 3 : 3) + 'px');
   recPcm(a);                                        // 회의 전체 녹음 (화자 구분용)
   if (Date.now() < S.playUntil) return;             // 번역을 읽어주는 동안은 마이크를 보내지 않음 (되울림 방지)
-  const msg = JSON.stringify({ realtimeInput: { audio: { data: b64(buf), mimeType: 'audio/pcm;rate=16000' } } });
-  SES.forEach(x => { if (x.ws && x.ws.readyState === 1 && x.up) x.ws.send(msg); });
+  // 💰 조용할 때는 보내지 않음 (Gemini 는 보낸 소리 길이만큼 과금) — 말소리 1.5초 뒤까지 + 말 시작 0.3초 전부터 보냄
+  const now = Date.now();
+  GATE.nf = m < GATE.nf * 3 || !GATE.nf ? GATE.nf * 0.98 + m * 0.02 : GATE.nf;   // 주변 소음 수준
+  if (m > Math.max(700, GATE.nf * 3)) GATE.loud = now;
+  const send = b => { const msg = JSON.stringify({ realtimeInput: { audio: { data: b64(b), mimeType: 'audio/pcm;rate=16000' } } }); SES.forEach(x => { if (x.ws && x.ws.readyState === 1 && x.up) x.ws.send(msg); }); };
+  if (now - GATE.loud < 1500) { GATE.pre.forEach(send); GATE.pre = []; send(buf); GATE.sent += a.length; }
+  else { GATE.pre.push(buf); if (GATE.pre.length > 8) GATE.pre.shift(); GATE.skip += a.length; }
 }
+const GATE = { nf: 0, loud: 0, pre: [], sent: 0, skip: 0 };
 
 // ---------- 녹음 (MP3 16kHz · 32kbps ≈ 1시간 14MB) ----------
 const REC = { enc: null, parts: [], mr: null, chunks: [], mime: '' };
@@ -983,7 +989,7 @@ function drawSide() {
     if (!$('memo')) { B.innerHTML = '<div class="muted" style="margin-bottom:6px">진행자 메모 · 회의록 정리 때 함께 반영됩니다</div><textarea id="memo" placeholder="결정 사항, 지시, 기한 등을 자유롭게 적으세요"></textarea>'; $('memo').value = MEMO; $('memo').oninput = () => { MEMO = $('memo').value; }; }
     return;
   }
-  B.innerHTML = '<div class="muted" style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><span style="flex:1">' + (DIG.busy ? '🤖 정리 중…' : DIG.at ? DIG.at + ' 기준 · 1분마다 자동 갱신' : '대화가 쌓이면 1분마다 대화 내용을 자동으로 요약합니다') + '</span><button id="digNow" style="padding:2px 8px;font-size:12px">↻ 지금</button></div>' +
+  B.innerHTML = '<div class="muted" style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><span style="flex:1">' + (DIG.busy ? '🤖 정리 중…' : DIG.at ? DIG.at + ' 기준 · 3분마다 자동 갱신' : '대화가 쌓이면 3분마다 대화 내용을 자동으로 요약합니다') + '</span><button id="digNow" style="padding:2px 8px;font-size:12px">↻ 지금</button></div>' +
     (DIG.summary ? '<div class="notice" style="margin:6px 0">' + esc(DIG.summary) + (DIG.summaryTh ? '<div style="margin-top:4px;color:var(--ink3)">' + esc(DIG.summaryTh) + '</div>' : '') + '</div>' : '') +
     DIG.points.map(x => '<div class="it"><span class="muted" style="font-size:11px">' + esc(x.t || '') + '</span> ' + esc(x.ko || '') + (x.th ? '<div class="th">' + esc(x.th) + '</div>' : '') + '</div>').join('');
 }
@@ -995,11 +1001,11 @@ async function digest(force) {
   if (DIG.busy || !S.lines.length || (!force && DIG.n === S.lines.length)) return;
   DIG.busy = true; if (SIDE === 'sum') drawSide();
   const n = S.lines.length;
-  try { const r = await api({ action: 'liveDigest', lines: S.lines.slice(-120).map(l => ({ t: l.t, src: l.src, tr: l.tr })) });
+  try { const r = await api({ action: 'liveDigest', lines: S.lines.slice(-60).map(l => ({ t: l.t, src: l.src, tr: l.tr })) });
     if (r.ok) { DIG.points = r.points || []; DIG.summary = r.summary_ko || ''; DIG.summaryTh = r.summary_th || ''; DIG.n = n; DIG.at = nowHM().slice(0, 5); } } catch (e) {}
   DIG.busy = false; if (SIDE === 'sum') drawSide();
 }
-setInterval(() => { if (S.running && S.lines.length >= 2) digest(); }, 60000);
+setInterval(() => { if (S.running && S.lines.length - (DIG.n || 0) >= 6) digest(); }, 180000);   // 💰 3분마다, 새 대화 6줄 이상일 때만
 
 // ---------- 휴대폰 자막: Firebase Realtime Database 로 중계 ----------
 S.fb = ls('liveFb') || '';
