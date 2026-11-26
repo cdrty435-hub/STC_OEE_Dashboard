@@ -176,6 +176,7 @@
   .sl { display:grid; grid-template-columns:220px 1fr; gap:12px; align-items:start; padding:8px; border:1px solid #e2e8f0; border-radius:10px; }
   .sl img { width:100%; border-radius:6px; background:#f1f5f9; min-height:60px; } .sl ul { margin:4px 0 0; padding-left:18px; font-size:14px; }
   @media (max-width:700px) { .sl { grid-template-columns:1fr; } }
+  body.reconly .lv { display:none !important; }
   .docl { display:inline-flex; gap:6px; } .docl a { padding:3px 9px; border:1px solid #cbd5e1; border-radius:8px; font-size:12px; text-decoration:none; color:#1e3a8a; background:#eff6ff; }
   /* 휴대폰 자막 */
   body.watch header.top, body.watch #vHome, body.watch #vLive, body.watch #vMin { display:none !important; }
@@ -218,6 +219,7 @@
       <div class="opt"><span class="ol">인도</span><select id="indSel" title="인도 참석자의 언어"></select></div>
       <div class="opt"><span class="ol">화면</span><span class="seg paneSeg"><button data-p="">기본</button><button data-p="ko">🇰🇷</button><button data-p="th">🇹🇭</button><button data-p="en">🇬🇧</button><button data-p="ind" class="indBtn">🇮🇳</button></span></div>
       <button id="btnStart" class="pri big">회의 시작 · เริ่มประชุม</button>
+      <button id="btnRecOnly" class="big" style="margin-top:8px" title="실시간 통역 없이 녹음만 → 끝나면 녹음을 듣고 말한 사람을 나눠 한국어·태국어 회의록 작성 · 비용이 훨씬 적음">🎙 녹음만 · 통역 없이 회의록<br><span class="muted">비용 절약 · บันทึกเสียงอย่างเดียว</span></button>
       <div id="homeMsg" class="msg"></div>
     </div>
     <div class="tile drop" id="dropCard">
@@ -422,10 +424,12 @@ $('mtgList').onclick = async e => {
 };
 
 // ---------- 회의 시작 ----------
-$('btnStart').onclick = async () => {
+$('btnStart').onclick = () => startMeeting(false);
+$('btnRecOnly').onclick = () => startMeeting(true);
+async function startMeeting(recOnly) {
   $('homeMsg').textContent = ''; $('homeMsg').classList.remove('err');
   try {
-    const micP = startMic(); prefetchToken();
+    const micP = startMic(); if (!recOnly) prefetchToken();
     await micP;
     const d = new Date(); S.date = todayYmd(); S.start = pad(d.getHours()) + ':' + pad(d.getMinutes()); S.end = '';
     S.id = 'M' + S.date.replace(/-/g, '') + '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
@@ -437,11 +441,19 @@ $('btnStart').onclick = async () => {
     S.clockTimer = setInterval(() => { const s = Math.floor((Date.now() - S.t0) / 1000); $('clock').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60); }, 1000);
     S.saveTimer = setInterval(() => saveLines(), 30000);
     startRec(); keepAwake();
+    S.recOnly = !!recOnly; document.body.classList.toggle('reconly', S.recOnly);
+    if (recOnly) {   // 녹음만: 통역 세션을 열지 않음 (Gemini 비용 없음) → 종료 후 녹음으로 회의록
+      SES.length = 0; setPill('rec', '🎙 녹음 중 · 통역 없음');
+      $('stWho').textContent = '🎙 녹음 중입니다 · กำลังบันทึกเสียง'; $('stSrc').textContent = '실시간 통역은 하지 않습니다. 끝나면 「■ 종료」를 누르세요 → 녹음을 듣고 말한 사람을 나눠 한국어·태국어 회의록을 만듭니다.'; $('stTr').textContent = '';
+      $('lines').innerHTML = '<div class="idle">🎙 녹음 중… 메모는 오른쪽 「📝 메모」에 적어 두세요 · กำลังบันทึกเสียง</div>';
+      SIDE = 'memo'; $('side').querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.t === 'memo')); drawSide();
+      S.room = ''; return;
+    }
     renderPanes(); drawStage();
     if (fbBase()) { S.room = newRoom(); watchViewers(); pubRoom(true); } else S.room = '';
     await startSessions();
   } catch (e) { stopAll(); show('vHome'); $('homeMsg').textContent = '시작 실패: ' + (e.message || e); $('homeMsg').classList.add('err'); }
-};
+}
 
 // ---------- 마이크 (16kHz PCM) ----------
 const MIC = { ctx: null, stream: null, node: null, src: null };
@@ -1110,6 +1122,7 @@ let WAKE = null;
 async function keepAwake() { try { WAKE = await navigator.wakeLock.request('screen'); } catch (e) {} }
 document.addEventListener('visibilitychange', () => { if (S.running && document.visibilityState === 'visible') keepAwake(); });
 function stopAll() {
+  document.body.classList.remove('reconly');
   S.running = false; try { pubRoom(true); VES && VES.close(); } catch (e) {} try { WAKE && WAKE.release(); } catch (e) {} WAKE = null;
   SES.forEach(x => { clearTimeout(x.tm); const w = x.ws; x.ws = null; try { w && w.close(); } catch (e) {} });
   stopMic(); clearInterval(S.saveTimer); clearInterval(S.clockTimer);
