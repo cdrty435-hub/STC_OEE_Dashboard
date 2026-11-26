@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>STC 통역 회의 · ประชุมแปลสด</title>
+<link rel="manifest" href="meeting_manifest.json">
+<meta name="theme-color" content="#1f3864">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="통역회의">
+<link rel="apple-touch-icon" href="meeting_icon_192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
@@ -166,6 +172,10 @@
   .meta-f label { display:flex; flex-direction:column; font-size:12px; color:#475569; gap:3px; }
   .meta-f input { padding:6px 8px; font-size:14px; }
   @media (max-width:700px) { .meta-f { grid-template-columns:1fr 1fr; } }
+  .slides { display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+  .sl { display:grid; grid-template-columns:220px 1fr; gap:12px; align-items:start; padding:8px; border:1px solid #e2e8f0; border-radius:10px; }
+  .sl img { width:100%; border-radius:6px; background:#f1f5f9; min-height:60px; } .sl ul { margin:4px 0 0; padding-left:18px; font-size:14px; }
+  @media (max-width:700px) { .sl { grid-template-columns:1fr; } }
   .docl { display:inline-flex; gap:6px; } .docl a { padding:3px 9px; border:1px solid #cbd5e1; border-radius:8px; font-size:12px; text-decoration:none; color:#1e3a8a; background:#eff6ff; }
   /* 휴대폰 자막 */
   body.watch header.top, body.watch #vHome, body.watch #vLive, body.watch #vMin { display:none !important; }
@@ -406,7 +416,7 @@ $('mtgList').onclick = async e => {
   const r = e.target.closest('.row'); if (!r) return;
   try { const g = await api({ action: 'liveGet', id: r.dataset.id }); if (!g.ok) throw new Error(g.error);
     const m = g.meeting; Object.assign(S, { doc: m.doc || '', pdf: m.pdf || '', id: m.id, date: m.date, start: m.start, end: m.end, lines: m.lines, t0: 0, audioUrl: m.audio ? 'https://drive.google.com/file/d/' + m.audio + '/view' : '' });
-    MIN = m.minutes; showMinutes(); if (!MIN) remake();
+    S.frames = (m.minutes && m.minutes.frames) || []; MIN = m.minutes; showMinutes(); if (!MIN) remake();
   } catch (er) { alert('열기 실패: ' + (er.message || er)); }
 };
 
@@ -420,7 +430,7 @@ $('btnStart').onclick = async () => {
     S.id = 'M' + S.date.replace(/-/g, '') + '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
     LAST = null; MEMO = ''; DIG = { points: [], summary: '', at: '', n: -1, busy: false }; SIDE = 'sum'; $('side').querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.t === 'sum')); $('sideBody').innerHTML = ''; drawSide();
     $('paneWrap').innerHTML = ''; 
-    Object.assign(S, { lines: [], running: true, t0: Date.now(), lastSaved: -1, audioUrl: '', doc: '', pdf: '' });
+    Object.assign(S, { lines: [], running: true, t0: Date.now(), lastSaved: -1, audioUrl: '', doc: '', pdf: '', frames: [] });
     $('lines').innerHTML = '<div class="idle" id="idleMsg">🎙 말씀하세요… · พูดได้เลย</div>'; show('vLive');
     $('btnStop').classList.remove('hidden'); $('lvl').classList.remove('hidden');
     S.clockTimer = setInterval(() => { const s = Math.floor((Date.now() - S.t0) / 1000); $('clock').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60); }, 1000);
@@ -497,6 +507,39 @@ async function fileToMp3(file, prog) {
   const o = enc.flush(); if (o.length) parts.push(new Uint8Array(o));
   return { blob: new Blob(parts, { type: 'audio/mpeg' }), sec: buf.duration };
 }
+// ---------- 동영상 → 발표 자료 화면 캡처 (화면이 바뀔 때만, 최대 40장) ----------
+const isVideo = f => /^video\//.test(f.type) || /\.(mp4|mov|m4v|webm|mkv|avi)$/i.test(f.name);
+async function videoFrames(file, prog) {
+  const v = document.createElement('video'); v.muted = true; v.preload = 'auto'; v.playsInline = true;
+  const url = URL.createObjectURL(file); v.src = url;
+  try {
+    await new Promise((res, rej) => { v.onloadeddata = res; v.onerror = () => rej(new Error('동영상 화면을 열 수 없습니다')); setTimeout(() => rej(new Error('동영상 열기 시간 초과')), 20000); });
+    const dur = v.duration || 0; if (!dur || !v.videoWidth) return [];
+    const W = Math.min(1280, v.videoWidth), H = Math.round(v.videoHeight * W / v.videoWidth);
+    const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+    const sc = document.createElement('canvas'); sc.width = 48; sc.height = 27; const sg = sc.getContext('2d', { willReadFrequently: true });
+    const seek = t => new Promise(res => { const done = () => { v.removeEventListener('seeked', done); res(); }; v.addEventListener('seeked', done); v.currentTime = t; setTimeout(done, 4000); });
+    const gray = () => { sg.drawImage(v, 0, 0, 48, 27); const d = sg.getImageData(0, 0, 48, 27).data, o = new Float32Array(48 * 27 * 3); for (let i = 0, k = 0; i < d.length; i += 4) { o[k++] = d[i]; o[k++] = d[i + 1]; o[k++] = d[i + 2]; } return o; };   // 색까지 비교
+    const diff = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]); return s / a.length; };
+    const step = dur > 3600 ? 10 : dur > 1200 ? 5 : 3, cand = [];
+    let last = null;
+    for (let t = Math.min(2, dur / 2); t < dur; t += step) {
+      await seek(t); const gr = gray();
+      const d = last ? diff(gr, last) : 999;
+      if (d > 14) {   // 화면이 크게 바뀜 = 새 자료 → 잠깐 뒤(자료가 다 뜬 뒤) 화면을 저장
+        await seek(Math.min(dur - 0.1, t + 1.5));
+        g.drawImage(v, 0, 0, W, H);
+        cand.push({ t: fmtT(t), d, data: c.toDataURL('image/jpeg', 0.72).split(',')[1] });
+        last = gray();
+      }
+      prog(Math.round(t / dur * 100));
+    }
+    // 너무 많으면 변화가 큰 화면만 40장 (시간 순서 유지)
+    if (cand.length > 40) { const keep = new Set(cand.slice().sort((a, b) => b.d - a.d).slice(0, 40)); return cand.filter(x => keep.has(x)); }
+    return cand;
+  } finally { URL.revokeObjectURL(url); }
+}
+function fmtT(sec) { sec = Math.floor(sec); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s2 = sec % 60; return (h ? h + ':' + pad(m) : pad(m)) + ':' + pad(s2); }
 async function fromFile(file) {
   if (!file) return;
   if (S.running) { alert('회의 중에는 파일을 넣을 수 없습니다'); return; }
@@ -512,7 +555,18 @@ async function fromFile(file) {
     msg('☁ 올리는 중… (' + (r.blob.size / 1048576).toFixed(1) + 'MB, ' + Math.round(r.sec / 60) + '분)');
     const up = await api({ action: 'liveAudio', id: S.id, mime: 'audio/mpeg', data: await blobB64(r.blob) });
     if (!up.ok) throw new Error(up.error);
-    S.audioUrl = up.url; msg('');
+    S.audioUrl = up.url; S.frames = [];
+    if (isVideo(file)) {   // 발표 자료 화면 캡처 → Drive
+      msg('🖼 동영상에서 발표 자료 화면 찾는 중… <div class="bar"><i id="pbar2"></i></div>');
+      let fr = [];
+      try { fr = await videoFrames(file, p => { const b = $('pbar2'); if (b) b.style.width = p + '%'; }); } catch (e) { fr = []; }
+      for (let i = 0; i < fr.length; i += 8) {
+        msg('☁ 자료 화면 올리는 중… ' + Math.min(fr.length, i + 8) + ' / ' + fr.length + '장');
+        const rr = await api({ action: 'liveFrames', id: S.id, frames: fr.slice(i, i + 8).map(x => ({ t: x.t, data: x.data })) });
+        if (rr.ok) S.frames = S.frames.concat(rr.frames || []);
+      }
+    }
+    msg('');
     MIN = null; DIRTY = false; showMinutes(); drawAudioLink();
     $('minTitle').insertAdjacentHTML('beforeend', ' <span class="muted" style="font-size:12px;font-weight:400">· ' + esc(file.name) + '</span>');
     await remake(up.fileId);
@@ -1071,9 +1125,9 @@ function showMinutes() {
 }
 function drawAudioLink() { const a = $('audioLink'); a.classList.toggle('hidden', !S.audioUrl); if (S.audioUrl) a.href = S.audioUrl; }
 async function remake(audioId, quick) {
-  $('minBody').innerHTML = '<div class="muted">🤖 ' + (quick ? '대화 ' + S.lines.length + '줄로 회의록 정리 중… (10~20초)' : (audioId || S.audioUrl ? '녹음을 듣고 말한 사람을 나눠서 회의록 정리 중… (30초~3분)' : '대화 ' + S.lines.length + '줄로 회의록 정리 중…')) + '</div>';
+  $('minBody').innerHTML = '<div class="muted">🤖 ' + (quick ? '대화 ' + S.lines.length + '줄로 회의록 정리 중… (10~20초)' : (audioId || S.audioUrl ? (S.frames && S.frames.length ? '녹음과 발표 자료 ' + S.frames.length + '장을 보고 회의록 정리 중… (1~4분)' : '녹음을 듣고 말한 사람을 나눠서 회의록 정리 중… (30초~3분)') : '대화 ' + S.lines.length + '줄로 회의록 정리 중…')) + '</div>';
   try {
-    const r = await api(Object.assign({ action: 'liveMinutes', audioId: audioId || '', quick: !!quick }, payload()));
+    const r = await api(Object.assign({ action: 'liveMinutes', audioId: audioId || '', quick: !!quick, frames: quick ? [] : (S.frames || []) }, payload()));
     if (!r.ok) throw new Error(r.error);
     MIN = r.minutes;
     if (r.lines && r.lines.length) { S.lines = r.lines; S.lastSaved = S.lines.length; }
@@ -1106,6 +1160,8 @@ function drawMinutes() {
     '<div class="notice" style="margin-bottom:10px">' + esc(MIN['summary_' + L] || MIN.summary_ko || '') + '</div>' +
     (tp.length ? '<div style="margin-bottom:12px"><b>🗂 주제별 정리</b>' + tp.map(t => '<div style="margin:6px 0 0 4px"><b style="font-weight:600">■ ' + esc(t['topic_' + L] || t.topic_ko || '') + '</b><ul style="margin:2px 0 0;padding-left:20px">' +
       (t['points_' + L] || t.points_ko || []).map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></div>').join('') + '</div>' : '') +
+    ((MIN.slides || []).length ? '<div style="margin-bottom:12px"><b>🖼 발표 자료 정리</b><div class="slides">' + MIN.slides.map(x => '<div class="sl">' + (x.fid ? '<a target="_blank" href="https://drive.google.com/file/d/' + esc(x.fid) + '/view"><img loading="lazy" src="https://drive.google.com/thumbnail?id=' + esc(x.fid) + '&sz=w400" alt=""></a>' : '') +
+      '<div><b>' + esc(x['title_' + L] || x.title_ko || '') + '</b> <span class="muted">' + esc(x.t || '') + '</span><ul>' + (x['points_' + L] || x.points_ko || []).map(p => '<li>' + esc(p) + '</li>').join('') + '</ul></div></div>').join('') + '</div></div>' : '') +
     '<b>📌 할 일 · 조치</b>' +
     '<table class="mt"><colgroup><col style="width:70px"><col style="width:70px"><col><col><col style="width:80px"><col style="width:70px"><col style="width:96px"><col style="width:28px"></colgroup>' +
     '<tr class="hd"><th>분류</th><th>설비</th><th>내용</th><th>조치 · 다음 할 일</th><th>담당</th><th>기한</th><th>상태</th><th></th></tr>' +
@@ -1207,7 +1263,8 @@ $('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
   sel.onchange = () => { const old = INDC; INDC = sel.value; ls('liveInd', INDC); PANES = PANES.map(x => x === old ? INDC : x); ls('livePanes', JSON.stringify(PANES)); drawPaneSeg(); renderPanes(); };
 })();
 drawPaneSeg();
-if (WATCH) startWatch(); else if (!DISP) loadHome();
+if (WATCH) startWatch();
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('meeting_sw.js').catch(() => {}); else if (!DISP) loadHome();
 </script>
 </body>
 </html>
