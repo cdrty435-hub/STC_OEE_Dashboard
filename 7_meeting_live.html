@@ -139,36 +139,37 @@
     table.mt select { border:0; appearance:none; -webkit-appearance:none; } .ln { break-inside:avoid; }
   }
   /* 시작 화면 */
-  /* ---- 시작 화면 ---- */
-  .home { max-width:1180px; }
-  .hero { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:8px 2px 16px; }
-  .hero h2 { margin:0; font-size:26px; letter-spacing:-.3px; } .hero p { margin:4px 0 0; color:var(--ink2); font-size:15px; }
-  .hstat { font-size:14px; color:var(--ink2); text-align:right; }
-  .modes { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px; }
-  .mode { all:unset; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; gap:6px; padding:24px 22px 20px; border-radius:18px; background:var(--surface); border:1px solid var(--line2); min-height:230px; transition:transform .12s, box-shadow .12s; }
-  .mode:hover, .mode:focus-visible { transform:translateY(-2px); box-shadow:0 10px 24px rgba(15,23,42,.10); }
-  .mode .mi { font-size:34px; line-height:1; margin-bottom:6px; }
-  .mode .mt { font-size:21px; font-weight:800; color:var(--ink); } .mode .ms { font-size:14px; color:var(--ink2); }
-  .mode .md { font-size:14.5px; line-height:1.6; color:var(--ink2); margin-top:6px; flex:1; }
-  .mode .mf { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:12px; }
-  .mode .tag2 { font-size:12.5px; padding:4px 10px; border-radius:999px; background:#eef2f7; color:#334155; font-weight:600; } .mode .tag2.save { background:#dcfce7; color:#166534; }
-  .mode .go { font-weight:800; font-size:15px; }
-  .mode.m1 { background:linear-gradient(135deg,#1f3864,#274b8a); border-color:#1f3864; } .mode.m1 .mt, .mode.m1 .go { color:#fff; } .mode.m1 .ms, .mode.m1 .md { color:#cfdcf2; } .mode.m1 .tag2 { background:rgba(255,255,255,.16); color:#fff; }
-  .mode.m2 { border-color:#86efac; } .mode.m2 .go { color:#15803d; }
-  .mode.m3 { border:2px dashed #94a3b8; } .mode.m3 .go { color:#1d4ed8; }
-  .mode.m3:hover, #dropCard.over { border-color:var(--ko); background:#eff6ff; }
-  .setbar { margin:16px 0 0; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:12px 16px; }
-  .setbar summary { cursor:pointer; font-size:15px; list-style:none; } .setbar summary::-webkit-details-marker { display:none; }
-  .setbar summary::after { content:'▾ 펼치기'; float:right; font-size:13px; color:var(--ink3); } .setbar[open] summary::after { content:'▴ 접기'; }
-  .setrow { display:flex; flex-wrap:wrap; gap:14px 28px; margin-top:12px; }
-  .setrow .opt { display:flex; align-items:center; gap:8px; font-size:14px; } .setrow .ol { font-size:13px; color:var(--ink2); font-weight:600; }
-  .mlist { margin-top:16px; } .mlh { display:flex; align-items:center; gap:10px; } .mlh h2 { flex:1; margin:0; } .mlh input { width:220px; padding:7px 10px; font-size:14px; }
+  /* ---- 시작 화면 (왼쪽 시작 3개 · 가운데 통역 설정 + 회의록/회의방) ---- */
+  .home2 { max-width:1320px; display:grid; grid-template-columns:330px minmax(0,1fr); gap:18px; align-items:start; }
+  .hside { position:sticky; top:calc(var(--hdr, 70px) + 12px); display:flex; flex-direction:column; gap:12px; }
+  .hs-t { font-size:15px; font-weight:800; color:var(--ink); padding:2px 4px; }
+  .home2 .mode { all:unset; box-sizing:border-box; cursor:pointer; position:relative; display:flex; gap:14px; align-items:flex-start; padding:18px 16px; border-radius:16px; background:var(--surface); border:1px solid var(--line2); transition:transform .12s, box-shadow .12s; }
+  .home2 .mode:hover, .home2 .mode:focus-visible { transform:translateY(-2px); box-shadow:0 10px 22px rgba(15,23,42,.10); }
+  .home2 .mode .no { position:absolute; top:10px; right:12px; font-size:12px; font-weight:800; color:var(--ink3); }
+  .home2 .mode .mi { font-size:30px; line-height:1; }
+  .home2 .mode .mtx2 { display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .home2 .mode .mt { font-size:18px; font-weight:800; color:var(--ink); } .home2 .mode .ms { font-size:13px; color:var(--ink2); } .home2 .mode .md { font-size:13.5px; color:var(--ink2); line-height:1.5; margin-top:4px; }
+  .home2 .mode .save { color:#15803d; white-space:nowrap; }
+  .home2 .mode.m1 { background:linear-gradient(135deg,#1f3864,#274b8a); border-color:#1f3864; } .home2 .mode.m1 .mt { color:#fff; } .home2 .mode.m1 .ms, .home2 .mode.m1 .md, .home2 .mode.m1 .no { color:#cfdcf2; }
+  .home2 .mode.m2 { border-color:#86efac; } .home2 .mode.m3 { border:2px dashed #94a3b8; }
+  .home2 .mode.m3:hover, .home2 #dropCard.over { border-color:var(--ko); background:#eff6ff; }
+  .hstat { font-size:13.5px; color:var(--ink2); padding:0 4px; } .hint { font-size:12.5px; color:var(--ink3); padding:0 4px; }
+  .hmain { display:flex; flex-direction:column; gap:16px; min-width:0; } .hmain .card { margin:0; }
+  .setcard h2 { margin:0 0 10px; } .setrow { display:flex; flex-wrap:wrap; gap:12px 26px; }
+  .setrow .opt { display:flex; align-items:center; gap:8px; font-size:14px; } .setrow .ol { font-size:13px; color:var(--ink2); font-weight:700; }
+  .mlh { display:flex; align-items:center; gap:10px; } .mlh h2 { flex:1; margin:0; } .mlh input { width:230px; padding:7px 10px; font-size:14px; }
+  .rooms { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 6px; }
+  .rooms button { padding:7px 12px; border-radius:999px; font-size:14px; border:1px solid var(--line2); background:var(--surface); color:var(--ink); }
+  .rooms button.on { background:#1f3864; border-color:#1f3864; color:#fff; } .rooms button .c { font-size:12px; opacity:.75; margin-left:4px; }
+  .rooms button.drop-on { outline:3px solid #60a5fa; } .rooms .addroom { border-style:dashed; color:#1d4ed8; }
+  .roomtools { display:flex; gap:8px; align-items:center; font-size:13px; color:var(--ink2); min-height:6px; margin-bottom:4px; } .roomtools button { font-size:12.5px; padding:3px 10px; }
   .list .row.mrow { display:grid; grid-template-columns:62px 1fr auto; gap:14px; align-items:center; padding:12px 6px; border-bottom:1px solid var(--line); cursor:pointer; } .mrow:hover { background:#f8fafc; }
   .mdate { text-align:center; border-radius:10px; background:#f1f5f9; padding:6px 0; line-height:1.15; } .mdate b { display:block; font-size:18px; } .mdate span { font-size:11.5px; color:var(--ink2); }
   .mtx { min-width:0; } .mtx .t1 { font-size:15.5px; font-weight:700; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .mtx .t2 { font-size:13px; color:var(--ink2); margin-top:2px; }
-  .mact { display:flex; gap:6px; align-items:center; } .mact a, .mact button { font-size:12.5px; padding:4px 10px; border-radius:8px; }
-  .mact a { border:1px solid #bfdbfe; background:#eff6ff; color:#1d4ed8; text-decoration:none; }
-  @media (max-width:860px) { .modes { grid-template-columns:1fr; } .mode { min-height:0; } .hero { flex-direction:column; align-items:flex-start; } .mlh input { width:130px; } }
+  .mtx .rm { font-size:12px; color:#1d4ed8; background:#eff6ff; border-radius:6px; padding:1px 6px; margin-left:6px; font-weight:600; }
+  .mact { display:flex; gap:6px; align-items:center; } .mact a, .mact button, .mact select { font-size:12.5px; padding:4px 8px; border-radius:8px; }
+  .mact a { border:1px solid #bfdbfe; background:#eff6ff; color:#1d4ed8; text-decoration:none; } .mact select { max-width:130px; }
+  @media (max-width:900px) { .home2 { grid-template-columns:1fr; } .hside { position:static; } .mlh input { width:130px; } .list .row.mrow { grid-template-columns:56px 1fr; } .mact { grid-column:1 / -1; justify-content:flex-end; } }
   .tiles { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; margin-bottom:14px; }
   .tile { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px 20px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; }
   .tile .tic { font-size:34px; line-height:1; } .tile h3 { margin:0; font-size:18px; } .tile p { margin:0; color:var(--ink2); font-size:13px; line-height:1.6; }
@@ -238,37 +239,34 @@
 </header>
 
 <!-- 시작 화면 -->
-<div id="vHome" class="wrap home">
-  <div class="hero"><div><h2>회의를 어떻게 기록할까요?</h2><p>จะบันทึกการประชุมแบบไหน · 세 가지 중 하나를 고르세요</p></div><div class="hstat" id="homeStats"></div></div>
-  <div class="modes">
-    <button class="mode m1" id="btnStart">
-      <span class="mi">⚡</span><span class="mt">실시간 통역 회의</span><span class="ms">ประชุมพร้อมล่าม</span>
-      <span class="md">말하는 동안 한국어 ⇄ 태국어 자막 · 휴대폰 자막 · 끝나면 회의록</span>
-      <span class="mf"><span class="tag2">통역 + 회의록</span><span class="go">시작 →</span></span>
-    </button>
-    <button class="mode m2" id="btnRecOnly">
-      <span class="mi">🎙</span><span class="mt">녹음만 하고 회의록</span><span class="ms">บันทึกเสียงอย่างเดียว</span>
-      <span class="md">회의 중엔 녹음만 · 끝나면 말한 사람을 나눠 한국어·태국어 회의록</span>
-      <span class="mf"><span class="tag2 save">💰 비용 절약</span><span class="go">녹음 시작 →</span></span>
-    </button>
-    <div class="mode m3" id="dropCard" role="button" tabindex="0">
-      <span class="mi">📁</span><span class="mt">파일로 회의록</span><span class="ms">สร้างจากไฟล์เสียง / วิดีโอ</span>
-      <span class="md">휴대폰 녹음 · 회의 동영상을 끌어다 놓거나 눌러서 선택<br>동영상은 발표 자료 화면까지 정리</span>
-      <span class="mf"><span class="tag2">mp3 · m4a · wav · mp4</span><span class="go">파일 선택 →</span></span>
-      <input type="file" id="audioFile" accept="audio/*,video/*,.m4a,.mp3,.wav,.aac,.ogg,.webm,.mp4" class="hidden">
-    </div>
-  </div>
-  <div id="homeMsg" class="msg"></div><div id="dropMsg" class="msg"></div>
-  <details class="setbar" id="setBar">
-    <summary><b>⚙ 통역 설정</b> <span id="setSum" class="muted"></span></summary>
-    <div class="setrow">
-      <div class="opt"><span class="ol">통역 방식</span><span class="seg" id="modeSeg"><button data-m="fast" title="말하는 도중에도 번역이 흘러나옴 · 가장 빠름">⚡ 동시</button><button data-m="acc" title="말하고 멈추면 문맥·용어집으로 정확하게 번역 · 주고받는 회의에 적합">🗣 순차</button></span></div>
-      <div class="opt"><span class="ol">참석자</span><label title="끄면: 한국어가 아닌 말은 모두 태국어로 봅니다 (태국어가 베트남어 등으로 잘못 인식되는 것 방지)" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="foreignOn"> 🌐 영어·외국어 참석자 있음</label></div>
-      <div class="opt"><span class="ol">인도 언어</span><select id="indSel" title="인도 참석자의 언어"></select></div>
-      <div class="opt"><span class="ol">화면 나누기</span><span class="seg paneSeg"><button data-p="">기본</button><button data-p="ko">🇰🇷</button><button data-p="th">🇹🇭</button><button data-p="en">🇬🇧</button><button data-p="ind" class="indBtn">🇮🇳</button></span></div>
-    </div>
-  </details>
-  <div class="card mlist"><div class="mlh"><h2>📋 지난 회의</h2><input id="mtgQ" type="search" placeholder="🔍 제목·날짜 검색"></div><div id="mtgList" class="list muted">불러오는 중…</div></div>
+<div id="vHome" class="wrap home2">
+  <aside class="hside">
+    <div class="hs-t">회의 시작 · เริ่มประชุม</div>
+    <button class="mode m1" id="btnStart"><span class="no">1</span><span class="mi">⚡</span><span class="mtx2"><span class="mt">실시간 통역 회의</span><span class="ms">ประชุมพร้อมล่าม</span><span class="md">말하는 동안 한국어 ⇄ 태국어 자막 · 끝나면 회의록</span></span></button>
+    <button class="mode m2" id="btnRecOnly"><span class="no">2</span><span class="mi">🎙</span><span class="mtx2"><span class="mt">녹음만 하고 회의록</span><span class="ms">บันทึกเสียงอย่างเดียว</span><span class="md">회의 중엔 녹음만 · 끝나면 한국어·태국어 회의록 <b class="save">💰 절약</b></span></span></button>
+    <div class="mode m3" id="dropCard" role="button" tabindex="0"><span class="no">3</span><span class="mi">📁</span><span class="mtx2"><span class="mt">파일로 회의록</span><span class="ms">สร้างจากไฟล์เสียง / วิดีโอ</span><span class="md">녹음·동영상 파일을 끌어다 놓거나 눌러서 선택</span></span>
+      <input type="file" id="audioFile" accept="audio/*,video/*,.m4a,.mp3,.wav,.aac,.ogg,.webm,.mp4" class="hidden"></div>
+    <div id="homeMsg" class="msg"></div><div id="dropMsg" class="msg"></div>
+    <div class="hstat" id="homeStats"></div>
+    <div class="hint">새 회의는 지금 선택한 <b>회의방</b>에 저장됩니다</div>
+  </aside>
+  <main class="hmain">
+    <section class="card setcard" id="setBar">
+      <h2>① 통역 설정 <span id="setSum" class="muted"></span></h2>
+      <div class="setrow">
+        <div class="opt"><span class="ol">통역 방식</span><span class="seg" id="modeSeg"><button data-m="fast" title="말하는 도중에도 번역이 흘러나옴 · 가장 빠름">⚡ 동시</button><button data-m="acc" title="말하고 멈추면 문맥·용어집으로 정확하게 번역 · 주고받는 회의에 적합">🗣 순차</button></span></div>
+        <div class="opt"><span class="ol">참석자</span><label title="끄면: 한국어가 아닌 말은 모두 태국어로 봅니다 (태국어가 베트남어 등으로 잘못 인식되는 것 방지)" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="foreignOn"> 🌐 영어·외국어 참석자 있음</label></div>
+        <div class="opt"><span class="ol">인도 언어</span><select id="indSel" title="인도 참석자의 언어"></select></div>
+        <div class="opt"><span class="ol">화면 나누기</span><span class="seg paneSeg"><button data-p="">기본</button><button data-p="ko">🇰🇷</button><button data-p="th">🇹🇭</button><button data-p="en">🇬🇧</button><button data-p="ind" class="indBtn">🇮🇳</button></span></div>
+      </div>
+    </section>
+    <section class="card mlist">
+      <div class="mlh"><h2>② 회의록</h2><input id="mtgQ" type="search" placeholder="🔍 제목·날짜 검색"></div>
+      <div class="rooms" id="roomBar"></div>
+      <div class="roomtools" id="roomTools"></div>
+      <div id="mtgList" class="list muted">불러오는 중…</div>
+    </section>
+  </main>
 </div>
 
 <!-- 회의 중 -->
@@ -438,26 +436,60 @@ async function loadHome() {
   try {
     const l = await api({ action: 'liveList' }); if (l.fb && !ls('liveFb')) S.fb = l.fb; prefetchToken();
     const L = l.ok ? l.list : [];
-    HOMEL = L; drawMtgList();
+    HOMEL = L; ROOMS = l.rooms || []; drawRooms(); drawMtgList();
     const ym = todayYmd().slice(0, 7), mon = L.filter(m => String(m.date).slice(0, 7) === ym);
     $('homeStats').innerHTML = '이번 달 회의 <b>' + mon.length + '</b>회 · ' + mon.reduce((a, m) => a + (+m.min || 0), 0) + '분' + (mon.filter(m => m.status === '확정').length ? ' · 확정 ' + mon.filter(m => m.status === '확정').length : '');
     if (!l.ok) $('mtgList').textContent = l.error || '불러오기 실패';
   } catch (e) { $('mtgList').textContent = '불러오기 실패: ' + (e.message || e); }
 }
-var HOMEL = [];
+var HOMEL = [], ROOMS = [];
+var CURROOM = ls('liveRoom') || '';   // '' = 전체, '__none' = 미분류, 그 밖 = 방 이름
 const WD = ['일', '월', '화', '수', '목', '금', '토'];
+function realRoom() { return CURROOM && CURROOM !== '__none' ? CURROOM : ''; }
+function drawRooms() {
+  if (CURROOM && CURROOM !== '__none' && ROOMS.indexOf(CURROOM) < 0) CURROOM = '';
+  const cnt = r => HOMEL.filter(m => r === '' ? true : r === '__none' ? !m.room : m.room === r).length;
+  const chip = (r, label) => '<button data-r="' + esc(r) + '" class="' + (CURROOM === r ? 'on' : '') + '">' + label + '<span class="c">' + cnt(r) + '</span></button>';
+  $('roomBar').innerHTML = chip('', '📋 전체') + chip('__none', '📥 미분류') + ROOMS.map(r => chip(r, '📂 ' + esc(r))).join('') + '<button class="addroom" data-add="1">＋ 회의방 만들기</button>';
+  $('roomTools').innerHTML = realRoom() ? '📂 <b>' + esc(CURROOM) + '</b> 방 <button data-tool="ren">✏ 이름 바꾸기</button><button data-tool="del" style="color:var(--red)">🗑 방 삭제</button><span class="muted">· 회의를 이 방으로 끌어다 놓아도 이동됩니다</span>' : '<span class="muted">회의 줄을 위 방 이름 위로 끌어다 놓거나 「📂 방 이동」으로 옮기세요</span>';
+}
+async function roomOp(body) { const r = await api(Object.assign({ action: 'liveRooms' }, body)); if (!r.ok) { alert(r.error || '실패'); return false; } ROOMS = r.rooms || []; return true; }
+$('roomBar').onclick = async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.add) { const n = (prompt('새 회의방 이름 (예: 경영 지시, 업체 미팅, 설비 회의, 품질 회의)') || '').trim(); if (!n) return; if (await roomOp({ op: 'add', name: n })) { CURROOM = n; ls('liveRoom', n); drawRooms(); drawMtgList(); } return; }
+  CURROOM = b.dataset.r; ls('liveRoom', CURROOM); drawRooms(); drawMtgList();
+};
+$('roomTools').onclick = async e => {
+  const b = e.target.closest('button'); if (!b || !realRoom()) return;
+  if (b.dataset.tool === 'ren') { const n = (prompt('새 이름', CURROOM) || '').trim(); if (!n || n === CURROOM) return; if (await roomOp({ op: 'rename', name: CURROOM, to: n })) { HOMEL.forEach(m => { if (m.room === CURROOM) m.room = n; }); CURROOM = n; ls('liveRoom', n); } }
+  if (b.dataset.tool === 'del') { if (!confirm('「' + CURROOM + '」 방을 지울까요? (안의 회의는 지워지지 않고 미분류로 갑니다)')) return; if (await roomOp({ op: 'del', name: CURROOM })) { HOMEL.forEach(m => { if (m.room === CURROOM) m.room = ''; }); CURROOM = ''; ls('liveRoom', ''); } }
+  drawRooms(); drawMtgList();
+};
+async function moveMtg(id, room) {
+  const m = HOMEL.find(x => x.id === id); if (!m || m.room === room) return;
+  const old = m.room; m.room = room; drawRooms(); drawMtgList();
+  try { const r = await api({ action: 'liveMove', id, room }); if (!r.ok) throw new Error(r.error); }
+  catch (er) { m.room = old; drawRooms(); drawMtgList(); alert('이동 실패: ' + (er.message || er)); }
+}
+// 회의 줄 → 방 이름 위로 끌어다 놓기
+$('mtgList').addEventListener('dragstart', e => { const r = e.target.closest('.mrow'); if (r) e.dataTransfer.setData('text/mtg', r.dataset.id); });
+$('roomBar').addEventListener('dragover', e => { const b = e.target.closest('button[data-r]'); if (b && e.dataTransfer.types.includes('text/mtg')) { e.preventDefault(); e.stopPropagation(); b.classList.add('drop-on'); } });
+$('roomBar').addEventListener('dragleave', e => { const b = e.target.closest('button[data-r]'); if (b) b.classList.remove('drop-on'); });
+$('roomBar').addEventListener('drop', e => { const b = e.target.closest('button[data-r]'); const id = e.dataTransfer.getData('text/mtg'); if (!b || !id) return; e.preventDefault(); e.stopPropagation(); b.classList.remove('drop-on'); if (b.dataset.r !== '') moveMtg(id, b.dataset.r === '__none' ? '' : b.dataset.r); });
+$('mtgList').addEventListener('change', e => { const sel = e.target.closest('.mmv'); if (!sel || !sel.value) return; moveMtg(sel.dataset.id, sel.value === '__none' ? '' : sel.value); });
 function drawMtgList() {
   const q = ($('mtgQ').value || '').trim().toLowerCase();
-  const L = HOMEL.filter(m => !q || (m.date + ' ' + (m.title || '')).toLowerCase().includes(q));
+  const L = HOMEL.filter(m => (CURROOM === '' || (CURROOM === '__none' ? !m.room : m.room === CURROOM)) && (!q || (m.date + ' ' + (m.title || '') + ' ' + (m.room || '')).toLowerCase().includes(q)));
   $('mtgList').classList.toggle('muted', !L.length);
   $('mtgList').innerHTML = L.length ? L.map(m => { const d = new Date(m.date + 'T00:00:00');
-    return '<div class="row mrow" data-id="' + esc(m.id) + '"><div class="mdate"><b>' + esc(String(m.date).slice(5).replace('-', '/')) + '</b><span>' + (isNaN(d) ? '' : WD[d.getDay()] + '요일') + '</span></div>' +
-      '<div class="mtx"><div class="t1">' + esc(m.title || '제목 없음 (열어서 회의록 정리)') + '</div><div class="t2">' + esc(m.start) + (m.end ? ' ~ ' + esc(m.end) : '') + ' · ' + esc(m.min || 0) + '분 · ' + esc(m.n || 0) + '줄</div></div>' +
+    return '<div class="row mrow" draggable="true" data-id="' + esc(m.id) + '"><div class="mdate"><b>' + esc(String(m.date).slice(5).replace('-', '/')) + '</b><span>' + (isNaN(d) ? '' : WD[d.getDay()] + '요일') + '</span></div>' +
+      '<div class="mtx"><div class="t1">' + esc(m.title || '제목 없음 (열어서 회의록 정리)') + (m.room && CURROOM === '' ? '<span class="rm">📂 ' + esc(m.room) + '</span>' : '') + '</div><div class="t2">' + esc(m.start) + (m.end ? ' ~ ' + esc(m.end) : '') + ' · ' + esc(m.min || 0) + '분 · ' + esc(m.n || 0) + '줄</div></div>' +
       '<div class="mact"><span class="tag ' + esc(m.status) + '">' + esc(m.status) + '</span>' + (m.pdf ? '<a class="mpdf" target="_blank" href="https://drive.google.com/file/d/' + esc(m.pdf) + '/view">📄 PDF</a>' : '') +
-      '<button class="mdel" data-id="' + esc(m.id) + '" style="color:var(--red)">삭제</button></div></div>'; }).join('') : (q ? '검색 결과가 없습니다' : '아직 회의가 없습니다');
+      '<select class="mmv" data-id="' + esc(m.id) + '"><option value="">📂 방 이동</option><option value="__none">📥 미분류</option>' + ROOMS.filter(r => r !== m.room).map(r => '<option value="' + esc(r) + '">📂 ' + esc(r) + '</option>').join('') + '</select>' +
+      '<button class="mdel" data-id="' + esc(m.id) + '" style="color:var(--red)">삭제</button></div></div>'; }).join('') : (q ? '검색 결과가 없습니다' : CURROOM ? '이 방에는 아직 회의가 없습니다' : '아직 회의가 없습니다');
 }
 $('mtgQ').oninput = drawMtgList;
-function setSum() { const pn = PANES.length ? PANES.map(p => (LANGS[p] || [''])[0]).join(' ') : '기본'; $('setSum').textContent = '· ' + (MODE === 'acc' ? '🗣 순차' : '⚡ 동시') + ' · ' + (FOREIGN ? '외국어 참석자 있음' : '태국어 기준') + ' · 화면 ' + pn; }
+function setSum() { if (!$('setSum')) return; const pn = PANES.length ? PANES.map(p => (LANGS[p] || [''])[0]).join(' ') : '기본'; $('setSum').textContent = '· ' + (MODE === 'acc' ? '🗣 순차' : '⚡ 동시') + ' · ' + (FOREIGN ? '외국어 참석자 있음' : '태국어 기준') + ' · 화면 ' + pn; }
 $('setBar').addEventListener('click', () => setTimeout(setSum, 0)); $('setBar').addEventListener('change', () => setTimeout(setSum, 0));
 $('mtgList').onclick = async e => {
   const d = e.target.closest('.mdel');
@@ -469,7 +501,7 @@ $('mtgList').onclick = async e => {
     catch (er) { d.disabled = false; alert('삭제 실패: ' + (er.message || er)); }
     return;
   }
-  if (e.target.closest('.mpdf')) return;
+  if (e.target.closest('.mpdf') || e.target.closest('.mmv')) return;
   const r = e.target.closest('.mrow'); if (!r) return;
   try { const g = await api({ action: 'liveGet', id: r.dataset.id }); if (!g.ok) throw new Error(g.error);
     const m = g.meeting; Object.assign(S, { doc: m.doc || '', pdf: m.pdf || '', id: m.id, date: m.date, start: m.start, end: m.end, lines: m.lines, t0: 0, audioUrl: m.audio ? 'https://drive.google.com/file/d/' + m.audio + '/view' : '' });
@@ -495,7 +527,7 @@ async function startMeeting(recOnly) {
     S.clockTimer = setInterval(() => { const s = Math.floor((Date.now() - S.t0) / 1000); $('clock').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60); }, 1000);
     S.saveTimer = setInterval(() => saveLines(), 30000);
     startRec(); keepAwake();
-    S.recOnly = !!recOnly; document.body.classList.toggle('reconly', S.recOnly);
+    S.mroom = realRoom(); S.recOnly = !!recOnly; document.body.classList.toggle('reconly', S.recOnly);
     if (recOnly) {   // 녹음만: 통역 세션을 열지 않음 (Gemini 비용 없음) → 종료 후 녹음으로 회의록
       SES.length = 0; setPill('rec', '🎙 녹음 중 · 통역 없음');
       $('stWho').textContent = '🎙 녹음 중입니다 · กำลังบันทึกเสียง'; $('stSrc').textContent = '실시간 통역은 하지 않습니다. 끝나면 「■ 종료」를 누르세요 → 녹음을 듣고 말한 사람을 나눠 한국어·태국어 회의록을 만듭니다.'; $('stTr').textContent = '';
@@ -628,7 +660,7 @@ async function fromFile(file) {
     msg('☁ 올리는 중… (' + (r.blob.size / 1048576).toFixed(1) + 'MB, ' + Math.round(r.sec / 60) + '분)');
     const up = await api({ action: 'liveAudio', id: S.id, mime: 'audio/mpeg', data: await blobB64(r.blob) });
     if (!up.ok) throw new Error(up.error);
-    S.audioUrl = up.url; S.frames = [];
+    S.audioUrl = up.url; S.frames = []; S.mroom = realRoom(); if (S.mroom) api({ action: 'liveMove', id: S.id, room: S.mroom }).catch(() => {});
     if (isVideo(file)) {   // 발표 자료 화면 캡처 → Drive
       msg('🖼 동영상에서 발표 자료 화면 찾는 중… <div class="bar"><i id="pbar2"></i></div>');
       let fr = [];
@@ -1164,7 +1196,7 @@ function startWatch() {
 // ---------- 저장 · 종료 ----------
 function payload(extra) {
   const min = S.t0 ? Math.max(1, Math.round((Date.now() - S.t0) / 60000)) : undefined;
-  return Object.assign({ id: S.id, date: S.date, start: S.start, end: S.end, min, memo: MEMO,
+  return Object.assign({ id: S.id, date: S.date, start: S.start, end: S.end, min, memo: MEMO, room: S.mroom || '',
     lines: S.lines.map(l => ({ t: l.t, who: l.who || '', lang: l.lang, src: l.src, tr: l.tr })) }, extra || {});
 }
 async function saveLines(force) {
