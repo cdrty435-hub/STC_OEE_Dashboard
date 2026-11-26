@@ -628,7 +628,7 @@ async function connect(x) {
   let model, setup, path = 'BidiGenerateContentConstrained';
   if (x.kind === 'fast') {
     model = tk.fast || 'models/gemini-3.5-live-translate-preview';
-    const tr = { targetLanguageCode: x.target, echoTargetLanguage: false };
+    const tr = { targetLanguageCode: x.target, echoTargetLanguage: !FOREIGN && x.target === 'th' };   // 태국어 기준: 태국어 말은 태국어 그대로 받아 적기
     if (x.v === 0) setup = { model, generationConfig: { responseModalities: ['AUDIO'], inputAudioTranscription: {}, outputAudioTranscription: {}, translationConfig: tr } };
     else setup = { model, generationConfig: { responseModalities: ['AUDIO'], translationConfig: tr }, inputAudioTranscription: {}, outputAudioTranscription: {} };
     if (x.v === 2) path = 'BidiGenerateContent';
@@ -693,7 +693,7 @@ function onServer(x, m) {
     if (c.inputTranscription && c.inputTranscription.text) {
       // →태국어 세션은 한국어·영어만, →한국어 세션은 태국어만 원문으로 모음 (두 세션 원문이 섞이지 않게)
       const tx = c.inputTranscription.text, lg = langOf(tx);
-      if (!lg || (x.target === 'th' ? lg !== 'th' : lg !== 'ko')) { if (!x.inq.length) x.t = nowHM(); x.inq.push({ at: now, text: tx }); setInBuf(x); }
+      if (!lg || (x.target === 'th' ? (FOREIGN ? lg !== 'th' : lg === 'ko') : lg !== 'ko')) { if (!x.inq.length) x.t = nowHM(); x.inq.push({ at: now, text: tx }); setInBuf(x); }
     }
     if (c.outputTranscription && c.outputTranscription.text) { if (!x.t) x.t = nowHM(); x.outBuf += c.outputTranscription.text; x.lastOutAt = now; clearTimeout(x.tm);
       // 번역은 짧은 조각으로 나오므로 문장 단위로 모아서 한 줄로: 문장 끝(. ? !)이면 0.4초, 아니면 1.3초 쉬면 확정, 140자 넘으면 바로
@@ -726,8 +726,30 @@ function viFix(l) {
   if (!l.vi) { if (!l.trTh || !clean(l.tr)) return; l.vi = true; l.orig = l.src; l.src = l.tr; l.lang = 'th'; l.trTh = true; }
   l.tr = (l.tx && l.tx.ko) || '';
 }
+// 태국어 기준 (외국어 참석자 없음): 한국어 말 → 태국어 번역 · 그 밖의 말은 태국어로 보고
+//   →태국어 세션이 받아 적은 태국어(echo)를 원문, →한국어 세션 결과를 번역으로 한 줄에 합침
+function thaiFlush(x, tr) {
+  const T = x.lastOutAt || Date.now(), now = Date.now();
+  const recent = f => S.lines.slice(-4).reverse().find(l => l.lang === 'th' && now - (l.at || 0) < 12000 && f(l));
+  if (x.target === 'th') {
+    const ko = clean(x.inq.filter(q => q.at <= T + 1500).map(q => q.text).join(''));
+    if (ko) pushLine({ t: x.t || nowHM(), src: ko, tr, lang: 'ko' });                       // 한국어 → 태국어
+    else { const m = recent(l => l.awaitTh);                                                 // 태국어 받아 적기
+      if (m) { m.src = tr; m.awaitTh = false; redrawLine(m); if (needTx(m)) refineQ(m); }
+      else pushLine({ t: x.t || nowHM(), src: tr, tr: '', lang: 'th', awaitKo: true, at: now }); }
+  } else {
+    const m = recent(l => l.awaitKo);
+    if (m) { m.tr = tr; m.awaitKo = false; redrawLine(m); if (needTx(m)) refineQ(m); }
+    else { const heard = clean(x.inq.filter(q => q.at <= T).map(q => q.text).join(''));
+      pushLine({ t: x.t || nowHM(), src: langOf(heard) === 'th' ? heard : '…', tr, lang: 'th', awaitTh: true, at: now }); }
+  }
+  SES.forEach(s2 => { if (s2 === x || !clean(s2.outBuf)) { s2.inq = s2.inq.filter(q => q.at > T); setInBuf(s2); s2.t = s2.inq.length ? nowHM() : ''; } });
+  x.outBuf = '';
+  drawPending();
+}
 function fastFlush(x) {
   const tr = clean(x.outBuf); if (!tr) return;
+  if (!FOREIGN) return thaiFlush(x, tr);
   // 마지막 번역 조각까지 들어온 말만 이 줄의 원문 · 그 뒤에 들어온 말은 다음 줄로
   const T = x.lastOutAt || Date.now();
   const src = clean(x.inq.filter(q => q.at <= T).map(q => q.text).join(''));
@@ -756,7 +778,8 @@ setInterval(() => {   // '번역 중…'으로 남은 줄(영어 줄 한쪽 번�
   if (!S.running && !S.lines.length) return;
   const now = Date.now();
   S.lines.slice(-20).forEach(l => {
-    if (!l.src || l.refining || RQ.q.includes(l) || (l.tries || 0) >= 4) return;
+    if (!l.src || l.src === '…' || l.awaitTh || l.refining || RQ.q.includes(l) || (l.tries || 0) >= 4) return;
+    if (l.awaitKo && now - (l.at || 0) > 6000) l.awaitKo = false;
     if (now - (l.at || l.lastTry || 0) < 4000 || now - (l.lastTry || 0) < 4000) return;
     if (missCore(l) || extraLangs().some(L => L !== l.lang && !(l.tx && l.tx[L]))) refineQ(l);
   });
@@ -767,7 +790,7 @@ function pushLine(c) {
   if (!c.src && !c.tr) return;
   c.lang = c.lang || langOf(c.src) || (langOf(c.tr) === 'th' ? 'ko' : 'th');
   S.lines.push(c); appendLine(c, S.lines.length - 1);
-  if (c.src && needTx(c)) refineQ(c);
+  if (c.src && !c.awaitTh && !c.awaitKo && needTx(c)) refineQ(c);
 }
 // ---------- 문맥 보정: 빠른 통역 줄을 확정 후 1~3초 안에 앞뒤 문맥·용어집으로 다듬어 교체 ----------
 const RQ = { busy: 0, q: [] };
@@ -868,7 +891,8 @@ function curPending() {
     const src = SES.map(x => clean(x.inBuf)).sort((a, b) => b.length - a.length)[0] || '';
     const out = {}; SES.forEach(x => { if (x.target && clean(x.outBuf)) out[x.target] = clean(x.outBuf); });
     let lg = langOf(src) || 'ko', tr = lg === 'th' ? (out.ko || '') : (out.th || out.ko || ''), s2 = src;
-    if (lg === 'en' && (!FOREIGN || VI_RE.test(src)) && out.th) { s2 = out.th; tr = out.ko || ''; lg = 'th'; }
+    if (!FOREIGN) { const koIn = SES.find(x => x.target === 'th'); const k = koIn ? clean(koIn.inBuf) : ''; if (k) { s2 = k; tr = out.th || ''; } else { s2 = out.th || (langOf(src) === 'th' ? src : ''); tr = out.ko || ''; } }
+    else if (lg === 'en' && VI_RE.test(src) && out.th) { s2 = out.th; tr = out.ko || ''; lg = 'th'; }
     if (s2 || tr) P = { t: nowHM(), src: s2, tr, out };
   } else SES.forEach(x => x.segs.forEach(g => { if (clean(g.src) || clean(g.tr)) P = { t: g.t, src: g.src, tr: g.tr }; }));
   if (P) P.lang = langOf(P.src) || (langOf(P.tr) === 'th' ? 'ko' : 'th');
@@ -1275,7 +1299,7 @@ $('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
   sel.onchange = () => { const old = INDC; INDC = sel.value; ls('liveInd', INDC); PANES = PANES.map(x => x === old ? INDC : x); ls('livePanes', JSON.stringify(PANES)); drawPaneSeg(); renderPanes(); };
 })();
 $('foreignOn').checked = FOREIGN;
-$('foreignOn').onchange = () => { FOREIGN = $('foreignOn').checked; ls('liveForeign', FOREIGN ? '1' : '0'); };
+$('foreignOn').onchange = () => { if (S.running) { $('foreignOn').checked = FOREIGN; alert('회의 중에는 바꿀 수 없습니다. 종료 후 바꿔 주세요'); return; } FOREIGN = $('foreignOn').checked; ls('liveForeign', FOREIGN ? '1' : '0'); };
 drawPaneSeg();
 if (WATCH) startWatch();
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('meeting_sw.js').catch(() => {}); else if (!DISP) loadHome();
