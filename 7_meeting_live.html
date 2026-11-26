@@ -140,7 +140,7 @@
   }
   /* 시작 화면 */
   /* ---- 시작 화면 (왼쪽 시작 3개 · 가운데 통역 설정 + 회의록/회의방) ---- */
-  .home2 { max-width:1320px; display:grid; grid-template-columns:330px minmax(0,1fr); gap:18px; align-items:start; }
+  .home2 { max-width:1320px; padding:16px 10px; display:grid; grid-template-columns:330px minmax(0,1fr); gap:18px; align-items:start; }
   .hside { position:sticky; top:calc(var(--hdr, 70px) + 12px); display:flex; flex-direction:column; gap:12px; }
   .hs-t { font-size:15px; font-weight:800; color:var(--ink); padding:2px 4px; }
   .home2 .mode { all:unset; box-sizing:border-box; cursor:pointer; position:relative; display:flex; gap:14px; align-items:flex-start; padding:18px 16px; border-radius:16px; background:var(--surface); border:1px solid var(--line2); transition:transform .12s, box-shadow .12s; }
@@ -369,9 +369,12 @@ function armed(btn, label) {   // 두 번 눌러야 실행
 // ---------- 상태 ----------
 const S = { id: '', date: '', start: '', end: '', lines: [], running: false, t0: 0, lastSaved: -1, saveTimer: null, clockTimer: null, playUntil: 0, audioUrl: '' };
 let MODE = ls('liveMode') === 'acc' ? 'acc' : 'fast';
-function show(v) { ['vHome', 'vLive', 'vMin'].forEach(x => $(x).classList.toggle('hidden', x !== v)); document.body.classList.toggle('live-on', v === 'vLive'); fitHdr(); }
+function show(v) { ['vHome', 'vLive', 'vMin'].forEach(x => $(x).classList.toggle('hidden', x !== v)); fitHome(); document.body.classList.toggle('live-on', v === 'vLive'); fitHdr(); }
 function fitHdr() { const h = document.querySelector('header.top'); if (h) document.documentElement.style.setProperty('--hdr', h.offsetHeight + 'px'); }
 window.addEventListener('resize', fitHdr);
+// 시작 화면은 창 너비에 맞춰 자동 확대 · 축소 (브라우저 확대/축소·모니터 크기와 관계없이 화면을 꽉 채움)
+function fitHome() { const v = $('vHome'); if (!v) return; const z = Math.max(0.8, Math.min(1.7, (window.innerWidth - 20) / 1360)); v.style.zoom = window.innerWidth < 900 ? '' : z.toFixed(3); const h = document.querySelector('header.top'); if (h) h.style.zoom = v.classList.contains('hidden') ? '' : v.style.zoom; fitHdr(); }
+window.addEventListener('resize', fitHome);
 try { new ResizeObserver(fitHdr).observe(document.querySelector('header.top')); } catch (e) {}
 function setPill(kind, txt) { const p = $('stPill'); p.className = 'pill ' + kind; p.innerHTML = (kind === 'rec' ? '<i></i>' : '') + esc(txt); p.classList.toggle('hidden', !kind); }
 
@@ -1406,7 +1409,7 @@ $('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
 })();
 $('foreignOn').checked = FOREIGN;
 $('foreignOn').onchange = () => { if (S.running) { $('foreignOn').checked = FOREIGN; alert('회의 중에는 바꿀 수 없습니다. 종료 후 바꿔 주세요'); return; } FOREIGN = $('foreignOn').checked; ls('liveForeign', FOREIGN ? '1' : '0'); };
-drawPaneSeg(); setSum();
+drawPaneSeg(); setSum(); fitHome();
 if (WATCH) startWatch();
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('meeting_sw.js').catch(() => {}); else if (!DISP) loadHome();
 </script>
